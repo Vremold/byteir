@@ -1,0 +1,118 @@
+//===-- ByreBase.td - Byre dialect definitions ---------------*- tablegen -*-===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// Defines the Byre dialect
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef BYRE_BASE
+#define BYRE_BASE
+
+include "mlir/IR/OpBase.td"
+
+//===----------------------------------------------------------------------===//
+// Byre Dialect.
+//===----------------------------------------------------------------------===//
+
+def Byre_Dialect : Dialect {
+  let name = "byre";
+  let cppNamespace = "::mlir::byre";
+  let hasOperationAttrVerify = 1;
+
+  let extraClassDeclaration = [{
+    /// Get the name of the attribute used to annotate the modules that contain
+    /// kernel modules.
+    static StringRef getContainerModuleAttrName() {
+      return "byre.container_module";
+    }
+
+    static StringRef getModuleMemorySpaceAttrName() {
+      return "byre.memory_space";
+    }
+
+    static StringRef getEntryPointFunctionAttrName() {
+      return "byre.entry_point";
+    }
+
+    static StringRef getEntryPointFuncArgTypeAttrName() {
+      return "byre.argtype";
+    }
+
+    static StringRef getEntryPointFuncArgNameAttrName() {
+      return "byre.argname";
+    }
+
+    static StringRef getEntryPointFuncResultAttrsName() {
+      return "byre.result_attrs";
+    }
+  }];
+}
+
+def Byre_AsyncToken : DialectType<
+  Byre_Dialect, CPred<"$_self.isa<::mlir::byre::AsyncTokenType>()">, "async token type">,
+             BuildableType<"mlir::byre::AsyncTokenType::get($_builder.getContext())">;
+
+def Byre_AsyncOpInterface : OpInterface<"AsyncOpInterface"> {
+  let description = [{
+    Interface for Runtime operations that execute asynchronously on the device.
+
+    The op doesn't start executing until all depent ops producing the async
+    dependency tokens have finished executing.
+
+    If the op returns a token, the op merely schedules the execution on the
+    device and returns immediately, without waiting for the execution to
+    complete. On the hand, if the op does not return a token, the op will wait
+    for the execution to complete.
+  }];
+  let cppNamespace = "::mlir::byre";
+
+  let methods = [
+    InterfaceMethod<[{
+        Query the operands that represent async dependency tokens.
+      }],
+      "OperandRange", "getAsyncDependencies", (ins), [{}], [{
+        ConcreteOp op = cast<ConcreteOp>(this->getOperation());
+        return op.asyncDependencies();
+      }]
+    >,
+    InterfaceMethod<[{
+        Adds a new token to the list of async dependencies.
+      }],
+      "void", "addAsyncDependency", (ins "Value":$token),
+      [{}], [{
+        ::mlir::byre::addAsyncDependency(this->getOperation(), token);
+      }]
+    >,
+    InterfaceMethod<[{
+        Query the result that represents the async token to depend on.
+      }],
+      "OpResult", "getAsyncToken", (ins), [{}], [{
+        ConcreteOp op = cast<ConcreteOp>(this->getOperation());
+        return op.asyncToken().template dyn_cast_or_null<OpResult>();
+      }]
+    >
+  ];
+}
+
+def Byre_ArgType_None: BitEnumAttrCase<"None", 0x0000>;
+def Byre_ArgType_Input: BitEnumAttrCase<"Input", 0x0001>;
+def Byre_ArgType_Output: BitEnumAttrCase<"Output", 0x0002>;
+def Byre_ArgType_Weight: BitEnumAttrCase<"Weight", 0x0004>;
+
+def Byre_ArgTypeAttr: BitEnumAttr<
+    "EntryFuncArgType",
+    "entry function argument type", [
+        Byre_ArgType_None,
+        Byre_ArgType_Input,
+        Byre_ArgType_Output,
+        Byre_ArgType_Weight
+    ]> {
+  let cppNamespace = "::mlir::byre";
+}
+
+#endif // BYRE_BASE

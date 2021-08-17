@@ -1,0 +1,7 @@
+add_subdirectory(AffineToGPU)
+add_subdirectory(Common)
+add_subdirectory(GPUToNVVM)
+add_subdirectory(HloToLHlo)
+add_subdirectory(HloToLinalg)
+add_subdirectory(ToByre)
+add_subdirectory(ToAce)

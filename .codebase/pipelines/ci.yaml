@@ -1,0 +1,23 @@
+name: ByteIR CI
+trigger:
+  change:
+    types:
+    - create
+    - push
+jobs:
+  byteir_compiler_tests:
+    name: byteir compiler CI
+    image: hub.byted.org/arnold/byteir_cuda:3fa9aa07d8589ee4543a2ceb13449593
+    working-directory: byteir/byteir
+    steps:
+      - id: cache
+        uses: actions/cache
+        inputs:
+            key: llvm-commit-v0
+            paths:
+              - ./llvm_build
+            restore_keys: 
+              - llvm-commit-v0
+      - name: Build and Test ByteIR Libs
+        commands:
+          - bash .codebase/pipelines/ci.sh

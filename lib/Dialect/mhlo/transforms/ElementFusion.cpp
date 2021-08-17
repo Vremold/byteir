@@ -1,0 +1,97 @@
+//===- ElementFusion.cpp --------------------------------------*--- C++ -*-===//
+//
+// Copyright (c) ByteDance Inc. All rights reserved.
+// Licensed under the Apache License, Version 2.0
+//
+//===----------------------------------------------------------------------===//
+
+#include "byteir/Dialect/mhlo/transforms/ElementFusion.h"
+#include "byteir/Dialect/mhlo/transforms/FusionUtil.h"
+#include "mlir/IR/Matchers.h"
+#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "PassDetail.h"
+#include "mlir/Pass/Pass.h"
+
+using namespace llvm;
+using namespace mlir;
+using namespace mlir::mhlo;
+
+
+namespace {
+  
+bool IsMhlo(Operation* op) {
+  Dialect* dialect = op->getDialect();
+  return dialect && isa<MhloDialect>(dialect);
+}
+
+bool IsFusibleCandidate(Operation* op) {
+  // FIXME (LWC) Tentatively disable constant fusion to avoid a bug
+  return IsMhlo(op) &&
+    (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
+      //     matchPattern(op, m_Constant()) ||
+      isa<mhlo::BroadcastInDimOp>(op) ||
+      isa<mhlo::BroadcastOp>(op) ||
+      isa<mhlo::ReshapeOp>(op) ||
+      isa<mhlo::ClampOp>(op)
+      );
+     //&& !isa<mhlo::ShiftRightLogicalOp>(op);
+}
+
+bool IsFusibleStart(Operation* op) {
+  return IsMhlo(op) && (
+    op->hasTrait<::mlir::OpTrait::Elementwise>() ||
+    isa<mhlo::BroadcastInDimOp>(op) ||
+    isa<mhlo::BroadcastOp>(op) ||
+    isa<mhlo::ReshapeOp>(op) ||
+    isa<mhlo::ClampOp>(op)
+    );
+  //&& !isa<mhlo::ShiftRightLogicalOp>(op);
+}
+
+bool IsFusibleWith(Operation* target, Operation* /*start*/) {
+  // FIXME (LWC) Tentatively disable constant fusion to avoid a bug
+  return IsMhlo(target) &&
+    (target->hasTrait<::mlir::OpTrait::Elementwise>() ||
+      //  matchPattern(target, m_Constant()) ||
+      isa<mhlo::BroadcastInDimOp>(target) ||
+      isa<mhlo::BroadcastOp>(target) ||
+      isa<mhlo::ReshapeOp>(target) ||
+      isa<mhlo::ClampOp>(target)
+      );
+    //&& !isa<mhlo::ShiftRightLogicalOp>(target);
+}
+
+struct ElementFusionPass
+  : public ElementFusionBase<ElementFusionPass> {
+
+  ElementFusionPass(const std::string& tag) 
+    : ElementFusionBase() {
+    attachTag = tag;
+  }
+  void runOnFunction() override;
+};
+
+} // namespace anonymous
+
+
+void ElementFusionPass::runOnFunction() {
+  FuncOp funcOp = getFunction();
+
+  FirstDegreeProducerFusionPlanner planner(funcOp, IsFusibleCandidate, IsFusibleStart, IsFusibleWith);
+
+  planner.Run();
+
+  const MhloFusionPlan& plan = planner.GetFusionPlan();
+
+  for (auto it = plan.rbegin(); it != plan.rend(); ++it) {
+    auto& pattern = *it;
+    if (pattern.size() > 1) {
+      ApplyMhloFusionPattern(pattern, attachTag);
+    }
+  }
+}
+
+std::unique_ptr<FunctionPass> mlir::createElementFusionPass(const std::string& attachTag) {
+  return std::make_unique<ElementFusionPass>(attachTag);
+}
+

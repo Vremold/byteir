@@ -1,0 +1,65 @@
+//===- TranslateRegistration.cpp - Register translation -------------------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+
+#include "byteir/Target/CUDA/ToCUDA.h"
+#include "mlir/Dialect/EmitC/IR/EmitC.h"
+#include "mlir/Dialect/GPU/GPUDialect.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/StandardOps/IR/Ops.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/Dialect.h"
+#include "mlir/Translation.h"
+#include "llvm/Support/CommandLine.h"
+
+using namespace byteir;
+using namespace mlir;
+
+//===----------------------------------------------------------------------===//
+// CUDA registration
+//===----------------------------------------------------------------------===//
+
+// some code from mlir's registerToCppTranslation
+void byteir::registerToCUDATranslation() {
+  static llvm::cl::OptionCategory CudaCat("CUDA-Emitter",
+    "CUDA-Emitter options");
+
+  static llvm::cl::opt<bool> declareVariablesAtTop(
+      "declare-var-at-top-cuda",
+      llvm::cl::desc("Declare variables at top when emitting CUDA"),
+      llvm::cl::init(false),
+      llvm::cl::cat(CudaCat));
+
+  static llvm::cl::opt<bool> forceExternC(
+    "force-extern-c",
+    llvm::cl::desc("Add Extern C in a kernel"),
+    llvm::cl::init(false),
+    llvm::cl::cat(CudaCat));
+
+  static llvm::cl::opt<bool> kernelOnly(
+    "kernel-only",
+    llvm::cl::desc("Emit kernel only"),
+    llvm::cl::init(false),
+    llvm::cl::cat(CudaCat));
+
+  TranslateFromMLIRRegistration reg(
+      "emit-cuda",
+      [](ModuleOp module, raw_ostream &output) {
+        return byteir::translateToCUDA(
+            module, output, declareVariablesAtTop, kernelOnly, forceExternC);
+      },
+      [](DialectRegistry &registry) {
+        // clang-format off
+        registry.insert<emitc::EmitCDialect,
+                        gpu::GPUDialect,
+                        memref::MemRefDialect,
+                        StandardOpsDialect,
+                        scf::SCFDialect>();
+        // clang-format on
+      });
+}

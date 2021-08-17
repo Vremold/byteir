@@ -1,0 +1,26 @@
+//===- Passes.td - Transforms pass definition file -------*--- tablegen -*-===//
+//
+// Copyright (c) ByteDance Inc. All rights reserved.
+// Licensed under the Apache License, Version 2.0
+//
+//===----------------------------------------------------------------------===//
+
+
+#ifndef BYTEIR_AFFINE_PASSES
+#define BYTEIR_AFFINE_PASSES
+
+include "mlir/Pass/PassBase.td"
+
+//===----------------------------------------------------------------------===//
+// 
+//===----------------------------------------------------------------------===//
+
+def RewriteAffineToMemref : FunctionPass<"rewrite-affine-to-memref"> {
+  let summary = "Rewrite Affine Load/Store to Memref Load/Store";
+  let constructor = "mlir::createRewriteAffineToMemrefPass()";
+  let dependentDialects = [
+    "memref::MemRefDialect"
+  ];
+}
+
+#endif // BYTEIR_AFFINE_PASSES

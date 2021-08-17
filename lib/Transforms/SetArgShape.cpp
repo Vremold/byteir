@@ -1,0 +1,115 @@
+//===- SetArgShape.cpp ----------------------------------------*--- C++ -*-===//
+//
+// Copyright (c) ByteDance Inc. All rights reserved.
+// Licensed under the Apache License, Version 2.0
+//
+//===----------------------------------------------------------------------===//
+
+#include <vector>
+
+#include "./PassDetail.h"
+#include "byteir/Transforms/SetArgShape.h"
+#include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
+
+#define DEBUG_TYPE "set-arg-shape-pass"
+
+using namespace mlir;
+
+namespace {
+
+struct SetArgShapePass : public SetArgShapeBase<SetArgShapePass> {
+
+  explicit SetArgShapePass() = default;
+
+  explicit SetArgShapePass(int dim, int size, std::string entryFuncName,
+                           std::string argAttrName)
+      : SetArgShapeBase<SetArgShapePass>::SetArgShapeBase() {
+    this->dim = dim;
+    this->size = size;
+    this->entryFuncName = entryFuncName;
+    this->argAttrName = argAttrName;
+  }
+
+  explicit SetArgShapePass(int dim, int size, std::string entryFuncName,
+                           std::function<bool(BlockArgument)> shouldSetShape)
+      : SetArgShapeBase<SetArgShapePass>::SetArgShapeBase() {
+    this->dim = dim;
+    this->size = size;
+    this->entryFuncName = entryFuncName;
+    this->shouldSetShape = shouldSetShape;
+  }
+
+  void runOnOperation() override {
+    ModuleOp module = getOperation();
+    FuncOp funcOp = module.lookupSymbol<FuncOp>(this->entryFuncName);
+    if (!funcOp) {
+      LLVM_DEBUG(llvm::dbgs() << "Cannot find the speficied function. This "
+                                 "pass will be ignored.\n");
+      return;
+    }
+    if (this->dim < 0) {
+      LLVM_DEBUG(llvm::dbgs()
+                 << "Dim is less than zero. This pass will be ignored.\n");
+      return;
+    }
+
+    FunctionType funcType = funcOp.getType();
+    SmallVector<Type, 4> newArgTypes;
+    newArgTypes.reserve(funcOp.getNumArguments());
+    for (unsigned i = 0, e = funcOp.getNumArguments(); i < e; ++i) {
+      auto arg = funcOp.getArgument(i);
+      if ((this->shouldSetShape && this->shouldSetShape(arg)) ||
+          funcOp.getArgAttr(i, this->argAttrName)) {
+        if (auto inputTy = arg.getType().dyn_cast<RankedTensorType>()) {
+          Type elementType = inputTy.getElementType();
+          llvm::SmallVector<int64_t> shape(inputTy.getShape().begin(),
+                                           inputTy.getShape().end());
+          if (this->dim < shape.size()) {
+            shape[this->dim] = this->size;
+            auto newArgType = RankedTensorType::get(shape, elementType,
+                                                    inputTy.getEncoding());
+            if (newArgType != inputTy) {
+              arg.setType(newArgType);
+            }
+          }
+        } else if (auto inputTy = arg.getType().dyn_cast<MemRefType>()) {
+          Type elementType = inputTy.getElementType();
+          llvm::SmallVector<int64_t> shape(inputTy.getShape().begin(),
+                                           inputTy.getShape().end());
+          if (this->dim < shape.size()) {
+            shape[this->dim] = this->size;
+            auto newArgType =
+                MemRefType::get(shape, elementType, inputTy.getAffineMaps(),
+                                inputTy.getMemorySpace());
+            if (newArgType != inputTy) {
+              arg.setType(newArgType);
+            }
+          }
+        }
+      }
+      newArgTypes.push_back(arg.getType());
+    }
+    funcOp.setType(FunctionType::get(funcOp.getContext(), newArgTypes,
+                                     funcType.getResults()));
+  }
+
+  std::function<bool(BlockArgument)> shouldSetShape;
+};
+} // namespace
+
+std::unique_ptr<OperationPass<ModuleOp>> mlir::createSetArgShapePass() {
+  return std::make_unique<SetArgShapePass>();
+}
+
+std::unique_ptr<OperationPass<ModuleOp>>
+mlir::createSetArgShapePass(int dim, int size, std::string entryFuncName,
+                            std::string argAttrName) {
+  return std::make_unique<SetArgShapePass>(dim, size, entryFuncName, argAttrName);
+}
+
+std::unique_ptr<OperationPass<ModuleOp>>
+mlir::createSetArgShapePass(int dim, int size, std::string entryFuncName,
+                            std::function<bool(BlockArgument)> shouldSetShape) {
+  return std::make_unique<SetArgShapePass>(dim, size, entryFuncName, shouldSetShape);
+}
