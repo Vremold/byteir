@@ -109,6 +109,9 @@ static FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp, StringRef funcName) 
   // erase terminator first, and then erase the block
   terminator->erase();
   secondBlock.erase();
+
+  // copy fusionOp's attributes to funcOp
+  AddAttrs(funcOp.getOperation(), fusionOp->getAttrs());
   return funcOp;
 }
 

@@ -28,9 +28,18 @@ mlir::ConvertToByrePattrn<mlir::CallOp>::matchAndRewrite(mlir::CallOp op, typena
   if (nameAttr == nullptr) {
     return failure();
   }
-  
-  rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
-    nameAttr.getValue(), adaptor.getOperands());
+
+  mlir::byre::ComputeOp computeOp =
+      rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, nameAttr.getValue(), adaptor.getOperands());
+
+  SmallVector<NamedAttribute> attrs;
+  for (auto iter = funcOp->getAttrs().begin(); iter != funcOp->getAttrs().end(); iter++) {
+    if (byre::isByreComputeAttr(*iter)) {
+      attrs.emplace_back(byre::removeByrePrefix(*iter));
+    }
+  }
+
+  AddAttrs(computeOp.getOperation(), attrs);
 
   return success();
 }

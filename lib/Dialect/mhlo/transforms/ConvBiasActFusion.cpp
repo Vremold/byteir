@@ -79,9 +79,9 @@ bool handleConvLayout(NamedAttrList &attrs,
     assert(false && "Unsupported convolution kernel layout.");
   }
 
-  attrs.append("input_layout", input_layout);
-  attrs.append("output_layout", output_layout);
-  attrs.append("kernel_layout", kernel_layout);
+  byre::appendByreComputeAttr(attrs, "input_layout", input_layout);
+  byre::appendByreComputeAttr(attrs, "output_layout", output_layout);
+  byre::appendByreComputeAttr(attrs, "kernel_layout", kernel_layout);
   return true;
 }
 
@@ -110,7 +110,6 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
 
     NamedAttrList attrs;
     attrs.append(byre::getByreComputeName(), rewriter.getStringAttr("ConvBiasOp"));
-    attrs.append("act_func", op.act_funcAttr());
     if (!handleConvLayout(
             attrs, convOp.dimension_numbers(),
             (*broadcastOp.broadcast_dimensions().begin()).getSExtValue(),
@@ -142,12 +141,13 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
     }
     // TODO: window_reversal attribute
 
-    attrs.append("window_strides", rewriter.getI64ArrayAttr(window_strides));
-    attrs.append("padding", rewriter.getI64ArrayAttr(padding));
-    attrs.append("lhs_dilation", rewriter.getI64ArrayAttr(lhs_dilation));
-    attrs.append("rhs_dilation", rewriter.getI64ArrayAttr(rhs_dilation));
-    attrs.append("feature_group_count", convOp.feature_group_countAttr());
-    attrs.append("batch_group_count", convOp.batch_group_countAttr());
+    byre::appendByreComputeAttr(attrs, "act_func", op.act_funcAttr());
+    byre::appendByreComputeAttr(attrs, "window_strides", rewriter.getI64ArrayAttr(window_strides));
+    byre::appendByreComputeAttr(attrs, "padding", rewriter.getI64ArrayAttr(padding));
+    byre::appendByreComputeAttr(attrs, "lhs_dilation", rewriter.getI64ArrayAttr(lhs_dilation));
+    byre::appendByreComputeAttr(attrs, "rhs_dilation", rewriter.getI64ArrayAttr(rhs_dilation));
+    byre::appendByreComputeAttr(attrs, "feature_group_count", convOp.feature_group_countAttr());
+    byre::appendByreComputeAttr(attrs, "batch_group_count", convOp.batch_group_countAttr());
 
     Location loc =
         rewriter.getFusedLoc({op->getLoc(), addOp->getLoc(),

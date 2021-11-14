@@ -1,6 +1,6 @@
-// RUN: byteir-opt %s -fuse-conv-bias-act | FileCheck %s
+// RUN: byteir-opt -fuse-conv-bias-act -fusion-outlining -convert-hlo-to-lhlo -cse -convert-to-byre %s | FileCheck %s
 
-func @conv_bias_act(%arg0: tensor<5x69x31x95xf32>, %arg1: tensor<64x69x1x1xf32>, %arg2: tensor<64xf32>) -> tensor<5x64x31x95xf32> {
+func @conv_bias_act(%arg0: tensor<5x69x31x95xf32> {__placeholder__byre.argname = "A"}, %arg1: tensor<64x69x1x1xf32> {__placeholder__byre.argname = "B"}, %arg2: tensor<64xf32> {__placeholder__byre.argname = "C"}) -> (tensor<5x64x31x95xf32> {__placeholder__byre.argname = "D"}) attributes {__placeholder__byre.entry_point} {
     %1 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[0, 0], [0, 0]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<5x69x31x95xf32>, tensor<64x69x1x1xf32>) -> tensor<5x64x31x95xf32>
     %2 = "mhlo.broadcast_in_dim"(%arg2) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<64xf32>) -> tensor<5x64x31x95xf32>
     %3 = mhlo.add %1, %2 : tensor<5x64x31x95xf32>
@@ -8,11 +8,4 @@ func @conv_bias_act(%arg0: tensor<5x69x31x95xf32>, %arg1: tensor<64x69x1x1xf32>,
     return %4 : tensor<5x64x31x95xf32>
 }
 // CHECK-LABEL: func @conv_bias_act
-// CHECK-NEXT:  mhlo.fusion
-// CHECK-NEXT:  mhlo.convolution
-// CHECK-NEXT:  mhlo.broadcast_in_dim
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  ace.activate{{.*}}{act_func = "relu"}
-// CHECK-NEXT:  mhlo.return
-// CHECK-NEXT:  }){{.*}}__byre__act_func = "relu"{{.*}}__byre__input_layout = "NCHW"{{.*}}__byre__kernel_layout = "KCRS"{{.*}}__byre__output_layout = "NCHW"{{.*}}byre_compute_name = "ConvBiasOp"
-// CHECK:  return
+// CHECK:  byre.compute @ConvBiasOp{{.*}}{act_func = "relu", batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "KCRS", lhs_dilation = [1, 1], output_layout = "NCHW", padding = [0, 0, 0, 0], rhs_dilation = [1, 1], window_strides = [1, 1]}

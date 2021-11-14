@@ -47,11 +47,14 @@ struct FuseTransposeDotPattern : public OpRewritePattern<mhlo::DotOp> {
           loc, op.getResult().getType(), ArrayRef<Value>{lhs, rhs});
       NamedAttrList attrs;
       // TODO: move this outside
-      attrs.append(byre::getByreComputeName(), rewriter.getStringAttr("MatmulOp"));
-      attrs.append("lhs_contracting_dimension",
-                   rewriter.getI64IntegerAttr(lhs_contracting_dimension));
-      attrs.append("rhs_contracting_dimension",
-                   rewriter.getI64IntegerAttr(rhs_contracting_dimension));
+      attrs.append(byre::getByreComputeName(),
+                   rewriter.getStringAttr("MatmulOp"));
+      byre::appendByreComputeAttr(
+          attrs, "lhs_contracting_dimension",
+          rewriter.getI64IntegerAttr(lhs_contracting_dimension));
+      byre::appendByreComputeAttr(
+          attrs, "rhs_contracting_dimension",
+          rewriter.getI64IntegerAttr(rhs_contracting_dimension));
       fusionOp->setAttrs(attrs.getDictionary(getContext()));
 
       Region &region = fusionOp.fused_computation();

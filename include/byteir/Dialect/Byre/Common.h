@@ -9,6 +9,8 @@
 #define MLIR_DIALECT_BYRE_COMMON_H
 
 #include "llvm/ADT/StringRef.h"
+#include "mlir/IR/Attributes.h"
+#include "mlir/IR/OperationSupport.h"
 
 namespace mlir {
 namespace byre {
@@ -22,6 +24,29 @@ inline llvm::StringRef getByreElementwiseFusionName() {
   return "byre_elementwise_fusion";
 }
 
+// byre.compute attributes prefix string
+inline std::string getByrePrefix() {
+  return "__byre__";
+}
+
+// append attribute with __byre__ prefix string
+inline void appendByreComputeAttr(NamedAttrList &attrs, llvm::StringRef name, Attribute attr) {
+  std::string byre_name = getByrePrefix() + name.str();
+  attrs.append(byre_name, attr);
+}
+
+// return true if the attribute with __byre__ prefix
+inline bool isByreComputeAttr(NamedAttribute attr) {
+  std::string name = attr.first.str();
+  return name.find(getByrePrefix()) == 0;
+}
+
+// remove __byre__ prefix of the attribute and return
+inline NamedAttribute removeByrePrefix(NamedAttribute attr) {
+  std::string name = attr.first.str().substr(getByrePrefix().size());
+  Identifier identifier = Identifier::get(name, attr.first.getContext());
+  return NamedAttribute{identifier, attr.second};
+}
 
 } // end namespace byre
 } // end namespace mlir

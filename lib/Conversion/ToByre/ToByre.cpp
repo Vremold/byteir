@@ -6,7 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/ToByre/ToByre.h"
-
+#include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Conversion/Common/FunctionSupport.h"
 #include "byteir/Conversion/ToByre/Common.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
@@ -234,7 +234,7 @@ void ConvertToByrePass::runOnOperation() {
   // Below rewrite Lmhlo ops
   ConversionTarget target(getContext());
   target.addLegalDialect<byre::ByreDialect, memref::MemRefDialect, scf::SCFDialect,
-    StandardOpsDialect>();
+    StandardOpsDialect, ace::AceDialect>();
 
   target.addLegalOp<ModuleOp, FuncOp, ReturnOp>();
 //  target.addLegalDialect<LmhloDialect>();
