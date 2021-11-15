@@ -16,10 +16,10 @@
 
 namespace mlir {
 template <typename SrcOpTy>
-class ConvertToByrePattrn : public OpConversionPattern<SrcOpTy> {
+class ConvertToByrePattern : public OpConversionPattern<SrcOpTy> {
  public:
 
-  ConvertToByrePattrn(MLIRContext* ctx,
+  ConvertToByrePattern(MLIRContext* ctx,
     const llvm::DenseMap<StringRef, StringRef>& lut)
     : OpConversionPattern<SrcOpTy>(ctx), src_to_callee_(lut) { }
 
@@ -45,9 +45,9 @@ private:
 };
 
 template<> 
-class ConvertToByrePattrn<mlir::CallOp> : public OpConversionPattern<mlir::CallOp> {
+class ConvertToByrePattern<mlir::CallOp> : public OpConversionPattern<mlir::CallOp> {
 public:
-  ConvertToByrePattrn(MLIRContext* ctx)
+  ConvertToByrePattern(MLIRContext* ctx)
     : OpConversionPattern<mlir::CallOp>(ctx) {}
 
   LogicalResult
@@ -55,17 +55,22 @@ public:
       ConversionPatternRewriter& rewriter) const override;
 };
 
-// specialization for mlir::lmhlo::DotOp
-template<>
-mlir::LogicalResult
-mlir::ConvertToByrePattrn<mlir::lmhlo::DotOp>::matchAndRewrite(mlir::lmhlo::DotOp op, typename mlir::lmhlo::DotOp::Adaptor adaptor,
-  ConversionPatternRewriter& rewriter) const;
+template <>
+class ConvertToByrePattern<mlir::lmhlo::DotOp> : public OpConversionPattern<mlir::lmhlo::DotOp> {
+public:
+  ConvertToByrePattern(MLIRContext* ctx)
+    : OpConversionPattern<mlir::lmhlo::DotOp>(ctx) {}
+  
+  LogicalResult
+    matchAndRewrite(mlir::lmhlo::DotOp op, typename mlir::lmhlo::DotOp::Adaptor adaptor,
+      ConversionPatternRewriter& rewriter) const override;
+};
 
 template <>
-class ConvertToByrePattrn<lmhlo::CustomCallOp>
+class ConvertToByrePattern<lmhlo::CustomCallOp>
     : public OpConversionPattern<lmhlo::CustomCallOp> {
 public:
-  ConvertToByrePattrn(MLIRContext *ctx)
+  ConvertToByrePattern(MLIRContext *ctx)
       : OpConversionPattern<lmhlo::CustomCallOp>(ctx) {}
 
   LogicalResult

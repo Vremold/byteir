@@ -22,13 +22,32 @@ module {
 // CHECK:     byre.compute @AddOp(%[[ARG_0]], %[[ARG_1]], %[[ARG_2]]) : memref<4xf32>, memref<4xf32>, memref<4xf32>
 // CHECK:     return
 
-  func @mhlo_dot(%arg0: memref<128x64xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<64x32xf32> {__placeholder__byre.argname = "B"}) -> (memref<128x32xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
+  func @mhlo_matmul(%arg0: memref<128x64xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<64x32xf32> {__placeholder__byre.argname = "B"}) -> (memref<128x32xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<128x32xf32>
     "lmhlo.dot"(%arg0, %arg1, %0) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [0]>} : (memref<128x64xf32>, memref<64x32xf32>, memref<128x32xf32>) -> ()
     return %0 : memref<128x32xf32>
   }
-// CHECK:   func @mhlo_dot(%[[ARG_0:.*]]: memref<128x64xf32> {byre.argname = "A", byre.argtype = 1 : i32}, %[[ARG_1:.*]]: memref<64x32xf32> {byre.argname = "B", byre.argtype = 1 : i32}, %[[ARG_2:.*]]: memref<128x32xf32> {byre.argname = "C", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
+// CHECK:   func @mhlo_matmul(%[[ARG_0:.*]]: memref<128x64xf32> {byre.argname = "A", byre.argtype = 1 : i32}, %[[ARG_1:.*]]: memref<64x32xf32> {byre.argname = "B", byre.argtype = 1 : i32}, %[[ARG_2:.*]]: memref<128x32xf32> {byre.argname = "C", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
 // CHECK:     byre.compute @MatmulOp(%[[ARG_0]], %[[ARG_1]], %[[ARG_2]]) {lhs_contracting_dimension = 1 : i64, rhs_contracting_dimension = 0 : i64} : memref<128x64xf32>, memref<64x32xf32>, memref<128x32xf32>
+// CHECK:     return
+
+  func @mhlo_matmul1(%arg0: memref<128x64xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<64x32xf32> {__placeholder__byre.argname = "B"}) -> (memref<128x32xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<128x32xf32>
+    "lmhlo.dot"(%arg0, %arg1, %0) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [], rhs_batching_dimensions = [], lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [0]>} : (memref<128x64xf32>, memref<64x32xf32>, memref<128x32xf32>) -> ()
+    return %0 : memref<128x32xf32>
+  }
+// CHECK:   func @mhlo_matmul1(%[[ARG_0:.*]]: memref<128x64xf32> {byre.argname = "A", byre.argtype = 1 : i32}, %[[ARG_1:.*]]: memref<64x32xf32> {byre.argname = "B", byre.argtype = 1 : i32}, %[[ARG_2:.*]]: memref<128x32xf32> {byre.argname = "C", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
+// CHECK:     byre.compute @MatmulOp(%[[ARG_0]], %[[ARG_1]], %[[ARG_2]]) {lhs_contracting_dimension = 1 : i64, rhs_contracting_dimension = 0 : i64} : memref<128x64xf32>, memref<64x32xf32>, memref<128x32xf32>
+// CHECK:     return
+
+
+  func @mhlo_batch_matmul(%arg0: memref<3x128x64xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<3x64x32xf32> {__placeholder__byre.argname = "B"}) -> (memref<3x128x32xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<3x128x32xf32>
+    "lmhlo.dot"(%arg0, %arg1, %0) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [0]>} : (memref<3x128x64xf32>, memref<3x64x32xf32>, memref<3x128x32xf32>) -> ()
+    return %0 : memref<3x128x32xf32>
+  }
+// CHECK:   func @mhlo_batch_matmul(%[[ARG_0:.*]]: memref<3x128x64xf32> {byre.argname = "A", byre.argtype = 1 : i32}, %[[ARG_1:.*]]: memref<3x64x32xf32> {byre.argname = "B", byre.argtype = 1 : i32}, %[[ARG_2:.*]]: memref<3x128x32xf32> {byre.argname = "C", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
+// CHECK:     byre.compute @BatchMatmulOp(%[[ARG_0]], %[[ARG_1]], %[[ARG_2]]) {lhs_batching_dimensions = [0], lhs_contracting_dimension = 1 : i64, rhs_batching_dimensions = [0], rhs_contracting_dimension = 0 : i64} : memref<3x128x64xf32>, memref<3x64x32xf32>, memref<3x128x32xf32>
 // CHECK:     return
 
 }

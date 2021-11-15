@@ -13,6 +13,8 @@
 
 namespace mlir {
 
+void populateTransposeDotToDotGeneralPattern(RewritePatternSet &patterns);
+
 std::unique_ptr<FunctionPass> createTransposeDotFusionPass();
 
 } // namespace mlir

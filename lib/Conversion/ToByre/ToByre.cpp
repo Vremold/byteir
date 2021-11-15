@@ -5,21 +5,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Conversion/ToByre/ToByre.h"
-#include "byteir/Dialect/Ace/AceDialect.h"
+#include "../PassDetail.h"
 #include "byteir/Conversion/Common/FunctionSupport.h"
 #include "byteir/Conversion/ToByre/Common.h"
+#include "byteir/Conversion/ToByre/ToByre.h"
+#include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Utils/Utils.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/SmallPtrSet.h"
+#include "mlir-hlo/Dialect/mhlo/IR/lhlo_ops.h" // LmhloDialect
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionSupport.h"
-#include "mlir-hlo/Dialect/mhlo/IR/lhlo_ops.h"  // LmhloDialect
-#include "../PassDetail.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include <functional>
 
 using namespace mlir;
@@ -27,35 +27,31 @@ using namespace mlir::byre;
 using namespace mlir::lmhlo;
 using namespace llvm;
 
-void mlir::populateLmhloToByreConversionPatterns(RewritePatternSet& patterns,
-  llvm::DenseMap<StringRef, StringRef>& supportMap) {
+void mlir::populateLmhloToByreConversionPatterns(
+    RewritePatternSet &patterns,
+    llvm::DenseMap<StringRef, StringRef> &supportMap) {
   // TODO move this from a file
   // TODO use MACRO trick to add patterns
-  patterns.add<
-    ConvertToByrePattrn<lmhlo::AddOp>,
-    ConvertToByrePattrn<lmhlo::DotOp>>(
-      patterns.getContext(), supportMap);
-
-  patterns.add<ConvertToByrePattrn<lmhlo::CustomCallOp>>(patterns.getContext());
+  patterns.add<ConvertToByrePattern<lmhlo::AddOp>>(patterns.getContext(),
+                                                   supportMap);
+  patterns.add<ConvertToByrePattern<lmhlo::CustomCallOp>>(patterns.getContext());
+  patterns.add<ConvertToByrePattern<lmhlo::DotOp>>(patterns.getContext());
 }
 
-void mlir::populateStdToByreConversionPatterns(RewritePatternSet& patterns) {
-  patterns.add<
-    ConvertToByrePattrn<mlir::CallOp>>(
-      patterns.getContext());
+void mlir::populateStdToByreConversionPatterns(RewritePatternSet &patterns) {
+  patterns.add<ConvertToByrePattern<mlir::CallOp>>(patterns.getContext());
 }
 
 namespace {
 
 // Main Pass
-struct ConvertToByrePass
-    : public ConvertToByreBase<ConvertToByrePass> {
-  
-  ConvertToByrePass() 
-    : ConvertToByreBase() {
+struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
+
+  ConvertToByrePass() : ConvertToByreBase() {
     // TODO: change to loading from outside
-    lmhloSupportMap.insert({ "lmhlo.add", "AddOp"});
-    lmhloSupportMap.insert({ "lmhlo.dot", "MatmulOp" });
+    lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
+    // lmhlo.dot will convert to MatmulOp and BatchMatmulOp
+    // lmhloSupportMap.insert({ "lmhlo.dot", "MatmulOp" });
 
     // insert attrNames
     attrNames.push_back(byre::ByreDialect::getEntryPointFunctionAttrName());
@@ -63,7 +59,7 @@ struct ConvertToByrePass
         byre::ByreDialect::getEntryPointFuncArgNameAttrName());
     argAttrNames.push_back(
         byre::ByreDialect::getEntryPointFuncArgTypeAttrName());
-  } 
+  }
 
   void runOnOperation() override;
 
@@ -74,8 +70,8 @@ struct ConvertToByrePass
 };
 
 static bool isFuncWithEntryPointPlaceholder(FuncOp func) {
-  return func->hasAttr(getAttrPlaceholderName(
-    ByreDialect::getEntryPointFunctionAttrName()));
+  return func->hasAttr(
+      getAttrPlaceholderName(ByreDialect::getEntryPointFunctionAttrName()));
 }
 
 static bool isEntryPointFunc(FuncOp func) {
@@ -83,7 +79,8 @@ static bool isEntryPointFunc(FuncOp func) {
 }
 
 // identify EntryPoint funciton
-static void identifyEntryPointFunc(ModuleOp m, llvm::SmallVector<FuncOp, 4>& collector) {
+static void identifyEntryPointFunc(ModuleOp m,
+                                   llvm::SmallVector<FuncOp, 4> &collector) {
   // get first entyr func
   for (auto entry : m.getOps<FuncOp>()) {
 
@@ -96,17 +93,17 @@ static void identifyEntryPointFunc(ModuleOp m, llvm::SmallVector<FuncOp, 4>& col
   }
 }
 
-static inline void relocateFuncOpResultsForLmhlo(FuncOp func, 
-  const llvm::SmallPtrSet<FuncOp, 4>& collectorSet) {
+static inline void relocateFuncOpResultsForLmhlo(
+    FuncOp func, const llvm::SmallPtrSet<FuncOp, 4> &collectorSet) {
   unsigned idx = func.getNumArguments();
 
   replcateFuncOpResults(func, [&](mlir::ReturnOp retOp) {
-    llvm::SmallPtrSet<mlir::Operation*, 16> removeOps;
+    llvm::SmallPtrSet<mlir::Operation *, 16> removeOps;
 
     mlir::OpBuilder opBuilder(retOp);
-    
+
     for (auto retVal : retOp.getOperands()) {
-      
+
       if (auto allocOp = dyn_cast<memref::AllocOp>(retVal.getDefiningOp())) {
         removeOps.insert(allocOp);
       } else if (auto callOp = dyn_cast<mlir::CallOp>(retVal.getDefiningOp())) {
@@ -116,8 +113,10 @@ static inline void relocateFuncOpResultsForLmhlo(FuncOp func,
           if (collectorSet.contains(calleeFuncOp)) {
             opBuilder.setInsertionPoint(callOp);
             SmallVector<Value, 4> oprands(callOp.getOperands());
-            oprands.append(callOp.getResults().begin(), callOp.getResults().end());
-            mlir::CallOp newCallOp = opBuilder.create<mlir::CallOp>(callOp.getLoc(), calleeFuncOp, oprands);
+            oprands.append(callOp.getResults().begin(),
+                           callOp.getResults().end());
+            mlir::CallOp newCallOp = opBuilder.create<mlir::CallOp>(
+                callOp.getLoc(), calleeFuncOp, oprands);
             newCallOp->setAttrs(callOp->getAttrs());
             removeOps.insert(callOp);
           }
@@ -139,9 +138,10 @@ static inline void relocateFuncOpResultsForLmhlo(FuncOp func,
   });
 }
 
-static inline void relocateFuncOpConstantLikeForLmhlo(FuncOp func, unsigned unknownCnt) {
+static inline void relocateFuncOpConstantLikeForLmhlo(FuncOp func,
+                                                      unsigned unknownCnt) {
 
-  MLIRContext* ctx = func.getContext();
+  MLIRContext *ctx = func.getContext();
   SmallVector<Attribute, 16> weightAttrs;
 
   relocateFuncOpConstantLike(func, "lmhlo.constant", [&](mlir::Operation *op) {
@@ -200,7 +200,7 @@ static inline void rewriteByreResultAttrsToFuncResultAttr(FuncOp func) {
 void ConvertToByrePass::runOnOperation() {
 
   ModuleOp m = getOperation();
-  MLIRContext& ctx = getContext();
+  MLIRContext &ctx = getContext();
   llvm::SmallVector<FuncOp, 4> collector;
 
   identifyEntryPointFunc(m, collector);
@@ -210,13 +210,13 @@ void ConvertToByrePass::runOnOperation() {
     return;
   }
 
-  // get a set for 
-  llvm::SmallPtrSet<FuncOp, 4> collectorSet(
-    collector.begin(), collector.end());
+  // get a set for
+  llvm::SmallPtrSet<FuncOp, 4> collectorSet(collector.begin(), collector.end());
 
-  // insert byre.container_module to module if there is none. 
+  // insert byre.container_module to module if there is none.
   if (!m->hasAttr(byre::ByreDialect::getContainerModuleAttrName())) {
-    m->setAttr(byre::ByreDialect::getContainerModuleAttrName(), UnitAttr::get(&ctx));
+    m->setAttr(byre::ByreDialect::getContainerModuleAttrName(),
+               UnitAttr::get(&ctx));
   }
 
   unsigned unknownCnt = 0;
@@ -237,17 +237,17 @@ void ConvertToByrePass::runOnOperation() {
     StandardOpsDialect, ace::AceDialect>();
 
   target.addLegalOp<ModuleOp, FuncOp, ReturnOp>();
-//  target.addLegalDialect<LmhloDialect>();
+  //  target.addLegalDialect<LmhloDialect>();
 
-  target.addDynamicallyLegalDialect<LmhloDialect>(
-    [&](Operation* op) { 
-      auto func = op->getParentOfType<FuncOp>(); 
-      return !isEntryPointFunc(func); });
-
-
-  target.addDynamicallyLegalOp<mlir::CallOp>([&](Operation* op) {
+  target.addDynamicallyLegalDialect<LmhloDialect>([&](Operation *op) {
     auto func = op->getParentOfType<FuncOp>();
-    return !isEntryPointFunc(func); });
+    return !isEntryPointFunc(func);
+  });
+
+  target.addDynamicallyLegalOp<mlir::CallOp>([&](Operation *op) {
+    auto func = op->getParentOfType<FuncOp>();
+    return !isEntryPointFunc(func);
+  });
 
   RewritePatternSet patterns(&ctx);
   populateLmhloToByreConversionPatterns(patterns, lmhloSupportMap);
@@ -259,8 +259,7 @@ void ConvertToByrePass::runOnOperation() {
   }
 }
 
-} // namespace anonymous
-
+} // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>> mlir::createConvertToByrePass() {
   return std::make_unique<ConvertToByrePass>();

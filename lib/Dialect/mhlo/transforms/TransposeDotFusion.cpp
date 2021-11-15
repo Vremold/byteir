@@ -20,65 +20,36 @@ using namespace llvm;
 
 namespace {
 
-struct FuseTransposeDotPattern : public OpRewritePattern<mhlo::DotOp> {
+struct FuseTransposeDotToDotGeneralPattern
+    : public OpRewritePattern<mhlo::DotOp> {
   using OpRewritePattern<mhlo::DotOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(mhlo::DotOp op,
                                 PatternRewriter &rewriter) const override {
-    if (op->getParentOfType<mhlo::FusionOp>()) {
+    auto lhs_transpose = op.lhs().getDefiningOp<mhlo::TransposeOp>();
+    auto rhs_transpose = op.rhs().getDefiningOp<mhlo::TransposeOp>();
+    if (!lhs_transpose && !rhs_transpose) {
       return failure();
     }
-    auto lhs_transpose =
-        dyn_cast_or_null<mhlo::TransposeOp>(op.lhs().getDefiningOp());
-    auto rhs_transpose =
-        dyn_cast_or_null<mhlo::TransposeOp>(op.rhs().getDefiningOp());
-    if (lhs_transpose || rhs_transpose) {
-      int64_t lhs_contracting_dimension = lhs_transpose ? 0 : 1;
-      int64_t rhs_contracting_dimension = rhs_transpose ? 1 : 0;
-      Value lhs = lhs_transpose ? lhs_transpose.operand() : op.lhs();
-      Value rhs = rhs_transpose ? rhs_transpose.operand() : op.rhs();
-
-      Location loc =
-          lhs_transpose
-              ? rewriter.getFusedLoc({lhs_transpose->getLoc(), op->getLoc()})
-              : op->getLoc();
-      loc = rhs_transpose ? rewriter.getFusedLoc({rhs_transpose->getLoc(), loc})
-                          : loc;
-      mhlo::FusionOp fusionOp = rewriter.create<mhlo::FusionOp>(
-          loc, op.getResult().getType(), ArrayRef<Value>{lhs, rhs});
-      NamedAttrList attrs;
-      // TODO: move this outside
-      attrs.append(byre::getByreComputeName(),
-                   rewriter.getStringAttr("MatmulOp"));
-      byre::appendByreComputeAttr(
-          attrs, "lhs_contracting_dimension",
-          rewriter.getI64IntegerAttr(lhs_contracting_dimension));
-      byre::appendByreComputeAttr(
-          attrs, "rhs_contracting_dimension",
-          rewriter.getI64IntegerAttr(rhs_contracting_dimension));
-      fusionOp->setAttrs(attrs.getDictionary(getContext()));
-
-      Region &region = fusionOp.fused_computation();
-      Block &block = region.emplaceBlock();
-      {
-        OpBuilder::InsertionGuard guard(rewriter);
-        rewriter.setInsertionPointToStart(&block);
-        Value new_dot_lhs = lhs_transpose ? rewriter.create<mhlo::TransposeOp>(
-                                                loc, op.lhs().getType(), lhs,
-                                                lhs_transpose.permutation())
-                                          : lhs;
-        Value new_dot_rhs = rhs_transpose ? rewriter.create<mhlo::TransposeOp>(
-                                                loc, op.rhs().getType(), rhs,
-                                                rhs_transpose.permutation())
-                                          : rhs;
-        Value dot = rewriter.create<mhlo::DotOp>(loc, op.getResult().getType(),
-                                                 new_dot_lhs, new_dot_rhs,
-                                                 op.precision_configAttr());
-        rewriter.create<mhlo::ReturnOp>(loc, dot);
-      }
-      op->replaceAllUsesWith(fusionOp.getResults());
-      return success();
+    Value lhs = op.lhs();
+    Value rhs = op.rhs();
+    int64_t lhs_contracting_dimension = 1;
+    int64_t rhs_contracting_dimension = 0;
+    if (lhs_transpose) {
+      lhs_contracting_dimension = 0;
+      lhs = lhs_transpose.operand();
     }
-    return failure();
+    if (rhs_transpose) {
+      rhs_contracting_dimension = 1;
+      rhs = rhs_transpose.operand();
+    }
+    auto dimension_numbers = mhlo::DotDimensionNumbersAttr::get(
+        rewriter.getContext(), /*lhsBatchingDimensions=*/{},
+        /*rhsBatchingDimensions=*/{}, {lhs_contracting_dimension},
+        {rhs_contracting_dimension});
+    rewriter.replaceOpWithNewOp<mhlo::DotGeneralOp>(
+        op, op.getResult().getType(), lhs, rhs, dimension_numbers,
+        op.precision_configAttr());
+    return success();
   }
 };
 
@@ -89,7 +60,7 @@ struct TransposeDotFusionPass
     FuncOp funcOp = getFunction();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
-    patterns.add(std::make_unique<FuseTransposeDotPattern>(context));
+    populateTransposeDotToDotGeneralPattern(patterns);
     LogicalResult status =
         applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
     if (failed(status)) {
@@ -99,6 +70,12 @@ struct TransposeDotFusionPass
 };
 
 } // namespace
+
+void mlir::populateTransposeDotToDotGeneralPattern(
+    RewritePatternSet &patterns) {
+  patterns.add(std::make_unique<FuseTransposeDotToDotGeneralPattern>(
+      patterns.getContext()));
+}
 
 std::unique_ptr<FunctionPass> mlir::createTransposeDotFusionPass() {
   return std::make_unique<TransposeDotFusionPass>();
