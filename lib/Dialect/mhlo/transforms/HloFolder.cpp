@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/transforms/HloFolder.h"
+#include "byteir/Utils/Utils.h"
 #include "PassDetail.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
@@ -63,6 +64,32 @@ struct BroadcastInDimTransposeToBroadcastInDimPattern
   }
 };
 
+// Transpose + Transpose -> Transpose
+struct TransposeTransposeToTransposePattern
+    : public OpRewritePattern<mhlo::TransposeOp> {
+  using OpRewritePattern<mhlo::TransposeOp>::OpRewritePattern;
+  LogicalResult matchAndRewrite(mhlo::TransposeOp op,
+                                PatternRewriter &rewriter) const override {
+    mhlo::TransposeOp transpose_op =
+        op.operand().getDefiningOp<mhlo::TransposeOp>();
+    if (!transpose_op) {
+      return failure();
+    }
+    SmallVector<int64_t> permutation, permutation1;
+    getValuesFromDenseIntElementsAttr(op.permutation(), permutation);
+    getValuesFromDenseIntElementsAttr(transpose_op.permutation(), permutation1);
+    for (size_t i = 0; i < permutation.size(); i++) {
+      permutation[i] = permutation1[permutation[i]];
+    }
+    auto loc = rewriter.getFusedLoc({op->getLoc(), transpose_op->getLoc()});
+    mhlo::TransposeOp new_transpose_op = rewriter.create<mhlo::TransposeOp>(
+        loc, op.getResult().getType(), transpose_op.operand(),
+        rewriter.getI64TensorAttr(permutation));
+    rewriter.replaceOp(op, new_transpose_op.getResult());
+    return success();
+  }
+};
+
 struct HloFolderPass : public HloFolderBase<HloFolderPass> {
   void runOnFunction() override;
 };
@@ -71,6 +98,8 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
 
 void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
   patterns.add(std::make_unique<BroadcastInDimTransposeToBroadcastInDimPattern>(
+      patterns.getContext()));
+  patterns.add(std::make_unique<TransposeTransposeToTransposePattern>(
       patterns.getContext()));
 }
 
