@@ -1,0 +1,241 @@
+//===- GraphClusteringByDevice.cpp ----------------------------*--- C++ -*-===//
+//
+// Copyright (c) ByteDance Inc. All rights reserved.
+// Licensed under the Apache License, Version 2.0
+//
+//===----------------------------------------------------------------------===//
+
+#include "byteir/Transforms/GraphClusteringByDevice.h"
+#include "PassDetail.h"
+#include "byteir/Utils/Utils.h"
+#include "mlir/Dialect/StandardOps/IR/Ops.h"
+#include "mlir/IR/BlockAndValueMapping.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/Dialect.h"
+#include "mlir/IR/MLIRContext.h"
+#include "mlir/IR/Operation.h"
+
+using namespace mlir;
+using namespace llvm;
+
+namespace {
+
+constexpr const char *DEVICE_ATTR_HOST = "host";
+
+struct FunctionMetadata {
+  // The device where function will run
+  StringRef deviceAttr;
+  // The original function name before partition.
+  StringRef originalName;
+  // The insertion point of partition functions.
+  Block::iterator insertionPoint;
+  // The partitioned function name.
+  llvm::StringRef partitionName;
+  // The input values of the function.
+  llvm::SmallVector<Value, 4> inputs;
+  // The result values of the function.
+  llvm::SmallVector<Value, 4> results;
+  // The operations to be included in the body of the function.
+  llvm::SmallVector<Operation *, 8> ops;
+
+  FuncOp partitionOp;
+};
+
+void insertOpsRecursively(Operation *op, SmallDenseSet<Operation *> &opSet) {
+  auto pair = opSet.insert(op);
+  if (!pair.second)
+    return;
+  for (Value v : op->getOperands()) {
+    if (Operation *defOp = v.getDefiningOp()) {
+      insertOpsRecursively(defOp, opSet);
+    }
+  }
+}
+
+Optional<SmallVector<FunctionMetadata>>
+getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr) {
+  SmallVector<FunctionMetadata> metadatas;
+  SmallDenseSet<Operation *> hostOps;
+  for (Operation &op : funcOp.front().without_terminator()) {
+    if (op.hasAttr(attrName)) {
+      StringAttr attr = op.getAttrOfType<StringAttr>(attrName);
+      if (attr.getValue().str() == DEVICE_ATTR_HOST) {
+        insertOpsRecursively(&op, hostOps);
+      }
+    }
+  }
+
+  if (hostOps.size() > 0) {
+    FunctionMetadata hostFuncMetadata;
+    hostFuncMetadata.deviceAttr = DEVICE_ATTR_HOST;
+    hostFuncMetadata.originalName = funcOp.sym_name();
+    hostFuncMetadata.insertionPoint = ++Block::iterator(funcOp);
+    for (Operation &op : funcOp.front().without_terminator()) {
+      if (hostOps.count(&op)) {
+        hostFuncMetadata.ops.push_back(&op);
+      }
+    }
+    hostFuncMetadata.inputs = GetInputsOfCluster(hostFuncMetadata.ops);
+    hostFuncMetadata.results = GetOutputsOfCluster(hostFuncMetadata.ops);
+    metadatas.push_back(hostFuncMetadata);
+  }
+
+  FunctionMetadata deviceFuncMetadata;
+  deviceFuncMetadata.deviceAttr = deviceAttr;
+  deviceFuncMetadata.originalName = funcOp.sym_name();
+  deviceFuncMetadata.insertionPoint = ++Block::iterator(funcOp);
+  for (Operation &op : funcOp.front().without_terminator()) {
+    if (!hostOps.count(&op)) {
+      deviceFuncMetadata.ops.push_back(&op);
+    }
+  }
+  if (deviceFuncMetadata.ops.size() > 0) {
+    deviceFuncMetadata.inputs = GetInputsOfCluster(deviceFuncMetadata.ops);
+    deviceFuncMetadata.results = GetOutputsOfCluster(deviceFuncMetadata.ops);
+    metadatas.push_back(deviceFuncMetadata);
+  }
+
+  return metadatas;
+}
+
+void createFunctions(ModuleOp module_op,
+                     SmallVector<FunctionMetadata> &metadatas,
+                     StringRef attrName) {
+  MLIRContext *context = module_op.getContext();
+  SymbolTable symbolTable(module_op);
+  for (auto &metadata : metadatas) {
+    llvm::SmallVector<mlir::Type, 4> inputTypes;
+    llvm::SmallVector<mlir::Type, 4> resultTypes;
+    for (Value input : metadata.inputs) {
+      inputTypes.push_back(input.getType());
+    }
+    for (Value result : metadata.results) {
+      resultTypes.push_back(result.getType());
+    }
+    std::string funcName =
+        (metadata.originalName + "_" + metadata.deviceAttr).str();
+    FunctionType funcType = FunctionType::get(context, inputTypes, resultTypes);
+    FuncOp funcOp =
+        FuncOp::create(UnknownLoc::get(context), funcName, funcType);
+    funcOp->setAttr(attrName,
+                    StringAttr::get(context, metadata.deviceAttr));
+    funcOp.setPublic();
+    Block *block = funcOp.addEntryBlock();
+
+    // Clones and moves the operations into the function's body. And the cloned
+    // operation should use the arguments of the newly created funcOp as
+    // appropriate.
+    OpBuilder builder(block, block->end());
+    BlockAndValueMapping mapping;
+    for (int i : llvm::seq<int>(0, metadata.inputs.size())) {
+      Value originalValue = metadata.inputs[i];
+      Value newValue = funcOp.getArgument(i);
+      mapping.map(originalValue, newValue);
+    }
+    for (Operation *op : metadata.ops) {
+      builder.clone(*op, mapping);
+    }
+    // Creates the ReturnOp so that the per-host function returns the
+    // correct values of the cloned operations.
+    llvm::SmallVector<Value, 4> resultsAfterMapping;
+    for (Value result : metadata.results) {
+      resultsAfterMapping.push_back(mapping.lookupOrDefault(result));
+    }
+    builder.create<ReturnOp>(UnknownLoc::get(context), resultsAfterMapping);
+    symbolTable.insert(funcOp, metadata.insertionPoint++);
+    // Record the actual name. The symbol table might rename the FuncOp if there
+    // is name collision.
+    metadata.partitionName = funcOp.getName();
+    metadata.partitionOp = funcOp;
+  }
+}
+
+void createCalls(MLIRContext *context,
+                 const SmallVector<FunctionMetadata> &metadatas) {
+  BlockAndValueMapping mapping;
+  for (auto &metadata : metadatas) {
+    // Creates the CallOp.
+    OpBuilder builder(metadata.ops.back());
+    llvm::SmallVector<Type, 4> resultTypes;
+    for (Value result : metadata.results) {
+      resultTypes.push_back(result.getType());
+    }
+    llvm::SmallVector<Value, 4> inputsAfterMapping;
+    for (Value input : metadata.inputs) {
+      inputsAfterMapping.push_back(mapping.lookupOrDefault(input));
+    }
+
+    CallOp callOp = builder.create<CallOp>(
+        UnknownLoc::get(context), metadata.partitionOp, inputsAfterMapping);
+    // Clones the CallOp operation to replace its callee args with
+    // the results of the other CallOp operations using the
+    // `mapping` as appropriate.
+    Operation *clonedCallOp = builder.clone(*callOp.getOperation(), mapping);
+    callOp.erase();
+
+    // Replaces usages of the results of the original operations with the
+    // results of the CallOp operations.
+    for (int i : llvm::seq<int>(0, metadata.results.size())) {
+      Value originalValue = metadata.results[i];
+      Value newValue = clonedCallOp->getResult(i);
+      originalValue.replaceAllUsesWith(newValue);
+      mapping.map(originalValue, newValue);
+    }
+  }
+}
+
+struct GraphClusteringByDevicePass
+    : public GraphClusteringByDeviceBase<GraphClusteringByDevicePass> {
+
+  explicit GraphClusteringByDevicePass() = default;
+
+  explicit GraphClusteringByDevicePass(std::string attrName, std::string device)
+      : GraphClusteringByDeviceBase<
+            GraphClusteringByDevicePass>::GraphClusteringByDeviceBase() {
+    this->attrName = attrName;
+    this->device = device;
+  }
+
+  void runOnOperation() override;
+};
+
+void GraphClusteringByDevicePass::runOnOperation() {
+  ModuleOp moduleOp = getOperation();
+  MLIRContext *context = &getContext();
+  SmallVector<FuncOp, 4> originalFuncs;
+  for (auto funcOp : moduleOp.getOps<FuncOp>()) {
+    originalFuncs.push_back(funcOp);
+  }
+  for (auto funcOp : originalFuncs) {
+    Optional<SmallVector<FunctionMetadata>> metadatas =
+        getFunctionMetadatas(funcOp, this->attrName, this->device);
+    if (!metadatas) {
+      signalPassFailure();
+      return;
+    }
+
+    createFunctions(moduleOp, *metadatas, this->attrName);
+    createCalls(context, *metadatas);
+
+    // Erases the original operations which have been cloned in the partitioned
+    // functions.
+    for (auto &metadata : *metadatas) {
+      for (int i = metadata.ops.size() - 1; i >= 0; i--) {
+        metadata.ops[i]->erase();
+      }
+    }
+  }
+}
+
+} // namespace
+
+std::unique_ptr<OperationPass<ModuleOp>>
+mlir::createGraphClusteringByDevicePass() {
+  return std::make_unique<GraphClusteringByDevicePass>();
+}
+
+std::unique_ptr<OperationPass<ModuleOp>>
+mlir::createGraphClusteringByDevicePass(std::string attrName,
+                                        std::string device) {
+  return std::make_unique<GraphClusteringByDevicePass>(attrName, device);
+}

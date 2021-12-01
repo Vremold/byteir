@@ -65,7 +65,7 @@ struct SetArgShapePass : public SetArgShapeBase<SetArgShapePass> {
           Type elementType = inputTy.getElementType();
           llvm::SmallVector<int64_t> shape(inputTy.getShape().begin(),
                                            inputTy.getShape().end());
-          if (this->dim < shape.size()) {
+          if (this->dim < int(shape.size())) {
             shape[this->dim] = this->size;
             auto newArgType = RankedTensorType::get(shape, elementType,
                                                     inputTy.getEncoding());
@@ -77,7 +77,7 @@ struct SetArgShapePass : public SetArgShapeBase<SetArgShapePass> {
           Type elementType = inputTy.getElementType();
           llvm::SmallVector<int64_t> shape(inputTy.getShape().begin(),
                                            inputTy.getShape().end());
-          if (this->dim < shape.size()) {
+          if (this->dim < int(shape.size())) {
             shape[this->dim] = this->size;
             auto newArgType =
                 MemRefType::get(shape, elementType, inputTy.getAffineMaps(),

@@ -96,7 +96,8 @@ bool mlir::HasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
   return !filteredAttrs.empty();
 }
 
-void mlir::AddAttrs(mlir::Operation* op, llvm::ArrayRef<mlir::NamedAttribute> attrs) {
+void mlir::AddAttrs(mlir::Operation *op,
+                    llvm::ArrayRef<mlir::NamedAttribute> attrs) {
   for (auto attr : attrs) {
     // override if there is any with the same name
     op->setAttr(attr.first, attr.second);
@@ -132,9 +133,59 @@ Optional<unsigned> mlir::FindResultIndex(mlir::Operation *op, mlir::Value val) {
   return None;
 }
 
-void mlir::getValuesFromDenseIntElementsAttr(DenseIntElementsAttr attr,
-                                             SmallVector<int64_t> &arrayValues) {
+void mlir::getValuesFromDenseIntElementsAttr(
+    DenseIntElementsAttr attr, SmallVector<int64_t> &arrayValues) {
   for (auto it = attr.begin(); it != attr.end(); it++) {
     arrayValues.push_back((*it).getSExtValue());
   }
+}
+
+SmallVector<Value, 4>
+mlir::GetInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
+  SmallVector<Value, 4> inputs;
+  SmallDenseSet<Value> input_set;
+  SmallDenseSet<Operation *> op_set;
+  for (Operation *op : cluster) {
+    bool inserted = op_set.insert(op).second;
+    (void)inserted;
+    assert(inserted && "cluster contains duplicate operations");
+  }
+
+  for (Operation *op : cluster) {
+    for (Value operand : op->getOperands()) {
+      Operation *operand_op = operand.getDefiningOp();
+      if (op_set.find(operand_op) != op_set.end()) {
+        // skip if defining op is in the cluster
+        continue;
+      }
+      if (input_set.insert(operand).second) {
+        inputs.push_back(operand);
+      }
+    }
+  }
+  return inputs;
+}
+
+SmallVector<Value, 4>
+mlir::GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
+  SmallVector<Value, 4> outputs;
+  SmallDenseSet<Operation *> op_set;
+  for (Operation *op : cluster) {
+    bool inserted = op_set.insert(op).second;
+    (void)inserted;
+    assert(inserted && "cluster contains duplicate operations");
+  }
+
+  for (Operation *op : cluster) {
+    for (Value result : op->getResults()) {
+      bool has_external_user =
+          llvm::any_of(result.getUses(), [&](OpOperand &use) {
+            return !op_set.count(use.getOwner());
+          });
+      if (has_external_user) {
+        outputs.push_back(result);
+      }
+    }
+  }
+  return outputs;
 }

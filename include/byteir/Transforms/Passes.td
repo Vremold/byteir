@@ -66,5 +66,19 @@ def SetArgShape: Pass<"set-arg-shape", "ModuleOp"> {
   ];
 }
 
+//===----------------------------------------------------------------------===//
+// GraphClusteringByDevice
+//===----------------------------------------------------------------------===//
+// This pass is currently a naive one and only works correct on tensor level Dialects
+def GraphClusteringByDevice : Pass<"graph-clustering-by-device", "ModuleOp"> {
+  let summary = "Clustering each function by device.";
+  let constructor = "mlir::createGraphClusteringByDevicePass()";
+  let options = [
+    Option<"attrName", "attr-name", "std::string", /*default=*/"\"device\"",
+           "The attr name used for clustering.">,
+    Option<"device", "device", "std::string", /*default=*/"\"device\"",
+           "The concrete device name for newly created device functions.">
+  ];
+}
 
 #endif // BYTEIR_TRANSFORMS_PASSES

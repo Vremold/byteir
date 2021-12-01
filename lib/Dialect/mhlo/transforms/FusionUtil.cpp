@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/transforms/FusionUtil.h"
+#include "byteir/Utils/Utils.h"
 
 #include "mlir/IR/Builders.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -34,53 +35,6 @@ namespace {
     return ret;
   }
 
-  SmallVector<Value, 4> GetInputsOfFusionPattern(const MhloFusionPattern& pattern) {
-    SmallVector<Value, 4> inputs;
-    SmallDenseSet<Value> input_set;
-    SmallDenseSet<Operation*> op_set;
-    for (Operation* op : pattern) {
-      bool inserted = op_set.insert(op).second;
-      (void)inserted;
-      assert(inserted && "FusionPattern contains duplicate operations");
-    }
-
-    for (Operation* op : pattern) {
-      for (Value operand : op->getOperands()) {
-        Operation* operand_op = operand.getDefiningOp();
-        if (op_set.find(operand_op) != op_set.end()) {
-          // skip if defining op is in the pattern
-          continue;
-        }
-        if (input_set.insert(operand).second) {
-          inputs.push_back(operand);
-        }
-      }
-    }
-    return inputs;
-  }
-
-  SmallVector<Value, 4> GetOutputsOfFusionPattern(const MhloFusionPattern& pattern) {
-    SmallVector<Value, 4> outputs;
-    SmallDenseSet<Operation*> op_set;
-    for (Operation* op : pattern) {
-      bool inserted = op_set.insert(op).second;
-      (void)inserted;
-      assert(inserted && "FusionPattern contains duplicate operations");
-    }
-
-    for (Operation* op : pattern) {
-      for (Value result : op->getResults()) {
-        bool has_external_user = llvm::any_of(
-          result.getUses(),
-          [&](OpOperand& use) { return !op_set.count(use.getOwner()); });
-        if (has_external_user) {
-          outputs.push_back(result);
-        }
-      }
-    }
-    return outputs;
-  }
-
 } // namespace anonymous
 
 // This code is from mhlo repo
@@ -98,8 +52,8 @@ void mlir::ApplyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef ta
   Location fused_loc =
     FusedLoc::get(pattern.back()->getContext(), locations);
 
-  SmallVector<Value, 4> inputs = GetInputsOfFusionPattern(pattern);
-  SmallVector<Value, 4> outputs = GetOutputsOfFusionPattern(pattern);
+  SmallVector<Value, 4> inputs = GetInputsOfCluster(pattern);
+  SmallVector<Value, 4> outputs = GetOutputsOfCluster(pattern);
 
   SmallVector<Type, 4> output_types;
   output_types.reserve(outputs.size());

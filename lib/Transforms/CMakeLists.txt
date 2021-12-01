@@ -1,5 +1,6 @@
 add_mlir_library(ByteIRTransforms
   CMAE.cpp
+  GraphClusteringByDevice.cpp
   RewriteOpToStdCall.cpp
   SetArgShape.cpp
 

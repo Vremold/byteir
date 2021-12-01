@@ -77,13 +77,17 @@ mlir::FuncOp GetFuncOp(mlir::CallOp);
 bool HasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
                    llvm::ArrayRef<llvm::StringRef> filterAttrs);
 
-
-void AddAttrs(mlir::Operation*, llvm::ArrayRef<mlir::NamedAttribute> attrs);
+void AddAttrs(mlir::Operation *, llvm::ArrayRef<mlir::NamedAttribute> attrs);
 
 Optional<unsigned> FindOperandIndex(mlir::Operation *, mlir::Value);
 
 Optional<unsigned> FindResultIndex(mlir::Operation *, mlir::Value);
 
+SmallVector<Value, 4>
+GetInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
+
+SmallVector<Value, 4>
+GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_H
