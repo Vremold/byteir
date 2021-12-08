@@ -41,8 +41,9 @@ func @mhlo_element_broadcast(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2
 // NOTAG-LABEL: func @mhlo_element_broadcast
 // NOTAG-NEXT:  mhlo.fusion
 // NOTAG-NEXT:  mhlo.add
-// NOTAG-NEXT:  mhlo.broadcast_in_dim
 // NOTAG-NEXT:  mhlo.abs
+// NOTAG:  mhlo.fusion
+// NOTAG-NEXT:  mhlo.broadcast_in_dim
 // NOTAG-NEXT:  mhlo.add
 // NOTAG-NEXT:  mhlo.broadcast_in_dim
 // NOTAG-NEXT:  mhlo.add
@@ -53,8 +54,9 @@ func @mhlo_element_broadcast(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2
 // TESTTAG-LABEL: func @mhlo_element_broadcast
 // TESTTAG-NEXT:  mhlo.fusion
 // TESTTAG-NEXT:  mhlo.add
-// TESTTAG-NEXT:  mhlo.broadcast_in_dim
 // TESTTAG-NEXT:  mhlo.abs
+// TESTTAG:  mhlo.fusion
+// TESTTAG-NEXT:  mhlo.broadcast_in_dim
 // TESTTAG-NEXT:  mhlo.add
 // TESTTAG-NEXT:  mhlo.broadcast_in_dim
 // TESTTAG-NEXT:  mhlo.add

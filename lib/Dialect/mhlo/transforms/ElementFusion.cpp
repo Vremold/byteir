@@ -32,18 +32,17 @@ bool IsFusibleCandidate(Operation* op) {
       isa<mhlo::BroadcastInDimOp>(op) ||
       isa<mhlo::BroadcastOp>(op) ||
       isa<mhlo::ReshapeOp>(op) ||
-      isa<mhlo::ClampOp>(op)
+      isa<mhlo::ClampOp>(op) ||
+      isa<mhlo::SelectOp>(op)
       );
-     //&& !isa<mhlo::ShiftRightLogicalOp>(op);
 }
 
 bool IsFusibleStart(Operation* op) {
   return IsMhlo(op) && (
     op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-    isa<mhlo::BroadcastInDimOp>(op) ||
-    isa<mhlo::BroadcastOp>(op) ||
     isa<mhlo::ReshapeOp>(op) ||
-    isa<mhlo::ClampOp>(op)
+    isa<mhlo::ClampOp>(op) ||
+    isa<mhlo::SelectOp>(op)
     );
   //&& !isa<mhlo::ShiftRightLogicalOp>(op);
 }
@@ -56,7 +55,8 @@ bool IsFusibleWith(Operation* target, Operation* /*start*/) {
       isa<mhlo::BroadcastInDimOp>(target) ||
       isa<mhlo::BroadcastOp>(target) ||
       isa<mhlo::ReshapeOp>(target) ||
-      isa<mhlo::ClampOp>(target)
+      isa<mhlo::ClampOp>(target) ||
+      isa<mhlo::SelectOp>(target)
       );
     //&& !isa<mhlo::ShiftRightLogicalOp>(target);
 }
