@@ -37,7 +37,7 @@ namespace mhlo {
 
   // So far, only new tod add BatchNorm  
   MAP_HLO_TO_LHLO(BatchNormGradOp);
-  MAP_HLO_TO_LHLO(BatchNormTrainingOp);  
+  MAP_HLO_TO_LHLO(BatchNormTrainingOp);
 
 #undef MAP_HLO_TO_LHLO
 
@@ -170,7 +170,6 @@ public:
     return success();
   }
 };
-
 
 template <typename HloOpTy>
 class HloWithTupleToLhloOpConverter : public BaseOpConversion<HloOpTy> {
@@ -322,6 +321,29 @@ public:
   }
 };
 
+class HloToLhloScatterOpConverter : public BaseOpConversion<mhlo::ScatterOp> {
+public:
+  using BaseOpConversion<mhlo::ScatterOp>::BaseOpConversion;
+  LogicalResult matchAndRewrite(
+    mhlo::ScatterOp op, ArrayRef<Value> operands,
+    ConversionPatternRewriter& rewriter) const final {
+    SmallVector<Value, 4> buffer_args(operands.begin(), operands.end());
+    if (failed(ConvertResults(op, buffer_args, rewriter))) return failure();
+    
+    auto new_op = rewriter.create<lmhlo::ScatterOp>(op->getLoc(), llvm::None,
+      buffer_args, op->getAttrs());
+
+    // Copy over the operations inside the region.
+    rewriter.inlineRegionBefore(op.update_computation(), 
+                                new_op.update_computation(), 
+                                new_op.update_computation().end());
+
+    rewriter.replaceOp(
+      op, llvm::makeArrayRef(buffer_args).drop_front(operands.size()));
+    return success();
+  }
+};
+
 struct ConvertHloToLHloPass : public ConvertHloToLHloBase<ConvertHloToLHloPass> {
 public:
   ConvertHloToLHloPass() = default;
@@ -335,7 +357,15 @@ public:
     target.addLegalDialect<memref::MemRefDialect>();
     target.addLegalDialect<shape::ShapeDialect>();
     target.addLegalDialect<tensor::TensorDialect>();
-    target.addIllegalDialect<mhlo::MhloDialect>();
+    
+    // LWC: lmhlo::ScatterOp's body allow mhlo 
+    target.addDynamicallyLegalDialect<mhlo::MhloDialect>([&](Operation* op) {
+      if (isa_and_nonnull<mhlo::ScatterOp>(op->getParentOp()) || 
+          isa_and_nonnull<lmhlo::ScatterOp>(op->getParentOp())) {
+        return true;
+      }
+      return false;
+    });
 
     // Declare tensor_store illegal. tensor_load may be used to reify output
     // shape computation during dialect conversion and will be handled later.
@@ -396,6 +426,7 @@ void mlir::populateHLOToLHLOConversionPatternExtension(MLIRContext* context,
   patterns->insert<HloWithTupleToLhloOpConverter<mhlo::BatchNormGradOp>,
                    HloWithTupleToLhloOpConverter<mhlo::BatchNormTrainingOp>,
                    HloToLhloOpConverterLocal<mhlo::ClampOp>,
+                   HloToLhloScatterOpConverter,
                    HloToLhloReduceWindowOpConverter,
                    HloToLhloCustomCallOpConverter>(*converter, context);
 }

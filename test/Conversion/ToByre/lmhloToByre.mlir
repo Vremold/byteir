@@ -1,4 +1,4 @@
-// RUN: byteir-opt --convert-to-byre %s | FileCheck %s
+// RUN: byteir-opt -convert-to-byre %s | FileCheck %s
 
 module {
 // CHECK: module attributes {byre.container_module}  {
@@ -49,5 +49,17 @@ module {
 // CHECK:   func @mhlo_batch_matmul(%[[ARG_0:.*]]: memref<3x128x64xf32> {byre.argname = "A", byre.argtype = 1 : i32}, %[[ARG_1:.*]]: memref<3x64x32xf32> {byre.argname = "B", byre.argtype = 1 : i32}, %[[ARG_2:.*]]: memref<3x128x32xf32> {byre.argname = "C", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
 // CHECK:     byre.compute @BatchMatmulOp(%[[ARG_0]], %[[ARG_1]], %[[ARG_2]]) {lhs_batching_dimensions = [0], lhs_contracting_dimension = 1 : i64, rhs_batching_dimensions = [0], rhs_contracting_dimension = 0 : i64} : memref<3x128x64xf32>, memref<3x64x32xf32>, memref<3x128x32xf32>
 // CHECK:     return
+
+  func @mhlo_scatter(%arg0: memref<512x128xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<128x1xi64> {__placeholder__byre.argname = "B"}, %arg2: memref<128x128xf32> {__placeholder__byre.argname = "C"}) -> (memref<512x128xf32> {__placeholder__byre.argname = "D"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<512x128xf32>
+    "lmhlo.scatter"(%arg0, %arg1, %arg2, %0) ( {
+    ^bb0(%arg3: tensor<f32>, %arg4: tensor<f32>):  // no predecessors
+      %1 = mhlo.add %arg3, %arg4 : tensor<f32>
+      "mhlo.return"(%1) : (tensor<f32>) -> ()
+    }) {indices_are_sorted = false, scatter_dimension_numbers = #mhlo.scatter<update_window_dims = [1], inserted_window_dims = [0], scatter_dims_to_operand_dims = [0], index_vector_dim = 1>, unique_indices = false} : (memref<512x128xf32>, memref<128x1xi64>, memref<128x128xf32>, memref<512x128xf32>) -> ()
+    return %0 : memref<512x128xf32>
+  }
+  // CHECK-LABEL: mhlo_scatter
+  // CHECK-NEXT: byre.compute @IndexPutOp
 
 }

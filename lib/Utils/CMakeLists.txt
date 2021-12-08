@@ -3,4 +3,5 @@ add_mlir_library(ByteIRUtils
 
   LINK_LIBS PUBLIC
   MLIRIR
+  MLIRMemRef
 )

@@ -88,6 +88,10 @@ GetInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
 
 SmallVector<Value, 4>
 GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
+
+// return true, if memref is only used in op in the filters, or alloc or dealloc
+bool IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> filters);
+
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_H

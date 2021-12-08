@@ -6,11 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Utils/Utils.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Operation.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Twine.h"
 
@@ -188,4 +190,19 @@ mlir::GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
     }
   }
   return outputs;
+}
+
+bool mlir::IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> filters) {
+  SmallPtrSet<mlir::Operation*, 4> op_sets(filters.begin(), filters.end());
+
+  if (!memref.getDefiningOp<memref::AllocOp>()) {
+    return false;
+  }
+
+  for (Operation* user : memref.getUsers()) {
+    if (!op_sets.contains(user) || !isa<memref::DeallocOp>(user)) {
+      return false;
+    }
+  }
+  return true;
 }

@@ -11,6 +11,7 @@
 #include "byteir/Conversion/ToByre/ToByre.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
+#include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/lhlo_ops.h" // LmhloDialect
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -18,6 +19,7 @@
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionSupport.h"
+#include "mlir/Parser.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include <functional>
@@ -27,22 +29,165 @@ using namespace mlir::byre;
 using namespace mlir::lmhlo;
 using namespace llvm;
 
-void mlir::populateLmhloToByreConversionPatterns(
-    RewritePatternSet &patterns,
-    llvm::DenseMap<StringRef, StringRef> &supportMap) {
-  // TODO move this from a file
-  // TODO use MACRO trick to add patterns
-  patterns.add<ConvertToByrePattern<lmhlo::AddOp>>(patterns.getContext(),
-                                                   supportMap);
-  patterns.add<ConvertToByrePattern<lmhlo::CustomCallOp>>(patterns.getContext());
-  patterns.add<ConvertToByrePattern<lmhlo::DotOp>>(patterns.getContext());
-}
 
-void mlir::populateStdToByreConversionPatterns(RewritePatternSet &patterns) {
-  patterns.add<ConvertToByrePattern<mlir::CallOp>>(patterns.getContext());
+template<>
+LogicalResult
+mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
+  mlir::lmhlo::ScatterOp op,
+  typename mlir::lmhlo::ScatterOp::Adaptor adaptor,
+  ConversionPatternRewriter& rewriter) const {
+
+  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
+  if (found == src_to_callee_.end()) {
+    // TODO adding more error message
+    return failure();
+  }
+
+  // TODO support inplace 
+  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
+    found->second, adaptor.getOperands());
+
+  return success();
 }
 
 namespace {
+
+class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
+public:
+  ConvertCallOpToByrePattern(MLIRContext* ctx)
+    : OpConversionPattern<mlir::CallOp>(ctx) {}
+
+  LogicalResult
+  matchAndRewrite(mlir::CallOp op, mlir::CallOp::Adaptor adaptor, 
+    ConversionPatternRewriter& rewriter) const override {
+
+    auto funcOp = GetFuncOp(op);
+    if (funcOp == nullptr) {
+      return failure();
+    }
+
+    StringAttr nameAttr =
+      funcOp->getAttrOfType<StringAttr>(byre::getByreComputeName());
+
+    if (nameAttr == nullptr) {
+      return failure();
+    }
+
+    mlir::byre::ComputeOp computeOp =
+      rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, nameAttr.getValue(), adaptor.getOperands());
+
+    SmallVector<NamedAttribute> attrs;
+    for (auto iter = funcOp->getAttrs().begin(); iter != funcOp->getAttrs().end(); iter++) {
+      if (byre::isByreComputeAttr(*iter)) {
+        attrs.emplace_back(byre::removeByrePrefix(*iter));
+      }
+    }
+
+    AddAttrs(computeOp.getOperation(), attrs);
+
+    return success();
+  }
+};
+
+class ConvertDotOpToByrePattern : public OpConversionPattern<mlir::lmhlo::DotOp> {
+public:
+  ConvertDotOpToByrePattern(MLIRContext* ctx)
+    : OpConversionPattern<mlir::lmhlo::DotOp>(ctx) {}
+
+  LogicalResult
+  matchAndRewrite(mlir::lmhlo::DotOp op, 
+    mlir::lmhlo::DotOp::Adaptor adaptor,
+    ConversionPatternRewriter& rewriter) const override {
+
+    auto dot_dimension_numbers = adaptor.dot_dimension_numbers();
+    assert(dot_dimension_numbers.getLhsContractingDimensions().size() == 1);
+    assert(dot_dimension_numbers.getRhsContractingDimensions().size() == 1);
+    if (dot_dimension_numbers.getLhsBatchingDimensions().size() == 0) {
+      // convert to MatmulOp
+      auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+        op, "MatmulOp", adaptor.getOperands());
+
+      // append attribute 'lhs_contracting_dimension' and
+      // 'rhs_contracting_dimension'
+      int64_t lhs_contracting_dimension =
+        dot_dimension_numbers.getLhsContractingDimensions()[0];
+      int64_t rhs_contracting_dimension =
+        dot_dimension_numbers.getRhsContractingDimensions()[0];
+      compute_op->setAttr("lhs_contracting_dimension",
+        rewriter.getI64IntegerAttr(lhs_contracting_dimension));
+      compute_op->setAttr("rhs_contracting_dimension",
+        rewriter.getI64IntegerAttr(rhs_contracting_dimension));
+    }
+    else {
+      // convert to BatchMatmulOp
+      SmallVector<int64_t> batching_dimensions;
+      for (int64_t i = 0, e = op.output().getType().cast<ShapedType>().getRank();
+        i < e - 2; i++) {
+        batching_dimensions.push_back(i);
+      }
+      if (!dot_dimension_numbers.getLhsBatchingDimensions().equals(
+        batching_dimensions) ||
+        !dot_dimension_numbers.getRhsBatchingDimensions().equals(
+          batching_dimensions)) {
+        return op->emitOpError()
+          << "can not handle unregular batching_dimensions";
+      }
+
+      auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+        op, "BatchMatmulOp", adaptor.getOperands());
+
+      // append attributes of batching and contracting dimensions
+      int64_t lhs_contracting_dimension =
+        dot_dimension_numbers.getLhsContractingDimensions()[0];
+      int64_t rhs_contracting_dimension =
+        dot_dimension_numbers.getRhsContractingDimensions()[0];
+      auto lhs_batching_dimensions =
+        dot_dimension_numbers.getLhsBatchingDimensions();
+      auto rhs_batching_dimensions =
+        dot_dimension_numbers.getRhsBatchingDimensions();
+      compute_op->setAttr("lhs_contracting_dimension",
+        rewriter.getI64IntegerAttr(lhs_contracting_dimension));
+      compute_op->setAttr("rhs_contracting_dimension",
+        rewriter.getI64IntegerAttr(rhs_contracting_dimension));
+      compute_op->setAttr("lhs_batching_dimensions",
+        rewriter.getI64ArrayAttr(lhs_batching_dimensions));
+      compute_op->setAttr("rhs_batching_dimensions",
+        rewriter.getI64ArrayAttr(rhs_batching_dimensions));
+    }
+    return success();
+  }
+};
+
+class ConvertCustomCallOpToByrePattern
+  : public OpConversionPattern<lmhlo::CustomCallOp> {
+public:
+  ConvertCustomCallOpToByrePattern(MLIRContext* ctx)
+    : OpConversionPattern<lmhlo::CustomCallOp>(ctx) {}
+
+  LogicalResult
+    matchAndRewrite(lmhlo::CustomCallOp op,
+      lmhlo::CustomCallOp::Adaptor adaptor,
+      ConversionPatternRewriter& rewriter) const override {
+    mlir::DictionaryAttr dict_attr;
+    auto backend_config = op.backend_config();
+    if (!backend_config.empty()) {
+      auto attrs = mlir::parseAttribute(backend_config, op->getContext());
+      if (!attrs || !attrs.isa<mlir::DictionaryAttr>())
+        return failure();
+      dict_attr = attrs.cast<mlir::DictionaryAttr>();
+    }
+
+    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+      op, op.call_target_name(), adaptor.getOperands());
+    if (dict_attr) {
+      NamedAttrList originAttrs = compute_op->getAttrs();
+      originAttrs.append(dict_attr);
+      compute_op->setAttrs(originAttrs);
+    }
+
+    return success();
+  }
+};
 
 // Main Pass
 struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
@@ -50,8 +195,7 @@ struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
   ConvertToByrePass() : ConvertToByreBase() {
     // TODO: change to loading from outside
     lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
-    // lmhlo.dot will convert to MatmulOp and BatchMatmulOp
-    // lmhloSupportMap.insert({ "lmhlo.dot", "MatmulOp" });
+    lmhloSupportMap.insert({ "lmhlo.scatter", "IndexPutOp" });
 
     // insert attrNames
     attrNames.push_back(byre::ByreDialect::getEntryPointFunctionAttrName());
@@ -260,6 +404,23 @@ void ConvertToByrePass::runOnOperation() {
 }
 
 } // namespace
+
+void mlir::populateLmhloToByreConversionPatterns(
+  RewritePatternSet& patterns,
+  llvm::DenseMap<StringRef, StringRef>& supportMap) {
+  // TODO move this from a file
+  // TODO use MACRO trick to add patterns
+  patterns.add<ConvertToByrePattern<lmhlo::AddOp>,
+    ConvertToByrePattern<lmhlo::ScatterOp>>(patterns.getContext(),
+    supportMap);
+
+  patterns.add<ConvertDotOpToByrePattern,
+    ConvertCustomCallOpToByrePattern>(patterns.getContext());
+}
+
+void mlir::populateStdToByreConversionPatterns(RewritePatternSet& patterns) {
+  patterns.add<ConvertCallOpToByrePattern>(patterns.getContext());
+}
 
 std::unique_ptr<OperationPass<ModuleOp>> mlir::createConvertToByrePass() {
   return std::make_unique<ConvertToByrePass>();
