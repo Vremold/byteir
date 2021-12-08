@@ -50,6 +50,98 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
   return success();
 }
 
+template <>
+mlir::LogicalResult
+mlir::ConvertToByrePattern<mlir::lmhlo::GatherOp>::matchAndRewrite(
+    mlir::lmhlo::GatherOp op, typename mlir::lmhlo::GatherOp::Adaptor adaptor,
+    ConversionPatternRewriter &rewriter) const {
+
+  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
+  if (found == src_to_callee_.end()) {
+    return op->emitOpError() << "can not find matched byre_compute_name";
+  }
+
+  auto start_indices = op.start_indices();
+  auto start_indices_ty = start_indices.getType().cast<ShapedType>();
+  if (!start_indices_ty.hasRank()) {
+    return rewriter.notifyMatchFailure(op, "unranked start_indices");
+  }
+
+  auto operand = op.operand();
+  auto operand_ty = operand.getType().cast<ShapedType>();
+  if (!operand_ty.hasRank()) {
+    return rewriter.notifyMatchFailure(op, "unranked operand");
+  }
+
+  int64_t index_vector_dim = start_indices_ty.getRank();
+
+  auto dimension_numbers = op.dimension_numbers();
+  if (dimension_numbers.getIndexVectorDim() != index_vector_dim) {
+    return rewriter.notifyMatchFailure(
+        op, "index_vector_dim not last dimension of start_indices");
+  }
+
+  // Index select only works across a single dimension.
+  if (start_indices_ty.getShape().empty() || start_indices_ty.getRank() != 1) {
+    return rewriter.notifyMatchFailure(
+        op, "start_indices index vector dimension not 1");
+  }
+
+  // Only support the default case for start_index_map.
+  if (dimension_numbers.getStartIndexMap().size() != 1 ||
+      dimension_numbers.getStartIndexMap()[0] != 0) {
+    return rewriter.notifyMatchFailure(op, "start_index_map != [0]");
+  }
+
+  auto result_ty = op.output().getType().dyn_cast<ShapedType>();
+  if (!result_ty) {
+    return rewriter.notifyMatchFailure(op, "unranked result");
+  }
+
+  // Offset dimensions should be the defaults.
+  if (dimension_numbers.getOffsetDims().size() !=
+      result_ty.getRank() - index_vector_dim) {
+    return rewriter.notifyMatchFailure(
+        op, "offset_dims.size not operand rank minus index_vector_dim");
+  }
+
+  for (auto it : llvm::enumerate(dimension_numbers.getOffsetDims())) {
+    if ((it.index() + index_vector_dim) != it.value()) {
+      return rewriter.notifyMatchFailure(
+          op, "offset_dims != [index_vector_dim, result.rank)");
+    }
+  }
+
+  for (auto it : llvm::enumerate(op.slice_sizes().getValues<APInt>())) {
+    // First shape value must be 1.
+    if (it.index() == 0) {
+      if (it.value().getSExtValue() != 1) {
+        return rewriter.notifyMatchFailure(op, "slice_size[0] != 1");
+      }
+      continue;
+    }
+
+    // The op needs to index the entire slice for each other dimension.
+    if (it.value().getSExtValue() != operand_ty.getDimSize(it.index())) {
+      return rewriter.notifyMatchFailure(
+          op, "slice_size doesn't match operand dimension");
+    }
+  }
+
+  if (dimension_numbers.getCollapsedSliceDims().size() != 1 ||
+      dimension_numbers.getCollapsedSliceDims()[0] != 0) {
+    return rewriter.notifyMatchFailure(op, "collapsed_slice_dims != [0]");
+  }
+
+  auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+      op, found->second, adaptor.getOperands());
+
+  // FIXME: currently only support select on dim0
+  compute_op->setAttr("dim", rewriter.getI32IntegerAttr(0));
+
+  return success();
+}
+
 namespace {
 
 class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
@@ -196,6 +288,7 @@ struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
     // TODO: change to loading from outside
     lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
     lmhloSupportMap.insert({ "lmhlo.scatter", "IndexPutOp" });
+    lmhloSupportMap.insert({"lmhlo.gather", "IndexSelectOp"});
 
     // insert attrNames
     attrNames.push_back(byre::ByreDialect::getEntryPointFunctionAttrName());
@@ -411,8 +504,9 @@ void mlir::populateLmhloToByreConversionPatterns(
   // TODO move this from a file
   // TODO use MACRO trick to add patterns
   patterns.add<ConvertToByrePattern<lmhlo::AddOp>,
-    ConvertToByrePattern<lmhlo::ScatterOp>>(patterns.getContext(),
-    supportMap);
+               ConvertToByrePattern<lmhlo::ScatterOp>,
+               ConvertToByrePattern<lmhlo::GatherOp>>(patterns.getContext(),
+                                                      supportMap);
 
   patterns.add<ConvertDotOpToByrePattern,
     ConvertCustomCallOpToByrePattern>(patterns.getContext());

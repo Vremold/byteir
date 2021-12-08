@@ -62,4 +62,12 @@ module {
   // CHECK-LABEL: mhlo_scatter
   // CHECK-NEXT: byre.compute @IndexPutOp
 
+  func @mhlo_gather(%arg0: memref<30522x128xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<128xui32> {__placeholder__byre.argname = "B"}) -> (memref<128x128xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
+    %2 = memref.alloc() : memref<128x128xf32>
+    "lmhlo.gather"(%arg0, %arg1, %2) {dimension_numbers = #mhlo.gather<offset_dims = [1], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 1>, indices_are_sorted = false, slice_sizes = dense<[1, 128]> : tensor<2xi64>} : (memref<30522x128xf32>, memref<128xui32>, memref<128x128xf32>) -> ()
+    return %2 : memref<128x128xf32>
+  }
+  // CHECK-LABEL: mhlo_gather
+  // CHECK-NEXT: byre.compute @IndexSelectOp
+
 }
