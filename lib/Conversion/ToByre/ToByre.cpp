@@ -13,6 +13,7 @@
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Utils/Utils.h"
+#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"  
 #include "mlir-hlo/Dialect/mhlo/IR/lhlo_ops.h" // LmhloDialect
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -24,31 +25,13 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include <functional>
 
+#include <iostream>
+
 using namespace mlir;
 using namespace mlir::byre;
 using namespace mlir::lmhlo;
+using namespace mlir::mhlo;
 using namespace llvm;
-
-
-template<>
-LogicalResult
-mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
-  mlir::lmhlo::ScatterOp op,
-  typename mlir::lmhlo::ScatterOp::Adaptor adaptor,
-  ConversionPatternRewriter& rewriter) const {
-
-  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
-  if (found == src_to_callee_.end()) {
-    // TODO adding more error message
-    return failure();
-  }
-
-  // TODO support inplace 
-  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
-    found->second, adaptor.getOperands());
-
-  return success();
-}
 
 template <>
 mlir::LogicalResult
@@ -142,44 +125,153 @@ mlir::ConvertToByrePattern<mlir::lmhlo::GatherOp>::matchAndRewrite(
   return success();
 }
 
-namespace {
+template<>
+LogicalResult
+mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
+  mlir::lmhlo::ScatterOp op,
+  typename mlir::lmhlo::ScatterOp::Adaptor adaptor,
+  ConversionPatternRewriter& rewriter) const {
 
-class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
-public:
-  ConvertCallOpToByrePattern(MLIRContext* ctx)
-    : OpConversionPattern<mlir::CallOp>(ctx) {}
+  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
+  if (found == src_to_callee_.end()) {
+    return op->emitOpError() << "can not find matched byre_compute_name";
+  }
 
-  LogicalResult
-  matchAndRewrite(mlir::CallOp op, mlir::CallOp::Adaptor adaptor, 
-    ConversionPatternRewriter& rewriter) const override {
+  // check wthether scatter supported
+  Region& region = op.update_computation();
+  // only support single block
+  if (region.getBlocks().size() != 1) {
+    return rewriter.notifyMatchFailure(op, "unsupported region in scatter");
+  }
 
-    auto funcOp = GetFuncOp(op);
-    if (funcOp == nullptr) {
-      return failure();
-    }
+  auto& block = region.front();
+  if (block.empty()) {
+    return rewriter.notifyMatchFailure(op, "unsupported empty block in scatter");
+  }
 
-    StringAttr nameAttr =
-      funcOp->getAttrOfType<StringAttr>(byre::getByreComputeName());
+  // check block args
+  if (block.getNumArguments() != 2 ||
+    !block.getArgument(0).getType().isa<TensorType>() ||
+    !block.getArgument(1).getType().isa<TensorType>()) {
+    return rewriter.notifyMatchFailure(op, "unsupported block's arg in scatter");
+  }
 
-    if (nameAttr == nullptr) {
-      return failure();
-    }
+  // check block body
+  auto ret_op = block.getTerminator();
+  if (!isa<mlir::mhlo::ReturnOp>(ret_op)) {
+    return rewriter.notifyMatchFailure(op, "unsupported terminator in scatter's block");
+  }
+  auto mhlo_ret = cast<mlir::mhlo::ReturnOp>(ret_op);
+  if (mhlo_ret.getNumOperands() != 1) {
+    return rewriter.notifyMatchFailure(op, "unsupported return's arg number in scatter's block");
+  }
 
-    mlir::byre::ComputeOp computeOp =
-      rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, nameAttr.getValue(), adaptor.getOperands());
+  auto compute_op = mhlo_ret.getOperand(0).getDefiningOp();
+  if (compute_op == nullptr) {
+    return rewriter.notifyMatchFailure(op, "unsupported update_computation of scatter");
+  }
 
-    SmallVector<NamedAttribute> attrs;
-    for (auto iter = funcOp->getAttrs().begin(); iter != funcOp->getAttrs().end(); iter++) {
-      if (byre::isByreComputeAttr(*iter)) {
-        attrs.emplace_back(byre::removeByrePrefix(*iter));
+  // only support add now
+  if (!isa<mhlo::AddOp>(compute_op)) {
+    return rewriter.notifyMatchFailure(op, "unsupported ops in update_computation of scatter");
+  }
+
+  // only add now 
+  if (compute_op->getOperand(0) != block.getArgument(0) ||
+    compute_op->getOperand(1) != block.getArgument(1)) {
+    return rewriter.notifyMatchFailure(op, "unsupported ops in addd computation in scatter");
+  }
+
+  // TODO support inplace 
+  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
+    found->second, adaptor.getOperands());
+
+  // FIXME: currently only support select on dim0
+  new_op->setAttr("dim", rewriter.getI32IntegerAttr(0));
+
+  return success();
+}
+
+template<>
+LogicalResult
+mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
+  mlir::lmhlo::SliceOp op,
+  typename mlir::lmhlo::SliceOp::Adaptor adaptor,
+  ConversionPatternRewriter& rewriter) const {
+
+  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
+  if (found == src_to_callee_.end()) {
+    return op->emitOpError() << "can not find matched byre_compute_name";
+  }
+
+  // check whether inplace is support
+  if (!isSplatValue(op.strides(), 1)) {
+    return rewriter.notifyMatchFailure(op, "unsupported strides of slice");
+  }
+
+  auto output = adaptor.getOperands()[1];
+  auto shape = output.getType().cast<MemRefType>().getShape();
+  auto start_indices = op.start_indices();
+  int64_t num_start = start_indices.getNumElements();
+  // check high dim of shape is 1
+  if (num_start > 1) {
+    for (int64_t i = 0; i < num_start-1; ++i) {
+      if (shape[i] != 1) {
+        return rewriter.notifyMatchFailure(op, "unsupport shape of slice");
       }
     }
-
-    AddAttrs(computeOp.getOperation(), attrs);
-
-    return success();
   }
-};
+
+  int64_t last_start = start_indices.getFlatValue<APInt>(num_start - 1).getSExtValue();
+
+  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
+    found->second, adaptor.getOperands());
+
+  // FIXME: currently only support inplace
+  new_op->setAttr("offset", rewriter.getI32IntegerAttr(last_start));
+  new_op->setAttr("inplace", rewriter.getBoolAttr(true));
+
+  return success();
+}
+
+namespace {
+
+  class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
+  public:
+    ConvertCallOpToByrePattern(MLIRContext* ctx)
+      : OpConversionPattern<mlir::CallOp>(ctx) {}
+
+    LogicalResult
+      matchAndRewrite(mlir::CallOp op, mlir::CallOp::Adaptor adaptor,
+        ConversionPatternRewriter& rewriter) const override {
+
+      auto funcOp = GetFuncOp(op);
+      if (funcOp == nullptr) {
+        return failure();
+      }
+
+      StringAttr nameAttr =
+        funcOp->getAttrOfType<StringAttr>(byre::getByreComputeName());
+
+      if (nameAttr == nullptr) {
+        return failure();
+      }
+
+      mlir::byre::ComputeOp computeOp =
+        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, nameAttr.getValue(), adaptor.getOperands());
+
+      SmallVector<NamedAttribute> attrs;
+      for (auto iter = funcOp->getAttrs().begin(); iter != funcOp->getAttrs().end(); iter++) {
+        if (byre::isByreComputeAttr(*iter)) {
+          attrs.emplace_back(byre::removeByrePrefix(*iter));
+        }
+      }
+
+      AddAttrs(computeOp.getOperation(), attrs);
+
+      return success();
+    }
+  };
 
 class ConvertDotOpToByrePattern : public OpConversionPattern<mlir::lmhlo::DotOp> {
 public:
@@ -287,8 +379,9 @@ struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
   ConvertToByrePass() : ConvertToByreBase() {
     // TODO: change to loading from outside
     lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
-    lmhloSupportMap.insert({ "lmhlo.scatter", "IndexPutOp" });
+    lmhloSupportMap.insert({"lmhlo.scatter", "IndexPutOp" });
     lmhloSupportMap.insert({"lmhlo.gather", "IndexSelectOp"});
+    lmhloSupportMap.insert({"lmhlo.slice", "SliceOp" });
 
     // insert attrNames
     attrNames.push_back(byre::ByreDialect::getEntryPointFunctionAttrName());
@@ -473,8 +566,7 @@ void ConvertToByrePass::runOnOperation() {
   target.addLegalDialect<byre::ByreDialect, memref::MemRefDialect, scf::SCFDialect,
     StandardOpsDialect, ace::AceDialect>();
 
-  target.addLegalOp<ModuleOp, FuncOp, ReturnOp>();
-  //  target.addLegalDialect<LmhloDialect>();
+  target.addLegalOp<ModuleOp, FuncOp, mlir::ReturnOp>();
 
   target.addDynamicallyLegalDialect<LmhloDialect>([&](Operation *op) {
     auto func = op->getParentOfType<FuncOp>();
@@ -504,12 +596,13 @@ void mlir::populateLmhloToByreConversionPatterns(
   // TODO move this from a file
   // TODO use MACRO trick to add patterns
   patterns.add<ConvertToByrePattern<lmhlo::AddOp>,
+               ConvertToByrePattern<lmhlo::GatherOp>,
                ConvertToByrePattern<lmhlo::ScatterOp>,
-               ConvertToByrePattern<lmhlo::GatherOp>>(patterns.getContext(),
-                                                      supportMap);
+               ConvertToByrePattern<lmhlo::SliceOp>>(patterns.getContext(),
+                                                     supportMap);
 
   patterns.add<ConvertDotOpToByrePattern,
-    ConvertCustomCallOpToByrePattern>(patterns.getContext());
+               ConvertCustomCallOpToByrePattern>(patterns.getContext());
 }
 
 void mlir::populateStdToByreConversionPatterns(RewritePatternSet& patterns) {

@@ -1,11 +1,11 @@
-//===- MhloPreprocessing.cpp ----------------------------------*--- C++ -*-===//
+//===- HloFolder.cpp ------------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/transforms/TransposeFolder.h"
+#include "byteir/Dialect/mhlo/transforms/HloFolder.h"
 #include "PassDetail.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
@@ -18,6 +18,8 @@ using namespace mlir;
 using namespace llvm;
 
 namespace {
+
+// Slice + Slice -> Slice
 
 // BroadcastInDim + Transpose -> BroadcastInDim
 struct BroadcastInDimTransposeToBroadcastInDimPattern
@@ -61,22 +63,22 @@ struct BroadcastInDimTransposeToBroadcastInDimPattern
   }
 };
 
-struct TransposeFolderPass : public TransposeFolderBase<TransposeFolderPass> {
+struct HloFolderPass : public HloFolderBase<HloFolderPass> {
   void runOnFunction() override;
 };
 
 } // namespace
 
-void mlir::populateFoldTransposePatterns(RewritePatternSet &patterns) {
+void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
   patterns.add(std::make_unique<BroadcastInDimTransposeToBroadcastInDimPattern>(
       patterns.getContext()));
 }
 
-void TransposeFolderPass::runOnFunction() {
+void HloFolderPass::runOnFunction() {
   FuncOp funcOp = getFunction();
   MLIRContext *context = &getContext();
   RewritePatternSet patterns(context);
-  populateFoldTransposePatterns(patterns);
+  populateHloFoldPatterns(patterns);
   LogicalResult status =
       applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
   if (failed(status)) {
@@ -84,6 +86,6 @@ void TransposeFolderPass::runOnFunction() {
   }
 }
 
-std::unique_ptr<FunctionPass> mlir::createTransposeFolderPass() {
-  return std::make_unique<TransposeFolderPass>();
+std::unique_ptr<FunctionPass> mlir::createHloFolderPass() {
+  return std::make_unique<HloFolderPass>();
 }

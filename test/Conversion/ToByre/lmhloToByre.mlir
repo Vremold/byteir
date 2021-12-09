@@ -70,4 +70,12 @@ module {
   // CHECK-LABEL: mhlo_gather
   // CHECK-NEXT: byre.compute @IndexSelectOp
 
+  func @mhlo_slice(%arg0: memref<1x512xi64> {__placeholder__byre.argname = "A"}) -> (memref<1x128xi64> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<1x128xi64>
+    "lmhlo.slice"(%arg0, %0) {limit_indices = dense<[1, 128]> : tensor<2xi64>, start_indices = dense<0> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (memref<1x512xi64>, memref<1x128xi64>) -> ()
+    return %0 : memref<1x128xi64>
+  }
+  // CHECK-LABEL: mhlo_slice
+  // CHECK-NEXT: byre.compute @SliceOp
+
 }

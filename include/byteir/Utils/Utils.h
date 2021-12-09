@@ -30,6 +30,9 @@ bool isConstantIndex(Value value, int64_t lit);
 // it will check all of sub attributes.
 bool isZeroAttribute(Attribute value);
 
+// Returns true if the given `attr` is a splat value and is `value`.
+bool isSplatValue(DenseIntElementsAttr attr, int64_t value);
+
 // Returns true if the given `attr` is a splat value and close to `value`.
 bool isSplatCloseToValue(DenseFPElementsAttr attr, double value,
                          double EPSILON = 0.00001);

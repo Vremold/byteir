@@ -14,9 +14,9 @@
 namespace mlir {
 
 // Patterns to fold mhlo::TransposeOp
-void populateFoldTransposePatterns(RewritePatternSet &patterns);
+void populateHloFoldPatterns(RewritePatternSet &patterns);
 
-std::unique_ptr<FunctionPass> createTransposeFolderPass();
+std::unique_ptr<FunctionPass> createHloFolderPass();
 
 } // namespace mlir
 

@@ -12,13 +12,13 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
-// TransposeFolder, example: broadcast + transpose -> broadcast
+// HloFolder
 //===----------------------------------------------------------------------===//
 
 // TODO(liuyuanqiang): re-implement this as folder
-def TransposeFolder : FunctionPass<"fold-transpose"> {
-  let summary = "Fold transpose, example: broadcast + transpose -> broadcast";
-  let constructor = "mlir::createTransposeFolderPass()";
+def HloFolder : FunctionPass<"hlo-fold"> {
+  let summary = "Fold mhlo ops";
+  let constructor = "mlir::createHloFolderPass()";
 }
 
 //===----------------------------------------------------------------------===//

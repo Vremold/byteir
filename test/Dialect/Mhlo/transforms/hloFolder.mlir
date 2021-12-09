@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s --fold-transpose | FileCheck %s
+// RUN: byteir-opt %s -hlo-fold | FileCheck %s
 
 func @broadcast_transpose(%arg0 : tensor<64xf32>) -> tensor<5x64x31x95xf32> {
     %0 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<3> : tensor<1xi64>} : (tensor<64xf32>) -> tensor<5x31x95x64xf32>

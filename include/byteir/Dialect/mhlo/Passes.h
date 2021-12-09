@@ -11,8 +11,8 @@
 #include "byteir/Dialect/mhlo/transforms/ConvBiasActFusion.h"
 #include "byteir/Dialect/mhlo/transforms/ElementFusion.h"
 #include "byteir/Dialect/mhlo/transforms/FusionOutlining.h"
+#include "byteir/Dialect/mhlo/transforms/HloFolder.h"
 #include "byteir/Dialect/mhlo/transforms/TransposeDotFusion.h"
-#include "byteir/Dialect/mhlo/transforms/TransposeFolder.h"
 
 namespace mlir {
 

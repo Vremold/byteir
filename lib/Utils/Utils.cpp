@@ -39,6 +39,17 @@ bool mlir::isZeroAttribute(Attribute value) {
   return false;
 }
 
+bool mlir::isSplatValue(DenseIntElementsAttr attr, int64_t value) {
+  if (!attr) {
+    return false;
+  }
+  if (!attr.isSplat()) {
+    return false;
+  }
+  int64_t start_val =attr.getSplatValue<IntegerAttr>().getInt();
+  return start_val == value;
+}
+
 bool mlir::isSplatCloseToValue(DenseFPElementsAttr attr, double value,
                                double EPSILON /*=0.00001*/) {
   if (!attr)
