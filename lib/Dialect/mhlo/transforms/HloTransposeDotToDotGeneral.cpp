@@ -1,13 +1,14 @@
-//===- TransposeDotFusion.cpp ---------------------------------*--- C++ -*-===//
+//===- HloTransposeDotToDotGeneral.cpp ---------------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/transforms/TransposeDotFusion.h"
+#include "byteir/Dialect/mhlo/transforms/HloTransposeDotToDotGeneral.h"
 #include "PassDetail.h"
+#include "byteir/Dialect/Byre/Common.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
@@ -20,6 +21,7 @@ using namespace llvm;
 
 namespace {
 
+// mhlo.transpose + mhlo.dot -> mhlo.dot_general
 struct FuseTransposeDotToDotGeneralPattern
     : public OpRewritePattern<mhlo::DotOp> {
   using OpRewritePattern<mhlo::DotOp>::OpRewritePattern;
@@ -53,14 +55,14 @@ struct FuseTransposeDotToDotGeneralPattern
   }
 };
 
-struct TransposeDotFusionPass
-    : public TransposeDotFusionBase<TransposeDotFusionPass> {
-  TransposeDotFusionPass() = default;
+struct HloTransposeDotToDotGeneralPass
+    : public HloTransposeDotToDotGeneralBase<HloTransposeDotToDotGeneralPass> {
+  HloTransposeDotToDotGeneralPass() = default;
   void runOnFunction() override {
     FuncOp funcOp = getFunction();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
-    populateTransposeDotToDotGeneralPattern(patterns);
+    populateHloTransposeDotToDotGeneralPattern(patterns);
     LogicalResult status =
         applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
     if (failed(status)) {
@@ -71,12 +73,12 @@ struct TransposeDotFusionPass
 
 } // namespace
 
-void mlir::populateTransposeDotToDotGeneralPattern(
+void mlir::populateHloTransposeDotToDotGeneralPattern(
     RewritePatternSet &patterns) {
   patterns.add(std::make_unique<FuseTransposeDotToDotGeneralPattern>(
       patterns.getContext()));
 }
 
-std::unique_ptr<FunctionPass> mlir::createTransposeDotFusionPass() {
-  return std::make_unique<TransposeDotFusionPass>();
+std::unique_ptr<FunctionPass> mlir::createHloTransposeDotToDotGeneralPass() {
+  return std::make_unique<HloTransposeDotToDotGeneralPass>();
 }

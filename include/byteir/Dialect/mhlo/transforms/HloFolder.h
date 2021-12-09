@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_MHLO_TRANSFORMS_TRANSPOSEFOLDER_H
-#define BYTEIR_DIALECT_MHLO_TRANSFORMS_TRANSPOSEFOLDER_H
+#ifndef BYTEIR_DIALECT_MHLO_TRANSFORMS_HLOFOLDER_H
+#define BYTEIR_DIALECT_MHLO_TRANSFORMS_HLOFOLDER_H
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
@@ -20,4 +20,4 @@ std::unique_ptr<FunctionPass> createHloFolderPass();
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_MHLO_TRANSFORMS_TRANSPOSEFOLDER_H
+#endif // BYTEIR_DIALECT_MHLO_TRANSFORMS_HLOFOLDER_H

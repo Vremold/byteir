@@ -48,12 +48,21 @@ def ElementFusion : FunctionPass<"fuse-element"> {
 }
 
 //===----------------------------------------------------------------------===//
-// TransposeDotFusion
+// HloTransposeDotToDotGeneral
 //===----------------------------------------------------------------------===//
 
-def TransposeDotFusion : FunctionPass<"fuse-transpose-dot"> {
-  let summary = "Fuse dot op with transpose";
-  let constructor = "mlir::createTransposeDotFusionPass()";
+def HloTransposeDotToDotGeneral : FunctionPass<"hlo-transpose-dot-to-dot-general"> {
+  let summary = "Fuse transpose dot to dot_general";
+  let constructor = "mlir::createHloTransposeDotToDotGeneralPass()";
+}
+
+//===----------------------------------------------------------------------===//
+// DotTransposeFusion : this pass should run after HloTransposeDotToDotGeneral
+//===----------------------------------------------------------------------===//
+
+def DotTransposeFusion : FunctionPass<"fuse-dot-transpose"> {
+  let summary = "Fuse dot/dot_general + transpose";
+  let constructor = "mlir::createDotTransposeFusionPass()";
 }
 
 //===----------------------------------------------------------------------===//

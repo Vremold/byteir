@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -fuse-transpose-dot | FileCheck %s
+// RUN: byteir-opt %s -hlo-transpose-dot-to-dot-general | FileCheck %s
 
 func @lhs_transpose_dot(%arg0 : tensor<64x128xf32>, %arg1 : tensor<64x32xf32>) -> tensor<128x32xf32> {
     %0 = "mhlo.transpose"(%arg0) {permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<64x128xf32>) -> tensor<128x64xf32>
