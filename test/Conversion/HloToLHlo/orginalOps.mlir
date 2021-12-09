@@ -11,3 +11,14 @@ func private @xla__select.55(%arg0: tensor<1x512xi64>) -> tensor<1x128xi64> {
   return %0 : tensor<1x128xi64>
 }
 // CHECK: lmhlo.slice
+
+func @mhlo_reduce(%arg0: tensor<1x128x128xf32>) -> tensor<128xf32> {
+  %0 = mhlo.constant dense<0.000000e+00> : tensor<f32>
+  %1 = "mhlo.reduce"(%arg0, %0) ( {
+    ^bb0(%arg3: tensor<f32>, %arg4: tensor<f32>):  // no predecessors
+      %1 = mhlo.add %arg3, %arg4 : tensor<f32>
+      "mhlo.return"(%1) : (tensor<f32>) -> ()
+  }) {dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<1x128x128xf32>, tensor<f32>) -> tensor<128xf32>
+  return %1: tensor<128xf32>
+}
+// CHECK: lmhlo.reduce

@@ -373,6 +373,96 @@ public:
   }
 };
 
+class ConvertReduceOpToByrePattern
+    : public OpConversionPattern<lmhlo::ReduceOp> {
+public:
+  ConvertReduceOpToByrePattern(MLIRContext *ctx)
+      : OpConversionPattern<lmhlo::ReduceOp>(ctx) {}
+
+  LogicalResult
+  matchAndRewrite(lmhlo::ReduceOp op, lmhlo::ReduceOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    if (adaptor.inputs().size() != 1 || adaptor.out().size() != 1 ||
+        adaptor.init_values().size() != 1) {
+      return rewriter.notifyMatchFailure(
+          op, "batched reductions is not supported yet");
+    }
+    // check wthether reduce supported
+    Region &region = op.body();
+    // only support single block
+    if (region.getBlocks().size() != 1) {
+      return rewriter.notifyMatchFailure(op, "unsupported region in reduce");
+    }
+    auto &block = region.front();
+    if (block.getOperations().size() != 2) {
+      return rewriter.notifyMatchFailure(op, "unsupported block in reduce");
+    }
+    // check block args
+    if (block.getNumArguments() != 3 ||
+        !block.getArgument(0).getType().isa<MemRefType>() ||
+        !block.getArgument(1).getType().isa<MemRefType>() ||
+        !block.getArgument(2).getType().isa<MemRefType>()) {
+      return rewriter.notifyMatchFailure(op,
+                                         "unsupported block's arg in reduce");
+    }
+
+    // check block body
+    auto ret_op = block.getTerminator();
+    if (!isa<mlir::lmhlo::TerminatorOp>(ret_op)) {
+      return rewriter.notifyMatchFailure(
+          op, "unsupported terminator in reduce's block");
+    }
+
+    auto reduce_computation = &block.front();
+    // only support ReduceSum now
+    if (!isa<lmhlo::AddOp>(reduce_computation)) {
+      return rewriter.notifyMatchFailure(
+          op, "unsupported ops in reduce_computation of reduce");
+    }
+    if (reduce_computation->getOperand(0) != block.getArgument(0) ||
+        reduce_computation->getOperand(1) != block.getArgument(1) ||
+        reduce_computation->getOperand(2) != block.getArgument(2)) {
+      return rewriter.notifyMatchFailure(
+          op, "unsupported ops in reduce_computation in reduce");
+    }
+    // TODO: more ReduceOp supported
+    std::string ReduceOp = "ReduceSumOp";
+
+    auto &&dimensions = op.dimensions();
+    int num_reduce_dims = 0;
+    auto inputShape = adaptor.inputs()[0].getType().dyn_cast<MemRefType>();
+    if (!inputShape || !inputShape.hasRank()) {
+      return rewriter.notifyMatchFailure(op, "invalid input type");
+    }
+    for (auto &&i : dimensions) {
+      auto dim = i.getSExtValue();
+      if (dim < 0 || dim >= inputShape.getRank()) {
+        return rewriter.notifyMatchFailure(op, "invalid reduce dimensions");
+      }
+      if (inputShape.getDimSize(dim) > 1) {
+        ++num_reduce_dims;
+      }
+    }
+    if (num_reduce_dims > 1) {
+      return rewriter.notifyMatchFailure(
+          op, "reduce along more than one dimensions");
+    }
+
+    // FIXME: Check initial value or pass it as operand to byre.compute
+    // Since runtime could only handle ReduceOp worked on fixed initial
+    // value, we don't pass it as an operand here. And we relocated all constant
+    // to function arguments before rewrite ReduceOp to byre.compute, so we
+    // cannot even check whether initial value is valid here
+    SmallVector<Value, 2> operands{adaptor.inputs()[0], adaptor.out()[0]};
+    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+        op, ReduceOp, operands);
+
+    compute_op->setAttr("dimensions", op.dimensions());
+
+    return success();
+  }
+};
+
 // Main Pass
 struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
 
@@ -601,8 +691,8 @@ void mlir::populateLmhloToByreConversionPatterns(
                ConvertToByrePattern<lmhlo::SliceOp>>(patterns.getContext(),
                                                      supportMap);
 
-  patterns.add<ConvertDotOpToByrePattern,
-               ConvertCustomCallOpToByrePattern>(patterns.getContext());
+  patterns.add<ConvertDotOpToByrePattern, ConvertCustomCallOpToByrePattern,
+               ConvertReduceOpToByrePattern>(patterns.getContext());
 }
 
 void mlir::populateStdToByreConversionPatterns(RewritePatternSet& patterns) {
