@@ -76,7 +76,7 @@ module {
     return %0 : memref<1x128xi64>
   }
   // CHECK-LABEL: mhlo_slice
-  // CHECK-NEXT: byre.compute @SliceOp
+  // CHECK-NEXT: byre.compute @AliasOp
 
 
   func @mhlo_reduce(%arg0: memref<1x128x128xf32> {__placeholder__byre.argname = "A"}) -> (memref<128xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {

@@ -204,7 +204,7 @@ mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
     return op->emitOpError() << "can not find matched byre_compute_name";
   }
 
-  // check whether inplace is support
+  // check whether Slice is applicable for Alias
   if (!isSplatValue(op.strides(), 1)) {
     return rewriter.notifyMatchFailure(op, "unsupported strides of slice");
   }
@@ -229,7 +229,10 @@ mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
 
   // FIXME: currently only support inplace
   new_op->setAttr("offset", rewriter.getI32IntegerAttr(last_start));
-  new_op->setAttr("inplace", rewriter.getBoolAttr(true));
+
+  if (adaptor.getOperands()[0].getDefiningOp() == nullptr) {
+    new_op->setAttr("arg_alias", rewriter.getUnitAttr());
+  }
 
   return success();
 }
@@ -471,7 +474,7 @@ struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
     lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
     lmhloSupportMap.insert({"lmhlo.scatter", "IndexPutOp" });
     lmhloSupportMap.insert({"lmhlo.gather", "IndexSelectOp"});
-    lmhloSupportMap.insert({"lmhlo.slice", "SliceOp" });
+    lmhloSupportMap.insert({"lmhlo.slice", "AliasOp" });
 
     // insert attrNames
     attrNames.push_back(byre::ByreDialect::getEntryPointFunctionAttrName());
