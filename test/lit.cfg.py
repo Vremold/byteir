@@ -35,6 +35,7 @@ tool_dirs = [
 ]
 tool_names = [
     'byteir-opt',
+    'byteir-stat',
     'byteir-translate'
 ]
 tools = [ToolSubst(s, unresolved='ignore') for s in tool_names]

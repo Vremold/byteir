@@ -52,3 +52,9 @@ function(add_byteir_translation_library name)
   set_property(GLOBAL APPEND PROPERTY BYTEIR_TRANSLATION_LIBS ${name})
   add_mlir_library(${ARGV} DEPENDS mlir-headers)
 endfunction(add_byteir_translation_library)
+
+# Declare the library associated with a statistics.
+function(add_byteir_stat_library name)
+  set_property(GLOBAL APPEND PROPERTY BYTEIR_STAT_LIBS ${name})
+  add_mlir_library(${ARGV} DEPENDS mlir-headers)
+endfunction(add_byteir_stat_library)
