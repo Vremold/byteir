@@ -32,7 +32,7 @@ static std::string GetOutlineFuncitonName(mhlo::FusionOp fusionOp, unsigned& cnt
   if (nameAttr == nullptr) {
     funcName = "Unknown" + Twine(cnt++).str();
   } else {
-    funcName = nameAttr.getValue().str();
+    funcName = nameAttr.getValue().str() + Twine(cnt++).str();
   }
 
   return funcName;

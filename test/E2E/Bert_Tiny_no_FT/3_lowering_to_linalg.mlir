@@ -1,6 +1,16 @@
 // RUN: byteir-opt %s -hlo-fusion-to-linalg="anchor-tag=byre_elementwise_fusion" -unrealized-cast-to-linalg -linalg-fuse-elementwise-ops -cse | FileCheck %s
 
 module  {
+  func private @MatmulOp0(%arg0: tensor<128x128xf32>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"} {
+    %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [0], rhs_contracting_dimensions = [0]>, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
+    %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x128xf32>) -> tensor<128x128xf32>
+    return %1 : tensor<128x128xf32>
+  }
+  func private @MatmulOp1(%arg0: tensor<128x128xf32>, %arg1: tensor<128x30522xf32>) -> tensor<30522x128xf32> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"} {
+    %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [0], rhs_contracting_dimensions = [0]>, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x30522xf32>) -> tensor<128x30522xf32>
+    %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x30522xf32>) -> tensor<30522x128xf32>
+    return %1 : tensor<30522x128xf32>
+  }
   func private @Unknown0(%arg0: tensor<1x128xi64>, %arg1: tensor<128xi64>, %arg2: tensor<128xi64>, %arg3: tensor<128xf64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>) attributes {byre_elementwise_fusion} {
     %0 = "mhlo.reshape"(%arg0) : (tensor<1x128xi64>) -> tensor<128xi64>
     %1 = "mhlo.convert"(%0) : (tensor<128xi64>) -> tensor<128xui32>
@@ -180,85 +190,86 @@ module  {
     %36 = mhlo.constant dense<0.000000e+00> : tensor<f32>
     %37 = "mhlo.slice"(%arg45) {limit_indices = dense<[1, 128]> : tensor<2xi64>, start_indices = dense<0> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (tensor<1x512xi64>) -> tensor<1x128xi64>
     %38 = "mhlo.slice"(%arg44) {limit_indices = dense<[1, 128]> : tensor<2xi64>, start_indices = dense<0> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (tensor<1x512xi64>) -> tensor<1x128xi64>
-    %39 = "mhlo.transpose"(%arg38) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x128xf32>) -> tensor<128x128xf32>
-    %40 = mhlo.multiply %arg39, %8 : tensor<128xf32>
-    %41 = "mhlo.transpose"(%arg42) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<30522x128xf32>) -> tensor<128x30522xf32>
-    %42 = "mhlo.transpose"(%41) {permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x30522xf32>) -> tensor<30522x128xf32>
-    %43 = "mhlo.dot"(%6, %42) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x30522xf32>, tensor<30522x128xf32>) -> tensor<128x128xf32>
-    %44 = mhlo.multiply %arg40, %8 : tensor<128xf32>
-    %45 = mhlo.multiply %arg43, %9 : tensor<30522xf32>
-    %46:3 = call @Unknown0(%arg46, %31, %11, %12) : (tensor<1x128xi64>, tensor<128xi64>, tensor<128xi64>, tensor<128xf64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>)
-    %47 = "mhlo.gather"(%arg0, %46#0) {dimension_numbers = #mhlo.gather<offset_dims = [1], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 1>, indices_are_sorted = false, slice_sizes = dense<[1, 128]> : tensor<2xi64>} : (tensor<30522x128xf32>, tensor<128xui32>) -> tensor<128x128xf32>
-    %48 = "mhlo.transpose"(%39) {permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x128xf32>) -> tensor<128x128xf32>
-    %49:3 = call @Unknown1(%38, %31, %29, %33) : (tensor<1x128xi64>, tensor<128xi64>, tensor<128xi64>, tensor<128xf64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>)
-    %50 = "mhlo.gather"(%arg1, %49#0) {dimension_numbers = #mhlo.gather<offset_dims = [1], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 1>, indices_are_sorted = false, slice_sizes = dense<[1, 128]> : tensor<2xi64>} : (tensor<512x128xf32>, tensor<128xui32>) -> tensor<128x128xf32>
-    %51:3 = call @Unknown2(%37, %31, %32, %33) : (tensor<1x128xi64>, tensor<128xi64>, tensor<128xi64>, tensor<128xf64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>)
-    %52 = "mhlo.gather"(%arg2, %51#0) {dimension_numbers = #mhlo.gather<offset_dims = [1], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 1>, indices_are_sorted = false, slice_sizes = dense<[1, 128]> : tensor<2xi64>} : (tensor<2x128xf32>, tensor<128xui32>) -> tensor<128x128xf32>
-    %53 = call @Unknown3(%47, %52, %35, %50) : (tensor<128x128xf32>, tensor<128x128xf32>, tensor<1x128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
-    %54 = "mhlo.dot"(%53, %39) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
-    %55:2 = call @Unknown4(%54, %40, %3, %2, %27, %26, %18, %25, %24, %23, %22, %21, %20, %19, %17, %16, %15, %14, %13, %35, %1, %0) : (tensor<128x128xf32>, tensor<128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>) -> (tensor<1x128x128xf32>, tensor<1x128x128xf32>)
-    %56 = "mhlo.batch_norm_training"(%55#0, %8, %4) {epsilon = 9.99999996E-13 : f32, feature_index = 1 : i64} : (tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>
-    %57 = "mhlo.get_tuple_element"(%56) {index = 0 : i32} : (tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<1x128x128xf32>
-    %58 = "mhlo.get_tuple_element"(%56) {index = 1 : i32} : (tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
-    %59 = "mhlo.get_tuple_element"(%56) {index = 2 : i32} : (tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
-    %60 = call @Unknown5(%59, %7, %8) : (tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %61 = call @Unknown6(%arg40, %57, %35, %arg41) : (tensor<128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<128xf32>) -> tensor<128x128xf32>
-    %62 = "mhlo.dot"(%61, %41) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x30522xf32>) -> tensor<128x30522xf32>
-    %63 = call @Unknown7(%62, %45) : (tensor<128x30522xf32>, tensor<30522xf32>) -> tensor<1x128x30522xf32>
-    %64 = "mhlo.transpose"(%53) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x128xf32>) -> tensor<128x128xf32>
-    %65:3 = call @Unknown8(%43, %44, %57, %35) : (tensor<128x128xf32>, tensor<128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>) -> (tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>)
-    %66 = "mhlo.batch_norm_grad"(%55#0, %8, %58, %60, %65#1) {epsilon = 9.99999996E-13 : f32, feature_index = 1 : i64} : (tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<1x128x128xf32>) -> tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>
-    %67 = "mhlo.get_tuple_element"(%66) {index = 0 : i32} : (tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<1x128x128xf32>
-    %68:2 = call @Unknown9(%67, %55#1) : (tensor<1x128x128xf32>, tensor<1x128x128xf32>) -> (tensor<1x128x128xf32>, tensor<128x128xf32>)
-    %69 = "mhlo.dot"(%68#1, %48) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
-    %70 = call @Unknown10(%46#2, %69, %34) : (tensor<128xi1>, tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
-    %71 = "mhlo.scatter"(%10, %46#1, %70) ( {
+    %39 = mhlo.multiply %arg39, %8 : tensor<128xf32>
+    %40 = "mhlo.dot"(%6, %arg42) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x30522xf32>, tensor<30522x128xf32>) -> tensor<128x128xf32>
+    %41 = mhlo.multiply %arg40, %8 : tensor<128xf32>
+    %42 = mhlo.multiply %arg43, %9 : tensor<30522xf32>
+    %43:3 = call @Unknown0(%arg46, %31, %11, %12) : (tensor<1x128xi64>, tensor<128xi64>, tensor<128xi64>, tensor<128xf64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>)
+    %44 = "mhlo.gather"(%arg0, %43#0) {dimension_numbers = #mhlo.gather<offset_dims = [1], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 1>, indices_are_sorted = false, slice_sizes = dense<[1, 128]> : tensor<2xi64>} : (tensor<30522x128xf32>, tensor<128xui32>) -> tensor<128x128xf32>
+    %45:3 = call @Unknown1(%38, %31, %29, %33) : (tensor<1x128xi64>, tensor<128xi64>, tensor<128xi64>, tensor<128xf64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>)
+    %46 = "mhlo.gather"(%arg1, %45#0) {dimension_numbers = #mhlo.gather<offset_dims = [1], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 1>, indices_are_sorted = false, slice_sizes = dense<[1, 128]> : tensor<2xi64>} : (tensor<512x128xf32>, tensor<128xui32>) -> tensor<128x128xf32>
+    %47:3 = call @Unknown2(%37, %31, %32, %33) : (tensor<1x128xi64>, tensor<128xi64>, tensor<128xi64>, tensor<128xf64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>)
+    %48 = "mhlo.gather"(%arg2, %47#0) {dimension_numbers = #mhlo.gather<offset_dims = [1], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 1>, indices_are_sorted = false, slice_sizes = dense<[1, 128]> : tensor<2xi64>} : (tensor<2x128xf32>, tensor<128xui32>) -> tensor<128x128xf32>
+    %49 = call @Unknown3(%44, %48, %35, %46) : (tensor<128x128xf32>, tensor<128x128xf32>, tensor<1x128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
+    %50 = "mhlo.dot_general"(%49, %arg38) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [1]>, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
+    %51:2 = call @Unknown4(%50, %39, %3, %2, %27, %26, %18, %25, %24, %23, %22, %21, %20, %19, %17, %16, %15, %14, %13, %35, %1, %0) : (tensor<128x128xf32>, tensor<128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>) -> (tensor<1x128x128xf32>, tensor<1x128x128xf32>)
+    %52 = "mhlo.batch_norm_training"(%51#0, %8, %4) {epsilon = 9.99999996E-13 : f32, feature_index = 1 : i64} : (tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>
+    %53 = "mhlo.get_tuple_element"(%52) {index = 0 : i32} : (tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<1x128x128xf32>
+    %54 = "mhlo.get_tuple_element"(%52) {index = 1 : i32} : (tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
+    %55 = "mhlo.get_tuple_element"(%52) {index = 2 : i32} : (tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
+    %56 = call @Unknown5(%55, %7, %8) : (tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %57 = call @Unknown6(%arg40, %53, %35, %arg41) : (tensor<128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<128xf32>) -> tensor<128x128xf32>
+    %58 = "mhlo.dot_general"(%57, %arg42) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [1]>, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<30522x128xf32>) -> tensor<128x30522xf32>
+    %59 = call @Unknown7(%58, %42) : (tensor<128x30522xf32>, tensor<30522xf32>) -> tensor<1x128x30522xf32>
+    %60:3 = call @Unknown8(%40, %41, %53, %35) : (tensor<128x128xf32>, tensor<128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>) -> (tensor<1x128x128xf32>, tensor<1x128x128xf32>, tensor<1x128x128xf32>)
+    %61 = "mhlo.batch_norm_grad"(%51#0, %8, %54, %56, %60#1) {epsilon = 9.99999996E-13 : f32, feature_index = 1 : i64} : (tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<1x128x128xf32>) -> tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>
+    %62 = "mhlo.get_tuple_element"(%61) {index = 0 : i32} : (tuple<tensor<1x128x128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<1x128x128xf32>
+    %63:2 = call @Unknown9(%62, %51#1) : (tensor<1x128x128xf32>, tensor<1x128x128xf32>) -> (tensor<1x128x128xf32>, tensor<128x128xf32>)
+    %64 = "mhlo.dot"(%63#1, %arg38) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
+    %65 = call @Unknown10(%43#2, %64, %34) : (tensor<128xi1>, tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
+    %66 = "mhlo.scatter"(%10, %43#1, %65) ( {
     ^bb0(%arg47: tensor<f32>, %arg48: tensor<f32>):  // no predecessors
-      %85 = mhlo.add %arg47, %arg48 : tensor<f32>
-      "mhlo.return"(%85) : (tensor<f32>) -> ()
+      %77 = mhlo.add %arg47, %arg48 : tensor<f32>
+      "mhlo.return"(%77) : (tensor<f32>) -> ()
     }) {indices_are_sorted = false, scatter_dimension_numbers = #mhlo.scatter<update_window_dims = [1], inserted_window_dims = [0], scatter_dims_to_operand_dims = [0], index_vector_dim = 1>, unique_indices = false} : (tensor<30522x128xf32>, tensor<128x1xi64>, tensor<128x128xf32>) -> tensor<30522x128xf32>
-    %72 = call @Unknown11(%49#2, %69, %34) : (tensor<128xi1>, tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
-    %73 = "mhlo.scatter"(%28, %49#1, %72) ( {
+    %67 = call @Unknown11(%45#2, %64, %34) : (tensor<128xi1>, tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
+    %68 = "mhlo.scatter"(%28, %45#1, %67) ( {
     ^bb0(%arg47: tensor<f32>, %arg48: tensor<f32>):  // no predecessors
-      %85 = mhlo.add %arg47, %arg48 : tensor<f32>
-      "mhlo.return"(%85) : (tensor<f32>) -> ()
+      %77 = mhlo.add %arg47, %arg48 : tensor<f32>
+      "mhlo.return"(%77) : (tensor<f32>) -> ()
     }) {indices_are_sorted = false, scatter_dimension_numbers = #mhlo.scatter<update_window_dims = [1], inserted_window_dims = [0], scatter_dims_to_operand_dims = [0], index_vector_dim = 1>, unique_indices = false} : (tensor<512x128xf32>, tensor<128x1xi64>, tensor<128x128xf32>) -> tensor<512x128xf32>
-    %74 = call @Unknown12(%51#2, %69, %34) : (tensor<128xi1>, tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
-    %75 = "mhlo.scatter"(%30, %51#1, %74) ( {
+    %69 = call @Unknown12(%47#2, %64, %34) : (tensor<128xi1>, tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
+    %70 = "mhlo.scatter"(%30, %47#1, %69) ( {
     ^bb0(%arg47: tensor<f32>, %arg48: tensor<f32>):  // no predecessors
-      %85 = mhlo.add %arg47, %arg48 : tensor<f32>
-      "mhlo.return"(%85) : (tensor<f32>) -> ()
+      %77 = mhlo.add %arg47, %arg48 : tensor<f32>
+      "mhlo.return"(%77) : (tensor<f32>) -> ()
     }) {indices_are_sorted = false, scatter_dimension_numbers = #mhlo.scatter<update_window_dims = [1], inserted_window_dims = [0], scatter_dims_to_operand_dims = [0], index_vector_dim = 1>, unique_indices = false} : (tensor<2x128xf32>, tensor<128x1xi64>, tensor<128x128xf32>) -> tensor<2x128xf32>
-    %76 = "mhlo.dot"(%64, %68#1) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
-    %77 = "mhlo.transpose"(%76) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x128xf32>) -> tensor<128x128xf32>
-    %78 = "mhlo.reduce"(%68#0, %36) ( {
+    %71 = call @MatmulOp0(%49, %63#1) : (tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>
+    %72 = "mhlo.reduce"(%63#0, %36) ( {
     ^bb0(%arg47: tensor<f32>, %arg48: tensor<f32>):  // no predecessors
-      %85 = mhlo.add %arg47, %arg48 : tensor<f32>
-      "mhlo.return"(%85) : (tensor<f32>) -> ()
+      %77 = mhlo.add %arg47, %arg48 : tensor<f32>
+      "mhlo.return"(%77) : (tensor<f32>) -> ()
     }) {dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<1x128x128xf32>, tensor<f32>) -> tensor<128xf32>
-    %79 = "mhlo.reduce"(%65#2, %36) ( {
+    %73 = "mhlo.reduce"(%60#2, %36) ( {
     ^bb0(%arg47: tensor<f32>, %arg48: tensor<f32>):  // no predecessors
-      %85 = mhlo.add %arg47, %arg48 : tensor<f32>
-      "mhlo.return"(%85) : (tensor<f32>) -> ()
+      %77 = mhlo.add %arg47, %arg48 : tensor<f32>
+      "mhlo.return"(%77) : (tensor<f32>) -> ()
     }) {dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<1x128x128xf32>, tensor<f32>) -> tensor<128xf32>
-    %80 = "mhlo.reduce"(%65#0, %36) ( {
+    %74 = "mhlo.reduce"(%60#0, %36) ( {
     ^bb0(%arg47: tensor<f32>, %arg48: tensor<f32>):  // no predecessors
-      %85 = mhlo.add %arg47, %arg48 : tensor<f32>
-      "mhlo.return"(%85) : (tensor<f32>) -> ()
+      %77 = mhlo.add %arg47, %arg48 : tensor<f32>
+      "mhlo.return"(%77) : (tensor<f32>) -> ()
     }) {dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<1x128x128xf32>, tensor<f32>) -> tensor<128xf32>
-    %81 = "mhlo.transpose"(%61) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x128xf32>) -> tensor<128x128xf32>
-    %82 = "mhlo.dot"(%81, %6) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<128x128xf32>, tensor<128x30522xf32>) -> tensor<128x30522xf32>
-    %83 = "mhlo.transpose"(%82) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x30522xf32>) -> tensor<30522x128xf32>
-    %84 = "mhlo.reduce"(%5, %36) ( {
+    %75 = call @MatmulOp1(%57, %6) : (tensor<128x128xf32>, tensor<128x30522xf32>) -> tensor<30522x128xf32>
+    %76 = "mhlo.reduce"(%5, %36) ( {
     ^bb0(%arg47: tensor<f32>, %arg48: tensor<f32>):  // no predecessors
-      %85 = mhlo.add %arg47, %arg48 : tensor<f32>
-      "mhlo.return"(%85) : (tensor<f32>) -> ()
+      %77 = mhlo.add %arg47, %arg48 : tensor<f32>
+      "mhlo.return"(%77) : (tensor<f32>) -> ()
     }) {dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<1x128x30522xf32>, tensor<f32>) -> tensor<30522xf32>
-    return %63, %71, %73, %75, %77, %78, %79, %80, %83, %84 : tensor<1x128x30522xf32>, tensor<30522x128xf32>, tensor<512x128xf32>, tensor<2x128xf32>, tensor<128x128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<30522x128xf32>, tensor<30522xf32>
+    return %59, %66, %68, %70, %71, %72, %73, %74, %75, %76 : tensor<1x128x30522xf32>, tensor<30522x128xf32>, tensor<512x128xf32>, tensor<2x128xf32>, tensor<128x128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<30522x128xf32>, tensor<30522xf32>
   }
 }
 
+// CHECK-LABEL: func private @MatmulOp0(%arg0: tensor<128x128xf32>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"}
+// CHECK-NEXT: mhlo.dot_general
+
+// CHECK-LABEL: func private @MatmulOp1(%arg0: tensor<128x128xf32>, %arg1: tensor<128x30522xf32>) -> tensor<30522x128xf32> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"}
+// CHECK-NEXT: mhlo.dot_general
+
 // CHECK-LABEL: func private @Unknown0
+// CHECK-NEXT: linalg
+
+// CHECK-LABEL: func private @Unknown1
 // CHECK-NEXT: linalg
 
 // CHECK-LABEL: func @main

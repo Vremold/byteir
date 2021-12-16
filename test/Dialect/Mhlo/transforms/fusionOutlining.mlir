@@ -26,14 +26,14 @@ func @mhlo_add_2(%arg0: tensor<4xf32>, %arg1: tensor<4xf32>) -> tensor<4xf32> {
   }) {byre_compute_name = "TestFunc", some_attr} : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
   return %0 : tensor<4xf32>
 }
-// CHECK-LABEL: func private @TestFunc
+// CHECK-LABEL: func private @TestFunc1
 // CHECK-SAME: {byre_compute_name = "TestFunc", some_attr}
 // CHECK:   %[[VAR_0:.*]] = mhlo.add %{{.*}}, %{{.*}} : tensor<4xf32>
 // CHECK:   %[[VAR_1:.*]] = mhlo.add %{{.*}}, %[[VAR_0]] : tensor<4xf32>
 // CHECK:   return %[[VAR_1]] : tensor<4xf32>
 
 // CHECK-LABEL: func @mhlo_add_2
-// CHECK:   %[[VAR_0:.*]] = call @TestFunc(%{{.*}}, %{{.*}}) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
+// CHECK:   %[[VAR_0:.*]] = call @TestFunc1(%{{.*}}, %{{.*}}) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
 // CHECK:   return %[[VAR_0]] : tensor<4xf32>
 
 func @mhlo_add_3(%arg0: tensor<4xf32>, %arg1: tensor<4xf32>) -> tensor<4xf32> {
@@ -45,7 +45,7 @@ func @mhlo_add_3(%arg0: tensor<4xf32>, %arg1: tensor<4xf32>) -> tensor<4xf32> {
   return %0 : tensor<4xf32>
 }
 // CHECK-LABEL: func @mhlo_add_3
-// CHECK:   %[[VAR_0:.*]] = call @TestFunc(%{{.*}}, %{{.*}}) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
+// CHECK:   %[[VAR_0:.*]] = call @TestFunc2(%{{.*}}, %{{.*}}) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
 // CHECK:   return %[[VAR_0]] : tensor<4xf32>
 
 func @mhlo_add_outer_scope_cst(%arg0: tensor<4xf32>, %arg1: tensor<4xf32>) -> tensor<4xf32> {
@@ -57,12 +57,12 @@ func @mhlo_add_outer_scope_cst(%arg0: tensor<4xf32>, %arg1: tensor<4xf32>) -> te
   }) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
   return %1 : tensor<4xf32>
 }
-// CHECK-LABEL: func private @Unknown1
+// CHECK-LABEL: func private @Unknown3
 // CEHCK:  %[[VAR_0:.*]] = mhlo.constant dense<0.000000e+00> : tensor<4xf32>
 // CHECK:  %[[VAR_1:.*]] = mhlo.add %{{.*}}, %[[VAR_0]] : tensor<4xf32>
 // CHECK:  %[[VAR_2:.*]] = mhlo.add %{{.*}}, %[[VAR_1]] : tensor<4xf32>
 // CHECK:  return %[[VAR_2]] : tensor<4xf32>
 
 // CHECK-LABEL: func @mhlo_add_outer_scope_cst
-// CHECK:   %[[VAR_0:.*]] = call @Unknown1(%{{.*}}, %{{.*}}) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
+// CHECK:   %[[VAR_0:.*]] = call @Unknown3(%{{.*}}, %{{.*}}) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
 // CHECK:   return %[[VAR_0]] : tensor<4xf32>
