@@ -625,17 +625,26 @@ static inline void relocateFuncOpConstantLikeForLmhlo(FuncOp func,
   });
 }
 
-static inline void markFuncOpInOutTypeForLmhlo(FuncOp func) {
+static inline void markFuncOpInOutTypeForLmhlo(FuncOp func, unsigned inputCnt,
+                                               unsigned outputCnt) {
   auto argTypeAttrName = byre::ByreDialect::getEntryPointFuncArgTypeAttrName();
+  auto argNameAttrName = byre::ByreDialect::getEntryPointFuncArgNameAttrName();
+  auto context = func->getContext();
   for (size_t idx = 0; idx < func.getNumArguments(); ++idx) {
+    func.setArgAttr(
+        idx, argNameAttrName,
+        StringAttr::get(context, Twine("Input") + Twine(inputCnt++)));
     func.setArgAttr(idx, argTypeAttrName,
                     byre::EntryFuncArgTypeAttr::get(
-                        func->getContext(), byre::EntryFuncArgType::Input));
+                        context, byre::EntryFuncArgType::Input));
   }
   for (size_t idx = 0; idx < func.getNumResults(); ++idx) {
+    func.setResultAttr(
+        idx, argNameAttrName,
+        StringAttr::get(context, Twine("Output") + Twine(outputCnt++)));
     func.setResultAttr(idx, argTypeAttrName,
                        byre::EntryFuncArgTypeAttr::get(
-                           func->getContext(), byre::EntryFuncArgType::Output));
+                           context, byre::EntryFuncArgType::Output));
   }
 }
 
@@ -685,16 +694,22 @@ void ConvertToByrePass::runOnOperation() {
   // rewrite private calls
   rewriteCallOpsForFuncOp(callCollector);
 
-  unsigned unknownCnt = 0;
+  unsigned unknownWeightCnt = 0;
+  unsigned inputCnt = 0, outputCnt = 0;
   for (auto func : entryCollector) {
-    markFuncOpInOutTypeForLmhlo(func);
+    // Note: In this process we will give all arguments and results of given
+    // func a unique `argName`, all arguments would be treated as argType::Input
+    // and all results would be treated as argType::Output. But if argument of
+    // func was with attribute placholders `argName` and `argType`, it will
+    // overwrite those two attributes later.
+    markFuncOpInOutTypeForLmhlo(func, inputCnt, outputCnt);
 
     rewriteByreResultAttrsToFuncResultAttr(func);
 
     relocateFuncOpResultsForLmhlo(func);
  
     if (isFuncWithEntryPointPlaceholder(func)) {
-      relocateFuncOpConstantLikeForLmhlo(func, unknownCnt);
+      relocateFuncOpConstantLikeForLmhlo(func, unknownWeightCnt);
     }
 
     removeAttrPlaceholders(func, attrNames);

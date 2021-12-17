@@ -22,7 +22,14 @@ module {
 // CHECK:     byre.compute @AddOp(%[[ARG_1]], %[[ARG_0]], %[[ARG_2]]) : memref<4xf32>, memref<4xf32>, memref<4xf32>
 // CHECK:     return
 
-
+  func @mhlo_add_no_annotation(%arg0: memref<4xf32>, %arg1: memref<4xf32>) -> memref<4xf32> attributes { __placeholder__byre.entry_point} {
+    %1 = memref.alloc() : memref<4xf32>
+    "lmhlo.add"(%arg0, %arg1, %1) : (memref<4xf32>, memref<4xf32>, memref<4xf32>) -> ()
+    return %1 : memref<4xf32>
+  }
+// CHECK:   func @mhlo_add_no_annotation(%[[ARG_0:.*]]: memref<4xf32> {byre.argname = "Input0", byre.argtype = 1 : i32}, %[[ARG_1:.*]]: memref<4xf32> {byre.argname = "Input1", byre.argtype = 1 : i32}, %[[ARG_2:.*]]: memref<4xf32> {byre.argname = "Output0", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
+// CHECK:     byre.compute @AddOp(%[[ARG_0]], %[[ARG_1]], %[[ARG_2]]) : memref<4xf32>, memref<4xf32>, memref<4xf32>
+// CHECK:     return
 
   func @mhlo_matmul(%arg0: memref<128x64xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<64x32xf32> {__placeholder__byre.argname = "B"}) -> (memref<128x32xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<128x32xf32>
@@ -95,5 +102,4 @@ module {
   // CHECK-LABEL: mhlo_reduce
   // CHECK-NEXT: byre.compute @ReduceSumOp(%arg1, %arg2)
   //   CHECK-DAG: dimensions = dense<[0, 1]>
-
 }
