@@ -157,7 +157,8 @@ void mlir::replcateFuncOpResults(
 }
 
 void mlir::relocateFuncOpConstantLike(
-    mlir::FuncOp funcOp, llvm::StringRef opName,
+    mlir::FuncOp funcOp, 
+    std::function<bool(mlir::Operation*)> checkOp, 
     std::function<std::tuple<mlir::Value, NamedAttrList>(mlir::Operation *)>
         getValue) {
   // skip empty func
@@ -180,7 +181,7 @@ void mlir::relocateFuncOpConstantLike(
   // collect all constantLikes
   unsigned offset = 0;
   funcOp.walk([&](mlir::Operation* op) {
-    if (op->getName().getStringRef() == opName) {
+    if (checkOp(op)) {
       auto t = getValue(op);
       mlir::Value& val =  std::get<0>(t);
       NamedAttrList& attrList = std::get<1>(t);
@@ -205,10 +206,9 @@ void mlir::relocateFuncOpConstantLike(
 
   mlir::FunctionType newFuncType = opBuilder.getFunctionType(newInputTypes, {}/*results*/);
 
-  mlir::function_like_impl::insertFunctionArguments(
+  mlir::function_like_impl::insertFunctionArgumentsEx(
       funcOp, relocatedIndices, relocatedTypes, correspondingArgAttrs, {},
       origianlSize, newFuncType);
-  //funcOp.insertArguments(relocatedIndices, relocatedTypes, {}, {});
 
   unsigned idx = 0;
   for (auto val : consantLikeValues) {

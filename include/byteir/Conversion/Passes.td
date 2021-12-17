@@ -76,18 +76,6 @@ def UnrealizedCastToLinalg : FunctionPass<"unrealized-cast-to-linalg"> {
 }
 
 //===----------------------------------------------------------------------===//
-// ToByre
-//===----------------------------------------------------------------------===//
-
-def ConvertToByre : Pass<"convert-to-byre", "ModuleOp"> {
-  let summary = "Convert op to Byre Op.";
-  let constructor = "mlir::createConvertToByrePass()";
-  let dependentDialects = [
-    "mlir::byre::ByreDialect",
-  ];
-}
-
-//===----------------------------------------------------------------------===//
 // ToAce
 //===----------------------------------------------------------------------===//
 
@@ -106,5 +94,27 @@ def ConvertMhloToAce : Pass<"convert-mhlo-to-ace", "FuncOp"> {
     "mlir::ace::AceDialect",
   ];
 }
+
+//===----------------------------------------------------------------------===//
+// ToByre
+//===----------------------------------------------------------------------===//
+
+def ConvertToByre : Pass<"convert-to-byre", "ModuleOp"> {
+  let summary = "Convert op to Byre Op.";
+  let constructor = "mlir::createConvertToByrePass()";
+  let dependentDialects = [
+    "mlir::byre::ByreDialect",
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// ToPTX
+//===----------------------------------------------------------------------===//
+
+def GenPTXConfig : FunctionPass<"gen-ptx-config"> {
+  let summary = "Generate PTX configuration";
+  let constructor = "mlir::createGenPTXConfigPass()";
+}
+
 
 #endif // BYTEIR_CONVERSION_PASSES

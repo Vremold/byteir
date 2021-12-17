@@ -501,51 +501,51 @@ static bool isEntryPointFunc(FuncOp func) {
   return func->hasAttr(ByreDialect::getEntryPointFunctionAttrName());
 }
 
-// identify EntryPoint funciton
-static void identifyEntryPointFunc(ModuleOp m,
-                                   llvm::SmallVector<FuncOp, 4> &collector) {
-  // get first entyr func
-  for (auto entry : m.getOps<FuncOp>()) {
+static bool isRewritablePrivateFunc(FuncOp func) {
+  // check support attribute
+  return func.isPrivate() &&
+         func->hasAttr(getByreComputeName());
+}
 
+// identify EntryPoint funciton
+static void identifyEntryPointFuncAndCalls(
+  ModuleOp m,
+  llvm::SmallVector<FuncOp, 4>& entries,
+  llvm::SmallVector<mlir::CallOp, 16>& calls,
+  llvm::SmallVector<FuncOp, 16>& removeFuncs) {
+  // get first entry func
+
+  llvm::SmallPtrSet<Operation*, 16> callSet;
+
+  for (auto func : m.getOps<FuncOp>()) {
     // skip non entry-point function or empty func
-    if (!isFuncWithEntryPointPlaceholder(entry) && entry.isPublic()) {
+    if (!isFuncWithEntryPointPlaceholder(func) || func.isPrivate()) {
       continue;
     }
+    entries.push_back(func);
 
-    collector.push_back(entry);
+    for (auto callOp : func.getOps<mlir::CallOp>()) {
+      auto calleeFuncOp = GetFuncOp(callOp);
+      if (isRewritablePrivateFunc(calleeFuncOp) &&
+          !callSet.contains(callOp)) {
+        calls.push_back(callOp);
+        callSet.insert(callOp);
+        removeFuncs.push_back(calleeFuncOp);
+      }
+    }
   }
 }
 
 static inline void relocateFuncOpResultsForLmhlo(
-    FuncOp func, const llvm::SmallPtrSet<FuncOp, 4> &collectorSet) {
+    FuncOp func) {
   unsigned idx = func.getNumArguments();
-
   replcateFuncOpResults(func, [&](mlir::ReturnOp retOp) {
     llvm::SmallPtrSet<mlir::Operation *, 16> removeOps;
-
     mlir::OpBuilder opBuilder(retOp);
-
     for (auto retVal : retOp.getOperands()) {
-
       if (auto allocOp = dyn_cast<memref::AllocOp>(retVal.getDefiningOp())) {
         removeOps.insert(allocOp);
-      } else if (auto callOp = dyn_cast<mlir::CallOp>(retVal.getDefiningOp())) {
-        // handle call op
-        if (callOp.getNumResults() > 0) {
-          auto calleeFuncOp = GetFuncOp(callOp);
-          if (collectorSet.contains(calleeFuncOp)) {
-            opBuilder.setInsertionPoint(callOp);
-            SmallVector<Value, 4> oprands(callOp.getOperands());
-            oprands.append(callOp.getResults().begin(),
-                           callOp.getResults().end());
-            mlir::CallOp newCallOp = opBuilder.create<mlir::CallOp>(
-                callOp.getLoc(), calleeFuncOp, oprands);
-            newCallOp->setAttrs(callOp->getAttrs());
-            removeOps.insert(callOp);
-          }
-        }
       }
-
       retVal.replaceAllUsesExcept(func.getArgument(idx++), retOp);
     }
 
@@ -558,7 +558,39 @@ static inline void relocateFuncOpResultsForLmhlo(
     for (auto op : removeOps) {
       op->erase();
     }
+
   });
+}
+
+static inline void rewriteCallOpsForFuncOp (
+  ArrayRef<mlir::CallOp> calls){
+
+  for (auto callOp : calls) {
+    if (callOp.getNumResults() == 0) {
+      continue;
+    }
+    mlir::OpBuilder opBuilder(callOp);
+    SmallVector<Value, 4> oprands(callOp.getOperands());
+
+    // change result to alloc
+    for (auto r : callOp.getResults()) {
+
+      auto alloc = opBuilder.create<memref::AllocOp>(
+        callOp.getLoc(), r.getType().dyn_cast<MemRefType>());
+      r.replaceAllUsesExcept(alloc.getResult(), callOp);
+      oprands.push_back(alloc.getResult());
+    }
+
+    mlir::CallOp newCallOp = opBuilder.create<mlir::CallOp>(
+      callOp.getLoc(), callOp.callee(), TypeRange(), oprands);
+    newCallOp->setAttrs(callOp->getAttrs());
+
+  }
+
+  // remove all remove ops
+  for (auto op : calls) {
+    op->erase();
+  }
 }
 
 static inline void relocateFuncOpConstantLikeForLmhlo(FuncOp func,
@@ -567,7 +599,14 @@ static inline void relocateFuncOpConstantLikeForLmhlo(FuncOp func,
   MLIRContext *ctx = func.getContext();
   SmallVector<Attribute, 16> weightAttrs;
 
-  relocateFuncOpConstantLike(func, "lmhlo.constant", [&](mlir::Operation *op) {
+  lmhlo::ConstOp op;
+  
+
+  relocateFuncOpConstantLike(func, 
+    [&](mlir::Operation* op) {
+      return isa<lmhlo::ConstOp>(op);
+    },
+    [&](mlir::Operation *op) {
     NamedAttrList attrList;
     auto attr = op->getAttr("name");
     if (attr != nullptr) {
@@ -575,7 +614,7 @@ static inline void relocateFuncOpConstantLikeForLmhlo(FuncOp func,
                       attr);
     } else {
       auto strAttr =
-          StringAttr::get(ctx, Twine("UnknowWeight") + Twine(unknownCnt));
+          StringAttr::get(ctx, Twine("UnknowWeight") + Twine(unknownCnt++));
       attrList.append(byre::ByreDialect::getEntryPointFuncArgNameAttrName(),
                       strAttr);
     }
@@ -602,15 +641,15 @@ static inline void markFuncOpInOutTypeForLmhlo(FuncOp func) {
 
 static inline void rewriteByreResultAttrsToFuncResultAttr(FuncOp func) {
   auto resultAttrsName = byre::ByreDialect::getEntryPointFuncResultAttrsName();
-  removeAttrPlaceholders(func, {resultAttrsName});
+  removeAttrPlaceholders(func, { resultAttrsName });
   if (auto result_attrs_attr =
-          func->getAttrOfType<mlir::ArrayAttr>(resultAttrsName)) {
+    func->getAttrOfType<mlir::ArrayAttr>(resultAttrsName)) {
     auto new_result_attrs = result_attrs_attr.getValue();
     if (func.getNumResults() != new_result_attrs.size())
       return;
     for (size_t i = 0; i < new_result_attrs.size(); ++i) {
       if (auto new_result_attrs_dict =
-              new_result_attrs[i].dyn_cast_or_null<DictionaryAttr>()) {
+        new_result_attrs[i].dyn_cast_or_null<DictionaryAttr>()) {
         NamedAttrList origin_attrs = func.getResultAttrs(i);
         origin_attrs.append(new_result_attrs_dict.getValue());
         func.setResultAttrs(i, origin_attrs.getDictionary(func->getContext()));
@@ -624,17 +663,18 @@ void ConvertToByrePass::runOnOperation() {
 
   ModuleOp m = getOperation();
   MLIRContext &ctx = getContext();
-  llvm::SmallVector<FuncOp, 4> collector;
+  llvm::SmallVector<FuncOp, 4> entryCollector;
+  llvm::SmallVector<mlir::CallOp, 16> callCollector;
+  llvm::SmallVector<FuncOp, 16> removeFuncCollector;
 
-  identifyEntryPointFunc(m, collector);
+  identifyEntryPointFuncAndCalls(m, 
+    entryCollector, callCollector,
+    removeFuncCollector);
 
   // early termination if module has no entry point function
-  if (collector.size() == 0) {
+  if (entryCollector.size() == 0) {
     return;
   }
-
-  // get a set for
-  llvm::SmallPtrSet<FuncOp, 4> collectorSet(collector.begin(), collector.end());
 
   // insert byre.container_module to module if there is none.
   if (!m->hasAttr(byre::ByreDialect::getContainerModuleAttrName())) {
@@ -642,14 +682,21 @@ void ConvertToByrePass::runOnOperation() {
                UnitAttr::get(&ctx));
   }
 
+  // rewrite private calls
+  rewriteCallOpsForFuncOp(callCollector);
+
   unsigned unknownCnt = 0;
-  for (auto func : collector) {
+  for (auto func : entryCollector) {
     markFuncOpInOutTypeForLmhlo(func);
+
     rewriteByreResultAttrsToFuncResultAttr(func);
-    relocateFuncOpResultsForLmhlo(func, collectorSet);
+
+    relocateFuncOpResultsForLmhlo(func);
+ 
     if (isFuncWithEntryPointPlaceholder(func)) {
       relocateFuncOpConstantLikeForLmhlo(func, unknownCnt);
     }
+
     removeAttrPlaceholders(func, attrNames);
     removeArgAttrPlaceholders(func, argAttrNames);
   }
@@ -676,8 +723,12 @@ void ConvertToByrePass::runOnOperation() {
 
   populateStdToByreConversionPatterns(patterns);
 
-  if (failed(applyFullConversion(m, target, std::move(patterns)))) {
+  if (failed(applyPartialConversion(m, target, std::move(patterns)))) {
     signalPassFailure();
+  }
+
+  for (auto func : removeFuncCollector) {
+    func->erase();
   }
 }
 

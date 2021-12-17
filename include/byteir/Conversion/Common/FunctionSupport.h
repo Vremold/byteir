@@ -28,7 +28,8 @@ void replcateFuncOpResults(mlir::FuncOp funcOp,
                            std::function<void(mlir::ReturnOp)> retOpHandling);
 
 void relocateFuncOpConstantLike(
-    mlir::FuncOp funcOp, llvm::StringRef opName,
+    mlir::FuncOp funcOp, 
+    std::function<bool(mlir::Operation*)> checkOp,
     std::function<std::tuple<mlir::Value, NamedAttrList>(mlir::Operation *)>
         getValue);
 

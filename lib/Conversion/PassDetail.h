@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_CONVERSION_TO_BYRE_PASSDETAIL_H
-#define BYTEIR_CONVERSION_TO_BYRE_PASSDETAIL_H
+#ifndef BYTEIR_CONVERSION_TO_PASSDETAIL_H
+#define BYTEIR_CONVERSION_TO_PASSDETAIL_H
 
 #include "mlir/Pass/Pass.h"
 
@@ -56,4 +56,4 @@ class ShapeDialect;
 
 } // namespace mlir
 
-#endif // BYTEIR_CONVERSION_TO_BYRE_PASSDETAIL_H
+#endif // BYTEIR_CONVERSION_TO_PASSDETAIL_H
