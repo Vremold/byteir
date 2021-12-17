@@ -8,6 +8,7 @@
 #ifndef BYTEIR_MHLO_PASSES_H
 #define BYTEIR_MHLO_PASSES_H
 
+#include "byteir/Dialect/mhlo/transforms/ArithOptimize.h"
 #include "byteir/Dialect/mhlo/transforms/ConvBiasActFusion.h"
 #include "byteir/Dialect/mhlo/transforms/DotTransposeFusion.h"
 #include "byteir/Dialect/mhlo/transforms/ElementFusion.h"

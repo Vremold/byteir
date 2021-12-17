@@ -50,6 +50,14 @@ bool mlir::isSplatValue(DenseIntElementsAttr attr, int64_t value) {
   return start_val == value;
 }
 
+// Returns true if the given `attr` is a splat value as the given `value`.
+bool mlir::isSplatValue(DenseFPElementsAttr attr, double value) {
+  if (!attr)
+    return false;
+  return attr.isSplat() &&
+         attr.getSplatValue<FloatAttr>().getValueAsDouble() == value;
+}
+
 bool mlir::isSplatCloseToValue(DenseFPElementsAttr attr, double value,
                                double EPSILON /*=0.00001*/) {
   if (!attr)

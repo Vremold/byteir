@@ -74,4 +74,13 @@ def ConvBiasActFusion : FunctionPass<"fuse-conv-bias-act"> {
   let constructor = "mlir::createConvBiasActFusionPass()";
 }
 
+//===----------------------------------------------------------------------===//
+// MhloArithOpt
+//===----------------------------------------------------------------------===//
+
+def MhloArithOpt : FunctionPass<"mhlo-arith-opt"> {
+  let summary = "optimize arithmetic operations in mhlo dialect";
+  let constructor = "mlir::createMhloArithOptPass()";
+}
+
 #endif // BYTEIR_MHLO_PASSES

@@ -33,6 +33,9 @@ bool isZeroAttribute(Attribute value);
 // Returns true if the given `attr` is a splat value and is `value`.
 bool isSplatValue(DenseIntElementsAttr attr, int64_t value);
 
+// Returns true if the given `attr` is a splat value as the given `value`.
+bool isSplatValue(DenseFPElementsAttr attr, double value);
+
 // Returns true if the given `attr` is a splat value and close to `value`.
 bool isSplatCloseToValue(DenseFPElementsAttr attr, double value,
                          double EPSILON = 0.00001);
