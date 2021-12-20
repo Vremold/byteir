@@ -451,16 +451,45 @@ public:
           op, "reduce along more than one dimensions");
     }
 
-    // FIXME: Check initial value or pass it as operand to byre.compute
-    // Since runtime could only handle ReduceOp worked on fixed initial
-    // value, we don't pass it as an operand here. And we relocated all constant
-    // to function arguments before rewrite ReduceOp to byre.compute, so we
-    // cannot even check whether initial value is valid here
+    if (!llvm::any_of(adaptor.init_values()[0].getUses(), [](OpOperand &use) {
+          if (auto constOp =
+                  llvm::dyn_cast_or_null<lmhlo::ConstOp>(use.getOwner())) {
+            // for ReduceSum initial value must be zero
+            return isZeroAttribute(constOp.value());
+          }
+          return false;
+        })) {
+      return failure();
+    }
     SmallVector<Value, 2> operands{adaptor.inputs()[0], adaptor.out()[0]};
     auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
         op, ReduceOp, operands);
 
     compute_op->setAttr("dimensions", op.dimensions());
+
+    return success();
+  }
+};
+
+class ConvertConstOpToByrePattern : public OpConversionPattern<lmhlo::ConstOp> {
+public:
+  ConvertConstOpToByrePattern(MLIRContext *ctx)
+      : OpConversionPattern<lmhlo::ConstOp>(ctx) {}
+
+  LogicalResult
+  matchAndRewrite(lmhlo::ConstOp op, lmhlo::ConstOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    if (!op.value().isSplat())
+      return failure();
+
+    auto alloc = op.output().getDefiningOp<memref::AllocOp>();
+    if (!alloc)
+      return failure();
+
+    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+        op, "FillOp", adaptor.getOperands());
+
+    compute_op->setAttr("value", op.value());
 
     return success();
   }
@@ -600,29 +629,32 @@ static inline void relocateFuncOpConstantLikeForLmhlo(FuncOp func,
   SmallVector<Attribute, 16> weightAttrs;
 
   lmhlo::ConstOp op;
-  
 
-  relocateFuncOpConstantLike(func, 
-    [&](mlir::Operation* op) {
-      return isa<lmhlo::ConstOp>(op);
-    },
-    [&](mlir::Operation *op) {
-    NamedAttrList attrList;
-    auto attr = op->getAttr("name");
-    if (attr != nullptr) {
-      attrList.append(byre::ByreDialect::getEntryPointFuncArgNameAttrName(),
-                      attr);
-    } else {
-      auto strAttr =
-          StringAttr::get(ctx, Twine("UnknowWeight") + Twine(unknownCnt++));
-      attrList.append(byre::ByreDialect::getEntryPointFuncArgNameAttrName(),
-                      strAttr);
-    }
-    attrList.append(byre::ByreDialect::getEntryPointFuncArgTypeAttrName(),
-                    byre::EntryFuncArgTypeAttr::get(
-                        op->getContext(), byre::EntryFuncArgType::Weight));
-    return std::make_tuple(op->getOperand(0), attrList);
-  });
+  relocateFuncOpConstantLike(
+      func,
+      [&](mlir::Operation *op) {
+        if (auto constant = dyn_cast<lmhlo::ConstOp>(op)) {
+          return !(constant.value().isSplat());
+        }
+        return false;
+      },
+      [&](mlir::Operation *op) {
+        NamedAttrList attrList;
+        auto attr = op->getAttr("name");
+        if (attr != nullptr) {
+          attrList.append(byre::ByreDialect::getEntryPointFuncArgNameAttrName(),
+                          attr);
+        } else {
+          auto strAttr =
+              StringAttr::get(ctx, Twine("UnknowWeight") + Twine(unknownCnt++));
+          attrList.append(byre::ByreDialect::getEntryPointFuncArgNameAttrName(),
+                          strAttr);
+        }
+        attrList.append(byre::ByreDialect::getEntryPointFuncArgTypeAttrName(),
+                        byre::EntryFuncArgTypeAttr::get(
+                            op->getContext(), byre::EntryFuncArgType::Weight));
+        return std::make_tuple(op->getOperand(0), attrList);
+      });
 }
 
 static inline void markFuncOpInOutTypeForLmhlo(FuncOp func, unsigned inputCnt,
@@ -745,6 +777,16 @@ void ConvertToByrePass::runOnOperation() {
   for (auto func : removeFuncCollector) {
     func->erase();
   }
+
+  // remove unused fill op
+  m.walk([&](byre::ComputeOp op) {
+    if (op.callee() == "FillOp") {
+      auto value = op->getOperand(0);
+      if (value.hasOneUse() && value.getDefiningOp<memref::AllocOp>()) {
+        op->erase();
+      }
+    }
+  });
 }
 
 } // namespace
@@ -761,7 +803,8 @@ void mlir::populateLmhloToByreConversionPatterns(
                                                      supportMap);
 
   patterns.add<ConvertDotOpToByrePattern, ConvertCustomCallOpToByrePattern,
-               ConvertReduceOpToByrePattern>(patterns.getContext());
+               ConvertReduceOpToByrePattern, ConvertConstOpToByrePattern>(
+      patterns.getContext());
 }
 
 void mlir::populateStdToByreConversionPatterns(RewritePatternSet& patterns) {
