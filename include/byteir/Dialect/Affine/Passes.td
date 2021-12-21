@@ -12,7 +12,7 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
-// 
+// RewriteAffineToMemref
 //===----------------------------------------------------------------------===//
 
 def RewriteAffineToMemref : FunctionPass<"rewrite-affine-to-memref"> {
@@ -20,6 +20,20 @@ def RewriteAffineToMemref : FunctionPass<"rewrite-affine-to-memref"> {
   let constructor = "mlir::createRewriteAffineToMemrefPass()";
   let dependentDialects = [
     "memref::MemRefDialect"
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// AffineLoopFusionEx
+//===----------------------------------------------------------------------===//
+
+def AffineLoopFusionEx : FunctionPass<"affine-loop-fusion-ex"> {
+  let summary = "Affine Loop Fusion Extension";
+  let constructor = "mlir::createAffineLoopFusionExPass()";
+  let options = [
+    Option<"anchorTag", "anchor-tag", "std::string",
+            /*default=*/"",
+            "Optional unitAttr anchored tag to apply this pass">
   ];
 }
 

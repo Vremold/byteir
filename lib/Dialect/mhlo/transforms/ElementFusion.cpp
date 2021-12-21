@@ -18,7 +18,7 @@ using namespace mlir::mhlo;
 
 
 namespace {
-  
+
 bool IsMhlo(Operation* op) {
   Dialect* dialect = op->getDialect();
   return dialect && isa<MhloDialect>(dialect);

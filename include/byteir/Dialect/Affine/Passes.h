@@ -8,6 +8,7 @@
 #ifndef BYTEIR_AFFINE_PASSES_H
 #define BYTEIR_AFFINE_PASSES_H
 
+#include "byteir/Dialect/Affine/transforms/AffineLoopFusionEx.h"
 #include "byteir/Dialect/Affine/transforms/RewriteAffineToMemref.h"
 
 namespace mlir {
