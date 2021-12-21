@@ -237,6 +237,30 @@ mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
   return success();
 }
 
+template <>
+LogicalResult
+mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
+    mlir::lmhlo::ReshapeOp op, typename mlir::lmhlo::ReshapeOp::Adaptor adaptor,
+    ConversionPatternRewriter &rewriter) const {
+
+  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
+  if (found == src_to_callee_.end()) {
+    return op->emitOpError() << "can not find matched byre_compute_name";
+  }
+
+  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+      op, found->second, adaptor.getOperands());
+
+  // FIXME: currently only support inplace
+  new_op->setAttr("offset", rewriter.getI32IntegerAttr(0));
+
+  if (adaptor.getOperands()[0].getDefiningOp() == nullptr) {
+    new_op->setAttr("arg_alias", rewriter.getUnitAttr());
+  }
+
+  return success();
+}
+
 namespace {
 
   class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
@@ -503,6 +527,7 @@ struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
     lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
     lmhloSupportMap.insert({"lmhlo.scatter", "IndexPutOp" });
     lmhloSupportMap.insert({"lmhlo.gather", "IndexSelectOp"});
+    lmhloSupportMap.insert({"lmhlo.reshape", "AliasOp"});
     lmhloSupportMap.insert({"lmhlo.slice", "AliasOp" });
 
     // insert attrNames
@@ -798,6 +823,7 @@ void mlir::populateLmhloToByreConversionPatterns(
   // TODO use MACRO trick to add patterns
   patterns.add<ConvertToByrePattern<lmhlo::AddOp>,
                ConvertToByrePattern<lmhlo::GatherOp>,
+               ConvertToByrePattern<lmhlo::ReshapeOp>,
                ConvertToByrePattern<lmhlo::ScatterOp>,
                ConvertToByrePattern<lmhlo::SliceOp>>(patterns.getContext(),
                                                      supportMap);

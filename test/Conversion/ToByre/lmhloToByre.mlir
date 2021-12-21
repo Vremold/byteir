@@ -102,6 +102,13 @@ module {
   // CHECK-LABEL: mhlo_slice
   // CHECK-NEXT: byre.compute @AliasOp
 
+  func @mhlo_reshape(%arg0: memref<1x1024xi64>) -> (memref<32x32xi64>) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<32x32xi64>
+    "lmhlo.reshape"(%arg0, %0) : (memref<1x1024xi64>, memref<32x32xi64>) -> ()
+    return %0 : memref<32x32xi64>
+  }
+  // CHECK-LABEL: mhlo_reshape
+  // CHECK-NEXT: byre.compute @AliasOp
 
   func @mhlo_reduce(%arg0: memref<1x128x128xf32> {__placeholder__byre.argname = "A"}) -> (memref<128xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<f32>
