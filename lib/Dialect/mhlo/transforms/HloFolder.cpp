@@ -6,8 +6,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/transforms/HloFolder.h"
-#include "byteir/Utils/Utils.h"
 #include "PassDetail.h"
+#include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
@@ -20,7 +20,7 @@ using namespace llvm;
 
 namespace {
 
-// Slice + Slice -> Slice
+// TODO(liuyuanqiang): push these pattern to upstream
 
 // BroadcastInDim + Transpose -> BroadcastInDim
 struct BroadcastInDimTransposeToBroadcastInDimPattern
@@ -33,34 +33,25 @@ struct BroadcastInDimTransposeToBroadcastInDimPattern
     if (!broadcast_op) {
       return failure();
     }
+    SmallVector<int64_t> new_broadcast_dimensions;
     auto broadcast_dimensions = broadcast_op.broadcast_dimensions();
-    if (broadcast_dimensions.size() == 0) {
-      mhlo::BroadcastInDimOp new_broadcast_op =
-          rewriter.create<mhlo::BroadcastInDimOp>(
-              op->getLoc(), op.getResult().getType(), broadcast_op.operand(),
-              rewriter.getI64TensorAttr({}));
-      rewriter.replaceOp(op, new_broadcast_op.getResult());
-      return success();
-    } else if (broadcast_dimensions.size() == 1) {
-      auto permutaion = op.permutation();
+    auto permutation = op.permutation();
+    for (auto dimension : broadcast_dimensions) {
       int64_t index = 0;
-      for (auto p : permutaion) {
-        if (p == *broadcast_dimensions.begin()) {
+      for (auto p : permutation) {
+        if (p == dimension) {
+          new_broadcast_dimensions.push_back(index);
           break;
         }
         index++;
       }
-      mhlo::BroadcastInDimOp new_broadcast_op =
-          rewriter.create<mhlo::BroadcastInDimOp>(
-              op->getLoc(), op.getResult().getType(), broadcast_op.operand(),
-              rewriter.getI64TensorAttr({index}));
-      rewriter.replaceOp(op, new_broadcast_op.getResult());
-      return success();
-    } else {
-      // TODO(liuyuanqiang): handle more dims in broadcast
-      return failure();
     }
-    return failure();
+    mhlo::BroadcastInDimOp new_broadcast_op =
+        rewriter.create<mhlo::BroadcastInDimOp>(
+            op->getLoc(), op.getResult().getType(), broadcast_op.operand(),
+            rewriter.getI64TensorAttr(new_broadcast_dimensions));
+    rewriter.replaceOp(op, new_broadcast_op.getResult());
+    return success();
   }
 };
 
