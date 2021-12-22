@@ -108,12 +108,22 @@ def ConvertToByre : Pass<"convert-to-byre", "ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// ToPTX
+// ToPTX or CUDA
 //===----------------------------------------------------------------------===//
 
 def GenPTXConfig : FunctionPass<"gen-ptx-config"> {
   let summary = "Generate PTX configuration";
   let constructor = "mlir::createGenPTXConfigPass()";
+}
+
+def CollectGPUKernel : Pass<"collect-gpu-kernel", "ModuleOp"> {
+  let summary = "Collect GPU kernels for generating device code";
+  let constructor = "mlir::createCollectGPUKernelPass()";
+  let options = [
+    Option<"moduleName", "module-name", "std::string",
+            /*default=*/"\"unified\"",
+            "Optional name for GPUModule to put all gpu kernels">,
+  ];
 }
 
 

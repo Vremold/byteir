@@ -10,11 +10,14 @@
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
+#include <string>
 
 namespace mlir {
 
 std::unique_ptr<FunctionPass> createGenPTXConfigPass();
 
+// TODO move to general GPU
+std::unique_ptr<OperationPass<ModuleOp>> createCollectGPUKernelPass(const std::string& name = "unified");
 
 } // namespace mlir
 
