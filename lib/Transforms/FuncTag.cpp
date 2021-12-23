@@ -21,8 +21,26 @@ struct FuncTagPass : public FuncTagBase<FuncTagPass> {
     this->funcName = name;
   }
 
+  void parseAttachAttr(const std::string& attr) {
+    size_t first_semi = attr.find(':');
+    
+    if (first_semi == std::string::npos) {
+      attrName = attr;
+      attrType = "Unit";
+    } else {
+      attrName = attr.substr(0, first_semi);
+      size_t second_semi = attr.find(':', first_semi + 1);
+      attrType = attr.substr(first_semi + 1, second_semi - first_semi -1);
+      if (second_semi != std::string::npos) {
+        attrValue = attr.substr(second_semi + 1);
+      }
+    }
+  }
+
   void runOnOperation() override {
     if (attachAttr.empty()) return;
+    parseAttachAttr(attachAttr);
+    if (attrName.empty()) return;
 
     auto m = getOperation();
     auto ctx = m.getContext();
@@ -30,10 +48,27 @@ struct FuncTagPass : public FuncTagBase<FuncTagPass> {
     for (auto funcOp : m.getOps<FuncOp>()) {
       if (funcName.empty() ||
         funcOp.getName() == funcName) {
-        funcOp->setAttr(attachAttr, UnitAttr::get(ctx));
+
+        if (attrType == "Unit") {
+          funcOp->setAttr(attrName, UnitAttr::get(ctx));
+        } else if (attrType == "String") {
+          funcOp->setAttr(attrName, StringAttr::get(ctx, attrValue));
+        } else if (attrType == "I32") {
+          int intVal = std::stoi(attrValue);
+          funcOp->setAttr(attrName, IntegerAttr::get(IntegerType::get(ctx, 32), intVal));
+        } else if (attrType == "F32") {
+          float f32Val = std::stof(attrValue);
+          funcOp->setAttr(attrName, FloatAttr::get(Float32Type::get(ctx), f32Val));
+        } else {
+          m.emitOpError() << "unsupport attachAttr";
+        }
       }
     }
   }
+
+  std::string attrName;
+  std::string attrType;
+  std::string attrValue;
 
 };
 

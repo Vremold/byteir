@@ -1,6 +1,7 @@
 // RUN: byteir-translate -gen-ptx -dump-ptx %s | FileCheck %s
 
 // CHECK-LABEL: .visible .entry Unknown0_kernel
+
 module attributes {byre.container_module, gpu.container_module}  {
   gpu.module @unified {
     llvm.func @Unknown0_kernel(%arg0: !llvm.ptr<i64>, %arg1: !llvm.ptr<i64>, %arg2: i64, %arg3: i64, %arg4: i64, %arg5: i64, %arg6: i64, %arg7: !llvm.ptr<i32>, %arg8: !llvm.ptr<i32>, %arg9: i64, %arg10: i64, %arg11: i64, %arg12: i64, %arg13: i64, %arg14: !llvm.ptr<i64>, %arg15: !llvm.ptr<i64>, %arg16: i64, %arg17: i64, %arg18: i64, %arg19: i64, %arg20: i64, %arg21: !llvm.ptr<i64>, %arg22: !llvm.ptr<i64>, %arg23: i64, %arg24: i64, %arg25: i64, %arg26: i64, %arg27: i64, %arg28: !llvm.ptr<i64>, %arg29: !llvm.ptr<i64>, %arg30: i64, %arg31: i64, %arg32: i64, %arg33: i64, %arg34: i64, %arg35: !llvm.ptr<f64>, %arg36: !llvm.ptr<f64>, %arg37: i64, %arg38: i64, %arg39: i64, %arg40: i64, %arg41: i64, %arg42: !llvm.ptr<i1>, %arg43: !llvm.ptr<i1>, %arg44: i64, %arg45: i64, %arg46: i64, %arg47: i64, %arg48: i64) attributes {gpu.kernel, nvvm.kernel} {

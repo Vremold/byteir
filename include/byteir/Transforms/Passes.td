@@ -50,7 +50,7 @@ def FuncTag : Pass<"func-tag", "ModuleOp"> {
   let options = [
     Option<"attachAttr", "attach-attr", "std::string",
             /*default=*/"",
-            "An optional Unit attribute attaching on target functions.">,
+            "An optional attribute attaching on target functions: <attr_name>:<type>:<value>">,
     Option<"funcName", "func-name", "std::string",
             /*default=*/"",
             "An optional name to specify target functions.">

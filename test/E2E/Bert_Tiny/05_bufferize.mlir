@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -convert-hlo-to-lhlo -cse --linalg-bufferize --cse --canonicalize | FileCheck %s
+// RUN: byteir-opt %s -convert-hlo-to-lhlo -cse -linalg-bufferize -cse -canonicalize | FileCheck %s
 
 // CHECK-LABEL: func @main
 
