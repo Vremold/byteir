@@ -124,4 +124,19 @@ module {
   // CHECK-LABEL: mhlo_reduce
   // CHECK-NEXT: byre.compute @ReduceSumOp(%arg0, %arg1)
   //   CHECK-DAG: dimensions = dense<[0, 1]>
+
+  func @mhlo_reduce_consecutive_dims(%arg0: memref<2x128x128xf32> {__placeholder__byre.argname = "A"}) -> (memref<128xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<f32>
+    "lmhlo.constant"(%0) {value = dense<0.000000e+00> : tensor<f32>} : (memref<f32>) -> ()
+    %1 = memref.alloc() : memref<128xf32>
+    "lmhlo.reduce"(%arg0, %0, %1) ( {
+    ^bb0(%arg1: memref<f32>, %arg2: memref<f32>, %arg3: memref<f32>):  // no predecessors
+      "lmhlo.add"(%arg1, %arg2, %arg3) : (memref<f32>, memref<f32>, memref<f32>) -> ()
+      "lmhlo.terminator"() : () -> ()
+    }) {dimensions = dense<[0, 1]> : tensor<2xi64>} : (memref<2x128x128xf32>, memref<f32>, memref<128xf32>) -> ()
+    return %1 : memref<128xf32>
+  }
+  // CHECK-LABEL: mhlo_reduce_consecutive_dims
+  // CHECK-NEXT: byre.compute @ReduceSumOp(%arg0, %arg1)
+  //   CHECK-DAG: dimensions = dense<[0, 1]>
 }

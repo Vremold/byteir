@@ -455,24 +455,24 @@ public:
     // TODO: more ReduceOp supported
     std::string ReduceOp = "ReduceSumOp";
 
-    auto &&dimensions = op.dimensions();
-    int num_reduce_dims = 0;
     auto inputShape = adaptor.inputs()[0].getType().dyn_cast<MemRefType>();
     if (!inputShape || !inputShape.hasRank()) {
       return rewriter.notifyMatchFailure(op, "invalid input type");
     }
-    for (auto &&i : dimensions) {
+
+    std::vector<int64_t> dimensions;
+    for (auto &&i : op.dimensions()) {
       auto dim = i.getSExtValue();
       if (dim < 0 || dim >= inputShape.getRank()) {
         return rewriter.notifyMatchFailure(op, "invalid reduce dimensions");
       }
-      if (inputShape.getDimSize(dim) > 1) {
-        ++num_reduce_dims;
-      }
+      dimensions.push_back(dim);
     }
-    if (num_reduce_dims > 1) {
-      return rewriter.notifyMatchFailure(
-          op, "reduce along more than one dimensions");
+    std::sort(dimensions.begin(), dimensions.end());
+    for (size_t i = 0; i < dimensions.size() - 1; ++i) {
+      if (dimensions[i + 1] - dimensions[i] != 1)
+        return rewriter.notifyMatchFailure(
+            op, "only consecutive dimensions were support");
     }
 
     if (!llvm::any_of(adaptor.init_values()[0].getUses(), [](OpOperand &use) {
