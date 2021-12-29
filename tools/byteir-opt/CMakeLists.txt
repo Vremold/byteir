@@ -3,6 +3,7 @@ set(BYTEIR_LIBS
   MLIRAce
   MLIRByre
   ByteIRAffinePasses
+  ByteIRByrePasses
   ByteIRMhloPasses
   ByteIRTransforms
   ${byteir_conversion_libs}

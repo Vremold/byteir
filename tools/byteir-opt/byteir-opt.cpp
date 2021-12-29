@@ -14,6 +14,7 @@
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Affine/Passes.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
+#include "byteir/Dialect/Byre/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Conversion/Passes.h"
 #include "byteir/Transforms/Passes.h"
@@ -48,6 +49,7 @@ int main(int argc, char **argv) {
   registerByteIRConversionPasses();
   registerByteIRTransformsPasses();
   registerByteIRAffinePasses();
+  registerByteIRByrePasses();
   registerByteIRMhloPasses();
   DialectRegistry registry;
   registerAllDialects(registry);
