@@ -37,10 +37,9 @@ void ApplyMhloFusionPattern(const MhloFusionPattern& pattern, llvm::StringRef ta
 // First degree means it only consider 1 op along fusion direction
 
 // TODO implement consumer direction later
-class FirstDegreeProducerFusionPlanner {
+class ProducerFusionPlanner {
 public:
-
-  FirstDegreeProducerFusionPlanner(FuncOp funcOp,
+  ProducerFusionPlanner(mlir::FuncOp funcOp,
     std::function<bool(Operation*)> fuse_candidate,
     std::function<bool(Operation*)> fuse_start,
     std::function<bool(Operation*, Operation*)> fuse_with);

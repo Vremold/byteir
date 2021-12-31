@@ -7,10 +7,12 @@ add_byteir_conversion_library(ByteIRToByre
   DEPENDS
   ByteIRConversionPassIncGen
   ByteIRConversionCommon
+  ByteIRMhlo
 
   LINK_LIBS PUBLIC
   MLIRIR
   MLIRMemRef
   MLIRTransforms
   ByteIRConversionCommon
+  ByteIRMhlo
   )

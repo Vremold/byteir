@@ -7,6 +7,8 @@
 
 #include "byteir/Dialect/mhlo/transforms/ElementFusion.h"
 #include "byteir/Dialect/mhlo/transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
+#include "byteir/Utils/IRRewrite.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "PassDetail.h"
@@ -28,7 +30,7 @@ bool IsFusibleCandidate(Operation* op) {
   // FIXME (LWC) Tentatively disable constant fusion to avoid a bug
   return IsMhlo(op) &&
     (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-      //     matchPattern(op, m_Constant()) ||
+      IsSplatMhloConstant(op) ||
       isa<mhlo::BroadcastInDimOp>(op) ||
       isa<mhlo::BroadcastOp>(op) ||
       isa<mhlo::ReshapeOp>(op) ||
@@ -51,7 +53,7 @@ bool IsFusibleWith(Operation* target, Operation* /*start*/) {
   // FIXME (LWC) Tentatively disable constant fusion to avoid a bug
   return IsMhlo(target) &&
     (target->hasTrait<::mlir::OpTrait::Elementwise>() ||
-      //  matchPattern(target, m_Constant()) ||
+      IsSplatMhloConstant(target) ||
       isa<mhlo::BroadcastInDimOp>(target) ||
       isa<mhlo::BroadcastOp>(target) ||
       isa<mhlo::ReshapeOp>(target) ||
@@ -77,7 +79,11 @@ struct ElementFusionPass
 void ElementFusionPass::runOnFunction() {
   FuncOp funcOp = getFunction();
 
-  FirstDegreeProducerFusionPlanner planner(funcOp, IsFusibleCandidate, IsFusibleStart, IsFusibleWith);
+  for (auto& block : funcOp.getBlocks()) {
+    ReplicateDefiningOp(&block, IsSplatMhloConstant);
+  }
+
+  ProducerFusionPlanner planner(funcOp, IsFusibleCandidate, IsFusibleStart, IsFusibleWith);
 
   planner.Run();
 

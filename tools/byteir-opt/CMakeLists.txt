@@ -4,12 +4,11 @@ set(BYTEIR_LIBS
   MLIRByre
   ByteIRAffinePasses
   ByteIRByrePasses
+  ByteIRMhlo
   ByteIRMhloPasses
   ByteIRTransforms
   ${byteir_conversion_libs}
 )
-
-message(Status "byteir_conversion_libs ${byteir_conversion_libs}")
 
 get_property(dialect_libs GLOBAL PROPERTY MLIR_DIALECT_LIBS)
 get_property(conversion_libs GLOBAL PROPERTY MLIR_CONVERSION_LIBS)

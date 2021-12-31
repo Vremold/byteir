@@ -53,11 +53,13 @@ struct AliasAnalysis {
     for (auto& op : block->without_terminator()) {
       if (is_alias(op)) {
         int newId = GetOrCreateIndex(op.getResult(0));
+        int newLeader = leader_to_index.getLeaderValue(newId);
         int oldId = GetOrCreateIndex(op.getOperand(0));
-        if (newId <= oldId) {
-          leader_to_index.unionSets(newId, oldId);
+        int oldLeader = leader_to_index.getLeaderValue(oldId);
+        if (newLeader <= oldLeader) {
+          leader_to_index.unionSets(newLeader, oldLeader);
         } else {
-          leader_to_index.unionSets(oldId, newId);
+          leader_to_index.unionSets(oldLeader, newLeader);
         }
       }
     }
@@ -73,7 +75,6 @@ struct AliasAnalysis {
 
   llvm::SmallDenseMap<mlir::Value, int> value_to_index;
   llvm::EquivalenceClasses<int> leader_to_index;
-  
 };
 
 

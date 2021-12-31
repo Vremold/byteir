@@ -12,6 +12,7 @@
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"  
 #include "mlir-hlo/Dialect/mhlo/IR/lhlo_ops.h" // LmhloDialect
@@ -145,41 +146,8 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
   }
 
   auto& block = region.front();
-  if (block.empty()) {
-    return rewriter.notifyMatchFailure(op, "unsupported empty block in scatter");
-  }
-
-  // check block args
-  if (block.getNumArguments() != 2 ||
-    !block.getArgument(0).getType().isa<TensorType>() ||
-    !block.getArgument(1).getType().isa<TensorType>()) {
-    return rewriter.notifyMatchFailure(op, "unsupported block's arg in scatter");
-  }
-
-  // check block body
-  auto ret_op = block.getTerminator();
-  if (!isa<mlir::mhlo::ReturnOp>(ret_op)) {
-    return rewriter.notifyMatchFailure(op, "unsupported terminator in scatter's block");
-  }
-  auto mhlo_ret = cast<mlir::mhlo::ReturnOp>(ret_op);
-  if (mhlo_ret.getNumOperands() != 1) {
-    return rewriter.notifyMatchFailure(op, "unsupported return's arg number in scatter's block");
-  }
-
-  auto compute_op = mhlo_ret.getOperand(0).getDefiningOp();
-  if (compute_op == nullptr) {
-    return rewriter.notifyMatchFailure(op, "unsupported update_computation of scatter");
-  }
-
-  // only support add now
-  if (!isa<mhlo::AddOp>(compute_op)) {
-    return rewriter.notifyMatchFailure(op, "unsupported ops in update_computation of scatter");
-  }
-
-  // only add now 
-  if (compute_op->getOperand(0) != block.getArgument(0) ||
-    compute_op->getOperand(1) != block.getArgument(1)) {
-    return rewriter.notifyMatchFailure(op, "unsupported ops in addd computation in scatter");
+  if (!IsBlockSingleAdd(&block)) {
+    return rewriter.notifyMatchFailure(op, "unsupported block in scatter");
   }
 
   // TODO support inplace 

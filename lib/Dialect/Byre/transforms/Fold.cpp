@@ -46,12 +46,14 @@ struct ByreAliasAnalysis : public AliasAnalysis {
     for (auto& op : block->without_terminator()) {
       if (is_alias(op)) {
         int in_idx = GetOrCreateIndex(op.getOperand(0));
+        int in_leader = leader_to_index.getLeaderValue(in_idx);
         int out_idx = GetOrCreateIndex(op.getOperand(1));
+        int out_leader = leader_to_index.getLeaderValue(out_idx);
 
-        if (in_idx <= out_idx) {
-          leader_to_index.unionSets(in_idx, out_idx);
+        if (in_leader <= out_idx) {
+          leader_to_index.unionSets(in_leader, out_leader);
         } else {
-          leader_to_index.unionSets(out_idx, in_idx);
+          leader_to_index.unionSets(out_leader, in_leader);
         }
 
         int in_offset = offsets[in_idx];

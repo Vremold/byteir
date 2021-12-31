@@ -7,8 +7,9 @@
 
 #include "byteir/Dialect/mhlo/transforms/FusionUtil.h"
 #include "byteir/Utils/Utils.h"
-
+#include "llvm/ADT/SmallPtrSet.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/Matchers.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 
 using namespace mlir;
@@ -40,7 +41,7 @@ namespace {
 // This code is from mhlo repo
 // but it was in the local namespace, so cannot be directly call.
 // TODO: we might update upstream to make it accessible later
-void mlir::ApplyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef tag) {
+void mlir::ApplyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef attachTag) {
   // after last op
   OpBuilder b(pattern.back());
 
@@ -86,7 +87,6 @@ void mlir::ApplyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef ta
   }
 
   for (auto op : llvm::reverse(consumers_vec)) {
-
     op->moveAfter(pattern.back());
   }
 
@@ -95,8 +95,8 @@ void mlir::ApplyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef ta
   Region& region = fusion.fused_computation();
   region.push_back(new Block);
   Block& block = region.front();
-  for (Operation* op : pattern) {
 
+  for (Operation* op : pattern) {
     op->moveBefore(&block, block.end());
   }
 
@@ -111,16 +111,18 @@ void mlir::ApplyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef ta
     }
   }
 
-  if (!tag.empty()) {
-    fusion->setAttr(tag, UnitAttr::get(fusion.getContext()));
+  if (!attachTag.empty()) {
+    fusion->setAttr(attachTag, UnitAttr::get(fusion.getContext()));
   }
 }
 
-mlir::FirstDegreeProducerFusionPlanner::FirstDegreeProducerFusionPlanner(FuncOp funcOp,
+mlir::ProducerFusionPlanner::ProducerFusionPlanner(FuncOp funcOp,
   std::function<bool(Operation*)> is_fusible,
   std::function<bool(Operation*)> fuse_start,
   std::function<bool(Operation*, Operation*)> fuse_with)
-  : fuse_candidate_(is_fusible), fuse_start_(fuse_start), fuse_with_(fuse_with) {
+   : fuse_candidate_(is_fusible), 
+     fuse_start_(fuse_start), 
+     fuse_with_(fuse_with) {
 
   // if empty function jus terminate
   if (funcOp.getBlocks().empty()) {
@@ -131,30 +133,29 @@ mlir::FirstDegreeProducerFusionPlanner::FirstDegreeProducerFusionPlanner(FuncOp 
 
   dependence_ = std::make_unique<OpDependenceInfo>(&entry_block);
 
-  int idx = 0;
   for (Operation& op : entry_block) {
     // skip non-fusible
     if (!fuse_candidate_(&op)) {
       continue;
     }
 
+    int idx = op_list_.size();
     op_list_.push_back(&op);
     op_to_node_id_[&op] = idx;
     leader_to_nodes_.insert(idx);
     leader_to_value_count_[idx] = InitValueCount(&op);
-    idx++;
   }
 
 }
 
-bool mlir::FirstDegreeProducerFusionPlanner::AlreayFused(Operation* pre_op, Operation* cur_op) {
+bool mlir::ProducerFusionPlanner::AlreayFused(Operation* pre_op, Operation* cur_op) {
   int pre_id = op_to_node_id_[pre_op];
   int cur_id = op_to_node_id_[cur_op];
   return leader_to_nodes_.isEquivalent(pre_id, cur_id);
 
 }
 
-bool mlir::FirstDegreeProducerFusionPlanner::CheckFusionLegal(Operation* pre_op, Operation* cur_op) {
+bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation* pre_op, Operation* cur_op) {
 
   int pre_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[pre_op]);
   const auto& pre_cluster = leader_to_value_count_[pre_leader];
@@ -194,20 +195,17 @@ bool mlir::FirstDegreeProducerFusionPlanner::CheckFusionLegal(Operation* pre_op,
 
 }
 
-void mlir::FirstDegreeProducerFusionPlanner::Merge(Operation* pre_op, Operation* cur_op) {
+void mlir::ProducerFusionPlanner::Merge(Operation* pre_op, Operation* cur_op) {
   int pre_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[pre_op]);
   int cur_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[cur_op]);
 
   int small_leader = pre_leader < cur_leader ? pre_leader : cur_leader;
   int large_leader = pre_leader < cur_leader ? cur_leader : pre_leader;
 
-
   leader_to_nodes_.unionSets(small_leader, large_leader);
-
+  // keep small one
   auto& small_value_cnt = leader_to_value_count_[small_leader];
   auto& large_value_cnt = leader_to_value_count_[large_leader];
-
-
   for (auto it : large_value_cnt) {
     small_value_cnt[it.first] += it.second;
     if (small_value_cnt[it.first] == 0) {
@@ -218,13 +216,17 @@ void mlir::FirstDegreeProducerFusionPlanner::Merge(Operation* pre_op, Operation*
   leader_to_value_count_.erase(large_leader);
 }
 
-void mlir::FirstDegreeProducerFusionPlanner::Run() {
-  for (auto* op : op_list_) {
+void mlir::ProducerFusionPlanner::Run() {
+
+  SmallVector<Operation*, 8> op_iteration = op_list_;
+
+  for (auto* op : op_iteration) {
     if (!fuse_start_(op)) {
       continue;
     }
 
-    for (auto val : op->getOperands()) {
+    for(unsigned i = 0; i < op->getNumOperands(); ++i) {
+      auto val = op->getOperand(i);
       auto op_def = val.getDefiningOp();
 
       // skip block arg, non-fusible, or already fused
