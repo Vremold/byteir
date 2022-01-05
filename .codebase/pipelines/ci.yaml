@@ -7,6 +7,8 @@ trigger:
 jobs:
   byteir_compiler_tests:
     name: byteir compiler CI
+    runs-on:
+      spec: m1.4xlarge
     image: hub.byted.org/arnold/byteir_cuda:3fa9aa07d8589ee4543a2ceb13449593
     working-directory: byteir/byteir
     steps:
