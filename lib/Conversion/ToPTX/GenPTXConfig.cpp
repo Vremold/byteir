@@ -25,6 +25,7 @@
 
 using namespace byteir;
 using namespace mlir;
+using namespace mlir::arith;
 using namespace mlir::byre;
 using namespace mlir::gpu;
 using namespace mlir::memref;
@@ -56,12 +57,12 @@ static void AddFuncAttrs(FuncOp func) {
 
     // Handle 1D only, since element-wise is only using 1D (linearized)
     auto grid = launchOp.getGridSizeOperandValues();
-    int64_t gx = cast<ConstantIndexOp>(grid.x.getDefiningOp()).getValue();
+    int64_t gx = cast<ConstantIndexOp>(grid.x.getDefiningOp()).value();
     func->setAttr(getByrePrefix() + "GridSize.x",
       opBuilder.getIntegerAttr(opBuilder.getIntegerType(32), gx));
 
     auto block = launchOp.getBlockSizeOperandValues();
-    int64_t bx = cast<ConstantIndexOp>(block.x.getDefiningOp()).getValue();
+    int64_t bx = cast<ConstantIndexOp>(block.x.getDefiningOp()).value();
     func->setAttr(getByrePrefix() + "BlockSize.x",
       opBuilder.getIntegerAttr(opBuilder.getIntegerType(32), bx));
 

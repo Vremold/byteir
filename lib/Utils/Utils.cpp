@@ -20,8 +20,9 @@ using namespace llvm;
 using namespace mlir;
 
 bool mlir::isConstantIndex(Value value, int64_t lit) {
-  if (auto def = value.getDefiningOp<ConstantIndexOp>())
-    return def.getValue() == lit;
+  if (auto def = value.getDefiningOp<arith::ConstantIndexOp>()) {
+    return def.value() == lit;
+  }
   return false;
 }
 
@@ -31,7 +32,7 @@ bool mlir::isZeroAttribute(Attribute value) {
   if (auto fpValue = value.dyn_cast<FloatAttr>())
     return fpValue.getValue().isZero();
   if (auto splatValue = value.dyn_cast<SplatElementsAttr>())
-    return isZeroAttribute(splatValue.getSplatValue());
+    return isZeroAttribute(splatValue.getSplatValue<Attribute>());
   if (auto elementsValue = value.dyn_cast<ElementsAttr>())
     return llvm::all_of(elementsValue.getValues<Attribute>(), isZeroAttribute);
   if (auto arrayValue = value.dyn_cast<ArrayAttr>())
@@ -111,7 +112,7 @@ bool mlir::HasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
 
   SmallVector<NamedAttribute, 8> filteredAttrs(
       llvm::make_filter_range(attrs, [&](NamedAttribute attr) {
-        return llvm::is_contained(filterAttrs, attr.first.strref());
+        return llvm::is_contained(filterAttrs, attr.getName().getValue());
       }));
 
   return !filteredAttrs.empty();
@@ -121,7 +122,7 @@ void mlir::AddAttrs(mlir::Operation *op,
                     llvm::ArrayRef<mlir::NamedAttribute> attrs) {
   for (auto attr : attrs) {
     // override if there is any with the same name
-    op->setAttr(attr.first, attr.second);
+    op->setAttr(attr.getName(), attr.getValue());
   }
 }
 

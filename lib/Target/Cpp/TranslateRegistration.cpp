@@ -43,7 +43,8 @@ void byteir::registerToCppTranslation() {
       },
       [](DialectRegistry &registry) {
         // clang-format off
-        registry.insert<emitc::EmitCDialect,
+        registry.insert<arith::ArithmeticDialect,
+                        emitc::EmitCDialect,
                         memref::MemRefDialect,
                         StandardOpsDialect,
                         scf::SCFDialect>();

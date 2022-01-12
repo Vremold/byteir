@@ -2,7 +2,7 @@
 // RUN: byteir-translate -emit-cpp -declare-var-at-top-cpp %s | FileCheck %s -check-prefix=CPP-DECLTOP
 
 func @emitc_call_unary() {
-  %c0 = constant 0 : i32
+  %c0 = arith.constant 0 : i32
   %0 = emitc.call "max" (%c0) : (i32) -> i32
   %1 = emitc.call "unknowAdd" (%0, %c0) : (i32,i32) -> i32
   return
@@ -38,7 +38,7 @@ func @emitc_call() {
 
 
 func @emitc_call_two_results() {
-  %0 = constant 0 : index
+  %0 = arith.constant 0 : index
   %1:2 = emitc.call "two_results" () : () -> (i32, i32)
   return
 }

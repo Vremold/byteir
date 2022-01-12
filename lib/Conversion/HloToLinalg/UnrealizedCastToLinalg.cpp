@@ -5,10 +5,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "../PassDetail.h"
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/Linalg/IR/LinalgOps.h"
-#include "mlir/Dialect/Linalg/IR/LinalgTypes.h"
+#include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
@@ -16,9 +16,9 @@
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Transforms/DialectConversion.h"
-#include "../PassDetail.h"
 
 using namespace mlir;
+using namespace mlir::arith;
 using namespace mlir::linalg;
 
 // some code from mhlo's legalize_to_linalg
@@ -152,10 +152,10 @@ namespace {
       OwningRewritePatternList patterns(&ctx);
       ConversionTarget target(ctx);
 
-      target.addLegalDialect<linalg::LinalgDialect,
-        math::MathDialect, StandardOpsDialect,
-        tensor::TensorDialect, scf::SCFDialect,
-        shape::ShapeDialect>();
+    target.addLegalDialect<arith::ArithmeticDialect, linalg::LinalgDialect,
+                           math::MathDialect, StandardOpsDialect,
+                           tensor::TensorDialect, scf::SCFDialect,
+                           shape::ShapeDialect>();
 
       target.addDynamicallyLegalOp<UnrealizedConversionCastOp>(
         [&](UnrealizedConversionCastOp op) {

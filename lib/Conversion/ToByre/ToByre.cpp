@@ -14,8 +14,8 @@
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"  
-#include "mlir-hlo/Dialect/mhlo/IR/lhlo_ops.h" // LmhloDialect
+#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h" // LmhloDialect
+#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
@@ -190,7 +190,8 @@ mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
     }
   }
 
-  int64_t last_start = start_indices.getFlatValue<APInt>(num_start - 1).getSExtValue();
+  // get last element of start_indices
+  int64_t last_start = start_indices.getValues<int64_t>()[num_start - 1];
 
   auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
     found->second, adaptor.getOperands());
@@ -604,7 +605,7 @@ static inline void rewriteCallOpsForFuncOp (
     }
 
     mlir::CallOp newCallOp = opBuilder.create<mlir::CallOp>(
-      callOp.getLoc(), callOp.callee(), TypeRange(), oprands);
+        callOp.getLoc(), callOp.getCalleeAttr(), TypeRange(), oprands);
     newCallOp->setAttrs(callOp->getAttrs());
 
   }

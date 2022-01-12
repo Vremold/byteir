@@ -12,7 +12,7 @@ add_byteir_conversion_library(ByteIRHloToLinalg
   LINK_LIBS PUBLIC
   MLIRIR
   MhloDialect
-  MhloLhloToLinalg
+  MhloToLinalg
   MLIRRewrite
   MLIRLinalg
   MLIRMath

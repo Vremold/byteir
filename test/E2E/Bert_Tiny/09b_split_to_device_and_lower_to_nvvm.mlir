@@ -9,38 +9,38 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c256 = constant 256 : index
-      %c30522_i64 = constant 30522 : i64
-      %c0_i64 = constant 0 : i64
-      %cst = constant 0.000000e+00 : f64
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c256 : index
+      %c0 = arith.constant 0 : index
+      %c256 = arith.constant 256 : index
+      %c30522_i64 = arith.constant 30522 : i64
+      %c0_i64 = arith.constant 0 : i64
+      %cst = arith.constant 0.000000e+00 : f64
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c256 : index
       scf.if %6 {
-        %c128 = constant 128 : index
-        %7 = remi_signed %5, %c128 : index
-        %8 = cmpi slt, %7, %c0 : index
-        %9 = addi %7, %c128 : index
+        %c128 = arith.constant 128 : index
+        %7 = arith.remsi %5, %c128 : index
+        %8 = arith.cmpi slt, %7, %c0 : index
+        %9 = arith.addi %7, %c128 : index
         %10 = select %8, %9, %7 : index
-        %c-1 = constant -1 : index
-        %11 = cmpi slt, %5, %c0 : index
-        %12 = subi %c-1, %5 : index
+        %c-1 = arith.constant -1 : index
+        %11 = arith.cmpi slt, %5, %c0 : index
+        %12 = arith.subi %c-1, %5 : index
         %13 = select %11, %12, %5 : index
-        %14 = divi_signed %13, %c128 : index
-        %15 = subi %c-1, %14 : index
+        %14 = arith.divsi %13, %c128 : index
+        %15 = arith.subi %c-1, %14 : index
         %16 = select %11, %15, %14 : index
         %17 = memref.load %arg0[%16, %10] : memref<2x128xi64>
-        %18 = trunci %17 : i64 to i32
+        %18 = arith.trunci %17 : i64 to i32
         %19 = builtin.unrealized_conversion_cast %18 : i32 to ui32
         memref.store %19, %arg1[%16, %10] : memref<2x128xui32>
-        %20 = addi %17, %c30522_i64 : i64
-        %21 = cmpi slt, %17, %c0_i64 : i64
+        %20 = arith.addi %17, %c30522_i64 : i64
+        %21 = arith.cmpi slt, %17, %c0_i64 : i64
         %22 = select %21, %20, %17 : i64
         memref.store %22, %arg2[%16, %10] : memref<2x128xi64>
-        %23 = sitofp %17 : i64 to f64
-        %24 = cmpf une, %23, %cst : f64
+        %23 = arith.sitofp %17 : i64 to f64
+        %24 = arith.cmpf une, %23, %cst : f64
         memref.store %24, %arg3[%16, %10] : memref<2x128xi1>
       }
       gpu.return
@@ -53,38 +53,38 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c256 = constant 256 : index
-      %c2_i64 = constant 2 : i64
-      %c0_i64 = constant 0 : i64
-      %cst = constant -1.000000e+00 : f64
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c256 : index
+      %c0 = arith.constant 0 : index
+      %c256 = arith.constant 256 : index
+      %c2_i64 = arith.constant 2 : i64
+      %c0_i64 = arith.constant 0 : i64
+      %cst = arith.constant -1.000000e+00 : f64
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c256 : index
       scf.if %6 {
-        %c128 = constant 128 : index
-        %7 = remi_signed %5, %c128 : index
-        %8 = cmpi slt, %7, %c0 : index
-        %9 = addi %7, %c128 : index
+        %c128 = arith.constant 128 : index
+        %7 = arith.remsi %5, %c128 : index
+        %8 = arith.cmpi slt, %7, %c0 : index
+        %9 = arith.addi %7, %c128 : index
         %10 = select %8, %9, %7 : index
-        %c-1 = constant -1 : index
-        %11 = cmpi slt, %5, %c0 : index
-        %12 = subi %c-1, %5 : index
+        %c-1 = arith.constant -1 : index
+        %11 = arith.cmpi slt, %5, %c0 : index
+        %12 = arith.subi %c-1, %5 : index
         %13 = select %11, %12, %5 : index
-        %14 = divi_signed %13, %c128 : index
-        %15 = subi %c-1, %14 : index
+        %14 = arith.divsi %13, %c128 : index
+        %15 = arith.subi %c-1, %14 : index
         %16 = select %11, %15, %14 : index
         %17 = memref.load %arg0[%10] : memref<128xi64>
-        %18 = trunci %17 : i64 to i32
+        %18 = arith.trunci %17 : i64 to i32
         %19 = builtin.unrealized_conversion_cast %18 : i32 to ui32
         memref.store %19, %arg1[%16, %10] : memref<2x128xui32>
-        %20 = addi %17, %c2_i64 : i64
-        %21 = cmpi slt, %17, %c0_i64 : i64
+        %20 = arith.addi %17, %c2_i64 : i64
+        %21 = arith.cmpi slt, %17, %c0_i64 : i64
         %22 = select %21, %20, %17 : i64
         memref.store %22, %arg2[%16, %10] : memref<2x128xi64>
-        %23 = sitofp %17 : i64 to f64
-        %24 = cmpf une, %23, %cst : f64
+        %23 = arith.sitofp %17 : i64 to f64
+        %24 = arith.cmpf une, %23, %cst : f64
         memref.store %24, %arg3[%16, %10] : memref<2x128xi1>
       }
       gpu.return
@@ -97,38 +97,38 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c32768 = constant 32768 : index
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c32768 : index
+      %c0 = arith.constant 0 : index
+      %c32768 = arith.constant 32768 : index
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c32768 : index
       scf.if %6 {
-        %c128 = constant 128 : index
-        %7 = remi_signed %5, %c128 : index
-        %8 = cmpi slt, %7, %c0 : index
-        %9 = addi %7, %c128 : index
+        %c128 = arith.constant 128 : index
+        %7 = arith.remsi %5, %c128 : index
+        %8 = arith.cmpi slt, %7, %c0 : index
+        %9 = arith.addi %7, %c128 : index
         %10 = select %8, %9, %7 : index
-        %c-1 = constant -1 : index
-        %11 = cmpi slt, %5, %c0 : index
-        %12 = subi %c-1, %5 : index
+        %c-1 = arith.constant -1 : index
+        %11 = arith.cmpi slt, %5, %c0 : index
+        %12 = arith.subi %c-1, %5 : index
         %13 = select %11, %12, %5 : index
-        %14 = divi_signed %13, %c128 : index
-        %15 = subi %c-1, %14 : index
+        %14 = arith.divsi %13, %c128 : index
+        %15 = arith.subi %c-1, %14 : index
         %16 = select %11, %15, %14 : index
-        %17 = remi_signed %16, %c128 : index
-        %18 = cmpi slt, %17, %c0 : index
-        %19 = addi %17, %c128 : index
+        %17 = arith.remsi %16, %c128 : index
+        %18 = arith.cmpi slt, %17, %c0 : index
+        %19 = arith.addi %17, %c128 : index
         %20 = select %18, %19, %17 : index
-        %21 = cmpi slt, %16, %c0 : index
-        %22 = subi %c-1, %16 : index
+        %21 = arith.cmpi slt, %16, %c0 : index
+        %22 = arith.subi %c-1, %16 : index
         %23 = select %21, %22, %16 : index
-        %24 = divi_signed %23, %c128 : index
-        %25 = subi %c-1, %24 : index
+        %24 = arith.divsi %23, %c128 : index
+        %25 = arith.subi %c-1, %24 : index
         %26 = select %21, %25, %24 : index
         %27 = memref.load %arg0[%26, %20, %10] : memref<2x128x128xf32>
         %28 = memref.load %arg1[%26, %20, %10] : memref<2x128x128xf32>
-        %29 = addf %27, %28 : f32
+        %29 = arith.addf %27, %28 : f32
         memref.store %29, %arg2[%26, %20, %10] : memref<2x128x128xf32>
       }
       gpu.return
@@ -141,26 +141,26 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c128 = constant 128 : index
-      %c512_i64 = constant 512 : i64
-      %c0_i64 = constant 0 : i64
-      %cst = constant -1.000000e+00 : f64
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c128 : index
+      %c0 = arith.constant 0 : index
+      %c128 = arith.constant 128 : index
+      %c512_i64 = arith.constant 512 : i64
+      %c0_i64 = arith.constant 0 : i64
+      %cst = arith.constant -1.000000e+00 : f64
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c128 : index
       scf.if %6 {
         %7 = memref.load %arg0[%5] : memref<128xi64>
-        %8 = trunci %7 : i64 to i32
+        %8 = arith.trunci %7 : i64 to i32
         %9 = builtin.unrealized_conversion_cast %8 : i32 to ui32
         memref.store %9, %arg1[%5] : memref<128xui32>
-        %10 = addi %7, %c512_i64 : i64
-        %11 = cmpi slt, %7, %c0_i64 : i64
+        %10 = arith.addi %7, %c512_i64 : i64
+        %11 = arith.cmpi slt, %7, %c0_i64 : i64
         %12 = select %11, %10, %7 : i64
         memref.store %12, %arg2[%5] : memref<128xi64>
-        %13 = sitofp %7 : i64 to f64
-        %14 = cmpf une, %13, %cst : f64
+        %13 = arith.sitofp %7 : i64 to f64
+        %14 = arith.cmpf une, %13, %cst : f64
         memref.store %14, %arg3[%5] : memref<128xi1>
       }
       gpu.return
@@ -173,39 +173,39 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c7813632 = constant 7813632 : index
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c7813632 : index
+      %c0 = arith.constant 0 : index
+      %c7813632 = arith.constant 7813632 : index
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c7813632 : index
       scf.if %6 {
-        %c30522 = constant 30522 : index
-        %7 = remi_signed %5, %c30522 : index
-        %8 = cmpi slt, %7, %c0 : index
-        %9 = addi %7, %c30522 : index
+        %c30522 = arith.constant 30522 : index
+        %7 = arith.remsi %5, %c30522 : index
+        %8 = arith.cmpi slt, %7, %c0 : index
+        %9 = arith.addi %7, %c30522 : index
         %10 = select %8, %9, %7 : index
-        %c-1 = constant -1 : index
-        %11 = cmpi slt, %5, %c0 : index
-        %12 = subi %c-1, %5 : index
+        %c-1 = arith.constant -1 : index
+        %11 = arith.cmpi slt, %5, %c0 : index
+        %12 = arith.subi %c-1, %5 : index
         %13 = select %11, %12, %5 : index
-        %14 = divi_signed %13, %c30522 : index
-        %15 = subi %c-1, %14 : index
+        %14 = arith.divsi %13, %c30522 : index
+        %15 = arith.subi %c-1, %14 : index
         %16 = select %11, %15, %14 : index
-        %c128 = constant 128 : index
-        %17 = remi_signed %16, %c128 : index
-        %18 = cmpi slt, %17, %c0 : index
-        %19 = addi %17, %c128 : index
+        %c128 = arith.constant 128 : index
+        %17 = arith.remsi %16, %c128 : index
+        %18 = arith.cmpi slt, %17, %c0 : index
+        %19 = arith.addi %17, %c128 : index
         %20 = select %18, %19, %17 : index
-        %21 = cmpi slt, %16, %c0 : index
-        %22 = subi %c-1, %16 : index
+        %21 = arith.cmpi slt, %16, %c0 : index
+        %22 = arith.subi %c-1, %16 : index
         %23 = select %21, %22, %16 : index
-        %24 = divi_signed %23, %c128 : index
-        %25 = subi %c-1, %24 : index
+        %24 = arith.divsi %23, %c128 : index
+        %25 = arith.subi %c-1, %24 : index
         %26 = select %21, %25, %24 : index
         %27 = memref.load %arg0[%26, %20, %10] : memref<2x128x30522xf32>
         %28 = memref.load %arg1[%10] : memref<30522xf32>
-        %29 = addf %27, %28 : f32
+        %29 = arith.addf %27, %28 : f32
         memref.store %29, %arg2[%26, %20, %10] : memref<2x128x30522xf32>
       }
       gpu.return
@@ -218,42 +218,42 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c32768 = constant 32768 : index
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c32768 : index
+      %c0 = arith.constant 0 : index
+      %c32768 = arith.constant 32768 : index
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c32768 : index
       scf.if %6 {
-        %c128 = constant 128 : index
-        %7 = remi_signed %5, %c128 : index
-        %8 = cmpi slt, %7, %c0 : index
-        %9 = addi %7, %c128 : index
+        %c128 = arith.constant 128 : index
+        %7 = arith.remsi %5, %c128 : index
+        %8 = arith.cmpi slt, %7, %c0 : index
+        %9 = arith.addi %7, %c128 : index
         %10 = select %8, %9, %7 : index
-        %c-1 = constant -1 : index
-        %11 = cmpi slt, %5, %c0 : index
-        %12 = subi %c-1, %5 : index
+        %c-1 = arith.constant -1 : index
+        %11 = arith.cmpi slt, %5, %c0 : index
+        %12 = arith.subi %c-1, %5 : index
         %13 = select %11, %12, %5 : index
-        %14 = divi_signed %13, %c128 : index
-        %15 = subi %c-1, %14 : index
+        %14 = arith.divsi %13, %c128 : index
+        %15 = arith.subi %c-1, %14 : index
         %16 = select %11, %15, %14 : index
-        %17 = remi_signed %16, %c128 : index
-        %18 = cmpi slt, %17, %c0 : index
-        %19 = addi %17, %c128 : index
+        %17 = arith.remsi %16, %c128 : index
+        %18 = arith.cmpi slt, %17, %c0 : index
+        %19 = arith.addi %17, %c128 : index
         %20 = select %18, %19, %17 : index
-        %21 = cmpi slt, %16, %c0 : index
-        %22 = subi %c-1, %16 : index
+        %21 = arith.cmpi slt, %16, %c0 : index
+        %22 = arith.subi %c-1, %16 : index
         %23 = select %21, %22, %16 : index
-        %24 = divi_signed %23, %c128 : index
-        %25 = subi %c-1, %24 : index
+        %24 = arith.divsi %23, %c128 : index
+        %25 = arith.subi %c-1, %24 : index
         %26 = select %21, %25, %24 : index
         %27 = memref.load %arg0[%26, %20, %10] : memref<2x128x128xf32>
         %28 = memref.load %arg1[%26, %20, %10] : memref<2x128x128xf32>
         %29 = memref.load %arg2[%26, %20, %10] : memref<2x128x128xf32>
         %30 = memref.load %arg3[%26, %20, %10] : memref<2x128x128xf32>
-        %31 = addf %27, %28 : f32
-        %32 = addf %31, %29 : f32
-        %33 = addf %32, %30 : f32
+        %31 = arith.addf %27, %28 : f32
+        %32 = arith.addf %31, %29 : f32
+        %33 = arith.addf %32, %30 : f32
         memref.store %33, %arg4[%26, %20, %10] : memref<2x128x128xf32>
       }
       gpu.return
@@ -266,42 +266,42 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c32768 = constant 32768 : index
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c32768 : index
+      %c0 = arith.constant 0 : index
+      %c32768 = arith.constant 32768 : index
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c32768 : index
       scf.if %6 {
-        %c128 = constant 128 : index
-        %7 = remi_signed %5, %c128 : index
-        %8 = cmpi slt, %7, %c0 : index
-        %9 = addi %7, %c128 : index
+        %c128 = arith.constant 128 : index
+        %7 = arith.remsi %5, %c128 : index
+        %8 = arith.cmpi slt, %7, %c0 : index
+        %9 = arith.addi %7, %c128 : index
         %10 = select %8, %9, %7 : index
-        %c-1 = constant -1 : index
-        %11 = cmpi slt, %5, %c0 : index
-        %12 = subi %c-1, %5 : index
+        %c-1 = arith.constant -1 : index
+        %11 = arith.cmpi slt, %5, %c0 : index
+        %12 = arith.subi %c-1, %5 : index
         %13 = select %11, %12, %5 : index
-        %14 = divi_signed %13, %c128 : index
-        %15 = subi %c-1, %14 : index
+        %14 = arith.divsi %13, %c128 : index
+        %15 = arith.subi %c-1, %14 : index
         %16 = select %11, %15, %14 : index
-        %17 = remi_signed %16, %c128 : index
-        %18 = cmpi slt, %17, %c0 : index
-        %19 = addi %17, %c128 : index
+        %17 = arith.remsi %16, %c128 : index
+        %18 = arith.cmpi slt, %17, %c0 : index
+        %19 = arith.addi %17, %c128 : index
         %20 = select %18, %19, %17 : index
-        %21 = cmpi slt, %16, %c0 : index
-        %22 = subi %c-1, %16 : index
+        %21 = arith.cmpi slt, %16, %c0 : index
+        %22 = arith.subi %c-1, %16 : index
         %23 = select %21, %22, %16 : index
-        %24 = divi_signed %23, %c128 : index
-        %25 = subi %c-1, %24 : index
+        %24 = arith.divsi %23, %c128 : index
+        %25 = arith.subi %c-1, %24 : index
         %26 = select %21, %25, %24 : index
         %27 = memref.load %arg0[%26, %20, %10] : memref<2x128x128xf32>
         %28 = memref.load %arg1[%26, %20, %10] : memref<2x128x128xf32>
         %29 = memref.load %arg2[%26, %20, %10] : memref<2x128x128xf32>
         %30 = memref.load %arg3[%26, %20, %10] : memref<2x128x128xf32>
-        %31 = addf %27, %28 : f32
-        %32 = addf %31, %29 : f32
-        %33 = addf %32, %30 : f32
+        %31 = arith.addf %27, %28 : f32
+        %32 = arith.addf %31, %29 : f32
+        %33 = arith.addf %32, %30 : f32
         memref.store %33, %arg4[%26, %20, %10] : memref<2x128x128xf32>
       }
       gpu.return
@@ -314,35 +314,35 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c32768 = constant 32768 : index
-      %cst = constant 0.000000e+00 : f32
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c32768 : index
+      %c0 = arith.constant 0 : index
+      %c32768 = arith.constant 32768 : index
+      %cst = arith.constant 0.000000e+00 : f32
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c32768 : index
       scf.if %6 {
-        %c128 = constant 128 : index
-        %7 = remi_signed %5, %c128 : index
-        %8 = cmpi slt, %7, %c0 : index
-        %9 = addi %7, %c128 : index
+        %c128 = arith.constant 128 : index
+        %7 = arith.remsi %5, %c128 : index
+        %8 = arith.cmpi slt, %7, %c0 : index
+        %9 = arith.addi %7, %c128 : index
         %10 = select %8, %9, %7 : index
-        %c-1 = constant -1 : index
-        %11 = cmpi slt, %5, %c0 : index
-        %12 = subi %c-1, %5 : index
+        %c-1 = arith.constant -1 : index
+        %11 = arith.cmpi slt, %5, %c0 : index
+        %12 = arith.subi %c-1, %5 : index
         %13 = select %11, %12, %5 : index
-        %14 = divi_signed %13, %c128 : index
-        %15 = subi %c-1, %14 : index
+        %14 = arith.divsi %13, %c128 : index
+        %15 = arith.subi %c-1, %14 : index
         %16 = select %11, %15, %14 : index
-        %17 = remi_signed %16, %c128 : index
-        %18 = cmpi slt, %17, %c0 : index
-        %19 = addi %17, %c128 : index
+        %17 = arith.remsi %16, %c128 : index
+        %18 = arith.cmpi slt, %17, %c0 : index
+        %19 = arith.addi %17, %c128 : index
         %20 = select %18, %19, %17 : index
-        %21 = cmpi slt, %16, %c0 : index
-        %22 = subi %c-1, %16 : index
+        %21 = arith.cmpi slt, %16, %c0 : index
+        %22 = arith.subi %c-1, %16 : index
         %23 = select %21, %22, %16 : index
-        %24 = divi_signed %23, %c128 : index
-        %25 = subi %c-1, %24 : index
+        %24 = arith.divsi %23, %c128 : index
+        %25 = arith.subi %c-1, %24 : index
         %26 = select %21, %25, %24 : index
         %27 = memref.load %arg0[%26, %20] : memref<2x128xi1>
         %28 = memref.load %arg1[%26, %20, %10] : memref<2x128x128xf32>
@@ -362,25 +362,25 @@ module attributes {byre.container_module, gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c16384 = constant 16384 : index
-      %cst = constant 0.000000e+00 : f32
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c16384 : index
+      %c0 = arith.constant 0 : index
+      %c16384 = arith.constant 16384 : index
+      %cst = arith.constant 0.000000e+00 : f32
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c16384 : index
       scf.if %6 {
-        %c128 = constant 128 : index
-        %7 = remi_signed %5, %c128 : index
-        %8 = cmpi slt, %7, %c0 : index
-        %9 = addi %7, %c128 : index
+        %c128 = arith.constant 128 : index
+        %7 = arith.remsi %5, %c128 : index
+        %8 = arith.cmpi slt, %7, %c0 : index
+        %9 = arith.addi %7, %c128 : index
         %10 = select %8, %9, %7 : index
-        %c-1 = constant -1 : index
-        %11 = cmpi slt, %5, %c0 : index
-        %12 = subi %c-1, %5 : index
+        %c-1 = arith.constant -1 : index
+        %11 = arith.cmpi slt, %5, %c0 : index
+        %12 = arith.subi %c-1, %5 : index
         %13 = select %11, %12, %5 : index
-        %14 = divi_signed %13, %c128 : index
-        %15 = subi %c-1, %14 : index
+        %14 = arith.divsi %13, %c128 : index
+        %15 = arith.subi %c-1, %14 : index
         %16 = select %11, %15, %14 : index
         %17 = memref.load %arg0[%16] : memref<128xi1>
         %18 = memref.load %arg1[%16, %10] : memref<128x128xf32>

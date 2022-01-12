@@ -6,21 +6,22 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
+#include "../PassDetail.h"
+#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
+#include "mlir-hlo/Dialect/lhlo/transforms/map_hlo_to_lhlo_op.h"
+#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
+#include "mlir/Dialect/Bufferization/Transforms/Bufferize.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Shape/Transforms/Passes.h"
 #include "mlir/Dialect/StandardOps/Transforms/FuncConversions.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
-#include "mlir/Transforms/Bufferize.h"
 #include "mlir/Transforms/DialectConversion.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir-hlo/Dialect/mhlo/IR/lhlo_ops.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/map_hlo_to_lhlo_op.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
-#include "../PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
+using namespace mlir::arith;
 using namespace mlir::lmhlo;
 using namespace mlir::memref;
 using namespace mlir::mhlo;
@@ -120,11 +121,11 @@ LogicalResult ConvertResults(Operation* op, SmallVectorImpl<Value>& results,
       for (auto operand : ArrayRef<Value>(results).take_front(num_operands)) {
         auto operand_type = operand.getType().dyn_cast<MemRefType>();
         if (!operand_type) return failure();
-        tensor_operands.push_back(rewriter.create<memref::TensorLoadOp>(
-          op->getLoc(),
-          RankedTensorType::get(operand_type.getShape(),
-            operand_type.getElementType()),
-          operand));
+        tensor_operands.push_back(rewriter.create<bufferization::ToTensorOp>(
+            op->getLoc(),
+            RankedTensorType::get(operand_type.getShape(),
+                                  operand_type.getElementType()),
+            operand));
       }
     }
 
@@ -157,10 +158,11 @@ template <typename HloOpTy>
 class HloToLhloOpConverterLocal : public BaseOpConversion<HloOpTy> {
 public:
   using BaseOpConversion<HloOpTy>::BaseOpConversion;
-  LogicalResult matchAndRewrite(
-    HloOpTy hloOp, ArrayRef<Value> operands,
-    ConversionPatternRewriter& rewriter) const final {
+  LogicalResult
+  matchAndRewrite(HloOpTy hloOp, typename HloOpTy::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const final {
     Operation* op = hloOp.getOperation();
+    ValueRange operands = adaptor.getOperands();
     SmallVector<Value, 4> buffer_args(operands.begin(), operands.end());
     if (failed(ConvertResults(op, buffer_args, rewriter))) return failure();
     rewriter.create<mhlo::HloToLhloOp<HloOpTy>>(op->getLoc(), llvm::None,
@@ -175,11 +177,11 @@ template <typename HloOpTy>
 class HloWithTupleToLhloOpConverter : public BaseOpConversion<HloOpTy> {
 public:
   using BaseOpConversion<HloOpTy>::BaseOpConversion;
-  LogicalResult matchAndRewrite(
-    HloOpTy hloOp, ArrayRef<Value> operands,
-    ConversionPatternRewriter& rewriter) const final {
-
+  LogicalResult
+  matchAndRewrite(HloOpTy hloOp, typename HloOpTy::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const final {
     Operation* op = hloOp.getOperation();
+    ValueRange operands = adaptor.getOperands();
 
     // check all user are get_tuple_element
     // Currently, we only support users are get_tuple_element
@@ -219,9 +221,10 @@ struct HloToLhloReduceWindowOpConverter : public BaseOpConversion<mhlo::ReduceWi
 public:
   using BaseOpConversion<mhlo::ReduceWindowOp>::BaseOpConversion;
 
-  LogicalResult matchAndRewrite(
-    mhlo::ReduceWindowOp op, ArrayRef<Value> operands,
-    ConversionPatternRewriter& rewriter) const final {
+  LogicalResult
+  matchAndRewrite(mhlo::ReduceWindowOp op, mhlo::ReduceWindowOpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const final {
+    ValueRange operands = adaptor.getOperands();
     auto loc = op.getLoc();
     if (!llvm::hasSingleElement(op.body())) {
       return op.emitOpError()
@@ -278,9 +281,10 @@ public:
   using BaseOpConversion<mhlo::CustomCallOp>::BaseOpConversion;
 
   LogicalResult
-  matchAndRewrite(mhlo::CustomCallOp hloOp, ArrayRef<Value> operands,
+  matchAndRewrite(mhlo::CustomCallOp hloOp, mhlo::CustomCallOpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const final {
     Operation *op = hloOp.getOperation();
+    ValueRange operands = adaptor.getOperands();
 
     // check all user are get_tuple_element
     // Currently, we only support users are get_tuple_element
@@ -324,9 +328,10 @@ public:
 class HloToLhloScatterOpConverter : public BaseOpConversion<mhlo::ScatterOp> {
 public:
   using BaseOpConversion<mhlo::ScatterOp>::BaseOpConversion;
-  LogicalResult matchAndRewrite(
-    mhlo::ScatterOp op, ArrayRef<Value> operands,
-    ConversionPatternRewriter& rewriter) const final {
+  LogicalResult
+  matchAndRewrite(mhlo::ScatterOp op, mhlo::ScatterOpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const final {
+    ValueRange operands = adaptor.getOperands();
     SmallVector<Value, 4> buffer_args(operands.begin(), operands.end());
     if (failed(ConvertResults(op, buffer_args, rewriter))) return failure();
     
@@ -352,12 +357,14 @@ public:
     OwningRewritePatternList patterns(&context);
     ConversionTarget target(context);
 
+    target.addLegalDialect<arith::ArithmeticDialect>();
+    target.addLegalDialect<bufferization::BufferizationDialect>();
     target.addLegalDialect<lmhlo::LmhloDialect>();
     target.addLegalDialect<StandardOpsDialect>();
     target.addLegalDialect<memref::MemRefDialect>();
     target.addLegalDialect<shape::ShapeDialect>();
     target.addLegalDialect<tensor::TensorDialect>();
-    
+
     // LWC: lmhlo::ScatterOp's body allow mhlo 
     target.addDynamicallyLegalDialect<mhlo::MhloDialect>([&](Operation* op) {
       if (isa_and_nonnull<mhlo::ScatterOp>(op->getParentOp()) || 
@@ -370,12 +377,12 @@ public:
     // Declare tensor_store illegal. tensor_load may be used to reify output
     // shape computation during dialect conversion and will be handled later.
     target.addIllegalOp<mlir::memref::TensorStoreOp>();
-    // buffer_cast is illegal if it has uses.
-    // TODO(b/175670649) Make buffer_cast illegal.
-    target.addDynamicallyLegalOp<mlir::memref::BufferCastOp>(
-      [](auto op) { return op->use_empty(); });
+    // bufferization.to_memref is illegal if it has uses.
+    // TODO(b/175670649) Make bufferization.to_memref illegal.
+    target.addDynamicallyLegalOp<bufferization::ToMemrefOp>(
+        [](auto op) { return op->use_empty(); });
 
-    BufferizeTypeConverter converter;
+    bufferization::BufferizeTypeConverter converter;
     auto isMemRefType = [](Type type) { return type.isa<BaseMemRefType>(); };
     target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
       return converter.isSignatureLegal(op.getType()) &&
@@ -419,9 +426,9 @@ public:
 } // namespace anonymous
 
 // Collection of rewrite patterns for lowering of HLO to LHLO dialect.
-void mlir::populateHLOToLHLOConversionPatternExtension(MLIRContext* context,
-  BufferizeTypeConverter* converter,
-  OwningRewritePatternList* patterns) {
+void mlir::populateHLOToLHLOConversionPatternExtension(
+    MLIRContext *context, bufferization::BufferizeTypeConverter *converter,
+    OwningRewritePatternList *patterns) {
 
   patterns->insert<HloWithTupleToLhloOpConverter<mhlo::BatchNormGradOp>,
                    HloWithTupleToLhloOpConverter<mhlo::BatchNormTrainingOp>,

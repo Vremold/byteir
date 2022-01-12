@@ -11,19 +11,18 @@
 #include "mlir/Pass/Pass.h"
 #include <memory>
 
+#include "mlir/Dialect/Bufferization/Transforms/Bufferize.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/PatternMatch.h"
-#include "mlir/Transforms/Bufferize.h"
 #include "mlir/Transforms/DialectConversion.h"
 
 namespace mlir {
 
 
 // Collection of rewrite patterns for lowering of HLO to LHLO dialect.
-void populateHLOToLHLOConversionPatternExtension(MLIRContext* context,
-    BufferizeTypeConverter* converter,
-    OwningRewritePatternList* patterns);
-
+void populateHLOToLHLOConversionPatternExtension(
+    MLIRContext *context, bufferization::BufferizeTypeConverter *converter,
+    OwningRewritePatternList *patterns);
 
 std::unique_ptr<OperationPass<ModuleOp>> createConvertHloToLHloPass();
 

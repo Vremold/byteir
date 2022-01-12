@@ -18,6 +18,10 @@ namespace ace {
 class AceDialect;
 } // namespace ace
 
+namespace bufferization {
+class BufferizationDialect;
+} // namespace bufferization
+
 namespace byre {
 class ByreDialect;
 } // namespace byre

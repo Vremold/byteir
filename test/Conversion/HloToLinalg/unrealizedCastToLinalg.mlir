@@ -18,7 +18,7 @@ func @test_shift_right_logical(%arg0: tensor<17x128x768xui32>, %arg1: tensor<17x
 // CHECK: linalg.generic
 // CHECK:  builtin.unrealized_conversion_cast
 // CHECK-NEXT:  builtin.unrealized_conversion_cast
-// CHECK-NEXT:  shift_right_unsigned
+// CHECK-NEXT:  arith.shrui
 // CHECK-NEXT:  builtin.unrealized_conversion_cast
 // CHECK-NEXT:  linalg.yield
 

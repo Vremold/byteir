@@ -80,7 +80,7 @@ struct SetArgShapePass : public SetArgShapeBase<SetArgShapePass> {
           if (this->dim < int(shape.size())) {
             shape[this->dim] = this->size;
             auto newArgType =
-                MemRefType::get(shape, elementType, inputTy.getAffineMaps(),
+                MemRefType::get(shape, elementType, inputTy.getLayout(),
                                 inputTy.getMemorySpace());
             if (newArgType != inputTy) {
               arg.setType(newArgType);

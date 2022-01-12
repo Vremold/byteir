@@ -37,15 +37,16 @@ inline void appendByreComputeAttr(NamedAttrList &attrs, llvm::StringRef name, At
 
 // return true if the attribute with __byre__ prefix
 inline bool isByreComputeAttr(NamedAttribute attr) {
-  std::string name = attr.first.str();
+  std::string name = attr.getName().getValue().str();
   return name.find(getByrePrefix()) == 0;
 }
 
 // remove __byre__ prefix of the attribute and return
 inline NamedAttribute removeByrePrefix(NamedAttribute attr) {
-  std::string name = attr.first.str().substr(getByrePrefix().size());
-  Identifier identifier = Identifier::get(name, attr.first.getContext());
-  return NamedAttribute{identifier, attr.second};
+  std::string name =
+      attr.getName().getValue().str().substr(getByrePrefix().size());
+  StringAttr identifier = StringAttr::get(name, attr.getName().getContext());
+  return NamedAttribute{identifier, attr.getValue()};
 }
 
 } // end namespace byre

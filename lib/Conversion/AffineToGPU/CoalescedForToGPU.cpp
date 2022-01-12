@@ -27,6 +27,7 @@
 
 using namespace llvm;
 using namespace mlir;
+using namespace mlir::arith;
 using namespace mlir::gpu;
 
 // Some code from SCFTOGPU
@@ -60,23 +61,13 @@ struct CoalescedAffineLoopToGpuConverter {
   Value step;
 };
 
-// TODO: after newer LLVM change to CeilDivSIOp
-static Value 
-CreatCeilDivSIOp(OpBuilder& builder, mlir::Location loc, Value lhs, Value rhs) {
-  Value constOne = builder.create<ConstantIndexOp>(loc, 1);
-  Value bias = builder.create<SubIOp>(loc, rhs, constOne);
-  Value sum = builder.create<AddIOp>(loc, lhs, bias);
-  Value ret = builder.create<SignedDivIOp>(loc, sum, rhs);
-  return ret;
-}
-
 static std::pair<Value, Value>
 CreateGridAndBlock(Value dim, int64_t blockSize) {
   auto loc = dim.getLoc();
   OpBuilder builder(dim.getContext());
   builder.setInsertionPointAfter(dim.getDefiningOp());
   Value constBlock = builder.create<ConstantIndexOp>(loc, blockSize);
-  Value grid = CreatCeilDivSIOp(builder, loc, dim, constBlock);
+  Value grid = builder.create<CeilDivSIOp>(loc, dim, constBlock);
   return { grid, constBlock };
 }
 
@@ -163,7 +154,7 @@ bool CoalescedAffineLoopToGpuConverter::collectBound(AffineForOp forOp) {
 
   if (!isConstantIndex(step, 1)) {
     // dim/step  only support perfect loop for now
-    dim = builder.create<SignedDivIOp>(loc, dim, step);
+    dim = builder.create<DivSIOp>(loc, dim, step);
   }
 
   iv = forOp.getInductionVar();

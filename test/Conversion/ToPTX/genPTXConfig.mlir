@@ -2,9 +2,9 @@
 
 module attributes {gpu.container_module}  {
   func private @Unknown0(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<128xi64>, %arg3: memref<128xf64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {byre_compute_name = "Unknown0", byre_elementwise_fusion} {
-    %c4 = constant 4 : index
-    %c1 = constant 1 : index
-    %c32 = constant 32 : index
+    %c4 = arith.constant 4 : index
+    %c1 = arith.constant 1 : index
+    %c32 = arith.constant 32 : index
     %0 = memref.collapse_shape %arg0 [[0, 1]] : memref<1x128xi64> into memref<128xi64>
     %1 = memref.alloc() : memref<128xui32>
     %2 = memref.alloc() : memref<128xi64>
@@ -20,26 +20,26 @@ module attributes {gpu.container_module}  {
       %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
       br ^bb1
     ^bb1:  // pred: ^bb0
-      %c0 = constant 0 : index
-      %c128 = constant 128 : index
-      %3 = muli %0, %2 : index
-      %4 = addi %3, %1 : index
-      %5 = addi %c0, %4 : index
-      %6 = cmpi slt, %4, %c128 : index
+      %c0 = arith.constant 0 : index
+      %c128 = arith.constant 128 : index
+      %3 = arith.muli %0, %2 : index
+      %4 = arith.addi %3, %1 : index
+      %5 = arith.addi %c0, %4 : index
+      %6 = arith.cmpi slt, %4, %c128 : index
       scf.if %6 {
         %7 = memref.load %arg0[%5] : memref<128xi64>
-        %8 = trunci %7 : i64 to i32
+        %8 = arith.trunci %7 : i64 to i32
         %9 = builtin.unrealized_conversion_cast %8 : i32 to ui32
         memref.store %9, %arg1[%5] : memref<128xui32>
         %10 = memref.load %arg2[%5] : memref<128xi64>
         %11 = memref.load %arg3[%5] : memref<128xi64>
-        %12 = addi %7, %11 : i64
-        %13 = cmpi slt, %7, %10 : i64
+        %12 = arith.addi %7, %11 : i64
+        %13 = arith.cmpi slt, %7, %10 : i64
         %14 = select %13, %12, %7 : i64
         memref.store %14, %arg4[%5] : memref<128xi64>
         %15 = memref.load %arg5[%5] : memref<128xf64>
-        %16 = sitofp %7 : i64 to f64
-        %17 = cmpf une, %16, %15 : f64
+        %16 = arith.sitofp %7 : i64 to f64
+        %17 = arith.cmpf une, %16, %15 : f64
         memref.store %17, %arg6[%5] : memref<128xi1>
       }
       gpu.return

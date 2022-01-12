@@ -9,11 +9,11 @@ func @fusion_broadcast_tag(%arg0: tensor<6x12x96xf32>, %arg1: tensor<6x12x96x96x
   %2 = "mhlo.exponential"(%1) : (tensor<6x12x96x96xf32>) -> tensor<6x12x96x96xf32>
   return %2 : tensor<6x12x96x96xf32>
   // NOTAG: linalg.generic
-  // NOTAG: subf
+  // NOTAG: arith.subf
   // NOTAG-NEXT: math.exp
   // NOTAG-NEXT: linalg.yield
   // TESTTAG: linalg.generic
-  // TESTTAG: subf
+  // TESTTAG: arith.subf
   // TESTTAG-NEXT: math.exp
   // TESTTAG-NEXT: linalg.yield
 }
@@ -26,7 +26,7 @@ func @fusion_broadcast_notag(%arg0: tensor<6x12x96xf32>, %arg1: tensor<6x12x96x9
   %2 = "mhlo.exponential"(%1) : (tensor<6x12x96x96xf32>) -> tensor<6x12x96x96xf32>
   return %2 : tensor<6x12x96x96xf32>
   // NOTAG: linalg.generic
-  // NOTAG: subf
+  // NOTAG: arith.subf
   // NOTAG-NEXT: math.exp
   // NOTAG-NEXT: linalg.yield
   // TESTTAG: mhlo.broadcast_in_dim

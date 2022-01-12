@@ -3,12 +3,12 @@
 module attributes {gpu.container_module}  {
   func @fusion_broadcast(%arg0: memref<6x12x96xf32>, %arg1: memref<6x12x96x96xf32>) -> memref<6x12x96x96xf32> {
     %0 = memref.alloc() : memref<6x12x96x96xf32>
-    %c0 = constant 0 : index
-    %c6 = constant 6 : index
-    %1 = subi %c6, %c0 : index
-    %c12 = constant 12 : index
-    %2 = subi %c12, %c0 : index
-    %c1 = constant 1 : index
+    %c0 = arith.constant 0 : index
+    %c6 = arith.constant 6 : index
+    %1 = arith.subi %c6, %c0 : index
+    %c12 = arith.constant 12 : index
+    %2 = arith.subi %c12, %c0 : index
+    %c1 = arith.constant 1 : index
     gpu.launch_func  @fusion_broadcast_kernel::@fusion_broadcast_kernel blocks in (%1, %c1, %c1) threads in (%2, %c1, %c1) args(%arg1 : memref<6x12x96x96xf32>, %arg0 : memref<6x12x96xf32>, %0 : memref<6x12x96x96xf32>)
     return %0 : memref<6x12x96x96xf32>
   }

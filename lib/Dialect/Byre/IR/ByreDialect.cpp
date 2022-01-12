@@ -110,8 +110,8 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
                                                     NamedAttribute attr) {
 
   // ContainerModuleAttr only applied to ModuleOp
-  if (attr.second.isa<UnitAttr>() &&
-      attr.first == getContainerModuleAttrName()) {
+  if (attr.getValue().isa<UnitAttr>() &&
+      attr.getName().getValue() == getContainerModuleAttrName()) {
     if (!isa<ModuleOp>(op)) {
       return op->emitError("expected '")
              << getContainerModuleAttrName()
@@ -145,8 +145,8 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
   }
 
   // ModuleMemorySpaceAttr only applied to ModuleOp with ContainerModuleAttr
-  if (attr.second.isa<ArrayAttr>() &&
-      attr.first == getModuleMemorySpaceAttrName()) {
+  if (attr.getValue().isa<ArrayAttr>() &&
+      attr.getName().getValue() == getModuleMemorySpaceAttrName()) {
     if (!op->hasAttrOfType<UnitAttr>(getContainerModuleAttrName())) {
       return op->emitError("expected '")
              << getModuleMemorySpaceAttrName()
@@ -158,8 +158,8 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
 
   // EntryPointFunctionAttr only applied to FuncOp,
   // which under ModuleOp with ContainerModuleAttrName
-  if (attr.second.isa<UnitAttr>() &&
-      attr.first == getEntryPointFunctionAttrName()) {
+  if (attr.getValue().isa<UnitAttr>() &&
+      attr.getName().getValue() == getEntryPointFunctionAttrName()) {
     if (!isa<FuncOp>(op)) {
       return op->emitError("expected '") << getEntryPointFunctionAttrName()
                                          << "' attribute to be attached to '"

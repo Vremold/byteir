@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Target/CUDA/ToCUDA.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -55,7 +56,8 @@ void byteir::registerToCUDATranslation() {
       },
       [](DialectRegistry &registry) {
         // clang-format off
-        registry.insert<emitc::EmitCDialect,
+        registry.insert<arith::ArithmeticDialect,
+                        emitc::EmitCDialect,
                         gpu::GPUDialect,
                         memref::MemRefDialect,
                         StandardOpsDialect,

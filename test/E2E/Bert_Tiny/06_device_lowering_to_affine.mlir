@@ -17,13 +17,13 @@ module  {
     return %1 : memref<30522x128xf32>
   }
   func private @Unknown0(%arg0: memref<2x128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {byre_elementwise_fusion} {
-    %c0_i64 = constant 0 : i64
-    %c30522_i64 = constant 30522 : i64
-    %cst = constant 0.000000e+00 : f64
+    %c0_i64 = arith.constant 0 : i64
+    %c30522_i64 = arith.constant 30522 : i64
+    %cst = arith.constant 0.000000e+00 : f64
     %0 = memref.alloc() : memref<2x128xui32>
     linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<2x128xi64>) outs(%0 : memref<2x128xui32>) {
     ^bb0(%arg1: i64, %arg2: ui32):  // no predecessors
-      %7 = trunci %arg1 : i64 to i32
+      %7 = arith.trunci %arg1 : i64 to i32
       %8 = builtin.unrealized_conversion_cast %7 : i32 to ui32
       linalg.yield %8 : ui32
     }
@@ -31,8 +31,8 @@ module  {
     %2 = memref.alloc() : memref<2x128xi64>
     linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<2x128xi64>) outs(%2 : memref<2x128xi64>) {
     ^bb0(%arg1: i64, %arg2: i64):  // no predecessors
-      %7 = addi %arg1, %c30522_i64 : i64
-      %8 = cmpi slt, %arg1, %c0_i64 : i64
+      %7 = arith.addi %arg1, %c30522_i64 : i64
+      %8 = arith.cmpi slt, %arg1, %c0_i64 : i64
       %9 = select %8, %7, %arg1 : i64
       linalg.yield %9 : i64
     }
@@ -41,21 +41,21 @@ module  {
     %5 = memref.alloc() : memref<2x128xi1>
     linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<2x128xi64>) outs(%5 : memref<2x128xi1>) {
     ^bb0(%arg1: i64, %arg2: i1):  // no predecessors
-      %7 = sitofp %arg1 : i64 to f64
-      %8 = cmpf une, %7, %cst : f64
+      %7 = arith.sitofp %arg1 : i64 to f64
+      %8 = arith.cmpf une, %7, %cst : f64
       linalg.yield %8 : i1
     }
     %6 = memref.collapse_shape %5 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
     return %1, %4, %6 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
   }
   func private @Unknown1(%arg0: memref<128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {byre_elementwise_fusion} {
-    %c0_i64 = constant 0 : i64
-    %c2_i64 = constant 2 : i64
-    %cst = constant -1.000000e+00 : f64
+    %c0_i64 = arith.constant 0 : i64
+    %c2_i64 = arith.constant 2 : i64
+    %cst = arith.constant -1.000000e+00 : f64
     %0 = memref.alloc() : memref<2x128xui32>
     linalg.generic {indexing_maps = [#map1, #map0], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<128xi64>) outs(%0 : memref<2x128xui32>) {
     ^bb0(%arg1: i64, %arg2: ui32):  // no predecessors
-      %7 = trunci %arg1 : i64 to i32
+      %7 = arith.trunci %arg1 : i64 to i32
       %8 = builtin.unrealized_conversion_cast %7 : i32 to ui32
       linalg.yield %8 : ui32
     }
@@ -63,8 +63,8 @@ module  {
     %2 = memref.alloc() : memref<2x128xi64>
     linalg.generic {indexing_maps = [#map1, #map0], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<128xi64>) outs(%2 : memref<2x128xi64>) {
     ^bb0(%arg1: i64, %arg2: i64):  // no predecessors
-      %7 = addi %arg1, %c2_i64 : i64
-      %8 = cmpi slt, %arg1, %c0_i64 : i64
+      %7 = arith.addi %arg1, %c2_i64 : i64
+      %8 = arith.cmpi slt, %arg1, %c0_i64 : i64
       %9 = select %8, %7, %arg1 : i64
       linalg.yield %9 : i64
     }
@@ -73,8 +73,8 @@ module  {
     %5 = memref.alloc() : memref<2x128xi1>
     linalg.generic {indexing_maps = [#map1, #map0], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<128xi64>) outs(%5 : memref<2x128xi1>) {
     ^bb0(%arg1: i64, %arg2: i1):  // no predecessors
-      %7 = sitofp %arg1 : i64 to f64
-      %8 = cmpf une, %7, %cst : f64
+      %7 = arith.sitofp %arg1 : i64 to f64
+      %8 = arith.cmpf une, %7, %cst : f64
       linalg.yield %8 : i1
     }
     %6 = memref.collapse_shape %5 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
@@ -86,28 +86,28 @@ module  {
     %2 = memref.alloc() : memref<2x128x128xf32>
     linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%0, %1 : memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%2 : memref<2x128x128xf32>) {
     ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
-      %3 = addf %arg2, %arg3 : f32
+      %3 = arith.addf %arg2, %arg3 : f32
       linalg.yield %3 : f32
     }
     return %2 : memref<2x128x128xf32>
   }
   func private @Unknown3(%arg0: memref<1x128xi64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {byre_elementwise_fusion} {
-    %c0_i64 = constant 0 : i64
-    %c512_i64 = constant 512 : i64
-    %cst = constant -1.000000e+00 : f64
+    %c0_i64 = arith.constant 0 : i64
+    %c512_i64 = arith.constant 512 : i64
+    %cst = arith.constant -1.000000e+00 : f64
     %0 = memref.collapse_shape %arg0 [[0, 1]] : memref<1x128xi64> into memref<128xi64>
     %1 = memref.alloc() : memref<128xui32>
     linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%0 : memref<128xi64>) outs(%1 : memref<128xui32>) {
     ^bb0(%arg1: i64, %arg2: ui32):  // no predecessors
-      %5 = trunci %arg1 : i64 to i32
+      %5 = arith.trunci %arg1 : i64 to i32
       %6 = builtin.unrealized_conversion_cast %5 : i32 to ui32
       linalg.yield %6 : ui32
     }
     %2 = memref.alloc() : memref<128xi64>
     linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%0 : memref<128xi64>) outs(%2 : memref<128xi64>) {
     ^bb0(%arg1: i64, %arg2: i64):  // no predecessors
-      %5 = addi %arg1, %c512_i64 : i64
-      %6 = cmpi slt, %arg1, %c0_i64 : i64
+      %5 = arith.addi %arg1, %c512_i64 : i64
+      %6 = arith.cmpi slt, %arg1, %c0_i64 : i64
       %7 = select %6, %5, %arg1 : i64
       linalg.yield %7 : i64
     }
@@ -115,8 +115,8 @@ module  {
     %4 = memref.alloc() : memref<128xi1>
     linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%0 : memref<128xi64>) outs(%4 : memref<128xi1>) {
     ^bb0(%arg1: i64, %arg2: i1):  // no predecessors
-      %5 = sitofp %arg1 : i64 to f64
-      %6 = cmpf une, %5, %cst : f64
+      %5 = arith.sitofp %arg1 : i64 to f64
+      %6 = arith.cmpf une, %5, %cst : f64
       linalg.yield %6 : i1
     }
     return %1, %3, %4 : memref<128xui32>, memref<128x1xi64>, memref<128xi1>
@@ -126,7 +126,7 @@ module  {
     %1 = memref.alloc() : memref<2x128x30522xf32>
     linalg.generic {indexing_maps = [#map2, #map4, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%0, %arg1 : memref<2x128x30522xf32>, memref<30522xf32>) outs(%1 : memref<2x128x30522xf32>) {
     ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
-      %2 = addf %arg2, %arg3 : f32
+      %2 = arith.addf %arg2, %arg3 : f32
       linalg.yield %2 : f32
     }
     return %1 : memref<2x128x30522xf32>
@@ -135,9 +135,9 @@ module  {
     %0 = memref.alloc() : memref<2x128x128xf32>
     linalg.generic {indexing_maps = [#map2, #map2, #map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%0 : memref<2x128x128xf32>) {
     ^bb0(%arg4: f32, %arg5: f32, %arg6: f32, %arg7: f32, %arg8: f32):  // no predecessors
-      %1 = addf %arg4, %arg5 : f32
-      %2 = addf %1, %arg6 : f32
-      %3 = addf %2, %arg7 : f32
+      %1 = arith.addf %arg4, %arg5 : f32
+      %2 = arith.addf %1, %arg6 : f32
+      %3 = arith.addf %2, %arg7 : f32
       linalg.yield %3 : f32
     }
     return %0 : memref<2x128x128xf32>
@@ -146,15 +146,15 @@ module  {
     %0 = memref.alloc() : memref<2x128x128xf32>
     linalg.generic {indexing_maps = [#map2, #map2, #map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%0 : memref<2x128x128xf32>) {
     ^bb0(%arg4: f32, %arg5: f32, %arg6: f32, %arg7: f32, %arg8: f32):  // no predecessors
-      %1 = addf %arg4, %arg5 : f32
-      %2 = addf %1, %arg6 : f32
-      %3 = addf %2, %arg7 : f32
+      %1 = arith.addf %arg4, %arg5 : f32
+      %2 = arith.addf %1, %arg6 : f32
+      %3 = arith.addf %2, %arg7 : f32
       linalg.yield %3 : f32
     }
     return %0 : memref<2x128x128xf32>
   }
   func private @Unknown7(%arg0: memref<256xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<256xi1>) -> (memref<256x128xf32>, memref<256x128xf32>) attributes {byre_elementwise_fusion} {
-    %cst = constant 0.000000e+00 : f32
+    %cst = arith.constant 0.000000e+00 : f32
     %0 = memref.expand_shape %arg0 [[0, 1]] : memref<256xi1> into memref<2x128xi1>
     %1 = memref.alloc() : memref<2x128x128xf32>
     linalg.generic {indexing_maps = [#map5, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%0, %arg1 : memref<2x128xi1>, memref<2x128x128xf32>) outs(%1 : memref<2x128x128xf32>) {
@@ -174,7 +174,7 @@ module  {
     return %2, %5 : memref<256x128xf32>, memref<256x128xf32>
   }
   func private @Unknown8(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>) -> memref<128x128xf32> attributes {byre_elementwise_fusion} {
-    %cst = constant 0.000000e+00 : f32
+    %cst = arith.constant 0.000000e+00 : f32
     %0 = memref.alloc() : memref<128x128xf32>
     linalg.generic {indexing_maps = [#map6, #map0, #map0], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1 : memref<128xi1>, memref<128x128xf32>) outs(%0 : memref<128x128xf32>) {
     ^bb0(%arg2: i1, %arg3: f32, %arg4: f32):  // no predecessors

@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s --mhlo-arith-opt | FileCheck %s
+// RUN: byteir-opt %s --canonicalize | FileCheck %s
 
 func @add_zero_left(%arg0: tensor<128xf32>) -> tensor<128xf32> {
   %c0 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>

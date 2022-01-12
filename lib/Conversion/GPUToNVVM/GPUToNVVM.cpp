@@ -7,6 +7,7 @@
 
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
 
+#include "mlir/Conversion/ArithmeticToLLVM/ArithmeticToLLVM.h"
 #include "mlir/Conversion/LLVMCommon/ConversionTarget.h"
 #include "mlir/Conversion/LLVMCommon/LoweringOptions.h"
 #include "mlir/Conversion/LLVMCommon/Pattern.h"
@@ -14,6 +15,7 @@
 #include "mlir/Conversion/GPUToNVVM/GPUToNVVMPass.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
 #include "mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
 #include "mlir/Dialect/GPU/Passes.h"
 #include "mlir/Dialect/LLVMIR/NVVMDialect.h"
@@ -130,10 +132,10 @@ private:
 void populateGpuToNVVMExtConversionPatterns(LLVMTypeConverter& converter,
     RewritePatternSet& patterns) {
 
-  patterns.add<OpToFuncCallLowering<mlir::MaxFOp>>(converter, "__nv_fmaxf",
-    "__nv_fmax");
-  patterns.add<OpToFuncCallLowering<mlir::MinFOp>>(converter, "__nv_fminf",
-    "__nv_fmin");
+  patterns.add<OpToFuncCallLowering<arith::MaxFOp>>(converter, "__nv_fmaxf",
+                                                    "__nv_fmax");
+  patterns.add<OpToFuncCallLowering<arith::MinFOp>>(converter, "__nv_fminf",
+                                                    "__nv_fmin");
 }
 
 struct GPUToNVVMExtPass
@@ -207,6 +209,7 @@ struct GPUToNVVMExtPass
     populateGpuRewritePatterns(patterns);
     (void)applyPatternsAndFoldGreedily(m, std::move(patterns));
 
+    arith::populateArithmeticToLLVMConversionPatterns(converter, llvmPatterns);
     populateStdToLLVMConversionPatterns(converter, llvmPatterns);
     populateMemRefToLLVMConversionPatterns(converter, llvmPatterns);
     populateGpuToNVVMConversionPatterns(converter, llvmPatterns);

@@ -17,7 +17,7 @@ module  {
     return %1 : memref<30522x128xf32>
   }
   func private @Unknown0(%arg0: memref<2x128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {byre_elementwise_fusion} {
-    %c0_i64 = constant 0 : i64
+    %c0_i64 = arith.constant 0 : i64
     %0 = memref.alloc() : memref<2x128xi1>
     %1 = memref.collapse_shape %0 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
     %2 = memref.alloc() : memref<2x128xi64>
@@ -25,27 +25,27 @@ module  {
     %4 = memref.expand_shape %3 [[0, 1]] : memref<256xi64> into memref<256x1xi64>
     %5 = memref.alloc() : memref<2x128xui32>
     %6 = memref.collapse_shape %5 [[0, 1]] : memref<2x128xui32> into memref<256xui32>
-    %c30522_i64 = constant 30522 : i64
-    %cst = constant 0.000000e+00 : f64
+    %c30522_i64 = arith.constant 30522 : i64
+    %cst = arith.constant 0.000000e+00 : f64
     affine.for %arg1 = 0 to 256 {
       %7 = affine.apply #map0(%arg1)
       %8 = affine.apply #map1(%arg1)
       %9 = affine.load %arg0[%8, %7] : memref<2x128xi64>
-      %10 = trunci %9 : i64 to i32
+      %10 = arith.trunci %9 : i64 to i32
       %11 = builtin.unrealized_conversion_cast %10 : i32 to ui32
       affine.store %11, %5[%8, %7] : memref<2x128xui32>
-      %12 = addi %9, %c30522_i64 : i64
-      %13 = cmpi slt, %9, %c0_i64 : i64
+      %12 = arith.addi %9, %c30522_i64 : i64
+      %13 = arith.cmpi slt, %9, %c0_i64 : i64
       %14 = select %13, %12, %9 : i64
       affine.store %14, %2[%8, %7] : memref<2x128xi64>
-      %15 = sitofp %9 : i64 to f64
-      %16 = cmpf une, %15, %cst : f64
+      %15 = arith.sitofp %9 : i64 to f64
+      %16 = arith.cmpf une, %15, %cst : f64
       affine.store %16, %0[%8, %7] : memref<2x128xi1>
     }
     return %6, %4, %1 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
   }
   func private @Unknown1(%arg0: memref<128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {byre_elementwise_fusion} {
-    %c0_i64 = constant 0 : i64
+    %c0_i64 = arith.constant 0 : i64
     %0 = memref.alloc() : memref<2x128xi1>
     %1 = memref.collapse_shape %0 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
     %2 = memref.alloc() : memref<2x128xi64>
@@ -53,21 +53,21 @@ module  {
     %4 = memref.expand_shape %3 [[0, 1]] : memref<256xi64> into memref<256x1xi64>
     %5 = memref.alloc() : memref<2x128xui32>
     %6 = memref.collapse_shape %5 [[0, 1]] : memref<2x128xui32> into memref<256xui32>
-    %c2_i64 = constant 2 : i64
-    %cst = constant -1.000000e+00 : f64
+    %c2_i64 = arith.constant 2 : i64
+    %cst = arith.constant -1.000000e+00 : f64
     affine.for %arg1 = 0 to 256 {
       %7 = affine.apply #map0(%arg1)
       %8 = affine.apply #map1(%arg1)
       %9 = affine.load %arg0[%7] : memref<128xi64>
-      %10 = trunci %9 : i64 to i32
+      %10 = arith.trunci %9 : i64 to i32
       %11 = builtin.unrealized_conversion_cast %10 : i32 to ui32
       affine.store %11, %5[%8, %7] : memref<2x128xui32>
-      %12 = addi %9, %c2_i64 : i64
-      %13 = cmpi slt, %9, %c0_i64 : i64
+      %12 = arith.addi %9, %c2_i64 : i64
+      %13 = arith.cmpi slt, %9, %c0_i64 : i64
       %14 = select %13, %12, %9 : i64
       affine.store %14, %2[%8, %7] : memref<2x128xi64>
-      %15 = sitofp %9 : i64 to f64
-      %16 = cmpf une, %15, %cst : f64
+      %15 = arith.sitofp %9 : i64 to f64
+      %16 = arith.cmpf une, %15, %cst : f64
       affine.store %16, %0[%8, %7] : memref<2x128xi1>
     }
     return %6, %4, %1 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
@@ -82,31 +82,31 @@ module  {
       %5 = affine.apply #map3(%arg2)
       %6 = affine.load %0[%5, %4, %3] : memref<2x128x128xf32>
       %7 = affine.load %2[%5, %4, %3] : memref<2x128x128xf32>
-      %8 = addf %6, %7 : f32
+      %8 = arith.addf %6, %7 : f32
       affine.store %8, %1[%5, %4, %3] : memref<2x128x128xf32>
     }
     return %1 : memref<2x128x128xf32>
   }
   func private @Unknown3(%arg0: memref<1x128xi64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {byre_elementwise_fusion} {
-    %c0_i64 = constant 0 : i64
+    %c0_i64 = arith.constant 0 : i64
     %0 = memref.alloc() : memref<128xi1>
     %1 = memref.alloc() : memref<128xi64>
     %2 = memref.expand_shape %1 [[0, 1]] : memref<128xi64> into memref<128x1xi64>
     %3 = memref.alloc() : memref<128xui32>
     %4 = memref.collapse_shape %arg0 [[0, 1]] : memref<1x128xi64> into memref<128xi64>
-    %c512_i64 = constant 512 : i64
-    %cst = constant -1.000000e+00 : f64
+    %c512_i64 = arith.constant 512 : i64
+    %cst = arith.constant -1.000000e+00 : f64
     affine.for %arg1 = 0 to 128 {
       %5 = affine.load %4[%arg1] : memref<128xi64>
-      %6 = trunci %5 : i64 to i32
+      %6 = arith.trunci %5 : i64 to i32
       %7 = builtin.unrealized_conversion_cast %6 : i32 to ui32
       affine.store %7, %3[%arg1] : memref<128xui32>
-      %8 = addi %5, %c512_i64 : i64
-      %9 = cmpi slt, %5, %c0_i64 : i64
+      %8 = arith.addi %5, %c512_i64 : i64
+      %9 = arith.cmpi slt, %5, %c0_i64 : i64
       %10 = select %9, %8, %5 : i64
       affine.store %10, %1[%arg1] : memref<128xi64>
-      %11 = sitofp %5 : i64 to f64
-      %12 = cmpf une, %11, %cst : f64
+      %11 = arith.sitofp %5 : i64 to f64
+      %12 = arith.cmpf une, %11, %cst : f64
       affine.store %12, %0[%arg1] : memref<128xi1>
     }
     return %3, %2, %0 : memref<128xui32>, memref<128x1xi64>, memref<128xi1>
@@ -120,7 +120,7 @@ module  {
       %4 = affine.apply #map6(%arg2)
       %5 = affine.load %0[%4, %3, %2] : memref<2x128x30522xf32>
       %6 = affine.load %arg1[%2] : memref<30522xf32>
-      %7 = addf %5, %6 : f32
+      %7 = arith.addf %5, %6 : f32
       affine.store %7, %1[%4, %3, %2] : memref<2x128x30522xf32>
     }
     return %1 : memref<2x128x30522xf32>
@@ -135,9 +135,9 @@ module  {
       %5 = affine.load %arg1[%3, %2, %1] : memref<2x128x128xf32>
       %6 = affine.load %arg2[%3, %2, %1] : memref<2x128x128xf32>
       %7 = affine.load %arg3[%3, %2, %1] : memref<2x128x128xf32>
-      %8 = addf %4, %5 : f32
-      %9 = addf %8, %6 : f32
-      %10 = addf %9, %7 : f32
+      %8 = arith.addf %4, %5 : f32
+      %9 = arith.addf %8, %6 : f32
+      %10 = arith.addf %9, %7 : f32
       affine.store %10, %0[%3, %2, %1] : memref<2x128x128xf32>
     }
     return %0 : memref<2x128x128xf32>
@@ -152,15 +152,15 @@ module  {
       %5 = affine.load %arg1[%3, %2, %1] : memref<2x128x128xf32>
       %6 = affine.load %arg2[%3, %2, %1] : memref<2x128x128xf32>
       %7 = affine.load %arg3[%3, %2, %1] : memref<2x128x128xf32>
-      %8 = addf %4, %5 : f32
-      %9 = addf %8, %6 : f32
-      %10 = addf %9, %7 : f32
+      %8 = arith.addf %4, %5 : f32
+      %9 = arith.addf %8, %6 : f32
+      %10 = arith.addf %9, %7 : f32
       affine.store %10, %0[%3, %2, %1] : memref<2x128x128xf32>
     }
     return %0 : memref<2x128x128xf32>
   }
   func private @Unknown7(%arg0: memref<256xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<256xi1>) -> (memref<256x128xf32>, memref<256x128xf32>) attributes {byre_elementwise_fusion} {
-    %cst = constant 0.000000e+00 : f32
+    %cst = arith.constant 0.000000e+00 : f32
     %0 = memref.alloc() : memref<2x128x128xf32>
     %1 = memref.collapse_shape %0 [[0, 1], [2]] : memref<2x128x128xf32> into memref<256x128xf32>
     %2 = memref.expand_shape %arg2 [[0, 1]] : memref<256xi1> into memref<2x128xi1>
@@ -182,7 +182,7 @@ module  {
     return %4, %1 : memref<256x128xf32>, memref<256x128xf32>
   }
   func private @Unknown8(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>) -> memref<128x128xf32> attributes {byre_elementwise_fusion} {
-    %cst = constant 0.000000e+00 : f32
+    %cst = arith.constant 0.000000e+00 : f32
     %0 = memref.alloc() : memref<128x128xf32>
     affine.for %arg2 = 0 to 16384 {
       %1 = affine.apply #map0(%arg2)

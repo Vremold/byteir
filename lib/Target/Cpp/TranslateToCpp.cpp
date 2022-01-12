@@ -12,6 +12,7 @@
 #include "byteir/Target/Common/EmitUtil.h"
 
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
@@ -32,6 +33,7 @@
 
 using namespace byteir;
 using namespace mlir;
+using namespace mlir::arith;
 using namespace mlir::emitc;
 using namespace mlir::memref;
 using llvm::formatv;
@@ -115,7 +117,7 @@ namespace {
 
     // Also disallow affine maps
     // TODO extend it
-    if (memrefType.getAffineMaps().size() != 0) {
+    if (!memrefType.getLayout().isIdentity()) {
       llvm::errs() << "<<MemRefType with affine maps is not supported>>";
       return failure();
     }
@@ -189,7 +191,7 @@ namespace {
     return emitter.emitAttribute(operation->getLoc(), value);
   }
 
-  static LogicalResult printStandardBinaryOp(CppEmitter& emitter, Operation* binOp) {
+  static LogicalResult printArithBinaryOp(CppEmitter& emitter, Operation* binOp) {
     raw_ostream& os = emitter.ostream();
     if (binOp->getNumOperands() != 2)
       return binOp->emitError("<<Invalid binOp Operands>>");
@@ -204,13 +206,13 @@ namespace {
       .Case<AddIOp, AddFOp>([&](auto&) { os << "+"; })
       .Case<SubIOp, SubFOp>([&](auto&) { os << "-"; })
       .Case<MulIOp, MulFOp>([&](auto&) { os << "*"; })
-      .Case<UnsignedDivIOp, SignedDivIOp, DivFOp>([&](auto&) { os << "/"; })
-      .Case<UnsignedRemIOp, SignedRemIOp>([&](auto&) { os << "%"; })
-      .Case<AndOp>([&](auto&) { os << "&"; })
-      .Case<OrOp>([&](auto&) { os << "|"; })
-      .Case<XOrOp>([&](auto&) { os << "^"; })
-      .Case<ShiftLeftOp>([&](auto&) { os << "<<"; })
-      .Case<UnsignedShiftRightOp, SignedShiftRightOp>(
+      .Case<DivUIOp, DivSIOp, DivFOp>([&](auto&) { os << "/"; })
+      .Case<RemUIOp, RemSIOp>([&](auto&) { os << "%"; })
+      .Case<AndIOp>([&](auto&) { os << "&"; })
+      .Case<OrIOp>([&](auto&) { os << "|"; })
+      .Case<XOrIOp>([&](auto&) { os << "^"; })
+      .Case<ShLIOp>([&](auto&) { os << "<<"; })
+      .Case<ShRUIOp, ShRSIOp>(
         [&](auto&) { os << ">>"; })
       .Case<CmpIOp>(
         [&](CmpIOp op) { os << getCmpIOpString(op.getPredicate()); })
@@ -250,7 +252,15 @@ namespace {
   static LogicalResult printOperation(CppEmitter& emitter,
     mlir::ConstantOp constantOp) {
     Operation* operation = constantOp.getOperation();
-    Attribute value = constantOp.value();
+    Attribute value = constantOp.getValue();
+
+    return printConstantOp(emitter, operation, value);
+  }
+
+  static LogicalResult printOperation(CppEmitter& emitter,
+    arith::ConstantOp constantOp) {
+    Operation* operation = constantOp.getOperation();
+    Attribute value = constantOp.getValue();
 
     return printConstantOp(emitter, operation, value);
   }
@@ -435,19 +445,19 @@ namespace {
     os << " ";
     os << emitter.getOrCreateName(forOp.getInductionVar());
     os << " = ";
-    os << emitter.getOrCreateName(forOp.lowerBound());
+    os << emitter.getOrCreateName(forOp.getLowerBound());
     os << "; ";
     os << emitter.getOrCreateName(forOp.getInductionVar());
     os << " < ";
-    os << emitter.getOrCreateName(forOp.upperBound());
+    os << emitter.getOrCreateName(forOp.getUpperBound());
     os << "; ";
     os << emitter.getOrCreateName(forOp.getInductionVar());
     os << " += ";
-    os << emitter.getOrCreateName(forOp.step());
+    os << emitter.getOrCreateName(forOp.getStep());
     os << ") {\n";
     os.indent();
 
-    Region& forRegion = forOp.region();
+    Region &forRegion = forOp.getRegion();
     auto regionOps = forRegion.getOps();
 
     // We skip the trailing yield op because this updates the result variables
@@ -499,7 +509,7 @@ namespace {
     os << ") {\n";
     os.indent();
 
-    Region& thenRegion = ifOp.thenRegion();
+    Region &thenRegion = ifOp.getThenRegion();
     for (Operation& op : thenRegion.getOps()) {
       // Note: This prints a superfluous semicolon if the terminating yield op has
       // zero results.
@@ -509,7 +519,7 @@ namespace {
 
     os.unindent() << "}";
 
-    Region& elseRegion = ifOp.elseRegion();
+    Region &elseRegion = ifOp.getElseRegion();
     if (!elseRegion.empty()) {
       os << " else {\n";
       os.indent();
@@ -881,7 +891,7 @@ CppEmitter::emitOperandsAndAttributes(Operation &op,
   // Insert comma in between operands and non-filtered attributes if needed.
   if (op.getNumOperands() > 0) {
     for (NamedAttribute attr : op.getAttrs()) {
-      if (!llvm::is_contained(exclude, attr.first.strref())) {
+      if (!llvm::is_contained(exclude, attr.getName().getValue())) {
         os << ", ";
         break;
       }
@@ -889,10 +899,10 @@ CppEmitter::emitOperandsAndAttributes(Operation &op,
   }
   // Emit attributes.
   auto emitNamedAttribute = [&](NamedAttribute attr) -> LogicalResult {
-    if (llvm::is_contained(exclude, attr.first.strref()))
+    if (llvm::is_contained(exclude, attr.getName().getValue()))
       return success();
-    os << "/* " << attr.first << " */";
-    if (failed(emitAttribute(op.getLoc(), attr.second)))
+    os << "/* " << attr.getName().getValue() << " */";
+    if (failed(emitAttribute(op.getLoc(), attr.getValue())))
       return failure();
     return success();
   };
@@ -979,16 +989,18 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
           .Case<BranchOp, mlir::CallOp, CondBranchOp, mlir::ConstantOp, FuncOp,
                 ModuleOp, ReturnOp>(
               [&](auto op) { return printOperation(*this, op); })
-          // Standard binary ops
-          .Case<AddIOp, AddFOp, SubIOp, SubFOp, MulIOp, MulFOp, 
-                UnsignedDivIOp, SignedDivIOp, DivFOp, UnsignedRemIOp, SignedRemIOp,
-                AndOp, OrOp, XOrOp, ShiftLeftOp, UnsignedShiftRightOp,
-                SignedShiftRightOp, CmpIOp, CmpFOp>(
-               [&](auto op) { return printStandardBinaryOp(*this, op); })
+          // Arithmetic ops
+          .Case<arith::ConstantOp>(
+              [&](auto op) { return printOperation(*this, op); })
+          // Arithmetic binary ops
+          .Case<AddIOp, AddFOp, SubIOp, SubFOp, MulIOp, MulFOp, DivUIOp,
+                DivSIOp, DivFOp, RemUIOp, RemSIOp, AndIOp, OrIOp, XOrIOp,
+                ShLIOp, ShRUIOp, ShRSIOp, CmpIOp, CmpFOp>(
+              [&](auto op) { return printArithBinaryOp(*this, op); })
           // SimpleCast
-          .Case<FPExtOp, FPTruncOp, IndexCastOp, SIToFPOp, FPToSIOp, FPToUIOp, UIToFPOp, 
-                UnrealizedConversionCastOp, TruncateIOp>(
-               [&](auto op) { return printSimpleCastOp(*this, op); })
+          .Case<ExtFOp, TruncIOp, TruncFOp, IndexCastOp, SIToFPOp, FPToSIOp,
+                FPToUIOp, UIToFPOp, UnrealizedConversionCastOp>(
+              [&](auto op) { return printSimpleCastOp(*this, op); })
           .Default([&](Operation *) {
             return op.emitOpError("unable to find printer for op");
           });

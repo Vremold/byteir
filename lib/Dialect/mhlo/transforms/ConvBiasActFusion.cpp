@@ -5,10 +5,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/transforms/ConvBiasActFusion.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
+#include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
@@ -24,14 +24,12 @@ namespace {
 
 // return 'true' for correctly broadcast
 bool handleConvLayout(NamedAttrList &attrs,
-                      mhlo::ConvDimensionNumbers dimension_numbers,
+                      mhlo::ConvDimensionNumbersAttr dimension_numbers,
                       int64_t broadcast_dim, PatternRewriter &rewriter) {
   StringAttr input_layout;
-  auto input_batch_dimension =
-      dimension_numbers.input_batch_dimension().getValue();
-  auto input_feature_dimension =
-      dimension_numbers.input_feature_dimension().getValue();
-  assert(dimension_numbers.input_spatial_dimensions().size() == 2);
+  auto input_batch_dimension = dimension_numbers.getInputBatchDimension();
+  auto input_feature_dimension = dimension_numbers.getInputFeatureDimension();
+  assert(dimension_numbers.getInputSpatialDimensions().size() == 2);
   if (input_batch_dimension == 0 && input_feature_dimension == 1) {
     input_layout = rewriter.getStringAttr("NCHW");
     if (broadcast_dim != 1) {
@@ -47,11 +45,9 @@ bool handleConvLayout(NamedAttrList &attrs,
   }
 
   StringAttr output_layout;
-  auto output_batch_dimension =
-      dimension_numbers.output_batch_dimension().getValue();
-  auto output_feature_dimension =
-      dimension_numbers.output_feature_dimension().getValue();
-  assert(dimension_numbers.output_spatial_dimensions().size() == 2);
+  auto output_batch_dimension = dimension_numbers.getOutputBatchDimension();
+  auto output_feature_dimension = dimension_numbers.getOutputFeatureDimension();
+  assert(dimension_numbers.getOutputSpatialDimensions().size() == 2);
   if (output_batch_dimension == 0 && output_feature_dimension == 1) {
     output_layout = rewriter.getStringAttr("NCHW");
   } else if (output_batch_dimension == 0 && output_feature_dimension == 3) {
@@ -65,10 +61,10 @@ bool handleConvLayout(NamedAttrList &attrs,
 
   StringAttr kernel_layout;
   auto kernel_input_feature_dimension =
-      dimension_numbers.kernel_input_feature_dimension().getValue();
+      dimension_numbers.getKernelInputFeatureDimension();
   auto kernel_output_feature_dimension =
-      dimension_numbers.kernel_output_feature_dimension().getValue();
-  assert(dimension_numbers.kernel_spatial_dimensions().size() == 2);
+      dimension_numbers.getKernelOutputFeatureDimension();
+  assert(dimension_numbers.getKernelSpatialDimensions().size() == 2);
   if (kernel_input_feature_dimension == 1 &&
       kernel_output_feature_dimension == 0) {
     kernel_layout = rewriter.getStringAttr("KCRS");
@@ -109,7 +105,8 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
     }
 
     NamedAttrList attrs;
-    attrs.append(byre::getByreComputeName(), rewriter.getStringAttr("ConvBiasOp"));
+    attrs.append(byre::getByreComputeName(),
+                 rewriter.getStringAttr("ConvBiasOp"));
     if (!handleConvLayout(
             attrs, convOp.dimension_numbers(),
             (*broadcastOp.broadcast_dimensions().begin()).getSExtValue(),
@@ -139,15 +136,21 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
       getValuesFromDenseIntElementsAttr(convOp.rhs_dilationAttr(),
                                         rhs_dilation);
     }
-    // TODO: window_reversal attribute
 
+    // TODO: window_reversal attribute
     byre::appendByreComputeAttr(attrs, "act_func", op.act_funcAttr());
-    byre::appendByreComputeAttr(attrs, "window_strides", rewriter.getI64ArrayAttr(window_strides));
-    byre::appendByreComputeAttr(attrs, "padding", rewriter.getI64ArrayAttr(padding));
-    byre::appendByreComputeAttr(attrs, "lhs_dilation", rewriter.getI64ArrayAttr(lhs_dilation));
-    byre::appendByreComputeAttr(attrs, "rhs_dilation", rewriter.getI64ArrayAttr(rhs_dilation));
-    byre::appendByreComputeAttr(attrs, "feature_group_count", convOp.feature_group_countAttr());
-    byre::appendByreComputeAttr(attrs, "batch_group_count", convOp.batch_group_countAttr());
+    byre::appendByreComputeAttr(attrs, "window_strides",
+                                rewriter.getI64ArrayAttr(window_strides));
+    byre::appendByreComputeAttr(attrs, "padding",
+                                rewriter.getI64ArrayAttr(padding));
+    byre::appendByreComputeAttr(attrs, "lhs_dilation",
+                                rewriter.getI64ArrayAttr(lhs_dilation));
+    byre::appendByreComputeAttr(attrs, "rhs_dilation",
+                                rewriter.getI64ArrayAttr(rhs_dilation));
+    byre::appendByreComputeAttr(attrs, "feature_group_count",
+                                convOp.feature_group_countAttr());
+    byre::appendByreComputeAttr(attrs, "batch_group_count",
+                                convOp.batch_group_countAttr());
 
     Location loc =
         rewriter.getFusedLoc({op->getLoc(), addOp->getLoc(),

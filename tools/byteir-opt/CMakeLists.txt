@@ -21,6 +21,7 @@ set(LLVM_LINK_COMPONENTS
 set(MHLO_LIBS
   MhloRegisterDialects
   AllMhloPasses
+  LmhloPasses
   MLIRBufferTransforms
   MLIRHLOAnalysis
   MLIRHLOTestAnalysis

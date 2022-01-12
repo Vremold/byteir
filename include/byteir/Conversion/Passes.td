@@ -53,6 +53,7 @@ def ConvertHloToLHlo : Pass<"convert-hlo-to-lhlo", "ModuleOp"> {
     "mlir::lmhlo::LmhloDialect",
     "mlir::memref::MemRefDialect",
     "mlir::shape::ShapeDialect",
+    "mlir::bufferization::BufferizationDialect",
   ];
 }
 
