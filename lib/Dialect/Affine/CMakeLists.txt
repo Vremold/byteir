@@ -7,10 +7,12 @@ add_mlir_dialect_library(ByteIRAffinePasses
 
   DEPENDS
   ByteIRAffinePassIncGen
+  ByteIRUtils
   MLIRAffine
   MLIRMemRef
 
   LINK_LIBS PUBLIC
+  ByteIRUtils
   MLIRIR
   MLIRAffine
   MLIRMemRef

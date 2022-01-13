@@ -5,14 +5,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_UTILS_H
-#define BYTEIR_UTILS_H
+#ifndef BYTEIR_UTILS_UTILS_H
+#define BYTEIR_UTILS_UTILS_H
 
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/FunctionSupport.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/SmallBitVector.h"
 #include <string>
 #include <type_traits>
 
@@ -21,6 +22,13 @@ class CallOp;
 class FuncOp;
 class Operation;
 class Value;
+
+// Create a vector with only the offset as 1, the rest as 0's.
+// e.g. if offset == 1, size == 4, val == 3, return3 [0, 3, 0, 0]
+llvm::SmallVector<int64_t, 4> createOneHot(unsigned size, unsigned offset, int64_t val = 1);
+
+// Return all indices for non-zeros
+llvm::SmallVector<unsigned, 4> getAllIndicesForNonZeros(ArrayRef<int64_t>);
 
 // Return true when a value is a ConstantIndex with value of `lit`.
 bool isConstantIndex(Value value, int64_t lit);
@@ -100,4 +108,4 @@ bool IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> filter
 
 } // namespace mlir
 
-#endif // BYTEIR_UTILS_H
+#endif // BYTEIR_UTILS_UTILS_H

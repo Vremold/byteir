@@ -15,9 +15,27 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Twine.h"
+#include <assert.h>  
 
 using namespace llvm;
 using namespace mlir;
+
+SmallVector<int64_t, 4> mlir::createOneHot(unsigned size, unsigned offset, int64_t val) {
+  assert(offset < size && "offset should be smaller than size");
+  SmallVector<int64_t, 4> res(size, 0);
+  res[offset] = val;
+  return res;
+}
+
+SmallVector<unsigned, 4> mlir::getAllIndicesForNonZeros(ArrayRef<int64_t> vec) {
+  SmallVector<unsigned, 4> res;
+  for (unsigned i = 0; i < vec.size(); ++i) {
+    if (vec[i] != 0) {
+      res.push_back(i);
+    }
+  }
+  return res;
+}
 
 bool mlir::isConstantIndex(Value value, int64_t lit) {
   if (auto def = value.getDefiningOp<arith::ConstantIndexOp>()) {

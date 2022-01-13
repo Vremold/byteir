@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Affine/transforms/AffineLoopFusionEx.h"
+#include "byteir/Utils/Hoist.h"
 #include "mlir/Analysis/Utils.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -39,8 +40,7 @@ Operation* leastDominantDefiningOp(
   return cur_pos;
 }
 
-bool IsHoistableOp(Operation* op) {
-  // everything but dealloc
+bool IsHoistUpOp(Operation* op) {
   return isa<memref::AllocOp>(op) ||
     isa<memref::CollapseShapeOp>(op) ||
     isa<memref::DimOp>(op) ||
@@ -48,33 +48,18 @@ bool IsHoistableOp(Operation* op) {
     isa<memref::ReshapeOp>(op);
 }
 
-void HoistNonAffineLoop(
-  FuncOp funcOp, DominanceInfo& domInfo, 
+void collectAffineLopps(
+  FuncOp funcOp, 
   SmallVector<AffineForOp>& loop_collector) {
 
-  SmallVector<std::pair<Operation*, Operation*>> movable_ops;
   for (auto& block : funcOp.getBody()) {
-    auto& first = block.front();
     for (auto& op : block.without_terminator()) {
       // skip AffineFor
       if (auto forOp = dyn_cast<AffineForOp>(op)) {
         loop_collector.push_back(forOp);
         continue;
       }
-
-      // skip non-hoistable op
-      if (!IsHoistableOp(&op)) continue;
-
-      auto pos = leastDominantDefiningOp(&first, &op, domInfo);
-      if (pos != &op) {
-        movable_ops.emplace_back(&op, pos);
-      }
     }
-  }
-
-  // real movement happens here
-  for (auto& p : movable_ops) {
-    p.first->moveAfter(p.second);
   }
 }
 
@@ -89,7 +74,7 @@ void UpdateComputationSliceState(mlir::ComputationSliceState& sliceUnion, MLIRCo
   sliceUnion.ubs[0] = AffineMap::get(1, 0, result, ctx);
 }
 
-void FuseAffineLoopEx(FuncOp funcOp, ArrayRef<AffineForOp> loops) {
+void fuseAffineLoopEx(FuncOp funcOp, ArrayRef<AffineForOp> loops) {
   // early return if only 1 or 0 loop
   if (loops.size() <= 1) return;
 
@@ -128,11 +113,15 @@ void AffineLoopFusionExPass::runOnFunction() {
 
   auto& domInfo = getAnalysis<DominanceInfo>();
 
-  SmallVector<AffineForOp> loop_collector;
+  SmallVector<AffineForOp> loopCollection;
 
-  HoistNonAffineLoop(funcOp, domInfo, loop_collector);
+  collectAffineLopps(funcOp, loopCollection);
 
-  FuseAffineLoopEx(funcOp, loop_collector);
+  for (auto& block : funcOp.getBody()) {
+    hoistUpOpsInBlock(&block, domInfo, IsHoistUpOp);
+  }
+
+  fuseAffineLoopEx(funcOp, loopCollection);
 }
 
 std::unique_ptr<FunctionPass>

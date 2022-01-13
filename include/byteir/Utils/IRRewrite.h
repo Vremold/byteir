@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_IRREWRITE_H
-#define BYTEIR_IRREWRITE_H
+#ifndef BYTEIR_UTILS_IRREWRITE_H
+#define BYTEIR_UTILS_IRREWRITE_H
 
 #include <functional>
 
@@ -19,4 +19,4 @@ void ReplicateDefiningOp(Block* block, std::function<bool(Operation*)> checkFunc
 
 } // namespace mlir
 
-#endif // BYTEIR_IRREWRITE_H
+#endif // BYTEIR_UTILS_IRREWRITE_H
