@@ -7,11 +7,15 @@ export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
 export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
 git submodule update --init --recursive
 unset http_proxy; unset https_proxy
-#if [ ! -f llvm_build/bin/mlir-opt ]; then
+
+LLVM_BUILD="llvm_install_579c4921c0105698617cc1e1b86a9ecf3b4717ce.tar.gz"
+if [ ! -f "$LLVM_BUILD" ]; then
+  rm -rf llvm_install*
   rm -rf llvm_build
-  wget http://tosv.byted.org/obj/turing/byteir/llvm_install_579c4921c0105698617cc1e1b86a9ecf3b4717ce.tar.gz
-  tar xzf llvm_install_579c4921c0105698617cc1e1b86a9ecf3b4717ce.tar.gz
-#fi
+  wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD"
+  tar xzf "$LLVM_BUILD"
+fi
+
 mkdir build
 cd build
 cmake ../cmake/ -G Ninja -DCMAKE_BUILD_TYPE=Release \
