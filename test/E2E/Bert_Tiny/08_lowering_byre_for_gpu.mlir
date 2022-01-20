@@ -1,7 +1,7 @@
 // RUN: byteir-opt %s -func-tag="attach-attr=__placeholder__byre.entry_point func-name=main" -gen-ptx-config -convert-to-byre -byre-fold -cse | FileCheck %s
 
 // CHECK-LABEL: func @main
-module attributes {gpu.container_module}  {
+module attributes {gpu.container_module} {
   func private @MatmulOp0(%arg0: memref<256x128xf32>, %arg1: memref<256x30522xf32>) -> memref<30522x128xf32> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"} {
     %0 = memref.alloc() : memref<128x30522xf32>
     %1 = memref.alloc() : memref<30522x128xf32>
@@ -25,9 +25,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown0_kernel {
     gpu.func @Unknown0_kernel(%arg0: memref<2x128xi64>, %arg1: memref<2x128xui32>, %arg2: memref<2x128xi64>, %arg3: memref<2x128xi1>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -83,9 +83,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown1_kernel {
     gpu.func @Unknown1_kernel(%arg0: memref<128xi64>, %arg1: memref<2x128xui32>, %arg2: memref<2x128xi64>, %arg3: memref<2x128xi1>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -137,9 +137,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown2_kernel {
     gpu.func @Unknown2_kernel(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -193,9 +193,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown3_kernel {
     gpu.func @Unknown3_kernel(%arg0: memref<128xi64>, %arg1: memref<128xui32>, %arg2: memref<128xi64>, %arg3: memref<128xi1>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -234,9 +234,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown4_kernel {
     gpu.func @Unknown4_kernel(%arg0: memref<2x128x30522xf32>, %arg1: memref<30522xf32>, %arg2: memref<2x128x30522xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -287,9 +287,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown5_kernel {
     gpu.func @Unknown5_kernel(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>, %arg4: memref<2x128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -343,9 +343,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown6_kernel {
     gpu.func @Unknown6_kernel(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>, %arg4: memref<2x128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -404,9 +404,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown7_kernel {
     gpu.func @Unknown7_kernel(%arg0: memref<2x128xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128xi1>, %arg4: memref<2x128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -460,9 +460,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown8_kernel {
     gpu.func @Unknown8_kernel(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>, %arg2: memref<128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -740,28 +740,28 @@ module attributes {gpu.container_module}  {
     %169 = call @Unknown6(%29, %18, %15, %12) : (memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>) -> memref<2x128x128xf32>
     "lmhlo.custom_call"(%169, %146, %arg6, %148, %147, %9, %8, %7, %6) {api_version = 1 : i32, backend_config = "", call_target_name = "ftv4.layernorm_backward_residual", has_side_effect = false, operand_segment_sizes = dense<[5, 4]> : vector<2xi32>} : (memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>) -> ()
     %170:2 = call @Unknown7(%162#2, %9, %163#2) : (memref<256xi1>, memref<2x128x128xf32>, memref<256xi1>) -> (memref<256x128xf32>, memref<256x128xf32>)
-    "lmhlo.scatter"(%167, %162#1, %170#0, %5) ( {
+    "lmhlo.scatter"(%167, %162#1, %170#0, %5) ({
     ^bb0(%arg48: tensor<f32>, %arg49: tensor<f32>):  // no predecessors
       %172 = mhlo.add %arg48, %arg49 : tensor<f32>
       "mhlo.return"(%172) : (tensor<f32>) -> ()
     }) {indices_are_sorted = false, scatter_dimension_numbers = #mhlo.scatter<update_window_dims = [1], inserted_window_dims = [0], scatter_dims_to_operand_dims = [0], index_vector_dim = 1>, unique_indices = false} : (memref<30522x128xf32>, memref<256x1xi64>, memref<256x128xf32>, memref<30522x128xf32>) -> ()
-    "lmhlo.scatter"(%0, %163#1, %170#1, %4) ( {
+    "lmhlo.scatter"(%0, %163#1, %170#1, %4) ({
     ^bb0(%arg48: tensor<f32>, %arg49: tensor<f32>):  // no predecessors
       %172 = mhlo.add %arg48, %arg49 : tensor<f32>
       "mhlo.return"(%172) : (tensor<f32>) -> ()
     }) {indices_are_sorted = false, scatter_dimension_numbers = #mhlo.scatter<update_window_dims = [1], inserted_window_dims = [0], scatter_dims_to_operand_dims = [0], index_vector_dim = 1>, unique_indices = false} : (memref<2x128xf32>, memref<256x1xi64>, memref<256x128xf32>, memref<2x128xf32>) -> ()
-    "lmhlo.reduce"(%6, %160, %3) ( {
+    "lmhlo.reduce"(%6, %160, %3) ({
     ^bb0(%arg48: memref<f32>, %arg49: memref<f32>, %arg50: memref<f32>):  // no predecessors
       "lmhlo.add"(%arg48, %arg49, %arg50) : (memref<f32>, memref<f32>, memref<f32>) -> ()
       "lmhlo.terminator"() : () -> ()
     }) {dimensions = dense<0> : tensor<1xi64>} : (memref<2x128x128xf32>, memref<f32>, memref<128x128xf32>) -> ()
     %171 = call @Unknown8(%165#2, %3) : (memref<128xi1>, memref<128x128xf32>) -> memref<128x128xf32>
-    "lmhlo.scatter"(%161, %165#1, %171, %2) ( {
+    "lmhlo.scatter"(%161, %165#1, %171, %2) ({
     ^bb0(%arg48: tensor<f32>, %arg49: tensor<f32>):  // no predecessors
       %172 = mhlo.add %arg48, %arg49 : tensor<f32>
       "mhlo.return"(%172) : (tensor<f32>) -> ()
     }) {indices_are_sorted = false, scatter_dimension_numbers = #mhlo.scatter<update_window_dims = [1], inserted_window_dims = [0], scatter_dims_to_operand_dims = [0], index_vector_dim = 1>, unique_indices = false} : (memref<512x128xf32>, memref<128x1xi64>, memref<128x128xf32>, memref<512x128xf32>) -> ()
-    "lmhlo.reduce"(%arg47, %160, %1) ( {
+    "lmhlo.reduce"(%arg47, %160, %1) ({
     ^bb0(%arg48: memref<f32>, %arg49: memref<f32>, %arg50: memref<f32>):  // no predecessors
       "lmhlo.add"(%arg48, %arg49, %arg50) : (memref<f32>, memref<f32>, memref<f32>) -> ()
       "lmhlo.terminator"() : () -> ()

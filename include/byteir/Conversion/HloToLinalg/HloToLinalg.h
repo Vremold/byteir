@@ -18,9 +18,10 @@ void populateUnrealizedCastToLinalgConversionPattern(
     MLIRContext* context,
     OwningRewritePatternList* patterns);
 
-std::unique_ptr<FunctionPass> createHloFusionToLinalgPass(const std::string& anchorTag = "");
+std::unique_ptr<OperationPass<FuncOp>>
+createHloFusionToLinalgPass(const std::string &anchorTag = "");
 
-std::unique_ptr<FunctionPass> createUnrealizedCastToLinalgPass();
+std::unique_ptr<OperationPass<FuncOp>> createUnrealizedCastToLinalgPass();
 
 } // namespace mlir
 

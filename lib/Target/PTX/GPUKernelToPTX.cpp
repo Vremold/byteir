@@ -232,7 +232,7 @@ LogicalResult SerializeToPTX::linkLibdevice(llvm::Module& llvmModule,
       continue;
     }
 
-    llvm::AttrBuilder FuncAttrs;
+    llvm::AttrBuilder FuncAttrs(llvmContext);
     FuncAttrs.addAttribute("frame-pointer", /*FramePointerKind*/ "all");
     FuncAttrs.addAttribute("less-precise-fpmad", "false");
     FuncAttrs.addAttribute("no-trapping-math", "true");

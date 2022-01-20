@@ -45,7 +45,7 @@ inline bool isByreComputeAttr(NamedAttribute attr) {
 inline NamedAttribute removeByrePrefix(NamedAttribute attr) {
   std::string name =
       attr.getName().getValue().str().substr(getByrePrefix().size());
-  StringAttr identifier = StringAttr::get(name, attr.getName().getContext());
+  StringAttr identifier = StringAttr::get(attr.getName().getContext(), name);
   return NamedAttribute{identifier, attr.getValue()};
 }
 

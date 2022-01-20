@@ -4,9 +4,9 @@
 module attributes {byre.container_module, gpu.container_module}  {
   gpu.module @Unknown0_kernel {
     gpu.func @Unknown0_kernel(%arg0: memref<2x128xi64>, %arg1: memref<2x128xui32>, %arg2: memref<2x128xi64>, %arg3: memref<2x128xi1>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -48,9 +48,9 @@ module attributes {byre.container_module, gpu.container_module}  {
   }
   gpu.module @Unknown1_kernel {
     gpu.func @Unknown1_kernel(%arg0: memref<128xi64>, %arg1: memref<2x128xui32>, %arg2: memref<2x128xi64>, %arg3: memref<2x128xi1>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -92,9 +92,9 @@ module attributes {byre.container_module, gpu.container_module}  {
   }
   gpu.module @Unknown2_kernel {
     gpu.func @Unknown2_kernel(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -136,9 +136,9 @@ module attributes {byre.container_module, gpu.container_module}  {
   }
   gpu.module @Unknown3_kernel {
     gpu.func @Unknown3_kernel(%arg0: memref<128xi64>, %arg1: memref<128xui32>, %arg2: memref<128xi64>, %arg3: memref<128xi1>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -168,9 +168,9 @@ module attributes {byre.container_module, gpu.container_module}  {
   }
   gpu.module @Unknown4_kernel {
     gpu.func @Unknown4_kernel(%arg0: memref<2x128x30522xf32>, %arg1: memref<30522xf32>, %arg2: memref<2x128x30522xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -213,9 +213,9 @@ module attributes {byre.container_module, gpu.container_module}  {
   }
   gpu.module @Unknown5_kernel {
     gpu.func @Unknown5_kernel(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>, %arg4: memref<2x128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -261,9 +261,9 @@ module attributes {byre.container_module, gpu.container_module}  {
   }
   gpu.module @Unknown6_kernel {
     gpu.func @Unknown6_kernel(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>, %arg4: memref<2x128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -309,9 +309,9 @@ module attributes {byre.container_module, gpu.container_module}  {
   }
   gpu.module @Unknown7_kernel {
     gpu.func @Unknown7_kernel(%arg0: memref<2x128xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128xi1>, %arg4: memref<2x128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
@@ -357,9 +357,9 @@ module attributes {byre.container_module, gpu.container_module}  {
   }
   gpu.module @Unknown8_kernel {
     gpu.func @Unknown8_kernel(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>, %arg2: memref<128x128xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index

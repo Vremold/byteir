@@ -102,8 +102,8 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
 struct DotTransposeFusionPass
     : public DotTransposeFusionBase<DotTransposeFusionPass> {
   DotTransposeFusionPass() = default;
-  void runOnFunction() override {
-    FuncOp funcOp = getFunction();
+  void runOnOperation() override {
+    FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateDotTransposeFusionPattern(patterns);
@@ -122,6 +122,6 @@ void mlir::populateDotTransposeFusionPattern(RewritePatternSet &patterns) {
       std::make_unique<FuseDotTransposePattern>(patterns.getContext()));
 }
 
-std::unique_ptr<FunctionPass> mlir::createDotTransposeFusionPass() {
+std::unique_ptr<OperationPass<FuncOp>> mlir::createDotTransposeFusionPass() {
   return std::make_unique<DotTransposeFusionPass>();
 }

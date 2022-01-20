@@ -14,7 +14,8 @@
 
 namespace mlir {
 
-std::unique_ptr<FunctionPass> createCoalescedForToGPULaunchPass(int64_t bSize = 32);
+std::unique_ptr<OperationPass<FuncOp>>
+createCoalescedForToGPULaunchPass(int64_t bSize = 32);
 
 } // namespace mlir
 

@@ -14,8 +14,8 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @fusion_broadcast_kernel {
     gpu.func @fusion_broadcast_kernel(%arg0: memref<6x12x96x96xf32>, %arg1: memref<6x12x96xf32>, %arg2: memref<6x12x96x96xf32>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
       %c0 = arith.constant 0 : index
       %2 = arith.addi %c0, %0 : index
       %3 = arith.addi %c0, %1 : index

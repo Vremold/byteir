@@ -79,7 +79,17 @@ struct AddScatterAddToScatterPattern
 };
 
 struct HloFolderPass : public HloFolderBase<HloFolderPass> {
-  void runOnFunction() override;
+  void runOnOperation() override {
+    FuncOp funcOp = getOperation();
+    MLIRContext *context = &getContext();
+    RewritePatternSet patterns(context);
+    populateHloFoldPatterns(patterns);
+    LogicalResult status =
+        applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
+    if (failed(status)) {
+      signalPassFailure();
+    }
+  }
 };
 
 } // namespace
@@ -88,18 +98,6 @@ void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
   patterns.add<AddScatterAddToScatterPattern>(patterns.getContext());
 }
 
-void HloFolderPass::runOnFunction() {
-  FuncOp funcOp = getFunction();
-  MLIRContext *context = &getContext();
-  RewritePatternSet patterns(context);
-  populateHloFoldPatterns(patterns);
-  LogicalResult status =
-      applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
-  if (failed(status)) {
-    signalPassFailure();
-  }
-}
-
-std::unique_ptr<FunctionPass> mlir::createHloFolderPass() {
+std::unique_ptr<OperationPass<FuncOp>> mlir::createHloFolderPass() {
   return std::make_unique<HloFolderPass>();
 }

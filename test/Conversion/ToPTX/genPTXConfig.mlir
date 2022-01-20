@@ -15,9 +15,9 @@ module attributes {gpu.container_module}  {
   }
   gpu.module @Unknown0_kernel {
     gpu.func @Unknown0_kernel(%arg0: memref<128xi64>, %arg1: memref<128xui32>, %arg2: memref<128xi64>, %arg3: memref<128xi64>, %arg4: memref<128xi64>, %arg5: memref<128xf64>, %arg6: memref<128xi1>) kernel {
-      %0 = "gpu.block_id"() {dimension = "x"} : () -> index
-      %1 = "gpu.thread_id"() {dimension = "x"} : () -> index
-      %2 = "gpu.block_dim"() {dimension = "x"} : () -> index
+      %0 = gpu.block_id  x
+      %1 = gpu.thread_id  x
+      %2 = gpu.block_dim  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index

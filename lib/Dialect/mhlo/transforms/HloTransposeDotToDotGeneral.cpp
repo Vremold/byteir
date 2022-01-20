@@ -58,8 +58,8 @@ struct FuseTransposeDotToDotGeneralPattern
 struct HloTransposeDotToDotGeneralPass
     : public HloTransposeDotToDotGeneralBase<HloTransposeDotToDotGeneralPass> {
   HloTransposeDotToDotGeneralPass() = default;
-  void runOnFunction() override {
-    FuncOp funcOp = getFunction();
+  void runOnOperation() override {
+    FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateHloTransposeDotToDotGeneralPattern(patterns);
@@ -79,6 +79,7 @@ void mlir::populateHloTransposeDotToDotGeneralPattern(
       patterns.getContext()));
 }
 
-std::unique_ptr<FunctionPass> mlir::createHloTransposeDotToDotGeneralPass() {
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createHloTransposeDotToDotGeneralPass() {
   return std::make_unique<HloTransposeDotToDotGeneralPass>();
 }

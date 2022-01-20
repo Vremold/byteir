@@ -6,13 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Affine/transforms/AffineLoopFusionEx.h"
+#include "PassDetail.h"
 #include "byteir/Utils/Hoist.h"
-#include "mlir/Analysis/Utils.h"
-#include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/Affine/Analysis/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Dominance.h"
 #include "mlir/Transforms/LoopFusionUtils.h"
-#include "PassDetail.h"
 #include <utility>
 
 using namespace llvm;
@@ -21,12 +21,10 @@ using namespace mlir;
 namespace {
 
 // TODO: maybe move this to util if it is useful for others
-Operation* leastDominantDefiningOp(
-  Operation* first,
-  Operation* op, 
-  DominanceInfo& domInfo) {
+Operation *leastDominantDefiningOp(Operation *first, Operation *op,
+                                   DominanceInfo &domInfo) {
 
-  Operation* cur_pos = first;
+  Operation *cur_pos = first;
   for (auto val : op->getOperands()) {
     if (val.getDefiningOp() == nullptr) {
       continue;
@@ -40,20 +38,17 @@ Operation* leastDominantDefiningOp(
   return cur_pos;
 }
 
-bool IsHoistUpOp(Operation* op) {
-  return isa<memref::AllocOp>(op) ||
-    isa<memref::CollapseShapeOp>(op) ||
-    isa<memref::DimOp>(op) ||
-    isa<memref::ExpandShapeOp>(op) ||
-    isa<memref::ReshapeOp>(op);
+bool IsHoistUpOp(Operation *op) {
+  return isa<memref::AllocOp>(op) || isa<memref::CollapseShapeOp>(op) ||
+         isa<memref::DimOp>(op) || isa<memref::ExpandShapeOp>(op) ||
+         isa<memref::ReshapeOp>(op);
 }
 
-void collectAffineLopps(
-  FuncOp funcOp, 
-  SmallVector<AffineForOp>& loop_collector) {
+void collectAffineLopps(FuncOp funcOp,
+                        SmallVector<AffineForOp> &loop_collector) {
 
-  for (auto& block : funcOp.getBody()) {
-    for (auto& op : block.without_terminator()) {
+  for (auto &block : funcOp.getBody()) {
+    for (auto &op : block.without_terminator()) {
       // skip AffineFor
       if (auto forOp = dyn_cast<AffineForOp>(op)) {
         loop_collector.push_back(forOp);
@@ -63,8 +58,9 @@ void collectAffineLopps(
   }
 }
 
-// This is a temp fix for affine fusion 
-void UpdateComputationSliceState(mlir::ComputationSliceState& sliceUnion, MLIRContext* ctx) {
+// This is a temp fix for affine fusion
+void UpdateComputationSliceState(mlir::ComputationSliceState &sliceUnion,
+                                 MLIRContext *ctx) {
   sliceUnion.lbs[0] = AffineMap::getMultiDimIdentityMap(1, ctx);
   // generate d0 + 1
   AffineExpr d0 = getAffineDimExpr(0, ctx);
@@ -76,7 +72,8 @@ void UpdateComputationSliceState(mlir::ComputationSliceState& sliceUnion, MLIRCo
 
 void fuseAffineLoopEx(FuncOp funcOp, ArrayRef<AffineForOp> loops) {
   // early return if only 1 or 0 loop
-  if (loops.size() <= 1) return;
+  if (loops.size() <= 1)
+    return;
 
   auto first = loops[0];
   for (size_t i = 1; i < loops.size(); ++i) {
@@ -86,7 +83,8 @@ void fuseAffineLoopEx(FuncOp funcOp, ArrayRef<AffineForOp> loops) {
 
     if (result.value == FusionResult::Success) {
       // FIXME: mlir's fuseLoops seems buggy in some cases
-      // just fix sliceUnion to single-step loop (lb = d0, ub = d0+1) so it can trigger fusion
+      // just fix sliceUnion to single-step loop (lb = d0, ub = d0+1) so it can
+      // trigger fusion
       // TODO change it back after it is fixed.
       UpdateComputationSliceState(sliceUnion, funcOp.getContext());
       fuseLoops(forOp, first, sliceUnion);
@@ -95,36 +93,34 @@ void fuseAffineLoopEx(FuncOp funcOp, ArrayRef<AffineForOp> loops) {
   }
 }
 
-struct AffineLoopFusionExPass : public AffineLoopFusionExBase<AffineLoopFusionExPass> {
-  AffineLoopFusionExPass(const std::string& anchor) 
-    : AffineLoopFusionExBase() {
+struct AffineLoopFusionExPass
+    : public AffineLoopFusionExBase<AffineLoopFusionExPass> {
+  AffineLoopFusionExPass(const std::string &anchor) : AffineLoopFusionExBase() {
     anchorTag = anchor;
   }
-  void runOnFunction() override;
+  void runOnOperation() override {
+    FuncOp funcOp = getOperation();
+
+    if (!anchorTag.empty() && !funcOp->hasAttrOfType<UnitAttr>(anchorTag))
+      return;
+
+    auto &domInfo = getAnalysis<DominanceInfo>();
+
+    SmallVector<AffineForOp> loopCollection;
+
+    collectAffineLopps(funcOp, loopCollection);
+
+    for (auto &block : funcOp.getBody()) {
+      hoistUpOpsInBlock(&block, domInfo, IsHoistUpOp);
+    }
+
+    fuseAffineLoopEx(funcOp, loopCollection);
+  }
 };
 
-} // namespace anonymous
+} // namespace
 
-void AffineLoopFusionExPass::runOnFunction() {
-  auto funcOp = getFunction();
-
-  if (!anchorTag.empty() && !funcOp->hasAttrOfType<UnitAttr>(anchorTag)) return;
-
-
-  auto& domInfo = getAnalysis<DominanceInfo>();
-
-  SmallVector<AffineForOp> loopCollection;
-
-  collectAffineLopps(funcOp, loopCollection);
-
-  for (auto& block : funcOp.getBody()) {
-    hoistUpOpsInBlock(&block, domInfo, IsHoistUpOp);
-  }
-
-  fuseAffineLoopEx(funcOp, loopCollection);
-}
-
-std::unique_ptr<FunctionPass>
-mlir::createAffineLoopFusionExPass(const std::string& anchor) {
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createAffineLoopFusionExPass(const std::string &anchor) {
   return std::make_unique<AffineLoopFusionExPass>(anchor);
 }

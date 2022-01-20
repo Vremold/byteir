@@ -13,8 +13,8 @@
 
 namespace mlir {
 
-std::unique_ptr<FunctionPass>
-createAffineLoopFusionExPass(const std::string& attachTag = "");
+std::unique_ptr<OperationPass<FuncOp>>
+createAffineLoopFusionExPass(const std::string &attachTag = "");
 
 } // namespace mlir
 

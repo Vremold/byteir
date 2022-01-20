@@ -145,8 +145,8 @@ namespace {
         shape::ShapeDialect>();
     }
 
-    void runOnFunction() final {
-      auto func = getFunction();
+    void runOnOperation() final {
+      FuncOp func = getOperation();
 
       MLIRContext& ctx = getContext();
       OwningRewritePatternList patterns(&ctx);
@@ -179,6 +179,7 @@ void mlir::populateUnrealizedCastToLinalgConversionPattern(
   patterns->insert<UnrealizedCastToLinalgConverter>(context);
 }
 
-std::unique_ptr<FunctionPass> mlir::createUnrealizedCastToLinalgPass() {
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createUnrealizedCastToLinalgPass() {
   return std::make_unique<UnrealizedCastToLinalgPass>();
 }

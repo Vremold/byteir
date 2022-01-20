@@ -9,8 +9,8 @@ git submodule update --init --recursive
 unset http_proxy; unset https_proxy
 #if [ ! -f llvm_build/bin/mlir-opt ]; then
   rm -rf llvm_build
-  wget http://tosv.byted.org/obj/turing/byteir/llvm_install_e745507eda2704e913cdde5ba9211d969d87b95e.tar.gz
-  tar xzf llvm_install_e745507eda2704e913cdde5ba9211d969d87b95e.tar.gz
+  wget http://tosv.byted.org/obj/turing/byteir/llvm_install_579c4921c0105698617cc1e1b86a9ecf3b4717ce.tar.gz
+  tar xzf llvm_install_579c4921c0105698617cc1e1b86a9ecf3b4717ce.tar.gz
 #fi
 mkdir build
 cd build

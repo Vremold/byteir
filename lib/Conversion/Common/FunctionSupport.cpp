@@ -10,14 +10,14 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
-#include "mlir/IR/FunctionSupport.h"
+#include "mlir/IR/FunctionInterfaces.h"
 #include "llvm/ADT/SmallPtrSet.h"
 
 using namespace mlir;
 using namespace llvm;
 
 namespace mlir {
-namespace function_like_impl {
+namespace function_interface_impl {
 // llvm upstream insertFunctionArgument cannot handle inserting multiple args
 static inline void
 insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
@@ -67,7 +67,7 @@ insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
     entry.insertArgument(argIndices[i], argTypes[i],
                          argLocs.empty() ? Optional<Location>{} : argLocs[i]);
 }
-} // namespace function_like_impl
+} // namespace function_interface_impl
 } // namespace mlir
 
 // 
@@ -102,9 +102,9 @@ static inline void replcateFuncOpResultSigature(mlir::FuncOp funcOp) {
     NamedAttrList attrList = funcOp.getResultAttrs(i);
     resultAttrs.push_back(attrList.getDictionary(funcOp->getContext()));
   }
-  funcOp->removeAttr(function_like_impl::getResultDictAttrName());
+  funcOp->removeAttr(function_interface_impl::getResultDictAttrName());
 
-  mlir::function_like_impl::insertFunctionArgumentsEx(
+  mlir::function_interface_impl::insertFunctionArgumentsEx(
       funcOp, relocatedIndices, oldFuncType.getResults(), resultAttrs, {},
       origianlSize, newFuncType);
   //  Note the FuncOp's member function seems buggy. Use the above
@@ -206,7 +206,7 @@ void mlir::relocateFuncOpConstantLike(
 
   mlir::FunctionType newFuncType = opBuilder.getFunctionType(newInputTypes, {}/*results*/);
 
-  mlir::function_like_impl::insertFunctionArgumentsEx(
+  mlir::function_interface_impl::insertFunctionArgumentsEx(
       funcOp, relocatedIndices, relocatedTypes, correspondingArgAttrs, {},
       origianlSize, newFuncType);
 

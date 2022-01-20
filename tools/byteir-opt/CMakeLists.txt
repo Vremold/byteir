@@ -33,7 +33,7 @@ set(LIBS
   ${BYTEIR_LIBS}
   ${MHLO_LIBS}
   ${test_libs}
-  MLIRLoopAnalysis
+  #MLIRLoopAnalysis
   MLIRAnalysis
   MLIRDialect
   MLIROptLib

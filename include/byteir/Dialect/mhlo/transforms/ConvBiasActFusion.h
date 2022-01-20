@@ -15,7 +15,7 @@ namespace mlir {
 
 void populateFuseConvBiasActPatterns(RewritePatternSet &patterns);
 
-std::unique_ptr<FunctionPass> createConvBiasActFusionPass();
+std::unique_ptr<OperationPass<FuncOp>> createConvBiasActFusionPass();
 
 } // namespace mlir
 

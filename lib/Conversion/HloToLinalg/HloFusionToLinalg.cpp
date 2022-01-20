@@ -41,8 +41,8 @@ namespace {
         math::MathDialect, memref::MemRefDialect, shape::ShapeDialect>();
     }
 
-    void runOnFunction() final {
-      auto func = getFunction();
+    void runOnOperation() final {
+      FuncOp func = getOperation();
       
       bool valid = anchorTag.empty() ||
         func->hasAttrOfType<UnitAttr>(anchorTag);
@@ -72,7 +72,7 @@ namespace {
 
 } // namespace anonymous
 
-std::unique_ptr<FunctionPass> mlir::createHloFusionToLinalgPass(const std::string& anchorTag) {
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createHloFusionToLinalgPass(const std::string &anchorTag) {
   return std::make_unique<HloFusionToLinalgPass>(anchorTag);
 }
-

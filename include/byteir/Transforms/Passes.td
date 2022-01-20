@@ -15,7 +15,7 @@ include "mlir/Pass/PassBase.td"
 // CMAE (Common Memory Access Elimination)
 //===----------------------------------------------------------------------===//
 
-def CMAE : FunctionPass<"cmae"> {
+def CMAE : Pass<"cmae", "mlir::FuncOp"> {
   let summary = "Eliminate common memory access within a block";
   let constructor = "mlir::createCMAEPass()";
   let options = [

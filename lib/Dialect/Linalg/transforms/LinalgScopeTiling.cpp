@@ -495,7 +495,7 @@ struct LinalgScopeTilingPass : public LinalgScopeTilingBase<LinalgScopeTilingPas
     this->distributionType = distributionType.str();
   }
 
-  void runOnFunction() override {
+  void runOnOperation() override {
     // early terminate when tileSize == 0
     if (tileSize == 0) return;
 
@@ -508,7 +508,7 @@ struct LinalgScopeTilingPass : public LinalgScopeTilingBase<LinalgScopeTilingPas
       .Case("tiled_loop", LinalgTilingLoopType::TiledLoops)
       .Default(loopTypeEnum);
 
-    FuncOp funcOp = getFunction();
+    FuncOp funcOp = getOperation();
 
     auto& domInfo = getAnalysis<DominanceInfo>();
     auto& postDomInfo = getAnalysis<PostDominanceInfo>();
@@ -531,13 +531,11 @@ struct LinalgScopeTilingPass : public LinalgScopeTilingBase<LinalgScopeTilingPas
   LinalgTilingLoopType loopTypeEnum;
 };
 
-} // anonymous 
+} // namespace
 
-std::unique_ptr<FunctionPass>
-mlir::createLinalgScopeTilingPass(
-  StringRef anchorTag, int64_t tileAxis,
-  int64_t tileSize, linalg::LinalgTilingLoopType loopType,
-  StringRef distributionType) {
+std::unique_ptr<OperationPass<FuncOp>> mlir::createLinalgScopeTilingPass(
+    StringRef anchorTag, int64_t tileAxis, int64_t tileSize,
+    linalg::LinalgTilingLoopType loopType, StringRef distributionType) {
   return std::make_unique<LinalgScopeTilingPass>(anchorTag, tileAxis, tileSize, loopType,
     distributionType);
 }

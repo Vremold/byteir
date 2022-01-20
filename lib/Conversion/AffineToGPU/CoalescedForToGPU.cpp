@@ -183,8 +183,8 @@ struct CoalescedForToGPULaunchPass : public CoalescedForToGPULaunchBase<Coalesce
     blockSize = bSize;
   }
 
-  void runOnFunction() final {
-    auto f = getFunction();
+  void runOnOperation() final {
+    FuncOp f = getOperation();
 
     for (Operation& op : llvm::make_early_inc_range(f.getOps())) {
       if (auto forOp = dyn_cast<AffineForOp>(&op)) {
@@ -198,6 +198,7 @@ struct CoalescedForToGPULaunchPass : public CoalescedForToGPULaunchBase<Coalesce
 
 } // namespace anonymous
 
-std::unique_ptr<FunctionPass> mlir::createCoalescedForToGPULaunchPass(int64_t bSize) {
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createCoalescedForToGPULaunchPass(int64_t bSize) {
   return std::make_unique<CoalescedForToGPULaunchPass>(bSize);
 }

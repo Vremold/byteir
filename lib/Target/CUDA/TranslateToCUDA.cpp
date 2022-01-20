@@ -196,28 +196,28 @@ namespace {
   static LogicalResult printOperation(CUDAEmitter& emitter, GridDimOp gdimOp) {
     RETURN_IF_FAILED(emitter.emitAssignPrefix(*gdimOp.getOperation()));
     raw_ostream& os = emitter.ostream();
-    os << "gridDim." << gdimOp.dimension();
+    os << "gridDim." << mlir::gpu::stringifyDimension(gdimOp.dimension());
     return success();
   }
 
   static LogicalResult printOperation(CUDAEmitter& emitter, BlockDimOp bdimOp) {
     RETURN_IF_FAILED(emitter.emitAssignPrefix(*bdimOp.getOperation()));
     raw_ostream& os = emitter.ostream();
-    os << "blockDim." << bdimOp.dimension();
+    os << "blockDim." << mlir::gpu::stringifyDimension(bdimOp.dimension());
     return success();
   }
 
   static LogicalResult printOperation(CUDAEmitter& emitter, BlockIdOp bidOp) {
     RETURN_IF_FAILED(emitter.emitAssignPrefix(*bidOp.getOperation()));
     raw_ostream& os = emitter.ostream();
-    os << "blockIdx." << bidOp.dimension();
+    os << "blockIdx." << mlir::gpu::stringifyDimension(bidOp.dimension());
     return success();
   }
 
   static LogicalResult printOperation(CUDAEmitter& emitter, ThreadIdOp tidOp) {
     RETURN_IF_FAILED(emitter.emitAssignPrefix(*tidOp.getOperation()));
     raw_ostream& os = emitter.ostream();
-    os << "threadIdx." << tidOp.dimension();
+    os << "threadIdx." << mlir::gpu::stringifyDimension(tidOp.dimension());
     return success();
   }
 

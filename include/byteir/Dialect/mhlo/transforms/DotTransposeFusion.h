@@ -15,7 +15,7 @@ namespace mlir {
 
 void populateDotTransposeFusionPattern(RewritePatternSet &patterns);
 
-std::unique_ptr<FunctionPass> createDotTransposeFusionPass();
+std::unique_ptr<OperationPass<FuncOp>> createDotTransposeFusionPass();
 
 } // namespace mlir
 

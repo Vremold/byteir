@@ -9,12 +9,12 @@ module {
   }
 
 // CHECK: func @tf_add(%arg0: tensor<2x4xf32>, %arg1: tensor<2x4xf32>) -> tensor<2x4xf32> {
-// CHECK:   %0 = "ace.opaque"(%arg0, %arg1) ( {
+// CHECK:   %0 = "ace.opaque"(%arg0, %arg1) ({
 // CHECK:   ^bb0(%arg2: tensor<2x4xf32>, %arg3: tensor<2x4xf32>):  // no predecessors
 // CHECK:     %3 = "tf.Add"(%arg2, %arg3) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
 // CHECK:     "ace.return"(%3) : (tensor<2x4xf32>) -> ()
 // CHECK:   }) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
-// CHECK:   %1 = "ace.opaque"(%0, %arg0) ( {
+// CHECK:   %1 = "ace.opaque"(%0, %arg0) ({
 // CHECK:   ^bb0(%arg2: tensor<2x4xf32>, %arg3: tensor<2x4xf32>):  // no predecessors
 // CHECK:     %3 = "tf.Mul"(%arg2, %arg3) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
 // CHECK:     "ace.return"(%3) : (tensor<2x4xf32>) -> ()

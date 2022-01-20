@@ -117,14 +117,13 @@ struct ByreHoldPass : public ByreFoldBase<ByreHoldPass> {
 
   ByreHoldPass() : ByreFoldBase() {}
 
-  void runOnFunction() override {
-    auto func = getFunction();
+  void runOnOperation() override {
+    FuncOp func = getOperation();
     FoldAlias(func);
   }
 };
 } // namespace anonymous
 
-std::unique_ptr<FunctionPass>
-mlir::createByreFoldPass() {
+std::unique_ptr<OperationPass<FuncOp>> mlir::createByreFoldPass() {
   return std::make_unique<ByreHoldPass>();
 }

@@ -14,7 +14,8 @@
 
 namespace mlir {
 
-std::unique_ptr<FunctionPass> createElementFusionPass(const std::string& attachTag = "");
+std::unique_ptr<OperationPass<FuncOp>>
+createElementFusionPass(const std::string &attachTag = "");
 
 } // namespace mlir
 

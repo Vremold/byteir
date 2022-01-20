@@ -14,7 +14,7 @@ include "mlir/Pass/PassBase.td"
 // AffineToGPU
 //===----------------------------------------------------------------------===//
 
-def CoalescedForToGPULaunch : FunctionPass<"coalesced-for-to-gpu"> {
+def CoalescedForToGPULaunch : Pass<"coalesced-for-to-gpu", "mlir::FuncOp"> {
   let summary = "Convert from a coalesced affine loop to gpu launch";
   let constructor = "mlir::createCoalescedForToGPULaunchPass()";
   let dependentDialects = [
@@ -61,7 +61,7 @@ def ConvertHloToLHlo : Pass<"convert-hlo-to-lhlo", "ModuleOp"> {
 // HloToLinalg
 //===----------------------------------------------------------------------===//
 
-def HloFusionToLinalg : FunctionPass<"hlo-fusion-to-linalg"> {
+def HloFusionToLinalg : Pass<"hlo-fusion-to-linalg", "mlir::FuncOp"> {
   let summary = "Convert from HLO fusion to Linalg dialect.";
   let constructor = "mlir::createHloFusionToLinalgPass()";
   let options = [
@@ -71,7 +71,7 @@ def HloFusionToLinalg : FunctionPass<"hlo-fusion-to-linalg"> {
   ];
 }
 
-def UnrealizedCastToLinalg : FunctionPass<"unrealized-cast-to-linalg"> {
+def UnrealizedCastToLinalg : Pass<"unrealized-cast-to-linalg", "mlir::FuncOp"> {
   let summary = "Convert UnrealizedCast op generated from hlo lowering to Linalg";
   let constructor = "mlir::createUnrealizedCastToLinalgPass()";
 }
@@ -112,7 +112,7 @@ def ConvertToByre : Pass<"convert-to-byre", "ModuleOp"> {
 // ToPTX or CUDA
 //===----------------------------------------------------------------------===//
 
-def GenPTXConfig : FunctionPass<"gen-ptx-config"> {
+def GenPTXConfig : Pass<"gen-ptx-config", "mlir::FuncOp"> {
   let summary = "Generate PTX configuration";
   let constructor = "mlir::createGenPTXConfigPass()";
 }

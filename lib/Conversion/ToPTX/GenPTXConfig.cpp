@@ -16,11 +16,11 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/Builders.h"
-#include "mlir/IR/FunctionSupport.h"
+#include "mlir/IR/FunctionInterfaces.h"
 #include "mlir/Parser.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/EquivalenceClasses.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include <functional>
 
 using namespace byteir;
@@ -108,14 +108,14 @@ struct GenPTXConfigPass : public GenPTXConfigBase<GenPTXConfigPass> {
 
   GenPTXConfigPass() : GenPTXConfigBase() {}
 
-  void runOnFunction() override {
-    auto func = getFunction();
+  void runOnOperation() override {
+    FuncOp func = getOperation();
     AddFuncAttrs(func);
   }
 };
 
 } // namespace
 
-std::unique_ptr<FunctionPass> mlir::createGenPTXConfigPass() {
+std::unique_ptr<OperationPass<FuncOp>> mlir::createGenPTXConfigPass() {
   return std::make_unique<GenPTXConfigPass>();
 }

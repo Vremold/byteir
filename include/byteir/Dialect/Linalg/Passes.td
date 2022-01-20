@@ -15,7 +15,7 @@ include "mlir/Pass/PassBase.td"
 // LinalgScopeTiling
 //===----------------------------------------------------------------------===//
 
-def LinalgScopeTiling : FunctionPass<"linalg-scope-tile"> {
+def LinalgScopeTiling : Pass<"linalg-scope-tile", "mlir::FuncOp"> {
   let summary = "Perform Tile linalg operations within a scope";
   let constructor = "mlir::createLinalgScopeTilingPass()";
   let dependentDialects = [

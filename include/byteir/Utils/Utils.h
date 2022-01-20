@@ -9,7 +9,7 @@
 #define BYTEIR_UTILS_UTILS_H
 
 #include "mlir/IR/Attributes.h"
-#include "mlir/IR/FunctionSupport.h"
+#include "mlir/IR/FunctionInterfaces.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
@@ -68,7 +68,7 @@ void removeAttrPlaceholders(mlir::Operation *op, ArrayRef<StringRef> Orignames);
 // The attribute name will become the original name
 // Note: the input is a list of original arg attribute names
 template <typename OpTy>
-std::enable_if_t<OpTy::template hasTrait<OpTrait::FunctionLike>()>
+std::enable_if_t<OpTy::template hasTrait<FunctionOpInterface::Trait>()>
 removeArgAttrPlaceholders(OpTy op, ArrayRef<StringRef> argAttrNames) {
   for (size_t idx = 0; idx < op.getNumArguments(); ++idx) {
     for (const auto &name : argAttrNames) {

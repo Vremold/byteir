@@ -5,10 +5,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "byteir/Conversion/ToByre/ToByre.h"
 #include "../PassDetail.h"
 #include "byteir/Conversion/Common/FunctionSupport.h"
 #include "byteir/Conversion/ToByre/Common.h"
-#include "byteir/Conversion/ToByre/ToByre.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
@@ -20,7 +20,7 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/IR/Builders.h"
-#include "mlir/IR/FunctionSupport.h"
+#include "mlir/IR/FunctionInterfaces.h"
 #include "mlir/Parser.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"

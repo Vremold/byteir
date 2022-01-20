@@ -15,7 +15,7 @@ namespace mlir {
 
 void populateHloTransposeDotToDotGeneralPattern(RewritePatternSet &patterns);
 
-std::unique_ptr<FunctionPass> createHloTransposeDotToDotGeneralPass();
+std::unique_ptr<OperationPass<FuncOp>> createHloTransposeDotToDotGeneralPass();
 
 } // namespace mlir
 

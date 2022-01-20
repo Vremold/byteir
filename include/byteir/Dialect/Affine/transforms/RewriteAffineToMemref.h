@@ -13,8 +13,7 @@
 
 namespace mlir {
 
-std::unique_ptr<FunctionPass>
-createRewriteAffineToMemrefPass();
+std::unique_ptr<OperationPass<FuncOp>> createRewriteAffineToMemrefPass();
 
 } // namespace mlir
 

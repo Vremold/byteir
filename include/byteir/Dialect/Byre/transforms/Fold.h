@@ -13,8 +13,7 @@
 
 namespace mlir {
 
-std::unique_ptr<FunctionPass>
-createByreFoldPass();
+std::unique_ptr<OperationPass<FuncOp>> createByreFoldPass();
 
 } // namespace mlir
 

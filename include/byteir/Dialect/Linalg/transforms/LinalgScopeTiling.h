@@ -16,10 +16,10 @@
 
 namespace mlir {
 
-std::unique_ptr<FunctionPass> createLinalgScopeTilingPass(StringRef anchorTag = "",
-  int64_t tileAxis = 0, int64_t tileSize = 0, 
-  linalg::LinalgTilingLoopType loopType = linalg::LinalgTilingLoopType::Loops,
-  StringRef distributionType = "");
+std::unique_ptr<OperationPass<FuncOp>> createLinalgScopeTilingPass(
+    StringRef anchorTag = "", int64_t tileAxis = 0, int64_t tileSize = 0,
+    linalg::LinalgTilingLoopType loopType = linalg::LinalgTilingLoopType::Loops,
+    StringRef distributionType = "");
 
 } // namespace mlir
 

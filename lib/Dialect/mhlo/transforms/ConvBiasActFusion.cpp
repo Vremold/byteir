@@ -180,7 +180,17 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
 
 struct ConvBiasActFusionPass
     : public ConvBiasActFusionBase<ConvBiasActFusionPass> {
-  void runOnFunction() override;
+  void runOnOperation() override {
+    FuncOp funcOp = getOperation();
+    MLIRContext *context = &getContext();
+    RewritePatternSet patterns(context);
+    populateFuseConvBiasActPatterns(patterns);
+    LogicalResult status =
+        applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
+    if (failed(status)) {
+      signalPassFailure();
+    }
+  }
 };
 
 } // namespace
@@ -189,18 +199,6 @@ void mlir::populateFuseConvBiasActPatterns(RewritePatternSet &patterns) {
   patterns.add(std::make_unique<FuseConvBiasActPattern>(patterns.getContext()));
 }
 
-void ConvBiasActFusionPass::runOnFunction() {
-  FuncOp funcOp = getFunction();
-  MLIRContext *context = &getContext();
-  RewritePatternSet patterns(context);
-  populateFuseConvBiasActPatterns(patterns);
-  LogicalResult status =
-      applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
-  if (failed(status)) {
-    signalPassFailure();
-  }
-}
-
-std::unique_ptr<FunctionPass> mlir::createConvBiasActFusionPass() {
+std::unique_ptr<OperationPass<FuncOp>> mlir::createConvBiasActFusionPass() {
   return std::make_unique<ConvBiasActFusionPass>();
 }

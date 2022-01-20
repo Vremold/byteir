@@ -113,7 +113,7 @@ struct CMAEPass : public CMAEBase<CMAEPass> {
     : CMAEBase() {
     skipAttr = skip;
   }
-  void runOnFunction() final;
+  void runOnOperation() final;
 
   void eliminateMemoryAccess(
     llvm::EquivalenceClasses<Operation*>& leader_to_replaced);
@@ -279,8 +279,8 @@ void CMAEPass::collectEliminableAccess(
   }
 }
 
-void CMAEPass::runOnFunction() {
-  auto f = getFunction();
+void CMAEPass::runOnOperation() {
+  auto f = getOperation();
 
   // early terimination
   if (f->hasAttr(skipAttr)) {
@@ -306,8 +306,7 @@ void CMAEPass::runOnFunction() {
 
 } // namespace
 
-std::unique_ptr<FunctionPass>
-mlir::createCMAEPass(const std::string& skip) {
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createCMAEPass(const std::string &skip) {
   return std::make_unique<CMAEPass>(skip);
-}
-;
+};

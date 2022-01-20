@@ -16,7 +16,7 @@ include "mlir/Pass/PassBase.td"
 //===----------------------------------------------------------------------===//
 
 // TODO(liuyuanqiang): re-implement this as folder
-def HloFolder : FunctionPass<"hlo-fold"> {
+def HloFolder : Pass<"hlo-fold", "mlir::FuncOp"> {
   let summary = "Fold mhlo ops";
   let constructor = "mlir::createHloFolderPass()";
 }
@@ -37,7 +37,7 @@ def FusionOutlining : Pass<"fusion-outlining", "ModuleOp"> {
 // ElementFusion
 //===----------------------------------------------------------------------===//
 
-def ElementFusion : FunctionPass<"fuse-element"> {
+def ElementFusion : Pass<"fuse-element", "mlir::FuncOp"> {
   let summary = "Fuse elementwise op";
   let constructor = "mlir::createElementFusionPass()";
   let options = [
@@ -51,7 +51,7 @@ def ElementFusion : FunctionPass<"fuse-element"> {
 // HloTransposeDotToDotGeneral
 //===----------------------------------------------------------------------===//
 
-def HloTransposeDotToDotGeneral : FunctionPass<"hlo-transpose-dot-to-dot-general"> {
+def HloTransposeDotToDotGeneral : Pass<"hlo-transpose-dot-to-dot-general", "mlir::FuncOp"> {
   let summary = "Fuse transpose dot to dot_general";
   let constructor = "mlir::createHloTransposeDotToDotGeneralPass()";
 }
@@ -60,7 +60,7 @@ def HloTransposeDotToDotGeneral : FunctionPass<"hlo-transpose-dot-to-dot-general
 // DotTransposeFusion : this pass should run after HloTransposeDotToDotGeneral
 //===----------------------------------------------------------------------===//
 
-def DotTransposeFusion : FunctionPass<"fuse-dot-transpose"> {
+def DotTransposeFusion : Pass<"fuse-dot-transpose", "mlir::FuncOp"> {
   let summary = "Fuse dot/dot_general + transpose";
   let constructor = "mlir::createDotTransposeFusionPass()";
 }
@@ -69,7 +69,7 @@ def DotTransposeFusion : FunctionPass<"fuse-dot-transpose"> {
 // ConvBiasActFusion
 //===----------------------------------------------------------------------===//
 
-def ConvBiasActFusion : FunctionPass<"fuse-conv-bias-act"> {
+def ConvBiasActFusion : Pass<"fuse-conv-bias-act", "mlir::FuncOp"> {
   let summary = "Fuse convolution bias activation";
   let constructor = "mlir::createConvBiasActFusionPass()";
 }
