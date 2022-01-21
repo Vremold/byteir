@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
 #include "byteir/Utils/Utils.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "mlir/IR/Builders.h"

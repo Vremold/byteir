@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/transforms/ConvBiasActFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/Common.h"

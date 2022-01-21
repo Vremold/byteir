@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Linalg/transforms/TilingUtils.h"
+#include "byteir/Dialect/Linalg/Transforms/TilingUtils.h"
 
 using namespace llvm;
 using namespace mlir;

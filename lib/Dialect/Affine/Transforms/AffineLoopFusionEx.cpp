@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Affine/transforms/AffineLoopFusionEx.h"
+#include "byteir/Dialect/Affine/Transforms/AffineLoopFusionEx.h"
 #include "PassDetail.h"
 #include "byteir/Utils/Hoist.h"
 #include "mlir/Dialect/Affine/Analysis/Utils.h"

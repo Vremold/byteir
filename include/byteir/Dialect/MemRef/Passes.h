@@ -5,17 +5,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_BYRE_PASSES_H
-#define BYTEIR_BYRE_PASSES_H
+#ifndef BYTEIR_MEMREF_PASSES_H
+#define BYTEIR_MEMREF_PASSES_H
 
-#include "byteir/Dialect/Byre/Transforms/Fold.h"
+#include "byteir/Dialect/MemRef/Transforms/ApplyMemRefAffineLayout.h"
+#include "byteir/Dialect/MemRef/Transforms/ReifyAlloc.h"
 
 namespace mlir {
 
 /// Generate the code for registering transforms passes.
 #define GEN_PASS_REGISTRATION
-#include "byteir/Dialect/Byre/Passes.h.inc"
+#include "byteir/Dialect/MemRef/Passes.h.inc"
 
 } // namespace mlir
 
-#endif // BYTEIR_BYRE_PASSES_H
+#endif // BYTEIR_MEMREF_PASSES_H

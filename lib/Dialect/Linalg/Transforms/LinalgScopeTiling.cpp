@@ -7,8 +7,8 @@
 
 // use some code from Linalg's LinalgTiling.cpp
 
-#include "byteir/Dialect/Linalg/transforms/LinalgScopeTiling.h"
-#include "byteir/Dialect/Linalg/transforms/TilingUtils.h"
+#include "byteir/Dialect/Linalg/Transforms/LinalgScopeTiling.h"
+#include "byteir/Dialect/Linalg/Transforms/TilingUtils.h"
 #include "byteir/Utils/Hoist.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"

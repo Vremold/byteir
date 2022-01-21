@@ -8,7 +8,6 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_LINALGSCOPETILING_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_LINALGSCOPETILING_H
 
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/Dialect/Linalg/Utils/Utils.h"
 #include "mlir/Pass/Pass.h"

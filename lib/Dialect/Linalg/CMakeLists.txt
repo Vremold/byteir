@@ -1,10 +1,11 @@
 add_mlir_dialect_library(ByteIRLinalgPasses
-  transforms/LinalgScopeTiling.cpp
-  transforms/TilingUtils.cpp
+  Transforms/LinalgDataPlace.cpp
+  Transforms/LinalgScopeTiling.cpp
+  Transforms/TilingUtils.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Linalg
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Linalg/transforms
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Linalg/Transforms
 
   DEPENDS
   ByteIRLinalgPassIncGen

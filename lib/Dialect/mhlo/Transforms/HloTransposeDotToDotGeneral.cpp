@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/transforms/HloTransposeDotToDotGeneral.h"
+#include "byteir/Dialect/mhlo/Transforms/HloTransposeDotToDotGeneral.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"

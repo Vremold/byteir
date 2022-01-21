@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/transforms/HloFolder.h"
+#include "byteir/Dialect/mhlo/Transforms/HloFolder.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "PassDetail.h"
 #include "byteir/Utils/Utils.h"

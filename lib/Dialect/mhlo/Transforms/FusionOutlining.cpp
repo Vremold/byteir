@@ -6,7 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/transforms/FusionOutlining.h"
+#include "byteir/Dialect/mhlo/Transforms/FusionOutlining.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BlockAndValueMapping.h"

@@ -13,7 +13,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/SmallBitVector.h"
+#include "llvm/ADT/SmallVector.h"
 #include <string>
 #include <type_traits>
 
@@ -22,6 +22,13 @@ class CallOp;
 class FuncOp;
 class Operation;
 class Value;
+
+// Return literal from a constant-like value
+int64_t getLiteralFromConstantLike(Value, int64_t defaultLit);
+
+// Return literals from a list of constant-like values
+llvm::SmallVector<int64_t, 4> 
+getLiteralsFromConstantLikes(ArrayRef<Value> values, int64_t defaultLit);
 
 // Create a vector with only the offset as 1, the rest as 0's.
 // e.g. if offset == 1, size == 4, val == 3, return3 [0, 3, 0, 0]

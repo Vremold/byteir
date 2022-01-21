@@ -5,10 +5,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/transforms/ElementFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
-#include "byteir/Dialect/mhlo/transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Matchers.h"

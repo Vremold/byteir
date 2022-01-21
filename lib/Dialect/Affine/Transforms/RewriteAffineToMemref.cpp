@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Affine/transforms/RewriteAffineToMemref.h"
+#include "byteir/Dialect/Affine/Transforms/RewriteAffineToMemref.h"
 #include "PassDetail.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"

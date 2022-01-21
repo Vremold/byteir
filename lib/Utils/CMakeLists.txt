@@ -1,6 +1,7 @@
 add_mlir_library(ByteIRUtils
   Hoist.cpp
   IRRewrite.cpp
+  MemUtils.cpp
   Utils.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -8,5 +9,6 @@ add_mlir_library(ByteIRUtils
 
   LINK_LIBS PUBLIC
   MLIRIR
+  MLIRArithmetic
   MLIRMemRef
 )

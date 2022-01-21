@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Utils/Utils.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -19,6 +20,33 @@
 
 using namespace llvm;
 using namespace mlir;
+
+int64_t mlir::getLiteralFromConstantLike(Value v, int64_t defaultLit) {
+  if (auto cOp = dyn_cast_or_null<arith::ConstantIndexOp>(v.getDefiningOp())) {
+    return cOp.value();
+  }
+
+  // handle other constant-related ops
+  // support DimOp for now
+  if (auto dimOp = dyn_cast_or_null<memref::DimOp>(v.getDefiningOp())) {
+    if (auto maybeIndex = dimOp.getConstantIndex()) {
+      if (maybeIndex.hasValue()) {
+        return dimOp.source().getType().dyn_cast<ShapedType>()
+                    .getDimSize(maybeIndex.getValue());
+      }
+    }
+  }
+  return defaultLit;
+}
+
+llvm::SmallVector<int64_t, 4>
+mlir::getLiteralsFromConstantLikes(ArrayRef<Value> values, int64_t defaultLit) {
+  SmallVector<int64_t, 4> res;
+  for (auto v : values) {
+    res.push_back(getLiteralFromConstantLike(v, defaultLit));
+  }
+  return res;
+}
 
 SmallVector<int64_t, 4> mlir::createOneHot(unsigned size, unsigned offset, int64_t val) {
   assert(offset < size && "offset should be smaller than size");

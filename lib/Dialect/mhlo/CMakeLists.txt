@@ -17,13 +17,13 @@ add_mlir_dialect_library(ByteIRMhlo
   )
 
 add_mlir_dialect_library(ByteIRMhloPasses
-  transforms/ConvBiasActFusion.cpp
-  transforms/DotTransposeFusion.cpp
-  transforms/ElementFusion.cpp
-  transforms/FusionOutlining.cpp
-  transforms/FusionUtil.cpp
-  transforms/HloFolder.cpp
-  transforms/HloTransposeDotToDotGeneral.cpp
+  Transforms/ConvBiasActFusion.cpp
+  Transforms/DotTransposeFusion.cpp
+  Transforms/ElementFusion.cpp
+  Transforms/FusionOutlining.cpp
+  Transforms/FusionUtil.cpp
+  Transforms/HloFolder.cpp
+  Transforms/HloTransposeDotToDotGeneral.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo

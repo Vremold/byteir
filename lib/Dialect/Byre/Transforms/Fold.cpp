@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Byre/transforms/Fold.h"
+#include "byteir/Dialect/Byre/Transforms/Fold.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Analysis/Alias.h"
 #include "llvm/ADT/EquivalenceClasses.h"

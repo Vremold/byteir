@@ -14,6 +14,10 @@
 namespace mlir {
 class AffineDialect;
 
+namespace arith {
+  class ArithmeticDialect;
+} // namespace arith
+
 namespace linalg {
   class LinalgDialect;
 } // namespace linalg

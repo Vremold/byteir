@@ -12,6 +12,24 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
+// LinalgDataPlace
+//===----------------------------------------------------------------------===//
+
+def LinalgDataPlace : Pass<"linalg-data-place", "mlir::FuncOp"> {
+  let summary = "Data-Place Linalg's buffer to a local buffer with space";
+  let constructor = "mlir::createLinalgDataPlacePass()";
+  let dependentDialects = [
+    "memref::MemRefDialect",
+    "arith::ArithmeticDialect",
+  ];
+  let options = [
+    ListOption<"memSpaces", "mem-spaces", "int64_t",
+               "data placement memory spaces",
+               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // LinalgScopeTiling
 //===----------------------------------------------------------------------===//
 

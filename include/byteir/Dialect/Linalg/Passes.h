@@ -8,7 +8,8 @@
 #ifndef BYTEIR_LINALG_PASSES_H
 #define BYTEIR_LINALG_PASSES_H
 
-#include "byteir/Dialect/Linalg/transforms/LinalgScopeTiling.h"
+#include "byteir/Dialect/Linalg/Transforms/LinalgDataPlace.h"
+#include "byteir/Dialect/Linalg/Transforms/LinalgScopeTiling.h"
 
 namespace mlir {
 

@@ -8,12 +8,12 @@
 #ifndef BYTEIR_MHLO_PASSES_H
 #define BYTEIR_MHLO_PASSES_H
 
-#include "byteir/Dialect/mhlo/transforms/ConvBiasActFusion.h"
-#include "byteir/Dialect/mhlo/transforms/DotTransposeFusion.h"
-#include "byteir/Dialect/mhlo/transforms/ElementFusion.h"
-#include "byteir/Dialect/mhlo/transforms/FusionOutlining.h"
-#include "byteir/Dialect/mhlo/transforms/HloFolder.h"
-#include "byteir/Dialect/mhlo/transforms/HloTransposeDotToDotGeneral.h"
+#include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/DotTransposeFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/FusionOutlining.h"
+#include "byteir/Dialect/mhlo/Transforms/HloFolder.h"
+#include "byteir/Dialect/mhlo/Transforms/HloTransposeDotToDotGeneral.h"
 
 namespace mlir {
 

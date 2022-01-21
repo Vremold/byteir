@@ -18,7 +18,7 @@ add_mlir_dialect_library(MLIRByre
   )
 
 add_mlir_dialect_library(ByteIRByrePasses
-  transforms/Fold.cpp
+  Transforms/Fold.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Byre
