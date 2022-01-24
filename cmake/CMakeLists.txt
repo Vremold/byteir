@@ -32,6 +32,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+option(BYTEIR_ENABLE_BINDINGS_PYTHON "Enable byteir python bindings" OFF)
+
 # Set Path
 set(REPO_ROOT_DIR ${PROJECT_SOURCE_DIR}/..)
 get_filename_component(REPO_ROOT_DIR "${REPO_ROOT_DIR}" ABSOLUTE)
@@ -48,6 +50,7 @@ else()
 endif()
 
 option(LLVM_INSTALL_PATH "The path to the built LLVM library")
+get_filename_component(LLVM_INSTALL_PATH ${LLVM_INSTALL_PATH} ABSOLUTE)
 
 set(LLVM_INSTALL_DIR "${LLVM_INSTALL_PATH}")
 if(MSVC)
@@ -60,12 +63,12 @@ if(NOT DEFINED LLVM_EXTERNAL_LIT)
   set(LLVM_EXTERNAL_LIT "${LLVM_TOOLS_DIR}/llvm-lit.py" CACHE PATH "PATH to llvm-lit")
 endif()
 
+set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
+set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
+
 set(MLIR_DIR "${LLVM_INSTALL_DIR}/lib/cmake/mlir")
 include(MLIR.cmake)
 include(mhlo.cmake)
-
-# MLIR.cmake calls find_package(MLIR) which sets LLVM_MINIMUM_PYTHON_VERSION
-find_package(Python3 ${LLVM_MINIMUM_PYTHON_VERSION} REQUIRED COMPONENTS Interpreter Development)
 
 include_directories(${BYTEIR_SRC_INCLUDE_DIR})
 include_directories(${BYTEIR_BIN_INCLUDE_DIR})
@@ -76,6 +79,12 @@ add_subdirectory(${REPO_ROOT_DIR}/include ${CMAKE_BINARY_DIR}/include)
 
 # Build tools
 add_subdirectory(${REPO_ROOT_DIR}/tools ${CMAKE_BINARY_DIR}/tools)
+
+if (BYTEIR_ENABLE_BINDINGS_PYTHON)
+  include(MLIRDetectPythonEnv)
+  mlir_configure_python_dev_packages()
+  add_subdirectory(${REPO_ROOT_DIR}/python ${CMAKE_BINARY_DIR}/python)
+endif()
 
 if(MSVC)
   set(BYTEIR_TOOLS_DIR ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})

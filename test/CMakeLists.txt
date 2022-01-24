@@ -14,7 +14,10 @@ configure_lit_site_cfg(${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.py.in
                        MAIN_CONFIG
                        ${CMAKE_CURRENT_SOURCE_DIR}/lit.cfg.py)
 
-set(BYTEIR_MLIR_TEST_DEPENDS byteir-opt byteir-translate)
+set(BYTEIR_MLIR_TEST_DEPENDS
+    byteir-opt
+    byteir-translate
+    byteir-stat)
 
 add_lit_testsuite(check-byteir
                   "Running the ByteIR regression tests"

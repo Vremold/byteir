@@ -20,5 +20,8 @@ mkdir build
 cd build
 cmake ../cmake/ -G Ninja -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_INSTALL_PATH=../llvm_build -DLLVM_EXTERNAL_LIT=$(which lit) \
-        -DCMAKE_INSTALL_PREFIX=../byteir_build
-cmake --build . --config Release --target all check-byteir install
+        -DCMAKE_INSTALL_PREFIX=../byteir_build \
+        -DPython3_EXECUTABLE=$(which python3) \
+        -DBYTEIR_ENABLE_BINDINGS_PYTHON=ON
+
+cmake --build . --config Release --target all check-byteir check-byteir-python install
