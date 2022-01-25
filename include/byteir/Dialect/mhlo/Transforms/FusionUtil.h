@@ -12,13 +12,13 @@
 #include "mlir/IR/Block.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Operation.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/EquivalenceClasses.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include <functional>
 #include <memory>
-
 
 namespace mlir {
 
@@ -70,7 +70,7 @@ private:
   // a UnionFind set
   llvm::EquivalenceClasses<int> leader_to_nodes_;
 
-  // leader to value cnt, where 1 input counts +1, 1 output counts -1
+  // leader to value cnt, where use cnt, 
   llvm::SmallDenseMap<int, llvm::DenseMap<Value, int>> leader_to_value_count_;
 
   // Fusion Plan
@@ -84,7 +84,6 @@ private:
 
   // fuse two clusters, each having each op
   void Merge(Operation* pre_op, Operation* cur_op);
-
 };
 
 } // namespace mlir

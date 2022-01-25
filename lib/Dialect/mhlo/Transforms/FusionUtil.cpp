@@ -18,18 +18,24 @@ using namespace llvm;
 
 namespace {
 
+  int UseCount(Value val) {
+    return static_cast<int>(std::distance(val.getUses().begin(), val.getUses().end()));
+  }
+
   llvm::DenseMap<Value, int> InitValueCount(Operation* op) {
     llvm::DenseMap<Value, int> ret;
+
+    // output
+    for (auto val : op->getResults()) {
+      ret[val] = UseCount(val);
+    }
+
     // input
     for (auto val : op->getOperands()) {
       // skip block arg
       if (val.getDefiningOp() == nullptr) {
         continue;
       }
-      ret[val]++;
-    }
-
-    for (auto val : op->getResults()) {
       ret[val]--;
     }
 
@@ -165,7 +171,7 @@ bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation* pre_op, Operation*
   for (auto it : pre_cluster) {
 
     // skip input
-    if (it.second > 0) {
+    if (it.second  <= 0) {
       continue;
     }
 
@@ -173,19 +179,19 @@ bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation* pre_op, Operation*
     for (auto& use : it.first.getUses()) {
 
       auto another_user = use.getOwner();
+      auto another_id = op_to_node_id_[another_user];
 
-      if (another_user == cur_op) {
+      // if another user is curOp 
+      // or already fused with curOp
+      // or already fused wiht pre_op
+      if (another_user == cur_op || 
+          leader_to_nodes_.isEquivalent(cur_id, another_id) ||
+          leader_to_nodes_.isEquivalent(pre_leader, another_id)) {
         continue;
       }
 
-      bool isNotFused = !fuse_with_(another_user, cur_op);
-      // if false, meaning another_user is fusible with
-      if (!isNotFused) {
-        isNotFused = !leader_to_nodes_.isEquivalent(cur_id, op_to_node_id_[another_user]);
-      }
-
-      // Basically this implies another path not in a fused graph
-      if (isNotFused && dependence_->properlyDepends(another_user, cur_op)) {
+      // if there is another path, return false
+      if(dependence_->properlyDepends(another_user, cur_op)) {
         return false;
       }
     }
@@ -194,6 +200,8 @@ bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation* pre_op, Operation*
   return true;
 
 }
+
+//static 
 
 void mlir::ProducerFusionPlanner::Merge(Operation* pre_op, Operation* cur_op) {
   int pre_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[pre_op]);
@@ -207,7 +215,10 @@ void mlir::ProducerFusionPlanner::Merge(Operation* pre_op, Operation* cur_op) {
   auto& small_value_cnt = leader_to_value_count_[small_leader];
   auto& large_value_cnt = leader_to_value_count_[large_leader];
   for (auto it : large_value_cnt) {
+
+    // merge two use cnt
     small_value_cnt[it.first] += it.second;
+
     if (small_value_cnt[it.first] == 0) {
       small_value_cnt.erase(it.first);
     }
@@ -225,14 +236,17 @@ void mlir::ProducerFusionPlanner::Run() {
       continue;
     }
 
-    for(unsigned i = 0; i < op->getNumOperands(); ++i) {
+    for (unsigned i = 0; i < op->getNumOperands(); ++i) {
       auto val = op->getOperand(i);
       auto op_def = val.getDefiningOp();
 
-      // skip block arg, non-fusible, or already fused
+      // skip block arg, or already fused
       if (op_def == nullptr ||
-        !fuse_with_(op_def, op) ||
-        AlreayFused(op_def, op) ||
+        AlreayFused(op_def, op)) {
+        continue;
+      }
+
+      if (!fuse_with_(op_def, op) ||
         !CheckFusionLegal(op_def, op)) {
         continue;
       }
@@ -240,6 +254,7 @@ void mlir::ProducerFusionPlanner::Run() {
       // now we can fuse
       Merge(op_def, op);
     }
+
   }
 
   llvm::SmallDenseMap<int, int> leader_to_offset;
@@ -261,4 +276,3 @@ void mlir::ProducerFusionPlanner::Run() {
   }
 
 }
-

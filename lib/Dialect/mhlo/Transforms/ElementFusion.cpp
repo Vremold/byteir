@@ -29,15 +29,20 @@ bool IsFusibleCandidate(Operation *op) {
   // FIXME (LWC) Tentatively disable constant fusion to avoid a bug
   return IsMhlo(op) &&
          (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-          IsSplatMhloConstant(op) || isa<mhlo::BroadcastInDimOp>(op) ||
-          isa<mhlo::BroadcastOp>(op) || isa<mhlo::ReshapeOp>(op) ||
-          isa<mhlo::ClampOp>(op) || isa<mhlo::SelectOp>(op));
+          IsSplatMhloConstant(op) || 
+          isa<mhlo::BroadcastInDimOp>(op) ||
+          isa<mhlo::BroadcastOp>(op) || 
+          isa<mhlo::ReshapeOp>(op) ||
+          isa<mhlo::ClampOp>(op) || 
+          isa<mhlo::SelectOp>(op));
 }
 
 bool IsFusibleStart(Operation *op) {
-  return IsMhlo(op) && (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-                        isa<mhlo::ReshapeOp>(op) || isa<mhlo::ClampOp>(op) ||
-                        isa<mhlo::SelectOp>(op));
+  return IsMhlo(op) && 
+         (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
+          isa<mhlo::ReshapeOp>(op) ||
+          isa<mhlo::ClampOp>(op) ||
+          isa<mhlo::SelectOp>(op));
   //&& !isa<mhlo::ShiftRightLogicalOp>(op);
 }
 
