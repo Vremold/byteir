@@ -22,6 +22,14 @@ Attribute mlir::wrapIntegerMemorySpace(unsigned space, MLIRContext* ctx) {
   return IntegerAttr::get(IntegerType::get(ctx, 64), space);
 }
 
+
+Optional<int64_t> mlir::getRank(Value val) {
+  if (auto shapedType = val.getType().dyn_cast<ShapedType>()) {
+    return shapedType.getRank();
+  }
+  return llvm::None;
+}
+
 Optional<Value> mlir::getDimSize(OpBuilder& b, Value val, unsigned idx) {
   if (auto shapedType = val.getType().dyn_cast<ShapedType>()) {
     auto loc = val.getLoc();
@@ -34,5 +42,39 @@ Optional<Value> mlir::getDimSize(OpBuilder& b, Value val, unsigned idx) {
     }
   }
   return llvm::None;
+}
+
+// Create an alloc based on an existing Value 'val', with a given space.
+// Return None, if not applicable.
+Optional<Value> mlir::createAlloc(OpBuilder& b, Value val, unsigned space) {
+  // early termination if not a memref
+  if (!val.getType().isa<MemRefType>()) return llvm::None;
+
+  auto oldMemRefType = val.getType().cast<MemRefType>();
+
+  auto spaceAttr = wrapIntegerMemorySpace(space, b.getContext());
+
+  SmallVector<Value, 4> dynValue;
+
+  auto shape = oldMemRefType.getShape();
+
+  auto newMemRefType =
+    MemRefType::get(shape,
+      oldMemRefType.getElementType(), nullptr/*layout*/, spaceAttr);
+
+  for (unsigned idx = 0, n = shape.size(); idx < n; ++idx) {
+    if (shape[idx] == ShapedType::kDynamicSize) {
+      auto maybeValue = getDimSize(b, val, idx);
+      if (!maybeValue.hasValue()) {
+        return llvm::None;
+      }
+
+      dynValue.push_back(maybeValue.getValue());
+    }
+  }
+
+  auto loc = val.getLoc();
+  auto alloc = b.create<memref::AllocOp>(loc, newMemRefType, dynValue);
+  return alloc.getResult();
 }
 

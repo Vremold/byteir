@@ -18,7 +18,15 @@ class MLIRContext;
 
 Attribute wrapIntegerMemorySpace(unsigned space, MLIRContext* ctx);
 
+
+// return rank 
+llvm::Optional<int64_t> getRank(Value val);
+
 llvm::Optional<Value> getDimSize(OpBuilder& b, Value val, unsigned idx);
+
+// Create an alloc based on an existing Value 'val', with a given space.
+// Return None, if not applicable.
+llvm::Optional<Value> createAlloc(OpBuilder& b, Value val, unsigned space = 0);
 
 } // namespace mlir
 

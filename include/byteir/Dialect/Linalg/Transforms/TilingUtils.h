@@ -10,20 +10,25 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/Location.h"
+#include "mlir/IR/OperationSupport.h"
+
 
 namespace mlir {
 
-struct TileOpProperty {
-  mlir::linalg::LinalgOp op;
-  unsigned axis;
-  unsigned rank;
+constexpr StringRef getAtomicKindAttrName() { return "__byteir_atomic_kind__"; }
+
+enum class LinalgScopeTilingLoopType {
+  SCFLoops = 0,
+  AffineLoops = 1,
+  TiledLoops = 2,
 };
 
 struct TileScope {
   mlir::linalg::LinalgOp anchorOp;
-  // store {op, axis, rank}
-  llvm::SmallVector<TileOpProperty> tileOps;
+
+  llvm::SmallVector<mlir::linalg::LinalgOp> ops;
 
   TileScope(mlir::linalg::LinalgOp op)
     : anchorOp(op) {}
@@ -39,6 +44,32 @@ void unpackRanges(
   SmallVectorImpl<Value>& lbs,
   SmallVectorImpl<Value>& ubs,
   SmallVectorImpl<Value>& steps);
+
+LogicalResult buildSCFLoop(OpBuilder& builder, Location loc,
+  bool isParallel,
+  ValueRange lbs,
+  ValueRange ubs, 
+  ValueRange steps,
+  function_ref<void(OpBuilder&, Location, ValueRange)>
+  bodyBuilder = nullptr);
+
+// buildAffineLoop doesn't handle isParallel directly.
+// Call affineParallelize after tiling instread.
+LogicalResult buildAffineLoop(OpBuilder& builder, Location loc,
+  ValueRange lbs,
+  ValueRange ubs, 
+  ValueRange steps,
+  function_ref<void(OpBuilder&, Location, ValueRange)>
+  bodyBuilder = nullptr);
+
+
+// Create atomic add 
+llvm::Optional<linalg::LinalgOp> createAtomicLinalgGeneric(
+  OpBuilder& b,
+  Location loc,
+  arith::AtomicRMWKind kind,
+  ArrayRef<Value> inputs,
+  ArrayRef<Value> outputs);
 
 } // namespace mlir
 

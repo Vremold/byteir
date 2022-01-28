@@ -39,22 +39,20 @@ def LinalgScopeTiling : Pass<"linalg-scope-tile", "mlir::FuncOp"> {
   let dependentDialects = [
     "AffineDialect",
     "arith::ArithmeticDialect",
-    "linalg::LinalgDialect",
     "memref::MemRefDialect",
     "scf::SCFDialect"
   ];
   let options = [
-    Option<"anchorTag", "anchor-tag", "std::string", /*default=*/"",
-           "use anchored op's iteration space for tiling">,
     Option<"tileAxis", "axis", "int64_t", /*default=*/"0",
            "tile axis">,
     Option<"tileSize", "tile-size", "int64_t", /*default=*/"0",
            "tile size">,
+    Option<"parallelizeReduction", "par-reduce", "bool", /*default=*/"false",
+            "force parallelize reduction">,	
     Option<"loopType", "loop-type", "std::string", /*default=*/"\"for\"",
-           "Specify the type of loops to generate: for, parallel or "
-           "affine, tiled_loop">,
+           "Specify the type of loops to generate: scf, affine, tiled_loop">,
     Option<"distributionType", "distribution-type", "std::string", /*default=*/"",
-           "DistributionTypes (if loop-type=tiled_loop)">
+           "DistributionTypes (if loop-type=tiled_loop)">,
   ];
 }
 

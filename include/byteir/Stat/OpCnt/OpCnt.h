@@ -18,8 +18,13 @@ namespace byteir {
 
 void registerOpCntStatistics();
 
-// Count operation in a ModuleOp recursively.
-mlir::LogicalResult opCntStatistics(mlir::ModuleOp op, llvm::raw_ostream &os);
+// Count operation within funcOps in a ModuleOp.
+// funcName can be used to specify a specific function name
+// If funcName is empty, all funcOps will be stat.
+// When topOnly == true, only stat ops in a funcOps.
+// If topOnly == false, stats will happen recursively
+mlir::LogicalResult opCntStatistics(
+  mlir::ModuleOp op, llvm::raw_ostream &os, const std::string& funcNmae = "", bool topOnly = false);
 
 } // namespace byteir
 

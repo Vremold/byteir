@@ -10,6 +10,7 @@
 #include "byteir/Dialect/Linalg/Transforms/LinalgScopeTiling.h"
 #include "byteir/Dialect/Linalg/Transforms/TilingUtils.h"
 #include "byteir/Utils/Hoist.h"
+#include "byteir/Utils/MemUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
@@ -24,6 +25,7 @@
 #include "mlir/IR/Dominance.h"
 #include "mlir/Transforms/FoldUtils.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/Support/CommandLine.h"
 
@@ -85,18 +87,28 @@ static SmallVector<Value, 4> createTileSize(
   return tileSizes;
 }
 
-//template <typename LoopTy>
-Optional<TiledLinalgOp>
+static bool IsReduction(mlir::linalg::LinalgOp linalgOp) {
+  SmallVector<StringAttr> iterTypes
+    = llvm::to_vector<4>(linalgOp.iterator_types().getAsRange<StringAttr>());
+  unsigned axis =
+    linalgOp->getAttrOfType<IntegerAttr>(getScopeTilingAxisAttrName()).getInt();
+  return isReductionIterator(iterTypes[axis]);
+}
+
+
+void
 tileScopeImpl(
-  OpBuilder& b, TileScope& ts, int64_t tileSize) {
+  OpBuilder& b, TileScope& ts, int64_t tileSize,
+  bool parallelizeReduction,
+  LinalgScopeTilingLoopType loopType) {
   // early termination
-  if (ts.tileOps.size() == 0) return llvm::None;
+  if (ts.ops.size() == 0) return;
 
   // 1. Build the tiled loop ranges.
   //    Use lastop to create loops variables 
-  auto lastOp = ts.tileOps.back().op;
-  auto lastAxis = ts.tileOps.back().axis;
-  auto lastRank = ts.tileOps.back().rank;
+  auto lastOp = ts.ops.back();
+  unsigned lastAxis = lastOp->getAttrOfType<IntegerAttr>(getScopeTilingAxisAttrName()).getInt();
+  unsigned lastRank = lastOp->getAttrOfType<IntegerAttr>(getScopeTilingRankAttrName()).getInt();
   auto loc = lastOp.getLoc();
 
   OpBuilder::InsertionGuard g(b);
@@ -105,8 +117,7 @@ tileScopeImpl(
   auto lastAllShapeSizes = lastOp.createFlatListOfOperandDims(b, loc);
 
   AffineMap lastShapeSizesToLoopsMap = lastOp.getShapesToLoopsMap();
-  if (!lastShapeSizesToLoopsMap)
-    return llvm::None;
+  if (!lastShapeSizesToLoopsMap) return;
 
   SmallVector<Range, 4> loopRanges = makeTiledLoopRange(
     b, loc, lastShapeSizesToLoopsMap, lastAllShapeSizes, lastAxis, tileSize);
@@ -121,13 +132,23 @@ tileScopeImpl(
     AffineMap::getMultiDimIdentityMap(lastRank, b.getContext());
   // TODO support loop interchange later
 
+  bool isParallel = true;
+
+  for (auto& linalgOp : ts.ops) {
+    if (IsReduction(linalgOp)) {
+      isParallel = false;
+      break;
+    }
+  }
+
   // 2. Create the tiled loops.
   SmallVector<Value, 8> lbsStorage, ubsStorage, stepsStorage;
   unpackRanges(loopRanges, lbsStorage, ubsStorage, stepsStorage);
   ValueRange lbs(lbsStorage), ubs(ubsStorage), steps(stepsStorage);
   SmallVector<Value, 8> ivs(lbs.size());
 
-  // only first axis 
+  auto ctx = b.getContext();
+
   auto tiledLoopBodyBuilder = 
     [&](OpBuilder& b, Location loc, ValueRange loopIvs) {
     ivs.assign(loopIvs.begin(), loopIvs.end());
@@ -141,10 +162,11 @@ tileScopeImpl(
     interchangedIvs.assign(ivs.begin(), ivs.end());
 
     // go through all ops
-    for (auto& top : ts.tileOps) {
-      auto linalgOp = top.op;
-      auto axis = top.axis;
-      auto rank = top.rank;
+    for (auto& linalgOp : ts.ops) {
+      unsigned axis = 
+        linalgOp->getAttrOfType<IntegerAttr>(getScopeTilingAxisAttrName()).getInt();
+      unsigned rank = 
+        linalgOp->getAttrOfType<IntegerAttr>(getScopeTilingRankAttrName()).getInt();
 
       auto localAllShapeSizes = linalgOp.createFlatListOfOperandDims(b, loc);
       AffineMap localShapeSizesToLoopsMap = linalgOp.getShapesToLoopsMap();
@@ -163,25 +185,76 @@ tileScopeImpl(
         b, loc, linalgOp, valuesToTile, interchangedIvs, tileSizes, localSizeBounds);
 
       SmallVector<Type, 4> resultTensorTypes;
-      for (OpOperand* opOperand : linalgOp.getOutputTensorOperands())
+      for (OpOperand* opOperand : linalgOp.getOutputTensorOperands()) {
         resultTensorTypes.push_back(
           localTiledOperands[opOperand->getOperandNumber()].getType());
+      }
 
-      linalgOp.clone(b, loc, resultTensorTypes, localTiledOperands);
+      // if enabling parallelize reduction and the loop is reduction 
+      // we need to alloc a new buffer and perform all reduce
+      if (parallelizeReduction && IsReduction(linalgOp)) {
+        SmallVector<Value> intermediates;
+        SmallVector<Value> outputs;
+        for (size_t i = linalgOp.getInputBufferOperands().size(); 
+             i < localTiledOperands.size(); ++i) {
+          outputs.push_back(localTiledOperands[i]); // record all one
+          auto maybeValue = createAlloc(b, localTiledOperands[i]);
+          intermediates.push_back(maybeValue.getValue());
+          localTiledOperands[i] = maybeValue.getValue();
+        }
+
+        auto cloned = linalgOp.clone(b, loc, resultTensorTypes, localTiledOperands);
+        // remove attr
+        cloned->removeAttr(getScopeTilingAxisAttrName());
+        cloned->removeAttr(getScopeTilingRankAttrName());
+
+        // support arith::AtomicRMWKind::addf for now
+        // FIXME: extend it 
+        auto maybeAlloc = createAtomicLinalgGeneric(
+          b, loc, arith::AtomicRMWKind::addf, intermediates, outputs);
+
+        if (!maybeAlloc.hasValue()) return;
+      } else {
+        auto cloned = linalgOp.clone(b, loc, resultTensorTypes, localTiledOperands);
+        // remove attr
+        cloned->removeAttr(getScopeTilingAxisAttrName());
+        cloned->removeAttr(getScopeTilingRankAttrName());
+      }
+
+
+      
+
     }
 
   };
 
-  auto loopNest = buildLoopNest(
-    b, loc, 
-    lbs.take_front(), ubs.take_front(), steps.take_front(),
-    tiledLoopBodyBuilder);
+  if (parallelizeReduction) isParallel = true;
 
-  for (auto& top : ts.tileOps) {
-    top.op.erase();
+  if (loopType == LinalgScopeTilingLoopType::SCFLoops) {
+    if (failed(buildSCFLoop(
+      b, loc, isParallel,
+      lbs.take_front(), ubs.take_front(), steps.take_front(),
+      tiledLoopBodyBuilder))) {
+      return;
+    }
+  } else if(loopType == LinalgScopeTilingLoopType::AffineLoops) {
+    // affine not support parallelizeReduction for now
+    if (parallelizeReduction) return;
+
+    if (failed(buildAffineLoop(
+      b, loc, lbs.take_front(), ubs.take_front(), steps.take_front(),
+      tiledLoopBodyBuilder))) {
+      return;
+    }
+  } else {
+    // TODO support Linalg::TiledLoop later
+    return;
   }
 
-  return None;
+
+  for (auto& op : ts.ops) {
+    op->erase();
+  }
 }
 
 
@@ -357,10 +430,9 @@ static bool isConsumerValidforTileScope(
 }
 
 // Collect ops within the Block of a given AnchorOp
-static void createTilingScope(
+static void greedilyCreateTilingScopeFromAnchor(
   TileScope& ts,
   unsigned iterAxis) {
-
   LinalgOp anchorOp = ts.anchorOp;
   Block* block = anchorOp->getBlock();
 
@@ -381,7 +453,7 @@ static void createTilingScope(
   SmallVector<StringAttr> iterTypes
     = llvm::to_vector<4>(anchorOp.iterator_types().getAsRange<StringAttr>());
 
-  // if iterAxis is out of bound, early return
+  // if iterAxis is out of bound, early terminate
   if (iterAxis >= iterTypes.size()) {
     return;
   }
@@ -405,7 +477,7 @@ static void createTilingScope(
       anchorOp, affineMaps[numInputs+i], iterAxis, performedReduce, true/*assigned*/);
   }
 
-  // use set here, instead of SmallSet, since we need ids to be sorted.
+  // NOTE: use set here, instead of SmallSet, since we need ids to be sorted.
   std::set<int> determinedIds;
   determinedIds.insert(anchorId);
 
@@ -434,37 +506,71 @@ static void createTilingScope(
     }
     if (!changed) break;
   }
-  
+
+  // insert attr for scope tiling
+  auto ctx = anchorOp->getContext();
   for (auto id : determinedIds) {
     if (auto linalg = dyn_cast<LinalgOp>(ops[id])) {
-      ts.tileOps.push_back({ops[id], opToIterAxisAndRank[ops[id]].first, 
-                             opToIterAxisAndRank[ops[id]].second });
+
+      linalg->setAttr(getScopeTilingAxisAttrName(), 
+        IntegerAttr::get(IntegerType::get(ctx, 32), opToIterAxisAndRank[ops[id]].first));
+
+      linalg->setAttr(getScopeTilingRankAttrName(),
+        IntegerAttr::get(IntegerType::get(ctx, 32), opToIterAxisAndRank[ops[id]].second));
+
+      ts.ops.push_back(linalg);
     }
   }
 }
  
-static void collectScopeFromAnchorOp(
-  FuncOp func, StringRef anchorTag, 
+static void collectTilingScope(
+  FuncOp func,
   unsigned iterAxis, 
   SmallVectorImpl<TileScope>& collection) {
 
   SmallSet<Block*, 4> visitedBlocks;
 
-  // collect op with anchorTag as intial values
+  // collect op with anchor as intial values
+  // it is nested
   func.walk([&](LinalgOp op) {
     // skip non-targeting or visited block
-    if (!op->hasAttr(anchorTag) || 
+    if (!op->hasAttr(getScopeTilingAnchorAttrName()) ||
         visitedBlocks.contains(op->getBlock())) {
       return;
     }
 
+    op->removeAttr(getScopeTilingAnchorAttrName());
     collection.emplace_back(op);
     visitedBlocks.insert(op->getBlock());
   });
 
+  // collect ops with ScopeTilingAxisAttr & ScopeTilingRankAttr
+  llvm::SmallDenseMap<Block*, SmallVector<LinalgOp>> blockToScope;
+  llvm::SmallSet<Block*, 4> noParallel;
+
+  func.walk([&](LinalgOp op) {
+    Block* block = op->getBlock();
+    // skip non-targeting or visited block
+    if (!op->hasAttr(getScopeTilingAxisAttrName()) ||
+        !op->hasAttr(getScopeTilingRankAttrName()) ||
+        visitedBlocks.contains(block)) {
+      return;
+    }
+
+   
+
+    blockToScope[block].push_back(op);
+    });
+
   // create tiling scope for each anchorTag
   for (TileScope& ts : collection) {
-    createTilingScope(ts, iterAxis);
+    greedilyCreateTilingScopeFromAnchor(ts, iterAxis);
+  }
+
+  for (auto& it : blockToScope) {
+    TileScope ts(it.second.front()); // use the first as anchor
+    ts.ops = it.second;  // copy
+    collection.push_back(ts);
   }
 }
 
@@ -483,15 +589,14 @@ bool IsHoistDownOp(Operation* op) {
 struct LinalgScopeTilingPass : public LinalgScopeTilingBase<LinalgScopeTilingPass> {
   LinalgScopeTilingPass() = default;
   LinalgScopeTilingPass(
-    StringRef anchorTag, int64_t tileAxis,
-    int64_t tileSize, LinalgTilingLoopType loopType,
+    int64_t tileAxis, int64_t tileSize, bool parallelizeReduction, LinalgScopeTilingLoopType loopType,
     StringRef distributionType) {
 
-    this->anchorTag.setValue(anchorTag.str());
     this->tileAxis = tileAxis;
     this->tileSize = tileSize;
+    this->parallelizeReduction = parallelizeReduction;
     this->loopType = "";
-    this->loopTypeEnum = loopType;
+    loopTypeEnum = loopType;
     this->distributionType = distributionType.str();
   }
 
@@ -500,12 +605,11 @@ struct LinalgScopeTilingPass : public LinalgScopeTilingBase<LinalgScopeTilingPas
     if (tileSize == 0) return;
 
     // parse
-    LinalgTilingLoopType type =
-      llvm::StringSwitch<LinalgTilingLoopType>(loopType)
-      .Case("for", LinalgTilingLoopType::Loops)
-      .Case("affine", LinalgTilingLoopType::AffineLoops)
-      .Case("parallel", LinalgTilingLoopType::ParallelLoops)
-      .Case("tiled_loop", LinalgTilingLoopType::TiledLoops)
+    LinalgScopeTilingLoopType type =
+      llvm::StringSwitch<LinalgScopeTilingLoopType>(loopType)
+      .Case("scf", LinalgScopeTilingLoopType::SCFLoops)
+      .Case("affine", LinalgScopeTilingLoopType::AffineLoops)
+      .Case("tiled_loop", LinalgScopeTilingLoopType::TiledLoops)
       .Default(loopTypeEnum);
 
     FuncOp funcOp = getOperation();
@@ -520,22 +624,22 @@ struct LinalgScopeTilingPass : public LinalgScopeTilingBase<LinalgScopeTilingPas
     }
 
     SmallVector<TileScope> collection;
-    collectScopeFromAnchorOp(funcOp, anchorTag, tileAxis, collection);
+    collectTilingScope(funcOp, tileAxis, collection);
 
     OpBuilder b(funcOp.getContext());
     for (auto& ts : collection) {
-      tileScopeImpl(b, ts, tileSize);
+      tileScopeImpl(b, ts, tileSize, parallelizeReduction, type);
     }
   }
 
-  LinalgTilingLoopType loopTypeEnum;
+  LinalgScopeTilingLoopType loopTypeEnum;
 };
 
 } // namespace
 
 std::unique_ptr<OperationPass<FuncOp>> mlir::createLinalgScopeTilingPass(
-    StringRef anchorTag, int64_t tileAxis, int64_t tileSize,
-    linalg::LinalgTilingLoopType loopType, StringRef distributionType) {
-  return std::make_unique<LinalgScopeTilingPass>(anchorTag, tileAxis, tileSize, loopType,
-    distributionType);
+    int64_t tileAxis, int64_t tileSize, bool parallelizeReduction,
+    mlir::LinalgScopeTilingLoopType loopType, StringRef distributionType) {
+  return std::make_unique<LinalgScopeTilingPass>(tileAxis, tileSize, parallelizeReduction, 
+    loopType, distributionType);
 }

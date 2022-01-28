@@ -9,6 +9,7 @@
 #define MLIR_STAT_COMMON_REG_H
 
 #include "llvm/Support/CommandLine.h"
+#include <string>
 
 namespace llvm {
 class StringRef;
@@ -42,6 +43,12 @@ struct StatisticsParser : public llvm::cl::parser<const MLIRRegFunctionStat *> {
 };
 
 struct MLIRStatRegistration {
+
+
+  static llvm::cl::opt<std::string> fucnName;
+
+  static llvm::cl::opt<bool> topOnly;
+
   MLIRStatRegistration(llvm::StringRef name, const MLIRFunctionStat &function);
 };
 } // namespace byteir
