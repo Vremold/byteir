@@ -90,14 +90,14 @@ func @mhlo_element_reshape(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 :
 // TESTTAG: {test}
 // TESTTAG:  return
 
-func @shared_constant(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tensor<4xf32>, %arg3 : tensor<4x4xf32>) -> (tensor<4xf32>, tensor<4x4xf32>) {
+func @shared_constant(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tensor<4xf32>, %arg3 : tensor<4x4xf32>) -> (tensor<4xf32>, tensor<4xf32>) {
   %0 = mhlo.constant dense<0.000000e+00> : tensor<4xf32>
   %1 = "mhlo.add"(%arg0, %0) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
   %2 = "mhlo.abs"(%1) : (tensor<4xf32>) -> tensor<4xf32>
   %3 = "mhlo.add"(%arg0, %arg1) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
   %4 = "mhlo.add"(%1, %3) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
-  %5 = "mhlo.dot"(%arg3, %0) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<4x4xf32>, tensor<4xf32>) -> tensor<4x4xf32>
-  return %4, %5 : tensor<4xf32>, tensor<4x4xf32>
+  %5 = "mhlo.dot"(%arg3, %0) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<4x4xf32>, tensor<4xf32>) -> tensor<4xf32>
+  return %4, %5 : tensor<4xf32>, tensor<4xf32>
 }
 // NOTAG-LABEL: func @shared_constant
 // NOTAG:  mhlo.fusion

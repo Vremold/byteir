@@ -431,12 +431,12 @@ void mlir::populateHLOToLHLOConversionPatternExtension(
     MLIRContext *context, bufferization::BufferizeTypeConverter *converter,
     OwningRewritePatternList *patterns) {
 
-  patterns->insert<HloWithTupleToLhloOpConverter<mhlo::BatchNormGradOp>,
-                   HloWithTupleToLhloOpConverter<mhlo::BatchNormTrainingOp>,
-                   HloToLhloOpConverterLocal<mhlo::ClampOp>,
-                   HloToLhloScatterOpConverter,
-                   HloToLhloReduceWindowOpConverter,
-                   HloToLhloCustomCallOpConverter>(*converter, context);
+  patterns
+      ->insert<HloToLhloOpConverterLocal<mhlo::BatchNormGradOp>,
+               HloToLhloOpConverterLocal<mhlo::BatchNormTrainingOp>,
+               HloToLhloOpConverterLocal<mhlo::ClampOp>,
+               HloToLhloScatterOpConverter, HloToLhloReduceWindowOpConverter,
+               HloToLhloCustomCallOpConverter>(*converter, context);
 }
 
 std::unique_ptr<OperationPass<ModuleOp>> mlir::createConvertHloToLHloPass() {
