@@ -18,7 +18,8 @@ class RewritePatternSet;
 // Collect a set of patterns to convert ops from Lmhlo dialect to Byre dialect
 // Note: supportMap is a reference.
 void populateLmhloToByreConversionPatterns(RewritePatternSet& patterns, 
-  llvm::DenseMap<StringRef, StringRef>& supportMap);
+  llvm::DenseMap<StringRef, StringRef>& supportMap, 
+  bool appendArgTypes);
 
 
 void populateStdToByreConversionPatterns(RewritePatternSet& patterns);
@@ -26,7 +27,7 @@ void populateStdToByreConversionPatterns(RewritePatternSet& patterns);
 // Collect a set of patterns to convert ops from Ace dialect to Byre dialect
 //void populateAceToByreConversionPatterns(RewritePatternSet& patterns);
 
-std::unique_ptr<OperationPass<ModuleOp>> createConvertToByrePass();
+std::unique_ptr<OperationPass<ModuleOp>> createConvertToByrePass(bool appendArgTypes = false);
 
 
 } // namespace mlir

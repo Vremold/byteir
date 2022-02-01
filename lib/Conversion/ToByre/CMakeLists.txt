@@ -1,4 +1,5 @@
 add_byteir_conversion_library(ByteIRToByre
+  Common.cpp
   ToByre.cpp
 
   ADDITIONAL_HEADER_DIRS

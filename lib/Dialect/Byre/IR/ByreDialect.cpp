@@ -272,7 +272,7 @@ namespace {
 
     LogicalResult matchAndRewrite(CopyOp copyOp,
       PatternRewriter& rewriter) const override {
-      if (copyOp.input() == copyOp.output()) {
+      if (copyOp.source() == copyOp.target()) {
         rewriter.eraseOp(copyOp);
         return success();
       }

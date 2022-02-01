@@ -69,8 +69,8 @@ def Byre_ComputeOp : Byre_Op<"compute",
 def Byre_CopyOp : Byre_Op<"copy",
     [HasParent<"FuncOp">, CopyOpInterface]> {
   let summary = "copy operation";
-  let description = [{ TODO
-    Copies the data to the output view from the input view.
+  let description = [{ 
+    Copies the data to from the source memref to the target memref .
 
     Usage:
 
@@ -78,35 +78,26 @@ def Byre_CopyOp : Byre_Op<"copy",
     byre.copy(%arg0, %arg1) : memref<?xf32, stride_specification>,
                               memref<?xf32, stride_specification>
     ```
-    Note %arg0 is destination, %arg1 is source.
+    Note %arg0 is source, %arg1 is destination.
   }];
 
 
   let arguments = (ins
-    AnyStridedMemRef:$output,
-    AnyStridedMemRef:$input);
-
-  let builders = [
-    OpBuilder<(ins "Value":$output, "Value":$input,
-      CArg<"ArrayRef<NamedAttribute>", "{}">:$attrs)>];
+    AnyStridedMemRef:$source,
+    AnyStridedMemRef:$target);
 
   let extraClassDeclaration = [{
-    ValueRange outputs() { return getOperands().take_front(); }
-    ValueRange inputs() { return getOperands().take_back(); }
-
-    Value getSource() { return input();}
-    Value getTarget() { return output(); }
-
+    Value getSource() { return source();}
+    Value getTarget() { return target(); }
   }];
 
   let assemblyFormat = [{
-    `(` $input `,` $output `)` attr-dict `:`
-        type($input) `,` type($output)
+    `(` $source `,` $target `)` attr-dict `:`
+        type($source) `,` type($target)
   }];
 
   let hasCanonicalizer = 1;
   let hasFolder = 1;
-  let skipDefaultBuilders = 1;
   let verifier = [{ return ::verify(*this); }];
 }
 

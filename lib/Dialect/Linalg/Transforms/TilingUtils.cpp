@@ -94,20 +94,39 @@ Optional<linalg::LinalgOp> mlir::createAtomicLinalgGeneric(
   auto ctx = b.getContext();
   size_t num = inputs.size();
 
-  // FIXME: only support all Rank are equal now
+  // FIXME: only support all Ranks are equal now
   auto maybeRank = getRank(inputs.back());
   if (!maybeRank.hasValue()) return llvm::None;
   auto rank = maybeRank.getValue();
+
+  for (auto val : inputs) {
+    auto anotherMaybeRank = getRank(val);
+    if (!anotherMaybeRank.hasValue() || rank != anotherMaybeRank.getValue()) {
+      return llvm::None;
+    }
+  }
+
+  for (auto val : outputs) {
+    auto anotherMaybeRank = getRank(val);
+    if (!anotherMaybeRank.hasValue() || rank != anotherMaybeRank.getValue()) {
+      return llvm::None;
+    }
+  }
 
   SmallVector<AffineMap, 2> indexingMaps;
 
   SmallVector<StringRef> parallelLoopAttrs(rank, getParallelIteratorTypeName());
 
+  // insert identity map for input
   for (size_t i = 0; i < num; ++i) {
-    // insert two identity map, one for input, one for output
-    indexingMaps.push_back(AffineMap::getMultiDimIdentityMap(rank, ctx));
     indexingMaps.push_back(AffineMap::getMultiDimIdentityMap(rank, ctx));
   }
+
+  // insert identity map for output
+  for (size_t i = 0; i < num; ++i) {
+    indexingMaps.push_back(AffineMap::getMultiDimIdentityMap(rank, ctx));
+  }
+
   ValueRange inputRange(inputs);
   ValueRange outputRange(outputs);
 
@@ -126,9 +145,9 @@ Optional<linalg::LinalgOp> mlir::createAtomicLinalgGeneric(
       // create 
       for (size_t i = 0; i < num; ++i) {
         auto op = nestedBuilder.create<memref::AtomicRMWOp>(
-          loc, blockArgs[i].getType(), kind, blockArgs[i], outputRange[i], indices);
+         loc, blockArgs[i].getType(), kind, blockArgs[i], outputs[i], indices);
 
-        opResults.push_back(op.getResult());
+         opResults.push_back(op.getResult());
       }
       nestedBuilder.create<linalg::YieldOp>(loc, opResults);
     });

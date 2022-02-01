@@ -106,6 +106,11 @@ def ConvertToByre : Pass<"convert-to-byre", "ModuleOp"> {
   let dependentDialects = [
     "mlir::byre::ByreDialect",
   ];
+  let options = [
+    Option<"appendArgTypes", "append-arg-types", "bool", /*default=*/"false",
+           "append arg types to Byre">,	
+  ];
+
 }
 
 //===----------------------------------------------------------------------===//

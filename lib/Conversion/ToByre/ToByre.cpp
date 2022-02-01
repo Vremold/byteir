@@ -24,9 +24,9 @@
 #include "mlir/Parser.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/TypeSwitch.h"
 #include <functional>
-
-#include <iostream>
+#include <string>
 
 using namespace mlir;
 using namespace mlir::byre;
@@ -117,8 +117,10 @@ mlir::ConvertToByrePattern<mlir::lmhlo::GatherOp>::matchAndRewrite(
     return rewriter.notifyMatchFailure(op, "collapsed_slice_dims != [0]");
   }
 
+  auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
+
   auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-      op, found->second, adaptor.getOperands());
+      op, key, adaptor.getOperands());
 
   // FIXME: currently only support select on dim0
   compute_op->setAttr("dim", rewriter.getI32IntegerAttr(0));
@@ -150,9 +152,11 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
     return rewriter.notifyMatchFailure(op, "unsupported block in scatter");
   }
 
+  auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
+
   // TODO support inplace 
   auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
-    found->second, adaptor.getOperands());
+    key, adaptor.getOperands());
 
   // FIXME: currently only support select on dim0
   new_op->setAttr("dim", rewriter.getI32IntegerAttr(0));
@@ -193,10 +197,18 @@ mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
   // get last element of start_indices
   int64_t last_start = start_indices.getValues<int64_t>()[num_start - 1];
 
-  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
-    found->second, adaptor.getOperands());
+  // if output is an arg, use copy
+  if (adaptor.getOperands()[1].getDefiningOp() == nullptr) {
+    auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::CopyOp>(
+      op, adaptor.getOperands()[0], adaptor.getOperands()[1]);
 
-  // FIXME: currently only support inplace
+    new_op->setAttr("offset", rewriter.getI32IntegerAttr(last_start));
+    return success();
+  }
+
+  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+    op, found->second, adaptor.getOperands());
+
   new_op->setAttr("offset", rewriter.getI32IntegerAttr(last_start));
 
   if (adaptor.getOperands()[0].getDefiningOp() == nullptr) {
@@ -217,13 +229,35 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
     return op->emitOpError() << "can not find matched byre_compute_name";
   }
 
-  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-      op, found->second, adaptor.getOperands());
+  // If both args, replace it with copy
+  if (adaptor.getOperands()[0].getDefiningOp() == nullptr && 
+      adaptor.getOperands()[1].getDefiningOp() == nullptr) {
+    auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::CopyOp>(
+      op, adaptor.getOperands()[0], adaptor.getOperands()[1]);
 
-  // FIXME: currently only support inplace
+    return success();
+  } 
+
+  bool is_arg_alias = false;
+  SmallVector<Value> operands;
+
+  // if output is an arg, swap in and out
+  if (adaptor.getOperands()[1].getDefiningOp() == nullptr) {
+    operands = { adaptor.getOperands()[1], adaptor.getOperands()[0]};
+    is_arg_alias = true;
+  } else if (adaptor.getOperands()[0].getDefiningOp() == nullptr) {
+    operands = adaptor.getOperands();
+    is_arg_alias = true;
+  } else {
+    operands = adaptor.getOperands();
+  }
+
+  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+      op, found->second, operands);
+
   new_op->setAttr("offset", rewriter.getI32IntegerAttr(0));
 
-  if (adaptor.getOperands()[0].getDefiningOp() == nullptr) {
+  if (is_arg_alias) {
     new_op->setAttr("arg_alias", rewriter.getUnitAttr());
   }
 
@@ -270,9 +304,11 @@ namespace {
   };
 
 class ConvertDotOpToByrePattern : public OpConversionPattern<mlir::lmhlo::DotOp> {
+private:
+  bool appendArgTypes;
 public:
-  ConvertDotOpToByrePattern(MLIRContext* ctx)
-    : OpConversionPattern<mlir::lmhlo::DotOp>(ctx) {}
+  ConvertDotOpToByrePattern(MLIRContext* ctx, bool appendTypes)
+    : OpConversionPattern<mlir::lmhlo::DotOp>(ctx), appendArgTypes(appendTypes) {}
 
   LogicalResult
   matchAndRewrite(mlir::lmhlo::DotOp op, 
@@ -284,8 +320,10 @@ public:
     assert(dot_dimension_numbers.getRhsContractingDimensions().size() == 1);
     if (dot_dimension_numbers.getLhsBatchingDimensions().size() == 0) {
       // convert to MatmulOp
+      auto key = getByreKey("MatmulOp", op->getOperandTypes(), appendArgTypes);
+
       auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-        op, "MatmulOp", adaptor.getOperands());
+        op, key, adaptor.getOperands());
 
       // append attribute 'lhs_contracting_dimension' and
       // 'rhs_contracting_dimension'
@@ -313,8 +351,9 @@ public:
           << "can not handle unregular batching_dimensions";
       }
 
+      auto key = getByreKey("BatchMatmulOp", op->getOperandTypes(), appendArgTypes);
       auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-        op, "BatchMatmulOp", adaptor.getOperands());
+        op, key, adaptor.getOperands());
 
       // append attributes of batching and contracting dimensions
       int64_t lhs_contracting_dimension =
@@ -341,7 +380,7 @@ public:
 class ConvertCustomCallOpToByrePattern
   : public OpConversionPattern<lmhlo::CustomCallOp> {
 public:
-  ConvertCustomCallOpToByrePattern(MLIRContext* ctx)
+  ConvertCustomCallOpToByrePattern(MLIRContext* ctx, bool /*appendArgTypes*/)
     : OpConversionPattern<lmhlo::CustomCallOp>(ctx) {}
 
   LogicalResult
@@ -371,9 +410,11 @@ public:
 
 class ConvertReduceOpToByrePattern
     : public OpConversionPattern<lmhlo::ReduceOp> {
+private: 
+  bool appendArgTypes;
 public:
-  ConvertReduceOpToByrePattern(MLIRContext *ctx)
-      : OpConversionPattern<lmhlo::ReduceOp>(ctx) {}
+  ConvertReduceOpToByrePattern(MLIRContext *ctx, bool appendTypes)
+      : OpConversionPattern<lmhlo::ReduceOp>(ctx), appendArgTypes(appendTypes) {}
 
   LogicalResult
   matchAndRewrite(lmhlo::ReduceOp op, lmhlo::ReduceOp::Adaptor adaptor,
@@ -455,8 +496,13 @@ public:
       return failure();
     }
     SmallVector<Value, 2> operands{adaptor.inputs()[0], adaptor.out()[0]};
+    SmallVector<Type, 2> operandTypes{adaptor.inputs()[0].getType(), 
+                                      adaptor.out()[0].getType()};
+
+    auto key = getByreKey(ReduceOp, operandTypes, appendArgTypes);
+
     auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-        op, ReduceOp, operands);
+        op, key, operands);
 
     compute_op->setAttr("dimensions", op.dimensions());
 
@@ -466,7 +512,7 @@ public:
 
 class ConvertConstOpToByrePattern : public OpConversionPattern<lmhlo::ConstOp> {
 public:
-  ConvertConstOpToByrePattern(MLIRContext *ctx)
+  ConvertConstOpToByrePattern(MLIRContext *ctx, bool /*appendArgTypes*/)
       : OpConversionPattern<lmhlo::ConstOp>(ctx) {}
 
   LogicalResult
@@ -490,8 +536,9 @@ public:
 
 // Main Pass
 struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
+  ConvertToByrePass(bool appendArgTypes) : ConvertToByreBase() {
+    this->appendArgTypes = appendArgTypes;
 
-  ConvertToByrePass() : ConvertToByreBase() {
     // TODO: change to loading from outside
     lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
     lmhloSupportMap.insert({"lmhlo.scatter", "IndexPutOp" });
@@ -760,7 +807,7 @@ void ConvertToByrePass::runOnOperation() {
   });
 
   RewritePatternSet patterns(&ctx);
-  populateLmhloToByreConversionPatterns(patterns, lmhloSupportMap);
+  populateLmhloToByreConversionPatterns(patterns, lmhloSupportMap, appendArgTypes);
 
   populateStdToByreConversionPatterns(patterns);
 
@@ -787,7 +834,8 @@ void ConvertToByrePass::runOnOperation() {
 
 void mlir::populateLmhloToByreConversionPatterns(
   RewritePatternSet& patterns,
-  llvm::DenseMap<StringRef, StringRef>& supportMap) {
+  llvm::DenseMap<StringRef, StringRef>& supportMap,
+  bool appendArgTypes) {
   // TODO move this from a file
   // TODO use MACRO trick to add patterns
   patterns.add<ConvertToByrePattern<lmhlo::AddOp>,
@@ -795,17 +843,18 @@ void mlir::populateLmhloToByreConversionPatterns(
                ConvertToByrePattern<lmhlo::ReshapeOp>,
                ConvertToByrePattern<lmhlo::ScatterOp>,
                ConvertToByrePattern<lmhlo::SliceOp>>(patterns.getContext(),
-                                                     supportMap);
+                                                     supportMap, 
+                                                     appendArgTypes);
 
   patterns.add<ConvertDotOpToByrePattern, ConvertCustomCallOpToByrePattern,
                ConvertReduceOpToByrePattern, ConvertConstOpToByrePattern>(
-      patterns.getContext());
+      patterns.getContext(), appendArgTypes);
 }
 
 void mlir::populateStdToByreConversionPatterns(RewritePatternSet& patterns) {
   patterns.add<ConvertCallOpToByrePattern>(patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<ModuleOp>> mlir::createConvertToByrePass() {
-  return std::make_unique<ConvertToByrePass>();
+std::unique_ptr<OperationPass<ModuleOp>> mlir::createConvertToByrePass(bool appendArgTypes) {
+  return std::make_unique<ConvertToByrePass>(appendArgTypes);
 }

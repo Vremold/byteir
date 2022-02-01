@@ -1,4 +1,4 @@
-// RUN: byteir-opt -convert-to-byre --canonicalize %s | FileCheck %s
+// RUN: byteir-opt -convert-to-byre -cse %s | FileCheck %s
 
 module {
 // CHECK: module attributes {byre.container_module}  {
@@ -94,20 +94,64 @@ module {
   // CHECK-LABEL: mhlo_gather
   // CHECK-NEXT: byre.compute @IndexSelectOp
 
-  func @mhlo_slice(%arg0: memref<1x512xi64> {__placeholder__byre.argname = "A"}) -> (memref<1x128xi64> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+  func @mhlo_slice_both_arg(%arg0: memref<1x512xi64> {__placeholder__byre.argname = "A"}) -> (memref<1x128xi64> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<1x128xi64>
     "lmhlo.slice"(%arg0, %0) {limit_indices = dense<[1, 128]> : tensor<2xi64>, start_indices = dense<0> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (memref<1x512xi64>, memref<1x128xi64>) -> ()
     return %0 : memref<1x128xi64>
   }
-  // CHECK-LABEL: mhlo_slice
-  // CHECK-NEXT: byre.compute @AliasOp
+  // CHECK-LABEL: mhlo_slice_both_arg
+  // CHECK-NEXT: byre.copy
 
-  func @mhlo_reshape(%arg0: memref<1x1024xi64>) -> (memref<32x32xi64>) attributes { __placeholder__byre.entry_point} {
+  func @mhlo_slice_input(%arg0: memref<1x512xi64> {__placeholder__byre.argname = "A"}) -> (memref<1x128xi64> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<1x128xi64>
+    %1 = memref.alloc() : memref<1x128xi64>
+    "lmhlo.slice"(%arg0, %1) {limit_indices = dense<[1, 128]> : tensor<2xi64>, start_indices = dense<0> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (memref<1x512xi64>, memref<1x128xi64>) -> ()
+    "lmhlo.add"(%1, %1, %0) : (memref<1x128xi64>, memref<1x128xi64>, memref<1x128xi64>) -> ()
+    return %0 : memref<1x128xi64>
+  }
+  // CHECK-LABEL: mhlo_slice_input
+  // CHECK-NEXT: memref.alloc
+  // CHECK-NEXT: byre.compute @AliasOp
+  // CHECK-NEXT: byre.compute @AddOp
+
+ func @mhlo_slice_output(%arg0: memref<1x512xi64> {__placeholder__byre.argname = "A"}) -> (memref<1x128xi64> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<1x512xi64>
+    %1 = memref.alloc() : memref<1x128xi64>
+    "lmhlo.slice"(%0, %1) {limit_indices = dense<[1, 128]> : tensor<2xi64>, start_indices = dense<0> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (memref<1x512xi64>, memref<1x128xi64>) -> ()
+    return %1 : memref<1x128xi64>
+  }
+  // CHECK-LABEL: mhlo_slice_output
+  // CHECK-NEXT: memref.alloc
+  // CHECK-NEXT: byre.copy
+
+  func @mhlo_reshape_both_args(%arg0: memref<1x1024xi64>) -> (memref<32x32xi64>) attributes { __placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<32x32xi64>
     "lmhlo.reshape"(%arg0, %0) : (memref<1x1024xi64>, memref<32x32xi64>) -> ()
     return %0 : memref<32x32xi64>
   }
-  // CHECK-LABEL: mhlo_reshape
+  // CHECK-LABEL: mhlo_reshape_both_args
+  // CHECK-NEXT: byre.copy
+
+  func @mhlo_reshape_input(%arg0: memref<1x1024xi64>) -> (memref<32x32xi64>) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<32x32xi64>
+    %1 = memref.alloc() : memref<32x32xi64>
+    "lmhlo.reshape"(%arg0, %0) : (memref<1x1024xi64>, memref<32x32xi64>) -> ()
+    "lmhlo.add"(%0, %0, %1) : (memref<32x32xi64>, memref<32x32xi64>, memref<32x32xi64>) -> ()
+    return %1 : memref<32x32xi64>
+  }
+  // CHECK-LABEL: mhlo_reshape_input
+  // CHECK-NEXT: memref.alloc
+  // CHECK-NEXT: byre.compute @AliasOp
+  // CHECK-NEXT: byre.compute @AddOp
+
+  func @mhlo_reshape_output(%arg0: memref<1x1024xi64>) -> (memref<32x32xi64>) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<1x1024xi64>
+    %1 = memref.alloc() : memref<32x32xi64>
+    "lmhlo.reshape"(%0, %1) : (memref<1x1024xi64>, memref<32x32xi64>) -> ()
+    return %1 : memref<32x32xi64>
+  }
+  // CHECK-LABEL: mhlo_reshape_output
+  // CHECK-NEXT: memref.alloc
   // CHECK-NEXT: byre.compute @AliasOp
 
   func @mhlo_reduce(%arg0: memref<1x128x128xf32> {__placeholder__byre.argname = "A"}) -> (memref<128xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
