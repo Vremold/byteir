@@ -17,6 +17,8 @@ def mlir_type_to_dtype(mlir_type):
         return np.uint8
     if str(mlir_type) == 'i1':
         return np.bool
+    if str(mlir_type) == '!tf_type.string':
+        return np.dtype('O')
     raise NotImplementedError("unsupported mlir type {}".format(mlir_type))
 
 def mlir_clone_region(old_region, new_region, mapping):
