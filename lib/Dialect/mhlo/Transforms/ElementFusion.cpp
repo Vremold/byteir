@@ -78,7 +78,7 @@ struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
     for (auto it = plan.rbegin(); it != plan.rend(); ++it) {
       auto &pattern = *it;
       if (pattern.size() > 1) {
-        ApplyMhloFusionPattern(pattern, attachTag);
+        applyMhloFusionPattern(pattern, attachTag);
       }
     }
   }

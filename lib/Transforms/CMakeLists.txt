@@ -3,6 +3,7 @@ add_mlir_library(ByteIRTransforms
   CollectFunc.cpp
   FuncTag.cpp
   GraphClusteringByDevice.cpp
+  LoopUnroll.cpp
   RewriteOpToStdCall.cpp
   SetArgShape.cpp
 
@@ -11,9 +12,13 @@ add_mlir_library(ByteIRTransforms
 
   DEPENDS
   ByteIRTransformsPassIncGen
+  ByteIRUtils
 
   LINK_LIBS PUBLIC
+  ByteIRUtils
   MLIRIR
+  MLIRAffine
   MLIRMemRef
+  MLIRSCF
   MLIRTransforms
 )

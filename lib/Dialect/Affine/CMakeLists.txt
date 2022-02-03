@@ -4,6 +4,7 @@ add_mlir_dialect_library(ByteIRAffinePasses
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Affine
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Affine/Transforms
 
   DEPENDS
   ByteIRAffinePassIncGen

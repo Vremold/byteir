@@ -1,6 +1,7 @@
 add_mlir_library(ByteIRUtils
   Hoist.cpp
   IRRewrite.cpp
+  LoopUtils.cpp
   MemUtils.cpp
   Utils.cpp
 
@@ -9,6 +10,8 @@ add_mlir_library(ByteIRUtils
 
   LINK_LIBS PUBLIC
   MLIRIR
+  MLIRAffine
   MLIRArithmetic
   MLIRMemRef
+  MLIRSCF
 )

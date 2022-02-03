@@ -12,12 +12,16 @@
 
 // forward dialects for conversions
 namespace mlir {
-
+class AffineDialect;
 class StandardOpsDialect;
 
 namespace memref {
 class MemRefDialect;
 } // namespace memref
+
+namespace scf {
+class SCFDialect;
+} // namespace scf
 
 #define GEN_PASS_CLASSES
 #include "byteir/Transforms/Passes.h.inc"

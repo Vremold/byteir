@@ -68,7 +68,7 @@ static FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp, StringRef funcName) 
   // LWC: this code has an assumption the FusionOp is 
   // generated from fusion pass, which only allows no arg op
   // to be moved to outer scope.
-  // TODO: change to it arbitrary scopw of def 
+  // TODO: change to it arbitrary scope of def 
   SmallVector<Operation*> ops;
   SmallPtrSet<Operation*, 8> opSet;
   for (auto& it : secondBlock.without_terminator()) {

@@ -100,7 +100,7 @@ void ReifyAllocPass::runOnOperation() {
   populateReifyAllocLikePatterns(patterns);
   
   if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
-    funcOp.emitError("applyPatternsAndFoldGreedily does not converge");
+    funcOp.emitError("ReifyAllocPass applyPatternsAndFoldGreedily does not converge");
     signalPassFailure();
   }
 }

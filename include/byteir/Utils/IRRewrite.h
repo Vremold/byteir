@@ -11,11 +11,17 @@
 #include <functional>
 
 namespace mlir {
+class OpBuilder;
 class Operation;
 class Block;
 
 // replicate specific ops satisfying func
 void ReplicateDefiningOp(Block* block, std::function<bool(Operation*)> checkFunc);
+
+// replicate op's opIdx-th DefinitingOp
+// and set op's opIdx-th operand as cloned's resIdx-th result.
+Operation* ReplicateDefiningOp(OpBuilder& b, Operation* op, unsigned opIdx, unsigned resIdx);
+
 
 } // namespace mlir
 

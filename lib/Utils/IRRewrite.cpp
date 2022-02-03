@@ -40,10 +40,17 @@ void mlir::ReplicateDefiningOp(Block* block, std::function<bool(Operation*)> che
     auto op = std::get<0>(t);
     auto opId = std::get<1>(t);
     auto resId = std::get<2>(t);
-    auto opDef = op->getOperand(opId).getDefiningOp();
-
-    builder.setInsertionPoint(opDef);
-    auto cloned = builder.clone(*opDef);
-    op->setOperand(opId, cloned->getResult(resId));
+    (void)ReplicateDefiningOp(builder, op, opId, resId);
   }
 }
+
+Operation* mlir::ReplicateDefiningOp(OpBuilder& b, Operation* op, unsigned opIdx, unsigned resIdx) {
+  if (op == nullptr) return nullptr; 
+  auto opDef = op->getOperand(opIdx).getDefiningOp();
+  if (opDef == nullptr) return nullptr;
+  b.setInsertionPoint(opDef);
+  auto cloned = b.clone(*opDef);
+  op->setOperand(opIdx, cloned->getResult(resIdx));
+  return cloned;
+}
+

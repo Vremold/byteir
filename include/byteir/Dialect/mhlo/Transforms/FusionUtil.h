@@ -21,6 +21,11 @@
 #include <memory>
 
 namespace mlir {
+class OpBuilder;
+
+namespace mhlo {
+class FusionOp;
+} // namespace mhlo
 
 using MhloFusionPattern = llvm::SmallVector<Operation*, 8>;
 using MhloFusionPlan = llvm::SmallVector<MhloFusionPattern, 8>;
@@ -28,7 +33,9 @@ using MhloFusionPlan = llvm::SmallVector<MhloFusionPattern, 8>;
 // A generic way rewriting MhloFusionPattern to FusionOps
 // This is from Mhlo repo.
 // TODO push back to upstream if passible
-void ApplyMhloFusionPattern(const MhloFusionPattern& pattern, llvm::StringRef tag);
+mhlo::FusionOp creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPattern& pattern);
+
+void applyMhloFusionPattern(const MhloFusionPattern& pattern, llvm::StringRef tag);
 
 // A predefined FusionPlanner using 3 criteria funcs
 // It can be used to as a skeleton for fusion pass

@@ -47,9 +47,9 @@ namespace {
 // This code is from mhlo repo
 // but it was in the local namespace, so cannot be directly call.
 // TODO: we might update upstream to make it accessible later
-void mlir::ApplyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef attachTag) {
-  // after last op
-  OpBuilder b(pattern.back());
+mhlo::FusionOp mlir::creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPattern& pattern) {
+  b.setInsertionPoint(pattern.back());
+
 
   SmallVector<Location, 4> locations;
   locations.reserve(pattern.size());
@@ -116,7 +116,14 @@ void mlir::ApplyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef at
       if (use.getOwner()->getBlock() != &block) use.set(fusion_result);
     }
   }
+  
+  return fusion;
+}
 
+
+void mlir::applyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef attachTag) {
+  OpBuilder b(pattern.back());
+  auto fusion = creatMhloFusionFromPattern(b, pattern);
   if (!attachTag.empty()) {
     fusion->setAttr(attachTag, UnitAttr::get(fusion.getContext()));
   }

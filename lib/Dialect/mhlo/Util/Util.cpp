@@ -13,7 +13,7 @@ using namespace mlir;
 using namespace llvm;
 
 bool mlir::IsSplatMhloConstant(Operation* op) {
-  if (auto constOp = dyn_cast<mhlo::ConstOp>(op)) {
+  if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     return constOp.value().isSplat();
   }
   return false;

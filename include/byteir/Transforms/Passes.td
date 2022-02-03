@@ -91,6 +91,25 @@ def RewriteOpToStdCall : Pass<"rewrite-op-to-std-call", "ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// LoopUnroll
+//===----------------------------------------------------------------------===//
+
+def LoopUnroll : Pass<"unroll", "mlir::FuncOp"> {
+  let summary = "Unroll scf/affine loops for anchored loop or satisfying depth";
+  let constructor = "mlir::createByteIRLoopUnrollPass()";
+  let options = [
+    Option<"unrollFactor", "unroll-factor", "unsigned", /*default=*/"2",
+           "Use this unroll factor for all loops being unrolled">,
+    Option<"unrollUpToFactor", "unroll-up-to-factor", "bool", /*default=*/"false", 
+           "Allow unrolling up to the factor specified">,
+    Option<"unrollFull", "unroll-full", "bool", /*default=*/"false",
+           "Fully unroll loops">,
+    Option<"depth", "depth", "int", /*default=*/"-1",
+           "Loop depth, a negative number implies disabling">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // SetArgShape
 //===----------------------------------------------------------------------===//
 
@@ -111,7 +130,5 @@ def SetArgShape: Pass<"set-arg-shape", "ModuleOp"> {
             "Specify the arg(s) to be acted on if it contains the attribute name.">
   ];
 }
-
-
 
 #endif // BYTEIR_TRANSFORMS_PASSES

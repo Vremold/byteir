@@ -12,6 +12,7 @@
 #include "byteir/Transforms/CollectFunc.h"
 #include "byteir/Transforms/FuncTag.h"
 #include "byteir/Transforms/GraphClusteringByDevice.h"
+#include "byteir/Transforms/LoopUnroll.h"
 #include "byteir/Transforms/RewriteOpToStdCall.h"
 #include "byteir/Transforms/SetArgShape.h"
 
