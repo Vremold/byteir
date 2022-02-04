@@ -14,4 +14,3 @@ func @mhlo_add_constant(%arg0: memref<4xf32>) -> memref<4xf32> {
   return %1 : memref<4xf32>
 }
 // CHECK-LABEL: func @mhlo_add_constant
-

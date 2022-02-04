@@ -408,6 +408,92 @@ public:
   }
 };
 
+class ConvertSelectAndScatterOpToByrePattern
+  : public OpConversionPattern<lmhlo::SelectAndScatterOp> {
+private:
+  bool appendArgTypes;
+public:
+  ConvertSelectAndScatterOpToByrePattern(MLIRContext* ctx, bool appendTypes)
+    : OpConversionPattern<lmhlo::SelectAndScatterOp>(ctx), appendArgTypes(appendTypes) {}
+
+  LogicalResult
+  matchAndRewrite(lmhlo::SelectAndScatterOp op, 
+                  lmhlo::SelectAndScatterOp::Adaptor adaptor,
+                  ConversionPatternRewriter& rewriter) const override {
+
+    // check whether SelectAndScatterOp support
+    if (op.select().getBlocks().size() != 1 ) {
+      return rewriter.notifyMatchFailure(op, "unsupported select in select_and_scatter");
+    }
+
+    if (op.scatter().getBlocks().size() != 1) {
+      return rewriter.notifyMatchFailure(op, "unsupported scatter in select_and_scatter");
+    }
+
+    auto& selectBlock = op.select().front();
+    if (selectBlock.getOperations().size() != 2 || 
+        !isa<mlir::mhlo::ReturnOp>(selectBlock.getTerminator())) {
+      return rewriter.notifyMatchFailure(op, "unsupported block in select of select_and_scatter");
+    }
+
+    if (selectBlock.getNumArguments() != 2 ||
+        !selectBlock.getArgument(0).getType().isa<TensorType>() ||
+        !selectBlock.getArgument(1).getType().isa<TensorType>()) {
+      return rewriter.notifyMatchFailure(op, "unsupported block's arg in select of select_and_scatter");
+    }
+
+    auto& scatterBlock = op.scatter().front();
+    if (scatterBlock.getOperations().size() != 2 ||
+        !isa<mlir::mhlo::ReturnOp>(scatterBlock.getTerminator())) {
+      return rewriter.notifyMatchFailure(op, "unsupported block in scatter of select_and_scatter");
+    }
+
+    if (scatterBlock.getNumArguments() != 2 ||
+        !scatterBlock.getArgument(0).getType().isa<TensorType>() ||
+        !scatterBlock.getArgument(1).getType().isa<TensorType>()) {
+      return rewriter.notifyMatchFailure(op, "unsupported block's arg in scatter of select_and_scatter");
+    }
+
+    // check whether valid PoolingGrad
+    // only support MaxPoolingGrad now
+    if (auto compare = dyn_cast<mhlo::CompareOp>(selectBlock.front())) {
+      if (compare.comparison_direction() != "GE" || 
+          compare->getOperand(0) != selectBlock.getArgument(0) ||
+          compare->getOperand(1) != selectBlock.getArgument(1)) {
+        return rewriter.notifyMatchFailure(
+          op, "unsupported comparison_direction in select of select_and_scatter");
+      }
+    } else {
+      return rewriter.notifyMatchFailure(
+        op, "unsupported ops in select of select_and_scatter");
+    }
+
+    if (!isa<mhlo::AddOp>(scatterBlock.front()) || 
+        scatterBlock.front().getOperand(0) != scatterBlock.getArgument(0) ||
+        scatterBlock.front().getOperand(1) != scatterBlock.getArgument(1)) {
+      return rewriter.notifyMatchFailure(
+        op, "unsupported ops in scatter of select_and_scatter");
+    }
+
+    // TODO: more SelectAndScatterOp supported
+    std::string poolingGradOp = "MaxPoolingGradOp";
+
+    SmallVector<Value, 2> operands{adaptor.operand(), adaptor.source(), adaptor.out()};
+    SmallVector<Type, 2> operandTypes{adaptor.operand().getType(),
+                                      adaptor.source().getType(),
+                                      adaptor.out().getType()};
+
+    auto key = getByreKey(poolingGradOp, operandTypes, appendArgTypes);
+
+    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+      op, key, operands);
+
+    AddAttrs(compute_op, op->getAttrs());
+    return success();
+  }
+
+};
+
 class ConvertReduceOpToByrePattern
     : public OpConversionPattern<lmhlo::ReduceOp> {
 private: 
@@ -424,7 +510,7 @@ public:
       return rewriter.notifyMatchFailure(
           op, "batched reductions is not supported yet");
     }
-    // check wthether reduce supported
+    // check whether reduce supported
     Region &region = op.body();
     // only support single block
     if (region.getBlocks().size() != 1) {
@@ -846,8 +932,11 @@ void mlir::populateLmhloToByreConversionPatterns(
                                                      supportMap, 
                                                      appendArgTypes);
 
-  patterns.add<ConvertDotOpToByrePattern, ConvertCustomCallOpToByrePattern,
-               ConvertReduceOpToByrePattern, ConvertConstOpToByrePattern>(
+  patterns.add<ConvertConstOpToByrePattern,
+               ConvertCustomCallOpToByrePattern,
+               ConvertDotOpToByrePattern,
+               ConvertReduceOpToByrePattern,
+               ConvertSelectAndScatterOpToByrePattern>(
       patterns.getContext(), appendArgTypes);
 }
 

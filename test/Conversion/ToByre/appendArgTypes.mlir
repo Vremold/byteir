@@ -106,4 +106,23 @@ module {
   // CHECK-LABEL: mhlo_reduce_consecutive_dims
   // CHECK-NEXT: byre.compute @ReduceSumOpf32f32(%arg0, %arg1)
   //   CHECK-DAG: dimensions = dense<[0, 1]>
+
+  func @select_and_scatter(%arg0: memref<32x64x112x112xf16>  {__placeholder__byre.argname = "A"}, %arg1: memref<32x64x56x56xf16> {__placeholder__byre.argname = "B"}) -> (memref<32x64x112x112xf16> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<32x64x112x112xf16>
+    %1 = memref.alloc() : memref<f16>
+    "lmhlo.constant"(%1) {value = dense<0.000000e+00> : tensor<f32>} : (memref<f16>) -> ()
+    "lmhlo.select_and_scatter"(%arg0, %arg1, %1, %0) ({
+    ^bb0(%arg3: tensor<f16>, %arg4: tensor<f16>):  // no predecessors
+      %2 = "mhlo.compare"(%arg3, %arg4) {comparison_direction = "GE"} : (tensor<f16>, tensor<f16>) -> tensor<i1>
+      "mhlo.return"(%2) : (tensor<i1>) -> ()
+    }, {
+    ^bb0(%arg3: tensor<f16>, %arg4: tensor<f16>):  // no predecessors
+      %2 = mhlo.add %arg3, %arg4 : tensor<f16>
+      "mhlo.return"(%2) : (tensor<f16>) -> ()
+    }) {padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (memref<32x64x112x112xf16>, memref<32x64x56x56xf16>, memref<f16>, memref<32x64x112x112xf16>) -> ()
+    return %0 : memref<32x64x112x112xf16>
+  }
+  // CHECK-LABEL: select_and_scatter
+  // CHECK-NEXT: byre.compute @MaxPoolingGradOpf16f16f16(%arg0, %arg1, %arg2)
+
 }

@@ -36,9 +36,15 @@ namespace mhlo {
     using Type = lmhlo::OpName;          \
   }
 
-  // So far, only new tod add BatchNorm  
   MAP_HLO_TO_LHLO(BatchNormGradOp);
   MAP_HLO_TO_LHLO(BatchNormTrainingOp);
+
+  MAP_HLO_TO_LHLO(AllReduceOp);
+  MAP_HLO_TO_LHLO(MapOp);
+  MAP_HLO_TO_LHLO(ReduceScatterOp);
+  MAP_HLO_TO_LHLO(ScatterOp);
+  MAP_HLO_TO_LHLO(SelectAndScatterOp);
+  MAP_HLO_TO_LHLO(SortOp);
 
 #undef MAP_HLO_TO_LHLO
 
@@ -325,26 +331,31 @@ public:
   }
 };
 
-class HloToLhloScatterOpConverter : public BaseOpConversion<mhlo::ScatterOp> {
+template <typename HloOpTy>
+class HloToLhloOpWithHloRegionsConverter : public BaseOpConversion<HloOpTy> {
 public:
-  using BaseOpConversion<mhlo::ScatterOp>::BaseOpConversion;
+  using BaseOpConversion<HloOpTy>::BaseOpConversion;
   LogicalResult
-  matchAndRewrite(mhlo::ScatterOp op, mhlo::ScatterOpAdaptor adaptor,
+  matchAndRewrite(HloOpTy hloOp, typename HloOpTy::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const final {
+    Operation* op = hloOp.getOperation();
     ValueRange operands = adaptor.getOperands();
     SmallVector<Value, 4> buffer_args(operands.begin(), operands.end());
     if (failed(ConvertResults(op, buffer_args, rewriter))) return failure();
     
-    auto new_op = rewriter.create<lmhlo::ScatterOp>(op->getLoc(), llvm::None,
+    auto new_op = rewriter.create<mhlo::HloToLhloOp<HloOpTy>>(
+      op->getLoc(), llvm::None,
       buffer_args, op->getAttrs());
 
-    // Copy over the operations inside the region.
-    rewriter.inlineRegionBefore(op.update_computation(), 
-                                new_op.update_computation(), 
-                                new_op.update_computation().end());
+    // Copy over the operations inside regions.
+    for (unsigned i = 0, num_region = op->getNumRegions(); i < num_region; ++i) {
+      rewriter.inlineRegionBefore(op->getRegion(i),
+        new_op->getRegion(i), new_op->getRegion(i).end());
+    }
 
     rewriter.replaceOp(
       op, llvm::makeArrayRef(buffer_args).drop_front(operands.size()));
+
     return success();
   }
 };
@@ -367,11 +378,13 @@ public:
 
     // LWC: lmhlo::ScatterOp's body allow mhlo 
     target.addDynamicallyLegalDialect<mhlo::MhloDialect>([&](Operation* op) {
-      if (isa_and_nonnull<mhlo::ScatterOp>(op->getParentOp()) || 
-          isa_and_nonnull<lmhlo::ScatterOp>(op->getParentOp())) {
-        return true;
-      }
-      return false;
+      return isa_and_nonnull<
+        mhlo::AllReduceOp, lmhlo::AllReduceOp,
+        mhlo::MapOp, lmhlo::MapOp,
+        mhlo::ReduceScatterOp, lmhlo::ReduceScatterOp,
+        mhlo::ScatterOp, lmhlo::ScatterOp,
+        mhlo::SelectAndScatterOp, lmhlo::SelectAndScatterOp,
+        mhlo::SortOp, lmhlo::SortOp>(op->getParentOp());
     });
 
     // Declare tensor_store illegal. tensor_load may be used to reify output
@@ -435,7 +448,13 @@ void mlir::populateHLOToLHLOConversionPatternExtension(
       ->insert<HloToLhloOpConverterLocal<mhlo::BatchNormGradOp>,
                HloToLhloOpConverterLocal<mhlo::BatchNormTrainingOp>,
                HloToLhloOpConverterLocal<mhlo::ClampOp>,
-               HloToLhloScatterOpConverter, HloToLhloReduceWindowOpConverter,
+               HloToLhloOpWithHloRegionsConverter<mhlo::AllReduceOp>,
+               HloToLhloOpWithHloRegionsConverter<mhlo::MapOp>,
+               HloToLhloOpWithHloRegionsConverter<mhlo::ReduceScatterOp>,
+               HloToLhloOpWithHloRegionsConverter<mhlo::ScatterOp>,
+               HloToLhloOpWithHloRegionsConverter<mhlo::SelectAndScatterOp>,
+               HloToLhloOpWithHloRegionsConverter<mhlo::SortOp>,
+               HloToLhloReduceWindowOpConverter,
                HloToLhloCustomCallOpConverter>(*converter, context);
 }
 
