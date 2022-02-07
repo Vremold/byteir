@@ -24,7 +24,7 @@ class MhloGoldenRefGenerator:
             shaped_type = ir.ShapedType(i.type)
             shape = shaped_type.shape
             dtype = mlir_type_to_dtype(shaped_type.element_type)
-            if dtype is np.dtype('O'):
+            if dtype is np.str:
                 self.value2tensor[i] = ""
             else:
                 self.value2tensor[i] = np.random.random(size=shape).astype(dtype)

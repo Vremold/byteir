@@ -9,8 +9,12 @@ def mlir_type_to_dtype(mlir_type):
         return np.float64
     if str(mlir_type) == 'f32':
         return np.float32
+    if str(mlir_type) == 'f16':
+        return np.half
     if str(mlir_type) == 'i64':
         return np.int64
+    if str(mlir_type) == 'i32':
+        return np.int32
     if str(mlir_type) == 'ui32':
         return np.uint32
     if str(mlir_type) == 'ui8':
@@ -18,7 +22,7 @@ def mlir_type_to_dtype(mlir_type):
     if str(mlir_type) == 'i1':
         return np.bool
     if str(mlir_type) == '!tf_type.string':
-        return np.dtype('O')
+        return np.str
     raise NotImplementedError("unsupported mlir type {}".format(mlir_type))
 
 def mlir_clone_region(old_region, new_region, mapping):
