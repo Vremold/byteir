@@ -67,6 +67,10 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     pattern.push_back(op);
 
     auto fusion = creatMhloFusionFromPattern(rewriter, pattern);
+
+    // add attr
+    fusion->setAttr(getByteIRReduceFusionAttrName(), UnitAttr::get(fusion.getContext()));
+
     return success();
   }
 
@@ -74,9 +78,8 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
 
 struct ReduceFusionPass : public ReduceFusionBase<ReduceFusionPass> {
 
-  ReduceFusionPass(const std::string &tag) : ReduceFusionBase() {
-    attachTag = tag;
-  }
+  ReduceFusionPass() : ReduceFusionBase() {}
+
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
 
@@ -96,6 +99,6 @@ void mlir::populateFuseReduceWindowPatterns(RewritePatternSet& patterns) {
 }
 
 std::unique_ptr<OperationPass<FuncOp>>
-mlir::createReduceFusionPass(const std::string &attachTag) {
-  return std::make_unique<ReduceFusionPass>(attachTag);
+mlir::createReduceFusionPass() {
+  return std::make_unique<ReduceFusionPass>();
 }

@@ -11,6 +11,7 @@
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -45,7 +46,7 @@ bool IsAliasOp(Operation& op) {
 
 static void AddFuncAttrs(FuncOp func) {
   // handle elementwise fusion
-  if (func->hasAttr(getByreElementwiseFusionName())) {
+  if (func->hasAttr(getByteIRElementwiseFusionAttrName())) {
     mlir::OpBuilder opBuilder(func);
 
     if (func.getOps<gpu::LaunchFuncOp>().empty()) return;

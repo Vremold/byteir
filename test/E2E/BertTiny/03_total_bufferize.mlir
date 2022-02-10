@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -convert-hlo-to-lhlo -cse -linalg-bufferize -cse -canonicalize | FileCheck %s
+// RUN: byteir-opt %s -byteir-total-bufferize | FileCheck %s
 
 // CHECK-LABEL: func @main
 #map0 = affine_map<(d0, d1) -> (d0, d1)>
@@ -14,7 +14,7 @@ module  {
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x30522xf32>) -> tensor<30522x128xf32>
     return %1 : tensor<30522x128xf32>
   }
-  func private @Unknown0(%arg0: tensor<2x128xi64>) -> (tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown0(%arg0: tensor<2x128xi64>) -> (tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f64
     %c30522_i64 = arith.constant 30522 : i64
     %c0_i64 = arith.constant 0 : i64
@@ -46,7 +46,7 @@ module  {
     %9 = tensor.collapse_shape %8 [[0, 1]] : tensor<2x128xi1> into tensor<256xi1>
     return %2, %6, %9 : tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>
   }
-  func private @Unknown1(%arg0: tensor<128xi64>) -> (tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown1(%arg0: tensor<128xi64>) -> (tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant -1.000000e+00 : f64
     %c2_i64 = arith.constant 2 : i64
     %c0_i64 = arith.constant 0 : i64
@@ -78,7 +78,7 @@ module  {
     %9 = tensor.collapse_shape %8 [[0, 1]] : tensor<2x128xi1> into tensor<256xi1>
     return %2, %6, %9 : tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>
   }
-  func private @Unknown2(%arg0: tensor<256x128xf32>, %arg1: tensor<256x128xf32>) -> tensor<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown2(%arg0: tensor<256x128xf32>, %arg1: tensor<256x128xf32>) -> tensor<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = tensor.expand_shape %arg0 [[0, 1], [2]] : tensor<256x128xf32> into tensor<2x128x128xf32>
     %1 = tensor.expand_shape %arg1 [[0, 1], [2]] : tensor<256x128xf32> into tensor<2x128x128xf32>
     %2 = linalg.init_tensor [2, 128, 128] : tensor<2x128x128xf32>
@@ -89,7 +89,7 @@ module  {
     } -> tensor<2x128x128xf32>
     return %3 : tensor<2x128x128xf32>
   }
-  func private @Unknown3(%arg0: tensor<1x128xi64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown3(%arg0: tensor<1x128xi64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>) attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant -1.000000e+00 : f64
     %c512_i64 = arith.constant 512 : i64
     %c0_i64 = arith.constant 0 : i64
@@ -119,7 +119,7 @@ module  {
     } -> tensor<128xi1>
     return %2, %5, %7 : tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>
   }
-  func private @Unknown4(%arg0: tensor<256x30522xf32>, %arg1: tensor<30522xf32>) -> tensor<2x128x30522xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown4(%arg0: tensor<256x30522xf32>, %arg1: tensor<30522xf32>) -> tensor<2x128x30522xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = tensor.expand_shape %arg0 [[0, 1], [2]] : tensor<256x30522xf32> into tensor<2x128x30522xf32>
     %1 = linalg.init_tensor [2, 128, 30522] : tensor<2x128x30522xf32>
     %2 = linalg.generic {indexing_maps = [#map2, #map4, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%0, %arg1 : tensor<2x128x30522xf32>, tensor<30522xf32>) outs(%1 : tensor<2x128x30522xf32>) {
@@ -129,7 +129,7 @@ module  {
     } -> tensor<2x128x30522xf32>
     return %2 : tensor<2x128x30522xf32>
   }
-  func private @Unknown5(%arg0: tensor<2x128x128xf32>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<2x128x128xf32>, %arg3: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown5(%arg0: tensor<2x128x128xf32>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<2x128x128xf32>, %arg3: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [2, 128, 128] : tensor<2x128x128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : tensor<2x128x128xf32>, tensor<2x128x128xf32>, tensor<2x128x128xf32>, tensor<2x128x128xf32>) outs(%0 : tensor<2x128x128xf32>) {
     ^bb0(%arg4: f32, %arg5: f32, %arg6: f32, %arg7: f32, %arg8: f32):  // no predecessors
@@ -140,7 +140,7 @@ module  {
     } -> tensor<2x128x128xf32>
     return %1 : tensor<2x128x128xf32>
   }
-  func private @Unknown6(%arg0: tensor<2x128x128xf32>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<2x128x128xf32>, %arg3: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown6(%arg0: tensor<2x128x128xf32>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<2x128x128xf32>, %arg3: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [2, 128, 128] : tensor<2x128x128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : tensor<2x128x128xf32>, tensor<2x128x128xf32>, tensor<2x128x128xf32>, tensor<2x128x128xf32>) outs(%0 : tensor<2x128x128xf32>) {
     ^bb0(%arg4: f32, %arg5: f32, %arg6: f32, %arg7: f32, %arg8: f32):  // no predecessors
@@ -151,7 +151,7 @@ module  {
     } -> tensor<2x128x128xf32>
     return %1 : tensor<2x128x128xf32>
   }
-  func private @Unknown7(%arg0: tensor<256xi1>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<256xi1>) -> (tensor<256x128xf32>, tensor<256x128xf32>) attributes {byre_elementwise_fusion} {
+  func private @Unknown7(%arg0: tensor<256xi1>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<256xi1>) -> (tensor<256x128xf32>, tensor<256x128xf32>) attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f32
     %0 = tensor.expand_shape %arg0 [[0, 1]] : tensor<256xi1> into tensor<2x128xi1>
     %1 = linalg.init_tensor [2, 128, 128] : tensor<2x128x128xf32>
@@ -170,7 +170,7 @@ module  {
     %6 = tensor.collapse_shape %5 [[0, 1], [2]] : tensor<2x128x128xf32> into tensor<256x128xf32>
     return %3, %6 : tensor<256x128xf32>, tensor<256x128xf32>
   }
-  func private @Unknown8(%arg0: tensor<128xi1>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown8(%arg0: tensor<128xi1>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f32
     %0 = linalg.init_tensor [128, 128] : tensor<128x128xf32>
     %1 = linalg.generic {indexing_maps = [#map6, #map0, #map0], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1 : tensor<128xi1>, tensor<128x128xf32>) outs(%0 : tensor<128x128xf32>) {

@@ -36,11 +36,6 @@ def DotTransposeFusion : Pass<"fuse-dot-transpose", "mlir::FuncOp"> {
 def ElementFusion : Pass<"fuse-element", "mlir::FuncOp"> {
   let summary = "Fuse elementwise op";
   let constructor = "mlir::createElementFusionPass()";
-  let options = [
-    Option<"attachTag", "attach-tag", "std::string",
-            /*default=*/"",
-            "Optional unitAttr tag to be attached with the fused op">
-  ];
 }
 
 //===----------------------------------------------------------------------===//
@@ -82,11 +77,6 @@ def HloTransposeDotToDotGeneral : Pass<"hlo-transpose-dot-to-dot-general", "mlir
 def ReduceFusion : Pass<"fuse-reduce", "mlir::FuncOp"> {
   let summary = "Fuse reduce and reduce-window ops";
   let constructor = "mlir::createReduceFusionPass()";
-  let options = [
-    Option<"attachTag", "attach-tag", "std::string",
-            /*default=*/"",
-            "Optional unitAttr tag to be attached with the fused op">
-  ];
 }
 
 #endif // BYTEIR_MHLO_PASSES

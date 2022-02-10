@@ -14,11 +14,14 @@
 
 namespace mlir {
 
+
+constexpr StringRef getByteIRReduceFusionAttrName() { return "__byteir_reduce_fusion__"; }
+
 // fuse ReduceWindow with Pad and/or Constant
 void populateFuseReduceWindowPatterns(RewritePatternSet& patterns);
 
 std::unique_ptr<OperationPass<FuncOp>>
-createReduceFusionPass(const std::string &attachTag = "");
+createReduceFusionPass();
 
 } // namespace mlir
 

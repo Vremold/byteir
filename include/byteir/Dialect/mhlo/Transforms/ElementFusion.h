@@ -14,8 +14,10 @@
 
 namespace mlir {
 
+constexpr StringRef getByteIRElementwiseFusionAttrName() { return "__byteir_elementwise_fusion__"; }
+
 std::unique_ptr<OperationPass<FuncOp>>
-createElementFusionPass(const std::string &attachTag = "");
+createElementFusionPass();
 
 } // namespace mlir
 

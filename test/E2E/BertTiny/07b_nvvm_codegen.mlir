@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -collect-gpu-kernel -convert-scf-to-std -gpu-to-nvvm-ext -cse -reconcile-unrealized-casts -cse -cse -cse | FileCheck %s
+// RUN: byteir-opt %s -nvvm-codegen | FileCheck %s
 
 // CHECK-LABEL: gpu.module @unified
 module attributes {byre.container_module, gpu.container_module}  {

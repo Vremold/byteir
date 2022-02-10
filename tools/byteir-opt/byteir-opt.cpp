@@ -19,6 +19,7 @@
 #include "byteir/Dialect/Linalg/Passes.h"
 #include "byteir/Dialect/MemRef/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
+#include "byteir/Pipelines/Passes.h"
 #include "byteir/Transforms/Passes.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Dialect/lhlo/transforms/register_passes.h"
@@ -55,6 +56,8 @@ int main(int argc, char **argv) {
   registerByteIRLinalgPasses();
   registerByteIRMemRefPasses();
   registerByteIRMhloPasses();
+
+  registerByteIRPipelinesPasses();
 
   DialectRegistry registry;
   registerAllDialects(registry);

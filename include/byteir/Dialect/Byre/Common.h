@@ -20,10 +20,6 @@ inline llvm::StringRef getByreComputeName() {
   return "byre_compute_name";
 }
 
-inline llvm::StringRef getByreElementwiseFusionName() {
-  return "byre_elementwise_fusion";
-}
-
 // byre.compute attributes prefix string
 inline std::string getByrePrefix() {
   return "__byre__";

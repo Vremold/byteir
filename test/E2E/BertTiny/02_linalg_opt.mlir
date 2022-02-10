@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -hlo-fusion-to-linalg="anchor-tag=byre_elementwise_fusion" -unrealized-cast-to-linalg -linalg-fuse-elementwise-ops -cse | FileCheck %s
+// RUN: byteir-opt %s -linalg-opt | FileCheck %s
 
 // CHECK-LABEL: func @main
 module  {
@@ -7,7 +7,7 @@ module  {
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<128x30522xf32>) -> tensor<30522x128xf32>
     return %1 : tensor<30522x128xf32>
   }
-  func private @Unknown0(%arg0: tensor<2x128xi64>) -> (tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown0(%arg0: tensor<2x128xi64>) -> (tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0> : tensor<256xi64>
     %1 = mhlo.constant dense<0.000000e+00> : tensor<256xf64>
     %2 = mhlo.constant dense<30522> : tensor<256xi64>
@@ -21,7 +21,7 @@ module  {
     %10 = "mhlo.compare"(%9, %1) {comparison_direction = "NE"} : (tensor<256xf64>, tensor<256xf64>) -> tensor<256xi1>
     return %4, %8, %10 : tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>
   }
-  func private @Unknown1(%arg0: tensor<128xi64>) -> (tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown1(%arg0: tensor<128xi64>) -> (tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<-1.000000e+00> : tensor<256xf64>
     %1 = mhlo.constant dense<2> : tensor<256xi64>
     %2 = mhlo.constant dense<0> : tensor<256xi64>
@@ -36,13 +36,13 @@ module  {
     %11 = "mhlo.compare"(%10, %0) {comparison_direction = "NE"} : (tensor<256xf64>, tensor<256xf64>) -> tensor<256xi1>
     return %5, %9, %11 : tensor<256xui32>, tensor<256x1xi64>, tensor<256xi1>
   }
-  func private @Unknown2(%arg0: tensor<256x128xf32>, %arg1: tensor<256x128xf32>) -> tensor<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown2(%arg0: tensor<256x128xf32>, %arg1: tensor<256x128xf32>) -> tensor<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = "mhlo.reshape"(%arg0) : (tensor<256x128xf32>) -> tensor<2x128x128xf32>
     %1 = "mhlo.reshape"(%arg1) : (tensor<256x128xf32>) -> tensor<2x128x128xf32>
     %2 = mhlo.add %0, %1 : tensor<2x128x128xf32>
     return %2 : tensor<2x128x128xf32>
   }
-  func private @Unknown3(%arg0: tensor<1x128xi64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown3(%arg0: tensor<1x128xi64>) -> (tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<-1.000000e+00> : tensor<128xf64>
     %1 = mhlo.constant dense<512> : tensor<128xi64>
     %2 = mhlo.constant dense<0> : tensor<128xi64>
@@ -56,25 +56,25 @@ module  {
     %10 = "mhlo.compare"(%9, %0) {comparison_direction = "NE"} : (tensor<128xf64>, tensor<128xf64>) -> tensor<128xi1>
     return %4, %8, %10 : tensor<128xui32>, tensor<128x1xi64>, tensor<128xi1>
   }
-  func private @Unknown4(%arg0: tensor<256x30522xf32>, %arg1: tensor<30522xf32>) -> tensor<2x128x30522xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown4(%arg0: tensor<256x30522xf32>, %arg1: tensor<30522xf32>) -> tensor<2x128x30522xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = "mhlo.reshape"(%arg0) : (tensor<256x30522xf32>) -> tensor<2x128x30522xf32>
     %1 = "mhlo.broadcast_in_dim"(%arg1) {broadcast_dimensions = dense<2> : tensor<1xi64>} : (tensor<30522xf32>) -> tensor<2x128x30522xf32>
     %2 = mhlo.add %0, %1 : tensor<2x128x30522xf32>
     return %2 : tensor<2x128x30522xf32>
   }
-  func private @Unknown5(%arg0: tensor<2x128x128xf32>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<2x128x128xf32>, %arg3: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown5(%arg0: tensor<2x128x128xf32>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<2x128x128xf32>, %arg3: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.add %arg0, %arg1 : tensor<2x128x128xf32>
     %1 = mhlo.add %0, %arg2 : tensor<2x128x128xf32>
     %2 = mhlo.add %1, %arg3 : tensor<2x128x128xf32>
     return %2 : tensor<2x128x128xf32>
   }
-  func private @Unknown6(%arg0: tensor<2x128x128xf32>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<2x128x128xf32>, %arg3: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown6(%arg0: tensor<2x128x128xf32>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<2x128x128xf32>, %arg3: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.add %arg0, %arg1 : tensor<2x128x128xf32>
     %1 = mhlo.add %0, %arg2 : tensor<2x128x128xf32>
     %2 = mhlo.add %1, %arg3 : tensor<2x128x128xf32>
     return %2 : tensor<2x128x128xf32>
   }
-  func private @Unknown7(%arg0: tensor<256xi1>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<256xi1>) -> (tensor<256x128xf32>, tensor<256x128xf32>) attributes {byre_elementwise_fusion} {
+  func private @Unknown7(%arg0: tensor<256xi1>, %arg1: tensor<2x128x128xf32>, %arg2: tensor<256xi1>) -> (tensor<256x128xf32>, tensor<256x128xf32>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<256x128xf32>
     %1 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<0> : tensor<1xi64>} : (tensor<256xi1>) -> tensor<256x128xi1>
     %2 = "mhlo.reshape"(%arg1) : (tensor<2x128x128xf32>) -> tensor<256x128xf32>
@@ -83,7 +83,7 @@ module  {
     %5 = "mhlo.select"(%4, %2, %0) : (tensor<256x128xi1>, tensor<256x128xf32>, tensor<256x128xf32>) -> tensor<256x128xf32>
     return %3, %5 : tensor<256x128xf32>, tensor<256x128xf32>
   }
-  func private @Unknown8(%arg0: tensor<128xi1>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown8(%arg0: tensor<128xi1>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<128x128xf32>
     %1 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<0> : tensor<1xi64>} : (tensor<128xi1>) -> tensor<128x128xi1>
     %2 = "mhlo.select"(%1, %arg1, %0) : (tensor<128x128xi1>, tensor<128x128xf32>, tensor<128x128xf32>) -> tensor<128x128xf32>

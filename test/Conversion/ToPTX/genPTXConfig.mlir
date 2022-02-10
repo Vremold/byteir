@@ -1,7 +1,7 @@
 // RUN: byteir-opt -gen-ptx-config -convert-to-byre %s | FileCheck %s
 
 module attributes {gpu.container_module}  {
-  func private @Unknown0(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<128xi64>, %arg3: memref<128xf64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {byre_compute_name = "Unknown0", byre_elementwise_fusion} {
+  func private @Unknown0(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<128xi64>, %arg3: memref<128xf64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {byre_compute_name = "Unknown0", __byteir_elementwise_fusion__} {
     %c4 = arith.constant 4 : index
     %c1 = arith.constant 1 : index
     %c32 = arith.constant 32 : index

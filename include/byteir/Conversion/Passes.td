@@ -64,6 +64,9 @@ def ConvertHloToLHlo : Pass<"convert-hlo-to-lhlo", "ModuleOp"> {
 def HloFusionToLinalg : Pass<"hlo-fusion-to-linalg", "mlir::FuncOp"> {
   let summary = "Convert from HLO fusion to Linalg dialect.";
   let constructor = "mlir::createHloFusionToLinalgPass()";
+  let dependentDialects = [
+    "mlir::linalg::LinalgDialect",
+  ];
   let options = [
     Option<"anchorTag", "anchor-tag", "std::string",
             /*default=*/"",
@@ -74,6 +77,9 @@ def HloFusionToLinalg : Pass<"hlo-fusion-to-linalg", "mlir::FuncOp"> {
 def UnrealizedCastToLinalg : Pass<"unrealized-cast-to-linalg", "mlir::FuncOp"> {
   let summary = "Convert UnrealizedCast op generated from hlo lowering to Linalg";
   let constructor = "mlir::createUnrealizedCastToLinalgPass()";
+  let dependentDialects = [
+    "mlir::linalg::LinalgDialect",
+  ];
 }
 
 //===----------------------------------------------------------------------===//

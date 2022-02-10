@@ -58,9 +58,7 @@ bool IsFusibleWith(Operation *target, Operation * /*start*/) {
 
 struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
 
-  ElementFusionPass(const std::string &tag) : ElementFusionBase() {
-    attachTag = tag;
-  }
+  ElementFusionPass() : ElementFusionBase() {}
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
 
@@ -78,7 +76,7 @@ struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
     for (auto it = plan.rbegin(); it != plan.rend(); ++it) {
       auto &pattern = *it;
       if (pattern.size() > 1) {
-        applyMhloFusionPattern(pattern, attachTag);
+        applyMhloFusionPattern(pattern, getByteIRElementwiseFusionAttrName());
       }
     }
   }
@@ -87,6 +85,6 @@ struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
 } // namespace
 
 std::unique_ptr<OperationPass<FuncOp>>
-mlir::createElementFusionPass(const std::string &attachTag) {
-  return std::make_unique<ElementFusionPass>(attachTag);
+mlir::createElementFusionPass() {
+  return std::make_unique<ElementFusionPass>();
 }

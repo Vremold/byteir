@@ -19,7 +19,7 @@ void populateUnrealizedCastToLinalgConversionPattern(
     OwningRewritePatternList* patterns);
 
 std::unique_ptr<OperationPass<FuncOp>>
-createHloFusionToLinalgPass(const std::string &anchorTag = "");
+createHloFusionToLinalgPass(llvm::StringRef anchorTag = "");
 
 std::unique_ptr<OperationPass<FuncOp>> createUnrealizedCastToLinalgPass();
 

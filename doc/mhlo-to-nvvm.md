@@ -9,7 +9,7 @@ Here is a typical pass pipeline for fusing elementwise op.
 A tag is attached for limiting applicable region or function in later passes.
 
 ```bash
- -fuse-element="attach-tag=byre_elementwise_fusion" 
+ -fuse-element="attach-tag=__byteir_elementwise_fusion__" 
 ```
 
 ## First Mid IR (Linalg)
@@ -35,7 +35,7 @@ Depending on lowering passes, some necessary passes might be required with lower
 In our case, an unrealized cast need to be resolved into a scalar form into Linalg. 
 
 ```bash
--hlo-fusion-to-linalg="anchor-tag=byre_elementwise_fusion" -unrealized-cast-to-linalg -cse
+-hlo-fusion-to-linalg="anchor-tag=__byteir_elementwise_fusion__" -unrealized-cast-to-linalg -cse
 ```
 
 ### Mid-IR Passes (Linalg)

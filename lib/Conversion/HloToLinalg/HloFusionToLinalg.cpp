@@ -31,9 +31,9 @@ namespace {
   struct HloFusionToLinalgPass
     : public HloFusionToLinalgBase<HloFusionToLinalgPass> {
 
-    HloFusionToLinalgPass(const std::string& tag)
+    HloFusionToLinalgPass(StringRef tag)
       : HloFusionToLinalgBase() {
-      anchorTag = tag;
+      anchorTag = tag.str();
     }
 
     void getDependentDialects(DialectRegistry& registry) const final {
@@ -73,6 +73,6 @@ namespace {
 } // namespace anonymous
 
 std::unique_ptr<OperationPass<FuncOp>>
-mlir::createHloFusionToLinalgPass(const std::string &anchorTag) {
+mlir::createHloFusionToLinalgPass(llvm::StringRef anchorTag) {
   return std::make_unique<HloFusionToLinalgPass>(anchorTag);
 }

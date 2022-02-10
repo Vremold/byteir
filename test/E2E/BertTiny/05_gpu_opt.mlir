@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -rewrite-affine-to-memref -coalesced-for-to-gpu -cse -sccp -cse -lower-affine -gpu-kernel-outlining -cse | FileCheck %s
+// RUN: byteir-opt %s -gpu-opt | FileCheck %s
 
 // CHECK-LABEL: func @main
 #map0 = affine_map<(d0) -> (d0 mod 128)>
@@ -16,7 +16,7 @@ module  {
     "lmhlo.transpose"(%0, %1) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (memref<128x30522xf32>, memref<30522x128xf32>) -> ()
     return %1 : memref<30522x128xf32>
   }
-  func private @Unknown0(%arg0: memref<2x128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown0(%arg0: memref<2x128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %c0_i64 = arith.constant 0 : i64
     %0 = memref.alloc() : memref<2x128xi1>
     %1 = memref.collapse_shape %0 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
@@ -44,7 +44,7 @@ module  {
     }
     return %6, %4, %1 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
   }
-  func private @Unknown1(%arg0: memref<128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown1(%arg0: memref<128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %c0_i64 = arith.constant 0 : i64
     %0 = memref.alloc() : memref<2x128xi1>
     %1 = memref.collapse_shape %0 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
@@ -72,7 +72,7 @@ module  {
     }
     return %6, %4, %1 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
   }
-  func private @Unknown2(%arg0: memref<256x128xf32>, %arg1: memref<256x128xf32>) -> memref<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown2(%arg0: memref<256x128xf32>, %arg1: memref<256x128xf32>) -> memref<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = memref.expand_shape %arg0 [[0, 1], [2]] : memref<256x128xf32> into memref<2x128x128xf32>
     %1 = memref.alloc() : memref<2x128x128xf32>
     %2 = memref.expand_shape %arg1 [[0, 1], [2]] : memref<256x128xf32> into memref<2x128x128xf32>
@@ -87,7 +87,7 @@ module  {
     }
     return %1 : memref<2x128x128xf32>
   }
-  func private @Unknown3(%arg0: memref<1x128xi64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {byre_elementwise_fusion} {
+  func private @Unknown3(%arg0: memref<1x128xi64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {__byteir_elementwise_fusion__} {
     %c0_i64 = arith.constant 0 : i64
     %0 = memref.alloc() : memref<128xi1>
     %1 = memref.alloc() : memref<128xi64>
@@ -111,7 +111,7 @@ module  {
     }
     return %3, %2, %0 : memref<128xui32>, memref<128x1xi64>, memref<128xi1>
   }
-  func private @Unknown4(%arg0: memref<256x30522xf32>, %arg1: memref<30522xf32>) -> memref<2x128x30522xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown4(%arg0: memref<256x30522xf32>, %arg1: memref<30522xf32>) -> memref<2x128x30522xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = memref.expand_shape %arg0 [[0, 1], [2]] : memref<256x30522xf32> into memref<2x128x30522xf32>
     %1 = memref.alloc() : memref<2x128x30522xf32>
     affine.for %arg2 = 0 to 7813632 {
@@ -125,7 +125,7 @@ module  {
     }
     return %1 : memref<2x128x30522xf32>
   }
-  func private @Unknown5(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown5(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = memref.alloc() : memref<2x128x128xf32>
     affine.for %arg4 = 0 to 32768 {
       %1 = affine.apply #map0(%arg4)
@@ -142,7 +142,7 @@ module  {
     }
     return %0 : memref<2x128x128xf32>
   }
-  func private @Unknown6(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown6(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = memref.alloc() : memref<2x128x128xf32>
     affine.for %arg4 = 0 to 32768 {
       %1 = affine.apply #map0(%arg4)
@@ -159,7 +159,7 @@ module  {
     }
     return %0 : memref<2x128x128xf32>
   }
-  func private @Unknown7(%arg0: memref<256xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<256xi1>) -> (memref<256x128xf32>, memref<256x128xf32>) attributes {byre_elementwise_fusion} {
+  func private @Unknown7(%arg0: memref<256xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<256xi1>) -> (memref<256x128xf32>, memref<256x128xf32>) attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f32
     %0 = memref.alloc() : memref<2x128x128xf32>
     %1 = memref.collapse_shape %0 [[0, 1], [2]] : memref<2x128x128xf32> into memref<256x128xf32>
@@ -181,7 +181,7 @@ module  {
     }
     return %4, %1 : memref<256x128xf32>, memref<256x128xf32>
   }
-  func private @Unknown8(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>) -> memref<128x128xf32> attributes {byre_elementwise_fusion} {
+  func private @Unknown8(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>) -> memref<128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f32
     %0 = memref.alloc() : memref<128x128xf32>
     affine.for %arg2 = 0 to 16384 {
