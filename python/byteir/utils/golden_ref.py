@@ -5,6 +5,7 @@ from byteir.ir import IRExecutor, mlir_type_to_dtype
 from mlir import ir
 from mlir.dialects.mhlo import register_mhlo_dialect
 
+
 class MhloGoldenRefGenerator:
 
     context = None
@@ -20,14 +21,20 @@ class MhloGoldenRefGenerator:
 
     def generate(self):
         func = self.module.body.operations[0]
+
         for i in func.arguments:
             shaped_type = ir.ShapedType(i.type)
             shape = shaped_type.shape
             dtype = mlir_type_to_dtype(shaped_type.element_type)
-            if dtype is np.str:
+            if i in self.value2tensor:
+                assert(shape == self.value2tensor[i].shape)
+                assert(dtype == self.value2tensor[i].dtype)
+                continue
+            elif dtype is np.str:
                 self.value2tensor[i] = ""
             else:
-                self.value2tensor[i] = np.random.random(size=shape).astype(dtype)
+                self.value2tensor[i] = np.random.normal(
+                    loc=0.0, scale=0.1, size=shape).astype(dtype)
 
         for op in func.entry_block:
             if op.operation.name == "std.return":
