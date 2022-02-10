@@ -27,7 +27,7 @@ class MhloGoldenRefGenerator:
             shape = shaped_type.shape
             dtype = mlir_type_to_dtype(shaped_type.element_type)
             if i in self.value2tensor:
-                assert(shape == self.value2tensor[i].shape)
+                assert(tuple(shape) == tuple(self.value2tensor[i].shape))
                 assert(dtype == self.value2tensor[i].dtype)
                 continue
             elif dtype is np.str:
