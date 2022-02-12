@@ -8,4 +8,4 @@ func @conv_bias_act(%arg0: tensor<5x69x31x95xf32> {__placeholder__byre.argname =
     return %4 : tensor<5x64x31x95xf32>
 }
 // CHECK-LABEL: func @conv_bias_act
-// CHECK:  byre.compute @ConvBiasOp{{.*}}{act_func = "relu", batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "KCRS", lhs_dilation = [1, 1], output_layout = "NCHW", padding = [0, 0, 0, 0], rhs_dilation = [1, 1], window_strides = [1, 1]}
+// CHECK:  byre.compute @ConvBiasOp{{.*}}{act_func = "relu", batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<0> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>}

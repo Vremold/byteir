@@ -64,7 +64,6 @@ module {
 // CHECK:     byre.compute @MatmulOp(%[[ARG_0]], %[[ARG_1]], %[[ARG_2]]) {lhs_contracting_dimension = 1 : i64, rhs_contracting_dimension = 0 : i64} : memref<128x64xf32>, memref<64x32xf32>, memref<128x32xf32>
 // CHECK:     return
 
-
   func @mhlo_batch_matmul(%arg0: memref<3x128x64xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<3x64x32xf32> {__placeholder__byre.argname = "B"}) -> (memref<3x128x32xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<3x128x32xf32>
     "lmhlo.dot"(%arg0, %arg1, %0) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [0]>} : (memref<3x128x64xf32>, memref<3x64x32xf32>, memref<3x128x32xf32>) -> ()
@@ -72,6 +71,15 @@ module {
   }
 // CHECK:   func @mhlo_batch_matmul(%[[ARG_0:.*]]: memref<3x128x64xf32> {byre.argname = "A", byre.argtype = 1 : i32}, %[[ARG_1:.*]]: memref<3x64x32xf32> {byre.argname = "B", byre.argtype = 1 : i32}, %[[ARG_2:.*]]: memref<3x128x32xf32> {byre.argname = "C", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
 // CHECK:     byre.compute @BatchMatmulOp(%[[ARG_0]], %[[ARG_1]], %[[ARG_2]]) {lhs_batching_dimensions = [0], lhs_contracting_dimension = 1 : i64, rhs_batching_dimensions = [0], rhs_contracting_dimension = 0 : i64} : memref<3x128x64xf32>, memref<3x64x32xf32>, memref<3x128x32xf32>
+// CHECK:     return
+
+  func @mhlo_conv(%24: memref<1x64x56x56xf16> {__placeholder__byre.argname = "A"}, %25: memref<64x64x3x3xf16> {__placeholder__byre.argname = "B"}) -> (memref<1x64x56x56xf16> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
+    %26 = memref.alloc() : memref<1x64x56x56xf16>
+    lmhlo.convolution(%24, %25, %26) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>) -> ()
+    return %26 : memref<1x64x56x56xf16>
+  }
+// CHECK:   func @mhlo_conv(%arg0: memref<1x64x56x56xf16> {byre.argname = "A", byre.argtype = 1 : i32}, %arg1: memref<64x64x3x3xf16> {byre.argname = "B", byre.argtype = 1 : i32}, %arg2: memref<1x64x56x56xf16> {byre.argname = "C", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
+// CHECK:     byre.compute @ConvOp(%arg0, %arg1, %arg2) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
 // CHECK:     return
 
   func @mhlo_scatter(%arg0: memref<512x128xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<128x1xi64> {__placeholder__byre.argname = "B"}, %arg2: memref<128x128xf32> {__placeholder__byre.argname = "C"}) -> (memref<512x128xf32> {__placeholder__byre.argname = "D"}) attributes { __placeholder__byre.entry_point} {

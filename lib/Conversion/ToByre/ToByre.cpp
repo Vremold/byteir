@@ -266,42 +266,43 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
 
 namespace {
 
-  class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
-  public:
-    ConvertCallOpToByrePattern(MLIRContext* ctx)
+class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
+public:
+  ConvertCallOpToByrePattern(MLIRContext *ctx)
       : OpConversionPattern<mlir::CallOp>(ctx) {}
 
-    LogicalResult
-      matchAndRewrite(mlir::CallOp op, mlir::CallOp::Adaptor adaptor,
-        ConversionPatternRewriter& rewriter) const override {
+  LogicalResult
+  matchAndRewrite(mlir::CallOp op, mlir::CallOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
 
-      auto funcOp = GetFuncOp(op);
-      if (funcOp == nullptr) {
-        return failure();
-      }
-
-      StringAttr nameAttr =
-        funcOp->getAttrOfType<StringAttr>(byre::getByreComputeName());
-
-      if (nameAttr == nullptr) {
-        return failure();
-      }
-
-      mlir::byre::ComputeOp computeOp =
-        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, nameAttr.getValue(), adaptor.getOperands());
-
-      SmallVector<NamedAttribute> attrs;
-      for (auto iter = funcOp->getAttrs().begin(); iter != funcOp->getAttrs().end(); iter++) {
-        if (byre::isByreComputeAttr(*iter)) {
-          attrs.emplace_back(byre::removeByrePrefix(*iter));
-        }
-      }
-
-      AddAttrs(computeOp.getOperation(), attrs);
-
-      return success();
+    auto funcOp = GetFuncOp(op);
+    if (funcOp == nullptr) {
+      return failure();
     }
-  };
+
+    StringAttr nameAttr =
+        funcOp->getAttrOfType<StringAttr>(byre::getByreComputeName());
+    if (nameAttr == nullptr) {
+      return failure();
+    }
+
+    mlir::byre::ComputeOp computeOp =
+        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+            op, nameAttr.getValue(), adaptor.getOperands());
+
+    SmallVector<NamedAttribute> attrs;
+    for (auto iter = funcOp->getAttrs().begin();
+         iter != funcOp->getAttrs().end(); iter++) {
+      if (byre::isByreComputeAttr(*iter)) {
+        attrs.emplace_back(byre::removeByrePrefix(*iter));
+      }
+    }
+
+    AddAttrs(computeOp.getOperation(), attrs);
+
+    return success();
+  }
+};
 
 class ConvertDotOpToByrePattern : public OpConversionPattern<mlir::lmhlo::DotOp> {
 private:
@@ -373,6 +374,29 @@ public:
       compute_op->setAttr("rhs_batching_dimensions",
         rewriter.getI64ArrayAttr(rhs_batching_dimensions));
     }
+    return success();
+  }
+};
+
+class ConvertConvOpToByrePattern
+    : public OpConversionPattern<mlir::lmhlo::ConvOp> {
+private:
+  bool appendArgTypes;
+
+public:
+  ConvertConvOpToByrePattern(MLIRContext *ctx, bool appendTypes)
+      : OpConversionPattern<mlir::lmhlo::ConvOp>(ctx),
+        appendArgTypes(appendTypes) {}
+
+  LogicalResult
+  matchAndRewrite(mlir::lmhlo::ConvOp op, mlir::lmhlo::ConvOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    NamedAttrList attrs;
+    HandleConvAttribute(attrs, op, rewriter);
+    auto key = getByreKey("ConvOp", op->getOperandTypes(), appendArgTypes);
+    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+        op, key, adaptor.getOperands());
+    AddAttrs(compute_op.getOperation(), attrs.getAttrs());
     return success();
   }
 };
@@ -922,6 +946,7 @@ void mlir::populateLmhloToByreConversionPatterns(
   RewritePatternSet& patterns,
   llvm::DenseMap<StringRef, StringRef>& supportMap,
   bool appendArgTypes) {
+  // clang-format off
   // TODO move this from a file
   // TODO use MACRO trick to add patterns
   patterns.add<ConvertToByrePattern<lmhlo::AddOp>,
@@ -935,9 +960,11 @@ void mlir::populateLmhloToByreConversionPatterns(
   patterns.add<ConvertConstOpToByrePattern,
                ConvertCustomCallOpToByrePattern,
                ConvertDotOpToByrePattern,
+               ConvertConvOpToByrePattern,
                ConvertReduceOpToByrePattern,
                ConvertSelectAndScatterOpToByrePattern>(
       patterns.getContext(), appendArgTypes);
+  // clang-format on
 }
 
 void mlir::populateStdToByreConversionPatterns(RewritePatternSet& patterns) {

@@ -37,8 +37,8 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     size_t numPad = llvm::count_if(op.inputs(), [&](Value v) {
       return isa_and_nonnull<mhlo::PadOp>(v.getDefiningOp());
       });
-;
-    // handle all pad 
+
+    // handle all pad
     if (numPad == op.inputs().size()) {
       for (auto val : op.inputs()) {
         auto pad = cast<mhlo::PadOp>(op.inputs().front().getDefiningOp());
@@ -48,7 +48,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
           auto cloned = ReplicateDefiningOp(rewriter, pad, 1, 0);
           pattern.push_back(cloned);
         }
-       
+
         pattern.push_back(pad);
       }
     } 

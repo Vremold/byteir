@@ -35,11 +35,20 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr("MatmulOp"));
     if (mhlo::DotOp dot = op.operand().getDefiningOp<mhlo::DotOp>()) {
-      llvm::outs() << "FuseDotTransposePattern: DotOp\n";
+      if (dot.lhs().getType().cast<ShapedType>().getRank() != 2) {
+        return failure();
+      }
+      if (dot.rhs().getType().cast<ShapedType>().getRank() != 2) {
+        return failure();
+      }
       inputs.push_back(dot.lhs());
       inputs.push_back(dot.rhs());
       byre::appendByreComputeAttr(attrs, "output_transpose",
                                   rewriter.getUnitAttr());
+      byre::appendByreComputeAttr(attrs, "lhs_contracting_dimension",
+                                  rewriter.getI64IntegerAttr(1));
+      byre::appendByreComputeAttr(attrs, "rhs_contracting_dimension",
+                                  rewriter.getI64IntegerAttr(0));
       dotOp = dot.getOperation();
     } else if (mhlo::DotGeneralOp dot_general =
                    op.operand().getDefiningOp<mhlo::DotGeneralOp>()) {

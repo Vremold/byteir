@@ -113,6 +113,11 @@ GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
 // return true, if memref is only used in op in the filters, or alloc or dealloc
 bool IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> filters);
 
+inline int UseCount(Value val) {
+  return static_cast<int>(
+      std::distance(val.getUses().begin(), val.getUses().end()));
+}
+
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_UTILS_H

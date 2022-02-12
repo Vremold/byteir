@@ -7,7 +7,9 @@
 
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
+#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops_base_attrs.h"
 
 using namespace mlir;
 using namespace llvm;
@@ -70,3 +72,82 @@ bool mlir::IsBlockSingleAdd(Block* block) {
 
   return false;
 }
+
+template <typename T>
+void mlir::HandleConvAttribute(NamedAttrList &attrs, T conv_op,
+                               OpBuilder &rewriter) {
+  auto dimension_numbers = conv_op.dimension_numbersAttr();
+
+  StringAttr input_layout;
+  auto input_batch_dimension = dimension_numbers.getInputBatchDimension();
+  auto input_feature_dimension = dimension_numbers.getInputFeatureDimension();
+  assert(dimension_numbers.getInputSpatialDimensions().size() == 2);
+  if (input_batch_dimension == 0 && input_feature_dimension == 1) {
+    input_layout = rewriter.getStringAttr("NCHW");
+  } else if (input_batch_dimension == 0 && input_feature_dimension == 3) {
+    input_layout = rewriter.getStringAttr("NHWC");
+  } else {
+    assert(false && "Unsupported convolution input layout.");
+  }
+
+  StringAttr output_layout;
+  auto output_batch_dimension = dimension_numbers.getOutputBatchDimension();
+  auto output_feature_dimension = dimension_numbers.getOutputFeatureDimension();
+  assert(dimension_numbers.getOutputSpatialDimensions().size() == 2);
+  if (output_batch_dimension == 0 && output_feature_dimension == 1) {
+    output_layout = rewriter.getStringAttr("NCHW");
+  } else if (output_batch_dimension == 0 && output_feature_dimension == 3) {
+    output_layout = rewriter.getStringAttr("NHWC");
+  } else {
+    assert(false && "Unsupported convolution output layout.");
+  }
+
+  assert(input_layout.getValue() == output_layout.getValue() &&
+         "Input layout should be same as output layout.");
+
+  StringAttr kernel_layout;
+  auto kernel_input_feature_dimension =
+      dimension_numbers.getKernelInputFeatureDimension();
+  auto kernel_output_feature_dimension =
+      dimension_numbers.getKernelOutputFeatureDimension();
+  assert(dimension_numbers.getKernelSpatialDimensions().size() == 2);
+  if (kernel_input_feature_dimension == 1 &&
+      kernel_output_feature_dimension == 0) {
+    kernel_layout = rewriter.getStringAttr("NCHW");
+  } else if (kernel_input_feature_dimension == 3 &&
+             kernel_output_feature_dimension == 0) {
+    kernel_layout = rewriter.getStringAttr("NHWC");
+  } else if (kernel_input_feature_dimension == 2 &&
+             kernel_output_feature_dimension == 3) {
+    kernel_layout = rewriter.getStringAttr("HWCN");
+  } else {
+    assert(false && "Unsupported convolution kernel layout.");
+  }
+
+  attrs.append("input_layout", input_layout);
+  attrs.append("output_layout", output_layout);
+  attrs.append("kernel_layout", kernel_layout);
+  if (conv_op.window_strides()) {
+    attrs.append("window_strides", conv_op.window_stridesAttr());
+  }
+  if (conv_op.padding()) {
+    attrs.append("padding", conv_op.paddingAttr());
+  }
+  if (conv_op.lhs_dilation()) {
+    attrs.append("lhs_dilation", conv_op.lhs_dilationAttr());
+  }
+  if (conv_op.rhs_dilation()) {
+    attrs.append("rhs_dilation", conv_op.rhs_dilationAttr());
+  }
+  attrs.append("feature_group_count", conv_op.feature_group_countAttr());
+  attrs.append("batch_group_count", conv_op.batch_group_countAttr());
+  if (conv_op.window_reversal()) {
+    attrs.append("window_reversal", conv_op.window_reversalAttr());
+  }
+}
+
+template void mlir::HandleConvAttribute<mlir::mhlo::ConvOp>(NamedAttrList &,
+                                                            mlir::mhlo::ConvOp,
+                                                            OpBuilder &);
+template void mlir::HandleConvAttribute<mlir::lmhlo::ConvOp>(
+    NamedAttrList &, mlir::lmhlo::ConvOp, OpBuilder &);

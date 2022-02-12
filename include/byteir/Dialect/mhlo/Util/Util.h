@@ -8,11 +8,15 @@
 #ifndef BYTEIR_DIALECT_MHLO_UTILUTIL_H
 #define BYTEIR_DIALECT_MHLO_UTILUTIL_H
 
+#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include <stdint.h>
 
 namespace mlir {
+class Attribute;
 class Block;
+class NamedAttrList;
 class Operation;
+class OpBuilder;
 class Value;
 
 bool IsSplatMhloConstant(Operation* op);
@@ -26,6 +30,9 @@ bool IsSplatMhloConstantValue(Value val, int64_t splat_val);
 bool IsSplatMhloConstantValue(Value val, double splat_val);
 
 bool IsBlockSingleAdd(Block* block);
+
+template <typename T>
+void HandleConvAttribute(NamedAttrList &attrs, T conv_op, OpBuilder &rewriter);
 
 } // namespace mlir
 

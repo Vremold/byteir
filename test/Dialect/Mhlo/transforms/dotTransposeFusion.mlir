@@ -10,7 +10,7 @@ func @dot_transpose(%arg0: tensor<128x128xf32>, %arg1: tensor<128x30522xf32>) ->
 // CHECK-NEXT:  mhlo.dot
 // CHECK-NEXT:  mhlo.transpose
 // CHECK-NEXT:  mhlo.return
-// CHECK-NEXT:  }) {__byre__output_transpose, byre_compute_name = "MatmulOp"}
+// CHECK-NEXT:  }) {__byre__lhs_contracting_dimension = 1 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"}
 // CHECK:  return
 
 func @dot_general_transpose(%arg0: tensor<128x128xf32>, %arg1: tensor<128x30522xf32>) -> tensor<30522x128xf32> {

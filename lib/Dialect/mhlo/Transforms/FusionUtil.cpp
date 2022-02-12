@@ -18,29 +18,25 @@ using namespace llvm;
 
 namespace {
 
-  int UseCount(Value val) {
-    return static_cast<int>(std::distance(val.getUses().begin(), val.getUses().end()));
+llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
+  llvm::DenseMap<Value, int> ret;
+
+  // output
+  for (auto val : op->getResults()) {
+    ret[val] = UseCount(val);
   }
 
-  llvm::DenseMap<Value, int> InitValueCount(Operation* op) {
-    llvm::DenseMap<Value, int> ret;
-
-    // output
-    for (auto val : op->getResults()) {
-      ret[val] = UseCount(val);
+  // input
+  for (auto val : op->getOperands()) {
+    // skip block arg
+    if (val.getDefiningOp() == nullptr) {
+      continue;
     }
-
-    // input
-    for (auto val : op->getOperands()) {
-      // skip block arg
-      if (val.getDefiningOp() == nullptr) {
-        continue;
-      }
-      ret[val]--;
-    }
-
-    return ret;
+    ret[val]--;
   }
+
+  return ret;
+}
 
 } // namespace anonymous
 
@@ -49,7 +45,6 @@ namespace {
 // TODO: we might update upstream to make it accessible later
 mhlo::FusionOp mlir::creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPattern& pattern) {
   b.setInsertionPoint(pattern.back());
-
 
   SmallVector<Location, 4> locations;
   locations.reserve(pattern.size());
