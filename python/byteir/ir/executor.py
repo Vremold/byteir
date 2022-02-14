@@ -1,5 +1,8 @@
+import numpy as np
+
 from mlir import ir
 from collections import namedtuple
+from .helper import mlir_type_to_dtype
 
 class DispatchableIRExecutorMeta(type):
     def __new__(cls, name, bases, attrs):
@@ -38,9 +41,40 @@ class IRExecutor(DispatchableIRExecutorBase):
         return impl
 
     @classmethod
+    def _check_type_single(cls, op, ir_type, tensor):
+        if ir.TupleType.isinstance(ir_type):
+            assert isinstance(tensor, tuple), "expect tuple but got {}, associated op is {}".format(tensor, op)
+            tuple_type = ir.TupleType(ir_type)
+            sub_types = [tuple_type.get_type(i) for i in range(tuple_type.num_types)]
+            sub_tensors = list(tensor)
+            cls._check_types(op, sub_types, sub_tensors)
+        else:
+            assert isinstance(tensor, np.ndarray), "expect numpy.ndarray but got {}, associated op is {}".format(tensor, op)
+            assert ir.ShapedType.isinstance(ir_type), "expect ShapedType but got {}, associated op is {}".format(ir_type, op)
+            shaped_type = ir.ShapedType(ir_type)
+
+            value_shape = list(shaped_type.shape)
+            tensor_shape = list(tensor.shape)
+            assert value_shape == tensor_shape, "shape mismatch {} vs {}, associated op is {}".format(value_shape, tensor_shape, op)
+
+            if tensor.dtype != np.object: # tensorflow treat some of dtype as opaque object (i.e. np.str), ignore them when type checking
+                value_dtype = mlir_type_to_dtype(shaped_type.element_type)
+                tensor_dtype = tensor.dtype
+                assert value_dtype == tensor_dtype, "dtype mismatch {} vs {}, associated op is {}".format(value_dtype, tensor_dtype, op)
+
+    @classmethod
+    def _check_types(cls, op, ir_types, tensors):
+        assert isinstance(tensors, (tuple, list)), "the input tensors or output tensors of IRExecutor should be list or tuple"
+        assert len(ir_types) == len(tensors), "the number of ir types and computing tensors mismatch, {} vs {}".format(ir_types, tensors)
+        for ir_type, tensor in zip(ir_types, tensors):
+            cls._check_type_single(op, ir_type, tensor)
+
+    @classmethod
     def execute(cls, op, inputs):
-        # TODO: type check
-        return cls.dispatch(op, inputs)
+        cls._check_types(op, [i.type for i in op.operands], inputs)
+        outputs = cls.dispatch(op, inputs)
+        cls._check_types(op, [i.type for i in op.results], outputs)
+        return outputs
 
 
 class MhloCustomCallExecutor(DispatchableIRExecutorBase):

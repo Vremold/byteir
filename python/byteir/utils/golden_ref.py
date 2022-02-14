@@ -31,7 +31,7 @@ class MhloGoldenRefGenerator:
                 assert(dtype == self.value2tensor[i].dtype)
                 continue
             elif dtype is np.str:
-                self.value2tensor[i] = ""
+                self.value2tensor[i] = np.ndarray(shape=shape, dtype=np.str)
             else:
                 self.value2tensor[i] = np.random.normal(
                     loc=0.0, scale=0.1, size=shape).astype(dtype)

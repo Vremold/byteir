@@ -5,6 +5,15 @@ from mlir import ir
 def _dispatch_add(op, inputs):
     return [inputs[0] + inputs[1],]
 
+@IRExecutor.register("mhlo.get_tuple_element")
+def _dispatch_get_tuple_element(op, inputs):
+    index_attr = op.attributes["index"]
+    assert ir.IntegerAttr.isinstance(index_attr)
+    index = ir.IntegerAttr(index_attr).value
+    tuple_input = inputs[0]
+    output = tuple_input[index]
+    return [output,]
+
 @MhloCustomCallExecutor.register("test_add")
 def _dispatch_test_add(op, inputs):
     backend_config_attr = op.attributes["backend_config"]
