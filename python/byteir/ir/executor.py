@@ -43,10 +43,9 @@ class IRExecutor(DispatchableIRExecutorBase):
     @classmethod
     def _check_type_single(cls, op, ir_type, tensor):
         if ir.TupleType.isinstance(ir_type):
-            assert isinstance(tensor, tuple), "expect tuple but got {}, associated op is {}".format(tensor, op)
             tuple_type = ir.TupleType(ir_type)
             sub_types = [tuple_type.get_type(i) for i in range(tuple_type.num_types)]
-            sub_tensors = list(tensor)
+            sub_tensors = tensor
             cls._check_types(op, sub_types, sub_tensors)
         else:
             assert isinstance(tensor, np.ndarray), "expect numpy.ndarray but got {}, associated op is {}".format(tensor, op)
@@ -64,7 +63,7 @@ class IRExecutor(DispatchableIRExecutorBase):
 
     @classmethod
     def _check_types(cls, op, ir_types, tensors):
-        assert isinstance(tensors, (tuple, list)), "the input tensors or output tensors of IRExecutor should be list or tuple"
+        assert isinstance(tensors, (tuple, list)), "expect tuple or list but got {}, associated op is {}".format(tensors, op)
         assert len(ir_types) == len(tensors), "the number of ir types and computing tensors mismatch, {} vs {}".format(ir_types, tensors)
         for ir_type, tensor in zip(ir_types, tensors):
             cls._check_type_single(op, ir_type, tensor)
