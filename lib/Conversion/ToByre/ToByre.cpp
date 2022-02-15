@@ -500,7 +500,7 @@ public:
     }
 
     // TODO: more SelectAndScatterOp supported
-    std::string poolingGradOp = "MaxPoolingGradOp";
+    std::string poolingGradOp = "PoolMaxGradOp";
 
     SmallVector<Value, 2> operands{adaptor.operand(), adaptor.source(), adaptor.out()};
     SmallVector<Type, 2> operandTypes{adaptor.operand().getType(),
@@ -615,6 +615,104 @@ public:
         op, key, operands);
 
     compute_op->setAttr("dimensions", op.dimensions());
+
+    return success();
+  }
+};
+
+
+class ConvertReduceWindowOpToByrePattern
+  : public OpConversionPattern<lmhlo::ReduceWindowOp> {
+private:
+  bool appendArgTypes;
+public:
+  ConvertReduceWindowOpToByrePattern(MLIRContext* ctx, bool appendTypes)
+    : OpConversionPattern<lmhlo::ReduceWindowOp>(ctx), appendArgTypes(appendTypes) {}
+
+  LogicalResult
+    matchAndRewrite(lmhlo::ReduceWindowOp op, lmhlo::ReduceWindowOp::Adaptor adaptor,
+      ConversionPatternRewriter& rewriter) const override {
+
+    if (adaptor.inputs().size() != 1 || adaptor.out().size() != 1 ||
+      adaptor.init_values().size() != 1) {
+      return rewriter.notifyMatchFailure(
+        op, "batched reductions is not supported yet");
+    }
+    // check whether reduce supported
+    Region& region = op.body();
+    // only support single block
+    if (region.getBlocks().size() != 1) {
+      return rewriter.notifyMatchFailure(op, "unsupported region in reduce_window");
+    }
+    auto& block = region.front();
+    if (block.getOperations().size() != 2) {
+      return rewriter.notifyMatchFailure(op, "unsupported block in reduce_window");
+    }
+    // check block args
+    if (block.getNumArguments() != 3 ||
+      !block.getArgument(0).getType().isa<MemRefType>() ||
+      !block.getArgument(1).getType().isa<MemRefType>() ||
+      !block.getArgument(2).getType().isa<MemRefType>()) {
+      return rewriter.notifyMatchFailure(op,
+        "unsupported block's arg in reduce_window");
+    }
+
+    // check block body
+    auto ret_op = block.getTerminator();
+    if (!isa<mlir::lmhlo::TerminatorOp>(ret_op)) {
+      return rewriter.notifyMatchFailure(
+        op, "unsupported terminator in reduce's block");
+    }
+
+    auto reduce_computation = &block.front();
+    // only support ReduceWindowMax now
+    if (!isa<lmhlo::MaxOp>(reduce_computation)) {
+      return rewriter.notifyMatchFailure(
+        op, "unsupported ops in reduce_computation of reduce_window");
+    }
+    if (reduce_computation->getOperand(0) != block.getArgument(0) ||
+      reduce_computation->getOperand(1) != block.getArgument(1) ||
+      reduce_computation->getOperand(2) != block.getArgument(2)) {
+      return rewriter.notifyMatchFailure(
+        op, "unsupported ops in reduce_computation in reduce_window");
+    }
+
+    // TODO: more ReduceOp supported
+    std::string ReduceWinOp = "PoolMaxOp";
+
+    auto inputShape = adaptor.inputs()[0].getType().dyn_cast<MemRefType>();
+    if (!inputShape || !inputShape.hasRank()) {
+      return rewriter.notifyMatchFailure(op, "invalid input type");
+    }
+
+    if (!llvm::any_of(adaptor.init_values()[0].getUses(), [](OpOperand& use) {
+      if (auto constOp =
+        llvm::dyn_cast_or_null<lmhlo::ConstOp>(use.getOwner())) {
+        // for ReduceWindowsMax initial value must be minValue
+        return isMinValueAttribute(constOp.value());
+      }
+      return false;
+      })) {
+      return failure();
+    }
+    SmallVector<Value, 2> operands{ adaptor.inputs()[0], adaptor.out()[0] };
+    SmallVector<Type, 2> operandTypes{ adaptor.inputs()[0].getType(),
+                                      adaptor.out()[0].getType() };
+
+    auto key = getByreKey(ReduceWinOp, operandTypes, appendArgTypes);
+
+    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+      op, key, operands);
+
+    compute_op->setAttr("window_dimensions", op.window_dimensions());
+
+    if (op.window_strides().hasValue()) {
+      compute_op->setAttr("window_strides", op.window_strides().getValue());
+    } 
+
+    if (op.padding().hasValue()) {
+      compute_op->setAttr("padding", op.padding().getValue());
+    }
 
     return success();
   }
@@ -962,6 +1060,7 @@ void mlir::populateLmhloToByreConversionPatterns(
                ConvertDotOpToByrePattern,
                ConvertConvOpToByrePattern,
                ConvertReduceOpToByrePattern,
+               ConvertReduceWindowOpToByrePattern, 
                ConvertSelectAndScatterOpToByrePattern>(
       patterns.getContext(), appendArgTypes);
   // clang-format on

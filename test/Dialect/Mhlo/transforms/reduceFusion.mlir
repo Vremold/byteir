@@ -11,9 +11,9 @@ func @reduce_window_const_pad_and_const_ini(%arg0: tensor<32x64x112x112xf16>) ->
   return %2 : tensor<32x64x56x56xf16>
 }
 // CHECK-LABEL: func @reduce_window_const_pad_and_const_ini
-// CHECK:     "mhlo.fusion"(%{{.*}})
-// CHECK-NEXT:  mhlo.pad
-// CHECK-NEXT:  mhlo.reduce_window
+// CHECK-NOT:  mhlo.fusion
+// CHECK-NOT:  mhlo.pad
+// CHECK:  mhlo.reduce_window
 
 func @reduce_window_pad_and_const_ini(%arg0: tensor<32x64x112x112xf16>, %arg1: tensor<f16>) -> tensor<32x64x56x56xf16>{
   %0 = mhlo.constant dense<0xFC00> : tensor<f16>
@@ -40,9 +40,9 @@ func @reduce_window_pad(%arg0: tensor<32x64x112x112xf16>, %arg1: tensor<f16>) ->
   return %1 : tensor<32x64x56x56xf16>
 }
 // CHECK-LABEL: func @reduce_window_pad
-// CHECK:     "mhlo.fusion"(%{{.*}}, %{{.*}})
-// CHECK-NEXT:  mhlo.pad
-// CHECK-NEXT:  mhlo.reduce_window
+// CHECK-NOT:  mhlo.fusion
+// CHECK-NOT:  mhlo.pad
+// CHECK:  mhlo.reduce_window
 
 func @reduce_window(%arg0: tensor<32x64x114x114xf16>, %arg1: tensor<f16>) -> tensor<32x64x56x56xf16>{
   %0 = "mhlo.reduce_window"(%arg0, %arg1) ({
@@ -53,5 +53,5 @@ func @reduce_window(%arg0: tensor<32x64x114x114xf16>, %arg1: tensor<f16>) -> ten
   return %0 : tensor<32x64x56x56xf16>
 }
 // CHECK-LABEL: func @reduce_window
-// CHECK:     "mhlo.fusion"(%{{.*}}, %{{.*}})
-// CHECK-NEXT:  mhlo.reduce_window
+// CHECK-NOT:  mhlo.fusion
+// CHECK:  mhlo.reduce_window

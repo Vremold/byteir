@@ -74,7 +74,7 @@ bool mlir::isConstantIndex(Value value, int64_t lit) {
 
 bool mlir::isZeroAttribute(Attribute value) {
   if (auto intValue = value.dyn_cast<IntegerAttr>())
-    return intValue.getValue().isNullValue();
+    return intValue.getValue().isNullValue();  // FIXME: isNullValue soft-deprecated. change to isZero
   if (auto fpValue = value.dyn_cast<FloatAttr>())
     return fpValue.getValue().isZero();
   if (auto splatValue = value.dyn_cast<SplatElementsAttr>())
@@ -83,6 +83,20 @@ bool mlir::isZeroAttribute(Attribute value) {
     return llvm::all_of(elementsValue.getValues<Attribute>(), isZeroAttribute);
   if (auto arrayValue = value.dyn_cast<ArrayAttr>())
     return llvm::all_of(arrayValue.getValue(), isZeroAttribute);
+  return false;
+}
+
+bool mlir::isMinValueAttribute(Attribute value) {
+  if (auto intValue = value.dyn_cast<IntegerAttr>())
+    return intValue.getValue().isMinValue();
+  if (auto fpValue = value.dyn_cast<FloatAttr>())
+    return fpValue.getValue().isInfinity() && fpValue.getValue().isNegative();  // -inf
+  if (auto splatValue = value.dyn_cast<SplatElementsAttr>())
+    return isMinValueAttribute(splatValue.getSplatValue<Attribute>());
+  if (auto elementsValue = value.dyn_cast<ElementsAttr>())
+    return llvm::all_of(elementsValue.getValues<Attribute>(), isMinValueAttribute);
+  if (auto arrayValue = value.dyn_cast<ArrayAttr>())
+    return llvm::all_of(arrayValue.getValue(), isMinValueAttribute);
   return false;
 }
 

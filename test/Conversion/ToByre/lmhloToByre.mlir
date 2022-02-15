@@ -192,6 +192,25 @@ module {
   // CHECK-NEXT: byre.compute @ReduceSumOp(%arg0, %arg1)
   //   CHECK-DAG: dimensions = dense<[0, 1]>
 
+  func @reduce_window(%arg: memref<1x64x112x112xf32> {__placeholder__byre.argname = "A"}) -> (memref<1x64x56x56xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<f32>
+    "lmhlo.constant"(%0) {value = dense<0xFF800000> : tensor<f32>} : (memref<f32>) -> ()
+    %1 = memref.alloc() : memref<1x64x56x56xf32>
+    "lmhlo.reduce_window"(%arg, %0, %1) ( {
+      ^bb0(%lhs: memref<f32>, %rhs: memref<f32>, %res: memref<f32>):
+        "lmhlo.maximum"(%lhs, %rhs, %res)
+          : (memref<f32>, memref<f32>, memref<f32>) -> ()
+        "lmhlo.terminator"() : () -> ()
+      }) {
+        padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>,
+        window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, 
+        window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>
+      } : (memref<1x64x112x112xf32>, memref<f32>, memref<1x64x56x56xf32>) -> ()
+    return %1 : memref<1x64x56x56xf32>  
+  }
+  // CHECK-LABEL: reduce_window
+  // CHECK-NEXT: byre.compute @PoolMaxOp(%arg0, %arg1)
+
   func @select_and_scatter(%arg0: memref<32x64x112x112xf16>  {__placeholder__byre.argname = "A"}, %arg1: memref<32x64x56x56xf16> {__placeholder__byre.argname = "B"}) -> (memref<32x64x112x112xf16> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<32x64x112x112xf16>
     %1 = memref.alloc() : memref<f16>
@@ -208,5 +227,5 @@ module {
     return %0 : memref<32x64x112x112xf16>
   }
   // CHECK-LABEL: select_and_scatter
-  // CHECK-NEXT: byre.compute @MaxPoolingGradOp(%arg0, %arg1, %arg2)
+  // CHECK-NEXT: byre.compute @PoolMaxGradOp(%arg0, %arg1, %arg2)
 }

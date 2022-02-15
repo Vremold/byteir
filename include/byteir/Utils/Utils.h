@@ -45,6 +45,14 @@ bool isConstantIndex(Value value, int64_t lit);
 // it will check all of sub attributes.
 bool isZeroAttribute(Attribute value);
 
+
+// Check whether an attribute is SmallestAttr
+// If an attribute contain multiple sub attributes,
+// it will check all of sub attributes.
+bool isMinValueAttribute(Attribute value);
+
+// TODO add Largest if needed.
+
 // Returns true if the given `attr` is a splat value and is `value`.
 bool isSplatValue(DenseIntElementsAttr attr, int64_t value);
 
