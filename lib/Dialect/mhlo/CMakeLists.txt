@@ -16,6 +16,24 @@ add_mlir_dialect_library(ByteIRMhlo
   ByteIRUtils
   )
 
+add_mlir_dialect_library(ByteIRMhloAnalysis
+  Analysis/DimFromBroadcast.cpp
+  
+  ADDITIONAL_HEADER_DIRS
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Analysis
+
+  DEPENDS
+  ByteIRAnalysis
+  MhloDialect
+  
+
+  LINK_LIBS PUBLIC
+  ByteIRAnalysis
+  MLIRIR
+  MLIRSupport
+  MhloDialect
+)
+
 add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/ConvBiasActFusion.cpp
   Transforms/DotTransposeFusion.cpp
@@ -35,6 +53,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   MhloDialect
   ByteIRMhlo
   ByteIRUtils
+  ByteIRMhloAnalysis
 
   LINK_LIBS PUBLIC
   MLIRIR
@@ -44,4 +63,5 @@ add_mlir_dialect_library(ByteIRMhloPasses
   ByteIRAnalysis
   ByteIRMhlo
   ByteIRUtils
+  ByteIRMhloAnalysis
   )

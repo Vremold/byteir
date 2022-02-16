@@ -1,4 +1,5 @@
 add_mlir_library(ByteIRAnalysis
+  DimFlag.cpp
   OpDependence.cpp
 
   ADDITIONAL_HEADER_DIRS

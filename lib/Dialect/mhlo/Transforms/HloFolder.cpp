@@ -6,8 +6,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/HloFolder.h"
-#include "byteir/Dialect/mhlo/Util/Util.h"
 #include "PassDetail.h"
+#include "byteir/Dialect/mhlo/Analysis/DimFromBroadcast.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
@@ -18,29 +19,30 @@
 
 using namespace mlir;
 using namespace llvm;
+using namespace byteir;
 
 namespace {
 
-static LogicalResult AddScatterAddMatchAndRewriteHelper(
-  mhlo::AddOp add_op, int idx,
-  PatternRewriter& rewriter) {
+static LogicalResult
+AddScatterAddMatchAndRewriteHelper(mhlo::AddOp add_op, int idx,
+                                   PatternRewriter &rewriter) {
 
-  // Match 
+  // Match
   mhlo::ScatterOp scatter_op =
-    add_op.getOperand(idx).getDefiningOp<mhlo::ScatterOp>();
+      add_op.getOperand(idx).getDefiningOp<mhlo::ScatterOp>();
 
   if (!scatter_op) {
     return failure();
   }
 
   // check wthether scatter supported
-  Region& region = scatter_op.update_computation();
+  Region &region = scatter_op.update_computation();
   // only support single block
   if (region.getBlocks().size() != 1) {
     return failure();
   }
 
-  auto& block = region.front();
+  auto &block = region.front();
   if (!IsBlockSingleAdd(&block)) {
     return failure();
   }
@@ -61,29 +63,64 @@ static LogicalResult AddScatterAddMatchAndRewriteHelper(
 
 // Add + Scatter {add} -> Scatter
 // TODO other scatter support
-struct AddScatterAddToScatterPattern
-  : public OpRewritePattern<mhlo::AddOp> {
+struct AddScatterAddToScatterPattern : public OpRewritePattern<mhlo::AddOp> {
   using OpRewritePattern<mhlo::AddOp>::OpRewritePattern;
 
   LogicalResult matchAndRewrite(mhlo::AddOp op,
-    PatternRewriter& rewriter) const override {
+                                PatternRewriter &rewriter) const override {
 
     // handle left
     if (failed(AddScatterAddMatchAndRewriteHelper(op, 0, rewriter))) {
       // handle right
       return AddScatterAddMatchAndRewriteHelper(op, 1, rewriter);
     }
- 
+
     return success();
   }
 };
 
+struct RemoveTrivialTorchIndexSelect
+    : public OpRewritePattern<mhlo::TorchIndexSelectOp> {
+  using OpRewritePattern<mhlo::TorchIndexSelectOp>::OpRewritePattern;
+  RemoveTrivialTorchIndexSelect(MLIRContext *context, DimFlagAnalysis *analysis)
+      : OpRewritePattern(context), analysis_(analysis) {}
+
+  LogicalResult matchAndRewrite(mhlo::TorchIndexSelectOp op,
+                                PatternRewriter &rewriter) const override {
+    uint64_t dim = op.dim();
+    Value index = op.index();
+    Value input = op.input();
+    auto index_shaped_type = index.getType().dyn_cast<ShapedType>();
+    auto input_shaped_type = input.getType().dyn_cast<ShapedType>();
+    if (!index_shaped_type || !index_shaped_type.hasStaticShape() ||
+        !input_shaped_type || !input_shaped_type.hasStaticShape() ||
+        index_shaped_type.getShape()[dim] !=
+            input_shaped_type.getShape()[dim]) {
+      return failure();
+    }
+
+    SmallVector<bool> from_broadcast = analysis_->GetDimFlag(input);
+    if (!(int64_t(from_broadcast.size()) == input_shaped_type.getRank()) ||
+        !from_broadcast[dim]) {
+      return failure();
+    }
+    rewriter.replaceOp(op, input);
+    return success();
+  }
+
+  DimFlagAnalysis *analysis_;
+};
+
 struct HloFolderPass : public HloFolderBase<HloFolderPass> {
   void runOnOperation() override {
+    DimFromBroadcast dim_from_broadcast;
+    DimFlagAnalysis dim_from_broadcast_analysis(&dim_from_broadcast);
     FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateHloFoldPatterns(patterns);
+    patterns.add<RemoveTrivialTorchIndexSelect>(patterns.getContext(),
+                                                &dim_from_broadcast_analysis);
     LogicalResult status =
         applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
     if (failed(status)) {

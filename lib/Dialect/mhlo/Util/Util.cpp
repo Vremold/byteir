@@ -10,21 +10,21 @@
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops_base_attrs.h"
+#include "mlir/IR/Operation.h"
 
-using namespace mlir;
 using namespace llvm;
 
-bool mlir::IsSplatMhloConstant(Operation* op) {
+bool mlir::IsSplatMhloConstant(Operation *op) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     return constOp.value().isSplat();
   }
   return false;
 }
 
-bool mlir::IsSplatMhloConstantValue(Operation* op, int64_t splat_val) {
+bool mlir::IsSplatMhloConstantValue(Operation *op, int64_t splat_val) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     // only handle DenseFPElementsAttr for now
-    // TODO extend it 
+    // TODO extend it
     if (auto denseIntE = constOp.value().dyn_cast<DenseIntElementsAttr>()) {
       return isSplatValue(denseIntE, splat_val);
     }
@@ -32,17 +32,16 @@ bool mlir::IsSplatMhloConstantValue(Operation* op, int64_t splat_val) {
   return false;
 }
 
-bool mlir::IsSplatMhloConstantValue(Operation* op, double splat_val) {
+bool mlir::IsSplatMhloConstantValue(Operation *op, double splat_val) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     // only handle DenseFPElementsAttr for now
-    // TODO extend it 
+    // TODO extend it
     if (auto denseFPE = constOp.value().dyn_cast<DenseFPElementsAttr>()) {
       return isSplatValue(denseFPE, splat_val);
     }
   }
   return false;
 }
-
 
 bool mlir::IsSplatMhloConstantValue(Value val, int64_t splat_val) {
   return IsSplatMhloConstantValue(val.getDefiningOp(), splat_val);
@@ -53,14 +52,17 @@ bool mlir::IsSplatMhloConstantValue(Value val, double splat_val) {
 }
 
 // TODO: make this a template later for max/min
-bool mlir::IsBlockSingleAdd(Block* block) {
-  if (block == nullptr) return false;
+bool mlir::IsBlockSingleAdd(Block *block) {
+  if (block == nullptr)
+    return false;
 
   auto ret_op = block->getTerminator();
-  if (!isa<mlir::mhlo::ReturnOp>(ret_op)) return false;
+  if (!isa<mlir::mhlo::ReturnOp>(ret_op))
+    return false;
 
   auto mhlo_ret = cast<mlir::mhlo::ReturnOp>(ret_op);
-  if (mhlo_ret.getNumOperands() != 1) return false;
+  if (mhlo_ret.getNumOperands() != 1)
+    return false;
 
   auto compute_op = mhlo_ret.getOperand(0).getDefiningOp();
   if (auto add_op = dyn_cast_or_null<mhlo::AddOp>(compute_op)) {
