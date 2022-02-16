@@ -88,14 +88,16 @@ struct RemoveTrivialTorchIndexSelect
   LogicalResult matchAndRewrite(mhlo::TorchIndexSelectOp op,
                                 PatternRewriter &rewriter) const override {
     uint64_t dim = op.dim();
+    uint64_t batch_dims = op.batch_dims();
     Value index = op.index();
     Value input = op.input();
+
     auto index_shaped_type = index.getType().dyn_cast<ShapedType>();
     auto input_shaped_type = input.getType().dyn_cast<ShapedType>();
-    if (!index_shaped_type || !index_shaped_type.hasStaticShape() ||
+    if (batch_dims > 0 || index_shaped_type.getRank() > 1 ||
+        !index_shaped_type || !index_shaped_type.hasStaticShape() ||
         !input_shaped_type || !input_shaped_type.hasStaticShape() ||
-        index_shaped_type.getShape()[dim] !=
-            input_shaped_type.getShape()[dim]) {
+        index_shaped_type.getShape()[0] != input_shaped_type.getShape()[dim]) {
       return failure();
     }
 

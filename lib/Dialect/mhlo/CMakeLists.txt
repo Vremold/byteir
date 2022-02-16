@@ -25,6 +25,7 @@ add_mlir_dialect_library(ByteIRMhloAnalysis
   DEPENDS
   ByteIRAnalysis
   MhloDialect
+  LmhloDialect
   
 
   LINK_LIBS PUBLIC
@@ -32,6 +33,7 @@ add_mlir_dialect_library(ByteIRMhloAnalysis
   MLIRIR
   MLIRSupport
   MhloDialect
+  LmhloDialect
 )
 
 add_mlir_dialect_library(ByteIRMhloPasses

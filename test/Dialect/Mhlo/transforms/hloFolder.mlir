@@ -27,13 +27,20 @@ func @add_scatteradd_left(%arg0 : tensor<30522x128xf32>, %arg1 : tensor<256x1xi6
 // CHECK-NEXT: mhlo.scatter
 
 
-func @unnecessary_torch_index_select(%arg0 : tensor<1x64xf16>, %arg1 : tensor<1014xi64>) -> tensor<1014x64xf16> {
+func @trivial_torch_index_select(%arg0 : tensor<1x64xf16>, %arg1 : tensor<1014xi64>) -> tensor<1014x64xf16> {
   %0 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<[0, 2]> : tensor<2xi64>} : (tensor<1x64xf16>) -> tensor<1x1014x64xf16>
   %1 = "mhlo.reshape"(%0) : (tensor<1x1014x64xf16>) -> tensor<1014x64xf16>
   %2 = "mhlo.torch_index_select"(%1, %arg1) {batch_dims = 0 : i64, dim = 0 : i64} : (tensor<1014x64xf16>, tensor<1014xi64>) -> tensor<1014x64xf16>
   return %2 : tensor<1014x64xf16>
 }
-// CHECK-LABEL: func @unnecessary_torch_index_select
+// CHECK-LABEL: func @trivial_torch_index_select
 // CHECK-NEXT: mhlo.broadcast_in_dim
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: return
+
+func @non_trivial_torch_index_select(%arg0: tensor<1x1024xf32>, %arg1: tensor<286xi32>) -> tensor<1x286xf32> {
+  %0 = "mhlo.torch_index_select"(%arg0, %arg1) {batch_dims = 0 : i64, dim = 1 : i64} : (tensor<1x1024xf32>, tensor<286xi32>) -> tensor<1x286xf32>
+  return %0 : tensor<1x286xf32>
+}
+// CHECK-LABEL: func @non_trivial_torch_index_select
+// CHECK-NEXT: mhlo.torch_index_select
