@@ -69,9 +69,8 @@ struct RewriteOpToStdCallPattern : public RewritePattern {
 struct RewriteOpToStdCallPass
     : public RewriteOpToStdCallBase<RewriteOpToStdCallPass> {
   RewriteOpToStdCallPass() = default;
-  RewriteOpToStdCallPass(CallTable _callTable) {
+  RewriteOpToStdCallPass(CallTable _callTable) : _callTable(_callTable) {
     this->callTable = {};
-    this->_callTable = _callTable;
   }
   void runOnOperation() override {
     if (this->callTable.size() != 0) {
@@ -80,6 +79,10 @@ struct RewriteOpToStdCallPass
         this->_callTable[table.substr(0, semicolon)] =
             table.substr(semicolon + 1);
       }
+    }
+
+    if (this->_callTable.size() == 0) {
+      signalPassFailure();
     }
 
     ModuleOp module = getOperation();

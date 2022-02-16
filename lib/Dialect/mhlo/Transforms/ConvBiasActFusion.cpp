@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
-#include "PassDetail.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
@@ -17,6 +16,8 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace llvm;

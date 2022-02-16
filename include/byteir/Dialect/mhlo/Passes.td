@@ -12,6 +12,27 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
+// IOConvertFusion
+//===----------------------------------------------------------------------===//
+
+def IOConvertFusion : Pass<"fuse-io-convert", "mlir::FuncOp"> {
+  let summary = "Fuse op with Input/Output convert";
+  let constructor = "mlir::createIOConvertFusionPass()";
+  let options = [
+    Option<"opName", "op-name", "std::string", /*default=*/"",
+           "Fuse op with Input/Output convert into mhlo.fusion">,
+    ListOption<"inputArgIdx", "input-arg-idx", "int",
+               "input args with convert: input-arg-index=0,1,...",
+               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+    ListOption<"outputArgIdx", "output-arg-idx", "int",
+               "output args with convert: output-arg-index=0,1,...",
+               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+    Option<"byreComputeName", "byre-compute-name", "std::string", /*default=*/"",
+            "Set mhlo.fusion with byre-compute-name">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // ConvBiasActFusion
 //===----------------------------------------------------------------------===//
 
