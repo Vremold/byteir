@@ -58,7 +58,9 @@ bool IsFusibleWith(Operation *target, Operation * /*start*/) {
 
 struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
 
-  ElementFusionPass() : ElementFusionBase() {}
+  ElementFusionPass(bool clusterSingleElemwiseOp) : ElementFusionBase() {
+    this->clusterSingleElemwiseOp = clusterSingleElemwiseOp;
+  }
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
 
@@ -77,6 +79,11 @@ struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
       auto &pattern = *it;
       if (pattern.size() > 1) {
         applyMhloFusionPattern(pattern, getByteIRElementwiseFusionAttrName());
+      } else if (clusterSingleElemwiseOp.getValue()) {
+        if (pattern.size() == 1 &&
+            pattern[0]->hasTrait<::mlir::OpTrait::Elementwise>()) {
+          applyMhloFusionPattern(pattern, getByteIRElementwiseFusionAttrName());
+        }
       }
     }
   }
@@ -85,6 +92,6 @@ struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
 } // namespace
 
 std::unique_ptr<OperationPass<FuncOp>>
-mlir::createElementFusionPass() {
-  return std::make_unique<ElementFusionPass>();
+mlir::createElementFusionPass(bool clusterSingleElemwiseOp) {
+  return std::make_unique<ElementFusionPass>(clusterSingleElemwiseOp);
 }

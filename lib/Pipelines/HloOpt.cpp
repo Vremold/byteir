@@ -18,12 +18,14 @@ using namespace mlir::mhlo;
 namespace {
 
   struct HloOptPipelinePass : public HloOptPipelineBase<HloOptPipelinePass> {
-  HloOptPipelinePass(const std::string& entry, const std::string& target)
-    : HloOptPipelineBase() {
-    // TODO use target to decide passes
-    this->entryFunc = entry;
-    this->target = target;
-  }
+    HloOptPipelinePass(const std::string &entry, const std::string &target,
+                       bool outlineSingleElemwiseOp)
+        : HloOptPipelineBase() {
+      // TODO use target to decide passes
+      this->entryFunc = entry;
+      this->target = target;
+      this->outlineSingleElemwiseOp = outlineSingleElemwiseOp;
+    }
 
   void runOnOperation() override {
     auto m = getOperation();
@@ -42,7 +44,8 @@ namespace {
     addCleanUpPassPipeline(pm);
 
     // add fusion patterns
-    addGenericHloFusionPatterns(pm, entryFunc);
+    addGenericHloFusionPatterns(pm, entryFunc,
+                                outlineSingleElemwiseOp.getValue());
 
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();
@@ -54,8 +57,9 @@ namespace {
 
 } // namespace
 
-
-void mlir::addGenericHloFusionPatterns(OpPassManager& pm, const std::string& entry) {
+void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
+                                       const std::string &entry,
+                                       bool outlineSingleElemwiseOp) {
 
   // Dot Transpose fusion
   pm.addNestedPass<FuncOp>(createDotTransposeFusionPass());
@@ -67,12 +71,18 @@ void mlir::addGenericHloFusionPatterns(OpPassManager& pm, const std::string& ent
   pm.addNestedPass<FuncOp>(createFlattenTuplePass());
 
   // Element fusion (always last?)
-  pm.addNestedPass<FuncOp>(createElementFusionPass());
+  // Note: if outlineSingleElemwiseOp is set, element fusion must be the last
+  // pass, since it will cluster every elemenwise op which is not fused yet into
+  // the mhlo.fusion and outline it as an independent function later
+  pm.addNestedPass<FuncOp>(createElementFusionPass(outlineSingleElemwiseOp));
   pm.addPass(createFusionOutliningPass());
   pm.addPass(createCSEPass());
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createHloOptPipelinePass(const std::string& entry, const std::string& target) {
-  return std::make_unique<HloOptPipelinePass>(entry, target);
+mlir::createHloOptPipelinePass(const std::string &entry,
+                               const std::string &target,
+                               bool outliningSingleElemwiseOp) {
+  return std::make_unique<HloOptPipelinePass>(entry, target,
+                                              outliningSingleElemwiseOp);
 }

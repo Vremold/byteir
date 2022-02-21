@@ -561,19 +561,44 @@ public:
     }
 
     auto reduce_computation = &block.front();
-    // only support ReduceSum now
-    if (!isa<lmhlo::AddOp>(reduce_computation)) {
-      return rewriter.notifyMatchFailure(
-          op, "unsupported ops in reduce_computation of reduce");
-    }
+    std::string ReduceOp;
+    auto check_initial_value = [&](auto &&checker) {
+      if (!llvm::any_of(
+              adaptor.init_values()[0].getUses(), [&](OpOperand &use) {
+                if (auto constOp = llvm::dyn_cast_or_null<lmhlo::ConstOp>(
+                        use.getOwner())) {
+                  // for ReduceSum initial value must be zero
+                  return checker(constOp.value());
+                }
+                return false;
+              })) {
+        return rewriter.notifyMatchFailure(
+            op, "unsupported initial value of reduce op");
+      }
+      return success();
+    };
+    // TODO: more ReduceOp supported
+    auto status =
+        llvm::TypeSwitch<Operation *, LogicalResult>(reduce_computation)
+            .Case<lmhlo::AddOp>([&](...) {
+              ReduceOp = "ReduceSumOp";
+              return check_initial_value(isZeroAttribute);
+            })
+            .Case<lmhlo::MaxOp>([&](...) {
+              ReduceOp = "ReduceMaxOp";
+              return check_initial_value(isMinValueAttribute);
+            })
+            .Default([&](...) {
+              return rewriter.notifyMatchFailure(
+                  op, "unsupported ops in reduce_computation in reduce");
+            });
+    if (failed(status))
+      return status;
+
     if (reduce_computation->getOperand(0) != block.getArgument(0) ||
         reduce_computation->getOperand(1) != block.getArgument(1) ||
         reduce_computation->getOperand(2) != block.getArgument(2)) {
-      return rewriter.notifyMatchFailure(
-          op, "unsupported ops in reduce_computation in reduce");
     }
-    // TODO: more ReduceOp supported
-    std::string ReduceOp = "ReduceSumOp";
 
     auto inputShape = adaptor.inputs()[0].getType().dyn_cast<MemRefType>();
     if (!inputShape || !inputShape.hasRank()) {
@@ -595,16 +620,6 @@ public:
             op, "only consecutive dimensions were support");
     }
 
-    if (!llvm::any_of(adaptor.init_values()[0].getUses(), [](OpOperand &use) {
-          if (auto constOp =
-                  llvm::dyn_cast_or_null<lmhlo::ConstOp>(use.getOwner())) {
-            // for ReduceSum initial value must be zero
-            return isZeroAttribute(constOp.value());
-          }
-          return false;
-        })) {
-      return failure();
-    }
     SmallVector<Value, 2> operands{adaptor.inputs()[0], adaptor.out()[0]};
     SmallVector<Type, 2> operandTypes{adaptor.inputs()[0].getType(), 
                                       adaptor.out()[0].getType()};

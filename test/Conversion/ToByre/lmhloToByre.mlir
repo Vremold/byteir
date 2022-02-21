@@ -162,7 +162,7 @@ module {
   // CHECK-NEXT: memref.alloc
   // CHECK-NEXT: byre.compute @AliasOp
 
-  func @mhlo_reduce(%arg0: memref<1x128x128xf32> {__placeholder__byre.argname = "A"}) -> (memref<128xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+  func @mhlo_reduce_sum(%arg0: memref<1x128x128xf32> {__placeholder__byre.argname = "A"}) -> (memref<128xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<f32>
     "lmhlo.constant"(%0) {value = dense<0.000000e+00> : tensor<f32>} : (memref<f32>) -> ()
     %1 = memref.alloc() : memref<128xf32>
@@ -173,8 +173,23 @@ module {
     }) {dimensions = dense<[0, 1]> : tensor<2xi64>} : (memref<1x128x128xf32>, memref<f32>, memref<128xf32>) -> ()
     return %1 : memref<128xf32>
   }
-  // CHECK-LABEL: mhlo_reduce
+  // CHECK-LABEL: mhlo_reduce_sum
   // CHECK-NEXT: byre.compute @ReduceSumOp(%arg0, %arg1)
+  //   CHECK-DAG: dimensions = dense<[0, 1]>
+
+  func @mhlo_reduce_max(%arg0: memref<1x128x128xf32> {__placeholder__byre.argname = "A"}) -> (memref<128xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<f32>
+    "lmhlo.constant"(%0) {value = dense<0xFF800000> : tensor<f32>} : (memref<f32>) -> ()
+    %1 = memref.alloc() : memref<128xf32>
+    "lmhlo.reduce"(%arg0, %0, %1) ( {
+    ^bb0(%arg1: memref<f32>, %arg2: memref<f32>, %arg3: memref<f32>):  // no predecessors
+      "lmhlo.maximum"(%arg1, %arg2, %arg3) : (memref<f32>, memref<f32>, memref<f32>) -> ()
+      "lmhlo.terminator"() : () -> ()
+    }) {dimensions = dense<[0, 1]> : tensor<2xi64>} : (memref<1x128x128xf32>, memref<f32>, memref<128xf32>) -> ()
+    return %1 : memref<128xf32>
+  }
+  // CHECK-LABEL: mhlo_reduce_max
+  // CHECK-NEXT: byre.compute @ReduceMaxOp(%arg0, %arg1)
   //   CHECK-DAG: dimensions = dense<[0, 1]>
 
   func @mhlo_reduce_consecutive_dims(%arg0: memref<2x128x128xf32> {__placeholder__byre.argname = "A"}) -> (memref<128xf32> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {

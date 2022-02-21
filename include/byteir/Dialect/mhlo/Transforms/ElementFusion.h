@@ -17,7 +17,7 @@ namespace mlir {
 constexpr StringRef getByteIRElementwiseFusionAttrName() { return "__byteir_elementwise_fusion__"; }
 
 std::unique_ptr<OperationPass<FuncOp>>
-createElementFusionPass();
+createElementFusionPass(bool clusterSingleElemwiseOp = false);
 
 } // namespace mlir
 

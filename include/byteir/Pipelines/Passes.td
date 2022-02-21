@@ -80,6 +80,9 @@ def HloOptPipeline : Pass<"hlo-opt", "mlir::ModuleOp"> {
     Option<"target", "target", "std::string",
             /*default=*/"",
             "An optional attribute to speicify target.">,
+    Option<"outlineSingleElemwiseOp", "outline-single-elemwise-op", 
+           "bool", /*default=*/"false",
+           "whether to outline the single element-wise operation as an independent function">,
   ];
 }
 

@@ -16,11 +16,14 @@
 
 namespace mlir {
 
-void addGenericHloFusionPatterns(OpPassManager& pm, const std::string& entry = "main");
+void addGenericHloFusionPatterns(OpPassManager &pm,
+                                 const std::string &entry = "main",
+                                 bool outlineSingleElemwiseOp = false);
 
 std::unique_ptr<OperationPass<ModuleOp>>
-createHloOptPipelinePass(const std::string& entry = "main", 
-                         const std::string &target = "");
+createHloOptPipelinePass(const std::string &entry = "main",
+                         const std::string &target = "",
+                         bool outlineSingleElemwiseOp = false);
 
 } // namespace mlir
 

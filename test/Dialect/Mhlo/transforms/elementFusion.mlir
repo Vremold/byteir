@@ -1,4 +1,5 @@
 // RUN: byteir-opt %s -fuse-element | FileCheck %s
+// RUN: byteir-opt %s -fuse-element="cluster-single-elemwise-op" | FileCheck %s --check-prefix CHECK-SINGLE
 
 func @mhlo_element(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tensor<4xf32>) -> tensor<4xf32> {
   %0 = "mhlo.add"(%arg0, %arg1) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
@@ -78,3 +79,17 @@ func @shared_constant(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tens
 
 func private @empty(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tensor<3x4xf32>) -> tensor<3x4xf32>
 // CHECK-LABEL: func private @empty
+
+func @mhlo_single_op(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>) -> tensor<4xf32> {
+  %0 = "mhlo.add"(%arg0, %arg1) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
+  return %0 : tensor<4xf32>
+}
+// CHECK-LABEL: func @mhlo_single_op
+//   CHECK-NEXT: mhlo.add
+//   CHECK-NEXT: return
+// CHECK-SINGLE-LABEL: func @mhlo_single_op
+//   CHECK-SINGLE: mhlo.fusion
+//     CHECK-SINGLE-NEXT: mhlo.add
+//     CHECK-SINGLE-NEXT: mhlo.return
+//   CHECK-SINGLE: {__byteir_elementwise_fusion__}
+//   CHECK-SINGLE: return
