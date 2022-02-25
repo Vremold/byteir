@@ -39,9 +39,11 @@ Operation *leastDominantDefiningOp(Operation *first, Operation *op,
 }
 
 bool IsHoistUpOp(Operation *op) {
-  return isa<memref::AllocOp>(op) || isa<memref::CollapseShapeOp>(op) ||
-         isa<memref::DimOp>(op) || isa<memref::ExpandShapeOp>(op) ||
-         isa<memref::ReshapeOp>(op);
+  return isa<memref::AllocOp,
+             memref::CollapseShapeOp,
+             memref::DimOp,
+             memref::ExpandShapeOp,
+             memref::ReshapeOp>(op);
 }
 
 void collectAffineLopps(FuncOp funcOp,

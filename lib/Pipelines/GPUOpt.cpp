@@ -11,11 +11,11 @@
 #include "byteir/Conversion/AffineToGPU/AffineToGPU.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Pipelines/Common.h"
-#include "mlir/Pass/PassManager.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/GPU/Passes.h"
 #include "mlir/Dialect/SCF/Passes.h"
 #include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;

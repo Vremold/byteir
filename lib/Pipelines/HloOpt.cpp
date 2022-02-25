@@ -51,10 +51,7 @@ namespace {
       signalPassFailure();
     }
   }
-
 };
-
-
 } // namespace
 
 void mlir::addGenericHloFusionPatterns(OpPassManager &pm,

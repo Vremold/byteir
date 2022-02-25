@@ -1,6 +1,6 @@
-// RUN: byteir-opt %s -nvvm-codegen | FileCheck %s
+// RUN: byteir-opt %s -byre-host="device-file-name=your_file" | FileCheck %s
 
-// CHECK-LABEL: gpu.module @unified
+// CHECK-LABEL: func @main
 module attributes {byre.container_module, gpu.container_module} {
   gpu.module @Unknown0_kernel {
     gpu.func @Unknown0_kernel(%arg0: memref<2x128xi64>, %arg1: memref<256xi1>) kernel {

@@ -12,7 +12,6 @@
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "byteir/Pipelines/Common.h"
 #include "mlir/Dialect/Linalg/Passes.h"
-#include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
@@ -47,7 +46,9 @@ void mlir::addGenericLinalgElementwisePasses(OpPassManager& pm) {
   pm.addNestedPass<FuncOp>(createHloFusionToLinalgPass(getByteIRElementwiseFusionAttrName()));
   pm.addNestedPass<FuncOp>(createUnrealizedCastToLinalgPass());
   pm.addPass(createLinalgElementwiseOpFusionPass());
+  pm.addPass(createFoldReshapeOpsByLinearizationPass());
   pm.addPass(createCSEPass());
+  
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>

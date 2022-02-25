@@ -8,7 +8,9 @@
 #ifndef BYTEIR_PIPELINES_PASSES_H
 #define BYTEIR_PIPELINES_PASSES_H
 
+#include "byteir/Pipelines/AllOpt.h"
 #include "byteir/Pipelines/AffineOpt.h"
+#include "byteir/Pipelines/ByreHost.h"
 #include "byteir/Pipelines/ByreOpt.h"
 #include "byteir/Pipelines/GPUOpt.h"
 #include "byteir/Pipelines/HloOpt.h"

@@ -18,6 +18,7 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/LLVMIR/NVVMDialect.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
+#include "mlir/Pass/PassManager.h"
 
 using namespace mlir;
 
@@ -26,6 +27,7 @@ namespace {
   struct NVVMCodegenPipelinePass : public NVVMCodegenPipelineBase<NVVMCodegenPipelinePass> {
   NVVMCodegenPipelinePass()
     : NVVMCodegenPipelineBase() {
+    // TODO add target for supporting different SMs
     // TODO use target to decide passes
   }
 
@@ -35,7 +37,7 @@ namespace {
 
     pm.addPass(createCollectGPUKernelPass());
     pm.addPass(createLowerToCFGPass());
-    pm.addNestedPass<gpu::GPUModuleOp>(createGPUToNVVMExtPass());
+    pm.addPass(createGPUToNVVMExtPass());
     pm.addPass(createCSEPass());
     pm.addPass(createReconcileUnrealizedCastsPass());
     addMultiCSEPipeline(pm, 3);

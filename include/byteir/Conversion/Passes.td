@@ -31,7 +31,7 @@ def CoalescedForToGPULaunch : Pass<"coalesced-for-to-gpu", "mlir::FuncOp"> {
 // GPUToNVVM
 //===----------------------------------------------------------------------===//
 
-def GPUToNVVMExt : Pass<"gpu-to-nvvm-ext", "mlir::gpu::GPUModuleOp"> {
+def GPUToNVVMExt : Pass<"gpu-to-nvvm-ext", "ModuleOp"> {
   let summary = "Generate NVVM operations for gpu operations";
   let constructor = "mlir::createGPUToNVVMExtPass()";
   let dependentDialects = ["NVVM::NVVMDialect", "memref::MemRefDialect"];

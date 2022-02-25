@@ -1,4 +1,4 @@
-// RUN: byteir-opt --fusion-outlining %s | FileCheck %s
+// RUN: byteir-opt -fusion-outlining %s | FileCheck %s
 
 func @mhlo_add(%arg0: tensor<4xf32>, %arg1: tensor<4xf32>) -> tensor<4xf32> {
   %0 = "mhlo.fusion"(%arg0, %arg1) ( {

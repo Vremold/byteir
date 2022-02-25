@@ -30,6 +30,23 @@ def AffineOptPipeline : Pass<"affine-opt", "mlir::ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// Byre Host Pipeline
+//===----------------------------------------------------------------------===//
+
+def ByreHostPipeline : Pass<"byre-host", "mlir::ModuleOp"> {
+  let summary = "Byre Host Pipeline";
+  let constructor = "mlir::createByreHostPipelinePass()";
+  let options = [
+    Option<"entryFunc", "entry-func", "std::string",
+            /*default=*/"\"main\"",
+            "An optional string to speicify entry function.">,
+    Option<"deviceFile", "device-file-name", "std::string",
+            /*default=*/"\"kernel\"",
+            "An optional string to speicify device file name.">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // Byre Opt Pipeline
 //===----------------------------------------------------------------------===//
 
@@ -139,6 +156,34 @@ def ByteIRTotalBufferizePipeline : Pass<"byteir-total-bufferize", "mlir::ModuleO
 // Pipeline passes of final passes (TBD)
 //
 //===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+// Byteir All Opt Pipeline. 
+//===----------------------------------------------------------------------===//
+
+def ByteirAllOptPipeline : Pass<"byteir-all-opt", "mlir::ModuleOp"> {
+  let summary = "Byteir all Opt Pipeline";
+  let constructor = "mlir::createByteIRAllOptPipelinePass()";
+  let dependentDialects = [
+    "mlir::AffineDialect",
+    "mlir::bufferization::BufferizationDialect",
+    "mlir::byre::ByreDialect",
+    "mlir::gpu::GPUDialect",
+    "mlir::linalg::LinalgDialect",
+    "mlir::lmhlo::LmhloDialect",
+    "mlir::memref::MemRefDialect",
+    "mlir::scf::SCFDialect",
+  ];
+  let options = [
+    Option<"entryFunc", "entry-func", "std::string",
+            /*default=*/"\"main\"",
+            "An optional string to speicify entry function.">,
+    Option<"target", "target", "std::string",
+            /*default=*/"",
+            "An optional attribute to speicify target.">,
+  ];
+}
+
 
 
 #endif // BYTEIR_TRANSFORMS_PASSES

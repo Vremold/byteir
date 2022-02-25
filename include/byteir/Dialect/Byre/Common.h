@@ -20,6 +20,22 @@ inline llvm::StringRef getByreComputeName() {
   return "byre_compute_name";
 }
 
+inline std::string getByrePassThroughArgAttrName() {
+  return "passthrough_arg";
+}
+
+inline std::string  getByreArgOffsetAttrName() {
+  return "arg_offsets";
+}
+
+inline std::string getByreArgRankAttrName() { 
+  return "arg_ranks"; 
+}
+
+inline llvm::StringRef getByreForceComputeNameAttrName() {
+  return "byre_force_compute_name"; 
+}
+
 // byre.compute attributes prefix string
 inline std::string getByrePrefix() {
   return "__byre__";

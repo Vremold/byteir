@@ -22,7 +22,8 @@ void populateLmhloToByreConversionPatterns(RewritePatternSet& patterns,
   bool appendArgTypes);
 
 
-void populateStdToByreConversionPatterns(RewritePatternSet& patterns);
+void populateStdToByreConversionPatterns(RewritePatternSet &patterns,
+                                         bool appendArgTypes);
 
 // Collect a set of patterns to convert ops from Ace dialect to Byre dialect
 //void populateAceToByreConversionPatterns(RewritePatternSet& patterns);

@@ -13,6 +13,7 @@
 #include "byteir/Transforms/Passes.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
+#include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 
@@ -34,6 +35,8 @@ namespace {
     pm.addNestedPass<FuncOp>(createSimplifyAffineStructuresPass());
     pm.addNestedPass<FuncOp>(createLoopFusionPass());
     pm.addNestedPass<FuncOp>(createAffineLoopFusionExPass());
+    pm.addNestedPass<FuncOp>(
+      createInsertTrivialAffineLoopPass(getByteIRElementwiseFusionAttrName()));
     pm.addPass(createCSEPass());
     pm.addNestedPass<FuncOp>(createCMAEPass());
 

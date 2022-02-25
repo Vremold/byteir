@@ -13,8 +13,11 @@
 #include "mlir/Conversion/LLVMCommon/Pattern.h"
 #include "mlir/Conversion/LLVMCommon/TypeConverter.h"
 #include "mlir/Conversion/GPUToNVVM/GPUToNVVMPass.h"
+#include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
 #include "mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h"
+#include "mlir/Conversion/VectorToLLVM/ConvertVectorToLLVM.h"
+
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
 #include "mlir/Dialect/GPU/Passes.h"
@@ -29,6 +32,7 @@
 #include "llvm/Support/FormatVariadic.h"
 
 #include "../PassDetail.h"
+#include <iostream>
 
 using namespace llvm;
 using namespace mlir;
@@ -146,88 +150,70 @@ struct GPUToNVVMExtPass
   }
 
   void runOnOperation() override {
-    gpu::GPUModuleOp m = getOperation();
+    auto m = getOperation();
 
     /// Customize the bitwidth used for the device side index computations.
-    LowerToLLVMOptions options(
-        m.getContext(),
-        mlir::DataLayout(cast<mlir::DataLayoutOpInterface>(m.getOperation())));
-
+    LowerToLLVMOptions options(m.getContext(), mlir::DataLayout(m));
     options.emitCWrappers = true;
-    if (indexBitwidth != kDeriveIndexBitwidthFromDataLayout)
+    if (indexBitwidth != kDeriveIndexBitwidthFromDataLayout) {
       options.overrideIndexBitwidth(indexBitwidth);
+    }
 
     /// MemRef conversion for GPU to NVVM lowering. The GPU dialect uses memory
     /// space 5 for private memory attributions, but NVVM represents private
     /// memory allocations as local `alloca`s in the default address space. This
     /// converter drops the private memory space to support the use case above.
     LLVMTypeConverter converter(m.getContext(), options);
-   
-    converter.addConversion([&](MemRefType type) -> Optional<mlir::Type> {
-      if (type.getMemorySpaceAsInt() !=
-          gpu::GPUDialect::getPrivateAddressSpace())
-        return llvm::None;
-      return converter.convertType(MemRefType::Builder(type).setMemorySpace(0));
-    });
-
     // Lowering for MMAMatrixType.
     converter.addConversion([&](gpu::MMAMatrixType type) -> mlir::Type {
-      // The number of items in structToReturn are dependent on the the dataType
-      // and the MMA operand that this operation is associated with.
-      llvm::DenseMap<StringRef, int64_t> numElemsPerThreadF16,
-          numElemsPerThreadF32;
-      numElemsPerThreadF16["AOp"] = 8;
-      numElemsPerThreadF16["BOp"] = 8;
-      numElemsPerThreadF16["COp"] = 4;
-      numElemsPerThreadF32["AOp"] = 8;
-      numElemsPerThreadF32["BOp"] = 8;
-      numElemsPerThreadF32["COp"] = 8;
-      mlir::Type structToReturn;
-      if (type.getElementType().isF16()) {
-        // Number of f16's in 32-bit.
-        unsigned vecSize = 2;
-        mlir::Type vec = mlir::VectorType::get(vecSize, FloatType::getF16(&getContext()));
-        unsigned size = numElemsPerThreadF16[type.getOperand()];
-        SmallVector<mlir::Type> elements(size, vec);
-        structToReturn =
-            LLVM::LLVMStructType::getLiteral(&getContext(), elements);
-      } else if (type.getElementType().isF32()) {
-        unsigned size = numElemsPerThreadF32[type.getOperand()];
-        SmallVector<mlir::Type> elements(size, FloatType::getF32(&getContext()));
-        structToReturn =
-            LLVM::LLVMStructType::getLiteral(&getContext(), elements);
-      }
-      return structToReturn;
+      return convertMMAToLLVMType(type);
     });
-
-    RewritePatternSet patterns(m.getContext());
-    RewritePatternSet llvmPatterns(m.getContext());
 
     // Apply in-dialect lowering first. In-dialect lowering will replace ops
     // which need to be lowered further, which is not supported by a single
     // conversion pass.
-    populateGpuRewritePatterns(patterns);
-    (void)applyPatternsAndFoldGreedily(m, std::move(patterns));
+    {
+      RewritePatternSet patterns(m.getContext());
+      populateGpuRewritePatterns(patterns);
+      // use void since it will return failure for any gpu.func
+      (void)applyPatternsAndFoldGreedily(m, std::move(patterns));
+    }
 
-    arith::populateArithmeticToLLVMConversionPatterns(converter, llvmPatterns);
-    populateStdToLLVMConversionPatterns(converter, llvmPatterns);
-    populateMemRefToLLVMConversionPatterns(converter, llvmPatterns);
-    populateGpuToNVVMConversionPatterns(converter, llvmPatterns);
 
-    // our extension
-    populateGpuToNVVMExtConversionPatterns(converter, llvmPatterns);
+    // llvm lowering
+    {
+      RewritePatternSet llvmPatterns(m.getContext());
+      arith::populateArithmeticToLLVMConversionPatterns(converter,
+                                                        llvmPatterns);
+      populateGpuToNVVMConversionPatterns(converter, llvmPatterns);
+      populateGpuWMMAToNVVMConversionPatterns(converter, llvmPatterns);
+      populateMathToLLVMConversionPatterns(converter, llvmPatterns);
+      populateMemRefToLLVMConversionPatterns(converter, llvmPatterns);
+      populateStdToLLVMConversionPatterns(converter, llvmPatterns);
+      populateVectorToLLVMConversionPatterns(converter, llvmPatterns);
+      populateStdToLLVMFuncOpConversionPattern(converter, llvmPatterns);
+      
+      // our extension fixing
+      populateGpuToNVVMExtConversionPatterns(converter, llvmPatterns);
 
-    populateGpuWMMAToNVVMConversionPatterns(converter, llvmPatterns);
-    LLVMConversionTarget target(getContext());
-    configureGpuToNVVMConversionLegality(target);
-    if (failed(applyPartialConversion(m, target, std::move(llvmPatterns))))
-      signalPassFailure();
+      LLVMConversionTarget target(getContext());
+      configureGpuToNVVMConversionLegality(target);
+      // FIXME: avoid host-call of launchFunc
+      target.addLegalOp<gpu::LaunchFuncOp>();
+
+      if (failed(applyPartialConversion(m, target, std::move(llvmPatterns)))) {
+        signalPassFailure();
+      }
+    }
   }
+
+
+
 };
 
 } // anonymous namespace
 
-std::unique_ptr<OperationPass<gpu::GPUModuleOp>>
+std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createGPUToNVVMExtPass(unsigned indexBitwidth) {
   return std::make_unique<GPUToNVVMExtPass>(indexBitwidth);
 }

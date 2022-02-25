@@ -1,5 +1,6 @@
 add_mlir_dialect_library(ByteIRAffinePasses
   Transforms/AffineLoopFusionEx.cpp
+  Transforms/InsertTrivialAffineLoop.cpp
   Transforms/RewriteAffineToMemref.cpp
 
   ADDITIONAL_HEADER_DIRS

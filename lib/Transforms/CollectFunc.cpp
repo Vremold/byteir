@@ -15,9 +15,9 @@ using namespace mlir;
 namespace {
 
 struct CollectFuncPass : public CollectFuncBase<CollectFuncPass> {
-  CollectFuncPass(const std::string& tag)
+  CollectFuncPass(llvm::StringRef tag)
     : CollectFuncBase() {
-    this->anchorAttr = tag;
+    this->anchorAttr = tag.str();
   }
 
   void runOnOperation() override {
@@ -52,6 +52,6 @@ struct CollectFuncPass : public CollectFuncBase<CollectFuncPass> {
 } // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createCollectFuncPass(const std::string& tag) {
-  return std::make_unique<CollectFuncPass>(tag);
+mlir::createCollectFuncPass(llvm::StringRef anchorTag) {
+  return std::make_unique<CollectFuncPass>(anchorTag);
 }

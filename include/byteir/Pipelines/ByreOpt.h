@@ -9,7 +9,6 @@
 #define BYTEIR_PIPELINES_BYREOPT_H
 
 #include "mlir/Pass/Pass.h"
-#include "mlir/Pass/PassManager.h"
 #include <memory>
 #include <string>
 

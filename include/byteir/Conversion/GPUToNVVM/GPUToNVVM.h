@@ -13,16 +13,11 @@
 #include <memory>
 
 namespace mlir {
+class ModuleOp;
 
-namespace gpu {
-class GPUModuleOp;
-} // namespace gpu
-
-
-std::unique_ptr<OperationPass<gpu::GPUModuleOp>> createGPUToNVVMExtPass(
+std::unique_ptr<OperationPass<ModuleOp>>
+createGPUToNVVMExtPass(
     unsigned indexBitwidth = kDeriveIndexBitwidthFromDataLayout);
-
-
 } // namespace mlir
 
 #endif // BYTEIR_CONVERSION_GPUTONVVM_H

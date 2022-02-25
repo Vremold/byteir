@@ -24,6 +24,20 @@ def RewriteAffineToMemref : Pass<"rewrite-affine-to-memref", "mlir::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// InsertTrivialAffineLoop
+//===----------------------------------------------------------------------===//
+
+def InsertTrivialAffineLoop : Pass<"insert-trivial-affine-loop", "mlir::FuncOp"> {
+  let summary = "Insert trivial affine Loop for scalar computation";
+  let constructor = "mlir::createInsertTrivialAffineLoopPass()";
+  let options = [
+    Option<"anchorTag", "anchor-tag", "std::string",
+            /*default=*/"",
+            "Optional unitAttr anchored tag to apply this pass">
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // AffineLoopFusionEx
 //===----------------------------------------------------------------------===//
 

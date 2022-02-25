@@ -25,35 +25,53 @@ bool IsMhlo(Operation *op) {
   return dialect && isa<MhloDialect>(dialect);
 }
 
-bool IsFusibleCandidate(Operation *op) {
-  // FIXME (LWC) Tentatively disable constant fusion to avoid a bug
+bool IsValidSingleElemwiseOp(Operation* op) {
   return IsMhlo(op) &&
          (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-          IsSplatMhloConstant(op) || 
-          isa<mhlo::BroadcastInDimOp>(op) ||
-          isa<mhlo::BroadcastOp>(op) || 
-          isa<mhlo::ReshapeOp>(op) ||
-          isa<mhlo::ClampOp>(op) || 
-          isa<mhlo::SelectOp>(op));
+          op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>());
+}
+
+bool IsFusibleCandidate(Operation *op) {
+  return IsMhlo(op) &&
+         (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
+          op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
+          IsMhloConstantLike(op) || 
+          isa<mhlo::BroadcastInDimOp, 
+              mhlo::BroadcastOp, 
+              mhlo::ReshapeOp>(op));
 }
 
 bool IsFusibleStart(Operation *op) {
-  return IsMhlo(op) && 
-         (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-          isa<mhlo::ReshapeOp>(op) ||
-          isa<mhlo::ClampOp>(op) ||
-          isa<mhlo::SelectOp>(op));
-  //&& !isa<mhlo::ShiftRightLogicalOp>(op);
+  if (!IsMhlo(op)) return false;
+
+  if (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
+      op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
+      isa<mhlo::ReshapeOp>(op)) {
+    return true;
+  }
+
+  if (isa<mhlo::BroadcastInDimOp, 
+          mhlo::BroadcastOp>(op)) {
+    auto val = op->getOperand(0);
+    auto def_op = val.getDefiningOp();
+    return def_op && IsMhloConstantLike(def_op);
+  }
+
+  return false;
 }
 
 bool IsFusibleWith(Operation *target, Operation * /*start*/) {
-  // FIXME (LWC) Tentatively disable constant fusion to avoid a bug
   return IsMhlo(target) &&
          (target->hasTrait<::mlir::OpTrait::Elementwise>() ||
-          IsSplatMhloConstant(target) || isa<mhlo::BroadcastInDimOp>(target) ||
-          isa<mhlo::BroadcastOp>(target) || isa<mhlo::ReshapeOp>(target) ||
-          isa<mhlo::ClampOp>(target) || isa<mhlo::SelectOp>(target));
-  //&& !isa<mhlo::ShiftRightLogicalOp>(target);
+          target->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
+          IsMhloConstantLike(target) || 
+          isa<mhlo::BroadcastInDimOp, 
+              mhlo::BroadcastOp, 
+              mhlo::ReshapeOp>(target));
+}
+
+bool Replicate(Operation *op) { 
+  return IsMhloConstantLike(op);
 }
 
 struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
@@ -65,7 +83,7 @@ struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
     FuncOp funcOp = getOperation();
 
     for (auto &block : funcOp.getBlocks()) {
-      ReplicateDefiningOp(&block, IsSplatMhloConstant);
+      ReplicateDefiningOp(&block, Replicate);
     }
 
     ProducerFusionPlanner planner(funcOp, IsFusibleCandidate, IsFusibleStart,
@@ -80,8 +98,7 @@ struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
       if (pattern.size() > 1) {
         applyMhloFusionPattern(pattern, getByteIRElementwiseFusionAttrName());
       } else if (clusterSingleElemwiseOp.getValue()) {
-        if (pattern.size() == 1 &&
-            pattern[0]->hasTrait<::mlir::OpTrait::Elementwise>()) {
+        if (pattern.size() == 1 && IsValidSingleElemwiseOp(pattern[0])) {
           applyMhloFusionPattern(pattern, getByteIRElementwiseFusionAttrName());
         }
       }

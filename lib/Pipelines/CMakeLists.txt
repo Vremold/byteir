@@ -1,5 +1,7 @@
 add_mlir_library(ByteIRPipelines
   AffineOpt.cpp
+  AllOpt.cpp
+  ByreHost.cpp
   ByreOpt.cpp
   Common.cpp
   GPUOpt.cpp

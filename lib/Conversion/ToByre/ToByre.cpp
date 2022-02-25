@@ -34,6 +34,29 @@ using namespace mlir::lmhlo;
 using namespace mlir::mhlo;
 using namespace llvm;
 
+namespace {
+  // TODO: move this to util if needed
+  bool IsArgAlias(SmallVectorImpl<Value> &operands, Value src, Value dst) {
+    bool is_arg_alias = false;
+    // TODO: move this util
+    // if output is an arg, swap in and out
+    if (dst.getDefiningOp() == nullptr) {
+      operands.push_back(dst);
+      operands.push_back(src);
+      is_arg_alias = true;
+    } else if (src.getDefiningOp() == nullptr) {
+      operands.push_back(src);
+      operands.push_back(dst);
+      is_arg_alias = true;
+    } else {
+      operands.push_back(src);
+      operands.push_back(dst);
+    }
+    return is_arg_alias;
+  }
+}
+
+
 template <>
 mlir::LogicalResult
 mlir::ConvertToByrePattern<mlir::lmhlo::GatherOp>::matchAndRewrite(
@@ -238,26 +261,16 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
     return success();
   } 
 
-  bool is_arg_alias = false;
-  SmallVector<Value> operands;
-
-  // if output is an arg, swap in and out
-  if (adaptor.getOperands()[1].getDefiningOp() == nullptr) {
-    operands = { adaptor.getOperands()[1], adaptor.getOperands()[0]};
-    is_arg_alias = true;
-  } else if (adaptor.getOperands()[0].getDefiningOp() == nullptr) {
-    operands = adaptor.getOperands();
-    is_arg_alias = true;
-  } else {
-    operands = adaptor.getOperands();
-  }
+  SmallVector<Value, 2> operands;
+  bool isArgAlias = IsArgAlias(operands, adaptor.getOperands()[0],
+                                 adaptor.getOperands()[1]);
 
   auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
       op, found->second, operands);
 
   new_op->setAttr("offset", rewriter.getI32IntegerAttr(0));
 
-  if (is_arg_alias) {
+  if (isArgAlias) {
     new_op->setAttr("arg_alias", rewriter.getUnitAttr());
   }
 
@@ -266,10 +279,15 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
 
 namespace {
 
+
+
 class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
+private:
+  bool appendArgTypes;
+
 public:
-  ConvertCallOpToByrePattern(MLIRContext *ctx)
-      : OpConversionPattern<mlir::CallOp>(ctx) {}
+  ConvertCallOpToByrePattern(MLIRContext *ctx, bool appendTypes)
+      : OpConversionPattern<mlir::CallOp>(ctx), appendArgTypes(appendTypes) {}
 
   LogicalResult
   matchAndRewrite(mlir::CallOp op, mlir::CallOp::Adaptor adaptor,
@@ -286,15 +304,81 @@ public:
       return failure();
     }
 
-    mlir::byre::ComputeOp computeOp =
-        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-            op, nameAttr.getValue(), adaptor.getOperands());
+    bool effectiveAppendArgTypes = 
+      !funcOp->hasAttr(byre::getByreForceComputeNameAttrName()) && 
+      appendArgTypes;
 
+    auto key = getByreKey(nameAttr.getValue(), op->getOperandTypes(),
+                          effectiveAppendArgTypes);
+
+
+    // handle
+    SmallVector<Value> operands;
+
+    SmallVector<int64_t> offsets;
+    if (funcOp->hasAttr(getByreArgOffsetAttrName())) {
+      auto offsetArray =
+          funcOp->getAttrOfType<ArrayAttr>(getByreArgOffsetAttrName());
+
+      offsets = llvm::to_vector(llvm::map_range(
+          offsetArray.getAsRange<IntegerAttr>(),
+          [&](IntegerAttr intAttr) { return intAttr.getInt(); }));
+
+      for (auto offset : offsets) {
+        operands.push_back(adaptor.getOperands()[offset]);
+      }    
+    } else {
+      operands.insert(operands.end(), adaptor.getOperands().begin(),
+                      adaptor.getOperands().end());
+    }
+
+
+    mlir::byre::ComputeOp computeOp =
+        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
+
+    // copy byre attr, and remove prefix
     SmallVector<NamedAttribute> attrs;
     for (auto iter = funcOp->getAttrs().begin();
          iter != funcOp->getAttrs().end(); iter++) {
       if (byre::isByreComputeAttr(*iter)) {
         attrs.emplace_back(byre::removeByrePrefix(*iter));
+      }
+    }
+
+    // handle arg-position sensitive attr here
+    if (offsets.size() > 0) {
+      // handle passthrough by inserting alias
+      if (funcOp->hasAttr(getByrePassThroughArgAttrName())) {
+        auto passThroughArray =
+            funcOp->getAttrOfType<ArrayAttr>(getByrePassThroughArgAttrName());
+
+        auto passThrough = llvm::to_vector(llvm::map_range(
+            passThroughArray.getAsRange<IntegerAttr>(),
+            [&](IntegerAttr intAttr) { return intAttr.getInt(); }));
+
+        auto loc = op.getLoc();
+
+        for (size_t i = 0; i < passThrough.size(); i += 2) {
+          SmallVector<Value, 2> aliasOperands;
+          Value dst = adaptor.getOperands()[passThrough[i]];
+          Value src = adaptor.getOperands()[passThrough[i + 1]];
+ 
+            // If both args, replace it with copy
+          if (src.getDefiningOp() == nullptr &&
+              dst.getDefiningOp() == nullptr) {
+            rewriter.create<byre::CopyOp>(loc, src, dst);
+            continue;
+          }
+
+          bool isArgAlias = IsArgAlias(aliasOperands, src, dst);
+          auto new_alias =
+              rewriter.create<byre::ComputeOp>(loc, "AliasOp", aliasOperands);
+
+          new_alias->setAttr("offset", rewriter.getI32IntegerAttr(0));
+          if (isArgAlias) {
+            new_alias->setAttr("arg_alias", rewriter.getUnitAttr());
+          }
+        }
       }
     }
 
@@ -1032,7 +1116,7 @@ void ConvertToByrePass::runOnOperation() {
   RewritePatternSet patterns(&ctx);
   populateLmhloToByreConversionPatterns(patterns, lmhloSupportMap, appendArgTypes);
 
-  populateStdToByreConversionPatterns(patterns);
+  populateStdToByreConversionPatterns(patterns, appendArgTypes);
 
   if (failed(applyPartialConversion(m, target, std::move(patterns)))) {
     signalPassFailure();
@@ -1081,8 +1165,10 @@ void mlir::populateLmhloToByreConversionPatterns(
   // clang-format on
 }
 
-void mlir::populateStdToByreConversionPatterns(RewritePatternSet& patterns) {
-  patterns.add<ConvertCallOpToByrePattern>(patterns.getContext());
+void mlir::populateStdToByreConversionPatterns(RewritePatternSet &patterns,
+                                               bool appendArgTypes) {
+  patterns.add<ConvertCallOpToByrePattern>(patterns.getContext(),
+                                           appendArgTypes);
 }
 
 std::unique_ptr<OperationPass<ModuleOp>> mlir::createConvertToByrePass(bool appendArgTypes) {

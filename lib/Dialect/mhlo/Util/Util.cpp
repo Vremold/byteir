@@ -21,6 +21,12 @@ bool mlir::IsSplatMhloConstant(Operation *op) {
   return false;
 }
 
+bool mlir::IsMhloConstantLike(Operation *op) { 
+  return IsSplatMhloConstant(op) || 
+         isa_and_nonnull<mhlo::IotaOp>(op);
+}
+
+
 bool mlir::IsSplatMhloConstantValue(Operation *op, int64_t splat_val) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     // only handle DenseFPElementsAttr for now

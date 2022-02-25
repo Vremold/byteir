@@ -10,12 +10,11 @@
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
-#include <string>
 
 namespace mlir {
 
 std::unique_ptr<OperationPass<ModuleOp>>
-createCollectFuncPass(const std::string& anchorTag = "");
+createCollectFuncPass(llvm::StringRef anchorTag = "");
 
 } // namespace mlir
 

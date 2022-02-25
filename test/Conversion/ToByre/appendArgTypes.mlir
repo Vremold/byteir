@@ -144,4 +144,33 @@ module {
   // CHECK-LABEL: select_and_scatter
   // CHECK-NEXT: byre.compute @PoolMaxGradOpf16f16f16(%arg0, %arg1, %arg2)
 
+  func @test_call(%arg0: memref<4xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<4xf32> {__placeholder__byre.argname = "B"}) -> (memref<4xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point } {
+    %0 = call @some_func(%arg0, %arg1) : (memref<4xf32>, memref<4xf32>) -> memref<4xf32>
+    return %0 : memref<4xf32>
+  }
+
+  func private @some_func(%arg0: memref<4xf32>, %arg1: memref<4xf32>) -> memref<4xf32> attributes { byre_compute_name = "customAddOp"}  {
+    %0 = memref.alloc() : memref<4xf32>
+    "lmhlo.add"(%arg0, %arg1, %0) : (memref<4xf32>, memref<4xf32>, memref<4xf32>) -> ()
+    %1 = memref.alloc() : memref<4xf32>
+    "lmhlo.add"(%arg0, %0, %1) : (memref<4xf32>, memref<4xf32>, memref<4xf32>) -> ()
+    return %1 : memref<4xf32>
+  }
+  // CHECK-LABEL: test_call
+  // CHECK-NEXT: byre.compute @customAddOpf32f32f32
+
+    func @test_call_codegen(%arg0: memref<4xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<4xf32> {__placeholder__byre.argname = "B"}) -> (memref<4xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point } {
+    %0 = call @some_func_2(%arg0, %arg1) : (memref<4xf32>, memref<4xf32>) -> memref<4xf32>
+    return %0 : memref<4xf32>
+  }
+
+  func private @some_func_2(%arg0: memref<4xf32>, %arg1: memref<4xf32>) -> memref<4xf32> attributes { byre_codegen_op, byre_compute_name = "customAddOp"}  {
+    %0 = memref.alloc() : memref<4xf32>
+    "lmhlo.add"(%arg0, %arg1, %0) : (memref<4xf32>, memref<4xf32>, memref<4xf32>) -> ()
+    %1 = memref.alloc() : memref<4xf32>
+    "lmhlo.add"(%arg0, %0, %1) : (memref<4xf32>, memref<4xf32>, memref<4xf32>) -> ()
+    return %1 : memref<4xf32>
+  }
+  // CHECK-LABEL: test_call_codegen
+  // CHECK-NEXT: byre.compute @customAddOp
 }

@@ -176,7 +176,6 @@ static LogicalResult convertCoalescedAffineLoopToGPULaunch(AffineForOp forOp,
   return success();
 }
 
-
 struct CoalescedForToGPULaunchPass : public CoalescedForToGPULaunchBase<CoalescedForToGPULaunchPass> {
   CoalescedForToGPULaunchPass(int64_t bSize)
     : CoalescedForToGPULaunchBase() {

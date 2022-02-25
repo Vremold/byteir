@@ -12,6 +12,7 @@
 #include "byteir/Dialect/Byre/Passes.h"
 #include "byteir/Transforms/Passes.h"
 #include "byteir/Utils/Utils.h"
+#include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;

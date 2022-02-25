@@ -9,6 +9,7 @@
 #define BYTEIR_CONVERSION_CONVERTTOBYRE_COMMON_H
 
 #include "byteir/Dialect/Byre/ByreDialect.h"
+#include "llvm/ADT/StringRef.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include <string>
 

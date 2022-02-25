@@ -9,14 +9,10 @@
 #define BYTEIR_PIPELINES_GPUOPT_H
 
 #include "mlir/Pass/Pass.h"
-#include "mlir/Pass/PassManager.h"
 #include <memory>
 #include <string>
 
-
 namespace mlir {
-
-//void addGenericHloFusionPatterns(OpPassManager& pm, const std::string& entry = "main");
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createGPUOptPipelinePass(const std::string &target = "");
