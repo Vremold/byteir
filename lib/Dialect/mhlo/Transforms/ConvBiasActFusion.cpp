@@ -49,6 +49,11 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
       return failure();
     }
 
+    SmallVector<Value> inputs{convOp.lhs(), convOp.rhs(),
+                              broadcastOp.operand()};
+    SmallVector<Operation *> ops{convOp.getOperation(),
+                                 broadcastOp.getOperation(),
+                                 addOp.getOperation(), op.getOperation()};
     NamedAttrList origin_attrs;
     HandleConvAttribute(origin_attrs, convOp, rewriter);
 
@@ -71,22 +76,17 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr("ConvBiasOp"));
 
-    Location loc =
-        rewriter.getFusedLoc({op->getLoc(), addOp->getLoc(),
-                              broadcastOp->getLoc(), convOp->getLoc()});
-    mhlo::FusionOp fusionOp = rewriter.create<mhlo::FusionOp>(
-        loc, op.getResult().getType(),
-        ArrayRef<Value>{convOp.lhs(), convOp.rhs(), broadcastOp.operand()});
+    Location loc = GetFusedLoc(ops, rewriter);
+    mhlo::FusionOp fusionOp =
+        rewriter.create<mhlo::FusionOp>(loc, op.getResult().getType(), inputs);
     op->replaceAllUsesWith(fusionOp.getResults());
-    Region &region = fusionOp.fused_computation();
-    Block &block = region.emplaceBlock();
+    Block &block = fusionOp.fused_computation().emplaceBlock();
     {
       // assume that there is no other reference of conv's result
       OpBuilder::InsertionGuard guard(rewriter);
-      convOp->moveBefore(&block, block.end());
-      broadcastOp->moveBefore(&block, block.end());
-      addOp->moveBefore(&block, block.end());
-      op->moveBefore(&block, block.end());
+      for (auto _op : ops) {
+        _op->moveBefore(&block, block.end());
+      }
 
       rewriter.setInsertionPoint(&block, block.end());
       rewriter.create<mhlo::ReturnOp>(loc, op.getResult());

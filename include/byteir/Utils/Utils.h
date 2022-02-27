@@ -9,17 +9,19 @@
 #define BYTEIR_UTILS_UTILS_H
 
 #include "mlir/IR/Attributes.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionInterfaces.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Optional.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 #include <string>
 #include <type_traits>
 
 namespace mlir {
 class CallOp;
 class FuncOp;
+class Location;
 class Operation;
 class Value;
 
@@ -124,6 +126,14 @@ bool IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> filter
 inline int UseCount(Value val) {
   return static_cast<int>(
       std::distance(val.getUses().begin(), val.getUses().end()));
+}
+
+inline Location GetFusedLoc(ArrayRef<Operation *> ops, OpBuilder &op_builder) {
+  llvm::SmallVector<Location> locs;
+  for (auto op : ops) {
+    locs.push_back(op->getLoc());
+  }
+  return op_builder.getFusedLoc(locs);
 }
 
 } // namespace mlir

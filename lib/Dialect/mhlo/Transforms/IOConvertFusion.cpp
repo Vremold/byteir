@@ -86,11 +86,7 @@ struct IOConvertFusionPattern : public RewritePattern {
       }
     }
 
-    llvm::SmallVector<Location> locs;
-    for (auto _op : ops) {
-      locs.push_back(_op->getLoc());
-    }
-    auto loc = rewriter.getFusedLoc(locs);
+    auto loc = GetFusedLoc(ops, rewriter);
     llvm::SmallVector<Type> outputs_type;
     for (auto output : outputs) {
       outputs_type.push_back(output.getType());

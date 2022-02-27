@@ -12,24 +12,12 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
-// IOConvertFusion
+// ConvBackwardFusion
 //===----------------------------------------------------------------------===//
 
-def IOConvertFusion : Pass<"fuse-io-convert", "mlir::FuncOp"> {
-  let summary = "Fuse op with Input/Output convert";
-  let constructor = "mlir::createIOConvertFusionPass()";
-  let options = [
-    Option<"opName", "op-name", "std::string", /*default=*/"",
-           "Fuse op with Input/Output convert into mhlo.fusion">,
-    ListOption<"inputArgIdx", "input-arg-idx", "int",
-               "input args with convert: input-arg-index=0,1,...",
-               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
-    ListOption<"outputArgIdx", "output-arg-idx", "int",
-               "output args with convert: output-arg-index=0,1,...",
-               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
-    Option<"byreComputeName", "byre-compute-name", "std::string", /*default=*/"",
-            "Set mhlo.fusion with byre-compute-name">,
-  ];
+def ConvBackwardFusion : Pass<"fuse-conv-backward", "mlir::FuncOp"> {
+  let summary = "Fuse convolution backward data & filter";
+  let constructor = "mlir::createConvBackwardFusionPass()";
 }
 
 //===----------------------------------------------------------------------===//
@@ -94,6 +82,27 @@ def HloFolder : Pass<"hlo-fold", "mlir::FuncOp"> {
 def HloTransposeDotToDotGeneral : Pass<"hlo-transpose-dot-to-dot-general", "mlir::FuncOp"> {
   let summary = "Fuse transpose dot to dot_general";
   let constructor = "mlir::createHloTransposeDotToDotGeneralPass()";
+}
+
+//===----------------------------------------------------------------------===//
+// IOConvertFusion
+//===----------------------------------------------------------------------===//
+
+def IOConvertFusion : Pass<"fuse-io-convert", "mlir::FuncOp"> {
+  let summary = "Fuse op with Input/Output convert";
+  let constructor = "mlir::createIOConvertFusionPass()";
+  let options = [
+    Option<"opName", "op-name", "std::string", /*default=*/"",
+           "Fuse op with Input/Output convert into mhlo.fusion">,
+    ListOption<"inputArgIdx", "input-arg-idx", "int",
+               "input args with convert: input-arg-index=0,1,...",
+               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+    ListOption<"outputArgIdx", "output-arg-idx", "int",
+               "output args with convert: output-arg-index=0,1,...",
+               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+    Option<"byreComputeName", "byre-compute-name", "std::string", /*default=*/"",
+            "Set mhlo.fusion with byre-compute-name">,
+  ];
 }
 
 //===----------------------------------------------------------------------===//

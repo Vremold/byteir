@@ -9,10 +9,10 @@ func @conv_bias_act(%arg0: tensor<5x69x31x95xf32>, %arg1: tensor<64x69x1x1xf32>,
 }
 // CHECK-LABEL: func @conv_bias_act
 // CHECK-NEXT:  mhlo.fusion
-// CHECK-NEXT:  mhlo.convolution
-// CHECK-NEXT:  mhlo.broadcast_in_dim
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  ace.activate{{.*}}{act_func = "relu"}
-// CHECK-NEXT:  mhlo.return
+// CHECK-NEXT:    mhlo.convolution
+// CHECK-NEXT:    mhlo.broadcast_in_dim
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    ace.activate{{.*}}{act_func = "relu"}
+// CHECK-NEXT:    mhlo.return
 // CHECK-NEXT:  }){{.*}}__byre__act_func = "relu"{{.*}}__byre__input_layout = "NCHW"{{.*}}__byre__kernel_layout = "NCHW"{{.*}}__byre__output_layout = "NCHW"{{.*}}byre_compute_name = "ConvBiasOp"
 // CHECK:  return
