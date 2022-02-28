@@ -6,8 +6,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/GraphClusteringByDevice.h"
-#include "PassDetail.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
+#include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
+#include "PassDetail.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
@@ -117,8 +119,7 @@ void createFunctions(ModuleOp module_op,
     FunctionType funcType = FunctionType::get(context, inputTypes, resultTypes);
     FuncOp funcOp =
         FuncOp::create(UnknownLoc::get(context), funcName, funcType);
-    funcOp->setAttr(attrName,
-                    StringAttr::get(context, metadata.deviceAttr));
+    funcOp->setAttr(attrName, StringAttr::get(context, metadata.deviceAttr));
     funcOp.setPublic();
     Block *block = funcOp.addEntryBlock();
 
@@ -204,6 +205,9 @@ void GraphClusteringByDevicePass::runOnOperation() {
   MLIRContext *context = &getContext();
   SmallVector<FuncOp, 4> originalFuncs;
   for (auto funcOp : moduleOp.getOps<FuncOp>()) {
+    for (auto &block : funcOp.getBlocks()) {
+      ReplicateDefiningOp(&block, IsSplatMhloConstant);
+    }
     originalFuncs.push_back(funcOp);
   }
   for (auto funcOp : originalFuncs) {
