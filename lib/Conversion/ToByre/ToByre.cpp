@@ -22,9 +22,11 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionInterfaces.h"
 #include "mlir/Parser.h"
+#include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/TypeSwitch.h"
+
 #include <functional>
 #include <string>
 
@@ -279,8 +281,6 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
 
 namespace {
 
-
-
 class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
 private:
   bool appendArgTypes;
@@ -308,10 +308,6 @@ public:
       !funcOp->hasAttr(byre::getByreForceComputeNameAttrName()) && 
       appendArgTypes;
 
-    auto key = getByreKey(nameAttr.getValue(), op->getOperandTypes(),
-                          effectiveAppendArgTypes);
-
-
     // handle
     SmallVector<Value> operands;
 
@@ -332,6 +328,8 @@ public:
                       adaptor.getOperands().end());
     }
 
+    auto key = getByreKey(nameAttr.getValue(), op->getOperandTypes(),
+                      effectiveAppendArgTypes);
 
     mlir::byre::ComputeOp computeOp =
         rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
@@ -1048,6 +1046,70 @@ static inline void rewriteByreResultAttrsToFuncResultAttr(FuncOp func) {
   }
 }
 
+// RNG constraint rewriting
+// Handle RngUniform constraint
+struct RngUniformPattern : public OpRewritePattern<mlir::CallOp> {
+  RngUniformPattern(MLIRContext *context)
+      : OpRewritePattern<mlir::CallOp> (context) {}
+
+  LogicalResult matchAndRewrite(mlir::CallOp op,
+                                PatternRewriter &rewriter) const override {
+    auto funcOp = GetFuncOp(op);
+    if (funcOp == nullptr) {
+      return failure();
+    }
+
+    StringAttr nameAttr =
+        funcOp->getAttrOfType<StringAttr>(byre::getByreComputeName());
+    if (nameAttr == nullptr) {
+      return failure();
+    }
+
+    if (nameAttr.str() != "RngUniform") {
+      return failure();
+    }
+
+    if (funcOp->hasAttr(getByrePrefix() + "low")) {
+      return failure();
+    }
+
+    // FIXME: this is hacky
+    auto get_const = [&](Value val) -> mlir::Operation* {
+      for (auto user : val.getUsers()) {
+        if (auto op = dyn_cast<lmhlo::ConstOp>(user)) {
+          return user;
+        }
+      }
+      return nullptr;
+    };
+
+
+    auto lowConst = get_const(op->getOperand(0));
+    auto highConst = get_const(op->getOperand(1));
+
+    if (lowConst && highConst) {
+      auto low = cast<lmhlo::ConstOp>(lowConst).value().getSplatValue<float>();
+      auto high = cast<lmhlo::ConstOp>(highConst).value().getSplatValue<float>();
+
+      funcOp->setAttr(getByrePrefix() + "low", 
+                      rewriter.getF32FloatAttr(low));
+
+      funcOp->setAttr(getByrePrefix() + "high",
+                      rewriter.getF32FloatAttr(high));
+
+
+      SmallVector<int32_t> offsets = {3};  // 3 as output idx
+      funcOp->setAttr(getByreArgOffsetAttrName(),
+                      rewriter.getI32ArrayAttr(offsets));
+
+      return success();
+    } 
+    
+
+    return failure();
+  }
+};
+
 void ConvertToByrePass::runOnOperation() {
 
   ModuleOp m = getOperation();
@@ -1096,6 +1158,18 @@ void ConvertToByrePass::runOnOperation() {
     removeArgAttrPlaceholders(func, argAttrNames);
   }
 
+
+  // Rewriting constraint
+  {
+    OwningRewritePatternList rewritePatterns(&ctx);
+    populateLmhloConstraintToByrePattern(rewritePatterns);
+    if (failed(applyPatternsAndFoldGreedily(m, std::move(rewritePatterns)))) {
+      m.emitError(
+          "populateLmhloConstraintToByrePattern applyPatternsAndFoldGreedily does not converge");
+      signalPassFailure();
+    }
+  }
+
   // Below rewrite Lmhlo ops
   ConversionTarget target(getContext());
   target.addLegalDialect<byre::ByreDialect, memref::MemRefDialect, scf::SCFDialect,
@@ -1138,6 +1212,11 @@ void ConvertToByrePass::runOnOperation() {
 }
 
 } // namespace
+
+void mlir::populateLmhloConstraintToByrePattern(
+    RewritePatternSet &patterns) {
+  patterns.add<RngUniformPattern>(patterns.getContext());
+}
 
 void mlir::populateLmhloToByreConversionPatterns(
   RewritePatternSet& patterns,

@@ -36,7 +36,6 @@ namespace {
       getAttrPlaceholderName(ByreDialect::getEntryPointFunctionAttrName()), 
       entryFunc));
 
-
     pm.addPass(createConvertToByrePass(appendArgTypes));
     pm.addNestedPass<FuncOp>(createByreFoldPass());
     pm.addPass(createCSEPass());

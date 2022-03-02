@@ -111,7 +111,6 @@ void FoldAlias(FuncOp func) {
       }
     }
   }
-
 }
 
 struct ByreHoldPass : public ByreFoldBase<ByreHoldPass> {

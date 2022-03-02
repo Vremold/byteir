@@ -14,7 +14,6 @@
 
 namespace mlir {
 
-
 constexpr StringRef getByteIRReduceFusionAttrName() { return "__byteir_reduce_fusion__"; }
 
 // fuse ReduceWindow with Pad and/or Constant

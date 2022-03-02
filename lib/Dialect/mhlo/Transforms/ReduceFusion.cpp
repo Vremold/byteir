@@ -14,7 +14,6 @@
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-#include <iostream>
 
 using namespace llvm;
 using namespace mlir;

@@ -46,7 +46,6 @@ namespace mhlo {
   MAP_HLO_TO_LHLO(ScatterOp);
   MAP_HLO_TO_LHLO(SelectAndScatterOp);
   MAP_HLO_TO_LHLO(SortOp);
-
 #undef MAP_HLO_TO_LHLO
 
 } // namespace mhlo
@@ -376,6 +375,13 @@ public:
     target.addLegalDialect<memref::MemRefDialect>();
     target.addLegalDialect<shape::ShapeDialect>();
     target.addLegalDialect<tensor::TensorDialect>();
+
+    // non-support op lowering here
+    // They are typically mhlo op without lmhlo counterpart
+    // Those ops should be hanndled in TrivialFusion by wrapping with calls 
+    target.addLegalOp<mhlo::RngBitGeneratorOp, 
+                      mhlo::RngNormalOp, 
+                      mhlo::RngUniformOp>();
 
     // LWC: lmhlo::ScatterOp's body allow mhlo 
     target.addDynamicallyLegalDialect<mhlo::MhloDialect>([&](Operation* op) {

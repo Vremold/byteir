@@ -114,4 +114,13 @@ def ReduceFusion : Pass<"fuse-reduce", "mlir::FuncOp"> {
   let constructor = "mlir::createReduceFusionPass()";
 }
 
+//===----------------------------------------------------------------------===//
+// TrivialFusion
+//===----------------------------------------------------------------------===//
+
+def TrivialFusion : Pass<"fuse-trivial", "mlir::FuncOp"> {
+  let summary = "Fuse trivial single ops";
+  let constructor = "mlir::createTrivialFusionPass()";
+}
+
 #endif // BYTEIR_MHLO_PASSES

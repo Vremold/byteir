@@ -157,6 +157,9 @@ mlir::ProducerFusionPlanner::ProducerFusionPlanner(FuncOp funcOp,
 }
 
 bool mlir::ProducerFusionPlanner::AlreayFused(Operation* pre_op, Operation* cur_op) {
+  assert(op_to_node_id_.count(pre_op) > 0);
+  assert(op_to_node_id_.count(cur_op) > 0);
+
   int pre_id = op_to_node_id_[pre_op];
   int cur_id = op_to_node_id_[cur_op];
   return leader_to_nodes_.isEquivalent(pre_id, cur_id);
@@ -164,10 +167,11 @@ bool mlir::ProducerFusionPlanner::AlreayFused(Operation* pre_op, Operation* cur_
 }
 
 bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation* pre_op, Operation* cur_op) {
+  assert(op_to_node_id_.count(pre_op) > 0);
+  assert(op_to_node_id_.count(cur_op) > 0);
 
   int pre_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[pre_op]);
   const auto& pre_cluster = leader_to_value_count_[pre_leader];
-
   int cur_id = op_to_node_id_[cur_op];
 
   for (auto it : pre_cluster) {
@@ -179,33 +183,38 @@ bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation* pre_op, Operation*
 
     // output's use
     for (auto& use : it.first.getUses()) {
-
       auto another_user = use.getOwner();
-      auto another_id = op_to_node_id_[another_user];
 
-      // if another user is curOp 
-      // or already fused with curOp
-      // or already fused wiht pre_op
-      if (another_user == cur_op || 
-          leader_to_nodes_.isEquivalent(cur_id, another_id) ||
-          leader_to_nodes_.isEquivalent(pre_leader, another_id)) {
-        continue;
+      // skip if another user is curOp
+      if (another_user == cur_op) continue;
+
+      // check if another user is a candidate
+      if (op_to_node_id_.count(another_user) > 0) {
+        auto another_id = op_to_node_id_[another_user];
+
+        // skip if another user already fused with curOp
+        // or already fused wiht pre_op
+        if (leader_to_nodes_.isEquivalent(cur_id, another_id) ||
+            leader_to_nodes_.isEquivalent(pre_leader, another_id)) {
+          continue;
+        }
       }
 
-      // if there is another path, return false
+      // check if there is another path going through another user to curOp
+      // if so, return false
       if(dependence_->properlyDepends(another_user, cur_op)) {
         return false;
-      }
+      }  
     }
   }
 
   return true;
-
 }
 
-//static 
-
 void mlir::ProducerFusionPlanner::Merge(Operation* pre_op, Operation* cur_op) {
+  assert(op_to_node_id_.count(pre_op) > 0);
+  assert(op_to_node_id_.count(cur_op) > 0);
+
   int pre_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[pre_op]);
   int cur_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[cur_op]);
 
@@ -234,17 +243,23 @@ void mlir::ProducerFusionPlanner::Run() {
   SmallVector<Operation*, 8> op_iteration = op_list_;
 
   for (auto* op : op_iteration) {
+
+    // fusion only can start when fuse_start_ is true
     if (!fuse_start_(op)) {
       continue;
     }
 
+    // check fusion in the operand sequence
     for (unsigned i = 0; i < op->getNumOperands(); ++i) {
       auto val = op->getOperand(i);
       auto op_def = val.getDefiningOp();
 
-      // skip block arg, or already fused
-      if (op_def == nullptr ||
-        AlreayFused(op_def, op)) {
+      // skip block arg (input args)
+      // or not in candidate
+      // or already fused
+      if (op_def == nullptr || 
+          op_to_node_id_.count(op_def) == 0 ||
+          AlreayFused(op_def, op)) {
         continue;
       }
 

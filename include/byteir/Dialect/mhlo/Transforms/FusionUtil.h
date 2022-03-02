@@ -77,7 +77,7 @@ private:
   // a UnionFind set
   llvm::EquivalenceClasses<int> leader_to_nodes_;
 
-  // leader to value cnt, where use cnt, 
+  // leader to value cnt, where use cnt
   llvm::SmallDenseMap<int, llvm::DenseMap<Value, int>> leader_to_value_count_;
 
   // Fusion Plan

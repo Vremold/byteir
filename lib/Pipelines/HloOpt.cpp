@@ -59,6 +59,10 @@ void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
                                        const std::string &entry,
                                        bool outlineSingleElemwiseOp) {
 
+  // Trivial fusion
+  pm.addNestedPass<FuncOp>(createTrivialFusionPass());
+  pm.addPass(createFusionOutliningPass());
+
   // Fusion passes
   pm.addNestedPass<FuncOp>(createConvBackwardFusionPass());
   pm.addNestedPass<FuncOp>(

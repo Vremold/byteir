@@ -47,6 +47,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/HloTransposeDotToDotGeneral.cpp
   Transforms/IOConvertFusion.cpp
   Transforms/ReduceFusion.cpp
+  Transforms/TrivialFusion.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo

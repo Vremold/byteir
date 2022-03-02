@@ -17,6 +17,7 @@
 #include "byteir/Dialect/mhlo/Transforms/HloTransposeDotToDotGeneral.h"
 #include "byteir/Dialect/mhlo/Transforms/IOConvertFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/ReduceFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/TrivialFusion.h"
 
 namespace mlir {
 
