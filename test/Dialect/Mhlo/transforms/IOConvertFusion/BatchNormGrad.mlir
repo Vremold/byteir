@@ -14,4 +14,4 @@ func @batch_norm_grad(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x1
 // CHECK-NEXT:    mhlo.batch_norm_grad
 // CHECK-NEXT:    mhlo.convert
 // CHECK-NEXT:    mhlo.return
-// CHECK-NEXT:  {{.*}}byre_compute_name = "BatchNormGradOp", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64
+// CHECK-NEXT:  {{.*}}__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"

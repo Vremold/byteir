@@ -74,7 +74,7 @@ bool mlir::isConstantIndex(Value value, int64_t lit) {
 
 bool mlir::isZeroAttribute(Attribute value) {
   if (auto intValue = value.dyn_cast<IntegerAttr>())
-    return intValue.getValue().isNullValue();  // FIXME: isNullValue soft-deprecated. change to isZero
+    return intValue.getValue().isZero();
   if (auto fpValue = value.dyn_cast<FloatAttr>())
     return fpValue.getValue().isZero();
   if (auto splatValue = value.dyn_cast<SplatElementsAttr>())

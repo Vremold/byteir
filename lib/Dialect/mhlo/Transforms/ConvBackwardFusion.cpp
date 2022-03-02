@@ -161,14 +161,21 @@ struct FuseConvBackwardDataPattern : public OpRewritePattern<mhlo::ConvOp> {
 
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr("ConvBackwardDataOp"));
-    attrs.append("input_layout", rewriter.getStringAttr("NCHW"));
-    attrs.append("kernel_layout", rewriter.getStringAttr("NCHW"));
-    attrs.append("output_layout", rewriter.getStringAttr("NCHW"));
-    attrs.append("window_strides",
-                 rewriter.getI64TensorAttr({stridesH, stridesW}));
-    attrs.append("padding", rewriter.getI64TensorAttr({paddingH, paddingW}));
-    attrs.append("feature_group_count", rewriter.getI64IntegerAttr(1));
-    attrs.append("batch_group_count", rewriter.getI64IntegerAttr(1));
+    byre::appendByreComputeAttr(attrs, "input_layout",
+                                rewriter.getStringAttr("NCHW"));
+    byre::appendByreComputeAttr(attrs, "kernel_layout",
+                                rewriter.getStringAttr("NCHW"));
+    byre::appendByreComputeAttr(attrs, "output_layout",
+                                rewriter.getStringAttr("NCHW"));
+    byre::appendByreComputeAttr(
+        attrs, "window_strides",
+        rewriter.getI64TensorAttr({stridesH, stridesW}));
+    byre::appendByreComputeAttr(
+        attrs, "padding", rewriter.getI64TensorAttr({paddingH, paddingW}));
+    byre::appendByreComputeAttr(attrs, "feature_group_count",
+                                rewriter.getI64IntegerAttr(1));
+    byre::appendByreComputeAttr(attrs, "batch_group_count",
+                                rewriter.getI64IntegerAttr(1));
 
     fusionOp->setAttrs(attrs.getDictionary(getContext()));
 
@@ -273,14 +280,21 @@ struct FuseConvBackwardFilterPattern
 
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr("ConvBackwardFilterOp"));
-    attrs.append("input_layout", rewriter.getStringAttr("NCHW"));
-    attrs.append("kernel_layout", rewriter.getStringAttr("NCHW"));
-    attrs.append("output_layout", rewriter.getStringAttr("NCHW"));
-    attrs.append("window_strides",
-                 rewriter.getI64TensorAttr({stridesH, stridesW}));
-    attrs.append("padding", rewriter.getI64TensorAttr({paddingH, paddingW}));
-    attrs.append("feature_group_count", rewriter.getI64IntegerAttr(1));
-    attrs.append("batch_group_count", rewriter.getI64IntegerAttr(1));
+    byre::appendByreComputeAttr(attrs, "input_layout",
+                                rewriter.getStringAttr("NCHW"));
+    byre::appendByreComputeAttr(attrs, "kernel_layout",
+                                rewriter.getStringAttr("NCHW"));
+    byre::appendByreComputeAttr(attrs, "output_layout",
+                                rewriter.getStringAttr("NCHW"));
+    byre::appendByreComputeAttr(
+        attrs, "window_strides",
+        rewriter.getI64TensorAttr({stridesH, stridesW}));
+    byre::appendByreComputeAttr(
+        attrs, "padding", rewriter.getI64TensorAttr({paddingH, paddingW}));
+    byre::appendByreComputeAttr(attrs, "feature_group_count",
+                                rewriter.getI64IntegerAttr(1));
+    byre::appendByreComputeAttr(attrs, "batch_group_count",
+                                rewriter.getI64IntegerAttr(1));
 
     fusionOp->setAttrs(attrs.getDictionary(getContext()));
 

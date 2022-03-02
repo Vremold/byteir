@@ -45,7 +45,8 @@ struct IOConvertFusionPattern : public RewritePattern {
     llvm::SmallVector<Value> inputs;
     llvm::SmallVector<Value> outputs;
     llvm::SmallVector<Operation *> ops;
-    llvm::SmallVector<NamedAttribute> attrs;
+    NamedAttrList attrs;
+    // inputs convert
     for (size_t i = 0; i < op->getOperands().size(); i++) {
       auto value = op->getOperands()[i];
       if (inputArgIdx.find(i) == inputArgIdx.end()) {
@@ -55,18 +56,23 @@ struct IOConvertFusionPattern : public RewritePattern {
         if (!convertOp) {
           return failure();
         } else {
-          ops.push_back(convertOp.getOperation());
-          inputs.push_back(convertOp.operand());
+          // copy mhlo.convert
+          auto _convertOp = rewriter.clone(*convertOp.getOperation());
+          op->setOperand(i, _convertOp->getResult(0));
+          ops.push_back(_convertOp);
+          inputs.push_back(_convertOp->getOperand(0));
         }
       }
     }
     ops.push_back(op);
-    attrs.push_back(
-        NamedAttribute(rewriter.getStringAttr(byre::getByreComputeName()),
-                       rewriter.getStringAttr(byreComputeName)));
+    // copy attrs to fusion op
+    attrs.append(byre::getByreComputeName(),
+                 rewriter.getStringAttr(byreComputeName));
     for (const auto &attr : op->getAttrs()) {
-      attrs.push_back(attr);
+      byre::appendByreComputeAttr(attrs, attr.getName().getValue(),
+                                  attr.getValue());
     }
+    // outputs convert
     for (size_t i = 0; i < op->getResults().size(); i++) {
       auto value = op->getResults()[i];
       if (outputArgIdx.find(i) == outputArgIdx.end()) {
@@ -91,13 +97,12 @@ struct IOConvertFusionPattern : public RewritePattern {
     for (auto output : outputs) {
       outputs_type.push_back(output.getType());
     }
-    mhlo::FusionOp fusion_op =
+    mhlo::FusionOp fusionOp =
         rewriter.create<mhlo::FusionOp>(loc, outputs_type, inputs);
     for (size_t i = 0; i < outputs.size(); i++) {
-      outputs[i].replaceAllUsesWith(fusion_op.getResults()[i]);
+      outputs[i].replaceAllUsesWith(fusionOp.getResults()[i]);
     }
-    Region &region = fusion_op.fused_computation();
-    Block &block = region.emplaceBlock();
+    Block &block = fusionOp.fused_computation().emplaceBlock();
     {
       OpBuilder::InsertionGuard guard(rewriter);
       for (auto _op : ops) {
@@ -107,8 +112,7 @@ struct IOConvertFusionPattern : public RewritePattern {
       rewriter.setInsertionPoint(&block, block.end());
       rewriter.create<mhlo::ReturnOp>(loc, outputs);
     }
-
-    AddAttrs(fusion_op.getOperation(), attrs);
+    fusionOp->setAttrs(attrs.getDictionary(getContext()));
 
     return success();
   }

@@ -69,6 +69,15 @@ bool isSplatCloseToValue(DenseFPElementsAttr attr, double value,
 void getValuesFromDenseIntElementsAttr(DenseIntElementsAttr attr,
                                        SmallVector<int64_t> &arrayValues);
 
+// Returns nD 64-bit dense elements attribute with the given values.
+inline DenseIntElementsAttr GetI64ElementsAttr(ArrayRef<int64_t> values,
+                                               ArrayRef<int64_t> shape,
+                                               Builder *builder) {
+  RankedTensorType ty =
+      RankedTensorType::get(shape, builder->getIntegerType(64));
+  return DenseIntElementsAttr::get(ty, values);
+}
+
 // Return a placeholder name of an attribute
 // to avoid breaking the verifier of the original attribute
 // by adding some unique prefix or postfix

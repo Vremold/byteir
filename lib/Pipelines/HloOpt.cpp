@@ -40,6 +40,7 @@ namespace {
     pm.addNestedPass<FuncOp>(createHloFolderPass());
     pm.addNestedPass<FuncOp>(createHloFolderPass());
     pm.addNestedPass<FuncOp>(createHloTransposeDotToDotGeneralPass());
+    pm.addNestedPass<FuncOp>(createReduceFusionPass());
 
     addCleanUpPassPipeline(pm);
 
@@ -58,9 +59,15 @@ void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
                                        const std::string &entry,
                                        bool outlineSingleElemwiseOp) {
 
-  // Dot Transpose fusion
+  // Fusion passes
+  pm.addNestedPass<FuncOp>(createConvBackwardFusionPass());
+  pm.addNestedPass<FuncOp>(
+      createIOConvertFusionPass("mhlo.batch_norm_training", std::vector<int>{0},
+                                std::vector<int>{0}, "BatchNormTrainingOp"));
+  pm.addNestedPass<FuncOp>(
+      createIOConvertFusionPass("mhlo.batch_norm_grad", std::vector<int>{0, 4},
+                                std::vector<int>{0}, "BatchNormGradOp"));
   pm.addNestedPass<FuncOp>(createDotTransposeFusionPass());
-  pm.addPass(createFusionOutliningPass());
 
   // expand tuple
   pm.addPass(CreateExpandHloTuplesPass(entry));

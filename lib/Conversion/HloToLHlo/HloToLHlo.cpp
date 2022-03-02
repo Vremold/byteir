@@ -38,6 +38,7 @@ namespace mhlo {
 
   MAP_HLO_TO_LHLO(BatchNormGradOp);
   MAP_HLO_TO_LHLO(BatchNormTrainingOp);
+  MAP_HLO_TO_LHLO(ReverseOp);
 
   MAP_HLO_TO_LHLO(AllReduceOp);
   MAP_HLO_TO_LHLO(MapOp);
@@ -444,18 +445,18 @@ void mlir::populateHLOToLHLOConversionPatternExtension(
     MLIRContext *context, bufferization::BufferizeTypeConverter *converter,
     OwningRewritePatternList *patterns) {
 
-  patterns
-      ->insert<HloToLhloOpConverterLocal<mhlo::BatchNormGradOp>,
-               HloToLhloOpConverterLocal<mhlo::BatchNormTrainingOp>,
-               HloToLhloOpConverterLocal<mhlo::ClampOp>,
-               HloToLhloOpWithHloRegionsConverter<mhlo::AllReduceOp>,
-               HloToLhloOpWithHloRegionsConverter<mhlo::MapOp>,
-               HloToLhloOpWithHloRegionsConverter<mhlo::ReduceScatterOp>,
-               HloToLhloOpWithHloRegionsConverter<mhlo::ScatterOp>,
-               HloToLhloOpWithHloRegionsConverter<mhlo::SelectAndScatterOp>,
-               HloToLhloOpWithHloRegionsConverter<mhlo::SortOp>,
-               HloToLhloReduceWindowOpConverter,
-               HloToLhloCustomCallOpConverter>(*converter, context);
+  patterns->insert<HloToLhloOpConverterLocal<mhlo::BatchNormGradOp>,
+                   HloToLhloOpConverterLocal<mhlo::BatchNormTrainingOp>,
+                   HloToLhloOpConverterLocal<mhlo::ReverseOp>,
+                   HloToLhloOpConverterLocal<mhlo::ClampOp>,
+                   HloToLhloOpWithHloRegionsConverter<mhlo::AllReduceOp>,
+                   HloToLhloOpWithHloRegionsConverter<mhlo::MapOp>,
+                   HloToLhloOpWithHloRegionsConverter<mhlo::ReduceScatterOp>,
+                   HloToLhloOpWithHloRegionsConverter<mhlo::ScatterOp>,
+                   HloToLhloOpWithHloRegionsConverter<mhlo::SelectAndScatterOp>,
+                   HloToLhloOpWithHloRegionsConverter<mhlo::SortOp>,
+                   HloToLhloReduceWindowOpConverter,
+                   HloToLhloCustomCallOpConverter>(*converter, context);
 }
 
 std::unique_ptr<OperationPass<ModuleOp>> mlir::createConvertHloToLHloPass() {
