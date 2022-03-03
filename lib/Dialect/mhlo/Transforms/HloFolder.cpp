@@ -121,27 +121,6 @@ struct RemoveTrivialTorchIndexSelect
   DimFlagAnalysis *analysis_;
 };
 
-//===----------------------------------------------------------------------===//
-// Pad + Pooling => Pooling Pattern
-//===----------------------------------------------------------------------===//
-
-bool isSplatNegInf(mhlo::ConstOp op) {
-  if (op) {
-    auto const_dense_attr =
-        op.valueAttr().dyn_cast_or_null<DenseFPElementsAttr>();
-    if (!const_dense_attr || !const_dense_attr.isSplat()) {
-      return false;
-    }
-    auto val = const_dense_attr.getSplatValue<APFloat>();
-    if (!(val.isInfinity() && val.isNegative())) {
-      return false;
-    }
-  } else {
-    return false;
-  }
-  return true;
-}
-
 struct HloFolderPass : public HloFolderBase<HloFolderPass> {
   void runOnOperation() override {
     DimFromBroadcast dim_from_broadcast;

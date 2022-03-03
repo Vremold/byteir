@@ -79,7 +79,8 @@ struct IOConvertFusionPattern : public RewritePattern {
         outputs.push_back(value);
       } else {
         if (UseCount(value) != 1) {
-          return failure();
+          return op->emitOpError()
+                 << "output idx " << i << "'s use_count is not 1";
         }
         auto convertOp = llvm::dyn_cast_or_null<mhlo::ConvertOp>(
             (*value.getUses().begin()).getOwner());
