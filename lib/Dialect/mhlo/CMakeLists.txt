@@ -37,6 +37,7 @@ add_mlir_dialect_library(ByteIRMhloAnalysis
 )
 
 add_mlir_dialect_library(ByteIRMhloPasses
+  Transforms/ClusterConstraint.cpp
   Transforms/ConvBackwardFusion.cpp
   Transforms/ConvBiasActFusion.cpp
   Transforms/DotTransposeFusion.cpp

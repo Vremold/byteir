@@ -15,8 +15,6 @@ namespace mlir {
 // forward decl
 class RewritePatternSet;
 
-void populateLmhloConstraintToByrePattern(RewritePatternSet &patterns);
-
 // Collect a set of patterns to convert ops from Lmhlo dialect to Byre dialect
 // Note: supportMap is a reference.
 void populateLmhloToByreConversionPatterns(RewritePatternSet& patterns, 

@@ -8,6 +8,7 @@
 #ifndef BYTEIR_MHLO_PASSES_H
 #define BYTEIR_MHLO_PASSES_H
 
+#include "byteir/Dialect/mhlo/Transforms/ClusterConstraint.h"
 #include "byteir/Dialect/mhlo/Transforms/ConvBackwardFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/DotTransposeFusion.h"

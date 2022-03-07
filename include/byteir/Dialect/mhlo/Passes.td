@@ -123,4 +123,18 @@ def TrivialFusion : Pass<"fuse-trivial", "mlir::FuncOp"> {
   let constructor = "mlir::createTrivialFusionPass()";
 }
 
+//===----------------------------------------------------------------------===//
+// ClusterConstraint
+//===----------------------------------------------------------------------===//
+
+def ClusterConstraint : Pass<"cluster-constraint", "mlir::FuncOp"> {
+  let summary = "Cluster mhlo ops with constraint";
+  let description = [{
+    This pass do some early check in the tensor world(i.e. mhlo) and also treat
+    those constraint values as constants and fuse them into mhlo.fusion
+  }];
+  let constructor = "mlir::createClusterConstraintPass()";
+}
+
+
 #endif // BYTEIR_MHLO_PASSES
