@@ -33,7 +33,13 @@ using MhloFusionPlan = llvm::SmallVector<MhloFusionPattern, 8>;
 // A generic way rewriting MhloFusionPattern to FusionOps
 // This is from Mhlo repo.
 // TODO push back to upstream if passible
-mhlo::FusionOp creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPattern& pattern);
+mhlo::FusionOp creatMhloFusionFromPattern(OpBuilder &b,
+                                          const MhloFusionPattern &pattern);
+
+mhlo::FusionOp creatMhloFusionFromPattern(OpBuilder& b, 
+  ValueRange inputs, ValueRange outputs,
+  const MhloFusionPattern& pattern);
+
 
 void applyMhloFusionPattern(const MhloFusionPattern& pattern, llvm::StringRef tag);
 

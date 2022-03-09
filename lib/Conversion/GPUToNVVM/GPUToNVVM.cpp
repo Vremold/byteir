@@ -32,7 +32,6 @@
 #include "llvm/Support/FormatVariadic.h"
 
 #include "../PassDetail.h"
-#include <iostream>
 
 using namespace llvm;
 using namespace mlir;

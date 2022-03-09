@@ -26,7 +26,6 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/TypeSwitch.h"
-
 #include <functional>
 #include <string>
 
@@ -744,7 +743,8 @@ public:
       return rewriter.notifyMatchFailure(op, "unsupported region in reduce_window");
     }
     auto& block = region.front();
-    if (block.getOperations().size() != 2) {
+    if (block.getOperations().size() != 2 &&
+        block.getOperations().size() != 4) {
       return rewriter.notifyMatchFailure(op, "unsupported block in reduce_window");
     }
     // check block args
@@ -763,15 +763,23 @@ public:
         op, "unsupported terminator in reduce's block");
     }
 
-    auto reduce_computation = &block.front();
+    Operation *reduce_computation = nullptr;
+    if (block.getOperations().size() == 2) {
+      reduce_computation = &block.front();
+    } else {
+      reduce_computation = block.front().getNextNode() ;
+    }
+
     // only support ReduceWindowMax now
     if (!isa<lmhlo::MaxOp>(reduce_computation)) {
       return rewriter.notifyMatchFailure(
         op, "unsupported ops in reduce_computation of reduce_window");
     }
-    if (reduce_computation->getOperand(0) != block.getArgument(0) ||
-      reduce_computation->getOperand(1) != block.getArgument(1) ||
-      reduce_computation->getOperand(2) != block.getArgument(2)) {
+
+    if (block.getOperations().size() == 2 &&
+        (reduce_computation->getOperand(0) != block.getArgument(0) ||
+         reduce_computation->getOperand(1) != block.getArgument(1) ||
+         reduce_computation->getOperand(2) != block.getArgument(2))) {
       return rewriter.notifyMatchFailure(
         op, "unsupported ops in reduce_computation in reduce_window");
     }
@@ -828,6 +836,7 @@ public:
     if (!op.value().isSplat())
       return failure();
 
+    // FIXME: only allow allocated memref for now
     auto alloc = op.output().getDefiningOp<memref::AllocOp>();
     if (!alloc)
       return failure();
@@ -852,6 +861,7 @@ struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
     lmhloSupportMap.insert({"lmhlo.gather", "IndexSelectOp"});
     lmhloSupportMap.insert({"lmhlo.reshape", "AliasOp"});
     lmhloSupportMap.insert({"lmhlo.slice", "AliasOp" });
+    lmhloSupportMap.insert({"lmhlo.transpose", "TransposeOp"});
 
     // insert attrNames
     attrNames.push_back(byre::ByreDialect::getEntryPointFunctionAttrName());
@@ -916,11 +926,11 @@ static void identifyEntryPointFuncAndCalls(
 static inline void relocateFuncOpResultsForLmhlo(
     FuncOp func) {
   unsigned idx = func.getNumArguments();
-  replcateFuncOpResults(func, [&](mlir::ReturnOp retOp) {
+  replicateFuncOpResults(func, [&](mlir::ReturnOp retOp) {
     llvm::SmallPtrSet<mlir::Operation *, 16> removeOps;
     mlir::OpBuilder opBuilder(retOp);
     for (auto retVal : retOp.getOperands()) {
-      if (auto allocOp = dyn_cast<memref::AllocOp>(retVal.getDefiningOp())) {
+      if (auto allocOp = dyn_cast_or_null<memref::AllocOp>(retVal.getDefiningOp())) {
         removeOps.insert(allocOp);
       }
       retVal.replaceAllUsesExcept(func.getArgument(idx++), retOp);
@@ -1049,7 +1059,6 @@ static inline void rewriteByreResultAttrsToFuncResultAttr(FuncOp func) {
 }
 
 void ConvertToByrePass::runOnOperation() {
-
   ModuleOp m = getOperation();
   MLIRContext &ctx = getContext();
   llvm::SmallVector<FuncOp, 4> entryCollector;
@@ -1087,12 +1096,13 @@ void ConvertToByrePass::runOnOperation() {
     rewriteByreResultAttrsToFuncResultAttr(func);
 
     relocateFuncOpResultsForLmhlo(func);
- 
+
     if (isFuncWithEntryPointPlaceholder(func)) {
       relocateFuncOpConstantLikeForLmhlo(func, unknownWeightCnt);
     }
 
     removeAttrPlaceholders(func, attrNames);
+
     removeArgAttrPlaceholders(func, argAttrNames);
   }
 
@@ -1126,6 +1136,7 @@ void ConvertToByrePass::runOnOperation() {
     func->erase();
   }
 
+  // TODO move this to fold
   // remove unused fill op
   m.walk([&](byre::ComputeOp op) {
     if (op.callee() == "FillOp") {
@@ -1150,9 +1161,11 @@ void mlir::populateLmhloToByreConversionPatterns(
                ConvertToByrePattern<lmhlo::GatherOp>,
                ConvertToByrePattern<lmhlo::ReshapeOp>,
                ConvertToByrePattern<lmhlo::ScatterOp>,
-               ConvertToByrePattern<lmhlo::SliceOp>>(patterns.getContext(),
-                                                     supportMap, 
-                                                     appendArgTypes);
+               ConvertToByrePattern<lmhlo::SliceOp>, 
+               ConvertToByrePatternWithAllAttrs<lmhlo::TransposeOp>>(
+                 patterns.getContext(),
+                 supportMap, 
+                 appendArgTypes);
 
   patterns.add<ConvertConstOpToByrePattern,
                ConvertCustomCallOpToByrePattern,

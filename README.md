@@ -28,7 +28,7 @@ cd /path_to_byteir/build/
 # build ByteIR
 cmake ../cmake/ -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DLLVM_INSTALL_PATH=path_to_LLVM_built_directory \
+                -DLLVM_INSTALL_PATH=path_to_LLVM_installed_or_built_directory \
                 -DLLVM_EXTERNAL_LIT=lit_executatble_location # or using $(which lit), this is optional for external lit 
 
 cmake --build . --config Release
@@ -41,7 +41,7 @@ cd /path_to_byteir/build/
 # build ByteIR
 cmake ../cmake/ -G "Visual Studio 16 2019" -A x64 \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DLLVM_INSTALL_PATH=path_to_LLVM_installed \
+                -DLLVM_INSTALL_PATH=path_to_LLVM_installed_or_built_directory \
                 -DLLVM_EXTERNAL_LIT=lit_location # this is optional for external lit 
 
 cmake --build . --config Release
@@ -66,7 +66,5 @@ Useful Pass Description [doc/passes.md](doc/passes.md)
 
 ### Examples
 Mhlo-to-NVVM pass pipeline [doc/mhlo-to-nvvm.md](doc/mhlo-to-nvvm.md)
-
-
 
 ## License (TODO)

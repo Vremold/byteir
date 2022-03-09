@@ -68,6 +68,7 @@ void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
   pm.addNestedPass<FuncOp>(
       createIOConvertFusionPass("mhlo.batch_norm_training", std::vector<int>{0},
                                 std::vector<int>{0}, "BatchNormTrainingOp"));
+
   pm.addNestedPass<FuncOp>(
       createIOConvertFusionPass("mhlo.batch_norm_grad", std::vector<int>{0, 4},
                                 std::vector<int>{0}, "BatchNormGradOp"));

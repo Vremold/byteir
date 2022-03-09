@@ -31,8 +31,6 @@
 
 #include "PassDetail.h"
 
-#include <iostream> //debug
-
 using namespace llvm;
 using namespace mlir;
 using namespace mlir::arith;

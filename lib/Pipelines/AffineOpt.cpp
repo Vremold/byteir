@@ -33,7 +33,6 @@ namespace {
     pm.addNestedPass<FuncOp>(createConvertLinalgToAffineLoopsPass());
     pm.addNestedPass<FuncOp>(createLoopCoalescingPass());
     pm.addNestedPass<FuncOp>(createSimplifyAffineStructuresPass());
-    pm.addNestedPass<FuncOp>(createLoopFusionPass());
     pm.addNestedPass<FuncOp>(createAffineLoopFusionExPass());
     pm.addNestedPass<FuncOp>(
       createInsertTrivialAffineLoopPass(getByteIRElementwiseFusionAttrName()));

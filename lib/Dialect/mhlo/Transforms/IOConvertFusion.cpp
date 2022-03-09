@@ -8,6 +8,8 @@
 #include "byteir/Dialect/mhlo/Transforms/IOConvertFusion.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
+#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
@@ -15,56 +17,80 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-
 #include "./PassDetail.h"
-#include <unordered_set>
 
 using namespace mlir;
 using namespace llvm;
 
 namespace {
 
+// Note IOConvert will keep input/output sequence order as orginal op
 struct IOConvertFusionPattern : public RewritePattern {
-  IOConvertFusionPattern(MLIRContext *context, const std::string &_opName,
-                         const std::vector<int> &_inputArgIdx,
-                         const std::vector<int> &_outputArgIdx,
-                         const std::string &_byreComputeName)
+  IOConvertFusionPattern(
+    MLIRContext *context, StringRef _opName,
+    ArrayRef<int> _inputArgIdx,
+    ArrayRef<int> _outputArgIdx, 
+    StringRef _byreComputeName)
       : RewritePattern(MatchAnyOpTypeTag(), 3, context), opName(_opName),
         inputArgIdx(_inputArgIdx.begin(), _inputArgIdx.end()),
         outputArgIdx(_outputArgIdx.begin(), _outputArgIdx.end()),
         byreComputeName(_byreComputeName) {}
+
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const override {
-    if (op->getName().getStringRef() != opName) {
-      return failure();
-    }
-    if (op->getParentOfType<mhlo::FusionOp>()) {
+    
+    // early termination
+    if (op->getName().getStringRef() != opName || 
+        op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
 
-    llvm::SmallVector<Value> inputs;
-    llvm::SmallVector<Value> outputs;
-    llvm::SmallVector<Operation *> ops;
-    NamedAttrList attrs;
-    // inputs convert
-    for (size_t i = 0; i < op->getOperands().size(); i++) {
-      auto value = op->getOperands()[i];
-      if (inputArgIdx.find(i) == inputArgIdx.end()) {
-        inputs.push_back(value);
+    MhloFusionPattern pattern;
+    SmallVector<Value> inputs;
+    SmallVector<Value> outputs;
+
+    // handle input's convert
+    for (unsigned idx = 0; idx < op->getNumOperands(); ++idx) {
+      auto value = op->getOperand(idx);
+      auto defOp = value.getDefiningOp();
+      if (isa_and_nonnull<mhlo::ConvertOp>(defOp)) {
+        auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
+        pattern.push_back(cloned);
+        inputs.push_back(cloned->getOperand(0));
       } else {
-        auto convertOp = value.getDefiningOp<mhlo::ConvertOp>();
-        if (!convertOp) {
-          return failure();
-        } else {
-          // copy mhlo.convert
-          auto _convertOp = rewriter.clone(*convertOp.getOperation());
-          op->setOperand(i, _convertOp->getResult(0));
-          ops.push_back(_convertOp);
-          inputs.push_back(_convertOp->getOperand(0));
-        }
+        inputs.push_back(value);
+      }   
+    }
+
+    // op itself
+    pattern.push_back(op);
+
+    // handle output's convert
+    for (unsigned idx = 0; idx < op->getNumResults(); ++idx) {
+      auto value = op->getResult(idx);
+
+      if (UseCount(value) == 0) {
+        continue;
+      }
+
+      if (UseCount(value) > 1) {
+        outputs.push_back(value);
+        continue;
+      }
+
+      auto user = *value.getUsers().begin();
+      if (isa_and_nonnull<mhlo::ConvertOp>(user)) {
+        pattern.push_back(user);
+        outputs.push_back(user->getResult(0));
+      } else {
+        outputs.push_back(value);
       }
     }
-    ops.push_back(op);
+
+    // terminate if only single op
+    if (pattern.size() == 1) return failure();
+
+    NamedAttrList attrs;
     // copy attrs to fusion op
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr(byreComputeName));
@@ -72,55 +98,17 @@ struct IOConvertFusionPattern : public RewritePattern {
       byre::appendByreComputeAttr(attrs, attr.getName().getValue(),
                                   attr.getValue());
     }
-    // outputs convert
-    for (size_t i = 0; i < op->getResults().size(); i++) {
-      auto value = op->getResults()[i];
-      if (outputArgIdx.find(i) == outputArgIdx.end()) {
-        outputs.push_back(value);
-      } else {
-        if (UseCount(value) != 1) {
-          return op->emitOpError()
-                 << "output idx " << i << "'s use_count is not 1";
-        }
-        auto convertOp = llvm::dyn_cast_or_null<mhlo::ConvertOp>(
-            (*value.getUses().begin()).getOwner());
-        if (!convertOp) {
-          return failure();
-        } else {
-          ops.push_back(convertOp.getOperation());
-          outputs.push_back(convertOp.getResult());
-        }
-      }
-    }
 
-    auto loc = GetFusedLoc(ops, rewriter);
-    llvm::SmallVector<Type> outputs_type;
-    for (auto output : outputs) {
-      outputs_type.push_back(output.getType());
-    }
-    mhlo::FusionOp fusionOp =
-        rewriter.create<mhlo::FusionOp>(loc, outputs_type, inputs);
-    for (size_t i = 0; i < outputs.size(); i++) {
-      outputs[i].replaceAllUsesWith(fusionOp.getResults()[i]);
-    }
-    Block &block = fusionOp.fused_computation().emplaceBlock();
-    {
-      OpBuilder::InsertionGuard guard(rewriter);
-      for (auto _op : ops) {
-        _op->moveBefore(&block, block.end());
-      }
-
-      rewriter.setInsertionPoint(&block, block.end());
-      rewriter.create<mhlo::ReturnOp>(loc, outputs);
-    }
+    mhlo::FusionOp fusionOp = creatMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
     fusionOp->setAttrs(attrs.getDictionary(getContext()));
 
     return success();
   }
-  const std::string opName;
-  const std::unordered_set<int> inputArgIdx;
-  const std::unordered_set<int> outputArgIdx;
-  const std::string byreComputeName;
+
+  StringRef opName;
+  const SmallDenseSet<int> inputArgIdx;
+  const SmallDenseSet<int> outputArgIdx;
+  StringRef byreComputeName;
 };
 
 struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
@@ -135,6 +123,7 @@ struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
     this->outputArgIdx = {};
     this->byreComputeName = "";
   }
+
   void runOnOperation() override {
     if (this->opName != "") {
       this->_opName = this->opName;
@@ -159,12 +148,14 @@ struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
     RewritePatternSet patterns(context);
     patterns.add<IOConvertFusionPattern>(context, _opName, _inputArgIdx,
                                          _outputArgIdx, _byreComputeName);
-    LogicalResult status =
-        applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
-    if (failed(status)) {
+
+    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+      funcOp.emitError("IOConvertFusionPass applyPatternsAndFoldGreedily "
+                       "does not converge");
       signalPassFailure();
     }
   }
+
   std::string _opName;
   std::vector<int> _inputArgIdx;
   std::vector<int> _outputArgIdx;

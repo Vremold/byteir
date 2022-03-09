@@ -22,9 +22,9 @@ namespace mlir {
 // meaning directly returning an input as an results
 // LWC NOTE Also DO NOT support duplicated results.
 //
-void replcateFuncOpResults(mlir::FuncOp funcOp);
+void replicateFuncOpResults(mlir::FuncOp funcOp);
 
-void replcateFuncOpResults(mlir::FuncOp funcOp,
+void replicateFuncOpResults(mlir::FuncOp funcOp,
                            std::function<void(mlir::ReturnOp)> retOpHandling);
 
 void relocateFuncOpConstantLike(

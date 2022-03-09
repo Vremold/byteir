@@ -243,4 +243,12 @@ module {
   }
   // CHECK-LABEL: select_and_scatter
   // CHECK-NEXT: byre.compute @PoolMaxGradOp(%arg0, %arg1, %arg2)
+
+  func @transpose(%arg0: memref<3x3x64x64xf16> {__placeholder__byre.argname = "A"}) -> (memref<64x64x3x3xf16> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<64x64x3x3xf16>
+    "lmhlo.transpose"(%arg0, %0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (memref<3x3x64x64xf16>, memref<64x64x3x3xf16>) -> ()
+    return %0 : memref<64x64x3x3xf16>
+  }
+  // CHECK-LABEL: transpose
+  // CHECK-NEXT: byre.compute @TransposeOp
 }

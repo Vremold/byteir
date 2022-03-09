@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s --fuse-conv-backward | FileCheck %s
+// RUN: byteir-opt %s -fuse-conv-backward | FileCheck %s
 
 func @conv_backward_data(%408: tensor<32x64x56x56xf16>, %59: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> {
   %409 = "mhlo.transpose"(%59) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<64x64x3x3xf16>) -> tensor<3x3x64x64xf16>

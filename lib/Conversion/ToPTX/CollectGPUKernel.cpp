@@ -13,7 +13,6 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/SymbolTable.h"
 #include "llvm/ADT/SmallVector.h"
-#include <iostream>
 
 using namespace mlir;
 using namespace mlir::byre;

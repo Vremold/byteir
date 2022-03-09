@@ -77,7 +77,7 @@ insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
 //
 namespace {
 
-static inline void replcateFuncOpResultSigature(mlir::FuncOp funcOp) {
+static inline void replicateFuncOpResultSigature(mlir::FuncOp funcOp) {
   mlir::FunctionType oldFuncType = funcOp.getType();
 
   llvm::SmallVector<Type, 16> newInputTypes(oldFuncType.getInputs().begin(),
@@ -114,10 +114,10 @@ static inline void replcateFuncOpResultSigature(mlir::FuncOp funcOp) {
 }
 } // annoymous
 
-void mlir::replcateFuncOpResults(mlir::FuncOp funcOp) {
+void mlir::replicateFuncOpResults(mlir::FuncOp funcOp) {
   unsigned idx = funcOp.getNumArguments();
 
-  replcateFuncOpResultSigature(funcOp);
+  replicateFuncOpResultSigature(funcOp);
 
   if (funcOp.empty()) {
     return;
@@ -144,9 +144,9 @@ void mlir::replcateFuncOpResults(mlir::FuncOp funcOp) {
   }
 }
 
-void mlir::replcateFuncOpResults(
+void mlir::replicateFuncOpResults(
     mlir::FuncOp funcOp, std::function<void(mlir::ReturnOp)> retOpHandling) {
-  replcateFuncOpResultSigature(funcOp);
+  replicateFuncOpResultSigature(funcOp);
 
   if (funcOp.empty()) {
     return;

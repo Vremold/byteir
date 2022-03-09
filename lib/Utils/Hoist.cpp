@@ -10,8 +10,6 @@
 #include "mlir/IR/Dominance.h"
 #include "mlir/IR/Operation.h"
 
-#include <iostream>
-
 using namespace mlir;
 
 // return least ProperlyDominant use or def

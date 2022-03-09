@@ -43,19 +43,19 @@ llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
 // This code is from mhlo repo
 // but it was in the local namespace, so cannot be directly call.
 // TODO: we might update upstream to make it accessible later
-mhlo::FusionOp mlir::creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPattern& pattern) {
+mhlo::FusionOp
+mlir::creatMhloFusionFromPattern(
+    OpBuilder &b, ValueRange inputs,
+    ValueRange outputs, const MhloFusionPattern &pattern) {
+  
   b.setInsertionPoint(pattern.back());
 
   SmallVector<Location, 4> locations;
   locations.reserve(pattern.size());
-  for (Operation* op : pattern) {
+  for (Operation *op : pattern) {
     locations.push_back(op->getLoc());
   }
-  Location fused_loc =
-    FusedLoc::get(pattern.back()->getContext(), locations);
-
-  SmallVector<Value, 4> inputs = GetInputsOfCluster(pattern);
-  SmallVector<Value, 4> outputs = GetOutputsOfCluster(pattern);
+  Location fused_loc = FusedLoc::get(pattern.back()->getContext(), locations);
 
   SmallVector<Type, 4> output_types;
   output_types.reserve(outputs.size());
@@ -63,23 +63,23 @@ mhlo::FusionOp mlir::creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPa
     output_types.push_back(v.getType());
   }
 
-  SmallDenseSet<Operation*> fused_set(pattern.begin(), pattern.end());
-  SmallDenseSet<Operation*> consumers_set;
+  SmallDenseSet<Operation *> fused_set(pattern.begin(), pattern.end());
+  SmallDenseSet<Operation *> consumers_set;
 
-  SmallVector<Operation*, 4> consumers_vec;
+  SmallVector<Operation *, 4> consumers_vec;
   auto first_iter = pattern.front()->getIterator();
   auto last_iter = pattern.back()->getIterator();
 
-  for (Operation& cur_op : llvm::make_range(first_iter, last_iter)) {
+  for (Operation &cur_op : llvm::make_range(first_iter, last_iter)) {
     // isn't fused op && consumer's op
     // move this after fusion op
     if (!fused_set.contains(&cur_op)) {
       // fused op's consumer or consumer's consumer
       bool is_consumer = llvm::any_of(
-        cur_op.getOperands(), [&fused_set, &consumers_set](Value v) {
-          auto op = v.getDefiningOp();
-          return fused_set.contains(op) || consumers_set.contains(op);
-        });
+          cur_op.getOperands(), [&fused_set, &consumers_set](Value v) {
+            auto op = v.getDefiningOp();
+            return fused_set.contains(op) || consumers_set.contains(op);
+          });
       if (is_consumer) {
         consumers_set.insert(&cur_op);
         consumers_vec.push_back(&cur_op);
@@ -91,13 +91,12 @@ mhlo::FusionOp mlir::creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPa
     op->moveAfter(pattern.back());
   }
 
-  FusionOp fusion =
-    b.create<mhlo::FusionOp>(fused_loc, output_types, inputs);
-  Region& region = fusion.fused_computation();
+  FusionOp fusion = b.create<mhlo::FusionOp>(fused_loc, output_types, inputs);
+  Region &region = fusion.fused_computation();
   region.push_back(new Block);
-  Block& block = region.front();
+  Block &block = region.front();
 
-  for (Operation* op : pattern) {
+  for (Operation *op : pattern) {
     op->moveBefore(&block, block.end());
   }
 
@@ -107,14 +106,20 @@ mhlo::FusionOp mlir::creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPa
   for (auto output_and_result : llvm::zip(outputs, fusion.getResults())) {
     Value output = std::get<0>(output_and_result);
     Value fusion_result = std::get<1>(output_and_result);
-    for (OpOperand& use : llvm::make_early_inc_range(output.getUses())) {
-      if (use.getOwner()->getBlock() != &block) use.set(fusion_result);
+    for (OpOperand &use : llvm::make_early_inc_range(output.getUses())) {
+      if (use.getOwner()->getBlock() != &block)
+        use.set(fusion_result);
     }
   }
-  
+
   return fusion;
 }
 
+mhlo::FusionOp mlir::creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPattern& pattern) {
+  SmallVector<Value, 4> inputs = GetInputsOfCluster(pattern);
+  SmallVector<Value, 4> outputs = GetOutputsOfCluster(pattern);
+  return creatMhloFusionFromPattern(b, inputs, outputs, pattern);
+}
 
 void mlir::applyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef attachTag) {
   OpBuilder b(pattern.back());

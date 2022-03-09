@@ -56,7 +56,7 @@ static LogicalResult foldMemRefCast(Operation* op) {
   return success(folded);
 }
 
-// ByreOp has be in FuncOp with EntryPointFunctionAttrName
+
 static LogicalResult verifyOpInEntryPointFunc(Operation* op) {
   auto func = op->getParentOfType<FuncOp>();
   if (!func->hasAttrOfType<UnitAttr>(ByreDialect::getEntryPointFunctionAttrName())) {
@@ -108,7 +108,6 @@ void ByreDialect::printType(Type type, DialectAsmPrinter &os) const {
 
 LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
                                                     NamedAttribute attr) {
-
   // ContainerModuleAttr only applied to ModuleOp
   if (attr.getValue().isa<UnitAttr>() &&
       attr.getName().getValue() == getContainerModuleAttrName()) {
@@ -176,6 +175,9 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
              << "' under '" << ModuleOp::getOperationName() << '\'';
     }
 
+    // FIXME
+
+    // This become optional
     if (!parentOp->hasAttrOfType<UnitAttr>(getContainerModuleAttrName())) {
       return op->emitError("expected '")
              << getEntryPointFunctionAttrName()

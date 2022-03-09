@@ -16,7 +16,7 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Twine.h"
-#include <assert.h>  
+#include <assert.h>
 
 using namespace llvm;
 using namespace mlir;

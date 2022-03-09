@@ -12,7 +12,6 @@
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include <utility>
-#include <iostream>
 
 using namespace llvm;
 using namespace mlir;
