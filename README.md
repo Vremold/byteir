@@ -16,7 +16,8 @@ ByRE is a runtime IR for the ByteIR runtime.
 An external dialect from https://github.com/tensorflow/mlir-hlo.
 
 ## Dependency 
-***LLVM/MLIR*** https://code.byted.org/byteir/llvm-project
+***LLVM/MLIR***: https://code.byted.org/byteir/llvm-build
+***Python*** (for python binding): minimum version is 3.6, requiring numpy and pybind11 installed.
 
 ## Build
 ### Linux/Mac 
@@ -27,8 +28,8 @@ cd /path_to_byteir/build/
 # build ByteIR
 cmake ../cmake/ -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DLLVM_INSTALL_PATH=path_to_LLVM_installed \
-                -DLLVM_EXTERNAL_LIT=lit_location # or using $(which lit), this is optional for external lit 
+                -DLLVM_INSTALL_PATH=path_to_LLVM_built_directory \
+                -DLLVM_EXTERNAL_LIT=lit_executatble_location # or using $(which lit), this is optional for external lit 
 
 cmake --build . --config Release
 ```

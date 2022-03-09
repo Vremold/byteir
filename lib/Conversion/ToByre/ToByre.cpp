@@ -58,11 +58,11 @@ namespace {
   }
 }
 
-
+namespace mlir {
 template <>
-mlir::LogicalResult
-mlir::ConvertToByrePattern<mlir::lmhlo::GatherOp>::matchAndRewrite(
-    mlir::lmhlo::GatherOp op, typename mlir::lmhlo::GatherOp::Adaptor adaptor,
+LogicalResult
+ConvertToByrePattern<lmhlo::GatherOp>::matchAndRewrite(
+    lmhlo::GatherOp op, typename lmhlo::GatherOp::Adaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
 
   auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
@@ -144,7 +144,7 @@ mlir::ConvertToByrePattern<mlir::lmhlo::GatherOp>::matchAndRewrite(
 
   auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
 
-  auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+  auto compute_op = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
       op, key, adaptor.getOperands());
 
   // FIXME: currently only support select on dim0
@@ -155,9 +155,9 @@ mlir::ConvertToByrePattern<mlir::lmhlo::GatherOp>::matchAndRewrite(
 
 template<>
 LogicalResult
-mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
-  mlir::lmhlo::ScatterOp op,
-  typename mlir::lmhlo::ScatterOp::Adaptor adaptor,
+ConvertToByrePattern<lmhlo::ScatterOp>::matchAndRewrite(
+  lmhlo::ScatterOp op,
+  typename lmhlo::ScatterOp::Adaptor adaptor,
   ConversionPatternRewriter& rewriter) const {
 
   auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
@@ -180,7 +180,7 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
   auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
 
   // TODO support inplace 
-  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op,
+  auto new_op = rewriter.replaceOpWithNewOp<byre::ComputeOp>(op,
     key, adaptor.getOperands());
 
   // FIXME: currently only support select on dim0
@@ -191,9 +191,9 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ScatterOp>::matchAndRewrite(
 
 template<>
 LogicalResult
-mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
-  mlir::lmhlo::SliceOp op,
-  typename mlir::lmhlo::SliceOp::Adaptor adaptor,
+ConvertToByrePattern<lmhlo::SliceOp>::matchAndRewrite(
+  lmhlo::SliceOp op,
+  typename lmhlo::SliceOp::Adaptor adaptor,
   ConversionPatternRewriter& rewriter) const {
 
   auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
@@ -224,14 +224,14 @@ mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
 
   // if output is an arg, use copy
   if (adaptor.getOperands()[1].getDefiningOp() == nullptr) {
-    auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::CopyOp>(
+    auto new_op = rewriter.replaceOpWithNewOp<byre::CopyOp>(
       op, adaptor.getOperands()[0], adaptor.getOperands()[1]);
 
     new_op->setAttr("offset", rewriter.getI32IntegerAttr(last_start));
     return success();
   }
 
-  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+  auto new_op = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
     op, found->second, adaptor.getOperands());
 
   new_op->setAttr("offset", rewriter.getI32IntegerAttr(last_start));
@@ -245,8 +245,8 @@ mlir::ConvertToByrePattern<mlir::lmhlo::SliceOp>::matchAndRewrite(
 
 template <>
 LogicalResult
-mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
-    mlir::lmhlo::ReshapeOp op, typename mlir::lmhlo::ReshapeOp::Adaptor adaptor,
+ConvertToByrePattern<lmhlo::ReshapeOp>::matchAndRewrite(
+    lmhlo::ReshapeOp op, typename lmhlo::ReshapeOp::Adaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
 
   auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
@@ -257,7 +257,7 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
   // If both args, replace it with copy
   if (adaptor.getOperands()[0].getDefiningOp() == nullptr && 
       adaptor.getOperands()[1].getDefiningOp() == nullptr) {
-    auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::CopyOp>(
+    auto new_op = rewriter.replaceOpWithNewOp<byre::CopyOp>(
       op, adaptor.getOperands()[0], adaptor.getOperands()[1]);
 
     return success();
@@ -267,7 +267,7 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
   bool isArgAlias = IsArgAlias(operands, adaptor.getOperands()[0],
                                  adaptor.getOperands()[1]);
 
-  auto new_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+  auto new_op = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
       op, found->second, operands);
 
   new_op->setAttr("offset", rewriter.getI32IntegerAttr(0));
@@ -278,6 +278,8 @@ mlir::ConvertToByrePattern<mlir::lmhlo::ReshapeOp>::matchAndRewrite(
 
   return success();
 }
+
+}  // namespace mlir
 
 namespace {
 
