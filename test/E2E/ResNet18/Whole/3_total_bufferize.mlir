@@ -632,40 +632,26 @@ module {
     } -> tensor<32x512x7x7xf16>
     return %1, %2 : tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>
   }
-  func private @Unknown59(%arg0: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [512] : tensor<512xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<512xf32>
-    return %1 : tensor<512xf32>
+  func private @BatchNormGradOp59(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
+    return %4, %3#1, %3#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
-  func private @BatchNormGradOp60(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>, %arg3: tensor<512xf32>, %arg4: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
-    return %3, %2#1, %2#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
-  }
-  func private @ConvBackwardDataOp61(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp60(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<512x512x3x3xf16>) -> tensor<3x3x512x512xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x512x512xf16>) -> tensor<3x3x512x512xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<3x3x512x512xf16>) -> tensor<32x512x7x7xf16>
     return %2 : tensor<32x512x7x7xf16>
   }
-  func private @ConvBackwardFilterOp62(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp61(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<3x3x512x512xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x512x512xf16>) -> tensor<512x512x3x3xf16>
     return %1 : tensor<512x512x3x3xf16>
   }
-  func private @Unknown63(%arg0: tensor<32x512x7x7xi1>, %arg1: tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown62(%arg0: tensor<32x512x7x7xi1>, %arg1: tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 512, 7, 7] : tensor<32x512x7x7xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x512x7x7xi1>, tensor<32x512x7x7xf16>) outs(%0 : tensor<32x512x7x7xf16>) {
@@ -675,40 +661,26 @@ module {
     } -> tensor<32x512x7x7xf16>
     return %1 : tensor<32x512x7x7xf16>
   }
-  func private @Unknown64(%arg0: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [512] : tensor<512xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<512xf32>
-    return %1 : tensor<512xf32>
+  func private @BatchNormGradOp63(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
+    return %4, %3#1, %3#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
-  func private @BatchNormGradOp65(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>, %arg3: tensor<512xf32>, %arg4: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
-    return %3, %2#1, %2#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
-  }
-  func private @ConvBackwardDataOp66(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp64(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<512x512x3x3xf16>) -> tensor<3x3x512x512xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x512x512xf16>) -> tensor<3x3x512x512xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<3x3x512x512xf16>) -> tensor<32x512x7x7xf16>
     return %2 : tensor<32x512x7x7xf16>
   }
-  func private @ConvBackwardFilterOp67(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp65(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<3x3x512x512xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x512x512xf16>) -> tensor<512x512x3x3xf16>
     return %1 : tensor<512x512x3x3xf16>
   }
-  func private @Unknown68(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<32x512x7x7xf16>, %arg2: tensor<32x512x7x7xi1>) -> tensor<32x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown66(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<32x512x7x7xf16>, %arg2: tensor<32x512x7x7xi1>) -> tensor<32x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 512, 7, 7] : tensor<32x512x7x7xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg2, %arg0, %arg1 : tensor<32x512x7x7xi1>, tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) outs(%0 : tensor<32x512x7x7xf16>) {
@@ -719,40 +691,26 @@ module {
     } -> tensor<32x512x7x7xf16>
     return %1 : tensor<32x512x7x7xf16>
   }
-  func private @Unknown69(%arg0: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [512] : tensor<512xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<512xf32>
-    return %1 : tensor<512xf32>
+  func private @BatchNormGradOp67(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
+    return %4, %3#1, %3#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
-  func private @BatchNormGradOp70(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>, %arg3: tensor<512xf32>, %arg4: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
-    return %3, %2#1, %2#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
-  }
-  func private @ConvBackwardDataOp71(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp68(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<512x512x3x3xf16>) -> tensor<3x3x512x512xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x512x512xf16>) -> tensor<3x3x512x512xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<3x3x512x512xf16>) -> tensor<32x512x7x7xf16>
     return %2 : tensor<32x512x7x7xf16>
   }
-  func private @ConvBackwardFilterOp72(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp69(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<3x3x512x512xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x512x512xf16>) -> tensor<512x512x3x3xf16>
     return %1 : tensor<512x512x3x3xf16>
   }
-  func private @Unknown73(%arg0: tensor<32x512x7x7xi1>, %arg1: tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown70(%arg0: tensor<32x512x7x7xi1>, %arg1: tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 512, 7, 7] : tensor<32x512x7x7xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x512x7x7xi1>, tensor<32x512x7x7xf16>) outs(%0 : tensor<32x512x7x7xf16>) {
@@ -762,72 +720,44 @@ module {
     } -> tensor<32x512x7x7xf16>
     return %1 : tensor<32x512x7x7xf16>
   }
-  func private @Unknown74(%arg0: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [512] : tensor<512xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<512xf32>
-    return %1 : tensor<512xf32>
+  func private @BatchNormGradOp71(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
+    return %4, %3#1, %3#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
-  func private @BatchNormGradOp75(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>, %arg3: tensor<512xf32>, %arg4: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
-    return %3, %2#1, %2#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
-  }
-  func private @ConvBackwardDataOp76(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x256x3x3xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp72(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x256x3x3xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<512x256x3x3xf16>) -> tensor<3x3x256x512xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x256x512xf16>) -> tensor<3x3x256x512xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 2], [1, 2]], lhs_dilate = [2, 2], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<3x3x256x512xf16>) -> tensor<32x256x14x14xf16>
     return %2 : tensor<32x256x14x14xf16>
   }
-  func private @ConvBackwardFilterOp77(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x256x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp73(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x256x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 0], [1, 0]], lhs_dilate = [1, 1], rhs_dilate = [2, 2]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<32x512x7x7xf16>) -> tensor<3x3x256x512xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x256x512xf16>) -> tensor<512x256x3x3xf16>
     return %1 : tensor<512x256x3x3xf16>
   }
-  func private @Unknown78(%arg0: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [512] : tensor<512xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<512xf32>
-    return %1 : tensor<512xf32>
+  func private @BatchNormGradOp74(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
+    return %4, %3#1, %3#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
-  func private @BatchNormGradOp79(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>, %arg3: tensor<512xf32>, %arg4: tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf32>) -> (tensor<32x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x512x7x7xf32>) -> tensor<32x512x7x7xf16>
-    return %3, %2#1, %2#2 : tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
-  }
-  func private @ConvBackwardDataOp80(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x256x1x1xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp75(%arg0: tensor<32x512x7x7xf16>, %arg1: tensor<512x256x1x1xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<512x256x1x1xf16>) -> tensor<1x1x256x512xf16>
     %1 = mhlo.convolution(%arg0, %0) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[0, 1], [0, 1]], lhs_dilate = [2, 2], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<1x1x256x512xf16>) -> tensor<32x256x14x14xf16>
     return %1 : tensor<32x256x14x14xf16>
   }
-  func private @ConvBackwardFilterOp81(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x256x1x1xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp76(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x512x7x7xf16>) -> tensor<512x256x1x1xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[0, -1], [0, -1]], lhs_dilate = [1, 1], rhs_dilate = [2, 2]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<32x512x7x7xf16>) -> tensor<1x1x256x512xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<1x1x256x512xf16>) -> tensor<512x256x1x1xf16>
     return %1 : tensor<512x256x1x1xf16>
   }
-  func private @Unknown82(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>, %arg2: tensor<32x256x14x14xi1>) -> tensor<32x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown77(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>, %arg2: tensor<32x256x14x14xi1>) -> tensor<32x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 256, 14, 14] : tensor<32x256x14x14xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg2, %arg0, %arg1 : tensor<32x256x14x14xi1>, tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) outs(%0 : tensor<32x256x14x14xf16>) {
@@ -838,40 +768,26 @@ module {
     } -> tensor<32x256x14x14xf16>
     return %1 : tensor<32x256x14x14xf16>
   }
-  func private @Unknown83(%arg0: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [256] : tensor<256xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<256xf32>
-    return %1 : tensor<256xf32>
+  func private @BatchNormGradOp78(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
+    return %4, %3#1, %3#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
-  func private @BatchNormGradOp84(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>, %arg3: tensor<256xf32>, %arg4: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
-    return %3, %2#1, %2#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
-  }
-  func private @ConvBackwardDataOp85(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp79(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<256x256x3x3xf16>) -> tensor<3x3x256x256xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x256x256xf16>) -> tensor<3x3x256x256xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<3x3x256x256xf16>) -> tensor<32x256x14x14xf16>
     return %2 : tensor<32x256x14x14xf16>
   }
-  func private @ConvBackwardFilterOp86(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp80(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<3x3x256x256xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x256x256xf16>) -> tensor<256x256x3x3xf16>
     return %1 : tensor<256x256x3x3xf16>
   }
-  func private @Unknown87(%arg0: tensor<32x256x14x14xi1>, %arg1: tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown81(%arg0: tensor<32x256x14x14xi1>, %arg1: tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 256, 14, 14] : tensor<32x256x14x14xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x256x14x14xi1>, tensor<32x256x14x14xf16>) outs(%0 : tensor<32x256x14x14xf16>) {
@@ -881,40 +797,26 @@ module {
     } -> tensor<32x256x14x14xf16>
     return %1 : tensor<32x256x14x14xf16>
   }
-  func private @Unknown88(%arg0: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [256] : tensor<256xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<256xf32>
-    return %1 : tensor<256xf32>
+  func private @BatchNormGradOp82(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
+    return %4, %3#1, %3#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
-  func private @BatchNormGradOp89(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>, %arg3: tensor<256xf32>, %arg4: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
-    return %3, %2#1, %2#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
-  }
-  func private @ConvBackwardDataOp90(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp83(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<256x256x3x3xf16>) -> tensor<3x3x256x256xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x256x256xf16>) -> tensor<3x3x256x256xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<3x3x256x256xf16>) -> tensor<32x256x14x14xf16>
     return %2 : tensor<32x256x14x14xf16>
   }
-  func private @ConvBackwardFilterOp91(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp84(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<3x3x256x256xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x256x256xf16>) -> tensor<256x256x3x3xf16>
     return %1 : tensor<256x256x3x3xf16>
   }
-  func private @Unknown92(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>, %arg2: tensor<32x256x14x14xi1>) -> tensor<32x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown85(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>, %arg2: tensor<32x256x14x14xi1>) -> tensor<32x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 256, 14, 14] : tensor<32x256x14x14xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg2, %arg0, %arg1 : tensor<32x256x14x14xi1>, tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) outs(%0 : tensor<32x256x14x14xf16>) {
@@ -925,40 +827,26 @@ module {
     } -> tensor<32x256x14x14xf16>
     return %1 : tensor<32x256x14x14xf16>
   }
-  func private @Unknown93(%arg0: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [256] : tensor<256xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<256xf32>
-    return %1 : tensor<256xf32>
+  func private @BatchNormGradOp86(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
+    return %4, %3#1, %3#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
-  func private @BatchNormGradOp94(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>, %arg3: tensor<256xf32>, %arg4: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
-    return %3, %2#1, %2#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
-  }
-  func private @ConvBackwardDataOp95(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp87(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<256x256x3x3xf16>) -> tensor<3x3x256x256xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x256x256xf16>) -> tensor<3x3x256x256xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<3x3x256x256xf16>) -> tensor<32x256x14x14xf16>
     return %2 : tensor<32x256x14x14xf16>
   }
-  func private @ConvBackwardFilterOp96(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp88(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<3x3x256x256xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x256x256xf16>) -> tensor<256x256x3x3xf16>
     return %1 : tensor<256x256x3x3xf16>
   }
-  func private @Unknown97(%arg0: tensor<32x256x14x14xi1>, %arg1: tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown89(%arg0: tensor<32x256x14x14xi1>, %arg1: tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 256, 14, 14] : tensor<32x256x14x14xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x256x14x14xi1>, tensor<32x256x14x14xf16>) outs(%0 : tensor<32x256x14x14xf16>) {
@@ -968,72 +856,44 @@ module {
     } -> tensor<32x256x14x14xf16>
     return %1 : tensor<32x256x14x14xf16>
   }
-  func private @Unknown98(%arg0: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [256] : tensor<256xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<256xf32>
-    return %1 : tensor<256xf32>
+  func private @BatchNormGradOp90(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
+    return %4, %3#1, %3#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
-  func private @BatchNormGradOp99(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>, %arg3: tensor<256xf32>, %arg4: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
-    return %3, %2#1, %2#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
-  }
-  func private @ConvBackwardDataOp100(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x128x3x3xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp91(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x128x3x3xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<256x128x3x3xf16>) -> tensor<3x3x128x256xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x128x256xf16>) -> tensor<3x3x128x256xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 2], [1, 2]], lhs_dilate = [2, 2], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<3x3x128x256xf16>) -> tensor<32x128x28x28xf16>
     return %2 : tensor<32x128x28x28xf16>
   }
-  func private @ConvBackwardFilterOp101(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x128x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp92(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x128x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 0], [1, 0]], lhs_dilate = [1, 1], rhs_dilate = [2, 2]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<32x256x14x14xf16>) -> tensor<3x3x128x256xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x128x256xf16>) -> tensor<256x128x3x3xf16>
     return %1 : tensor<256x128x3x3xf16>
   }
-  func private @Unknown102(%arg0: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [256] : tensor<256xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<256xf32>
-    return %1 : tensor<256xf32>
+  func private @BatchNormGradOp93(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
+    return %4, %3#1, %3#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
-  func private @BatchNormGradOp103(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>, %arg3: tensor<256xf32>, %arg4: tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf32>) -> (tensor<32x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x256x14x14xf32>) -> tensor<32x256x14x14xf16>
-    return %3, %2#1, %2#2 : tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
-  }
-  func private @ConvBackwardDataOp104(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x128x1x1xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp94(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<256x128x1x1xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<256x128x1x1xf16>) -> tensor<1x1x128x256xf16>
     %1 = mhlo.convolution(%arg0, %0) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[0, 1], [0, 1]], lhs_dilate = [2, 2], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x256x14x14xf16>, tensor<1x1x128x256xf16>) -> tensor<32x128x28x28xf16>
     return %1 : tensor<32x128x28x28xf16>
   }
-  func private @ConvBackwardFilterOp105(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x128x1x1xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp95(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x256x14x14xf16>) -> tensor<256x128x1x1xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[0, -1], [0, -1]], lhs_dilate = [1, 1], rhs_dilate = [2, 2]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<32x256x14x14xf16>) -> tensor<1x1x128x256xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<1x1x128x256xf16>) -> tensor<256x128x1x1xf16>
     return %1 : tensor<256x128x1x1xf16>
   }
-  func private @Unknown106(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>, %arg2: tensor<32x128x28x28xi1>) -> tensor<32x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown96(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>, %arg2: tensor<32x128x28x28xi1>) -> tensor<32x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 128, 28, 28] : tensor<32x128x28x28xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg2, %arg0, %arg1 : tensor<32x128x28x28xi1>, tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) outs(%0 : tensor<32x128x28x28xf16>) {
@@ -1044,40 +904,26 @@ module {
     } -> tensor<32x128x28x28xf16>
     return %1 : tensor<32x128x28x28xf16>
   }
-  func private @Unknown107(%arg0: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [128] : tensor<128xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<128xf32>
-    return %1 : tensor<128xf32>
+  func private @BatchNormGradOp97(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
+    return %4, %3#1, %3#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
-  func private @BatchNormGradOp108(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>, %arg3: tensor<128xf32>, %arg4: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
-    return %3, %2#1, %2#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
-  }
-  func private @ConvBackwardDataOp109(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp98(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<128x128x3x3xf16>) -> tensor<3x3x128x128xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x128x128xf16>) -> tensor<3x3x128x128xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<3x3x128x128xf16>) -> tensor<32x128x28x28xf16>
     return %2 : tensor<32x128x28x28xf16>
   }
-  func private @ConvBackwardFilterOp110(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp99(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<3x3x128x128xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x128x128xf16>) -> tensor<128x128x3x3xf16>
     return %1 : tensor<128x128x3x3xf16>
   }
-  func private @Unknown111(%arg0: tensor<32x128x28x28xi1>, %arg1: tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown100(%arg0: tensor<32x128x28x28xi1>, %arg1: tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 128, 28, 28] : tensor<32x128x28x28xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x128x28x28xi1>, tensor<32x128x28x28xf16>) outs(%0 : tensor<32x128x28x28xf16>) {
@@ -1087,40 +933,26 @@ module {
     } -> tensor<32x128x28x28xf16>
     return %1 : tensor<32x128x28x28xf16>
   }
-  func private @Unknown112(%arg0: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [128] : tensor<128xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<128xf32>
-    return %1 : tensor<128xf32>
+  func private @BatchNormGradOp101(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
+    return %4, %3#1, %3#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
-  func private @BatchNormGradOp113(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>, %arg3: tensor<128xf32>, %arg4: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
-    return %3, %2#1, %2#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
-  }
-  func private @ConvBackwardDataOp114(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp102(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<128x128x3x3xf16>) -> tensor<3x3x128x128xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x128x128xf16>) -> tensor<3x3x128x128xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<3x3x128x128xf16>) -> tensor<32x128x28x28xf16>
     return %2 : tensor<32x128x28x28xf16>
   }
-  func private @ConvBackwardFilterOp115(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp103(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<3x3x128x128xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x128x128xf16>) -> tensor<128x128x3x3xf16>
     return %1 : tensor<128x128x3x3xf16>
   }
-  func private @Unknown116(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>, %arg2: tensor<32x128x28x28xi1>) -> tensor<32x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown104(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>, %arg2: tensor<32x128x28x28xi1>) -> tensor<32x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 128, 28, 28] : tensor<32x128x28x28xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg2, %arg0, %arg1 : tensor<32x128x28x28xi1>, tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) outs(%0 : tensor<32x128x28x28xf16>) {
@@ -1131,40 +963,26 @@ module {
     } -> tensor<32x128x28x28xf16>
     return %1 : tensor<32x128x28x28xf16>
   }
-  func private @Unknown117(%arg0: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [128] : tensor<128xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<128xf32>
-    return %1 : tensor<128xf32>
+  func private @BatchNormGradOp105(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
+    return %4, %3#1, %3#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
-  func private @BatchNormGradOp118(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>, %arg3: tensor<128xf32>, %arg4: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
-    return %3, %2#1, %2#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
-  }
-  func private @ConvBackwardDataOp119(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp106(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<128x128x3x3xf16>) -> tensor<3x3x128x128xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x128x128xf16>) -> tensor<3x3x128x128xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<3x3x128x128xf16>) -> tensor<32x128x28x28xf16>
     return %2 : tensor<32x128x28x28xf16>
   }
-  func private @ConvBackwardFilterOp120(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp107(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<3x3x128x128xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x128x128xf16>) -> tensor<128x128x3x3xf16>
     return %1 : tensor<128x128x3x3xf16>
   }
-  func private @Unknown121(%arg0: tensor<32x128x28x28xi1>, %arg1: tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown108(%arg0: tensor<32x128x28x28xi1>, %arg1: tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 128, 28, 28] : tensor<32x128x28x28xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x128x28x28xi1>, tensor<32x128x28x28xf16>) outs(%0 : tensor<32x128x28x28xf16>) {
@@ -1174,72 +992,44 @@ module {
     } -> tensor<32x128x28x28xf16>
     return %1 : tensor<32x128x28x28xf16>
   }
-  func private @Unknown122(%arg0: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [128] : tensor<128xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<128xf32>
-    return %1 : tensor<128xf32>
+  func private @BatchNormGradOp109(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
+    return %4, %3#1, %3#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
-  func private @BatchNormGradOp123(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>, %arg3: tensor<128xf32>, %arg4: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
-    return %3, %2#1, %2#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
-  }
-  func private @ConvBackwardDataOp124(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp110(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<128x64x3x3xf16>) -> tensor<3x3x64x128xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x64x128xf16>) -> tensor<3x3x64x128xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 2], [1, 2]], lhs_dilate = [2, 2], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<3x3x64x128xf16>) -> tensor<32x64x56x56xf16>
     return %2 : tensor<32x64x56x56xf16>
   }
-  func private @ConvBackwardFilterOp125(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp111(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 0], [1, 0]], lhs_dilate = [1, 1], rhs_dilate = [2, 2]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<32x128x28x28xf16>) -> tensor<3x3x64x128xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x64x128xf16>) -> tensor<128x64x3x3xf16>
     return %1 : tensor<128x64x3x3xf16>
   }
-  func private @Unknown126(%arg0: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [128] : tensor<128xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<128xf32>
-    return %1 : tensor<128xf32>
+  func private @BatchNormGradOp112(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
+    return %4, %3#1, %3#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
-  func private @BatchNormGradOp127(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>, %arg3: tensor<128xf32>, %arg4: tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf32>) -> (tensor<32x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x128x28x28xf32>) -> tensor<32x128x28x28xf16>
-    return %3, %2#1, %2#2 : tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
-  }
-  func private @ConvBackwardDataOp128(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x64x1x1xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp113(%arg0: tensor<32x128x28x28xf16>, %arg1: tensor<128x64x1x1xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<128x64x1x1xf16>) -> tensor<1x1x64x128xf16>
     %1 = mhlo.convolution(%arg0, %0) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[0, 1], [0, 1]], lhs_dilate = [2, 2], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x128x28x28xf16>, tensor<1x1x64x128xf16>) -> tensor<32x64x56x56xf16>
     return %1 : tensor<32x64x56x56xf16>
   }
-  func private @ConvBackwardFilterOp129(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x64x1x1xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp114(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x128x28x28xf16>) -> tensor<128x64x1x1xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[0, -1], [0, -1]], lhs_dilate = [1, 1], rhs_dilate = [2, 2]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<32x128x28x28xf16>) -> tensor<1x1x64x128xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<1x1x64x128xf16>) -> tensor<128x64x1x1xf16>
     return %1 : tensor<128x64x1x1xf16>
   }
-  func private @Unknown130(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>, %arg2: tensor<32x64x56x56xi1>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown115(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>, %arg2: tensor<32x64x56x56xi1>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 64, 56, 56] : tensor<32x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg2, %arg0, %arg1 : tensor<32x64x56x56xi1>, tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) outs(%0 : tensor<32x64x56x56xf16>) {
@@ -1250,40 +1040,26 @@ module {
     } -> tensor<32x64x56x56xf16>
     return %1 : tensor<32x64x56x56xf16>
   }
-  func private @Unknown131(%arg0: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [64] : tensor<64xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<64xf32>
-    return %1 : tensor<64xf32>
+  func private @BatchNormGradOp116(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf32>) -> (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x64x56x56xf32>) -> tensor<32x64x56x56xf16>
+    return %4, %3#1, %3#2 : tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
-  func private @BatchNormGradOp132(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf32>) -> (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x64x56x56xf32>) -> tensor<32x64x56x56xf16>
-    return %3, %2#1, %2#2 : tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
-  }
-  func private @ConvBackwardDataOp133(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp117(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<64x64x3x3xf16>) -> tensor<3x3x64x64xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x64x64xf16>) -> tensor<3x3x64x64xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<3x3x64x64xf16>) -> tensor<32x64x56x56xf16>
     return %2 : tensor<32x64x56x56xf16>
   }
-  func private @ConvBackwardFilterOp134(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp118(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<3x3x64x64xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x64x64xf16>) -> tensor<64x64x3x3xf16>
     return %1 : tensor<64x64x3x3xf16>
   }
-  func private @Unknown135(%arg0: tensor<32x64x56x56xi1>, %arg1: tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown119(%arg0: tensor<32x64x56x56xi1>, %arg1: tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 64, 56, 56] : tensor<32x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x64x56x56xi1>, tensor<32x64x56x56xf16>) outs(%0 : tensor<32x64x56x56xf16>) {
@@ -1293,40 +1069,26 @@ module {
     } -> tensor<32x64x56x56xf16>
     return %1 : tensor<32x64x56x56xf16>
   }
-  func private @Unknown136(%arg0: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [64] : tensor<64xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<64xf32>
-    return %1 : tensor<64xf32>
+  func private @BatchNormGradOp120(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf32>) -> (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x64x56x56xf32>) -> tensor<32x64x56x56xf16>
+    return %4, %3#1, %3#2 : tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
-  func private @BatchNormGradOp137(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf32>) -> (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x64x56x56xf32>) -> tensor<32x64x56x56xf16>
-    return %3, %2#1, %2#2 : tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
-  }
-  func private @ConvBackwardDataOp138(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp121(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<64x64x3x3xf16>) -> tensor<3x3x64x64xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x64x64xf16>) -> tensor<3x3x64x64xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<3x3x64x64xf16>) -> tensor<32x64x56x56xf16>
     return %2 : tensor<32x64x56x56xf16>
   }
-  func private @ConvBackwardFilterOp139(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp122(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<3x3x64x64xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x64x64xf16>) -> tensor<64x64x3x3xf16>
     return %1 : tensor<64x64x3x3xf16>
   }
-  func private @Unknown140(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>, %arg2: tensor<32x64x56x56xi1>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown123(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>, %arg2: tensor<32x64x56x56xi1>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 64, 56, 56] : tensor<32x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg2, %arg0, %arg1 : tensor<32x64x56x56xi1>, tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) outs(%0 : tensor<32x64x56x56xf16>) {
@@ -1337,40 +1099,26 @@ module {
     } -> tensor<32x64x56x56xf16>
     return %1 : tensor<32x64x56x56xf16>
   }
-  func private @Unknown141(%arg0: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [64] : tensor<64xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<64xf32>
-    return %1 : tensor<64xf32>
+  func private @BatchNormGradOp124(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf32>) -> (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x64x56x56xf32>) -> tensor<32x64x56x56xf16>
+    return %4, %3#1, %3#2 : tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
-  func private @BatchNormGradOp142(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf32>) -> (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x64x56x56xf32>) -> tensor<32x64x56x56xf16>
-    return %3, %2#1, %2#2 : tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
-  }
-  func private @ConvBackwardDataOp143(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp125(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<64x64x3x3xf16>) -> tensor<3x3x64x64xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x64x64xf16>) -> tensor<3x3x64x64xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<3x3x64x64xf16>) -> tensor<32x64x56x56xf16>
     return %2 : tensor<32x64x56x56xf16>
   }
-  func private @ConvBackwardFilterOp144(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp126(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<3x3x64x64xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x64x64xf16>) -> tensor<64x64x3x3xf16>
     return %1 : tensor<64x64x3x3xf16>
   }
-  func private @Unknown145(%arg0: tensor<32x64x56x56xi1>, %arg1: tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown127(%arg0: tensor<32x64x56x56xi1>, %arg1: tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 64, 56, 56] : tensor<32x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x64x56x56xi1>, tensor<32x64x56x56xf16>) outs(%0 : tensor<32x64x56x56xf16>) {
@@ -1380,40 +1128,26 @@ module {
     } -> tensor<32x64x56x56xf16>
     return %1 : tensor<32x64x56x56xf16>
   }
-  func private @Unknown146(%arg0: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [64] : tensor<64xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<64xf32>
-    return %1 : tensor<64xf32>
+  func private @BatchNormGradOp128(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf32>) -> (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x64x56x56xf32>) -> tensor<32x64x56x56xf16>
+    return %4, %3#1, %3#2 : tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
-  func private @BatchNormGradOp147(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf32>) -> (tensor<32x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x64x56x56xf32>) -> tensor<32x64x56x56xf16>
-    return %3, %2#1, %2#2 : tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
-  }
-  func private @ConvBackwardDataOp148(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
+  func private @ConvBackwardDataOp129(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
     %0 = "mhlo.transpose"(%arg1) {minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>, permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<64x64x3x3xf16>) -> tensor<3x3x64x64xf16>
     %1 = "mhlo.reverse"(%0) {dimensions = dense<[0, 1]> : tensor<2xi64>, minor_to_major = dense<[1, 0, 2, 3]> : tensor<4xindex>} : (tensor<3x3x64x64xf16>) -> tensor<3x3x64x64xf16>
     %2 = mhlo.convolution(%arg0, %1) dim_numbers = [b, f, 0, 1]x[0, 1, o, i]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<3x3x64x64xf16>) -> tensor<32x64x56x56xf16>
     return %2 : tensor<32x64x56x56xf16>
   }
-  func private @ConvBackwardFilterOp149(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<2xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp130(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<3x3x64x64xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<3x3x64x64xf16>) -> tensor<64x64x3x3xf16>
     return %1 : tensor<64x64x3x3xf16>
   }
-  func private @Unknown150(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown131(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [32, 64, 56, 56] : tensor<32x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) outs(%0 : tensor<32x64x56x56xf16>) {
     ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
@@ -1422,7 +1156,7 @@ module {
     } -> tensor<32x64x56x56xf16>
     return %1 : tensor<32x64x56x56xf16>
   }
-  func private @Unknown151(%arg0: tensor<32x64x112x112xi1>, %arg1: tensor<32x64x112x112xf16>) -> tensor<32x64x112x112xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown132(%arg0: tensor<32x64x112x112xi1>, %arg1: tensor<32x64x112x112xf16>) -> tensor<32x64x112x112xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [32, 64, 112, 112] : tensor<32x64x112x112xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<32x64x112x112xi1>, tensor<32x64x112x112xf16>) outs(%0 : tensor<32x64x112x112xf16>) {
@@ -1432,34 +1166,20 @@ module {
     } -> tensor<32x64x112x112xf16>
     return %1 : tensor<32x64x112x112xf16>
   }
-  func private @Unknown152(%arg0: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 9.99999974E-6 : f32
-    %cst_0 = arith.constant 1.000000e+00 : f32
-    %0 = linalg.init_tensor [64] : tensor<64xf32>
-    %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
-      %2 = arith.addf %arg1, %cst : f32
-      %3 = math.rsqrt %2 : f32
-      %4 = arith.divf %cst_0, %3 : f32
-      %5 = arith.mulf %4, %4 : f32
-      %6 = arith.subf %5, %cst : f32
-      linalg.yield %6 : f32
-    } -> tensor<64xf32>
-    return %1 : tensor<64xf32>
+  func private @BatchNormGradOp133(%arg0: tensor<32x64x112x112xf16>, %arg1: tensor<64xf32>, %arg2: tensor<32x64x112x112xf16>) -> (tensor<32x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
+    %0 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
+    %1 = "mhlo.convert"(%arg0) : (tensor<32x64x112x112xf16>) -> tensor<32x64x112x112xf32>
+    %2 = "mhlo.convert"(%arg2) : (tensor<32x64x112x112xf16>) -> tensor<32x64x112x112xf32>
+    %3:3 = "mhlo.batch_norm_grad"(%1, %arg1, %0, %0, %2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x112x112xf32>) -> (tensor<32x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>)
+    %4 = "mhlo.convert"(%3#0) : (tensor<32x64x112x112xf32>) -> tensor<32x64x112x112xf16>
+    return %4, %3#1, %3#2 : tensor<32x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>
   }
-  func private @BatchNormGradOp153(%arg0: tensor<32x64x112x112xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<32x64x112x112xf16>) -> (tensor<32x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = "mhlo.convert"(%arg0) : (tensor<32x64x112x112xf16>) -> tensor<32x64x112x112xf32>
-    %1 = "mhlo.convert"(%arg4) : (tensor<32x64x112x112xf16>) -> tensor<32x64x112x112xf32>
-    %2:3 = "mhlo.batch_norm_grad"(%0, %arg1, %arg2, %arg3, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<32x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x112x112xf32>) -> (tensor<32x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = "mhlo.convert"(%2#0) : (tensor<32x64x112x112xf32>) -> tensor<32x64x112x112xf16>
-    return %3, %2#1, %2#2 : tensor<32x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>
-  }
-  func private @ConvBackwardFilterOp154(%arg0: tensor<32x3x224x224xf16>, %arg1: tensor<32x64x112x112xf16>) -> tensor<64x3x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<3> : tensor<2xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
+  func private @ConvBackwardFilterOp134(%arg0: tensor<32x3x224x224xf16>, %arg1: tensor<32x64x112x112xf16>) -> tensor<64x3x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<3> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
     %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [f, b, 0, 1]x[i, o, 0, 1]->[0, 1, b, f], window = {stride = [1, 1], pad = [[3, 2], [3, 2]], lhs_dilate = [1, 1], rhs_dilate = [2, 2]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x3x224x224xf16>, tensor<32x64x112x112xf16>) -> tensor<7x7x3x64xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>, permutation = dense<[3, 2, 0, 1]> : tensor<4xi64>} : (tensor<7x7x3x64xf16>) -> tensor<64x3x7x7xf16>
     return %1 : tensor<64x3x7x7xf16>
   }
-  func private @Unknown155(%arg0: tensor<64x3x7x7xf16>) -> tensor<64x3x7x7xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown135(%arg0: tensor<64x3x7x7xf16>) -> tensor<64x3x7x7xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 3, 7, 7] : tensor<64x3x7x7xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x3x7x7xf16>) outs(%0 : tensor<64x3x7x7xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1468,7 +1188,7 @@ module {
     } -> tensor<64x3x7x7xf32>
     return %1 : tensor<64x3x7x7xf32>
   }
-  func private @Unknown156(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown136(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 64, 3, 3] : tensor<64x64x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x64x3x3xf16>) outs(%0 : tensor<64x64x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1477,7 +1197,7 @@ module {
     } -> tensor<64x64x3x3xf32>
     return %1 : tensor<64x64x3x3xf32>
   }
-  func private @Unknown157(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown137(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 64, 3, 3] : tensor<64x64x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x64x3x3xf16>) outs(%0 : tensor<64x64x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1486,7 +1206,7 @@ module {
     } -> tensor<64x64x3x3xf32>
     return %1 : tensor<64x64x3x3xf32>
   }
-  func private @Unknown158(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown138(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 64, 3, 3] : tensor<64x64x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x64x3x3xf16>) outs(%0 : tensor<64x64x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1495,7 +1215,7 @@ module {
     } -> tensor<64x64x3x3xf32>
     return %1 : tensor<64x64x3x3xf32>
   }
-  func private @Unknown159(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown139(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 64, 3, 3] : tensor<64x64x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x64x3x3xf16>) outs(%0 : tensor<64x64x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1504,7 +1224,7 @@ module {
     } -> tensor<64x64x3x3xf32>
     return %1 : tensor<64x64x3x3xf32>
   }
-  func private @Unknown160(%arg0: tensor<128x64x3x3xf16>) -> tensor<128x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown140(%arg0: tensor<128x64x3x3xf16>) -> tensor<128x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 64, 3, 3] : tensor<128x64x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x64x3x3xf16>) outs(%0 : tensor<128x64x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1513,7 +1233,7 @@ module {
     } -> tensor<128x64x3x3xf32>
     return %1 : tensor<128x64x3x3xf32>
   }
-  func private @Unknown161(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown141(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 128, 3, 3] : tensor<128x128x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x128x3x3xf16>) outs(%0 : tensor<128x128x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1522,7 +1242,7 @@ module {
     } -> tensor<128x128x3x3xf32>
     return %1 : tensor<128x128x3x3xf32>
   }
-  func private @Unknown162(%arg0: tensor<128x64x1x1xf16>) -> tensor<128x64x1x1xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown142(%arg0: tensor<128x64x1x1xf16>) -> tensor<128x64x1x1xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 64, 1, 1] : tensor<128x64x1x1xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x64x1x1xf16>) outs(%0 : tensor<128x64x1x1xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1531,7 +1251,7 @@ module {
     } -> tensor<128x64x1x1xf32>
     return %1 : tensor<128x64x1x1xf32>
   }
-  func private @Unknown163(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown143(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 128, 3, 3] : tensor<128x128x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x128x3x3xf16>) outs(%0 : tensor<128x128x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1540,7 +1260,7 @@ module {
     } -> tensor<128x128x3x3xf32>
     return %1 : tensor<128x128x3x3xf32>
   }
-  func private @Unknown164(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown144(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 128, 3, 3] : tensor<128x128x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x128x3x3xf16>) outs(%0 : tensor<128x128x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1549,7 +1269,7 @@ module {
     } -> tensor<128x128x3x3xf32>
     return %1 : tensor<128x128x3x3xf32>
   }
-  func private @Unknown165(%arg0: tensor<256x128x3x3xf16>) -> tensor<256x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown145(%arg0: tensor<256x128x3x3xf16>) -> tensor<256x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 128, 3, 3] : tensor<256x128x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x128x3x3xf16>) outs(%0 : tensor<256x128x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1558,7 +1278,7 @@ module {
     } -> tensor<256x128x3x3xf32>
     return %1 : tensor<256x128x3x3xf32>
   }
-  func private @Unknown166(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown146(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 256, 3, 3] : tensor<256x256x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x256x3x3xf16>) outs(%0 : tensor<256x256x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1567,7 +1287,7 @@ module {
     } -> tensor<256x256x3x3xf32>
     return %1 : tensor<256x256x3x3xf32>
   }
-  func private @Unknown167(%arg0: tensor<256x128x1x1xf16>) -> tensor<256x128x1x1xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown147(%arg0: tensor<256x128x1x1xf16>) -> tensor<256x128x1x1xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 128, 1, 1] : tensor<256x128x1x1xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x128x1x1xf16>) outs(%0 : tensor<256x128x1x1xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1576,7 +1296,7 @@ module {
     } -> tensor<256x128x1x1xf32>
     return %1 : tensor<256x128x1x1xf32>
   }
-  func private @Unknown168(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown148(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 256, 3, 3] : tensor<256x256x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x256x3x3xf16>) outs(%0 : tensor<256x256x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1585,7 +1305,7 @@ module {
     } -> tensor<256x256x3x3xf32>
     return %1 : tensor<256x256x3x3xf32>
   }
-  func private @Unknown169(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown149(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 256, 3, 3] : tensor<256x256x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x256x3x3xf16>) outs(%0 : tensor<256x256x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1594,7 +1314,7 @@ module {
     } -> tensor<256x256x3x3xf32>
     return %1 : tensor<256x256x3x3xf32>
   }
-  func private @Unknown170(%arg0: tensor<512x256x3x3xf16>) -> tensor<512x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown150(%arg0: tensor<512x256x3x3xf16>) -> tensor<512x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 256, 3, 3] : tensor<512x256x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x256x3x3xf16>) outs(%0 : tensor<512x256x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1603,7 +1323,7 @@ module {
     } -> tensor<512x256x3x3xf32>
     return %1 : tensor<512x256x3x3xf32>
   }
-  func private @Unknown171(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown151(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 512, 3, 3] : tensor<512x512x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x512x3x3xf16>) outs(%0 : tensor<512x512x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1612,7 +1332,7 @@ module {
     } -> tensor<512x512x3x3xf32>
     return %1 : tensor<512x512x3x3xf32>
   }
-  func private @Unknown172(%arg0: tensor<512x256x1x1xf16>) -> tensor<512x256x1x1xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown152(%arg0: tensor<512x256x1x1xf16>) -> tensor<512x256x1x1xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 256, 1, 1] : tensor<512x256x1x1xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x256x1x1xf16>) outs(%0 : tensor<512x256x1x1xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1621,7 +1341,7 @@ module {
     } -> tensor<512x256x1x1xf32>
     return %1 : tensor<512x256x1x1xf32>
   }
-  func private @Unknown173(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown153(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 512, 3, 3] : tensor<512x512x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x512x3x3xf16>) outs(%0 : tensor<512x512x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1630,7 +1350,7 @@ module {
     } -> tensor<512x512x3x3xf32>
     return %1 : tensor<512x512x3x3xf32>
   }
-  func private @Unknown174(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown154(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 512, 3, 3] : tensor<512x512x3x3xf32>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x512x3x3xf16>) outs(%0 : tensor<512x512x3x3xf32>) attrs =  {minor_to_major = dense<[0, 1, 3, 2]> : tensor<4xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1639,7 +1359,7 @@ module {
     } -> tensor<512x512x3x3xf32>
     return %1 : tensor<512x512x3x3xf32>
   }
-  func private @Unknown175(%arg0: tensor<32x512xf16>) -> tensor<32x512xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown155(%arg0: tensor<32x512xf16>) -> tensor<32x512xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 2.040100e-02 : f16
     %0 = linalg.init_tensor [32, 512] : tensor<32x512xf16>
     %1 = linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<32x512xf16>) outs(%0 : tensor<32x512xf16>) {
@@ -1649,12 +1369,12 @@ module {
     } -> tensor<32x512xf16>
     return %1 : tensor<32x512xf16>
   }
-  func private @MatmulOp176(%arg0: tensor<32x512xf16>, %arg1: tensor<32x1000xf16>) -> tensor<1000x512xf16> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"} {
+  func private @MatmulOp156(%arg0: tensor<32x512xf16>, %arg1: tensor<32x1000xf16>) -> tensor<1000x512xf16> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"} {
     %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [0], rhs_contracting_dimensions = [0]>, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512xf16>, tensor<32x1000xf16>) -> tensor<512x1000xf16>
     %1 = "mhlo.transpose"(%0) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<512x1000xf16>) -> tensor<1000x512xf16>
     return %1 : tensor<1000x512xf16>
   }
-  func private @Unknown177(%arg0: tensor<1000x512xf16>) -> tensor<1000x512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown157(%arg0: tensor<1000x512xf16>) -> tensor<1000x512xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [1000, 512] : tensor<1000x512xf32>
     %1 = linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<1000x512xf16>) outs(%0 : tensor<1000x512xf32>) attrs =  {minor_to_major = dense<[0, 1]> : tensor<2xindex>} {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1663,7 +1383,7 @@ module {
     } -> tensor<1000x512xf32>
     return %1 : tensor<1000x512xf32>
   }
-  func private @Unknown178(%arg0: tensor<32x1000xf16>) -> tensor<32x1000xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown158(%arg0: tensor<32x1000xf16>) -> tensor<32x1000xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [32, 1000] : tensor<32x1000xf32>
     %1 = linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<32x1000xf16>) outs(%0 : tensor<32x1000xf32>) {
     ^bb0(%arg1: f16, %arg2: f32):  // no predecessors
@@ -1672,7 +1392,7 @@ module {
     } -> tensor<32x1000xf32>
     return %1 : tensor<32x1000xf32>
   }
-  func private @Unknown179(%arg0: tensor<1000xf32>) -> tensor<1000xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown159(%arg0: tensor<1000xf32>) -> tensor<1000xf32> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [1000] : tensor<1000xf32>
     %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<1000xf32>) outs(%0 : tensor<1000xf32>) {
     ^bb0(%arg1: f32, %arg2: f32):  // no predecessors
@@ -1682,7 +1402,7 @@ module {
     } -> tensor<1000xf32>
     return %1 : tensor<1000xf32>
   }
-  func private @Unknown180(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown160(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1695,7 +1415,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown181(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown161(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1708,7 +1428,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown182(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown162(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1721,7 +1441,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown183(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown163(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1734,7 +1454,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown184(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown164(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1747,7 +1467,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown185(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown165(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1760,7 +1480,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown186(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown166(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1773,7 +1493,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown187(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown167(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1786,7 +1506,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown188(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown168(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1799,7 +1519,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown189(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown169(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
@@ -1812,7 +1532,7 @@ module {
     } -> tensor<64xf32>
     return %1 : tensor<64xf32>
   }
-  func private @Unknown190(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown170(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1825,7 +1545,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown191(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown171(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1838,7 +1558,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown192(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown172(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1851,7 +1571,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown193(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown173(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1864,7 +1584,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown194(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown174(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1877,7 +1597,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown195(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown175(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1890,7 +1610,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown196(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown176(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1903,7 +1623,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown197(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown177(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1916,7 +1636,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown198(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown178(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1929,7 +1649,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown199(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown179(%arg0: tensor<128xf32>, %arg1: tensor<128xf32>) -> tensor<128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
@@ -1942,7 +1662,7 @@ module {
     } -> tensor<128xf32>
     return %1 : tensor<128xf32>
   }
-  func private @Unknown200(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown180(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -1955,7 +1675,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown201(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown181(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -1968,7 +1688,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown202(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown182(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -1981,7 +1701,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown203(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown183(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -1994,7 +1714,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown204(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown184(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -2007,7 +1727,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown205(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown185(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -2020,7 +1740,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown206(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown186(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -2033,7 +1753,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown207(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown187(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -2046,7 +1766,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown208(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown188(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -2059,7 +1779,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown209(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown189(%arg0: tensor<256xf32>, %arg1: tensor<256xf32>) -> tensor<256xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
@@ -2072,7 +1792,7 @@ module {
     } -> tensor<256xf32>
     return %1 : tensor<256xf32>
   }
-  func private @Unknown210(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown190(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2085,7 +1805,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown211(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown191(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2098,7 +1818,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown212(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown192(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2111,7 +1831,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown213(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown193(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2124,7 +1844,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown214(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown194(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2137,7 +1857,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown215(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown195(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2150,7 +1870,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown216(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown196(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2163,7 +1883,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown217(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown197(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2176,7 +1896,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown218(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown198(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2189,7 +1909,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown219(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown199(%arg0: tensor<512xf32>, %arg1: tensor<512xf32>) -> tensor<512xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
@@ -2202,7 +1922,7 @@ module {
     } -> tensor<512xf32>
     return %1 : tensor<512xf32>
   }
-  func private @Unknown220(%arg0: tensor<1000xf32>) -> tensor<1000xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown200(%arg0: tensor<1000xf32>) -> tensor<1000xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [1000] : tensor<1000xf16>
     %1 = linalg.generic {indexing_maps = [#map3, #map3], iterator_types = ["parallel"]} ins(%arg0 : tensor<1000xf32>) outs(%0 : tensor<1000xf16>) {
     ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
@@ -2211,7 +1931,7 @@ module {
     } -> tensor<1000xf16>
     return %1 : tensor<1000xf16>
   }
-  func private @Unknown221(%arg0: tensor<1000xf16>, %arg1: tensor<32x1000xf16>) -> tensor<32x1000xf16> attributes {__byteir_elementwise_fusion__} {
+  func private @Unknown201(%arg0: tensor<1000xf16>, %arg1: tensor<32x1000xf16>) -> tensor<32x1000xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [32, 1000] : tensor<32x1000xf16>
     %1 = linalg.generic {indexing_maps = [#map1, #map4, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg1, %arg0 : tensor<32x1000xf16>, tensor<1000xf16>) outs(%0 : tensor<32x1000xf16>) {
     ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
@@ -2253,8 +1973,8 @@ module {
     %29:2 = call @Unknown23(%7#0) : (tensor<32x64x112x112xf16>) -> (tensor<32x64x112x112xf16>, tensor<32x64x112x112xi1>)
     %30 = "mhlo.reduce_window"(%29#0, %3) ({
     ^bb0(%arg104: tensor<f16>, %arg105: tensor<f16>):  // no predecessors
-      %252 = mhlo.maximum %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%252) : (tensor<f16>) -> ()
+      %232 = mhlo.maximum %arg104, %arg105 : tensor<f16>
+      "mhlo.return"(%232) : (tensor<f16>) -> ()
     }) {base_dilations = dense<1> : tensor<4xi64>, padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dilations = dense<1> : tensor<4xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (tensor<32x64x112x112xf16>, tensor<f16>) -> tensor<32x64x56x56xf16>
     %31 = mhlo.convolution(%30, %10) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
     %32:3 = call @BatchNormTrainingOp24(%31, %arg10, %arg9) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
@@ -2310,190 +2030,170 @@ module {
     %82 = mhlo.convolution(%81#0, %28) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16>
     %83:3 = call @BatchNormTrainingOp57(%82, %arg100, %arg99) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
     %84:2 = call @Unknown58(%9, %83#0, %78#0) : (tensor<32x512xf16>, tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>)
-    %85 = call @Unknown59(%83#2) : (tensor<512xf32>) -> tensor<512xf32>
-    %86:3 = call @BatchNormGradOp60(%82, %arg100, %83#1, %85, %84#1) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
-    %87 = call @ConvBackwardDataOp61(%86#0, %28) : (tensor<32x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16>
-    %88 = call @ConvBackwardFilterOp62(%81#0, %86#0) : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16>
-    %89 = call @Unknown63(%81#1, %87) : (tensor<32x512x7x7xi1>, tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf16>
-    %90 = call @Unknown64(%80#2) : (tensor<512xf32>) -> tensor<512xf32>
-    %91:3 = call @BatchNormGradOp65(%79, %arg95, %80#1, %90, %89) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
-    %92 = call @ConvBackwardDataOp66(%91#0, %27) : (tensor<32x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16>
-    %93 = call @ConvBackwardFilterOp67(%78#0, %91#0) : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16>
-    %94 = call @Unknown68(%84#1, %92, %78#1) : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>, tensor<32x512x7x7xi1>) -> tensor<32x512x7x7xf16>
-    %95 = call @Unknown69(%77#2) : (tensor<512xf32>) -> tensor<512xf32>
-    %96:3 = call @BatchNormGradOp70(%76, %arg85, %77#1, %95, %94) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
-    %97 = call @ConvBackwardDataOp71(%96#0, %25) : (tensor<32x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16>
-    %98 = call @ConvBackwardFilterOp72(%75#0, %96#0) : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16>
-    %99 = call @Unknown73(%75#1, %97) : (tensor<32x512x7x7xi1>, tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf16>
-    %100 = call @Unknown74(%72#2) : (tensor<512xf32>) -> tensor<512xf32>
-    %101:3 = call @BatchNormGradOp75(%71, %arg80, %72#1, %100, %99) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
-    %102 = call @ConvBackwardDataOp76(%101#0, %24) : (tensor<32x512x7x7xf16>, tensor<512x256x3x3xf16>) -> tensor<32x256x14x14xf16>
-    %103 = call @ConvBackwardFilterOp77(%70#0, %101#0) : (tensor<32x256x14x14xf16>, tensor<32x512x7x7xf16>) -> tensor<512x256x3x3xf16>
-    %104 = call @Unknown78(%74#2) : (tensor<512xf32>) -> tensor<512xf32>
-    %105:3 = call @BatchNormGradOp79(%73, %arg89, %74#1, %104, %94) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
-    %106 = call @ConvBackwardDataOp80(%105#0, %26) : (tensor<32x512x7x7xf16>, tensor<512x256x1x1xf16>) -> tensor<32x256x14x14xf16>
-    %107 = call @ConvBackwardFilterOp81(%70#0, %105#0) : (tensor<32x256x14x14xf16>, tensor<32x512x7x7xf16>) -> tensor<512x256x1x1xf16>
-    %108 = call @Unknown82(%106, %102, %70#1) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>, tensor<32x256x14x14xi1>) -> tensor<32x256x14x14xf16>
-    %109 = call @Unknown83(%69#2) : (tensor<256xf32>) -> tensor<256xf32>
-    %110:3 = call @BatchNormGradOp84(%68, %arg75, %69#1, %109, %108) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
-    %111 = call @ConvBackwardDataOp85(%110#0, %23) : (tensor<32x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16>
-    %112 = call @ConvBackwardFilterOp86(%67#0, %110#0) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16>
-    %113 = call @Unknown87(%67#1, %111) : (tensor<32x256x14x14xi1>, tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf16>
-    %114 = call @Unknown88(%66#2) : (tensor<256xf32>) -> tensor<256xf32>
-    %115:3 = call @BatchNormGradOp89(%65, %arg70, %66#1, %114, %113) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
-    %116 = call @ConvBackwardDataOp90(%115#0, %22) : (tensor<32x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16>
-    %117 = call @ConvBackwardFilterOp91(%64#0, %115#0) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16>
-    %118 = call @Unknown92(%108, %116, %64#1) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>, tensor<32x256x14x14xi1>) -> tensor<32x256x14x14xf16>
-    %119 = call @Unknown93(%63#2) : (tensor<256xf32>) -> tensor<256xf32>
-    %120:3 = call @BatchNormGradOp94(%62, %arg60, %63#1, %119, %118) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
-    %121 = call @ConvBackwardDataOp95(%120#0, %20) : (tensor<32x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16>
-    %122 = call @ConvBackwardFilterOp96(%61#0, %120#0) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16>
-    %123 = call @Unknown97(%61#1, %121) : (tensor<32x256x14x14xi1>, tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf16>
-    %124 = call @Unknown98(%58#2) : (tensor<256xf32>) -> tensor<256xf32>
-    %125:3 = call @BatchNormGradOp99(%57, %arg55, %58#1, %124, %123) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
-    %126 = call @ConvBackwardDataOp100(%125#0, %19) : (tensor<32x256x14x14xf16>, tensor<256x128x3x3xf16>) -> tensor<32x128x28x28xf16>
-    %127 = call @ConvBackwardFilterOp101(%56#0, %125#0) : (tensor<32x128x28x28xf16>, tensor<32x256x14x14xf16>) -> tensor<256x128x3x3xf16>
-    %128 = call @Unknown102(%60#2) : (tensor<256xf32>) -> tensor<256xf32>
-    %129:3 = call @BatchNormGradOp103(%59, %arg64, %60#1, %128, %118) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
-    %130 = call @ConvBackwardDataOp104(%129#0, %21) : (tensor<32x256x14x14xf16>, tensor<256x128x1x1xf16>) -> tensor<32x128x28x28xf16>
-    %131 = call @ConvBackwardFilterOp105(%56#0, %129#0) : (tensor<32x128x28x28xf16>, tensor<32x256x14x14xf16>) -> tensor<256x128x1x1xf16>
-    %132 = call @Unknown106(%130, %126, %56#1) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>, tensor<32x128x28x28xi1>) -> tensor<32x128x28x28xf16>
-    %133 = call @Unknown107(%55#2) : (tensor<128xf32>) -> tensor<128xf32>
-    %134:3 = call @BatchNormGradOp108(%54, %arg50, %55#1, %133, %132) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
-    %135 = call @ConvBackwardDataOp109(%134#0, %18) : (tensor<32x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16>
-    %136 = call @ConvBackwardFilterOp110(%53#0, %134#0) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16>
-    %137 = call @Unknown111(%53#1, %135) : (tensor<32x128x28x28xi1>, tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf16>
-    %138 = call @Unknown112(%52#2) : (tensor<128xf32>) -> tensor<128xf32>
-    %139:3 = call @BatchNormGradOp113(%51, %arg45, %52#1, %138, %137) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
-    %140 = call @ConvBackwardDataOp114(%139#0, %17) : (tensor<32x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16>
-    %141 = call @ConvBackwardFilterOp115(%50#0, %139#0) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16>
-    %142 = call @Unknown116(%132, %140, %50#1) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>, tensor<32x128x28x28xi1>) -> tensor<32x128x28x28xf16>
-    %143 = call @Unknown117(%49#2) : (tensor<128xf32>) -> tensor<128xf32>
-    %144:3 = call @BatchNormGradOp118(%48, %arg35, %49#1, %143, %142) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
-    %145 = call @ConvBackwardDataOp119(%144#0, %15) : (tensor<32x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16>
-    %146 = call @ConvBackwardFilterOp120(%47#0, %144#0) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16>
-    %147 = call @Unknown121(%47#1, %145) : (tensor<32x128x28x28xi1>, tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf16>
-    %148 = call @Unknown122(%44#2) : (tensor<128xf32>) -> tensor<128xf32>
-    %149:3 = call @BatchNormGradOp123(%43, %arg30, %44#1, %148, %147) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
-    %150 = call @ConvBackwardDataOp124(%149#0, %14) : (tensor<32x128x28x28xf16>, tensor<128x64x3x3xf16>) -> tensor<32x64x56x56xf16>
-    %151 = call @ConvBackwardFilterOp125(%42#0, %149#0) : (tensor<32x64x56x56xf16>, tensor<32x128x28x28xf16>) -> tensor<128x64x3x3xf16>
-    %152 = call @Unknown126(%46#2) : (tensor<128xf32>) -> tensor<128xf32>
-    %153:3 = call @BatchNormGradOp127(%45, %arg39, %46#1, %152, %142) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
-    %154 = call @ConvBackwardDataOp128(%153#0, %16) : (tensor<32x128x28x28xf16>, tensor<128x64x1x1xf16>) -> tensor<32x64x56x56xf16>
-    %155 = call @ConvBackwardFilterOp129(%42#0, %153#0) : (tensor<32x64x56x56xf16>, tensor<32x128x28x28xf16>) -> tensor<128x64x1x1xf16>
-    %156 = call @Unknown130(%154, %150, %42#1) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>, tensor<32x64x56x56xi1>) -> tensor<32x64x56x56xf16>
-    %157 = call @Unknown131(%41#2) : (tensor<64xf32>) -> tensor<64xf32>
-    %158:3 = call @BatchNormGradOp132(%40, %arg25, %41#1, %157, %156) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
-    %159 = call @ConvBackwardDataOp133(%158#0, %13) : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
-    %160 = call @ConvBackwardFilterOp134(%39#0, %158#0) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16>
-    %161 = call @Unknown135(%39#1, %159) : (tensor<32x64x56x56xi1>, tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16>
-    %162 = call @Unknown136(%38#2) : (tensor<64xf32>) -> tensor<64xf32>
-    %163:3 = call @BatchNormGradOp137(%37, %arg20, %38#1, %162, %161) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
-    %164 = call @ConvBackwardDataOp138(%163#0, %12) : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
-    %165 = call @ConvBackwardFilterOp139(%36#0, %163#0) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16>
-    %166 = call @Unknown140(%156, %164, %36#1) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>, tensor<32x64x56x56xi1>) -> tensor<32x64x56x56xf16>
-    %167 = call @Unknown141(%35#2) : (tensor<64xf32>) -> tensor<64xf32>
-    %168:3 = call @BatchNormGradOp142(%34, %arg15, %35#1, %167, %166) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
-    %169 = call @ConvBackwardDataOp143(%168#0, %11) : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
-    %170 = call @ConvBackwardFilterOp144(%33#0, %168#0) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16>
-    %171 = call @Unknown145(%33#1, %169) : (tensor<32x64x56x56xi1>, tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16>
-    %172 = call @Unknown146(%32#2) : (tensor<64xf32>) -> tensor<64xf32>
-    %173:3 = call @BatchNormGradOp147(%31, %arg10, %32#1, %172, %171) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
-    %174 = call @ConvBackwardDataOp148(%173#0, %10) : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
-    %175 = call @ConvBackwardFilterOp149(%30, %173#0) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16>
-    %176 = call @Unknown150(%166, %174) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16>
-    %177 = "mhlo.select_and_scatter"(%29#0, %176, %2) ({
+    %85:3 = call @BatchNormGradOp59(%82, %arg100, %84#1) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
+    %86 = call @ConvBackwardDataOp60(%85#0, %28) : (tensor<32x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16>
+    %87 = call @ConvBackwardFilterOp61(%81#0, %85#0) : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16>
+    %88 = call @Unknown62(%81#1, %86) : (tensor<32x512x7x7xi1>, tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf16>
+    %89:3 = call @BatchNormGradOp63(%79, %arg95, %88) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
+    %90 = call @ConvBackwardDataOp64(%89#0, %27) : (tensor<32x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16>
+    %91 = call @ConvBackwardFilterOp65(%78#0, %89#0) : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16>
+    %92 = call @Unknown66(%84#1, %90, %78#1) : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>, tensor<32x512x7x7xi1>) -> tensor<32x512x7x7xf16>
+    %93:3 = call @BatchNormGradOp67(%76, %arg85, %92) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
+    %94 = call @ConvBackwardDataOp68(%93#0, %25) : (tensor<32x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<32x512x7x7xf16>
+    %95 = call @ConvBackwardFilterOp69(%75#0, %93#0) : (tensor<32x512x7x7xf16>, tensor<32x512x7x7xf16>) -> tensor<512x512x3x3xf16>
+    %96 = call @Unknown70(%75#1, %94) : (tensor<32x512x7x7xi1>, tensor<32x512x7x7xf16>) -> tensor<32x512x7x7xf16>
+    %97:3 = call @BatchNormGradOp71(%71, %arg80, %96) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
+    %98 = call @ConvBackwardDataOp72(%97#0, %24) : (tensor<32x512x7x7xf16>, tensor<512x256x3x3xf16>) -> tensor<32x256x14x14xf16>
+    %99 = call @ConvBackwardFilterOp73(%70#0, %97#0) : (tensor<32x256x14x14xf16>, tensor<32x512x7x7xf16>) -> tensor<512x256x3x3xf16>
+    %100:3 = call @BatchNormGradOp74(%73, %arg89, %92) : (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<32x512x7x7xf16>) -> (tensor<32x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>)
+    %101 = call @ConvBackwardDataOp75(%100#0, %26) : (tensor<32x512x7x7xf16>, tensor<512x256x1x1xf16>) -> tensor<32x256x14x14xf16>
+    %102 = call @ConvBackwardFilterOp76(%70#0, %100#0) : (tensor<32x256x14x14xf16>, tensor<32x512x7x7xf16>) -> tensor<512x256x1x1xf16>
+    %103 = call @Unknown77(%101, %98, %70#1) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>, tensor<32x256x14x14xi1>) -> tensor<32x256x14x14xf16>
+    %104:3 = call @BatchNormGradOp78(%68, %arg75, %103) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
+    %105 = call @ConvBackwardDataOp79(%104#0, %23) : (tensor<32x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16>
+    %106 = call @ConvBackwardFilterOp80(%67#0, %104#0) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16>
+    %107 = call @Unknown81(%67#1, %105) : (tensor<32x256x14x14xi1>, tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf16>
+    %108:3 = call @BatchNormGradOp82(%65, %arg70, %107) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
+    %109 = call @ConvBackwardDataOp83(%108#0, %22) : (tensor<32x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16>
+    %110 = call @ConvBackwardFilterOp84(%64#0, %108#0) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16>
+    %111 = call @Unknown85(%103, %109, %64#1) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>, tensor<32x256x14x14xi1>) -> tensor<32x256x14x14xf16>
+    %112:3 = call @BatchNormGradOp86(%62, %arg60, %111) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
+    %113 = call @ConvBackwardDataOp87(%112#0, %20) : (tensor<32x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<32x256x14x14xf16>
+    %114 = call @ConvBackwardFilterOp88(%61#0, %112#0) : (tensor<32x256x14x14xf16>, tensor<32x256x14x14xf16>) -> tensor<256x256x3x3xf16>
+    %115 = call @Unknown89(%61#1, %113) : (tensor<32x256x14x14xi1>, tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf16>
+    %116:3 = call @BatchNormGradOp90(%57, %arg55, %115) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
+    %117 = call @ConvBackwardDataOp91(%116#0, %19) : (tensor<32x256x14x14xf16>, tensor<256x128x3x3xf16>) -> tensor<32x128x28x28xf16>
+    %118 = call @ConvBackwardFilterOp92(%56#0, %116#0) : (tensor<32x128x28x28xf16>, tensor<32x256x14x14xf16>) -> tensor<256x128x3x3xf16>
+    %119:3 = call @BatchNormGradOp93(%59, %arg64, %111) : (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<32x256x14x14xf16>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>)
+    %120 = call @ConvBackwardDataOp94(%119#0, %21) : (tensor<32x256x14x14xf16>, tensor<256x128x1x1xf16>) -> tensor<32x128x28x28xf16>
+    %121 = call @ConvBackwardFilterOp95(%56#0, %119#0) : (tensor<32x128x28x28xf16>, tensor<32x256x14x14xf16>) -> tensor<256x128x1x1xf16>
+    %122 = call @Unknown96(%120, %117, %56#1) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>, tensor<32x128x28x28xi1>) -> tensor<32x128x28x28xf16>
+    %123:3 = call @BatchNormGradOp97(%54, %arg50, %122) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
+    %124 = call @ConvBackwardDataOp98(%123#0, %18) : (tensor<32x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16>
+    %125 = call @ConvBackwardFilterOp99(%53#0, %123#0) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16>
+    %126 = call @Unknown100(%53#1, %124) : (tensor<32x128x28x28xi1>, tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf16>
+    %127:3 = call @BatchNormGradOp101(%51, %arg45, %126) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
+    %128 = call @ConvBackwardDataOp102(%127#0, %17) : (tensor<32x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16>
+    %129 = call @ConvBackwardFilterOp103(%50#0, %127#0) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16>
+    %130 = call @Unknown104(%122, %128, %50#1) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>, tensor<32x128x28x28xi1>) -> tensor<32x128x28x28xf16>
+    %131:3 = call @BatchNormGradOp105(%48, %arg35, %130) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
+    %132 = call @ConvBackwardDataOp106(%131#0, %15) : (tensor<32x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<32x128x28x28xf16>
+    %133 = call @ConvBackwardFilterOp107(%47#0, %131#0) : (tensor<32x128x28x28xf16>, tensor<32x128x28x28xf16>) -> tensor<128x128x3x3xf16>
+    %134 = call @Unknown108(%47#1, %132) : (tensor<32x128x28x28xi1>, tensor<32x128x28x28xf16>) -> tensor<32x128x28x28xf16>
+    %135:3 = call @BatchNormGradOp109(%43, %arg30, %134) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
+    %136 = call @ConvBackwardDataOp110(%135#0, %14) : (tensor<32x128x28x28xf16>, tensor<128x64x3x3xf16>) -> tensor<32x64x56x56xf16>
+    %137 = call @ConvBackwardFilterOp111(%42#0, %135#0) : (tensor<32x64x56x56xf16>, tensor<32x128x28x28xf16>) -> tensor<128x64x3x3xf16>
+    %138:3 = call @BatchNormGradOp112(%45, %arg39, %130) : (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<32x128x28x28xf16>) -> (tensor<32x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>)
+    %139 = call @ConvBackwardDataOp113(%138#0, %16) : (tensor<32x128x28x28xf16>, tensor<128x64x1x1xf16>) -> tensor<32x64x56x56xf16>
+    %140 = call @ConvBackwardFilterOp114(%42#0, %138#0) : (tensor<32x64x56x56xf16>, tensor<32x128x28x28xf16>) -> tensor<128x64x1x1xf16>
+    %141 = call @Unknown115(%139, %136, %42#1) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>, tensor<32x64x56x56xi1>) -> tensor<32x64x56x56xf16>
+    %142:3 = call @BatchNormGradOp116(%40, %arg25, %141) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
+    %143 = call @ConvBackwardDataOp117(%142#0, %13) : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
+    %144 = call @ConvBackwardFilterOp118(%39#0, %142#0) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16>
+    %145 = call @Unknown119(%39#1, %143) : (tensor<32x64x56x56xi1>, tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16>
+    %146:3 = call @BatchNormGradOp120(%37, %arg20, %145) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
+    %147 = call @ConvBackwardDataOp121(%146#0, %12) : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
+    %148 = call @ConvBackwardFilterOp122(%36#0, %146#0) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16>
+    %149 = call @Unknown123(%141, %147, %36#1) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>, tensor<32x64x56x56xi1>) -> tensor<32x64x56x56xf16>
+    %150:3 = call @BatchNormGradOp124(%34, %arg15, %149) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
+    %151 = call @ConvBackwardDataOp125(%150#0, %11) : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
+    %152 = call @ConvBackwardFilterOp126(%33#0, %150#0) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16>
+    %153 = call @Unknown127(%33#1, %151) : (tensor<32x64x56x56xi1>, tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16>
+    %154:3 = call @BatchNormGradOp128(%31, %arg10, %153) : (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<32x64x56x56xf16>) -> (tensor<32x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>)
+    %155 = call @ConvBackwardDataOp129(%154#0, %10) : (tensor<32x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16>
+    %156 = call @ConvBackwardFilterOp130(%30, %154#0) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<64x64x3x3xf16>
+    %157 = call @Unknown131(%149, %155) : (tensor<32x64x56x56xf16>, tensor<32x64x56x56xf16>) -> tensor<32x64x56x56xf16>
+    %158 = "mhlo.select_and_scatter"(%29#0, %157, %2) ({
     ^bb0(%arg104: tensor<f16>, %arg105: tensor<f16>):  // no predecessors
-      %252 = "mhlo.compare"(%arg104, %arg105) {comparison_direction = "GE"} : (tensor<f16>, tensor<f16>) -> tensor<i1>
-      "mhlo.return"(%252) : (tensor<i1>) -> ()
+      %232 = "mhlo.compare"(%arg104, %arg105) {comparison_direction = "GE"} : (tensor<f16>, tensor<f16>) -> tensor<i1>
+      "mhlo.return"(%232) : (tensor<i1>) -> ()
     }, {
     ^bb0(%arg104: tensor<f16>, %arg105: tensor<f16>):  // no predecessors
-      %252 = mhlo.add %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%252) : (tensor<f16>) -> ()
+      %232 = mhlo.add %arg104, %arg105 : tensor<f16>
+      "mhlo.return"(%232) : (tensor<f16>) -> ()
     }) {padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (tensor<32x64x112x112xf16>, tensor<32x64x56x56xf16>, tensor<f16>) -> tensor<32x64x112x112xf16>
-    %178 = call @Unknown151(%29#1, %177) : (tensor<32x64x112x112xi1>, tensor<32x64x112x112xf16>) -> tensor<32x64x112x112xf16>
-    %179 = call @Unknown152(%7#2) : (tensor<64xf32>) -> tensor<64xf32>
-    %180:3 = call @BatchNormGradOp153(%6, %arg5, %7#1, %179, %178) : (tensor<32x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<32x64x112x112xf16>) -> (tensor<32x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>)
-    %181 = call @ConvBackwardFilterOp154(%4, %180#0) : (tensor<32x3x224x224xf16>, tensor<32x64x112x112xf16>) -> tensor<64x3x7x7xf16>
-    %182 = call @Unknown155(%181) : (tensor<64x3x7x7xf16>) -> tensor<64x3x7x7xf32>
-    %183 = call @Unknown156(%175) : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
-    %184 = call @Unknown157(%170) : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
-    %185 = call @Unknown158(%165) : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
-    %186 = call @Unknown159(%160) : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
-    %187 = call @Unknown160(%151) : (tensor<128x64x3x3xf16>) -> tensor<128x64x3x3xf32>
-    %188 = call @Unknown161(%146) : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
-    %189 = call @Unknown162(%155) : (tensor<128x64x1x1xf16>) -> tensor<128x64x1x1xf32>
-    %190 = call @Unknown163(%141) : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
-    %191 = call @Unknown164(%136) : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
-    %192 = call @Unknown165(%127) : (tensor<256x128x3x3xf16>) -> tensor<256x128x3x3xf32>
-    %193 = call @Unknown166(%122) : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
-    %194 = call @Unknown167(%131) : (tensor<256x128x1x1xf16>) -> tensor<256x128x1x1xf32>
-    %195 = call @Unknown168(%117) : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
-    %196 = call @Unknown169(%112) : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
-    %197 = call @Unknown170(%103) : (tensor<512x256x3x3xf16>) -> tensor<512x256x3x3xf32>
-    %198 = call @Unknown171(%98) : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
-    %199 = call @Unknown172(%107) : (tensor<512x256x1x1xf16>) -> tensor<512x256x1x1xf32>
-    %200 = call @Unknown173(%93) : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
-    %201 = call @Unknown174(%88) : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
-    %202 = mhlo.reduce(%84#0 init: %2) across dimensions = [3, 2] : (tensor<32x512x7x7xf16>, tensor<f16>) -> tensor<32x512xf16>
+    %159 = call @Unknown132(%29#1, %158) : (tensor<32x64x112x112xi1>, tensor<32x64x112x112xf16>) -> tensor<32x64x112x112xf16>
+    %160:3 = call @BatchNormGradOp133(%6, %arg5, %159) : (tensor<32x64x112x112xf16>, tensor<64xf32>, tensor<32x64x112x112xf16>) -> (tensor<32x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>)
+    %161 = call @ConvBackwardFilterOp134(%4, %160#0) : (tensor<32x3x224x224xf16>, tensor<32x64x112x112xf16>) -> tensor<64x3x7x7xf16>
+    %162 = call @Unknown135(%161) : (tensor<64x3x7x7xf16>) -> tensor<64x3x7x7xf32>
+    %163 = call @Unknown136(%156) : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
+    %164 = call @Unknown137(%152) : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
+    %165 = call @Unknown138(%148) : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
+    %166 = call @Unknown139(%144) : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
+    %167 = call @Unknown140(%137) : (tensor<128x64x3x3xf16>) -> tensor<128x64x3x3xf32>
+    %168 = call @Unknown141(%133) : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
+    %169 = call @Unknown142(%140) : (tensor<128x64x1x1xf16>) -> tensor<128x64x1x1xf32>
+    %170 = call @Unknown143(%129) : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
+    %171 = call @Unknown144(%125) : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
+    %172 = call @Unknown145(%118) : (tensor<256x128x3x3xf16>) -> tensor<256x128x3x3xf32>
+    %173 = call @Unknown146(%114) : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
+    %174 = call @Unknown147(%121) : (tensor<256x128x1x1xf16>) -> tensor<256x128x1x1xf32>
+    %175 = call @Unknown148(%110) : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
+    %176 = call @Unknown149(%106) : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
+    %177 = call @Unknown150(%99) : (tensor<512x256x3x3xf16>) -> tensor<512x256x3x3xf32>
+    %178 = call @Unknown151(%95) : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
+    %179 = call @Unknown152(%102) : (tensor<512x256x1x1xf16>) -> tensor<512x256x1x1xf32>
+    %180 = call @Unknown153(%91) : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
+    %181 = call @Unknown154(%87) : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
+    %182 = mhlo.reduce(%84#0 init: %2) across dimensions = [3, 2] : (tensor<32x512x7x7xf16>, tensor<f16>) -> tensor<32x512xf16>
      reducer(%arg104: tensor<f16>, %arg105: tensor<f16>)  {
-      %252 = mhlo.add %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%252) : (tensor<f16>) -> ()
+      %232 = mhlo.add %arg104, %arg105 : tensor<f16>
+      "mhlo.return"(%232) : (tensor<f16>) -> ()
     }
-    %203 = call @Unknown175(%202) : (tensor<32x512xf16>) -> tensor<32x512xf16>
-    %204 = call @MatmulOp176(%203, %arg102) : (tensor<32x512xf16>, tensor<32x1000xf16>) -> tensor<1000x512xf16>
-    %205 = call @Unknown177(%204) : (tensor<1000x512xf16>) -> tensor<1000x512xf32>
-    %206 = call @Unknown178(%arg102) : (tensor<32x1000xf16>) -> tensor<32x1000xf32>
-    %207 = mhlo.reduce(%206 init: %1) across dimensions = [0] : (tensor<32x1000xf32>, tensor<f32>) -> tensor<1000xf32>
+    %183 = call @Unknown155(%182) : (tensor<32x512xf16>) -> tensor<32x512xf16>
+    %184 = call @MatmulOp156(%183, %arg102) : (tensor<32x512xf16>, tensor<32x1000xf16>) -> tensor<1000x512xf16>
+    %185 = call @Unknown157(%184) : (tensor<1000x512xf16>) -> tensor<1000x512xf32>
+    %186 = call @Unknown158(%arg102) : (tensor<32x1000xf16>) -> tensor<32x1000xf32>
+    %187 = mhlo.reduce(%186 init: %1) across dimensions = [0] : (tensor<32x1000xf32>, tensor<f32>) -> tensor<1000xf32>
      reducer(%arg104: tensor<f32>, %arg105: tensor<f32>)  {
-      %252 = mhlo.add %arg104, %arg105 : tensor<f32>
-      "mhlo.return"(%252) : (tensor<f32>) -> ()
+      %232 = mhlo.add %arg104, %arg105 : tensor<f32>
+      "mhlo.return"(%232) : (tensor<f32>) -> ()
     }
-    %208 = call @Unknown179(%207) : (tensor<1000xf32>) -> tensor<1000xf32>
-    %209 = call @Unknown180(%7#1, %arg3) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %210 = call @Unknown181(%7#2, %arg2) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %211 = call @Unknown182(%32#1, %arg8) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %212 = call @Unknown183(%32#2, %arg7) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %213 = call @Unknown184(%35#1, %arg13) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %214 = call @Unknown185(%35#2, %arg12) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %215 = call @Unknown186(%38#1, %arg18) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %216 = call @Unknown187(%38#2, %arg17) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %217 = call @Unknown188(%41#1, %arg23) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %218 = call @Unknown189(%41#2, %arg22) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
-    %219 = call @Unknown190(%44#1, %arg28) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %220 = call @Unknown191(%44#2, %arg27) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %221 = call @Unknown192(%49#1, %arg33) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %222 = call @Unknown193(%49#2, %arg32) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %223 = call @Unknown194(%46#1, %arg37) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %224 = call @Unknown195(%46#2, %arg36) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %225 = call @Unknown196(%52#1, %arg43) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %226 = call @Unknown197(%52#2, %arg42) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %227 = call @Unknown198(%55#1, %arg48) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %228 = call @Unknown199(%55#2, %arg47) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
-    %229 = call @Unknown200(%58#1, %arg53) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %230 = call @Unknown201(%58#2, %arg52) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %231 = call @Unknown202(%63#1, %arg58) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %232 = call @Unknown203(%63#2, %arg57) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %233 = call @Unknown204(%60#1, %arg62) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %234 = call @Unknown205(%60#2, %arg61) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %235 = call @Unknown206(%66#1, %arg68) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %236 = call @Unknown207(%66#2, %arg67) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %237 = call @Unknown208(%69#1, %arg73) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %238 = call @Unknown209(%69#2, %arg72) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
-    %239 = call @Unknown210(%72#1, %arg78) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %240 = call @Unknown211(%72#2, %arg77) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %241 = call @Unknown212(%77#1, %arg83) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %242 = call @Unknown213(%77#2, %arg82) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %243 = call @Unknown214(%74#1, %arg87) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %244 = call @Unknown215(%74#2, %arg86) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %245 = call @Unknown216(%80#1, %arg93) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %246 = call @Unknown217(%80#2, %arg92) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %247 = call @Unknown218(%83#1, %arg98) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %248 = call @Unknown219(%83#2, %arg97) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
-    %249 = call @Unknown220(%arg103) : (tensor<1000xf32>) -> tensor<1000xf16>
-    %250 = "mhlo.dot_general"(%203, %8) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [1]>, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512xf16>, tensor<1000x512xf16>) -> tensor<32x1000xf16>
-    %251 = call @Unknown221(%249, %250) : (tensor<1000xf16>, tensor<32x1000xf16>) -> tensor<32x1000xf16>
-    return %182, %180#1, %180#2, %183, %173#1, %173#2, %184, %168#1, %168#2, %185, %163#1, %163#2, %186, %158#1, %158#2, %187, %149#1, %149#2, %188, %144#1, %144#2, %189, %153#1, %153#2, %190, %139#1, %139#2, %191, %134#1, %134#2, %192, %125#1, %125#2, %193, %120#1, %120#2, %194, %129#1, %129#2, %195, %115#1, %115#2, %196, %110#1, %110#2, %197, %101#1, %101#2, %198, %96#1, %96#2, %199, %105#1, %105#2, %200, %91#1, %91#2, %201, %86#1, %86#2, %205, %208, %209, %210, %0, %211, %212, %0, %213, %214, %0, %215, %216, %0, %217, %218, %0, %219, %220, %0, %221, %222, %0, %223, %224, %0, %225, %226, %0, %227, %228, %0, %229, %230, %0, %231, %232, %0, %233, %234, %0, %235, %236, %0, %237, %238, %0, %239, %240, %0, %241, %242, %0, %243, %244, %0, %245, %246, %0, %247, %248, %0, %251 : tensor<64x3x7x7xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128x64x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x64x1x1xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256x128x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x128x1x1xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512x256x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x256x1x1xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<1000x512xf32>, tensor<1000xf32>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<32x1000xf16>
+    %188 = call @Unknown159(%187) : (tensor<1000xf32>) -> tensor<1000xf32>
+    %189 = call @Unknown160(%7#1, %arg3) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %190 = call @Unknown161(%7#2, %arg2) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %191 = call @Unknown162(%32#1, %arg8) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %192 = call @Unknown163(%32#2, %arg7) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %193 = call @Unknown164(%35#1, %arg13) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %194 = call @Unknown165(%35#2, %arg12) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %195 = call @Unknown166(%38#1, %arg18) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %196 = call @Unknown167(%38#2, %arg17) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %197 = call @Unknown168(%41#1, %arg23) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %198 = call @Unknown169(%41#2, %arg22) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+    %199 = call @Unknown170(%44#1, %arg28) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %200 = call @Unknown171(%44#2, %arg27) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %201 = call @Unknown172(%49#1, %arg33) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %202 = call @Unknown173(%49#2, %arg32) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %203 = call @Unknown174(%46#1, %arg37) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %204 = call @Unknown175(%46#2, %arg36) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %205 = call @Unknown176(%52#1, %arg43) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %206 = call @Unknown177(%52#2, %arg42) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %207 = call @Unknown178(%55#1, %arg48) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %208 = call @Unknown179(%55#2, %arg47) : (tensor<128xf32>, tensor<128xf32>) -> tensor<128xf32>
+    %209 = call @Unknown180(%58#1, %arg53) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %210 = call @Unknown181(%58#2, %arg52) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %211 = call @Unknown182(%63#1, %arg58) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %212 = call @Unknown183(%63#2, %arg57) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %213 = call @Unknown184(%60#1, %arg62) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %214 = call @Unknown185(%60#2, %arg61) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %215 = call @Unknown186(%66#1, %arg68) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %216 = call @Unknown187(%66#2, %arg67) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %217 = call @Unknown188(%69#1, %arg73) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %218 = call @Unknown189(%69#2, %arg72) : (tensor<256xf32>, tensor<256xf32>) -> tensor<256xf32>
+    %219 = call @Unknown190(%72#1, %arg78) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %220 = call @Unknown191(%72#2, %arg77) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %221 = call @Unknown192(%77#1, %arg83) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %222 = call @Unknown193(%77#2, %arg82) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %223 = call @Unknown194(%74#1, %arg87) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %224 = call @Unknown195(%74#2, %arg86) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %225 = call @Unknown196(%80#1, %arg93) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %226 = call @Unknown197(%80#2, %arg92) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %227 = call @Unknown198(%83#1, %arg98) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %228 = call @Unknown199(%83#2, %arg97) : (tensor<512xf32>, tensor<512xf32>) -> tensor<512xf32>
+    %229 = call @Unknown200(%arg103) : (tensor<1000xf32>) -> tensor<1000xf16>
+    %230 = "mhlo.dot_general"(%183, %8) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [1]>, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<32x512xf16>, tensor<1000x512xf16>) -> tensor<32x1000xf16>
+    %231 = call @Unknown201(%229, %230) : (tensor<1000xf16>, tensor<32x1000xf16>) -> tensor<32x1000xf16>
+    return %162, %160#1, %160#2, %163, %154#1, %154#2, %164, %150#1, %150#2, %165, %146#1, %146#2, %166, %142#1, %142#2, %167, %135#1, %135#2, %168, %131#1, %131#2, %169, %138#1, %138#2, %170, %127#1, %127#2, %171, %123#1, %123#2, %172, %116#1, %116#2, %173, %112#1, %112#2, %174, %119#1, %119#2, %175, %108#1, %108#2, %176, %104#1, %104#2, %177, %97#1, %97#2, %178, %93#1, %93#2, %179, %100#1, %100#2, %180, %89#1, %89#2, %181, %85#1, %85#2, %185, %188, %189, %190, %0, %191, %192, %0, %193, %194, %0, %195, %196, %0, %197, %198, %0, %199, %200, %0, %201, %202, %0, %203, %204, %0, %205, %206, %0, %207, %208, %0, %209, %210, %0, %211, %212, %0, %213, %214, %0, %215, %216, %0, %217, %218, %0, %219, %220, %0, %221, %222, %0, %223, %224, %0, %225, %226, %0, %227, %228, %0, %231 : tensor<64x3x7x7xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128x64x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x64x1x1xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256x128x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x128x1x1xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512x256x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x256x1x1xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<1000x512xf32>, tensor<1000xf32>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<64xf32>, tensor<64xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<128xf32>, tensor<128xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<256xf32>, tensor<256xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<512xf32>, tensor<512xf32>, tensor<i64>, tensor<32x1000xf16>
   }
 }
 

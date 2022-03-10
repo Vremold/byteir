@@ -57,9 +57,12 @@ struct IOConvertFusionPattern : public RewritePattern {
         auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
         pattern.push_back(cloned);
         inputs.push_back(cloned->getOperand(0));
+      } else if (IsSplatMhloConstant(defOp)) {
+        auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
+        pattern.push_back(cloned);
       } else {
         inputs.push_back(value);
-      }   
+      }
     }
 
     // op itself

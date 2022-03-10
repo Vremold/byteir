@@ -42,6 +42,9 @@ namespace {
     pm.addNestedPass<FuncOp>(createHloTransposeDotToDotGeneralPass());
     pm.addNestedPass<FuncOp>(createReduceFusionPass());
 
+    // rewrite with constraint
+    pm.addNestedPass<FuncOp>(createRewriteWithConstraintPass());
+
     addCleanUpPassPipeline(pm);
 
     // add fusion patterns

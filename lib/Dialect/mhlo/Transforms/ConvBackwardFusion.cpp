@@ -171,7 +171,8 @@ struct FuseConvBackwardDataPattern : public OpRewritePattern<mhlo::ConvOp> {
         attrs, "window_strides",
         rewriter.getI64TensorAttr({stridesH, stridesW}));
     byre::appendByreComputeAttr(
-        attrs, "padding", rewriter.getI64TensorAttr({paddingH, paddingW}));
+        attrs, "padding",
+        rewriter.getI64TensorAttr({paddingH, paddingH, paddingW, paddingW}));
     byre::appendByreComputeAttr(attrs, "feature_group_count",
                                 rewriter.getI64IntegerAttr(1));
     byre::appendByreComputeAttr(attrs, "batch_group_count",
@@ -290,7 +291,8 @@ struct FuseConvBackwardFilterPattern
         attrs, "window_strides",
         rewriter.getI64TensorAttr({stridesH, stridesW}));
     byre::appendByreComputeAttr(
-        attrs, "padding", rewriter.getI64TensorAttr({paddingH, paddingW}));
+        attrs, "padding",
+        rewriter.getI64TensorAttr({paddingH, paddingH, paddingW, paddingW}));
     byre::appendByreComputeAttr(attrs, "feature_group_count",
                                 rewriter.getI64IntegerAttr(1));
     byre::appendByreComputeAttr(attrs, "batch_group_count",
