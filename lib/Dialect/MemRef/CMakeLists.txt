@@ -1,6 +1,7 @@
 add_mlir_dialect_library(ByteIRMemRefPasses
   Transforms/ApplyMemRefAffineLayout.cpp
   Transforms/ReifyAlloc.cpp
+  Transforms/SimplifyView.cpp
   Utils/Layout.cpp
 
   ADDITIONAL_HEADER_DIRS

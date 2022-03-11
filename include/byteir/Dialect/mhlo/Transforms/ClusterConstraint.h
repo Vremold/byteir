@@ -13,6 +13,7 @@
 namespace mlir {
 
 void populateClusterConstraintPattern(RewritePatternSet &patterns);
+
 std::unique_ptr<OperationPass<FuncOp>> createClusterConstraintPass();
 
 } // namespace mlir

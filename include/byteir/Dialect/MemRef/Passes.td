@@ -20,13 +20,23 @@ def ApplyMemRefAffineLayout : Pass<"apply-memref-affine-layout", "mlir::FuncOp">
   let constructor = "mlir::createApplyMemRefAffineLayoutPass()";
 }
 
+
 //===----------------------------------------------------------------------===//
-// Reify Alloc
+// Reify Alloc (deprecated, using canonicalize instead) 
 //===----------------------------------------------------------------------===//
 
 def ReifyAlloc : Pass<"reify-alloc", "mlir::FuncOp"> {
-  let summary = "Reify Alloc after constant folding";
+  let summary = "Reify Alloc after constant folding (deprecated using canonicalize instead)";
   let constructor = "mlir::createReifyAllocPass()";
+}
+
+//===----------------------------------------------------------------------===//
+// Simplify View
+//===----------------------------------------------------------------------===//
+
+def SimplifyView : Pass<"simplify-view", "mlir::FuncOp"> {
+  let summary = "Simplify subview and view";
+  let constructor = "mlir::createSimplifyViewPass()";
 }
 
 

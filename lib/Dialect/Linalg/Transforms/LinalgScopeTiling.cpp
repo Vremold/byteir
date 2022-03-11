@@ -145,8 +145,6 @@ tileScopeImpl(
   ValueRange lbs(lbsStorage), ubs(ubsStorage), steps(stepsStorage);
   SmallVector<Value, 8> ivs(lbs.size());
 
-  auto ctx = b.getContext();
-
   auto tiledLoopBodyBuilder = 
     [&](OpBuilder& b, Location loc, ValueRange loopIvs) {
     ivs.assign(loopIvs.begin(), loopIvs.end());

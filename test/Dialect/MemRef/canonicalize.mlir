@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -reify-alloc | FileCheck %s
+// RUN: byteir-opt %s -canonicalize | FileCheck %s
 
 
 #map0 = affine_map<(d0, d1) -> (d0 * 32 + d1)>
@@ -7,8 +7,8 @@
 // CHECK-LABEL: func @test_map
 func @test_map(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>, %arg2: index) {
   %c32 = arith.constant 32 : index
-  %0 = memref.alloc(%c32) {other_attr = "some_attr"} : memref<100x?xf32, #map0, 1>
-// CHECK: memref.alloc() {other_attr = "some_attr"} : memref<100x32xf32, #map0, 1>
+  %0 = memref.alloc(%c32) : memref<100x?xf32, #map0, 1>
+// CHECK: memref.alloc() : memref<100x32xf32, #map0, 1>
   %1 = memref.load %arg0[%arg2, %arg2] : memref<100x?xf32>
   %2 = memref.load %0[%arg2, %arg2] : memref<100x?xf32, #map0, 1>
   %3 = arith.addf %1, %2 : f32
