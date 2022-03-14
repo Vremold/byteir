@@ -7,6 +7,7 @@
 
 #include "byteir/Dialect/mhlo/Transforms/DotTransposeFusion.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
@@ -30,8 +31,9 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
-    Operation *dotOp = nullptr;
-    SmallVector<Value> inputs;
+
+    SmallVector<Value> inputs, outputs;
+    MhloFusionPattern pattern;
     NamedAttrList attrs;
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr("MatmulOp"));
@@ -50,7 +52,7 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
                                   rewriter.getI64IntegerAttr(1));
       byre::appendByreComputeAttr(attrs, "rhs_contracting_dimension",
                                   rewriter.getI64IntegerAttr(0));
-      dotOp = dot.getOperation();
+      pattern.push_back(dot);
     } else if (mhlo::DotGeneralOp dot_general =
                    op.operand().getDefiningOp<mhlo::DotGeneralOp>()) {
       if (dot_general.lhs().getType().cast<ShapedType>().getRank() != 2) {
@@ -84,26 +86,15 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
           attrs, "rhs_contracting_dimension",
           rewriter.getI64IntegerAttr(
               dot_dimension_numbers.getRhsContractingDimensions()[0]));
-      dotOp = dot_general.getOperation();
+      pattern.push_back(dot_general);
     } else {
       return failure();
     }
+    pattern.push_back(op);
+    outputs.push_back(op.getResult());
 
-    Location loc = rewriter.getFusedLoc({op->getLoc(), dotOp->getLoc()});
     mhlo::FusionOp fusionOp =
-        rewriter.create<mhlo::FusionOp>(loc, op.getResult().getType(), inputs);
-    op->replaceAllUsesWith(fusionOp.getResults());
-    Region &region = fusionOp.fused_computation();
-    Block &block = region.emplaceBlock();
-    {
-      // assume that there is no other reference of dot's result
-      OpBuilder::InsertionGuard guard(rewriter);
-      dotOp->moveBefore(&block, block.end());
-      op->moveBefore(&block, block.end());
-
-      rewriter.setInsertionPoint(&block, block.end());
-      rewriter.create<mhlo::ReturnOp>(loc, op.getResult());
-    }
+        createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
     fusionOp->setAttrs(attrs.getDictionary(getContext()));
     return success();
   }

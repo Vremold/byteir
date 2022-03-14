@@ -81,6 +81,7 @@ struct IOConvertFusionPattern : public RewritePattern {
         continue;
       }
 
+      // UseCount(value) == 1
       auto user = *value.getUsers().begin();
       if (isa_and_nonnull<mhlo::ConvertOp>(user)) {
         pattern.push_back(user);
@@ -102,7 +103,8 @@ struct IOConvertFusionPattern : public RewritePattern {
                                   attr.getValue());
     }
 
-    mhlo::FusionOp fusionOp = creatMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
+    mhlo::FusionOp fusionOp =
+        createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
     fusionOp->setAttrs(attrs.getDictionary(getContext()));
 
     return success();

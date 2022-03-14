@@ -44,10 +44,10 @@ llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
 // but it was in the local namespace, so cannot be directly call.
 // TODO: we might update upstream to make it accessible later
 mhlo::FusionOp
-mlir::creatMhloFusionFromPattern(
-    OpBuilder &b, ValueRange inputs,
-    ValueRange outputs, const MhloFusionPattern &pattern) {
-  
+mlir::createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
+                                  ValueRange outputs,
+                                  const MhloFusionPattern &pattern) {
+
   b.setInsertionPoint(pattern.back());
 
   SmallVector<Location, 4> locations;
@@ -115,15 +115,17 @@ mlir::creatMhloFusionFromPattern(
   return fusion;
 }
 
-mhlo::FusionOp mlir::creatMhloFusionFromPattern(OpBuilder& b, const MhloFusionPattern& pattern) {
+mhlo::FusionOp
+mlir::createMhloFusionFromPattern(OpBuilder &b,
+                                  const MhloFusionPattern &pattern) {
   SmallVector<Value, 4> inputs = GetInputsOfCluster(pattern);
   SmallVector<Value, 4> outputs = GetOutputsOfCluster(pattern);
-  return creatMhloFusionFromPattern(b, inputs, outputs, pattern);
+  return createMhloFusionFromPattern(b, inputs, outputs, pattern);
 }
 
 void mlir::applyMhloFusionPattern(const MhloFusionPattern& pattern, StringRef attachTag) {
   OpBuilder b(pattern.back());
-  auto fusion = creatMhloFusionFromPattern(b, pattern);
+  auto fusion = createMhloFusionFromPattern(b, pattern);
   if (!attachTag.empty()) {
     fusion->setAttr(attachTag, UnitAttr::get(fusion.getContext()));
   }

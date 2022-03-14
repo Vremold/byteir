@@ -33,13 +33,19 @@ using MhloFusionPlan = llvm::SmallVector<MhloFusionPattern, 8>;
 // A generic way rewriting MhloFusionPattern to FusionOps
 // This is from Mhlo repo.
 // TODO push back to upstream if passible
-mhlo::FusionOp creatMhloFusionFromPattern(OpBuilder &b,
-                                          const MhloFusionPattern &pattern);
 
-mhlo::FusionOp creatMhloFusionFromPattern(OpBuilder& b, 
-  ValueRange inputs, ValueRange outputs,
-  const MhloFusionPattern& pattern);
+// This versionwill automatically scan and generate input/output with the
+// sequence of defOp in the fusion's basic block.
+// Often used: when input/output sequence order or number has no constraint.
+mhlo::FusionOp createMhloFusionFromPattern(OpBuilder &b,
+                                           const MhloFusionPattern &pattern);
 
+// This version with inputs/outputs will use explicit given inputs/outputs.
+// Often used: 1) when requiring the input/output sequence order,
+//             2) when creating arg/return for unused input/output.
+mhlo::FusionOp createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
+                                           ValueRange outputs,
+                                           const MhloFusionPattern &pattern);
 
 void applyMhloFusionPattern(const MhloFusionPattern& pattern, llvm::StringRef tag);
 

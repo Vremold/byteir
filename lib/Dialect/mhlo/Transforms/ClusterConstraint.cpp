@@ -48,7 +48,7 @@ static inline mhlo::FusionOp fuseWithConstantArgs(Operation *op,
     pattern.push_back(cloned);
   }
   pattern.push_back(op);
-  return creatMhloFusionFromPattern(rewriter, pattern);
+  return createMhloFusionFromPattern(rewriter, pattern);
 }
 
 struct RngUniformConstraint : public OpRewritePattern<mhlo::RngUniformOp> {

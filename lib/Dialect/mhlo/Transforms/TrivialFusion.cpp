@@ -36,7 +36,7 @@ struct SingleOpPattern : public OpRewritePattern<OpTy> {
 
     MhloFusionPattern pattern; 
     pattern.push_back(op);
-    auto fusion = creatMhloFusionFromPattern(rewriter, pattern);
+    auto fusion = createMhloFusionFromPattern(rewriter, pattern);
     // add attr
     fusion->setAttr(getByteIRTrivialFusionAttrName(),
                     UnitAttr::get(fusion.getContext()));

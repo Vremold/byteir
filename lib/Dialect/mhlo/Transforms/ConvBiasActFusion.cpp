@@ -8,6 +8,7 @@
 #include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -51,9 +52,9 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
 
     SmallVector<Value> inputs{convOp.lhs(), convOp.rhs(),
                               broadcastOp.operand()};
-    SmallVector<Operation *> ops{convOp.getOperation(),
-                                 broadcastOp.getOperation(),
-                                 addOp.getOperation(), op.getOperation()};
+    SmallVector<Value> outputs{op.getResult()};
+    MhloFusionPattern pattern{convOp, broadcastOp, addOp, op};
+
     NamedAttrList origin_attrs;
     HandleConvAttribute(origin_attrs, convOp, rewriter);
 
@@ -76,21 +77,8 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr("ConvBiasOp"));
 
-    Location loc = GetFusedLoc(ops, rewriter);
     mhlo::FusionOp fusionOp =
-        rewriter.create<mhlo::FusionOp>(loc, op.getResult().getType(), inputs);
-    op->replaceAllUsesWith(fusionOp.getResults());
-    Block &block = fusionOp.fused_computation().emplaceBlock();
-    {
-      // assume that there is no other reference of conv's result
-      OpBuilder::InsertionGuard guard(rewriter);
-      for (auto _op : ops) {
-        _op->moveBefore(&block, block.end());
-      }
-
-      rewriter.setInsertionPoint(&block, block.end());
-      rewriter.create<mhlo::ReturnOp>(loc, op.getResult());
-    }
+        createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
     fusionOp->setAttrs(attrs.getDictionary(getContext()));
 
     return success();

@@ -8,6 +8,7 @@
 #include "byteir/Dialect/mhlo/Transforms/ConvBackwardFusion.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -64,9 +65,8 @@ struct FuseConvBackwardDataPattern : public OpRewritePattern<mhlo::ConvOp> {
       return failure();
     }
 
+    MhloFusionPattern pattern;
     SmallVector<Value> inputs, outputs;
-    SmallVector<Operation *> ops;
-    NamedAttrList attrs;
     if (auto reverseOp = op.rhs().getDefiningOp<mhlo::ReverseOp>()) {
       SmallVector<int64_t> dimensions;
       getValuesFromDenseIntElementsAttr(reverseOp.dimensions(), dimensions);
@@ -79,10 +79,8 @@ struct FuseConvBackwardDataPattern : public OpRewritePattern<mhlo::ConvOp> {
         assert((permutation == ArrayRef<int64_t>{2, 3, 1, 0}));
         inputs.push_back(op.lhs());
         inputs.push_back(transposeOp.operand());
-        ops.push_back(transposeOp.getOperation());
-        ops.push_back(reverseOp.getOperation());
-        ops.push_back(op.getOperation());
-        outputs.push_back(op.getResult());
+        pattern.push_back(transposeOp);
+        pattern.push_back(reverseOp);
       }
     } else if (auto transposeOp = op.rhs().getDefiningOp<mhlo::TransposeOp>()) {
       // TODO: check kH = 1 and kW = 1
@@ -91,34 +89,17 @@ struct FuseConvBackwardDataPattern : public OpRewritePattern<mhlo::ConvOp> {
       assert((permutation == ArrayRef<int64_t>{2, 3, 1, 0}));
       inputs.push_back(op.lhs());
       inputs.push_back(transposeOp.operand());
-      ops.push_back(transposeOp.getOperation());
-      ops.push_back(op.getOperation());
-      outputs.push_back(op.getResult());
+      pattern.push_back(transposeOp);
     } else {
       return failure();
     }
+    pattern.push_back(op);
+    outputs.push_back(op.getResult());
 
-    auto loc = GetFusedLoc(ops, rewriter);
-    SmallVector<Type> outputs_type;
-    for (auto output : outputs) {
-      outputs_type.push_back(output.getType());
-    }
     mhlo::FusionOp fusionOp =
-        rewriter.create<mhlo::FusionOp>(loc, outputs_type, inputs);
-    for (size_t i = 0; i < outputs.size(); i++) {
-      outputs[i].replaceAllUsesWith(fusionOp.getResults()[i]);
-    }
-    Block &block = fusionOp.fused_computation().emplaceBlock();
-    {
-      OpBuilder::InsertionGuard guard(rewriter);
-      for (auto _op : ops) {
-        _op->moveBefore(&block, block.end());
-      }
+        createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
 
-      rewriter.setInsertionPoint(&block, block.end());
-      rewriter.create<mhlo::ReturnOp>(loc, outputs);
-    }
-
+    NamedAttrList attrs;
     if (op.window_stridesAttr()) {
       SmallVector<int64_t> window_strides;
       getValuesFromDenseIntElementsAttr(op.window_stridesAttr(),
@@ -212,32 +193,14 @@ struct FuseConvBackwardFilterPattern
       return failure();
     }
 
-    SmallVector<Value> inputs{op.lhs(), op.rhs()},
-        outputs{transposeOp.getResult()};
-    SmallVector<Operation *> ops{op.getOperation(), transposeOp.getOperation()};
-    NamedAttrList attrs;
+    SmallVector<Value> inputs{op.lhs(), op.rhs()};
+    SmallVector<Value> outputs{transposeOp.getResult()};
+    MhloFusionPattern pattern{op, transposeOp};
 
-    auto loc = GetFusedLoc(ops, rewriter);
-    SmallVector<Type> outputs_type;
-    for (auto output : outputs) {
-      outputs_type.push_back(output.getType());
-    }
     mhlo::FusionOp fusionOp =
-        rewriter.create<mhlo::FusionOp>(loc, outputs_type, inputs);
-    for (size_t i = 0; i < outputs.size(); i++) {
-      outputs[i].replaceAllUsesWith(fusionOp.getResults()[i]);
-    }
-    Block &block = fusionOp.fused_computation().emplaceBlock();
-    {
-      OpBuilder::InsertionGuard guard(rewriter);
-      for (auto _op : ops) {
-        _op->moveBefore(&block, block.end());
-      }
+        createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
 
-      rewriter.setInsertionPoint(&block, block.end());
-      rewriter.create<mhlo::ReturnOp>(loc, outputs);
-    }
-
+    NamedAttrList attrs;
     if (op.window_stridesAttr()) {
       SmallVector<int64_t> window_strides;
       getValuesFromDenseIntElementsAttr(op.window_stridesAttr(),

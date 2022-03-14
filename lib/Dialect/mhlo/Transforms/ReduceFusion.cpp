@@ -96,7 +96,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
 
     pattern.push_back(op);
 
-    auto fusion = creatMhloFusionFromPattern(rewriter, pattern);
+    auto fusion = createMhloFusionFromPattern(rewriter, pattern);
 
     // add attr
     fusion->setAttr(getByteIRReduceFusionAttrName(), UnitAttr::get(fusion.getContext()));
