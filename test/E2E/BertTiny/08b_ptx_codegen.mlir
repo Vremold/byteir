@@ -201,33 +201,27 @@ module attributes {byre.container_module, gpu.container_module} {
       %12 = llvm.mlir.constant(512 : i64) : i64
       %13 = llvm.mlir.constant(0 : i64) : i64
       %14 = llvm.mlir.constant(-1.000000e+00 : f64) : f64
-      %15 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %15 = nvvm.read.ptx.sreg.tid.x : i32
       %16 = llvm.sext %15 : i32 to i64
-      %17 = nvvm.read.ptx.sreg.tid.x : i32
-      %18 = llvm.sext %17 : i32 to i64
-      %19 = nvvm.read.ptx.sreg.ntid.x : i32
-      %20 = llvm.sext %19 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %21 = llvm.mul %16, %20  : i64
-      %22 = llvm.add %21, %18  : i64
-      %23 = llvm.icmp "slt" %22, %11 : i64
-      llvm.cond_br %23, ^bb2, ^bb3
+      %17 = llvm.icmp "slt" %16, %11 : i64
+      llvm.cond_br %17, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %24 = llvm.getelementptr %arg1[%22] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
-      %25 = llvm.load %24 : !llvm.ptr<i64>
-      %26 = llvm.trunc %25 : i64 to i32
-      %27 = llvm.getelementptr %arg6[%22] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
-      llvm.store %26, %27 : !llvm.ptr<i32>
-      %28 = llvm.add %25, %12  : i64
-      %29 = llvm.icmp "slt" %25, %13 : i64
-      %30 = llvm.select %29, %28, %25 : i1, i64
-      %31 = llvm.getelementptr %arg11[%22] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
-      llvm.store %30, %31 : !llvm.ptr<i64>
-      %32 = llvm.sitofp %25 : i64 to f64
-      %33 = llvm.fcmp "une" %32, %14 : f64
-      %34 = llvm.getelementptr %arg16[%22] : (!llvm.ptr<i1>, i64) -> !llvm.ptr<i1>
-      llvm.store %33, %34 : !llvm.ptr<i1>
+      %18 = llvm.getelementptr %arg1[%16] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
+      %19 = llvm.load %18 : !llvm.ptr<i64>
+      %20 = llvm.trunc %19 : i64 to i32
+      %21 = llvm.getelementptr %arg6[%16] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
+      llvm.store %20, %21 : !llvm.ptr<i32>
+      %22 = llvm.add %19, %12  : i64
+      %23 = llvm.icmp "slt" %19, %13 : i64
+      %24 = llvm.select %23, %22, %19 : i1, i64
+      %25 = llvm.getelementptr %arg11[%16] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
+      llvm.store %24, %25 : !llvm.ptr<i64>
+      %26 = llvm.sitofp %19 : i64 to f64
+      %27 = llvm.fcmp "une" %26, %14 : f64
+      %28 = llvm.getelementptr %arg16[%16] : (!llvm.ptr<i1>, i64) -> !llvm.ptr<i1>
+      llvm.store %27, %28 : !llvm.ptr<i1>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return

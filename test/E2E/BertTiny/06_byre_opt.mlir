@@ -9,13 +9,13 @@ module attributes {gpu.container_module} {
     "lmhlo.transpose"(%0, %1) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (memref<128x30522xf32>, memref<30522x128xf32>) -> ()
     return %1 : memref<30522x128xf32>
   }
-  func private @Unknown0(%arg0: memref<2x128xi64>) -> (memref<256xi64>, memref<256xi1>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 8 : i32, __byre__arg_ranks = [2 : i32, 1 : i32], __byre__kernel_name = "Unknown0_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name, passthrough_arg = [1 : i32, 0 : i32]} {
-    %c32 = arith.constant 32 : index
-    %c8 = arith.constant 8 : index
+  func private @Unknown0(%arg0: memref<2x128xi64>) -> (memref<256xi64>, memref<256xi1>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 2 : i32, __byre__arg_ranks = [2 : i32, 1 : i32], __byre__kernel_name = "Unknown0_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name, passthrough_arg = [1 : i32, 0 : i32]} {
+    %c128 = arith.constant 128 : index
+    %c2 = arith.constant 2 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<256xi1>
     %1 = memref.collapse_shape %arg0 [[0, 1]] : memref<2x128xi64> into memref<256xi64>
-    gpu.launch_func  @Unknown0_kernel::@Unknown0_kernel blocks in (%c8, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<2x128xi64>, %0 : memref<256xi1>)
+    gpu.launch_func  @Unknown0_kernel::@Unknown0_kernel blocks in (%c2, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<2x128xi64>, %0 : memref<256xi1>)
     return %1, %0 : memref<256xi64>, memref<256xi1>
   }
   gpu.module @Unknown0_kernel {
@@ -51,15 +51,15 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown1(%arg0: memref<2x128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 8 : i32, __byre__arg_ranks = [2 : i32, 1 : i32, 1 : i32, 1 : i32], __byre__kernel_name = "Unknown1_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c8 = arith.constant 8 : index
+  func private @Unknown1(%arg0: memref<2x128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 2 : i32, __byre__arg_ranks = [2 : i32, 1 : i32, 1 : i32, 1 : i32], __byre__kernel_name = "Unknown1_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c2 = arith.constant 2 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<256xi1>
     %1 = memref.alloc() : memref<256xi64>
     %2 = memref.expand_shape %1 [[0, 1]] : memref<256xi64> into memref<256x1xi64>
     %3 = memref.alloc() : memref<256xui32>
-    gpu.launch_func  @Unknown1_kernel::@Unknown1_kernel blocks in (%c8, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<2x128xi64>, %3 : memref<256xui32>, %1 : memref<256xi64>, %0 : memref<256xi1>)
+    gpu.launch_func  @Unknown1_kernel::@Unknown1_kernel blocks in (%c2, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<2x128xi64>, %3 : memref<256xui32>, %1 : memref<256xi64>, %0 : memref<256xi1>)
     return %3, %2, %0 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
   }
   gpu.module @Unknown1_kernel {
@@ -105,9 +105,9 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown2(%arg0: memref<128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 8 : i32, __byre__arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown2_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c8 = arith.constant 8 : index
+  func private @Unknown2(%arg0: memref<128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 2 : i32, __byre__arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown2_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c2 = arith.constant 2 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<2x128xi1>
     %1 = memref.collapse_shape %0 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
@@ -116,7 +116,7 @@ module attributes {gpu.container_module} {
     %4 = memref.expand_shape %3 [[0, 1]] : memref<256xi64> into memref<256x1xi64>
     %5 = memref.alloc() : memref<2x128xui32>
     %6 = memref.collapse_shape %5 [[0, 1]] : memref<2x128xui32> into memref<256xui32>
-    gpu.launch_func  @Unknown2_kernel::@Unknown2_kernel blocks in (%c8, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<128xi64>, %5 : memref<2x128xui32>, %2 : memref<2x128xi64>, %0 : memref<2x128xi1>)
+    gpu.launch_func  @Unknown2_kernel::@Unknown2_kernel blocks in (%c2, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<128xi64>, %5 : memref<2x128xui32>, %2 : memref<2x128xi64>, %0 : memref<2x128xi1>)
     return %6, %4, %1 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
   }
   gpu.module @Unknown2_kernel {
@@ -162,54 +162,49 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown3(%arg0: memref<1x128xi64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 4 : i32, __byre__arg_ranks = [1 : i32, 1 : i32, 1 : i32, 1 : i32], __byre__kernel_name = "Unknown3_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c4 = arith.constant 4 : index
+  func private @Unknown3(%arg0: memref<1x128xi64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 1 : i32, __byre__arg_ranks = [1 : i32, 1 : i32, 1 : i32, 1 : i32], __byre__kernel_name = "Unknown3_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<128xi1>
     %1 = memref.alloc() : memref<128xi64>
     %2 = memref.expand_shape %1 [[0, 1]] : memref<128xi64> into memref<128x1xi64>
     %3 = memref.alloc() : memref<128xui32>
     %4 = memref.collapse_shape %arg0 [[0, 1]] : memref<1x128xi64> into memref<128xi64>
-    gpu.launch_func  @Unknown3_kernel::@Unknown3_kernel blocks in (%c4, %c1, %c1) threads in (%c32, %c1, %c1) args(%4 : memref<128xi64>, %3 : memref<128xui32>, %1 : memref<128xi64>, %0 : memref<128xi1>)
+    gpu.launch_func  @Unknown3_kernel::@Unknown3_kernel blocks in (%c1, %c1, %c1) threads in (%c128, %c1, %c1) args(%4 : memref<128xi64>, %3 : memref<128xui32>, %1 : memref<128xi64>, %0 : memref<128xi1>)
     return %3, %2, %0 : memref<128xui32>, memref<128x1xi64>, memref<128xi1>
   }
   gpu.module @Unknown3_kernel {
     gpu.func @Unknown3_kernel(%arg0: memref<128xi64>, %arg1: memref<128xui32>, %arg2: memref<128xi64>, %arg3: memref<128xi1>) kernel {
-      %0 = gpu.block_id  x
-      %1 = gpu.thread_id  x
-      %2 = gpu.block_dim  x
+      %0 = gpu.thread_id  x
       br ^bb1
     ^bb1:  // pred: ^bb0
       %c128 = arith.constant 128 : index
       %c512_i64 = arith.constant 512 : i64
       %c0_i64 = arith.constant 0 : i64
       %cst = arith.constant -1.000000e+00 : f64
-      %3 = arith.muli %0, %2 : index
-      %4 = arith.addi %3, %1 : index
-      %5 = arith.cmpi slt, %4, %c128 : index
-      scf.if %5 {
-        %6 = memref.load %arg0[%4] : memref<128xi64>
-        %7 = arith.trunci %6 : i64 to i32
-        %8 = builtin.unrealized_conversion_cast %7 : i32 to ui32
-        memref.store %8, %arg1[%4] : memref<128xui32>
-        %9 = arith.addi %6, %c512_i64 : i64
-        %10 = arith.cmpi slt, %6, %c0_i64 : i64
-        %11 = select %10, %9, %6 : i64
-        memref.store %11, %arg2[%4] : memref<128xi64>
-        %12 = arith.sitofp %6 : i64 to f64
-        %13 = arith.cmpf une, %12, %cst : f64
-        memref.store %13, %arg3[%4] : memref<128xi1>
+      %1 = arith.cmpi slt, %0, %c128 : index
+      scf.if %1 {
+        %2 = memref.load %arg0[%0] : memref<128xi64>
+        %3 = arith.trunci %2 : i64 to i32
+        %4 = builtin.unrealized_conversion_cast %3 : i32 to ui32
+        memref.store %4, %arg1[%0] : memref<128xui32>
+        %5 = arith.addi %2, %c512_i64 : i64
+        %6 = arith.cmpi slt, %2, %c0_i64 : i64
+        %7 = select %6, %5, %2 : i64
+        memref.store %7, %arg2[%0] : memref<128xi64>
+        %8 = arith.sitofp %2 : i64 to f64
+        %9 = arith.cmpf une, %8, %cst : f64
+        memref.store %9, %arg3[%0] : memref<128xi1>
       }
       gpu.return
     }
   }
-  func private @Unknown4(%arg0: memref<256x128xf32>, %arg1: memref<256x128xf32>, %arg2: memref<128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 1024 : i32, __byre__arg_ranks = [2 : i32, 2 : i32, 2 : i32, 3 : i32], __byre__kernel_name = "Unknown4_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c1024 = arith.constant 1024 : index
+  func private @Unknown4(%arg0: memref<256x128xf32>, %arg1: memref<256x128xf32>, %arg2: memref<128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 256 : i32, __byre__arg_ranks = [2 : i32, 2 : i32, 2 : i32, 3 : i32], __byre__kernel_name = "Unknown4_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<2x128x128xf32>
-    gpu.launch_func  @Unknown4_kernel::@Unknown4_kernel blocks in (%c1024, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<256x128xf32>, %arg1 : memref<256x128xf32>, %arg2 : memref<128x128xf32>, %0 : memref<2x128x128xf32>)
+    gpu.launch_func  @Unknown4_kernel::@Unknown4_kernel blocks in (%c256, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<256x128xf32>, %arg1 : memref<256x128xf32>, %arg2 : memref<128x128xf32>, %0 : memref<2x128x128xf32>)
     return %0 : memref<2x128x128xf32>
   }
   gpu.module @Unknown4_kernel {
@@ -257,14 +252,14 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown5(%arg0: memref<256x30522xf32>, %arg1: memref<30522xf32>) -> (memref<2x128x30522xf32>, memref<256x30522xf32>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 244176 : i32, __byre__arg_ranks = [2 : i32, 1 : i32, 3 : i32, 3 : i32, 2 : i32], __byre__kernel_name = "Unknown5_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 0 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c244176 = arith.constant 244176 : index
+  func private @Unknown5(%arg0: memref<256x30522xf32>, %arg1: memref<30522xf32>) -> (memref<2x128x30522xf32>, memref<256x30522xf32>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 61044 : i32, __byre__arg_ranks = [2 : i32, 1 : i32, 3 : i32, 3 : i32, 2 : i32], __byre__kernel_name = "Unknown5_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 0 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c61044 = arith.constant 61044 : index
     %c1 = arith.constant 1 : index
     %0 = memref.expand_shape %arg0 [[0, 1], [2]] : memref<256x30522xf32> into memref<2x128x30522xf32>
     %1 = memref.alloc() : memref<256x30522xf32>
     %2 = memref.alloc() : memref<2x128x30522xf32>
-    gpu.launch_func  @Unknown5_kernel::@Unknown5_kernel blocks in (%c244176, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<256x30522xf32>, %arg1 : memref<30522xf32>, %2 : memref<2x128x30522xf32>, %0 : memref<2x128x30522xf32>, %1 : memref<256x30522xf32>)
+    gpu.launch_func  @Unknown5_kernel::@Unknown5_kernel blocks in (%c61044, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<256x30522xf32>, %arg1 : memref<30522xf32>, %2 : memref<2x128x30522xf32>, %0 : memref<2x128x30522xf32>, %1 : memref<256x30522xf32>)
     return %2, %1 : memref<2x128x30522xf32>, memref<256x30522xf32>
   }
   gpu.module @Unknown5_kernel {
@@ -314,13 +309,13 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown6(%arg0: memref<256xf32>, %arg1: memref<256x30522xf32>) -> (memref<256x30522xf32>, memref<256x30522xf32>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 244176 : i32, __byre__arg_ranks = [2 : i32, 1 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown6_kernel", __byteir_elementwise_fusion__, arg_offsets = [1 : i32, 0 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c244176 = arith.constant 244176 : index
+  func private @Unknown6(%arg0: memref<256xf32>, %arg1: memref<256x30522xf32>) -> (memref<256x30522xf32>, memref<256x30522xf32>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 61044 : i32, __byre__arg_ranks = [2 : i32, 1 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown6_kernel", __byteir_elementwise_fusion__, arg_offsets = [1 : i32, 0 : i32, 2 : i32, 3 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c61044 = arith.constant 61044 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<256x30522xf32>
     %1 = memref.alloc() : memref<256x30522xf32>
-    gpu.launch_func  @Unknown6_kernel::@Unknown6_kernel blocks in (%c244176, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg1 : memref<256x30522xf32>, %arg0 : memref<256xf32>, %0 : memref<256x30522xf32>, %1 : memref<256x30522xf32>)
+    gpu.launch_func  @Unknown6_kernel::@Unknown6_kernel blocks in (%c61044, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg1 : memref<256x30522xf32>, %arg0 : memref<256xf32>, %0 : memref<256x30522xf32>, %1 : memref<256x30522xf32>)
     return %0, %1 : memref<256x30522xf32>, memref<256x30522xf32>
   }
   gpu.module @Unknown6_kernel {
@@ -358,12 +353,12 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown7(%arg0: memref<256xf32>) -> memref<256xf32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 8 : i32, __byre__arg_ranks = [1 : i32, 1 : i32], __byre__kernel_name = "Unknown7_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c8 = arith.constant 8 : index
+  func private @Unknown7(%arg0: memref<256xf32>) -> memref<256xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 2 : i32, __byre__arg_ranks = [1 : i32, 1 : i32], __byre__kernel_name = "Unknown7_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c2 = arith.constant 2 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<256xf32>
-    gpu.launch_func  @Unknown7_kernel::@Unknown7_kernel blocks in (%c8, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<256xf32>, %0 : memref<256xf32>)
+    gpu.launch_func  @Unknown7_kernel::@Unknown7_kernel blocks in (%c2, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<256xf32>, %0 : memref<256xf32>)
     return %0 : memref<256xf32>
   }
   gpu.module @Unknown7_kernel {
@@ -385,15 +380,15 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown8(%arg0: memref<256xf32>, %arg1: memref<256x30522xf32>, %arg2: memref<256xi64>, %arg3: memref<256xi1>) -> (memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 244176 : i32, __byre__arg_ranks = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown8_kernel", __byteir_elementwise_fusion__, arg_offsets = [3 : i32, 2 : i32, 4 : i32, 1 : i32, 0 : i32, 5 : i32, 6 : i32, 7 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c244176 = arith.constant 244176 : index
+  func private @Unknown8(%arg0: memref<256xf32>, %arg1: memref<256x30522xf32>, %arg2: memref<256xi64>, %arg3: memref<256xi1>) -> (memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 61044 : i32, __byre__arg_ranks = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown8_kernel", __byteir_elementwise_fusion__, arg_offsets = [3 : i32, 2 : i32, 4 : i32, 1 : i32, 0 : i32, 5 : i32, 6 : i32, 7 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c61044 = arith.constant 61044 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<256x30522xf32>
     %1 = memref.alloc() : memref<256x30522xf32>
     %2 = memref.alloc() : memref<256x30522xf32>
     %3 = memref.alloc() : memref<256x30522xf32>
-    gpu.launch_func  @Unknown8_kernel::@Unknown8_kernel blocks in (%c244176, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg3 : memref<256xi1>, %arg2 : memref<256xi64>, %3 : memref<256x30522xf32>, %arg1 : memref<256x30522xf32>, %arg0 : memref<256xf32>, %2 : memref<256x30522xf32>, %1 : memref<256x30522xf32>, %0 : memref<256x30522xf32>)
+    gpu.launch_func  @Unknown8_kernel::@Unknown8_kernel blocks in (%c61044, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg3 : memref<256xi1>, %arg2 : memref<256xi64>, %3 : memref<256x30522xf32>, %arg1 : memref<256x30522xf32>, %arg0 : memref<256xf32>, %2 : memref<256x30522xf32>, %1 : memref<256x30522xf32>, %0 : memref<256x30522xf32>)
     return %3, %2, %1, %0 : memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
   }
   gpu.module @Unknown8_kernel {
@@ -448,11 +443,11 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown9(%arg0: memref<f32>) -> memref<f32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 1 : i32, __byre__arg_ranks = [0 : i32, 0 : i32], __byre__kernel_name = "Unknown9_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+  func private @Unknown9(%arg0: memref<f32>) -> memref<f32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 1 : i32, __byre__arg_ranks = [0 : i32, 0 : i32], __byre__kernel_name = "Unknown9_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
     %c1 = arith.constant 1 : index
-    %c32 = arith.constant 32 : index
+    %c128 = arith.constant 128 : index
     %0 = memref.alloc() : memref<f32>
-    gpu.launch_func  @Unknown9_kernel::@Unknown9_kernel blocks in (%c1, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<f32>, %0 : memref<f32>)
+    gpu.launch_func  @Unknown9_kernel::@Unknown9_kernel blocks in (%c1, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<f32>, %0 : memref<f32>)
     return %0 : memref<f32>
   }
   gpu.module @Unknown9_kernel {
@@ -473,12 +468,12 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown10(%arg0: memref<f32>, %arg1: memref<256x30522xf32>) -> memref<256x30522xf32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 244176 : i32, __byre__arg_ranks = [2 : i32, 0 : i32, 2 : i32], __byre__kernel_name = "Unknown10_kernel", __byteir_elementwise_fusion__, arg_offsets = [1 : i32, 0 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c244176 = arith.constant 244176 : index
+  func private @Unknown10(%arg0: memref<f32>, %arg1: memref<256x30522xf32>) -> memref<256x30522xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 61044 : i32, __byre__arg_ranks = [2 : i32, 0 : i32, 2 : i32], __byre__kernel_name = "Unknown10_kernel", __byteir_elementwise_fusion__, arg_offsets = [1 : i32, 0 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c61044 = arith.constant 61044 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<256x30522xf32>
-    gpu.launch_func  @Unknown10_kernel::@Unknown10_kernel blocks in (%c244176, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg1 : memref<256x30522xf32>, %arg0 : memref<f32>, %0 : memref<256x30522xf32>)
+    gpu.launch_func  @Unknown10_kernel::@Unknown10_kernel blocks in (%c61044, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg1 : memref<256x30522xf32>, %arg0 : memref<f32>, %0 : memref<256x30522xf32>)
     return %0 : memref<256x30522xf32>
   }
   gpu.module @Unknown10_kernel {
@@ -514,11 +509,11 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown11(%arg0: memref<f32>, %arg1: memref<f32>) -> memref<f32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 1 : i32, __byre__arg_ranks = [0 : i32, 0 : i32, 0 : i32], __byre__kernel_name = "Unknown11_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+  func private @Unknown11(%arg0: memref<f32>, %arg1: memref<f32>) -> memref<f32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 1 : i32, __byre__arg_ranks = [0 : i32, 0 : i32, 0 : i32], __byre__kernel_name = "Unknown11_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
     %c1 = arith.constant 1 : index
-    %c32 = arith.constant 32 : index
+    %c128 = arith.constant 128 : index
     %0 = memref.alloc() : memref<f32>
-    gpu.launch_func  @Unknown11_kernel::@Unknown11_kernel blocks in (%c1, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<f32>, %arg1 : memref<f32>, %0 : memref<f32>)
+    gpu.launch_func  @Unknown11_kernel::@Unknown11_kernel blocks in (%c1, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<f32>, %arg1 : memref<f32>, %0 : memref<f32>)
     return %0 : memref<f32>
   }
   gpu.module @Unknown11_kernel {
@@ -537,14 +532,14 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown12(%arg0: memref<256xf32>, %arg1: memref<256x30522xf32>, %arg2: memref<256x30522xf32>) -> (memref<256x30522xf32>, memref<2x128x30522xf32>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 244176 : i32, __byre__arg_ranks = [2 : i32, 2 : i32, 1 : i32, 2 : i32, 2 : i32, 3 : i32], __byre__kernel_name = "Unknown12_kernel", __byteir_elementwise_fusion__, arg_offsets = [2 : i32, 1 : i32, 0 : i32, 3 : i32, 0 : i32, 4 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c244176 = arith.constant 244176 : index
+  func private @Unknown12(%arg0: memref<256xf32>, %arg1: memref<256x30522xf32>, %arg2: memref<256x30522xf32>) -> (memref<256x30522xf32>, memref<2x128x30522xf32>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 61044 : i32, __byre__arg_ranks = [2 : i32, 2 : i32, 1 : i32, 2 : i32, 2 : i32, 3 : i32], __byre__kernel_name = "Unknown12_kernel", __byteir_elementwise_fusion__, arg_offsets = [2 : i32, 1 : i32, 0 : i32, 3 : i32, 0 : i32, 4 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c61044 = arith.constant 61044 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<256x30522xf32>
     %1 = memref.alloc() : memref<2x128x30522xf32>
     %2 = memref.expand_shape %arg0 [[0, 1]] : memref<256xf32> into memref<2x128xf32>
-    gpu.launch_func  @Unknown12_kernel::@Unknown12_kernel blocks in (%c244176, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg2 : memref<256x30522xf32>, %arg1 : memref<256x30522xf32>, %arg0 : memref<256xf32>, %0 : memref<256x30522xf32>, %2 : memref<2x128xf32>, %1 : memref<2x128x30522xf32>)
+    gpu.launch_func  @Unknown12_kernel::@Unknown12_kernel blocks in (%c61044, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg2 : memref<256x30522xf32>, %arg1 : memref<256x30522xf32>, %arg0 : memref<256xf32>, %0 : memref<256x30522xf32>, %2 : memref<2x128xf32>, %1 : memref<2x128x30522xf32>)
     return %0, %1 : memref<256x30522xf32>, memref<2x128x30522xf32>
   }
   gpu.module @Unknown12_kernel {
@@ -597,12 +592,12 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown13(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 1024 : i32, __byre__arg_ranks = [3 : i32, 3 : i32, 3 : i32], __byre__kernel_name = "Unknown13_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c1024 = arith.constant 1024 : index
+  func private @Unknown13(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 256 : i32, __byre__arg_ranks = [3 : i32, 3 : i32, 3 : i32], __byre__kernel_name = "Unknown13_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<2x128x128xf32>
-    gpu.launch_func  @Unknown13_kernel::@Unknown13_kernel blocks in (%c1024, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<2x128x128xf32>, %arg1 : memref<2x128x128xf32>, %0 : memref<2x128x128xf32>)
+    gpu.launch_func  @Unknown13_kernel::@Unknown13_kernel blocks in (%c256, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<2x128x128xf32>, %arg1 : memref<2x128x128xf32>, %0 : memref<2x128x128xf32>)
     return %0 : memref<2x128x128xf32>
   }
   gpu.module @Unknown13_kernel {
@@ -648,12 +643,12 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown14(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 1024 : i32, __byre__arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], __byre__kernel_name = "Unknown14_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32, 4 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c1024 = arith.constant 1024 : index
+  func private @Unknown14(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 256 : i32, __byre__arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], __byre__kernel_name = "Unknown14_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32, 4 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<2x128x128xf32>
-    gpu.launch_func  @Unknown14_kernel::@Unknown14_kernel blocks in (%c1024, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<2x128x128xf32>, %arg1 : memref<2x128x128xf32>, %arg2 : memref<2x128x128xf32>, %arg3 : memref<2x128x128xf32>, %0 : memref<2x128x128xf32>)
+    gpu.launch_func  @Unknown14_kernel::@Unknown14_kernel blocks in (%c256, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<2x128x128xf32>, %arg1 : memref<2x128x128xf32>, %arg2 : memref<2x128x128xf32>, %arg3 : memref<2x128x128xf32>, %0 : memref<2x128x128xf32>)
     return %0 : memref<2x128x128xf32>
   }
   gpu.module @Unknown14_kernel {
@@ -703,12 +698,12 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown15(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 1024 : i32, __byre__arg_ranks = [3 : i32, 3 : i32, 3 : i32], __byre__kernel_name = "Unknown15_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c1024 = arith.constant 1024 : index
+  func private @Unknown15(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 256 : i32, __byre__arg_ranks = [3 : i32, 3 : i32, 3 : i32], __byre__kernel_name = "Unknown15_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<2x128x128xf32>
-    gpu.launch_func  @Unknown15_kernel::@Unknown15_kernel blocks in (%c1024, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<2x128x128xf32>, %arg1 : memref<2x128x128xf32>, %0 : memref<2x128x128xf32>)
+    gpu.launch_func  @Unknown15_kernel::@Unknown15_kernel blocks in (%c256, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<2x128x128xf32>, %arg1 : memref<2x128x128xf32>, %0 : memref<2x128x128xf32>)
     return %0 : memref<2x128x128xf32>
   }
   gpu.module @Unknown15_kernel {
@@ -754,12 +749,12 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown16(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 1024 : i32, __byre__arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], __byre__kernel_name = "Unknown16_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32, 4 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c1024 = arith.constant 1024 : index
+  func private @Unknown16(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 256 : i32, __byre__arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], __byre__kernel_name = "Unknown16_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32, 3 : i32, 4 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<2x128x128xf32>
-    gpu.launch_func  @Unknown16_kernel::@Unknown16_kernel blocks in (%c1024, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<2x128x128xf32>, %arg1 : memref<2x128x128xf32>, %arg2 : memref<2x128x128xf32>, %arg3 : memref<2x128x128xf32>, %0 : memref<2x128x128xf32>)
+    gpu.launch_func  @Unknown16_kernel::@Unknown16_kernel blocks in (%c256, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<2x128x128xf32>, %arg1 : memref<2x128x128xf32>, %arg2 : memref<2x128x128xf32>, %arg3 : memref<2x128x128xf32>, %0 : memref<2x128x128xf32>)
     return %0 : memref<2x128x128xf32>
   }
   gpu.module @Unknown16_kernel {
@@ -809,15 +804,15 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown17(%arg0: memref<256xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<256xi1>) -> (memref<256x128xf32>, memref<256x128xf32>) attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 1024 : i32, __byre__arg_ranks = [2 : i32, 3 : i32, 2 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown17_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 3 : i32, 2 : i32, 4 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c1024 = arith.constant 1024 : index
+  func private @Unknown17(%arg0: memref<256xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<256xi1>) -> (memref<256x128xf32>, memref<256x128xf32>) attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 256 : i32, __byre__arg_ranks = [2 : i32, 3 : i32, 2 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown17_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 3 : i32, 2 : i32, 4 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
+    %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<256x128xf32>
     %1 = memref.expand_shape %arg2 [[0, 1]] : memref<256xi1> into memref<2x128xi1>
     %2 = memref.alloc() : memref<256x128xf32>
     %3 = memref.expand_shape %arg0 [[0, 1]] : memref<256xi1> into memref<2x128xi1>
-    gpu.launch_func  @Unknown17_kernel::@Unknown17_kernel blocks in (%c1024, %c1, %c1) threads in (%c32, %c1, %c1) args(%3 : memref<2x128xi1>, %arg1 : memref<2x128x128xf32>, %2 : memref<256x128xf32>, %1 : memref<2x128xi1>, %0 : memref<256x128xf32>)
+    gpu.launch_func  @Unknown17_kernel::@Unknown17_kernel blocks in (%c256, %c1, %c1) threads in (%c128, %c1, %c1) args(%3 : memref<2x128xi1>, %arg1 : memref<2x128x128xf32>, %2 : memref<256x128xf32>, %1 : memref<2x128xi1>, %0 : memref<256x128xf32>)
     return %2, %0 : memref<256x128xf32>, memref<256x128xf32>
   }
   gpu.module @Unknown17_kernel {
@@ -867,12 +862,11 @@ module attributes {gpu.container_module} {
       gpu.return
     }
   }
-  func private @Unknown18(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>) -> memref<128x128xf32> attributes {__byre__BlockSize.x = 32 : i32, __byre__GridSize.x = 512 : i32, __byre__arg_ranks = [1 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown18_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
-    %c32 = arith.constant 32 : index
-    %c512 = arith.constant 512 : index
+  func private @Unknown18(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>) -> memref<128x128xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 128 : i32, __byre__arg_ranks = [1 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown18_kernel", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+    %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
     %0 = memref.alloc() : memref<128x128xf32>
-    gpu.launch_func  @Unknown18_kernel::@Unknown18_kernel blocks in (%c512, %c1, %c1) threads in (%c32, %c1, %c1) args(%arg0 : memref<128xi1>, %arg1 : memref<128x128xf32>, %0 : memref<128x128xf32>)
+    gpu.launch_func  @Unknown18_kernel::@Unknown18_kernel blocks in (%c128, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<128xi1>, %arg1 : memref<128x128xf32>, %0 : memref<128x128xf32>)
     return %0 : memref<128x128xf32>
   }
   gpu.module @Unknown18_kernel {

@@ -34,7 +34,7 @@ namespace {
     OpPassManager pm(m.getOperationName());
 
     pm.addNestedPass<FuncOp>(createRewriteAffineToMemrefPass());
-    pm.addNestedPass<FuncOp>(createCoalescedForToGPULaunchPass());
+    pm.addNestedPass<FuncOp>(createCoalescedForToGPULaunchPass(128));
     addCleanUpPassPipeline(pm);
     pm.addPass(createLowerAffinePass());
     pm.addPass(createGpuKernelOutliningPass());
