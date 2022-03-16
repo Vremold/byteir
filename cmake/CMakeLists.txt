@@ -33,6 +33,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(BYTEIR_ENABLE_BINDINGS_PYTHON "Enable byteir python bindings" OFF)
+option(BYTEIR_INCLUDE_TESTS "Generate build targets for the ByteIR unit tests." ON)
+if (BYTEIR_INCLUDE_TESTS)
+  add_definitions(-DBYTEIR_INCLUDE_TESTS)
+endif()
+
 
 # Set Path
 set(REPO_ROOT_DIR ${PROJECT_SOURCE_DIR}/..)

@@ -1,3 +1,5 @@
+add_subdirectory(lib)
+
 if (MSVC)
   # On platforms where CMAKE_CFG_INTDIR is not equal to '.' (e.g. Windows),
   # configure_lit_site_cfg will replace LLVM_BUILD_MODE in LLVM_TOOLS_DIR

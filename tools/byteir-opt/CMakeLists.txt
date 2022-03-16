@@ -13,6 +13,12 @@ set(BYTEIR_LIBS
   ${byteir_conversion_libs}
 )
 
+if(BYTEIR_INCLUDE_TESTS)
+  set(test_libs
+    ByteIRTestAnalysis
+    )
+endif()
+
 get_property(dialect_libs GLOBAL PROPERTY MLIR_DIALECT_LIBS)
 get_property(conversion_libs GLOBAL PROPERTY MLIR_CONVERSION_LIBS)
 set(LLVM_LINK_COMPONENTS

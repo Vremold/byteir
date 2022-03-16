@@ -1,6 +1,8 @@
 add_mlir_library(ByteIRAnalysis
   DimFlag.cpp
+  Liveness.cpp
   OpDependence.cpp
+  UseRange.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Analysis

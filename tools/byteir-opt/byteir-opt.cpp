@@ -43,6 +43,20 @@
 using namespace llvm;
 using namespace mlir;
 
+namespace byteir {
+namespace test {
+void registerTestPrintLivenessPass();
+void registerTestPrintUseRangePass();
+}
+}
+
+#ifdef BYTEIR_INCLUDE_TESTS
+void registerTestPasses() {
+  byteir::test::registerTestPrintLivenessPass();
+  byteir::test::registerTestPrintUseRangePass();
+}
+#endif
+
 int main(int argc, char **argv) {
   registerAllPasses();
   mlir::mhlo::registerAllMhloPasses();
@@ -58,6 +72,10 @@ int main(int argc, char **argv) {
   registerByteIRMhloPasses();
 
   registerByteIRPipelinesPasses();
+
+#ifdef BYTEIR_INCLUDE_TESTS
+  registerTestPasses();
+#endif
 
   DialectRegistry registry;
   registerAllDialects(registry);
