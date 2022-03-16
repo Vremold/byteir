@@ -3,6 +3,8 @@
 // CHECK-DAG: [[MAP_0:.*]] = affine_map<(d0, d1) -> (d0 * 32 + d1)>
 // CHECK-DAG: [[MAP_1:.*]] = affine_map<(d0, d1) -> (d1, d0)>
 
+#map0 = affine_map<(d0, d1) -> (d1, d0)>
+
 // CHECK-LABEL: func @test_map_attr
 func @test_map_attr(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>) {
   %c0 = arith.constant 0 : index

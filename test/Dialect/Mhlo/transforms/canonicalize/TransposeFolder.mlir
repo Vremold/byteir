@@ -1,5 +1,16 @@
 // RUN: byteir-opt %s -canonicalize | FileCheck %s
 
+
+func @transpose_const() -> tensor<5x64x31x95xf32> {
+    %0 = mhlo.constant dense<1.000000e+00> : tensor<5x31x95x64xf32>
+    %1 = "mhlo.transpose"(%0) {permutation = dense<[0, 3, 1, 2]> : tensor<4xi64>} : (tensor<5x31x95x64xf32>) -> tensor<5x64x31x95xf32>
+    return %1 : tensor<5x64x31x95xf32>
+}
+// CHECK-LABEL: func @transpose_const
+// CHECK-NEXT: mhlo.constant
+// CHECK-NEXT: mhlo.transpose
+// CHECK-NEXT:  return
+
 func @broadcast_transpose(%arg0 : tensor<64xf32>) -> tensor<5x64x31x95xf32> {
     %0 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<3> : tensor<1xi64>} : (tensor<64xf32>) -> tensor<5x31x95x64xf32>
     %1 = "mhlo.transpose"(%0) {permutation = dense<[0, 3, 1, 2]> : tensor<4xi64>} : (tensor<5x31x95x64xf32>) -> tensor<5x64x31x95xf32>

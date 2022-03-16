@@ -132,10 +132,15 @@ GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
 // return true, if memref is only used in op in the filters, or alloc or dealloc
 bool IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> filters);
 
+// count number of a value is used
+// if a value is used twice by a user, it will count twice
 inline int UseCount(Value val) {
   return static_cast<int>(
       std::distance(val.getUses().begin(), val.getUses().end()));
 }
+// count number of users a value has
+// if a value is used twice by a user, it will count one
+int UserCount(Value val);
 
 inline Location GetFusedLoc(ArrayRef<Operation *> ops, OpBuilder &op_builder) {
   llvm::SmallVector<Location> locs;

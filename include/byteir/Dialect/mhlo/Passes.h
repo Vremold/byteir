@@ -15,6 +15,7 @@
 #include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/FusionOutlining.h"
 #include "byteir/Dialect/mhlo/Transforms/HloFolder.h"
+#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
 #include "byteir/Dialect/mhlo/Transforms/HloTransposeDotToDotGeneral.h"
 #include "byteir/Dialect/mhlo/Transforms/IOConvertFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/ReduceFusion.h"

@@ -286,3 +286,14 @@ bool mlir::IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> 
   }
   return true;
 }
+
+int mlir::UserCount(Value val) {
+  SmallDenseSet<Operation*> count;
+  for (auto user : val.getUsers()) {
+    if (!count.contains(user)) {
+      count.insert(user);
+    }
+  }
+  return count.size();
+}
+

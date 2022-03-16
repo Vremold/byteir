@@ -9,8 +9,11 @@
 #include "byteir/Utils/Utils.h"
 #include "llvm/ADT/SmallVector.h"
 #include "mlir/IR/Block.h"
+#include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/TypeRange.h"
+
 #include <tuple>
 
 using namespace llvm;
@@ -52,5 +55,18 @@ Operation* mlir::ReplicateDefiningOp(OpBuilder& b, Operation* op, unsigned opIdx
   auto cloned = b.clone(*opDef);
   op->setOperand(opIdx, cloned->getResult(resIdx));
   return cloned;
+}
+
+
+Operation *mlir::cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
+  BlockAndValueMapping bvm, TypeRange types) {
+
+  auto newOp = b.clone(*op, bvm);
+  // force resetting type since we didn't perform type inference
+  // FIXME: change to type inference later if possible
+  for (size_t i = 0; i < types.size(); ++i) {
+    newOp->getResult(i).setType(types[i]);
+  }
+  return newOp;
 }
 

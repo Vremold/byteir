@@ -119,6 +119,37 @@ def IOConvertFusion : Pass<"fuse-io-convert", "mlir::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// HloMoveDown
+//===----------------------------------------------------------------------===//
+
+def HloMoveDown : Pass<"hlo-move-down", "mlir::FuncOp"> {
+  let summary = "Move selected mhlo op down (to output)";
+  let constructor = "mlir::createHloMoveDownPass()";
+  let options = [
+    Option<"allMultiUser", "all-multi-user", 
+           "bool", /*default=*/"false",
+           "whether to support multiple users and require all user legal">,
+    Option<"multiUser", "multi-user", 
+           "bool", /*default=*/"false",
+           "whether to support multiple users, it might be overridden by all-multi-user">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// HloMoveUp
+//===----------------------------------------------------------------------===//
+
+def HloMoveUp : Pass<"hlo-move-up", "mlir::FuncOp"> {
+  let summary = "Move selected mhlo op up (to input)";
+  let constructor = "mlir::createHloMoveUpPass()";
+  let options = [
+    Option<"multiInput", "multi-input", 
+           "bool", /*default=*/"false",
+           "whether to support multiple inputs">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // ReduceFusion
 //===----------------------------------------------------------------------===//
 

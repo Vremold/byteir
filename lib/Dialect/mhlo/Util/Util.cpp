@@ -14,6 +14,8 @@
 
 using namespace llvm;
 
+
+
 bool mlir::IsSplatMhloConstant(Operation *op) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     return constOp.value().isSplat();
@@ -26,6 +28,9 @@ bool mlir::IsMhloConstantLike(Operation *op) {
          isa_and_nonnull<mhlo::IotaOp>(op);
 }
 
+bool mlir::IsSplatMhloConstantValue(Value val) {
+  return IsSplatMhloConstant(val.getDefiningOp());
+}
 
 bool mlir::IsSplatMhloConstantValue(Operation *op, int64_t splat_val) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
