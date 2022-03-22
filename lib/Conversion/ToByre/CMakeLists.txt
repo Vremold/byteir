@@ -6,11 +6,13 @@ add_byteir_conversion_library(ByteIRToByre
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Conversion/ToByre
 
   DEPENDS
+  MLIRByre
   ByteIRConversionPassIncGen
   ByteIRConversionCommon
   ByteIRMhlo
 
   LINK_LIBS PUBLIC
+  MLIRByre
   MLIRIR
   MLIRMemRef
   MLIRTransforms
