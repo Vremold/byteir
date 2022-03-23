@@ -26,14 +26,9 @@ namespace {
 
 // Note IOConvert will keep input/output sequence order as orginal op
 struct IOConvertFusionPattern : public RewritePattern {
-  IOConvertFusionPattern(
-    MLIRContext *context, StringRef _opName,
-    ArrayRef<int> _inputArgIdx,
-    ArrayRef<int> _outputArgIdx, 
-    StringRef _byreComputeName)
+  IOConvertFusionPattern(MLIRContext *context, StringRef _opName,
+                         StringRef _byreComputeName)
       : RewritePattern(MatchAnyOpTypeTag(), 3, context), opName(_opName),
-        inputArgIdx(_inputArgIdx.begin(), _inputArgIdx.end()),
-        outputArgIdx(_outputArgIdx.begin(), _outputArgIdx.end()),
         byreComputeName(_byreComputeName) {}
 
   LogicalResult matchAndRewrite(Operation *op,
@@ -91,8 +86,8 @@ struct IOConvertFusionPattern : public RewritePattern {
       }
     }
 
-    // terminate if only single op
-    if (pattern.size() == 1) return failure();
+    // note: single batch_norm_training should be fused
+    // if (pattern.size() == 1) return failure();
 
     NamedAttrList attrs;
     // copy attrs to fusion op
@@ -111,21 +106,14 @@ struct IOConvertFusionPattern : public RewritePattern {
   }
 
   StringRef opName;
-  const SmallDenseSet<int> inputArgIdx;
-  const SmallDenseSet<int> outputArgIdx;
   StringRef byreComputeName;
 };
 
 struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
   IOConvertFusionPass() = default;
-  IOConvertFusionPass(std::string _opName, std::vector<int> _inputArgIdx,
-                      std::vector<int> _outputArgIdx,
-                      std::string _byreComputeName)
-      : _opName(_opName), _inputArgIdx(_inputArgIdx),
-        _outputArgIdx(_outputArgIdx), _byreComputeName(_byreComputeName) {
+  IOConvertFusionPass(std::string _opName, std::string _byreComputeName)
+      : _opName(_opName), _byreComputeName(_byreComputeName) {
     this->opName = "";
-    this->inputArgIdx = {};
-    this->outputArgIdx = {};
     this->byreComputeName = "";
   }
 
@@ -133,26 +121,16 @@ struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
     if (this->opName != "") {
       this->_opName = this->opName;
       this->_byreComputeName = this->byreComputeName;
-      for (auto &idx : this->inputArgIdx) {
-        _inputArgIdx.push_back(idx);
-      }
-      for (auto &idx : this->outputArgIdx) {
-        _outputArgIdx.push_back(idx);
-      }
     }
 
     if (_opName == "" || _byreComputeName == "") {
-      signalPassFailure();
-    }
-    if (_inputArgIdx.size() == 0 && _outputArgIdx.size() == 0) {
       signalPassFailure();
     }
 
     FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
-    patterns.add<IOConvertFusionPattern>(context, _opName, _inputArgIdx,
-                                         _outputArgIdx, _byreComputeName);
+    patterns.add<IOConvertFusionPattern>(context, _opName, _byreComputeName);
 
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
       funcOp.emitError("IOConvertFusionPass applyPatternsAndFoldGreedily "
@@ -162,28 +140,24 @@ struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
   }
 
   std::string _opName;
-  std::vector<int> _inputArgIdx;
-  std::vector<int> _outputArgIdx;
   std::string _byreComputeName;
 };
 } // namespace
 
 void populateIOConvertBatchNormPattern(RewritePatternSet &patterns) {
   patterns.add(std::make_unique<IOConvertFusionPattern>(
-      patterns.getContext(), "mhlo.batch_norm_training", std::vector<int>{0},
-      std::vector<int>{0}, "BatchNormTrainingOp"));
+      patterns.getContext(), "mhlo.batch_norm_training",
+      "BatchNormTrainingOp"));
   patterns.add(std::make_unique<IOConvertFusionPattern>(
-      patterns.getContext(), "mhlo.batch_norm_grad", std::vector<int>{0, 4},
-      std::vector<int>{0}, "BatchNormGradOp"));
+      patterns.getContext(), "mhlo.batch_norm_grad", "BatchNormGradOp"));
 }
 
 std::unique_ptr<OperationPass<FuncOp>> mlir::createIOConvertFusionPass() {
   return std::make_unique<IOConvertFusionPass>();
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createIOConvertFusionPass(
-    std::string opName, std::vector<int> inputArgIdx,
-    std::vector<int> outputArgIdx, std::string byreComputeName) {
-  return std::make_unique<IOConvertFusionPass>(opName, inputArgIdx,
-                                               outputArgIdx, byreComputeName);
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createIOConvertFusionPass(std::string opName,
+                                std::string byreComputeName) {
+  return std::make_unique<IOConvertFusionPass>(opName, byreComputeName);
 }

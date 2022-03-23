@@ -20,9 +20,7 @@ void populateIOConvertBatchNormPattern(RewritePatternSet &patterns);
 std::unique_ptr<OperationPass<FuncOp>> createIOConvertFusionPass();
 
 std::unique_ptr<OperationPass<FuncOp>>
-createIOConvertFusionPass(std::string opName, std::vector<int> inputArgIdx,
-                          std::vector<int> outputArgIdx,
-                          std::string byreComputeName);
+createIOConvertFusionPass(std::string opName, std::string byreComputeName);
 
 } // namespace mlir
 

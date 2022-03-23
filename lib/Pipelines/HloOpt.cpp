@@ -62,19 +62,16 @@ void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
                                        const std::string &entry,
                                        bool outlineSingleElemwiseOp) {
 
-  // culster constraint
+  // cluster constraint
   pm.addNestedPass<FuncOp>(createClusterConstraintPass());
   pm.addPass(createFusionOutliningPass());
 
   // Fusion passes
   pm.addNestedPass<FuncOp>(createConvBackwardFusionPass());
+  pm.addNestedPass<FuncOp>(createIOConvertFusionPass("mhlo.batch_norm_training",
+                                                     "BatchNormTrainingOp"));
   pm.addNestedPass<FuncOp>(
-      createIOConvertFusionPass("mhlo.batch_norm_training", std::vector<int>{0},
-                                std::vector<int>{0}, "BatchNormTrainingOp"));
-
-  pm.addNestedPass<FuncOp>(
-      createIOConvertFusionPass("mhlo.batch_norm_grad", std::vector<int>{0, 4},
-                                std::vector<int>{0}, "BatchNormGradOp"));
+      createIOConvertFusionPass("mhlo.batch_norm_grad", "BatchNormGradOp"));
   pm.addNestedPass<FuncOp>(createDotTransposeFusionPass());
 
   // expand tuple
