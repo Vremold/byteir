@@ -119,3 +119,121 @@ func @transpose_move_down_1_unary_1_invalid(%arg0 : tensor<31x20x32xf32>, %arg1 
 // AllMULTIUSER-NEXT: mhlo.add
 // AllMULTIUSER-NEXT: mhlo.multiply
 // AllMULTIUSER-NEXT: return
+
+func @reshape_move_down_unary(%arg0 : tensor<31x20x32xf32>) -> tensor<31x640xf32> {
+    %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x640xf32>
+    %1 = "mhlo.abs"(%0) : (tensor<31x640xf32>) -> tensor<31x640xf32>
+    return %1 : tensor<31x640xf32>
+}
+// CHECK-LABEL: func @reshape_move_down_unary
+// CHECK-NEXT: mhlo.abs
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: return
+
+func @reshape_binary_same(%arg0 : tensor<31x20x32xf32>) -> tensor<31x640xf32> {
+    %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x640xf32>
+    %1 = mhlo.add %0, %0 : tensor<31x640xf32>
+    return %1 : tensor<31x640xf32>
+}
+// CHECK-LABEL: func @reshape_binary_same
+// CHECK-NEXT: mhlo.add
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: return
+
+func @reshape_move_down_binary_splat_const(%arg0 : tensor<31x20x32xf32>) -> tensor<31x640xf32> {
+    %0 = mhlo.constant dense<1.000000e+00> : tensor<31x640xf32>
+    %1 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x640xf32>
+    %2 = mhlo.add %1, %0 : tensor<31x640xf32>
+    return %2 : tensor<31x640xf32>
+}
+// CHECK-LABEL: func @reshape_move_down_binary_splat_const
+// CHECK-NEXT: mhlo.constant
+// CHECK-NEXT: mhlo.add
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: return
+
+func @reshape_move_down_unary_and_cancel(%arg0 : tensor<31x20x32xf32>) -> tensor<31x20x32xf32> {
+    %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x640xf32>
+    %1 = "mhlo.abs"(%0) : (tensor<31x640xf32>) -> tensor<31x640xf32>
+    %2 = "mhlo.reshape"(%1) : (tensor<31x640xf32>) -> tensor<31x20x32xf32>
+    return %2 : tensor<31x20x32xf32>
+}
+// CHECK-LABEL: func @reshape_move_down_unary_and_cancel
+// CHECK-NEXT: mhlo.abs
+// CHECK-NEXT: return
+
+func @reshape_move_down_unary_many_and_cancel(%arg0 : tensor<31x20x32xf32>) -> tensor<31x20x32xf32> {
+    %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x640xf32>
+    %1 = "mhlo.abs"(%0) : (tensor<31x640xf32>) -> tensor<31x640xf32>
+    %2 = "mhlo.sine"(%1) : (tensor<31x640xf32>) -> tensor<31x640xf32>
+    %3 = "mhlo.sine"(%2) : (tensor<31x640xf32>) -> tensor<31x640xf32>
+    %4 = "mhlo.sine"(%3) : (tensor<31x640xf32>) -> tensor<31x640xf32>
+    %5 = "mhlo.reshape"(%4) : (tensor<31x640xf32>) -> tensor<31x20x32xf32>
+    return %5 : tensor<31x20x32xf32>
+}
+// CHECK-LABEL: func @reshape_move_down_unary_many_and_cancel
+// CHECK-NEXT: mhlo.abs
+// CHECK-NEXT: mhlo.sine
+// CHECK-NEXT: mhlo.sine
+// CHECK-NEXT: mhlo.sine
+// CHECK-NEXT: return
+
+func @reshape_move_down_two_unary(%arg0 : tensor<31x20x32xf32>) -> tensor<20x31x32xf32> {
+    %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
+    %1 = "mhlo.abs"(%0) : (tensor<20x31x32xf32>) -> tensor<20x31x32xf32>
+    %2 = "mhlo.sine"(%0) : (tensor<20x31x32xf32>) -> tensor<20x31x32xf32>
+    %3 = mhlo.add %1, %2 : tensor<20x31x32xf32>
+    return %3 : tensor<20x31x32xf32>
+}
+// CHECK-LABEL: func @reshape_move_down_two_unary
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: mhlo.abs
+// CHECK-NEXT: mhlo.sine
+// CHECK-NEXT: mhlo.add
+// CHECK-NEXT: return
+
+// MULTIUSER-LABEL: func @reshape_move_down_two_unary
+// MULTIUSER-DAG{ABS}: mhlo.abs
+// MULTIUSER-NEXT{ABS}: mhlo.reshape
+// MULTIUSER-DAG{SINE}: mhlo.sine
+// MULTIUSER-NEXT{SINE}: mhlo.reshape
+// MULTIUSER: mhlo.add
+// MULTIUSER-NEXT: return
+
+// AllMULTIUSER-LABEL: func @reshape_move_down_two_unary
+// AllMULTIUSER-DAG{ABS}: mhlo.abs
+// AllMULTIUSER-NEXT{ABS}: mhlo.reshape
+// AllMULTIUSER-DAG{SINE}: mhlo.sine
+// AllMULTIUSER-NEXT{SINE}: mhlo.reshape
+// AllMULTIUSER: mhlo.add
+// AllMULTIUSER-NEXT: return
+
+func @reshape_move_down_1_unary_1_invalid(%arg0 : tensor<31x20x32xf32>, %arg1 : tensor<20x31x32xf32>)-> tensor<20x31x32xf32> {
+    %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
+    %1 = "mhlo.abs"(%0) : (tensor<20x31x32xf32>) -> tensor<20x31x32xf32>
+    %2 = mhlo.add %0, %arg1 : tensor<20x31x32xf32>
+    %3 = mhlo.multiply %1, %2 : tensor<20x31x32xf32>
+    return %3 : tensor<20x31x32xf32>
+}
+// CHECK-LABEL: func @reshape_move_down_1_unary_1_invalid
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: mhlo.abs
+// CHECK-NEXT: mhlo.add
+// CHECK-NEXT: mhlo.multiply
+// CHECK-NEXT: return
+
+// MULTIUSER-LABEL: func @reshape_move_down_1_unary_1_invalid
+// MULTIUSER-DAG{ABS}: mhlo.abs
+// MULTIUSER-NEXT{ABS}: mhlo.reshape
+// MULTIUSER-DAG{ADD}: mhlo.reshape
+// MULTIUSER-NEXT{ADD}: mhlo.add
+// MULTIUSER: mhlo.multiply
+// MULTIUSER-NEXT: return
+
+// AllMULTIUSER-LABEL: func @reshape_move_down_1_unary_1_invalid
+// AllMULTIUSER-NEXT: mhlo.reshape
+// AllMULTIUSER-NEXT: mhlo.abs
+// AllMULTIUSER-NEXT: mhlo.add
+// AllMULTIUSER-NEXT: mhlo.multiply
+// AllMULTIUSER-NEXT: return
+

@@ -106,6 +106,77 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
   }
 };
 
+struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
+  ReshapeMoveUpPattern(MLIRContext *context,
+                         const llvm::DenseSet<llvm::StringRef> &blocker,
+                         bool multiInput)
+      : HloMoveUpPattern<mhlo::ReshapeOp>(context, blocker, multiInput) {}
+
+  LogicalResult matchAndRewrite(mhlo::ReshapeOp op,
+                                PatternRewriter &rewriter) const override {
+    auto resultType = op.getResult().getType(); // T2 as Reshape: T1 -> T2
+    auto defOp = op.getOperand().getDefiningOp();
+
+    // early termination
+    // 1) op.getOperand() is an argument
+    // 2) op.getOperand() has another user
+    // 3) defOp is in the blockers
+    if (defOp == nullptr ||
+        UseCount(op.getOperand()) > 1 ||
+        blockers.contains(defOp->getName().getStringRef())) {
+      return failure();  
+    }
+
+    // See Line 28 comment
+    if (!isElementwiseOneResult(defOp)) return failure();
+
+    // isElementwiseOneResult(defOp) == true
+    SmallDenseSet<Value> constInputs;
+    SmallDenseSet<Value> nonConstInputs;
+    for (auto operand : defOp->getOperands()) {
+      if (IsSplatMhloConstantValue(operand)) {
+        if (!constInputs.contains(operand)) {
+          constInputs.insert(operand);
+        }
+      } else {
+        if (!nonConstInputs.contains(operand)) {
+          nonConstInputs.insert(operand);
+        }
+      }
+    }
+
+    // terminate if assumes single input but has multiple 
+    if (!multiInput && nonConstInputs.size() > 1) {
+      return failure();
+    }
+
+    BlockAndValueMapping bvm;
+    // create all const and put into bvm
+    for (auto input : constInputs) {
+      ElementsAttr oldConstAttr = input.getDefiningOp<mhlo::ConstOp>().value();
+      auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, resultType);
+      auto newConstOp =
+          rewriter.create<mhlo::ConstOp>(op->getLoc(), newConstAttr.getValue());
+      bvm.map(input, newConstOp.output());
+    }
+
+    // clone new Reshape for nonConstInputs
+    for (auto input : nonConstInputs) {
+      BlockAndValueMapping bvmReshape;
+      bvmReshape.map(op.getOperand(), input);
+      auto newReshape = rewriter.clone(*op, bvmReshape);
+      bvm.map(input, newReshape->getResult(0));
+    }
+
+    // clone a new elementwise as consumer
+    auto newConsumer =
+        cloneAndReplaceResultTypes(rewriter, defOp, bvm, op->getResultTypes());
+    rewriter.replaceOp(op, newConsumer->getResults());
+    
+    return success();
+  }
+};
+
 struct HloMoveUpPass : public HloMoveUpBase<HloMoveUpPass> {
 
   HloMoveUpPass(bool supportMultiInput) : HloMoveUpBase() { 
@@ -135,7 +206,7 @@ void mlir::populateHloMoveUpPattern(
   RewritePatternSet &patterns, 
   const llvm::DenseSet<StringRef> &blocker,
   bool multiInput) {
-  patterns.add<TransposeMoveUpPattern>(
+  patterns.add<TransposeMoveUpPattern, ReshapeMoveUpPattern>(
     patterns.getContext(), blocker, multiInput);
 }
 
