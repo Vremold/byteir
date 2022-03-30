@@ -16,7 +16,9 @@
 namespace mlir {
 
 constexpr StringRef getDataPlaceAttrName() { return "__byteir_data_place__"; }
-constexpr int64_t getUnplacedSpace() { return -1; }
+
+// TODO: change this to string, since memory space as int was soft-deprecated
+constexpr int64_t getUnplacedSpace() { return -1; } 
 
 std::unique_ptr<OperationPass<FuncOp>> createLinalgDataPlacePass(
   ArrayRef<int64_t> spaces = {});

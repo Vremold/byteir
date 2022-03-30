@@ -30,6 +30,21 @@ def LinalgDataPlace : Pass<"linalg-data-place", "mlir::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// LinalgPrefetch
+//===----------------------------------------------------------------------===//
+
+def LinalgPrefetch : Pass<"linalg-prefetch", "mlir::FuncOp"> {
+  let summary = "Prefetch Linalg's copies within loop";
+  let constructor = "mlir::createLinalgPrefetchPass()";
+  let options = [
+    Option<"prefetchCnt", "count", "int64_t", /*default=*/"1",
+           "prefetch count, <= 0 implies disabled">,
+    Option<"unroll", "unroll", "bool", /*default=*/"false",
+           "unroll prefetch">,	
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // LinalgScopeTiling
 //===----------------------------------------------------------------------===//
 

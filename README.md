@@ -17,6 +17,7 @@ An external dialect from https://github.com/tensorflow/mlir-hlo.
 
 ## Dependency 
 ***LLVM/MLIR***: https://code.byted.org/byteir/llvm-build
+
 ***Python*** (for python binding): minimum version is 3.6, requiring numpy and pybind11 installed.
 
 ## Build
