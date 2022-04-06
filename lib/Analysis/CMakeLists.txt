@@ -8,5 +8,7 @@ add_mlir_library(ByteIRAnalysis
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Analysis
 
   LINK_LIBS PUBLIC
+  MLIRAnalysis
+  MLIRBufferizationTransforms
   MLIRIR
 )

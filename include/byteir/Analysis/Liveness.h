@@ -70,6 +70,18 @@ public:
   /// blocks in which the given value is live).
   OperationListT resolveLiveness(Value value) const;
 
+  /// Gets the start operation for the given value. This is the first operation
+  /// the given value is considered to be live. This could either be the start
+  /// operation of the current block (in case the value is live-in) or the
+  /// operation that defines the given value (must be referenced in this block).
+  virtual Operation *getStartOperation(Value value,
+                                       const LivenessBlockInfo *lBI) const;
+
+  /// Gets the end operation for the given value using the start operation
+  /// provided (must be referenced in this block).
+  virtual Operation *getEndOperation(Value value, Operation *startOperation,
+                                     const LivenessBlockInfo *lBI) const;
+
   /// Gets liveness info (if any) for the block.
   const LivenessBlockInfo *getLiveness(Block *block) const;
 
@@ -123,16 +135,6 @@ public:
 
   /// Returns true if the given value is in the live-out set.
   bool isLiveOut(Value value) const;
-
-  /// Gets the start operation for the given value. This is the first operation
-  /// the given value is considered to be live. This could either be the start
-  /// operation of the current block (in case the value is live-in) or the
-  /// operation that defines the given value (must be referenced in this block).
-  virtual Operation *getStartOperation(Value value) const;
-
-  /// Gets the end operation for the given value using the start operation
-  /// provided (must be referenced in this block).
-  virtual Operation *getEndOperation(Value value, Operation *startOperation) const;
 
 private:
   /// The underlying block.

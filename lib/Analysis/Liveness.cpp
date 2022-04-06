@@ -202,8 +202,8 @@ Liveness::OperationListT Liveness::resolveLiveness(Value value) const {
     const LivenessBlockInfo *blockInfo = getLiveness(block);
 
     // Note that start and end will be in the same block.
-    Operation *start = blockInfo->getStartOperation(value);
-    Operation *end = blockInfo->getEndOperation(value, start);
+    Operation *start = getStartOperation(value, blockInfo);
+    Operation *end = getEndOperation(value, start, blockInfo);
 
     result.push_back(start);
     while (start != end) {
@@ -219,6 +219,39 @@ Liveness::OperationListT Liveness::resolveLiveness(Value value) const {
   }
 
   return result;
+}
+
+/// Gets the start operation for the given value (must be referenced in this
+/// block).
+Operation *Liveness::getStartOperation(Value value,
+                                       const LivenessBlockInfo *lBI) const {
+  Operation *definingOp = value.getDefiningOp();
+  // The given value is either live-in or is defined
+  // in the scope of this block.
+  if (lBI->isLiveIn(value) || !definingOp)
+    return &lBI->getBlock()->front();
+  return definingOp;
+}
+
+/// Gets the end operation for the given value using the start operation
+/// provided (must be referenced in this block).
+Operation *Liveness::getEndOperation(Value value, Operation *startOperation,
+                                     const LivenessBlockInfo *lBI) const {
+  // The given value is either dying in this block or live-out.
+  if (lBI->isLiveOut(value))
+    return &lBI->getBlock()->back();
+
+  // Resolve the last operation (must exist by definition).
+  Operation *endOperation = startOperation;
+  for (Operation *useOp : value.getUsers()) {
+    // Find the associated operation in the current block (if any).
+    useOp = lBI->getBlock()->findAncestorOpInBlock(*useOp);
+    // Check whether the use is in our block and after the current end
+    // operation.
+    if (useOp && endOperation->isBeforeInBlock(useOp))
+      endOperation = useOp;
+  }
+  return endOperation;
 }
 
 /// Gets liveness info (if any) for the block.
@@ -246,7 +279,7 @@ bool Liveness::isDeadAfter(Value value, Operation *operation) const {
   if (blockInfo->isLiveOut(value))
     return false;
 
-  Operation *endOperation = blockInfo->getEndOperation(value, operation);
+  Operation *endOperation = getEndOperation(value, operation, blockInfo);
   // If the operation is a real user of `value` the first check is sufficient.
   // If not, we will have to test whether the end operation is executed before
   // the given operation in the block.
@@ -345,36 +378,4 @@ bool LivenessBlockInfo::isLiveIn(Value value) const {
 /// Returns true if the given value is in the live-out set.
 bool LivenessBlockInfo::isLiveOut(Value value) const {
   return outValues.count(value);
-}
-
-/// Gets the start operation for the given value (must be referenced in this
-/// block).
-Operation *LivenessBlockInfo::getStartOperation(Value value) const {
-  Operation *definingOp = value.getDefiningOp();
-  // The given value is either live-in or is defined
-  // in the scope of this block.
-  if (isLiveIn(value) || !definingOp)
-    return &block->front();
-  return definingOp;
-}
-
-/// Gets the end operation for the given value using the start operation
-/// provided (must be referenced in this block).
-Operation *LivenessBlockInfo::getEndOperation(Value value,
-                                              Operation *startOperation) const {
-  // The given value is either dying in this block or live-out.
-  if (isLiveOut(value))
-    return &block->back();
-
-  // Resolve the last operation (must exist by definition).
-  Operation *endOperation = startOperation;
-  for (Operation *useOp : value.getUsers()) {
-    // Find the associated operation in the current block (if any).
-    useOp = block->findAncestorOpInBlock(*useOp);
-    // Check whether the use is in our block and after the current end
-    // operation.
-    if (useOp && endOperation->isBeforeInBlock(useOp))
-      endOperation = useOp;
-  }
-  return endOperation;
 }

@@ -6,9 +6,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Utils/MemUtils.h"
+#include "mlir/Dialect/Bufferization/IR/AllocationOpInterface.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
+
 
 
 
@@ -78,3 +80,39 @@ Optional<Value> mlir::createAlloc(OpBuilder& b, Value val, unsigned space) {
   return alloc.getResult();
 }
 
+// Get byte shift from the original allocation operation or function argument.
+// Note that `shift` is different from `offset`, since `shift` is used for
+// contiguous memory, while `offset` is used in multi-dimenstional situation.
+// Return None, if val is not of type MemRefType or it could not be determined.
+llvm::Optional<int64_t> mlir::getByteShiftFromAllocOrArgument(Value val) {
+  auto memRefType = val.getType().dyn_cast_or_null<MemRefType>();
+  if (!memRefType)
+    return None;
+  Operation *op = val.getDefiningOp();
+  if (!op || isa<memref::AllocOp>(op)) {
+    return 0;
+  } else if (auto viewOp = dyn_cast<memref::ViewOp>(op)) {
+    Value offsetVal = viewOp.byte_shift();
+    if (auto offsetOp = offsetVal.getDefiningOp<arith::ConstantOp>()) {
+      if (auto offsetLit =
+              offsetOp.getValue().dyn_cast_or_null<IntegerAttr>()) {
+        int64_t curOffset = offsetLit.getInt();
+        llvm::Optional<int64_t> subOffset =
+            getByteShiftFromAllocOrArgument(viewOp.source());
+        if (!subOffset.hasValue())
+          // the byte shift of viewOp's source is None
+          return None;
+        else
+          return curOffset + subOffset.getValue();
+      } else {
+        llvm_unreachable("view op's byte shift is arith.constant but not of Integer type.");
+      }
+    } else {
+      // the byte shift of view op is not arith.constant
+      return None;
+    }
+  } else if (auto subViewOp = dyn_cast<memref::SubViewOp>(op)) {
+    return getByteShiftFromAllocOrArgument(subViewOp.source());
+  }
+  return None;
+}
