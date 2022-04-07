@@ -1,4 +1,4 @@
-//===- MemUtils.cpp ----------------------------------------------------------===//
+//===- MemUtils.cpp -------------------------------------------------------===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -11,19 +11,14 @@
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 
-
-
-
 using namespace llvm;
 using namespace mlir;
 
-
-Attribute mlir::wrapIntegerMemorySpace(unsigned space, MLIRContext* ctx) {
+Attribute mlir::wrapIntegerMemorySpace(unsigned space, MLIRContext *ctx) {
   if (space == 0)
     return nullptr;
   return IntegerAttr::get(IntegerType::get(ctx, 64), space);
 }
-
 
 Optional<int64_t> mlir::getRank(Value val) {
   if (auto shapedType = val.getType().dyn_cast<ShapedType>()) {
@@ -32,14 +27,15 @@ Optional<int64_t> mlir::getRank(Value val) {
   return llvm::None;
 }
 
-Optional<Value> mlir::getDimSize(OpBuilder& b, Value val, unsigned idx) {
+Optional<Value> mlir::getDimSize(OpBuilder &b, Value val, unsigned idx) {
   if (auto shapedType = val.getType().dyn_cast<ShapedType>()) {
     auto loc = val.getLoc();
     if (shapedType.isDynamicDim(idx)) {
       auto dimOp = b.create<memref::DimOp>(loc, val, idx);
       return dimOp.getResult();
     } else {
-      auto cOp = b.create<arith::ConstantIndexOp>(loc, shapedType.getDimSize(idx));
+      auto cOp =
+          b.create<arith::ConstantIndexOp>(loc, shapedType.getDimSize(idx));
       return cOp.getResult();
     }
   }
@@ -48,9 +44,10 @@ Optional<Value> mlir::getDimSize(OpBuilder& b, Value val, unsigned idx) {
 
 // Create an alloc based on an existing Value 'val', with a given space.
 // Return None, if not applicable.
-Optional<Value> mlir::createAlloc(OpBuilder& b, Value val, unsigned space) {
+Optional<Value> mlir::createAlloc(OpBuilder &b, Value val, unsigned space) {
   // early termination if not a memref
-  if (!val.getType().isa<MemRefType>()) return llvm::None;
+  if (!val.getType().isa<MemRefType>())
+    return llvm::None;
 
   auto oldMemRefType = val.getType().cast<MemRefType>();
 
@@ -60,9 +57,8 @@ Optional<Value> mlir::createAlloc(OpBuilder& b, Value val, unsigned space) {
 
   auto shape = oldMemRefType.getShape();
 
-  auto newMemRefType =
-    MemRefType::get(shape,
-      oldMemRefType.getElementType(), nullptr/*layout*/, spaceAttr);
+  auto newMemRefType = MemRefType::get(shape, oldMemRefType.getElementType(),
+                                       nullptr /*layout*/, spaceAttr);
 
   for (unsigned idx = 0, n = shape.size(); idx < n; ++idx) {
     if (shape[idx] == ShapedType::kDynamicSize) {
@@ -105,7 +101,8 @@ llvm::Optional<int64_t> mlir::getByteShiftFromAllocOrArgument(Value val) {
         else
           return curOffset + subOffset.getValue();
       } else {
-        llvm_unreachable("view op's byte shift is arith.constant but not of Integer type.");
+        llvm_unreachable(
+            "view op's byte shift is arith.constant but not of Integer type.");
       }
     } else {
       // the byte shift of view op is not arith.constant
@@ -113,6 +110,50 @@ llvm::Optional<int64_t> mlir::getByteShiftFromAllocOrArgument(Value val) {
     }
   } else if (auto subViewOp = dyn_cast<memref::SubViewOp>(op)) {
     return getByteShiftFromAllocOrArgument(subViewOp.source());
+  }
+  return None;
+}
+
+bool mlir::isStatic(MemRefType t) {
+  ShapedType shape = t.dyn_cast_or_null<ShapedType>();
+  if (!shape)
+    return false;
+  if (!shape.hasStaticShape())
+    return false;
+  SmallVector<int64_t> strides;
+  int64_t offset;
+  if (failed(getStridesAndOffset(t, strides, offset)))
+    return false;
+  if (offset == ShapedType::kDynamicStrideOrOffset)
+    return false;
+  for (auto stride : strides) {
+    if (stride == ShapedType::kDynamicStrideOrOffset)
+      return false;
+  }
+  return true;
+}
+
+Optional<int64_t> mlir::getSizeInBits(MemRefType t) {
+  if (!isStatic(t))
+    return None;
+  SmallVector<int64_t> strides;
+  int64_t offset;
+  assert(succeeded(getStridesAndOffset(t, strides, offset)));
+  int64_t numElems = offset;
+  ArrayRef<int64_t> shapes = t.cast<ShapedType>().getShape();
+  for (auto strideAndShape : zip(strides, shapes)) {
+    int64_t stride = std::get<0>(strideAndShape);
+    int64_t shape = std::get<1>(strideAndShape);
+    numElems = std::max(numElems, offset + stride * shape);
+  }
+
+  auto elementType = t.getElementType();
+  if (elementType.isIntOrFloat())
+    return elementType.getIntOrFloatBitWidth() * numElems;
+
+  if (auto complexType = elementType.dyn_cast<ComplexType>()) {
+    elementType = complexType.getElementType();
+    return elementType.getIntOrFloatBitWidth() * numElems * 2;
   }
   return None;
 }

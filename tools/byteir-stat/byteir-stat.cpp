@@ -8,7 +8,7 @@
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Stat/Common/Reg.h"
-#include "byteir/Stat/OpCnt/OpCnt.h"
+#include "byteir/Stat/InitAllStats.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/MLIRContext.h"
@@ -33,7 +33,7 @@ static llvm::cl::opt<std::string>
 
 int main(int argc, char **argv) {
   InitLLVM y(argc, argv);
-  registerOpCntStatistics();
+  registerAllStatistics();
   cl::opt<const MLIRRegFunctionStat *, false, StatisticsParser> statRequested(
       "", cl::desc("Statistics to perform"), cl::Required);
   cl::ParseCommandLineOptions(argc, argv, "byteir statistics driver.\n");

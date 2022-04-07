@@ -9,6 +9,7 @@
 #define BYTEIR_UTILS_MEMUTILS_H
 
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
 #include "llvm/ADT/Optional.h"
 
@@ -32,6 +33,16 @@ llvm::Optional<Value> createAlloc(OpBuilder &b, Value val, unsigned space = 0);
 // contiguous memory, while `offset` is used in multi-dimenstional situation.
 // Return None, if val is not of type MemRefType or it could not be determined.
 llvm::Optional<int64_t> getByteShiftFromAllocOrArgument(Value val);
+
+// Returns the total amount of bits occupied by a value of MemRefType. This
+// takes into account of memory layout constraints. Returns None if the size
+// cannot be computed statically, e.g. if the type has a dynamic shape or if its
+// elemental type does not have a known bit width.
+llvm::Optional<int64_t> getSizeInBits(MemRefType t);
+
+// Returns whether a value of MemRefType is static. It requires the shape,
+// stride and offset are all static value.
+bool isStatic(MemRefType t);
 
 } // namespace mlir
 
