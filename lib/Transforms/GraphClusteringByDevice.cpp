@@ -188,13 +188,13 @@ void createCalls(MLIRContext *context,
 struct GraphClusteringByDevicePass
     : public GraphClusteringByDeviceBase<GraphClusteringByDevicePass> {
 
-  explicit GraphClusteringByDevicePass() = default;
-
-  explicit GraphClusteringByDevicePass(std::string attrName, std::string device)
+  explicit GraphClusteringByDevicePass(std::string attrName, std::string device,
+                                       bool dupNonSplat)
       : GraphClusteringByDeviceBase<
             GraphClusteringByDevicePass>::GraphClusteringByDeviceBase() {
     this->attrName = attrName;
     this->device = device;
+    this->dupNonSplat = dupNonSplat;
   }
 
   void runOnOperation() override;
@@ -206,19 +206,22 @@ void GraphClusteringByDevicePass::runOnOperation() {
   SmallVector<FuncOp, 4> originalFuncs;
   for (auto funcOp : moduleOp.getOps<FuncOp>()) {
     for (auto &block : funcOp.getBlocks()) {
-      ReplicateDefiningOp(&block, IsSplatMhloConstant);
+      if (dupNonSplat)
+        ReplicateDefiningOp(&block, IsMhloConstantLike);
+      else
+        ReplicateDefiningOp(&block, IsSplatMhloConstantLike);
     }
     originalFuncs.push_back(funcOp);
   }
   for (auto funcOp : originalFuncs) {
     Optional<SmallVector<FunctionMetadata>> metadatas =
-        getFunctionMetadatas(funcOp, this->attrName, this->device);
+        getFunctionMetadatas(funcOp, attrName, device);
     if (!metadatas) {
       signalPassFailure();
       return;
     }
 
-    createFunctions(moduleOp, *metadatas, this->attrName);
+    createFunctions(moduleOp, *metadatas, attrName);
     createCalls(context, *metadatas);
 
     // Erases the original operations which have been cloned in the partitioned
@@ -234,12 +237,8 @@ void GraphClusteringByDevicePass::runOnOperation() {
 } // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createGraphClusteringByDevicePass() {
-  return std::make_unique<GraphClusteringByDevicePass>();
-}
-
-std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createGraphClusteringByDevicePass(std::string attrName,
-                                        std::string device) {
-  return std::make_unique<GraphClusteringByDevicePass>(attrName, device);
+                                        std::string device, bool dupNonSplat) {
+  return std::make_unique<GraphClusteringByDevicePass>(attrName, device,
+                                                       dupNonSplat);
 }

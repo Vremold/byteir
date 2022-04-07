@@ -21,8 +21,14 @@ bool mlir::IsSplatMhloConstant(Operation *op) {
   return false;
 }
 
-bool mlir::IsMhloConstantLike(Operation *op) {
+bool mlir::IsSplatMhloConstantLike(Operation *op) {
   return IsSplatMhloConstant(op) || isa_and_nonnull<mhlo::IotaOp>(op);
+}
+
+bool mlir::IsMhloConstantLike(Operation *op) {
+  if (!op)
+    return false;
+  return isa<mhlo::ConstOp>(op) || isa<mhlo::IotaOp>(op);
 }
 
 bool mlir::IsSplatMhloConstantValue(Value val) {

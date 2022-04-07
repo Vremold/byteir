@@ -18,10 +18,10 @@ namespace mlir {
 // attribute to those operations that could only be run on host. Then this pass
 // will cluster the host ops and their recursive producers into a host function,
 // the other ops will be clustered into a device function.
-std::unique_ptr<OperationPass<ModuleOp>> createGraphClusteringByDevicePass();
-
 std::unique_ptr<OperationPass<ModuleOp>>
-createGraphClusteringByDevicePass(std::string attrName, std::string device);
+createGraphClusteringByDevicePass(std::string attrName = "device",
+                                  std::string device = "cuda",
+                                  bool dupNonSplat = false);
 
 } // namespace mlir
 

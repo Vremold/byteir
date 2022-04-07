@@ -25,6 +25,8 @@ bool IsSplatMhloConstant(Operation *op);
 
 // Return true if op is either a splat constant, or another constant-like op
 // like iota
+bool IsSplatMhloConstantLike(Operation *op);
+
 bool IsMhloConstantLike(Operation *op);
 
 bool IsSplatMhloConstantValue(Operation *op, int64_t splat_val);
