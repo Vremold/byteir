@@ -17,7 +17,7 @@
 
 namespace mlir {
 
-// 
+//
 // LWC NOTE This implementation DO NOT support inout,
 // meaning directly returning an input as an results
 // LWC NOTE Also DO NOT support duplicated results.
@@ -25,11 +25,10 @@ namespace mlir {
 void replicateFuncOpResults(mlir::FuncOp funcOp);
 
 void replicateFuncOpResults(mlir::FuncOp funcOp,
-                           std::function<void(mlir::ReturnOp)> retOpHandling);
+                            std::function<void(mlir::ReturnOp)> retOpHandling);
 
 void relocateFuncOpConstantLike(
-    mlir::FuncOp funcOp, 
-    std::function<bool(mlir::Operation*)> checkOp,
+    mlir::FuncOp funcOp, std::function<bool(mlir::Operation *)> checkOp,
     std::function<std::tuple<mlir::Value, NamedAttrList>(mlir::Operation *)>
         getValue);
 

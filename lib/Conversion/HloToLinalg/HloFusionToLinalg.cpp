@@ -27,50 +27,49 @@ using namespace mlir::mhlo;
 
 namespace {
 
-  // some code from mhlo's legalize_to_linalg
-  struct HloFusionToLinalgPass
+// some code from mhlo's legalize_to_linalg
+struct HloFusionToLinalgPass
     : public HloFusionToLinalgBase<HloFusionToLinalgPass> {
 
-    HloFusionToLinalgPass(StringRef tag)
-      : HloFusionToLinalgBase() {
-      anchorTag = tag.str();
-    }
+  HloFusionToLinalgPass(StringRef tag) : HloFusionToLinalgBase() {
+    anchorTag = tag.str();
+  }
 
-    void getDependentDialects(DialectRegistry& registry) const final {
-      registry.insert<linalg::LinalgDialect, scf::SCFDialect,
-        math::MathDialect, memref::MemRefDialect, shape::ShapeDialect>();
-    }
+  void getDependentDialects(DialectRegistry &registry) const final {
+    registry.insert<linalg::LinalgDialect, scf::SCFDialect, math::MathDialect,
+                    memref::MemRefDialect, shape::ShapeDialect>();
+  }
 
-    void runOnOperation() final {
-      FuncOp func = getOperation();
-      
-      bool valid = anchorTag.empty() ||
-        func->hasAttrOfType<UnitAttr>(anchorTag);
+  void runOnOperation() final {
+    FuncOp func = getOperation();
 
-      // early termination
-      if (!valid) return;
+    bool valid = anchorTag.empty() || func->hasAttrOfType<UnitAttr>(anchorTag);
 
-      MLIRContext& ctx = getContext();
-      OwningRewritePatternList patterns(&ctx);
-      ConversionTarget target(ctx);
-      target.addLegalDialect<arith::ArithmeticDialect, linalg::LinalgDialect,
+    // early termination
+    if (!valid)
+      return;
+
+    MLIRContext &ctx = getContext();
+    OwningRewritePatternList patterns(&ctx);
+    ConversionTarget target(ctx);
+    target.addLegalDialect<arith::ArithmeticDialect, linalg::LinalgDialect,
                            math::MathDialect, StandardOpsDialect,
                            tensor::TensorDialect, scf::SCFDialect,
                            shape::ShapeDialect>();
 
-      target.addLegalOp<UnrealizedConversionCastOp>();
+    target.addLegalOp<UnrealizedConversionCastOp>();
 
-      mhlo::RemoveSignTypeConverter type_converter;
-     
-      mhlo::populateHLOToLinalgConversionPattern(&ctx, type_converter, &patterns);
+    mhlo::RemoveSignTypeConverter type_converter;
 
-      if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
-        signalPassFailure();
-      }
+    mhlo::populateHLOToLinalgConversionPattern(&ctx, type_converter, &patterns);
+
+    if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
+      signalPassFailure();
     }
-  };
+  }
+};
 
-} // namespace anonymous
+} // namespace
 
 std::unique_ptr<OperationPass<FuncOp>>
 mlir::createHloFusionToLinalgPass(llvm::StringRef anchorTag) {

@@ -31,8 +31,8 @@ int64_t mlir::getLiteralFromConstantLike(Value v, int64_t defaultLit) {
   if (auto dimOp = dyn_cast_or_null<memref::DimOp>(v.getDefiningOp())) {
     if (auto maybeIndex = dimOp.getConstantIndex()) {
       if (maybeIndex.hasValue()) {
-        return dimOp.source().getType().dyn_cast<ShapedType>()
-                    .getDimSize(maybeIndex.getValue());
+        return dimOp.source().getType().dyn_cast<ShapedType>().getDimSize(
+            maybeIndex.getValue());
       }
     }
   }
@@ -48,7 +48,8 @@ mlir::getLiteralsFromConstantLikes(ArrayRef<Value> values, int64_t defaultLit) {
   return res;
 }
 
-SmallVector<int64_t, 4> mlir::createOneHot(unsigned size, unsigned offset, int64_t val) {
+SmallVector<int64_t, 4> mlir::createOneHot(unsigned size, unsigned offset,
+                                           int64_t val) {
   assert(offset < size && "offset should be smaller than size");
   SmallVector<int64_t, 4> res(size, 0);
   res[offset] = val;
@@ -90,11 +91,13 @@ bool mlir::isMinValueAttribute(Attribute value) {
   if (auto intValue = value.dyn_cast<IntegerAttr>())
     return intValue.getValue().isMinValue();
   if (auto fpValue = value.dyn_cast<FloatAttr>())
-    return fpValue.getValue().isInfinity() && fpValue.getValue().isNegative();  // -inf
+    return fpValue.getValue().isInfinity() &&
+           fpValue.getValue().isNegative(); // -inf
   if (auto splatValue = value.dyn_cast<SplatElementsAttr>())
     return isMinValueAttribute(splatValue.getSplatValue<Attribute>());
   if (auto elementsValue = value.dyn_cast<ElementsAttr>())
-    return llvm::all_of(elementsValue.getValues<Attribute>(), isMinValueAttribute);
+    return llvm::all_of(elementsValue.getValues<Attribute>(),
+                        isMinValueAttribute);
   if (auto arrayValue = value.dyn_cast<ArrayAttr>())
     return llvm::all_of(arrayValue.getValue(), isMinValueAttribute);
   return false;
@@ -107,7 +110,7 @@ bool mlir::isSplatValue(DenseIntElementsAttr attr, int64_t value) {
   if (!attr.isSplat()) {
     return false;
   }
-  int64_t start_val =attr.getSplatValue<IntegerAttr>().getInt();
+  int64_t start_val = attr.getSplatValue<IntegerAttr>().getInt();
   return start_val == value;
 }
 
@@ -272,14 +275,15 @@ mlir::GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
   return outputs;
 }
 
-bool mlir::IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> filters) {
-  SmallPtrSet<mlir::Operation*, 4> op_sets(filters.begin(), filters.end());
+bool mlir::IsMemrefTrivial(mlir::Value memref,
+                           llvm::ArrayRef<mlir::Operation *> filters) {
+  SmallPtrSet<mlir::Operation *, 4> op_sets(filters.begin(), filters.end());
 
   if (!memref.getDefiningOp<memref::AllocOp>()) {
     return false;
   }
 
-  for (Operation* user : memref.getUsers()) {
+  for (Operation *user : memref.getUsers()) {
     if (!op_sets.contains(user) || !isa<memref::DeallocOp>(user)) {
       return false;
     }
@@ -288,7 +292,7 @@ bool mlir::IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> 
 }
 
 int mlir::UserCount(Value val) {
-  SmallDenseSet<Operation*> count;
+  SmallDenseSet<Operation *> count;
   for (auto user : val.getUsers()) {
     if (!count.contains(user)) {
       count.insert(user);
@@ -296,4 +300,3 @@ int mlir::UserCount(Value val) {
   }
   return count.size();
 }
-

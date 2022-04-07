@@ -8,7 +8,7 @@
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include <iostream> 
+#include <iostream>
 
 using namespace llvm;
 using namespace mlir;
@@ -27,13 +27,14 @@ mlir::mhlo::EliminateSplatConstantTranspose(mhlo::TransposeOp op,
     return failure();
   }
 
-  auto maybe_new_attr = reshapeSplatElementsAttr(const_op.value(), op.getType());
-  if (!maybe_new_attr.hasValue()) return failure();
+  auto maybe_new_attr =
+      reshapeSplatElementsAttr(const_op.value(), op.getType());
+  if (!maybe_new_attr.hasValue())
+    return failure();
 
   rewriter.replaceOpWithNewOp<mhlo::ConstOp>(op, maybe_new_attr.getValue());
   return success();
 }
-
 
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
                                                 MLIRContext *ctx) {
@@ -46,12 +47,12 @@ void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
 
   // add op level  getCanonicalizationPatterns
   for (RegisteredOperationName op : ctx->getRegisteredOperations()) {
-    // only add mhlo-related 
+    // only add mhlo-related
     if (isa<MhloDialect>(op.getDialect())) {
       op.getCanonicalizationPatterns(results, ctx);
     }
   }
 
-  // add our extension 
+  // add our extension
   results.add(mlir::mhlo::EliminateSplatConstantTranspose);
 }

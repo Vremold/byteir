@@ -28,31 +28,26 @@ using namespace mlir;
 // some code from mlir's registerToCppTranslation
 void byteir::registerToCUDATranslation() {
   static llvm::cl::OptionCategory CudaCat("CUDA-Emitter",
-    "CUDA-Emitter options");
+                                          "CUDA-Emitter options");
 
   static llvm::cl::opt<bool> declareVariablesAtTop(
       "declare-var-at-top-cuda",
       llvm::cl::desc("Declare variables at top when emitting CUDA"),
-      llvm::cl::init(false),
-      llvm::cl::cat(CudaCat));
+      llvm::cl::init(false), llvm::cl::cat(CudaCat));
 
   static llvm::cl::opt<bool> forceExternC(
-    "force-extern-c",
-    llvm::cl::desc("Add Extern C in a kernel"),
-    llvm::cl::init(false),
-    llvm::cl::cat(CudaCat));
+      "force-extern-c", llvm::cl::desc("Add Extern C in a kernel"),
+      llvm::cl::init(false), llvm::cl::cat(CudaCat));
 
   static llvm::cl::opt<bool> kernelOnly(
-    "kernel-only",
-    llvm::cl::desc("Emit kernel only"),
-    llvm::cl::init(false),
-    llvm::cl::cat(CudaCat));
+      "kernel-only", llvm::cl::desc("Emit kernel only"), llvm::cl::init(false),
+      llvm::cl::cat(CudaCat));
 
   TranslateFromMLIRRegistration reg(
       "emit-cuda",
       [](ModuleOp module, raw_ostream &output) {
-        return byteir::translateToCUDA(
-            module, output, declareVariablesAtTop, kernelOnly, forceExternC);
+        return byteir::translateToCUDA(module, output, declareVariablesAtTop,
+                                       kernelOnly, forceExternC);
       },
       [](DialectRegistry &registry) {
         // clang-format off

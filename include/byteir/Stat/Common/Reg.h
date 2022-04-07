@@ -44,7 +44,6 @@ struct StatisticsParser : public llvm::cl::parser<const MLIRRegFunctionStat *> {
 
 struct MLIRStatRegistration {
 
-
   static llvm::cl::opt<std::string> fucnName;
 
   static llvm::cl::opt<bool> topOnly;

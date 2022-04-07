@@ -5,6 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "../PassDetail.h"
 #include "byteir/Conversion/AffineToGPU/AffineToGPU.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
@@ -18,10 +19,9 @@
 #include "mlir/Transforms/LoopUtils.h"
 #include "mlir/Transforms/Passes.h"
 #include "mlir/Transforms/RegionUtils.h"
-#include "llvm/ADT/Sequence.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/Sequence.h"
 #include "llvm/Support/Debug.h"
-#include "../PassDetail.h"
 
 #define DEBUG_TYPE "coadesced-for-to-gpu"
 
@@ -33,15 +33,13 @@ using namespace mlir::gpu;
 // Some code from SCFTOGPU
 namespace {
 
-static LogicalResult checkACoalescedffineLoopMappable(
-  AffineForOp forOp) {
-  Region& limit = forOp.region();
+static LogicalResult checkACoalescedffineLoopMappable(AffineForOp forOp) {
+  Region &limit = forOp.region();
 
   if (!areValuesDefinedAbove(forOp.getLowerBoundOperands(), limit) ||
-    !areValuesDefinedAbove(forOp.getUpperBoundOperands(), limit)) {
-    return forOp.emitError(
-      "loop with bounds depending on other mapped loops "
-      "are not supported");
+      !areValuesDefinedAbove(forOp.getUpperBoundOperands(), limit)) {
+    return forOp.emitError("loop with bounds depending on other mapped loops "
+                           "are not supported");
   }
   return success();
 }
@@ -61,28 +59,27 @@ struct CoalescedAffineLoopToGpuConverter {
   Value step;
 };
 
-static std::pair<Value, Value>
-CreateGridAndBlock(Value dim, int64_t blockSize) {
+static std::pair<Value, Value> CreateGridAndBlock(Value dim,
+                                                  int64_t blockSize) {
   auto loc = dim.getLoc();
   OpBuilder builder(dim.getContext());
   builder.setInsertionPointAfter(dim.getDefiningOp());
   Value constBlock = builder.create<ConstantIndexOp>(loc, blockSize);
   Value grid = builder.create<CeilDivSIOp>(loc, dim, constBlock);
-  return { grid, constBlock };
+  return {grid, constBlock};
 }
 
 // TODO move another file
-static Value 
-CreateLinearizedIndex(OpBuilder& builder, mlir::Location loc, Value bId, Value bSize, Value tId) {
+static Value CreateLinearizedIndex(OpBuilder &builder, mlir::Location loc,
+                                   Value bId, Value bSize, Value tId) {
   Value mul = builder.create<MulIOp>(loc, bId, bSize);
   Value ret = builder.create<AddIOp>(loc, mul, tId);
   return ret;
 }
 
 // Replace the for with a GPU launch operation.
-void CoalescedAffineLoopToGpuConverter::createLaunch(
-  AffineForOp forOp,
-  unsigned blockSize) {
+void CoalescedAffineLoopToGpuConverter::createLaunch(AffineForOp forOp,
+                                                     unsigned blockSize) {
   OpBuilder builder(forOp.getOperation());
   // Prepare the grid and block sizes for the launch operation.  If there is
   // no loop mapped to a specific dimension, use constant "1" as its size.
@@ -99,37 +96,36 @@ void CoalescedAffineLoopToGpuConverter::createLaunch(
   // Create a launch op and move the body region of the innermost loop to the
   // launch op.
   auto launchOp = builder.create<gpu::LaunchOp>(
-    forOp.getLoc(), gridSizeX, gridSizeY, gridSizeZ, blockSizeX,
-    blockSizeY, blockSizeZ);
+      forOp.getLoc(), gridSizeX, gridSizeY, gridSizeZ, blockSizeX, blockSizeY,
+      blockSizeZ);
 
-  // Remove the loop terminator (loops contain only a single block) 
-  Operation* terminator = forOp.getBody()->getTerminator();
+  // Remove the loop terminator (loops contain only a single block)
+  Operation *terminator = forOp.getBody()->getTerminator();
   terminator->erase();
 
   builder.setInsertionPointToStart(&launchOp.body().front());
   Value bIdx = launchOp.getBlockIds().x;
   Value id = CreateLinearizedIndex(builder, bIdx.getLoc(), bIdx,
-    launchOp.getBlockSize().x, launchOp.getThreadIds().x);
+                                   launchOp.getBlockSize().x,
+                                   launchOp.getThreadIds().x);
 
   auto idLoc = id.getDefiningOp()->getLoc();
   Value cond = builder.create<CmpIOp>(idLoc, CmpIPredicate::slt, id, dim);
   auto ifOp = builder.create<scf::IfOp>(idLoc, cond, false);
 
   // copy body
-  ifOp.getBody(0)->getOperations().splice(
-    ifOp.getBody(0)->begin(), 
-    forOp.getBody()->getOperations());
+  ifOp.getBody(0)->getOperations().splice(ifOp.getBody(0)->begin(),
+                                          forOp.getBody()->getOperations());
 
-  // Remap the loop iterators to use block/thread identifiers 
+  // Remap the loop iterators to use block/thread identifiers
   // with (gid * S) + LB.
   builder.setInsertionPointAfter(id.getDefiningOp());
   if (!isConstantIndex(step, 1)) {
     id = builder.create<MulIOp>(forOp.getLoc(), step, id);
   }
-  Value ivReplacement =
-    builder.create<AddIOp>(forOp.getLoc(), lb, id);
+  Value ivReplacement = builder.create<AddIOp>(forOp.getLoc(), lb, id);
   iv.replaceAllUsesWith(ivReplacement);
-  
+
   // Insert terminator
   builder.setInsertionPointToEnd(&launchOp.body().front());
   auto terminatorLoc = launchOp.body().front().back().getLoc();
@@ -149,7 +145,7 @@ bool CoalescedAffineLoopToGpuConverter::collectBound(AffineForOp forOp) {
   if (!lb || !upperBound) {
     return false;
   }
-  dim = builder.create<SubIOp>(loc, upperBound, lb); 
+  dim = builder.create<SubIOp>(loc, upperBound, lb);
   step = builder.create<ConstantIndexOp>(loc, forOp.getStep());
 
   if (!isConstantIndex(step, 1)) {
@@ -163,29 +159,30 @@ bool CoalescedAffineLoopToGpuConverter::collectBound(AffineForOp forOp) {
 
 // Generic loop to GPU kernel conversion function.
 static LogicalResult convertCoalescedAffineLoopToGPULaunch(AffineForOp forOp,
-  unsigned blockSize) {
+                                                           unsigned blockSize) {
   if (failed(checkACoalescedffineLoopMappable(forOp))) {
     return failure();
   }
 
   CoalescedAffineLoopToGpuConverter converter;
   auto found_bound = converter.collectBound(forOp);
-  if (!found_bound) return failure();
+  if (!found_bound)
+    return failure();
   converter.createLaunch(forOp, blockSize);
 
   return success();
 }
 
-struct CoalescedForToGPULaunchPass : public CoalescedForToGPULaunchBase<CoalescedForToGPULaunchPass> {
-  CoalescedForToGPULaunchPass(int64_t bSize)
-    : CoalescedForToGPULaunchBase() {
+struct CoalescedForToGPULaunchPass
+    : public CoalescedForToGPULaunchBase<CoalescedForToGPULaunchPass> {
+  CoalescedForToGPULaunchPass(int64_t bSize) : CoalescedForToGPULaunchBase() {
     blockSize = bSize;
   }
 
   void runOnOperation() final {
     FuncOp f = getOperation();
 
-    for (Operation& op : llvm::make_early_inc_range(f.getOps())) {
+    for (Operation &op : llvm::make_early_inc_range(f.getOps())) {
       if (auto forOp = dyn_cast<AffineForOp>(&op)) {
         if (failed(convertCoalescedAffineLoopToGPULaunch(forOp, blockSize))) {
           signalPassFailure();
@@ -195,7 +192,7 @@ struct CoalescedForToGPULaunchPass : public CoalescedForToGPULaunchBase<Coalesce
   }
 };
 
-} // namespace anonymous
+} // namespace
 
 std::unique_ptr<OperationPass<FuncOp>>
 mlir::createCoalescedForToGPULaunchPass(int64_t bSize) {

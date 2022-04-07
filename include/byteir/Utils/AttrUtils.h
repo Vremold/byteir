@@ -1,4 +1,5 @@
-//===- AttrUtils.h ---------------------------------------------*--- C++ -*-===//
+//===- AttrUtils.h ---------------------------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -16,12 +17,12 @@ class ElementsAttr;
 class ShapedType;
 
 /// Return a new ElementsAttr that has the same data as the current
-/// attribute, but has been reshaped to 'newShape'. 
-llvm::Optional<ElementsAttr> reshapeSplatElementsAttr(
-  ElementsAttr attr, llvm::ArrayRef<int64_t> newShape);
+/// attribute, but has been reshaped to 'newShape'.
+llvm::Optional<ElementsAttr>
+reshapeSplatElementsAttr(ElementsAttr attr, llvm::ArrayRef<int64_t> newShape);
 
-llvm::Optional<ElementsAttr> reshapeSplatElementsAttr(
-  ElementsAttr attr, ShapedType newShape);
+llvm::Optional<ElementsAttr> reshapeSplatElementsAttr(ElementsAttr attr,
+                                                      ShapedType newShape);
 
 } // namespace mlir
 

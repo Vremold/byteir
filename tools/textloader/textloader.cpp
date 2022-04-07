@@ -1,5 +1,4 @@
 
-#include <iostream>
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Dialect.h"
@@ -10,6 +9,7 @@
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/ToolOutputFile.h"
+#include <iostream>
 
 using namespace llvm;
 using namespace mlir;
@@ -32,7 +32,7 @@ static OwningModuleRef parseMLIRInput(StringRef inputFilename,
 }
 
 // a mlir module traverser example
-static void TraverseAllEntries(OwningModuleRef& m) {
+static void TraverseAllEntries(OwningModuleRef &m) {
   // iterate all entry function ops in this module.
   for (FuncOp entry : m->getOps<FuncOp>()) {
     if (!entry->hasAttr(ByreDialect::getEntryPointFunctionAttrName())) {
@@ -41,13 +41,12 @@ static void TraverseAllEntries(OwningModuleRef& m) {
     }
     entry.walk([&](byre::ComputeOp op) {
       std::cout << op.getCallee().str() << std::endl;
-      for(auto opArg : op.getOperands()) {
+      for (auto opArg : op.getOperands()) {
         // use pointer as unique id for value
         std::cout << opArg.getAsOpaquePointer() << std::endl;
       }
     });
   }
-
 }
 
 int main(int argc, char **argv) {
@@ -56,20 +55,19 @@ int main(int argc, char **argv) {
   // register ByteIR's dialects here
   registry.insert<mlir::byre::ByreDialect>();
 
-  if(argc < 2) {
+  if (argc < 2) {
     llvm::errs() << "need input file arg\n";
     return 1;
   }
-  
+
   MLIRContext context(registry);
   auto m = parseMLIRInput(argv[1], &context);
   if (!m) {
     llvm::errs() << "could not parse the input IR\n";
     return 1;
-  } 
+  }
 
   TraverseAllEntries(m);
 
   return 0;
-
 }

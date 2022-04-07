@@ -29,7 +29,7 @@ class Block;
 class Operation;
 class Region;
 class Value;
-}
+} // namespace mlir
 
 using namespace mlir;
 

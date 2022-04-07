@@ -9,9 +9,12 @@ jobs:
     name: byteir compiler CI
     runs-on:
       spec: m1.4xlarge
-    image: hub.byted.org/arnold/byteir_cuda:66dd1b5002df276db934215dfec20afb
+    image: hub.byted.org/arnold/byteir_cuda:main
     working-directory: byteir/byteir
     steps:
+      - name: Run clang format check
+        commands:
+          - bash .codebase/pipelines/clang_format_check.sh
       - id: cache
         uses: actions/cache
         inputs:
@@ -22,4 +25,4 @@ jobs:
               - llvm-commit-v0
       - name: Build and Test ByteIR Libs
         commands:
-          - bash .codebase/pipelines/ci.sh
+          - bash .codebase/pipelines/build_and_lit_test.sh

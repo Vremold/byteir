@@ -22,9 +22,8 @@
 .DS_store
 
 # Nested build directory
-build*
-*build*
-*Build*
+build/
+build.sh
 
 # Local Test
 local_test*

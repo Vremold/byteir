@@ -20,21 +20,21 @@ using namespace mlir::mhlo;
 
 namespace {
 
-template<typename OpTy>
+template <typename OpTy>
 struct SingleOpPattern : public OpRewritePattern<OpTy> {
   SingleOpPattern(MLIRContext *context,
                   const llvm::DenseMap<StringRef, StringRef> &lut)
       : OpRewritePattern<OpTy>(context), src_to_name_(lut) {}
 
   LogicalResult matchAndRewrite(OpTy op,
-    PatternRewriter& rewriter) const override {
+                                PatternRewriter &rewriter) const override {
 
     // avoid already fused
     if (op->template getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
 
-    MhloFusionPattern pattern; 
+    MhloFusionPattern pattern;
     pattern.push_back(op);
     auto fusion = createMhloFusionFromPattern(rewriter, pattern);
     // add attr
@@ -55,7 +55,6 @@ struct SingleOpPattern : public OpRewritePattern<OpTy> {
   }
 
   const llvm::DenseMap<StringRef, StringRef> &src_to_name_;
-
 };
 
 struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
@@ -72,7 +71,8 @@ struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
     OwningRewritePatternList patterns(funcOp.getContext());
     populateTrivialFusionPattern(patterns, mhloNameMap);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
-      funcOp.emitError("TrivialFusionPass applyPatternsAndFoldGreedily does not converge");
+      funcOp.emitError(
+          "TrivialFusionPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();
     }
   }
@@ -81,14 +81,13 @@ struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
 };
 } // namespace
 
-void mlir::populateTrivialFusionPattern(RewritePatternSet &patterns,
-                                        llvm::DenseMap<StringRef, StringRef>& lut) {
+void mlir::populateTrivialFusionPattern(
+    RewritePatternSet &patterns, llvm::DenseMap<StringRef, StringRef> &lut) {
   patterns.add<SingleOpPattern<mhlo::RngBitGeneratorOp>,
                SingleOpPattern<mhlo::RngNormalOp>,
                SingleOpPattern<mhlo::RngUniformOp>>(patterns.getContext(), lut);
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
-mlir::createTrivialFusionPass() {
+std::unique_ptr<OperationPass<FuncOp>> mlir::createTrivialFusionPass() {
   return std::make_unique<TrivialFusionPass>();
 }

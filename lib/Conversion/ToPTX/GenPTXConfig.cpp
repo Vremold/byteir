@@ -34,10 +34,9 @@ using namespace llvm;
 
 namespace {
 
-bool IsAliasOp(Operation& op) {
-  return isa<memref::CollapseShapeOp, 
-             memref::ExpandShapeOp,
-             memref::ReshapeOp>(op);
+bool IsAliasOp(Operation &op) {
+  return isa<memref::CollapseShapeOp, memref::ExpandShapeOp, memref::ReshapeOp>(
+      op);
 };
 
 // support static for now
@@ -48,30 +47,32 @@ static void AddFuncAttrs(FuncOp func) {
   if (func->hasAttr(getByteIRElementwiseFusionAttrName())) {
     mlir::OpBuilder opBuilder(func);
 
-    if (func.getOps<gpu::LaunchFuncOp>().empty()) return;
+    if (func.getOps<gpu::LaunchFuncOp>().empty())
+      return;
 
     gpu::LaunchFuncOp launchOp = *func.getOps<gpu::LaunchFuncOp>().begin();
 
     func->setAttr(getByrePrefix() + "kernel_name",
-      opBuilder.getStringAttr(launchOp.getKernelName().getValue()));
+                  opBuilder.getStringAttr(launchOp.getKernelName().getValue()));
 
     // Handle 1D only, since element-wise is only using 1D (linearized)
     auto grid = launchOp.getGridSizeOperandValues();
     int64_t gx = cast<ConstantIndexOp>(grid.x.getDefiningOp()).value();
     func->setAttr(getByrePrefix() + "GridSize.x",
-      opBuilder.getIntegerAttr(opBuilder.getIntegerType(32), gx));
+                  opBuilder.getIntegerAttr(opBuilder.getIntegerType(32), gx));
 
     auto block = launchOp.getBlockSizeOperandValues();
     int64_t bx = cast<ConstantIndexOp>(block.x.getDefiningOp()).value();
     func->setAttr(getByrePrefix() + "BlockSize.x",
-      opBuilder.getIntegerAttr(opBuilder.getIntegerType(32), bx));
+                  opBuilder.getIntegerAttr(opBuilder.getIntegerType(32), bx));
 
     func->setAttr(getByreComputeName(), opBuilder.getStringAttr("PTXOp"));
     func->setAttr(getByreForceComputeNameAttrName(), opBuilder.getUnitAttr());
 
-    // Handle arg mapping here 
+    // Handle arg mapping here
     // LWC: this is tentative when we are using GPU Kernel Outlining.
-    // TODO: drop this when we are arrange our arg placement in our own gpu codegen.
+    // TODO: drop this when we are arrange our arg placement in our own gpu
+    // codegen.
     SmallVector<Value> initial_copy;
     for (auto val : func.getArguments()) {
       initial_copy.push_back(val);
@@ -82,7 +83,7 @@ static void AddFuncAttrs(FuncOp func) {
       initial_copy.push_back(val);
     }
 
-    auto& func_block = func.getBody().front();
+    auto &func_block = func.getBody().front();
     AliasAnalysis memref_alias(&func_block, initial_copy, IsAliasOp);
     memref_alias.RunOnBlock();
 
@@ -104,11 +105,12 @@ static void AddFuncAttrs(FuncOp func) {
     SmallVector<int32_t> unused_alias;
     for (unsigned i = 0; i < initial_copy.size(); ++i) {
       // skip visisted
-      if (visited.contains(i)) continue;
+      if (visited.contains(i))
+        continue;
 
       auto val = initial_copy[i];
       int index = memref_alias.GetLeaderIndex(val);
-      
+
       unused_alias.push_back(i);
       unused_alias.push_back(index);
     }

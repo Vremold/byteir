@@ -11,7 +11,6 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Support/LogicalResult.h"
 
-
 namespace mlir {
 class MLIRContext;
 
@@ -24,14 +23,12 @@ class TransposeOp;
 ///
 ///  Transpose
 ///
-LogicalResult EliminateSplatConstantTranspose(
-    mhlo::TransposeOp op, PatternRewriter& rewriter);
-
+LogicalResult EliminateSplatConstantTranspose(mhlo::TransposeOp op,
+                                              PatternRewriter &rewriter);
 
 // Get all canoncializationExt on top of canoncialization
 void getCanonicalizationExtPatterns(RewritePatternSet &results,
                                     MLIRContext *context);
-
 
 } // namespace mhlo
 } // namespace mlir

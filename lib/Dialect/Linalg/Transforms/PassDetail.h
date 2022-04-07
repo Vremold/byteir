@@ -15,19 +15,19 @@ namespace mlir {
 class AffineDialect;
 
 namespace arith {
-  class ArithmeticDialect;
+class ArithmeticDialect;
 } // namespace arith
 
 namespace linalg {
-  class LinalgDialect;
+class LinalgDialect;
 } // namespace linalg
 
 namespace memref {
-  class MemRefDialect;
+class MemRefDialect;
 } // namespace memref
 
 namespace scf {
-  class SCFDialect;
+class SCFDialect;
 } // namespace scf
 
 #define GEN_PASS_CLASSES

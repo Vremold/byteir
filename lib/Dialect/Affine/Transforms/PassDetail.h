@@ -13,7 +13,7 @@
 // forward dialects for conversions
 namespace mlir {
 namespace memref {
-  class MemRefDialect;
+class MemRefDialect;
 } // namespace memref
 
 #define GEN_PASS_CLASSES

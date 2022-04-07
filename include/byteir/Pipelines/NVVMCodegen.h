@@ -13,8 +13,7 @@
 
 namespace mlir {
 
-std::unique_ptr<OperationPass<ModuleOp>>
-createNVVMCodegenPipelinePass();
+std::unique_ptr<OperationPass<ModuleOp>> createNVVMCodegenPipelinePass();
 
 } // namespace mlir
 

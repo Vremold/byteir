@@ -17,7 +17,8 @@ namespace mlir {
 std::unique_ptr<OperationPass<FuncOp>> createGenPTXConfigPass();
 
 // TODO move to general GPU
-std::unique_ptr<OperationPass<ModuleOp>> createCollectGPUKernelPass(const std::string& name = "unified");
+std::unique_ptr<OperationPass<ModuleOp>>
+createCollectGPUKernelPass(const std::string &name = "unified");
 
 } // namespace mlir
 

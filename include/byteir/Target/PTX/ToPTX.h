@@ -18,12 +18,14 @@
 
 namespace mlir {
 
-  void registerToPTXTranslation();
+void registerToPTXTranslation();
 
-  LogicalResult translateToPTX(Operation* op, raw_ostream& os,
-    const std::string& prefix = "out",
-    OptLevel level = OptLevel::O3, const std::string& gpuArch = "sm_70",
-    bool dumpPtx = false, bool saveTemp = false, bool verbose = false);
+LogicalResult translateToPTX(Operation *op, raw_ostream &os,
+                             const std::string &prefix = "out",
+                             OptLevel level = OptLevel::O3,
+                             const std::string &gpuArch = "sm_70",
+                             bool dumpPtx = false, bool saveTemp = false,
+                             bool verbose = false);
 
 } // namespace mlir
 

@@ -6,19 +6,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Target/PTX/ToPTX.h"
 #include "byteir/Target/Common/Common.h"
+#include "byteir/Target/PTX/Passes.h"
+#include "byteir/Target/PTX/ToPTX.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Dialect.h"
-#include "byteir/Target/PTX/Passes.h"
-#include "mlir/Translation.h"
-#include "llvm/Support/CommandLine.h"
 #include "mlir/InitAllDialects.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/NVVM/NVVMToLLVMIRTranslation.h"
+#include "mlir/Translation.h"
+#include "llvm/Support/CommandLine.h"
 
 using namespace mlir;
 
@@ -30,51 +30,50 @@ namespace mlir {
 
 void registerToPTXTranslation() {
   // TODO move to another file after CUDA emitter is created
-  static llvm::cl::OptionCategory PTXCodeGenCat("CUDA-PTX Codegen", 
-    "CUDA-PTX code generation options");
+  static llvm::cl::OptionCategory PTXCodeGenCat(
+      "CUDA-PTX Codegen", "CUDA-PTX code generation options");
 
-  static llvm::cl::opt<std::string> outPrefix("o-ptx",
-    llvm::cl::desc("output preifx"),
-    llvm::cl::init("out"),
-    llvm::cl::cat(PTXCodeGenCat));
+  static llvm::cl::opt<std::string> outPrefix(
+      "o-ptx", llvm::cl::desc("output preifx"), llvm::cl::init("out"),
+      llvm::cl::cat(PTXCodeGenCat));
 
-  static llvm::cl::opt<bool> verbose("verbose-ptx",
-    llvm::cl::desc("Print out verbose messages"),
-    llvm::cl::init(false), llvm::cl::cat(PTXCodeGenCat));
+  static llvm::cl::opt<bool> verbose(
+      "verbose-ptx", llvm::cl::desc("Print out verbose messages"),
+      llvm::cl::init(false), llvm::cl::cat(PTXCodeGenCat));
 
-  static llvm::cl::opt<bool> saveTemps("save-temps-ptx",
-    llvm::cl::desc("Save intermediate files generated during codegen "
-                   "to the current dir"),
-    llvm::cl::init(false), llvm::cl::cat(PTXCodeGenCat));
+  static llvm::cl::opt<bool> saveTemps(
+      "save-temps-ptx",
+      llvm::cl::desc("Save intermediate files generated during codegen "
+                     "to the current dir"),
+      llvm::cl::init(false), llvm::cl::cat(PTXCodeGenCat));
 
-  static llvm::cl::opt<bool> dumpPtx("dump-ptx",
-    llvm::cl::desc("Dump ptx to stdout"),
-    llvm::cl::init(false), llvm::cl::cat(PTXCodeGenCat));
+  static llvm::cl::opt<bool> dumpPtx(
+      "dump-ptx", llvm::cl::desc("Dump ptx to stdout"), llvm::cl::init(false),
+      llvm::cl::cat(PTXCodeGenCat));
 
-  static llvm::cl::opt<std::string> gpuArch("gpu-arch-ptx",
-    llvm::cl::desc("Target gpu architecture"),
-    llvm::cl::init("sm_70"),
-    llvm::cl::cat(PTXCodeGenCat));
+  static llvm::cl::opt<std::string> gpuArch(
+      "gpu-arch-ptx", llvm::cl::desc("Target gpu architecture"),
+      llvm::cl::init("sm_70"), llvm::cl::cat(PTXCodeGenCat));
 
-  static llvm::cl::opt<OptLevel> codeGenOpt("codegen-opt-ptx",
-    llvm::cl::desc("codegen optimization level"),
-    llvm::cl::values(clEnumValN(O0, "O0", "Optimization level 0"),
-                     clEnumVal(O1, "Optimization level 1"),
-                     clEnumVal(O2, "Optimization level 2"),
-                     clEnumVal(O3, "Optimization level 3")),
-    llvm::cl::init(O3), llvm::cl::cat(PTXCodeGenCat));
+  static llvm::cl::opt<OptLevel> codeGenOpt(
+      "codegen-opt-ptx", llvm::cl::desc("codegen optimization level"),
+      llvm::cl::values(clEnumValN(O0, "O0", "Optimization level 0"),
+                       clEnumVal(O1, "Optimization level 1"),
+                       clEnumVal(O2, "Optimization level 2"),
+                       clEnumVal(O3, "Optimization level 3")),
+      llvm::cl::init(O3), llvm::cl::cat(PTXCodeGenCat));
 
-  TranslateFromMLIRRegistration reg(
-      "gen-ptx",
-      [](ModuleOp module, raw_ostream &output) {
-        return mlir::translateToPTX(
-            module, output, outPrefix, codeGenOpt, gpuArch, dumpPtx, saveTemps,verbose);
-      },
-      [](DialectRegistry &registry) {
-        registerAllDialects(registry);
-        registerLLVMDialectTranslation(registry);
-        registerNVVMDialectTranslation(registry);
-      });
+  TranslateFromMLIRRegistration reg("gen-ptx",
+                                    [](ModuleOp module, raw_ostream &output) {
+                                      return mlir::translateToPTX(
+                                          module, output, outPrefix, codeGenOpt,
+                                          gpuArch, dumpPtx, saveTemps, verbose);
+                                    },
+                                    [](DialectRegistry &registry) {
+                                      registerAllDialects(registry);
+                                      registerLLVMDialectTranslation(registry);
+                                      registerNVVMDialectTranslation(registry);
+                                    });
 }
 
 } // namespace mlir

@@ -23,8 +23,9 @@ void registerOpCntStatistics();
 // If funcName is empty, all funcOps will be stat.
 // When topOnly == true, only stat ops in a funcOps.
 // If topOnly == false, stats will happen recursively
-mlir::LogicalResult opCntStatistics(
-  mlir::ModuleOp op, llvm::raw_ostream &os, const std::string& funcNmae = "", bool topOnly = false);
+mlir::LogicalResult opCntStatistics(mlir::ModuleOp op, llvm::raw_ostream &os,
+                                    const std::string &funcNmae = "",
+                                    bool topOnly = false);
 
 } // namespace byteir
 

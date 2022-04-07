@@ -6,10 +6,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/LoopUnroll.h"
-#include "byteir/Utils/LoopUtils.h"
 #include "./PassDetail.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "byteir/Utils/LoopUtils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/Transforms/LoopUtils.h"
 
@@ -20,19 +20,19 @@ using namespace mlir::memref;
 namespace {
 
 // some code is from Mlir's TestLoopUnrolling
-static unsigned getNestingDepth(Operation* op) {
-  Operation* currOp = op;
+static unsigned getNestingDepth(Operation *op) {
+  Operation *currOp = op;
   unsigned depth = 0;
   while ((currOp = currOp->getParentOp())) {
-    if (isa<LoopLikeOpInterface>(currOp)) depth++;
+    if (isa<LoopLikeOpInterface>(currOp))
+      depth++;
   }
   return depth;
 }
 
-void collectCandidateLoops(
-  FuncOp func,
-  SmallVectorImpl<LoopLikeOpInterface>& loops,
-  int depth) {
+void collectCandidateLoops(FuncOp func,
+                           SmallVectorImpl<LoopLikeOpInterface> &loops,
+                           int depth) {
 
   auto ctx = func.getContext();
   // collect depth
@@ -55,15 +55,11 @@ void collectCandidateLoops(
       loop->removeAttr(getByteIRUnorllAttrName());
     }
   });
-
 }
 
-void unrollLoop(
-  LoopLikeOpInterface loop, 
-  unsigned unrollFactor, 
-  bool unrollUpToFactor, 
-  bool unrollFull) {
-  if (auto* forOp = dyn_cast<scf::ForOp>(&loop)) {
+void unrollLoop(LoopLikeOpInterface loop, unsigned unrollFactor,
+                bool unrollUpToFactor, bool unrollFull) {
+  if (auto *forOp = dyn_cast<scf::ForOp>(&loop)) {
     if (unrollUpToFactor) {
       (void)loopUnrollUpToFactor(*forOp, unrollFactor);
     } else if (unrollFull) {
@@ -71,7 +67,7 @@ void unrollLoop(
     } else {
       (void)loopUnrollByFactor(*forOp, unrollFactor);
     }
-  } else if (auto* forOp = dyn_cast<AffineForOp>(&loop)) {
+  } else if (auto *forOp = dyn_cast<AffineForOp>(&loop)) {
     if (unrollUpToFactor) {
       (void)loopUnrollUpToFactor(*forOp, unrollFactor);
     } else if (unrollFull) {
@@ -83,8 +79,8 @@ void unrollLoop(
 }
 
 struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
-  LoopUnrollPass(unsigned factor, bool upTo, bool full, int depth) 
-    : LoopUnrollBase() {
+  LoopUnrollPass(unsigned factor, bool upTo, bool full, int depth)
+      : LoopUnrollBase() {
     this->unrollFactor = factor;
     this->unrollUpToFactor = upTo;
     this->unrollFull = full;
@@ -92,7 +88,8 @@ struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
   }
 
   void runOnOperation() override {
-    if (unrollFactor < 2) return;
+    if (unrollFactor < 2)
+      return;
 
     FuncOp func = getOperation();
     SmallVector<LoopLikeOpInterface, 4> loops;
@@ -102,12 +99,12 @@ struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
     for (auto loop : loops) {
       unrollLoop(loop, unrollFactor, unrollUpToFactor, unrollFull);
     }
-
   }
 };
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> 
-mlir::createByteIRLoopUnrollPass(unsigned factor, bool upTo, bool full, int depth) {
-  return  std::make_unique<LoopUnrollPass>(factor, upTo, full, depth);
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createByteIRLoopUnrollPass(unsigned factor, bool upTo, bool full,
+                                 int depth) {
+  return std::make_unique<LoopUnrollPass>(factor, upTo, full, depth);
 }

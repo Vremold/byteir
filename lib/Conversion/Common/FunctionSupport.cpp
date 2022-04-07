@@ -70,7 +70,7 @@ insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
 } // namespace function_interface_impl
 } // namespace mlir
 
-// 
+//
 // LWC NOTE This implementation DO NOT support inout,
 // meaning directly returning an input as an results
 // LWC NOTE Also DO NOT support duplicated results.
@@ -112,7 +112,7 @@ static inline void replicateFuncOpResultSigature(mlir::FuncOp funcOp) {
   //  oldFuncType.getResults(), {},
   //  {});
 }
-} // annoymous
+} // namespace
 
 void mlir::replicateFuncOpResults(mlir::FuncOp funcOp) {
   unsigned idx = funcOp.getNumArguments();
@@ -123,9 +123,10 @@ void mlir::replicateFuncOpResults(mlir::FuncOp funcOp) {
     return;
   }
 
-  mlir::ReturnOp retOp = cast<mlir::ReturnOp>(funcOp.getBody().front().getTerminator());
+  mlir::ReturnOp retOp =
+      cast<mlir::ReturnOp>(funcOp.getBody().front().getTerminator());
 
-  llvm::SmallPtrSet<mlir::Operation*, 16> retAllocs;
+  llvm::SmallPtrSet<mlir::Operation *, 16> retAllocs;
 
   for (auto retVal : retOp.getOperands()) {
     retVal.replaceAllUsesExcept(funcOp.getArgument(idx++), retOp);
@@ -152,13 +153,13 @@ void mlir::replicateFuncOpResults(
     return;
   }
 
-  mlir::ReturnOp retOp = cast<mlir::ReturnOp>(funcOp.getBody().front().getTerminator());
+  mlir::ReturnOp retOp =
+      cast<mlir::ReturnOp>(funcOp.getBody().front().getTerminator());
   retOpHandling(retOp);
 }
 
 void mlir::relocateFuncOpConstantLike(
-    mlir::FuncOp funcOp, 
-    std::function<bool(mlir::Operation*)> checkOp, 
+    mlir::FuncOp funcOp, std::function<bool(mlir::Operation *)> checkOp,
     std::function<std::tuple<mlir::Value, NamedAttrList>(mlir::Operation *)>
         getValue) {
   // skip empty func
@@ -173,18 +174,18 @@ void mlir::relocateFuncOpConstantLike(
   llvm::SmallVector<unsigned, 16> relocatedIndices;
 
   // might use DenseSet instread if constant is too many
-  //llvm::SmallPtrSet<mlir::Operation*, 16> consantLikes;
+  // llvm::SmallPtrSet<mlir::Operation*, 16> consantLikes;
   llvm::SmallPtrSet<mlir::Value, 16> consantLikeValues;
-  llvm::SmallVector<mlir::Operation*, 16> constantLikeOps;
+  llvm::SmallVector<mlir::Operation *, 16> constantLikeOps;
   llvm::SmallVector<DictionaryAttr, 16> correspondingArgAttrs;
 
   // collect all constantLikes
   unsigned offset = 0;
-  funcOp.walk([&](mlir::Operation* op) {
+  funcOp.walk([&](mlir::Operation *op) {
     if (checkOp(op)) {
       auto t = getValue(op);
-      mlir::Value& val =  std::get<0>(t);
-      NamedAttrList& attrList = std::get<1>(t);
+      mlir::Value &val = std::get<0>(t);
+      NamedAttrList &attrList = std::get<1>(t);
       consantLikeValues.insert(val);
       constantLikeOps.push_back(op);
       relocatedIndices.push_back(offset);
@@ -192,7 +193,7 @@ void mlir::relocateFuncOpConstantLike(
       correspondingArgAttrs.push_back(attrList.getDictionary(op->getContext()));
       offset++;
     }
-    });
+  });
 
   // if no weight
   if (offset == 0) {
@@ -200,11 +201,13 @@ void mlir::relocateFuncOpConstantLike(
   }
 
   llvm::SmallVector<Type, 16> newInputTypes = relocatedTypes; // copy
-  newInputTypes.append(oldFuncType.getInputs().begin(), oldFuncType.getInputs().end());
+  newInputTypes.append(oldFuncType.getInputs().begin(),
+                       oldFuncType.getInputs().end());
 
   mlir::OpBuilder opBuilder(funcOp);
 
-  mlir::FunctionType newFuncType = opBuilder.getFunctionType(newInputTypes, {}/*results*/);
+  mlir::FunctionType newFuncType =
+      opBuilder.getFunctionType(newInputTypes, {} /*results*/);
 
   mlir::function_interface_impl::insertFunctionArgumentsEx(
       funcOp, relocatedIndices, relocatedTypes, correspondingArgAttrs, {},
@@ -213,7 +216,7 @@ void mlir::relocateFuncOpConstantLike(
   unsigned idx = 0;
   for (auto val : consantLikeValues) {
     val.replaceAllUsesWith(funcOp.getArgument(relocatedIndices[idx]));
-    Operation* op = constantLikeOps[idx++];
+    Operation *op = constantLikeOps[idx++];
     if (val.getDefiningOp() != nullptr) {
       if (op != val.getDefiningOp()) {
         op->erase();

@@ -1,4 +1,5 @@
-//===- ByreOpt.cpp ---------------------------------------------*--- C++ -*-===//
+//===- ByreOpt.cpp ---------------------------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -20,9 +21,9 @@ using namespace mlir::byre;
 
 namespace {
 
-  struct ByreOptPipelinePass : public ByreOptPipelineBase<ByreOptPipelinePass> {
-  ByreOptPipelinePass(const std::string& entry, bool appendTypes)
-    : ByreOptPipelineBase() {
+struct ByreOptPipelinePass : public ByreOptPipelineBase<ByreOptPipelinePass> {
+  ByreOptPipelinePass(const std::string &entry, bool appendTypes)
+      : ByreOptPipelineBase() {
     // TODO use target to decide passes
     this->entryFunc = entry;
     this->appendArgTypes = appendTypes;
@@ -33,8 +34,8 @@ namespace {
     OpPassManager pm(m.getOperationName());
 
     pm.addPass(createFuncTagPass(
-      getAttrPlaceholderName(ByreDialect::getEntryPointFunctionAttrName()), 
-      entryFunc));
+        getAttrPlaceholderName(ByreDialect::getEntryPointFunctionAttrName()),
+        entryFunc));
 
     pm.addPass(createConvertToByrePass(appendArgTypes));
     pm.addNestedPass<FuncOp>(createByreFoldPass());
@@ -44,14 +45,11 @@ namespace {
       signalPassFailure();
     }
   }
-
 };
-
 
 } // namespace
 
-
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createByreOptPipelinePass(const std::string& entry, bool appendTypes) {
+mlir::createByreOptPipelinePass(const std::string &entry, bool appendTypes) {
   return std::make_unique<ByreOptPipelinePass>(entry, appendTypes);
 }

@@ -12,11 +12,9 @@
 #include <memory>
 #include <string>
 
-
 namespace mlir {
 
-std::unique_ptr<OperationPass<ModuleOp>>
-createAffineOptPipelinePass();
+std::unique_ptr<OperationPass<ModuleOp>> createAffineOptPipelinePass();
 
 } // namespace mlir
 

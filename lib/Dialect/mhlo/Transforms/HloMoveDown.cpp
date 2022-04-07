@@ -5,21 +5,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
-#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
-#include "byteir/Dialect/mhlo/Transforms/MoveCommon.h"
-#include "byteir/Dialect/mhlo/Util/Util.h"
-#include "byteir/Utils/IRRewrite.h"
-#include "byteir/Utils/Utils.h"
-#include "byteir/Utils/AttrUtils.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
+#include "byteir/Dialect/mhlo/Transforms/MoveCommon.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
+#include "byteir/Utils/AttrUtils.h"
+#include "byteir/Utils/IRRewrite.h"
+#include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-#include "mlir/IR/BlockAndValueMapping.h"
 #include "llvm/ADT/DenseSet.h"
-#include <iostream> 
+#include <iostream>
 
 using namespace llvm;
 using namespace mlir;
@@ -27,10 +27,9 @@ using namespace mlir::mhlo;
 
 namespace {
 
-// For now, we support single result, Elementwise, 
+// For now, we support single result, Elementwise,
 // SameOperandsAndResultShape (avoid implicit broadcast)
-inline
-bool isElementwiseOneResult(Operation* op) {
+inline bool isElementwiseOneResult(Operation *op) {
   return op->hasTrait<::mlir::OpTrait::Elementwise>() &&
          op->hasTrait<::mlir::OpTrait::SameOperandsAndResultShape>() &&
          op->hasTrait<::mlir::OpTrait::OneResult>();
@@ -39,10 +38,9 @@ bool isElementwiseOneResult(Operation* op) {
 struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
   TransposeMoveDownPattern(MLIRContext *context,
                            const llvm::DenseSet<llvm::StringRef> &blocker,
-                           bool allMultiUser = false,
-                           bool multiUser = false)
-      : HloMoveDownPattern<mhlo::TransposeOp>(context, blocker,
-                                              allMultiUser, multiUser) {}
+                           bool allMultiUser = false, bool multiUser = false)
+      : HloMoveDownPattern<mhlo::TransposeOp>(context, blocker, allMultiUser,
+                                              multiUser) {}
 
   LogicalResult matchAndRewrite(mhlo::TransposeOp op,
                                 PatternRewriter &rewriter) const override {
@@ -54,10 +52,11 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       return failure();
     }
 
-    SmallDenseSet<Operation*> users;
+    SmallDenseSet<Operation *> users;
     for (auto user : value.getUsers()) {
       // skip checked user
-      if (users.contains(user)) continue;
+      if (users.contains(user))
+        continue;
 
       // skip if a user is
       // 1) a terminator or
@@ -65,33 +64,37 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       if (user->hasTrait<::mlir::OpTrait::IsTerminator>() ||
           blockers.contains(user->getName().getStringRef())) {
         // if requiring allMultiUser legal, one skip implies failure
-        if (allMultiUser) return failure();
+        if (allMultiUser)
+          return failure();
         continue;
       }
-      
+
       // just check ElementwiseOneResult
       // See Line 29 comment
       if (!isElementwiseOneResult(user)) {
-        if (allMultiUser) return failure();
+        if (allMultiUser)
+          return failure();
         continue;
       }
 
       // isElementwiseOneResult(user) == true
       bool failed = false;
       for (auto operand : user->getOperands()) {
-        if (operand != value &&  
-            !IsSplatMhloConstantValue(operand)) {
-          if (allMultiUser) return failure();
+        if (operand != value && !IsSplatMhloConstantValue(operand)) {
+          if (allMultiUser)
+            return failure();
           failed = true;
           break;
         }
       }
-      if (failed) continue;
+      if (failed)
+        continue;
       users.insert(user);
     }
 
     // terminate if no legal users
-    if (users.size() == 0) return failure();
+    if (users.size() == 0)
+      return failure();
 
     // process user
     for (auto user : users) {
@@ -121,10 +124,9 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
         bvm.map(input, newConstOp.output());
       }
 
-      // clone an elementwise op as producer 
-      auto newProducer = 
-        cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                   op->getOperandTypes());
+      // clone an elementwise op as producer
+      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
+                                                    op->getOperandTypes());
 
       // create transpose op
       auto trans = rewriter.replaceOpWithNewOp<mhlo::TransposeOp>(
@@ -135,14 +137,12 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
   }
 };
 
-
 struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
   ReshapeMoveDownPattern(MLIRContext *context,
-                           const llvm::DenseSet<llvm::StringRef> &blocker,
-                           bool allMultiUser = false,
-                           bool multiUser = false)
-      : HloMoveDownPattern<mhlo::ReshapeOp>(context, blocker,
-                                              allMultiUser, multiUser) {}
+                         const llvm::DenseSet<llvm::StringRef> &blocker,
+                         bool allMultiUser = false, bool multiUser = false)
+      : HloMoveDownPattern<mhlo::ReshapeOp>(context, blocker, allMultiUser,
+                                            multiUser) {}
 
   LogicalResult matchAndRewrite(mhlo::ReshapeOp op,
                                 PatternRewriter &rewriter) const override {
@@ -154,10 +154,11 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       return failure();
     }
 
-    SmallDenseSet<Operation*> users;
+    SmallDenseSet<Operation *> users;
     for (auto user : value.getUsers()) {
       // skip checked user
-      if (users.contains(user)) continue;
+      if (users.contains(user))
+        continue;
 
       // skip if a user is
       // 1) a terminator or
@@ -165,33 +166,37 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       if (user->hasTrait<::mlir::OpTrait::IsTerminator>() ||
           blockers.contains(user->getName().getStringRef())) {
         // if requiring allMultiUser legal, one skip implies failure
-        if (allMultiUser) return failure();
+        if (allMultiUser)
+          return failure();
         continue;
       }
-      
+
       // just check ElementwiseOneResult
       // See Line 29 comment
       if (!isElementwiseOneResult(user)) {
-        if (allMultiUser) return failure();
+        if (allMultiUser)
+          return failure();
         continue;
       }
 
       // isElementwiseOneResult(user) == true
       bool failed = false;
       for (auto operand : user->getOperands()) {
-        if (operand != value &&  
-            !IsSplatMhloConstantValue(operand)) {
-          if (allMultiUser) return failure();
+        if (operand != value && !IsSplatMhloConstantValue(operand)) {
+          if (allMultiUser)
+            return failure();
           failed = true;
           break;
         }
       }
-      if (failed) continue;
+      if (failed)
+        continue;
       users.insert(user);
     }
 
     // terminate if no legal users
-    if (users.size() == 0) return failure();
+    if (users.size() == 0)
+      return failure();
 
     // process user
     for (auto user : users) {
@@ -221,10 +226,9 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         bvm.map(input, newConstOp.output());
       }
 
-      // clone an elementwise op as producer 
-      auto newProducer = 
-        cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                   op->getOperandTypes());
+      // clone an elementwise op as producer
+      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
+                                                    op->getOperandTypes());
 
       // create reshape op
       auto reshape = rewriter.replaceOpWithNewOp<mhlo::ReshapeOp>(
@@ -234,8 +238,6 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
     return success();
   }
 };
-
-
 
 struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
 
@@ -256,21 +258,19 @@ struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
     mhlo::getCanonicalizationExtPatterns(patterns, patterns.getContext());
 
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
-      funcOp.emitError("HloMoveDownPass applyPatternsAndFoldGreedily does not converge");
+      funcOp.emitError(
+          "HloMoveDownPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();
     }
   }
-
 };
 } // namespace
 
-void mlir::populateHloMoveDownPattern(
-  RewritePatternSet &patterns, 
-  const llvm::DenseSet<StringRef> &blocker,
-  bool allMultiUser,
-  bool multiUser) {
-  patterns.add<TransposeMoveDownPattern, ReshapeMoveDownPattern>(patterns.getContext(), blocker,
-                                         allMultiUser, multiUser);
+void mlir::populateHloMoveDownPattern(RewritePatternSet &patterns,
+                                      const llvm::DenseSet<StringRef> &blocker,
+                                      bool allMultiUser, bool multiUser) {
+  patterns.add<TransposeMoveDownPattern, ReshapeMoveDownPattern>(
+      patterns.getContext(), blocker, allMultiUser, multiUser);
 }
 
 std::unique_ptr<OperationPass<FuncOp>>

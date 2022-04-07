@@ -29,7 +29,7 @@ void registerToCppTranslation();
 /// 'declareVariablesAtTop' enforces that all variables for op results and block
 /// arguments are declared at the beginning of the function.
 mlir::LogicalResult translateToCpp(mlir::Operation *op, llvm::raw_ostream &os,
-                             bool declareVariablesAtTop = false);
+                                   bool declareVariablesAtTop = false);
 } // namespace byteir
 
 #endif // BYTEIR_TARGET_CPP_TOCPP_H

@@ -36,7 +36,7 @@ class LmhloDialect;
 
 namespace memref {
 class MemRefDialect;
-} // namespace linalg
+} // namespace memref
 
 namespace NVVM {
 class NVVMDialect;

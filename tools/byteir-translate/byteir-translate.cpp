@@ -11,8 +11,8 @@
 //===----------------------------------------------------------------------===//
 // Modifications Copyright (c) ByteDance.
 
-#include "byteir/Target/Cpp/ToCpp.h"
 #include "byteir/Target/CUDA/ToCUDA.h"
+#include "byteir/Target/Cpp/ToCpp.h"
 #include "byteir/Target/PTX/ToPTX.h"
 #include "mlir/InitAllTranslations.h"
 #include "mlir/Support/LogicalResult.h"
@@ -20,11 +20,12 @@
 
 using namespace mlir;
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   registerAllTranslations();
   registerToPTXTranslation();
   byteir::registerToCppTranslation();
   byteir::registerToCUDATranslation();
 
-  return failed(mlirTranslateMain(argc, argv, "ByteIR Translation Testing Tool"));
+  return failed(
+      mlirTranslateMain(argc, argv, "ByteIR Translation Testing Tool"));
 }

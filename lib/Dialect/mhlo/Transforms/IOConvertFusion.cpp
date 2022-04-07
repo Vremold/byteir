@@ -6,9 +6,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/IOConvertFusion.h"
+#include "./PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -17,7 +18,6 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace llvm;
@@ -33,9 +33,9 @@ struct IOConvertFusionPattern : public RewritePattern {
 
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const override {
-    
+
     // early termination
-    if (op->getName().getStringRef() != opName || 
+    if (op->getName().getStringRef() != opName ||
         op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }

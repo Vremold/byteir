@@ -13,16 +13,16 @@ using namespace llvm;
 namespace {
 
 // some code from llvm's AsmPrinter
-void appendElementTypeToString(Type type, std::string& out) {
+void appendElementTypeToString(Type type, std::string &out) {
   llvm::TypeSwitch<Type>(type)
-    .Case<IndexType>([&](Type) { out += "index"; })
-    .Case<BFloat16Type>([&](Type) { out += "bf16"; })
-    .Case<Float16Type>([&](Type) { out += "f16"; })
-    .Case<Float32Type>([&](Type) { out += "f32"; })
-    .Case<Float64Type>([&](Type) { out += "f64"; })
-    .Case<Float80Type>([&](Type) { out += "f80"; })
-    .Case<Float128Type>([&](Type) { out += "f128"; })
-    .Case<IntegerType>([&](IntegerType integerTy) {
+      .Case<IndexType>([&](Type) { out += "index"; })
+      .Case<BFloat16Type>([&](Type) { out += "bf16"; })
+      .Case<Float16Type>([&](Type) { out += "f16"; })
+      .Case<Float32Type>([&](Type) { out += "f32"; })
+      .Case<Float64Type>([&](Type) { out += "f64"; })
+      .Case<Float80Type>([&](Type) { out += "f80"; })
+      .Case<Float128Type>([&](Type) { out += "f128"; })
+      .Case<IntegerType>([&](IntegerType integerTy) {
         if (integerTy.isSigned()) {
           out += 's';
         } else if (integerTy.isUnsigned()) {
@@ -30,27 +30,27 @@ void appendElementTypeToString(Type type, std::string& out) {
         }
         out += 'i' + std::to_string(integerTy.getWidth());
       })
-    .Case<ComplexType>([&](ComplexType complexTy) {
+      .Case<ComplexType>([&](ComplexType complexTy) {
         out += 'c';
         appendElementTypeToString(complexTy.getElementType(), out);
       })
-    .Case<TupleType>([&](TupleType tupleTy) {
+      .Case<TupleType>([&](TupleType tupleTy) {
         out += 't';
         for (auto t : tupleTy.getTypes()) {
           out += 'e';
           appendElementTypeToString(t, out);
         }
       })
-    .Default([&](Type type) { out += "unknown"; });
-  }
+      .Default([&](Type type) { out += "unknown"; });
+}
 
-} // anonymous
+} // namespace
 
-std::string mlir::getByreKey(StringRef original,
-  TypeRange types,
-  bool appendArgTypes) {
+std::string mlir::getByreKey(StringRef original, TypeRange types,
+                             bool appendArgTypes) {
 
-  if (!appendArgTypes) return original.str();
+  if (!appendArgTypes)
+    return original.str();
 
   std::string out = original.str();
 
@@ -64,4 +64,3 @@ std::string mlir::getByreKey(StringRef original,
   }
   return out;
 }
-

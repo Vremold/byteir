@@ -8,12 +8,11 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
 
-#include "llvm/ADT/SmallVector.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Location.h"
 #include "mlir/IR/OperationSupport.h"
-
+#include "llvm/ADT/SmallVector.h"
 
 namespace mlir {
 
@@ -30,8 +29,7 @@ struct TileScope {
 
   llvm::SmallVector<mlir::linalg::LinalgOp> ops;
 
-  TileScope(mlir::linalg::LinalgOp op)
-    : anchorOp(op) {}
+  TileScope(mlir::linalg::LinalgOp op) : anchorOp(op) {}
 };
 
 // TODO maybe relax this
@@ -39,37 +37,26 @@ inline bool isStructuralLinalg(mlir::linalg::LinalgOp op) {
   return op.getNumOutputs() == 1;
 }
 
-void unpackRanges(
-  ArrayRef<Range> ranges, 
-  SmallVectorImpl<Value>& lbs,
-  SmallVectorImpl<Value>& ubs,
-  SmallVectorImpl<Value>& steps);
+void unpackRanges(ArrayRef<Range> ranges, SmallVectorImpl<Value> &lbs,
+                  SmallVectorImpl<Value> &ubs, SmallVectorImpl<Value> &steps);
 
-LogicalResult buildSCFLoop(OpBuilder& builder, Location loc,
-  bool isParallel,
-  ValueRange lbs,
-  ValueRange ubs, 
-  ValueRange steps,
-  function_ref<void(OpBuilder&, Location, ValueRange)>
-  bodyBuilder = nullptr);
+LogicalResult buildSCFLoop(OpBuilder &builder, Location loc, bool isParallel,
+                           ValueRange lbs, ValueRange ubs, ValueRange steps,
+                           function_ref<void(OpBuilder &, Location, ValueRange)>
+                               bodyBuilder = nullptr);
 
 // buildAffineLoop doesn't handle isParallel directly.
 // Call affineParallelize after tiling instread.
-LogicalResult buildAffineLoop(OpBuilder& builder, Location loc,
-  ValueRange lbs,
-  ValueRange ubs, 
-  ValueRange steps,
-  function_ref<void(OpBuilder&, Location, ValueRange)>
-  bodyBuilder = nullptr);
+LogicalResult buildAffineLoop(
+    OpBuilder &builder, Location loc, ValueRange lbs, ValueRange ubs,
+    ValueRange steps,
+    function_ref<void(OpBuilder &, Location, ValueRange)> bodyBuilder =
+        nullptr);
 
-
-// Create atomic add 
-llvm::Optional<linalg::LinalgOp> createAtomicLinalgGeneric(
-  OpBuilder& b,
-  Location loc,
-  arith::AtomicRMWKind kind,
-  ArrayRef<Value> inputs,
-  ArrayRef<Value> outputs);
+// Create atomic add
+llvm::Optional<linalg::LinalgOp>
+createAtomicLinalgGeneric(OpBuilder &b, Location loc, arith::AtomicRMWKind kind,
+                          ArrayRef<Value> inputs, ArrayRef<Value> outputs);
 
 } // namespace mlir
 

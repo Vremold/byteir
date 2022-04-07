@@ -1,4 +1,5 @@
-//===- ApplyMemRefAffineLayout.cpp -----------------------------*--- C++ -*-===//
+//===- ApplyMemRefAffineLayout.cpp -----------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -6,11 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/MemRef/Transforms/ApplyMemRefAffineLayout.h"
+#include "PassDetail.h"
 #include "byteir/Dialect/MemRef/Utils/Layout.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Builders.h"
-#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -18,37 +19,39 @@ using namespace mlir::memref;
 
 namespace {
 
-void applyAffineLayout(OpBuilder& b,
-  ArrayRef<Operation*> collector) {
+void applyAffineLayout(OpBuilder &b, ArrayRef<Operation *> collector) {
 
   for (auto op : collector) {
     if (op->hasAttrOfType<StringAttr>(getLayoutAttributeName())) {
       auto attr = op->getAttrOfType<StringAttr>(getLayoutAttributeName());
       auto layoutName = attr.strref();
-      AffineLayoutRegistry& layoutRegistry = mlir::AffineLayoutRegistry::getInstance();
+      AffineLayoutRegistry &layoutRegistry =
+          mlir::AffineLayoutRegistry::getInstance();
 
       // early termination if not registerred
-      if (layoutRegistry.registry.count(layoutName) == 0) return;
+      if (layoutRegistry.registry.count(layoutName) == 0)
+        return;
 
       auto firstMemref = op->getResult(0).getType().dyn_cast<MemRefType>();
-      auto maybeAttrMap =
-        layoutRegistry.registry[layoutName].createAffineMap(b.getContext(), firstMemref);
+      auto maybeAttrMap = layoutRegistry.registry[layoutName].createAffineMap(
+          b.getContext(), firstMemref);
 
       // early termination if not legal
-      if (!maybeAttrMap.hasValue()) return;
+      if (!maybeAttrMap.hasValue())
+        return;
 
       b.setInsertionPoint(op);
       auto cloned = b.clone(*op);
 
       for (unsigned i = 0; i < op->getNumResults(); ++i) {
-        if (auto memref = cloned->getResult(i).getType().dyn_cast<MemRefType>()) {
-          MemRefType newMemref =
-            MemRefType::get(memref.getShape(), memref.getElementType(),
+        if (auto memref =
+                cloned->getResult(i).getType().dyn_cast<MemRefType>()) {
+          MemRefType newMemref = MemRefType::get(
+              memref.getShape(), memref.getElementType(),
               maybeAttrMap.getValue(), memref.getMemorySpaceAsInt());
 
           cloned->getResult(i).setType(newMemref);
           op->getResult(i).replaceAllUsesWith(cloned->getResult(i));
-
         }
       }
 
@@ -60,12 +63,12 @@ void applyAffineLayout(OpBuilder& b,
       b.setInsertionPoint(op);
       auto cloned = b.clone(*op);
 
-
       for (unsigned i = 0; i < op->getNumResults(); ++i) {
-        if (auto memref = cloned->getResult(i).getType().dyn_cast<MemRefType>()) {
+        if (auto memref =
+                cloned->getResult(i).getType().dyn_cast<MemRefType>()) {
           MemRefType newMemref =
-            MemRefType::get(memref.getShape(), memref.getElementType(),
-              affMap, memref.getMemorySpaceAsInt());
+              MemRefType::get(memref.getShape(), memref.getElementType(),
+                              affMap, memref.getMemorySpaceAsInt());
 
           cloned->getResult(i).setType(newMemref);
           op->getResult(i).replaceAllUsesWith(cloned->getResult(i));
@@ -76,14 +79,11 @@ void applyAffineLayout(OpBuilder& b,
       op->erase();
     }
   }
-
 }
 
-void collectLayoutOps(
-  FuncOp funcOp,
-  SmallVectorImpl<Operation*>& collector) {
-  for (auto& block : funcOp.getBody()) {
-    for (auto& op : block.without_terminator()) {
+void collectLayoutOps(FuncOp funcOp, SmallVectorImpl<Operation *> &collector) {
+  for (auto &block : funcOp.getBody()) {
+    for (auto &op : block.without_terminator()) {
       if (op.hasAttr(getLayoutAttributeName())) {
         collector.push_back(&op);
       }
@@ -91,20 +91,19 @@ void collectLayoutOps(
   }
 }
 
-
-struct ApplyMemRefAffineLayoutPass : public ApplyMemRefAffineLayoutBase<ApplyMemRefAffineLayoutPass> {
+struct ApplyMemRefAffineLayoutPass
+    : public ApplyMemRefAffineLayoutBase<ApplyMemRefAffineLayoutPass> {
 public:
   ApplyMemRefAffineLayoutPass() = default;
   void runOnOperation() override;
 };
 
-} // namespace anonymous
-
+} // namespace
 
 void ApplyMemRefAffineLayoutPass::runOnOperation() {
 
   auto funcOp = getOperation();
-  SmallVector<Operation*> collector;
+  SmallVector<Operation *> collector;
   OpBuilder builder(funcOp.getContext());
 
   // collect all ops with layout attribute

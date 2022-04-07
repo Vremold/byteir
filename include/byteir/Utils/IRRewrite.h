@@ -18,16 +18,19 @@ class BlockAndValueMapping;
 class TypeRange;
 
 // replicate specific ops satisfying func
-void ReplicateDefiningOp(Block* block, std::function<bool(Operation*)> checkFunc);
+void ReplicateDefiningOp(Block *block,
+                         std::function<bool(Operation *)> checkFunc);
 
 // replicate op's opIdx-th DefinitingOp
 // and set op's opIdx-th operand as cloned's resIdx-th result.
-Operation* ReplicateDefiningOp(OpBuilder& b, Operation* op, unsigned opIdx, unsigned resIdx);
+Operation *ReplicateDefiningOp(OpBuilder &b, Operation *op, unsigned opIdx,
+                               unsigned resIdx);
 
-// clone a new op and force to replace its result types without doing type inference
-Operation *cloneAndReplaceResultTypes(
-  OpBuilder &b, Operation *op,
-  BlockAndValueMapping bvm, TypeRange types);
+// clone a new op and force to replace its result types without doing type
+// inference
+Operation *cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
+                                      BlockAndValueMapping bvm,
+                                      TypeRange types);
 
 } // namespace mlir
 

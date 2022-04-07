@@ -25,14 +25,12 @@ using namespace mlir;
 
 // some code from mlir's registerToCppTranslation
 void byteir::registerToCppTranslation() {
-  static llvm::cl::OptionCategory CppCat("Cpp-Emitter",
-    "Cpp-Emitter options");
+  static llvm::cl::OptionCategory CppCat("Cpp-Emitter", "Cpp-Emitter options");
 
   static llvm::cl::opt<bool> declareVariablesAtTop(
       "declare-var-at-top-cpp",
       llvm::cl::desc("Declare variables at top when emitting C/C++"),
-      llvm::cl::init(false),
-      llvm::cl::cat(CppCat));
+      llvm::cl::init(false), llvm::cl::cat(CppCat));
 
   TranslateFromMLIRRegistration reg(
       "emit-cpp",

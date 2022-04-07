@@ -5,19 +5,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
-#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
-#include "byteir/Dialect/mhlo/Transforms/MoveCommon.h"
-#include "byteir/Dialect/mhlo/Util/Util.h"
-#include "byteir/Utils/IRRewrite.h"
-#include "byteir/Utils/Utils.h"
-#include "byteir/Utils/AttrUtils.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
+#include "byteir/Dialect/mhlo/Transforms/MoveCommon.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
+#include "byteir/Utils/AttrUtils.h"
+#include "byteir/Utils/IRRewrite.h"
+#include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-#include "mlir/IR/BlockAndValueMapping.h"
 #include "llvm/ADT/DenseSet.h"
 
 using namespace llvm;
@@ -28,8 +28,7 @@ namespace {
 
 // For now, we support single result, Elementwise,
 // SameOperandsAndResultShape (avoid implicit broadcast)
-inline
-bool isElementwiseOneResult(Operation* op) {
+inline bool isElementwiseOneResult(Operation *op) {
   return op->hasTrait<::mlir::OpTrait::Elementwise>() &&
          op->hasTrait<::mlir::OpTrait::SameOperandsAndResultShape>() &&
          op->hasTrait<::mlir::OpTrait::OneResult>();
@@ -50,14 +49,14 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
     // 1) op.getOperand() is an argument
     // 2) op.getOperand() has another user
     // 3) defOp is in the blockers
-    if (defOp == nullptr ||
-        UseCount(op.getOperand()) > 1 ||
+    if (defOp == nullptr || UseCount(op.getOperand()) > 1 ||
         blockers.contains(defOp->getName().getStringRef())) {
-      return failure();  
+      return failure();
     }
 
     // See Line 28 comment
-    if (!isElementwiseOneResult(defOp)) return failure();
+    if (!isElementwiseOneResult(defOp))
+      return failure();
 
     // isElementwiseOneResult(defOp) == true
     SmallDenseSet<Value> constInputs;
@@ -74,7 +73,7 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
       }
     }
 
-    // terminate if assumes single input but has multiple 
+    // terminate if assumes single input but has multiple
     if (!multiInput && nonConstInputs.size() > 1) {
       return failure();
     }
@@ -101,15 +100,15 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
     auto newConsumer =
         cloneAndReplaceResultTypes(rewriter, defOp, bvm, op->getResultTypes());
     rewriter.replaceOp(op, newConsumer->getResults());
-    
+
     return success();
   }
 };
 
 struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
   ReshapeMoveUpPattern(MLIRContext *context,
-                         const llvm::DenseSet<llvm::StringRef> &blocker,
-                         bool multiInput)
+                       const llvm::DenseSet<llvm::StringRef> &blocker,
+                       bool multiInput)
       : HloMoveUpPattern<mhlo::ReshapeOp>(context, blocker, multiInput) {}
 
   LogicalResult matchAndRewrite(mhlo::ReshapeOp op,
@@ -121,14 +120,14 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
     // 1) op.getOperand() is an argument
     // 2) op.getOperand() has another user
     // 3) defOp is in the blockers
-    if (defOp == nullptr ||
-        UseCount(op.getOperand()) > 1 ||
+    if (defOp == nullptr || UseCount(op.getOperand()) > 1 ||
         blockers.contains(defOp->getName().getStringRef())) {
-      return failure();  
+      return failure();
     }
 
     // See Line 28 comment
-    if (!isElementwiseOneResult(defOp)) return failure();
+    if (!isElementwiseOneResult(defOp))
+      return failure();
 
     // isElementwiseOneResult(defOp) == true
     SmallDenseSet<Value> constInputs;
@@ -145,7 +144,7 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
       }
     }
 
-    // terminate if assumes single input but has multiple 
+    // terminate if assumes single input but has multiple
     if (!multiInput && nonConstInputs.size() > 1) {
       return failure();
     }
@@ -172,14 +171,14 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
     auto newConsumer =
         cloneAndReplaceResultTypes(rewriter, defOp, bvm, op->getResultTypes());
     rewriter.replaceOp(op, newConsumer->getResults());
-    
+
     return success();
   }
 };
 
 struct HloMoveUpPass : public HloMoveUpBase<HloMoveUpPass> {
 
-  HloMoveUpPass(bool supportMultiInput) : HloMoveUpBase() { 
+  HloMoveUpPass(bool supportMultiInput) : HloMoveUpBase() {
     multiInput = supportMultiInput;
   }
 
@@ -194,20 +193,19 @@ struct HloMoveUpPass : public HloMoveUpBase<HloMoveUpPass> {
     mhlo::getCanonicalizationExtPatterns(patterns, funcOp.getContext());
 
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
-      funcOp.emitError("HloMoveUpPass applyPatternsAndFoldGreedily does not converge");
+      funcOp.emitError(
+          "HloMoveUpPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();
     }
   }
-
 };
 } // namespace
 
-void mlir::populateHloMoveUpPattern(
-  RewritePatternSet &patterns, 
-  const llvm::DenseSet<StringRef> &blocker,
-  bool multiInput) {
+void mlir::populateHloMoveUpPattern(RewritePatternSet &patterns,
+                                    const llvm::DenseSet<StringRef> &blocker,
+                                    bool multiInput) {
   patterns.add<TransposeMoveUpPattern, ReshapeMoveUpPattern>(
-    patterns.getContext(), blocker, multiInput);
+      patterns.getContext(), blocker, multiInput);
 }
 
 std::unique_ptr<OperationPass<FuncOp>>

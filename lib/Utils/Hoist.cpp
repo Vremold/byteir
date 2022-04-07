@@ -14,15 +14,15 @@ using namespace mlir;
 
 // return least ProperlyDominant use or def
 // Note: val must be refOp's operand
-Operation* mlir::leastProperlyDominantUseOrDef(
-  Value val, 
-  DominanceInfo& domInfo, 
-  Operation* refOp) {
+Operation *mlir::leastProperlyDominantUseOrDef(Value val,
+                                               DominanceInfo &domInfo,
+                                               Operation *refOp) {
 
-  Operation* defOp = val.getDefiningOp();
-  if (defOp == nullptr) return nullptr;
-  Operation* curPos = defOp;
-  for (Operation* user : val.getUsers()) {
+  Operation *defOp = val.getDefiningOp();
+  if (defOp == nullptr)
+    return nullptr;
+  Operation *curPos = defOp;
+  for (Operation *user : val.getUsers()) {
     if (domInfo.properlyDominates(curPos, user) &&
         domInfo.properlyDominates(user, refOp)) {
       curPos = user;
@@ -32,16 +32,15 @@ Operation* mlir::leastProperlyDominantUseOrDef(
 }
 
 // return least ProperlyDominant use or def
-Operation* mlir::leastProperlyPostDominantUse(
-  Value val,
-  PostDominanceInfo& postDomInfo,
-  Operation* refOp) {
+Operation *mlir::leastProperlyPostDominantUse(Value val,
+                                              PostDominanceInfo &postDomInfo,
+                                              Operation *refOp) {
 
-  Operation* curPos = nullptr;
-  for (Operation* user : val.getUsers()) {
+  Operation *curPos = nullptr;
+  for (Operation *user : val.getUsers()) {
     bool isCurPosProperPostDominates =
-      curPos != nullptr ? postDomInfo.properlyPostDominates(curPos, user)
-                        : true;
+        curPos != nullptr ? postDomInfo.properlyPostDominates(curPos, user)
+                          : true;
     if (isCurPosProperPostDominates &&
         postDomInfo.properlyPostDominates(user, refOp)) {
       curPos = user;
@@ -51,15 +50,13 @@ Operation* mlir::leastProperlyPostDominantUse(
 }
 
 // return Operation Hoist Up within a Block of op
-Operation* mlir::findHoistUpInBlock(
-  Operation* op,
-  DominanceInfo& domInfo) {
-  Operation* curPos = &(op->getBlock()->front());
+Operation *mlir::findHoistUpInBlock(Operation *op, DominanceInfo &domInfo) {
+  Operation *curPos = &(op->getBlock()->front());
   for (auto val : op->getOperands()) {
-    Operation* leastDominant 
-      = leastProperlyDominantUseOrDef(val, domInfo, op);
+    Operation *leastDominant = leastProperlyDominantUseOrDef(val, domInfo, op);
     // skip nullptr
-    if (leastDominant == nullptr) continue;
+    if (leastDominant == nullptr)
+      continue;
 
     if (domInfo.properlyDominates(curPos, leastDominant)) {
       curPos = leastDominant;
@@ -69,25 +66,26 @@ Operation* mlir::findHoistUpInBlock(
   return curPos;
 }
 
-Operation* mlir::findHoistDownInBlock(
-  Operation* op,
-  PostDominanceInfo& postDomInfo) {
-  Operation* curPos = op->getBlock()->getTerminator();
+Operation *mlir::findHoistDownInBlock(Operation *op,
+                                      PostDominanceInfo &postDomInfo) {
+  Operation *curPos = op->getBlock()->getTerminator();
 
   // check all results
   for (auto val : op->getResults()) {
-    Operation* leastPostDominant
-      = leastProperlyPostDominantUse(val, postDomInfo, op);
-    if (leastPostDominant == nullptr) continue;
+    Operation *leastPostDominant =
+        leastProperlyPostDominantUse(val, postDomInfo, op);
+    if (leastPostDominant == nullptr)
+      continue;
     if (postDomInfo.properlyPostDominates(curPos, leastPostDominant)) {
       curPos = leastPostDominant;
     }
   }
 
   for (auto val : op->getOperands()) {
-    Operation* leastPostDominant
-      = leastProperlyPostDominantUse(val, postDomInfo, op);
-    if (leastPostDominant == nullptr) continue;
+    Operation *leastPostDominant =
+        leastProperlyPostDominantUse(val, postDomInfo, op);
+    if (leastPostDominant == nullptr)
+      continue;
     if (postDomInfo.properlyPostDominates(curPos, leastPostDominant)) {
       curPos = leastPostDominant;
     }
@@ -97,19 +95,19 @@ Operation* mlir::findHoistDownInBlock(
 }
 
 // hoist up ops in a given Block
-void mlir::hoistUpOpsInBlock(
-  Block* block,
-  DominanceInfo& domInfo,
-  std::function<bool(Operation*)> checkFunc) {
+void mlir::hoistUpOpsInBlock(Block *block, DominanceInfo &domInfo,
+                             std::function<bool(Operation *)> checkFunc) {
   // early termination
-  if (block == nullptr) return;
+  if (block == nullptr)
+    return;
 
-  SmallVector<std::pair<Operation*, Operation*>> moveAfterOps;
+  SmallVector<std::pair<Operation *, Operation *>> moveAfterOps;
 
-  // hanlde HoistUp 
-  for (auto& op : block->without_terminator()) {
+  // hanlde HoistUp
+  for (auto &op : block->without_terminator()) {
     // skip non-hoistable op
-    if (!checkFunc(&op)) continue;
+    if (!checkFunc(&op))
+      continue;
 
     auto pos = findHoistUpInBlock(&op, domInfo);
     if (pos != &op) {
@@ -117,33 +115,33 @@ void mlir::hoistUpOpsInBlock(
     }
   }
 
-  for (auto& p : moveAfterOps) {
+  for (auto &p : moveAfterOps) {
     p.first->moveAfter(p.second);
   }
 }
 
 // hoist down ops in a given Block
-void mlir::hoistDownOpsInBlock(
-  Block* block,
-  PostDominanceInfo& postDomInfo,
-  std::function<bool(Operation*)> checkFunc) {
+void mlir::hoistDownOpsInBlock(Block *block, PostDominanceInfo &postDomInfo,
+                               std::function<bool(Operation *)> checkFunc) {
   // early termination
-  if (block == nullptr) return;
+  if (block == nullptr)
+    return;
 
-  SmallVector<std::pair<Operation*, Operation*>> moveBeforeOps;
+  SmallVector<std::pair<Operation *, Operation *>> moveBeforeOps;
 
-  // hanlde HoistUp 
+  // hanlde HoistUp
   for (auto it = block->rbegin(); it != block->rend(); ++it) {
-    auto& op = *it;
+    auto &op = *it;
     // skip non-hoistable op
-    if (!checkFunc(&op)) continue;
+    if (!checkFunc(&op))
+      continue;
     auto pos = findHoistDownInBlock(&op, postDomInfo);
     if (pos != &op) {
       moveBeforeOps.emplace_back(&op, pos);
     }
   }
 
-  for (auto& p : moveBeforeOps) {
+  for (auto &p : moveBeforeOps) {
     p.first->moveBefore(p.second);
   }
 }

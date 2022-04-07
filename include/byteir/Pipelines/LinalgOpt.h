@@ -15,7 +15,7 @@
 
 namespace mlir {
 
-void addGenericLinalgElementwisePasses(OpPassManager& pm);
+void addGenericLinalgElementwisePasses(OpPassManager &pm);
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createLinalgOptPipelinePass(const std::string &target = "");

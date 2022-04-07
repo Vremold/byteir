@@ -29,7 +29,7 @@ class ByreDialect;
 namespace gpu {
 class GPUDialect;
 class GPUModuleOp;
-} // namespace byre
+} // namespace gpu
 
 namespace lmhlo {
 class LmhloDialect;
@@ -44,11 +44,11 @@ class MemRefDialect;
 } // namespace memref
 
 namespace NVVM {
-  class NVVMDialect;
+class NVVMDialect;
 } // namespace NVVM
 
 namespace scf {
-  class SCFDialect;
+class SCFDialect;
 } // namespace scf
 
 namespace shape {

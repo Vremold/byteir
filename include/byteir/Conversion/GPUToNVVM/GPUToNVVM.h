@@ -15,8 +15,7 @@
 namespace mlir {
 class ModuleOp;
 
-std::unique_ptr<OperationPass<ModuleOp>>
-createGPUToNVVMExtPass(
+std::unique_ptr<OperationPass<ModuleOp>> createGPUToNVVMExtPass(
     unsigned indexBitwidth = kDeriveIndexBitwidthFromDataLayout);
 } // namespace mlir
 

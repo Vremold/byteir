@@ -23,17 +23,12 @@ struct TrivialAffineLoopOp {
   SmallVector<Operation *> ops;
 };
 
-static bool IsHoistableOp(Operation* op) {
-  return isa<arith::ConstantOp,
-             memref::AllocOp, 
-             memref::CollapseShapeOp, 
-             memref::DimOp,
-             memref::ExpandShapeOp, 
-             memref::ReshapeOp>(op);
+static bool IsHoistableOp(Operation *op) {
+  return isa<arith::ConstantOp, memref::AllocOp, memref::CollapseShapeOp,
+             memref::DimOp, memref::ExpandShapeOp, memref::ReshapeOp>(op);
 }
 
-static TrivialAffineLoopOp 
-IdentifyTrivialAffineLoopOp(FuncOp funcOp) {
+static TrivialAffineLoopOp IdentifyTrivialAffineLoopOp(FuncOp funcOp) {
   TrivialAffineLoopOp tal;
 
   for (auto &block : funcOp.getBody()) {
@@ -49,10 +44,11 @@ IdentifyTrivialAffineLoopOp(FuncOp funcOp) {
   return tal;
 }
 
-static void InsertTrivialAffineLoop(TrivialAffineLoopOp& tal) {
+static void InsertTrivialAffineLoop(TrivialAffineLoopOp &tal) {
   // early terminate
-  if (tal.insert_point == nullptr) return;
- 
+  if (tal.insert_point == nullptr)
+    return;
+
   OpBuilder b(tal.insert_point);
   auto loc = tal.insert_point->getLoc();
   auto affine = b.create<AffineForOp>(loc, 0, 1);
@@ -62,19 +58,17 @@ static void InsertTrivialAffineLoop(TrivialAffineLoopOp& tal) {
   }
 }
 
-
 struct InsertTrivialAffineLoopPass
     : public InsertTrivialAffineLoopBase<InsertTrivialAffineLoopPass> {
-  InsertTrivialAffineLoopPass(llvm::StringRef anchor) 
-    : InsertTrivialAffineLoopBase() {
+  InsertTrivialAffineLoopPass(llvm::StringRef anchor)
+      : InsertTrivialAffineLoopBase() {
     anchorTag = anchor.str();
   }
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
 
     // skip non-anchored
-    if (!anchorTag.empty() && 
-        !funcOp->hasAttrOfType<UnitAttr>(anchorTag)) {
+    if (!anchorTag.empty() && !funcOp->hasAttrOfType<UnitAttr>(anchorTag)) {
       return;
     }
 

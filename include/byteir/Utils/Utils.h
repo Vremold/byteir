@@ -29,12 +29,13 @@ class Value;
 int64_t getLiteralFromConstantLike(Value, int64_t defaultLit);
 
 // Return literals from a list of constant-like values
-llvm::SmallVector<int64_t, 4> 
+llvm::SmallVector<int64_t, 4>
 getLiteralsFromConstantLikes(ArrayRef<Value> values, int64_t defaultLit);
 
 // Create a vector with only the offset as 1, the rest as 0's.
 // e.g. if offset == 1, size == 4, val == 3, return3 [0, 3, 0, 0]
-llvm::SmallVector<int64_t, 4> createOneHot(unsigned size, unsigned offset, int64_t val = 1);
+llvm::SmallVector<int64_t, 4> createOneHot(unsigned size, unsigned offset,
+                                           int64_t val = 1);
 
 // Return all indices for non-zeros
 llvm::SmallVector<unsigned, 4> getAllIndicesForNonZeros(ArrayRef<int64_t>);
@@ -46,7 +47,6 @@ bool isConstantIndex(Value value, int64_t lit);
 // If an attribute contain multiple sub attributes,
 // it will check all of sub attributes.
 bool isZeroAttribute(Attribute value);
-
 
 // Check whether an attribute is SmallestAttr
 // If an attribute contain multiple sub attributes,
@@ -130,7 +130,8 @@ SmallVector<Value, 4>
 GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
 
 // return true, if memref is only used in op in the filters, or alloc or dealloc
-bool IsMemrefTrivial(mlir::Value memref, llvm::ArrayRef<mlir::Operation*> filters);
+bool IsMemrefTrivial(mlir::Value memref,
+                     llvm::ArrayRef<mlir::Operation *> filters);
 
 // count number of a value is used
 // if a value is used twice by a user, it will count twice

@@ -42,13 +42,13 @@ static void registerStatistics(StringRef name,
 // MLIR Statistics Registration
 //===----------------------------------------------------------------------===//
 
-llvm::cl::opt<std::string> MLIRStatRegistration::fucnName("func-name",
-  llvm::cl::desc("func name"),
-  llvm::cl::init(""));
+llvm::cl::opt<std::string>
+    MLIRStatRegistration::fucnName("func-name", llvm::cl::desc("func name"),
+                                   llvm::cl::init(""));
 
-llvm::cl::opt<bool> MLIRStatRegistration::topOnly("top-only",
-  llvm::cl::desc("stat top only"),
-  llvm::cl::init(false));
+llvm::cl::opt<bool>
+    MLIRStatRegistration::topOnly("top-only", llvm::cl::desc("stat top only"),
+                                  llvm::cl::init(false));
 
 MLIRStatRegistration::MLIRStatRegistration(StringRef name,
                                            const MLIRFunctionStat &function) {

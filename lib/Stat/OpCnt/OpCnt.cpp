@@ -18,15 +18,15 @@ using namespace mlir;
 
 void byteir::registerOpCntStatistics() {
   MLIRStatRegistration reg("op-cnt", [](ModuleOp module, raw_ostream &output) {
-    return byteir::opCntStatistics(module, output, 
-                                   MLIRStatRegistration::fucnName, 
+    return byteir::opCntStatistics(module, output,
+                                   MLIRStatRegistration::fucnName,
                                    MLIRStatRegistration::topOnly);
   });
 }
 
 mlir::LogicalResult byteir::opCntStatistics(ModuleOp moduleOp,
-                                            llvm::raw_ostream &os, 
-                                            const std::string& funcNmae, 
+                                            llvm::raw_ostream &os,
+                                            const std::string &funcNmae,
                                             bool topOnly) {
   os << "========== Operation Type and Its Numbers ============\n";
   llvm::StringMap<unsigned> opCnt;
@@ -34,26 +34,29 @@ mlir::LogicalResult byteir::opCntStatistics(ModuleOp moduleOp,
   if (funcNmae.empty()) {
     for (FuncOp func : moduleOp.getOps<FuncOp>()) {
       if (topOnly) {
-        for (auto& op : func.getOps()) {
+        for (auto &op : func.getOps()) {
           opCnt[op.getName().getStringRef()] += 1;
         }
       } else {
-        func.walk([&](Operation* op) { opCnt[op->getName().getStringRef()] += 1; });
+        func.walk(
+            [&](Operation *op) { opCnt[op->getName().getStringRef()] += 1; });
       }
     }
   } else {
     SymbolTable symbolTable(moduleOp);
     auto func = symbolTable.lookup<FuncOp>(funcNmae);
-    
+
     // early return
-    if (func == nullptr) return success();
+    if (func == nullptr)
+      return success();
 
     if (topOnly) {
-      for (auto& op : func.getOps()) {
+      for (auto &op : func.getOps()) {
         opCnt[op.getName().getStringRef()] += 1;
       }
     } else {
-      func.walk([&](Operation* op) { opCnt[op->getName().getStringRef()] += 1; });
+      func.walk(
+          [&](Operation *op) { opCnt[op->getName().getStringRef()] += 1; });
     }
   }
 

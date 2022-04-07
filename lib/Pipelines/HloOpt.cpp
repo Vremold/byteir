@@ -9,23 +9,23 @@
 #include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/Common.h"
-#include "mlir/Transforms/Passes.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
+#include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
 using namespace mlir::mhlo;
 
 namespace {
 
-  struct HloOptPipelinePass : public HloOptPipelineBase<HloOptPipelinePass> {
-    HloOptPipelinePass(const std::string &entry, const std::string &target,
-                       bool outlineSingleElemwiseOp)
-        : HloOptPipelineBase() {
-      // TODO use target to decide passes
-      this->entryFunc = entry;
-      this->target = target;
-      this->outlineSingleElemwiseOp = outlineSingleElemwiseOp;
-    }
+struct HloOptPipelinePass : public HloOptPipelineBase<HloOptPipelinePass> {
+  HloOptPipelinePass(const std::string &entry, const std::string &target,
+                     bool outlineSingleElemwiseOp)
+      : HloOptPipelineBase() {
+    // TODO use target to decide passes
+    this->entryFunc = entry;
+    this->target = target;
+    this->outlineSingleElemwiseOp = outlineSingleElemwiseOp;
+  }
 
   void runOnOperation() override {
     auto m = getOperation();

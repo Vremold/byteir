@@ -18,11 +18,10 @@ using namespace mlir;
 
 namespace {
 
-  struct ByteIRTotalBufferizePipelinePass 
-    : public ByteIRTotalBufferizePipelineBase<ByteIRTotalBufferizePipelinePass> {
-  ByteIRTotalBufferizePipelinePass()
-    : ByteIRTotalBufferizePipelineBase() {
-  }
+struct ByteIRTotalBufferizePipelinePass
+    : public ByteIRTotalBufferizePipelineBase<
+          ByteIRTotalBufferizePipelinePass> {
+  ByteIRTotalBufferizePipelinePass() : ByteIRTotalBufferizePipelineBase() {}
 
   void runOnOperation() override {
     auto m = getOperation();
@@ -33,12 +32,11 @@ namespace {
       signalPassFailure();
     }
   }
-
 };
 
 } // namespace
 
-void mlir::addByteIRTotalBufferizePatterns(OpPassManager& pm) {
+void mlir::addByteIRTotalBufferizePatterns(OpPassManager &pm) {
   pm.addPass(createConvertHloToLHloPass());
   pm.addPass(createCSEPass());
   pm.addNestedPass<FuncOp>(createLinalgBufferizePass());

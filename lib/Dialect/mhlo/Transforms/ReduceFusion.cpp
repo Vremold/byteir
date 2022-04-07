@@ -1,4 +1,5 @@
-//===- ReduceFusion.cpp ----------------------------------------*--- C++ -*-===//
+//===- ReduceFusion.cpp ----------------------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -25,23 +26,26 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
   using OpRewritePattern<mhlo::ReduceWindowOp>::OpRewritePattern;
 
   LogicalResult matchAndRewrite(mhlo::ReduceWindowOp op,
-    PatternRewriter& rewriter) const override {
+                                PatternRewriter &rewriter) const override {
 
     // avoid already fused
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
 
-    // handle a common, special case of ReduceWindow for 1 input, 1 init_values, and 1 result
-    if (op.inputs().size() == 1 && op.init_values().size() == 1 && op.getResults().size() == 1) {
-      if (auto pad = dyn_cast_or_null<mhlo::PadOp>(op.inputs().front().getDefiningOp())) {
-        if (pad.padding_value() == op.init_values().front() && 
+    // handle a common, special case of ReduceWindow for 1 input, 1 init_values,
+    // and 1 result
+    if (op.inputs().size() == 1 && op.init_values().size() == 1 &&
+        op.getResults().size() == 1) {
+      if (auto pad = dyn_cast_or_null<mhlo::PadOp>(
+              op.inputs().front().getDefiningOp())) {
+        if (pad.padding_value() == op.init_values().front() &&
             isZeroAttribute(pad.interior_padding()) &&
             (!op.padding().hasValue() ||
-            isZeroAttribute(op.padding().getValue()))) {
-          // create a padding 
-          const auto& edge_padding_low = pad.edge_padding_low();
-          const auto& edge_padding_high = pad.edge_padding_high();
+             isZeroAttribute(op.padding().getValue()))) {
+          // create a padding
+          const auto &edge_padding_low = pad.edge_padding_low();
+          const auto &edge_padding_high = pad.edge_padding_high();
           SmallVector<int64_t> newPadding;
           for (auto it : llvm::zip(edge_padding_low, edge_padding_high)) {
             newPadding.push_back(std::get<0>(it).getZExtValue());
@@ -49,14 +53,16 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
           }
 
           auto newPaddingAttr = DenseIntElementsAttr::get(
-            RankedTensorType::get({ edge_padding_low.size(), 2 }, rewriter.getI64Type()), newPadding);
+              RankedTensorType::get({edge_padding_low.size(), 2},
+                                    rewriter.getI64Type()),
+              newPadding);
 
           auto newOp = cast<mhlo::ReduceWindowOp>(rewriter.clone(*op));
           newOp.setOperand(0, pad.operand());
           newOp.paddingAttr(newPaddingAttr);
           rewriter.replaceOp(op, newOp->getResult(0));
           return success();
-        } 
+        }
       } else {
         return failure();
       }
@@ -65,7 +71,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     // only support cases of all pads or none pads
     size_t numPad = llvm::count_if(op.inputs(), [&](Value v) {
       return isa_and_nonnull<mhlo::PadOp>(v.getDefiningOp());
-      });
+    });
 
     MhloFusionPattern pattern;
     // handle the case of all pads
@@ -81,7 +87,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
 
         pattern.push_back(pad);
       }
-    } 
+    }
 
     // handle initial as a constant
     size_t idx = op.inputs().size();
@@ -99,11 +105,11 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     auto fusion = createMhloFusionFromPattern(rewriter, pattern);
 
     // add attr
-    fusion->setAttr(getByteIRReduceFusionAttrName(), UnitAttr::get(fusion.getContext()));
+    fusion->setAttr(getByteIRReduceFusionAttrName(),
+                    UnitAttr::get(fusion.getContext()));
 
     return success();
   }
-
 };
 
 struct ReduceFusionPass : public ReduceFusionBase<ReduceFusionPass> {
@@ -117,18 +123,18 @@ struct ReduceFusionPass : public ReduceFusionBase<ReduceFusionPass> {
     populateFuseReduceWindowPatterns(patterns);
 
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
-      funcOp.emitError("ReduceFusionPass applyPatternsAndFoldGreedily does not converge");
+      funcOp.emitError(
+          "ReduceFusionPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();
     }
   }
 };
 } // namespace
 
-void mlir::populateFuseReduceWindowPatterns(RewritePatternSet& patterns) {
+void mlir::populateFuseReduceWindowPatterns(RewritePatternSet &patterns) {
   patterns.add<PadReduceWindowPattern>(patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
-mlir::createReduceFusionPass() {
+std::unique_ptr<OperationPass<FuncOp>> mlir::createReduceFusionPass() {
   return std::make_unique<ReduceFusionPass>();
 }

@@ -1,4 +1,5 @@
-//===- ByreOpt.h -----------------------------------------------*--- C++ -*-===//
+//===- ByreOpt.h -----------------------------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -15,7 +16,8 @@
 namespace mlir {
 
 std::unique_ptr<OperationPass<ModuleOp>>
-createByreOptPipelinePass(const std::string& entry = "main", bool appendArgTypes = false);
+createByreOptPipelinePass(const std::string &entry = "main",
+                          bool appendArgTypes = false);
 
 } // namespace mlir
 

@@ -7,8 +7,8 @@
 
 #include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
 #include "PassDetail.h"
-#include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Matchers.h"
@@ -25,24 +25,22 @@ bool IsMhlo(Operation *op) {
   return dialect && isa<MhloDialect>(dialect);
 }
 
-bool IsValidSingleElemwiseOp(Operation* op) {
-  return IsMhlo(op) &&
-         (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-          op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>());
+bool IsValidSingleElemwiseOp(Operation *op) {
+  return IsMhlo(op) && (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
+                        op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>());
 }
 
 bool IsFusibleCandidate(Operation *op) {
   return IsMhlo(op) &&
          (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
           op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
-          IsMhloConstantLike(op) || 
-          isa<mhlo::BroadcastInDimOp, 
-              mhlo::BroadcastOp, 
-              mhlo::ReshapeOp>(op));
+          IsMhloConstantLike(op) ||
+          isa<mhlo::BroadcastInDimOp, mhlo::BroadcastOp, mhlo::ReshapeOp>(op));
 }
 
 bool IsFusibleStart(Operation *op) {
-  if (!IsMhlo(op)) return false;
+  if (!IsMhlo(op))
+    return false;
 
   if (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
       op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
@@ -50,8 +48,7 @@ bool IsFusibleStart(Operation *op) {
     return true;
   }
 
-  if (isa<mhlo::BroadcastInDimOp, 
-          mhlo::BroadcastOp>(op)) {
+  if (isa<mhlo::BroadcastInDimOp, mhlo::BroadcastOp>(op)) {
     auto val = op->getOperand(0);
     auto def_op = val.getDefiningOp();
     return def_op && IsMhloConstantLike(def_op);
@@ -64,15 +61,12 @@ bool IsFusibleWith(Operation *target, Operation * /*start*/) {
   return IsMhlo(target) &&
          (target->hasTrait<::mlir::OpTrait::Elementwise>() ||
           target->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
-          IsMhloConstantLike(target) || 
-          isa<mhlo::BroadcastInDimOp, 
-              mhlo::BroadcastOp, 
-              mhlo::ReshapeOp>(target));
+          IsMhloConstantLike(target) ||
+          isa<mhlo::BroadcastInDimOp, mhlo::BroadcastOp, mhlo::ReshapeOp>(
+              target));
 }
 
-bool Replicate(Operation *op) { 
-  return IsMhloConstantLike(op);
-}
+bool Replicate(Operation *op) { return IsMhloConstantLike(op); }
 
 struct ElementFusionPass : public ElementFusionBase<ElementFusionPass> {
 

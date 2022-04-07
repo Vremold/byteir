@@ -27,7 +27,7 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/TypeUtilities.h"
 
-#include <algorithm>    // for std::any_of
+#include <algorithm> // for std::any_of
 
 using namespace mlir;
 using namespace mlir::byre;
@@ -44,9 +44,9 @@ using namespace mlir::byre;
 ///    someop(memrefcast(%src)) -> someop(%src)
 /// ```
 /// It folds the source of the memref.cast into the root operation directly.
-static LogicalResult foldMemRefCast(Operation* op) {
+static LogicalResult foldMemRefCast(Operation *op) {
   bool folded = false;
-  for (OpOperand& operand : op->getOpOperands()) {
+  for (OpOperand &operand : op->getOpOperands()) {
     auto castOp = operand.get().getDefiningOp<memref::CastOp>();
     if (castOp && memref::CastOp::canFoldIntoConsumerOp(castOp)) {
       operand.set(castOp.getOperand());
@@ -56,13 +56,14 @@ static LogicalResult foldMemRefCast(Operation* op) {
   return success(folded);
 }
 
-
-static LogicalResult verifyOpInEntryPointFunc(Operation* op) {
+static LogicalResult verifyOpInEntryPointFunc(Operation *op) {
   auto func = op->getParentOfType<FuncOp>();
-  if (!func->hasAttrOfType<UnitAttr>(ByreDialect::getEntryPointFunctionAttrName())) {
+  if (!func->hasAttrOfType<UnitAttr>(
+          ByreDialect::getEntryPointFunctionAttrName())) {
     return op->emitError("expected '")
-      << ByreDialect::getEntryPointFunctionAttrName() << "' attribute to be attached to '"
-      << FuncOp::getOperationName() << "' " << func.getName();
+           << ByreDialect::getEntryPointFunctionAttrName()
+           << "' attribute to be attached to '" << FuncOp::getOperationName()
+           << "' " << func.getName();
   }
   return success();
 }
@@ -268,36 +269,35 @@ FunctionType mlir::byre::ComputeOp::getType() {
 //===----------------------------------------------------------------------===/
 
 namespace {
-  /// Remove copy operations that copy data with the same input and output
-  struct EraseIdentityCopyOp : public OpRewritePattern<CopyOp> {
-    using OpRewritePattern<CopyOp>::OpRewritePattern;
+/// Remove copy operations that copy data with the same input and output
+struct EraseIdentityCopyOp : public OpRewritePattern<CopyOp> {
+  using OpRewritePattern<CopyOp>::OpRewritePattern;
 
-    LogicalResult matchAndRewrite(CopyOp copyOp,
-      PatternRewriter& rewriter) const override {
-      if (copyOp.source() == copyOp.target()) {
-        rewriter.eraseOp(copyOp);
-        return success();
-      }
-      return failure();
+  LogicalResult matchAndRewrite(CopyOp copyOp,
+                                PatternRewriter &rewriter) const override {
+    if (copyOp.source() == copyOp.target()) {
+      rewriter.eraseOp(copyOp);
+      return success();
     }
-  };
+    return failure();
+  }
+};
 } // namespace
 
-void CopyOp::getCanonicalizationPatterns(RewritePatternSet& results,
-  MLIRContext* context) {
+void CopyOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                         MLIRContext *context) {
   results.add<EraseIdentityCopyOp>(context);
 }
 
-LogicalResult CopyOp::fold(ArrayRef<Attribute>, SmallVectorImpl<OpFoldResult>&) {
+LogicalResult CopyOp::fold(ArrayRef<Attribute>,
+                           SmallVectorImpl<OpFoldResult> &) {
   return foldMemRefCast(*this);
 }
 
-static LogicalResult verify(CopyOp op) {
-  return verifyOpInEntryPointFunc(op);
-}
+static LogicalResult verify(CopyOp op) { return verifyOpInEntryPointFunc(op); }
 
 // LWC: ignore Async for now
-// 
+//
 //===----------------------------------------------------------------------===//
 // AsyncOpInterface
 //===----------------------------------------------------------------------===//
@@ -317,7 +317,6 @@ void byre::addAsyncDependency(Operation *op, Value token) {
   ++sizes.front();
   op->setAttr(attrName, Builder(op->getContext()).getI32VectorAttr(sizes));
 }
-
 
 #include "byteir/Dialect/Byre/ByreOpInterfaces.cpp.inc"
 

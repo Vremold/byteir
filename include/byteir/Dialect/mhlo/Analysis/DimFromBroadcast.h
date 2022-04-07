@@ -18,6 +18,6 @@ namespace byteir {
 class DimFromBroadcast : public ComputeFlag {
   SmallVector<bool> Compute(Value v) override;
 };
-}
+} // namespace byteir
 
 #endif // BYTEIR_DIALECT_MHLO_ANALYSIS_DIMFROMBROADCAST_H

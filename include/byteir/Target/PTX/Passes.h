@@ -8,22 +8,23 @@
 #ifndef BYTEIR_TARGET_PTX_PASSES_H
 #define BYTEIR_TARGET_PTX_PASSES_H
 
+#include "mlir/Pass/Pass.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Module.h"
-#include "mlir/Pass/Pass.h"
 #include <string>
 
 namespace mlir {
 
 namespace gpu {
-  class GPUModuleOp;
+class GPUModuleOp;
 }
 
 /// Convert kernel functions in GPU dialect to PTX
 std::unique_ptr<OperationPass<gpu::GPUModuleOp>>
-  createSerializeToPTXPass(unsigned optLevel, const std::string& libdeviceFile, 
-                            const std::string& triple, const std::string& targetChip, 
-                            const std::string& features, std::string& targetISA);
+createSerializeToPTXPass(unsigned optLevel, const std::string &libdeviceFile,
+                         const std::string &triple,
+                         const std::string &targetChip,
+                         const std::string &features, std::string &targetISA);
 
 } // namespace mlir
 

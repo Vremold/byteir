@@ -6,6 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Target/PTX/Passes.h"
+#include "mlir/Dialect/GPU/GPUDialect.h"
+#include "mlir/Dialect/GPU/Passes.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Support/FileUtilities.h"
+#include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
+#include "mlir/Target/LLVMIR/Dialect/NVVM/NVVMToLLVMIRTranslation.h"
+#include "mlir/Target/LLVMIR/Export.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Bitcode/BitcodeReader.h"
@@ -19,13 +26,6 @@
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/IPO/Internalize.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
-#include "mlir/Dialect/GPU/GPUDialect.h"
-#include "mlir/Dialect/GPU/Passes.h"
-#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
-#include "mlir/Support/FileUtilities.h"
-#include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
-#include "mlir/Target/LLVMIR/Dialect/NVVM/NVVMToLLVMIRTranslation.h"
-#include "mlir/Target/LLVMIR/Export.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -56,11 +56,10 @@ static llvm::CodeGenOpt::Level LLVMCodeGenOpt(unsigned optLevel) {
 }
 
 // TODO: maybe move another file
-static void addOptimizationPasses(
-  llvm::legacy::PassManagerBase& MPM,
-  llvm::legacy::FunctionPassManager& FPM,
-  llvm::TargetMachine& TM, unsigned optLevel,
-  unsigned sizeLevel) {
+static void addOptimizationPasses(llvm::legacy::PassManagerBase &MPM,
+                                  llvm::legacy::FunctionPassManager &FPM,
+                                  llvm::TargetMachine &TM, unsigned optLevel,
+                                  unsigned sizeLevel) {
   FPM.add(llvm::createVerifierPass()); // Verify that input is correct
 
   llvm::PassManagerBuilder builder;
@@ -68,8 +67,8 @@ static void addOptimizationPasses(
   builder.SizeLevel = sizeLevel;
 
   builder.Inliner =
-    llvm::createFunctionInliningPass(optLevel, sizeLevel,
-      /*DisableInlineHotCallSite*/ false);
+      llvm::createFunctionInliningPass(optLevel, sizeLevel,
+                                       /*DisableInlineHotCallSite*/ false);
 
   // Has some similar configuration as llvm/opt
   builder.DisableUnrollLoops = optLevel == 0;
@@ -82,18 +81,14 @@ static void addOptimizationPasses(
   builder.populateModulePassManager(MPM);
 }
 
-class SerializeToPTX : public PassWrapper<SerializeToPTX,
-                                          OperationPass<gpu::GPUModuleOp>> {
+class SerializeToPTX
+    : public PassWrapper<SerializeToPTX, OperationPass<gpu::GPUModuleOp>> {
 public:
-  SerializeToPTX(unsigned opt, 
-                  const std::string& libdeviceFile, 
-                  const std::string& triple,
-                  const std::string& chip, 
-                  const std::string& features,
-                  std::string& targetISA)
-    : optLevel(opt), libdeviceFile(libdeviceFile), 
-      triple(triple), chip(chip),
-      features(features), targetISA(targetISA) {}
+  SerializeToPTX(unsigned opt, const std::string &libdeviceFile,
+                 const std::string &triple, const std::string &chip,
+                 const std::string &features, std::string &targetISA)
+      : optLevel(opt), libdeviceFile(libdeviceFile), triple(triple), chip(chip),
+        features(features), targetISA(targetISA) {}
 
   void runOnOperation() override;
 
@@ -101,18 +96,20 @@ private:
   /// Creates the LLVM target machine to generate the ISA.
   std::unique_ptr<llvm::TargetMachine> createTargetMachine();
 
-  void translateToISA(llvm::Module& llvmModule, llvm::TargetMachine& targetMachine);
+  void translateToISA(llvm::Module &llvmModule,
+                      llvm::TargetMachine &targetMachine);
 
   /// Translates the 'getOperation()' result to an LLVM module.
-  std::unique_ptr<llvm::Module> translateToLLVMIR(llvm::LLVMContext& llvmContext);
+  std::unique_ptr<llvm::Module>
+  translateToLLVMIR(llvm::LLVMContext &llvmContext);
 
   // Serializes the target ISA to binary form.
   // Disable this for now
   // TODO add this back later
-  //std::unique_ptr<std::vector<char>> serializeISA(const std::string& isa);
+  // std::unique_ptr<std::vector<char>> serializeISA(const std::string& isa);
 
-  LogicalResult linkLibdevice(llvm::Module& llvmModule,
-    llvm::LLVMContext& llvmContext);
+  LogicalResult linkLibdevice(llvm::Module &llvmModule,
+                              llvm::LLVMContext &llvmContext);
 
   unsigned optLevel;
 
@@ -124,7 +121,7 @@ private:
 
   std::string features;
 
-  std::string& targetISA;
+  std::string &targetISA;
 };
 
 void SerializeToPTX::runOnOperation() {
@@ -136,13 +133,14 @@ void SerializeToPTX::runOnOperation() {
   if (!llvmModule) {
     return signalPassFailure();
   }
-  
+
   if (failed(linkLibdevice(*llvmModule, llvmContext))) {
     return signalPassFailure();
   }
 
   std::unique_ptr<llvm::TargetMachine> targetMachine = createTargetMachine();
-  if (!targetMachine) return signalPassFailure();
+  if (!targetMachine)
+    return signalPassFailure();
 
   translateToISA(*llvmModule, *targetMachine);
 }
@@ -150,16 +148,16 @@ void SerializeToPTX::runOnOperation() {
 std::unique_ptr<llvm::TargetMachine> SerializeToPTX::createTargetMachine() {
   Location loc = getOperation().getLoc();
   std::string error;
-  const llvm::Target* target = llvm::TargetRegistry::lookupTarget(triple, error);
+  const llvm::Target *target =
+      llvm::TargetRegistry::lookupTarget(triple, error);
 
   if (!target) {
     emitError(loc, Twine("failed to lookup target: ") + error);
     return {};
   }
 
-  llvm::TargetMachine* machine =
-    target->createTargetMachine(triple, chip, features, {}, {}, 
-                                None, LLVMCodeGenOpt(optLevel));
+  llvm::TargetMachine *machine = target->createTargetMachine(
+      triple, chip, features, {}, {}, None, LLVMCodeGenOpt(optLevel));
   if (!machine) {
     emitError(loc, "failed to create target machine");
     return {};
@@ -168,40 +166,40 @@ std::unique_ptr<llvm::TargetMachine> SerializeToPTX::createTargetMachine() {
   return std::unique_ptr<llvm::TargetMachine>{machine};
 }
 
-void SerializeToPTX::translateToISA(llvm::Module& llvmModule, 
-                                    llvm::TargetMachine& targetMachine) {
+void SerializeToPTX::translateToISA(llvm::Module &llvmModule,
+                                    llvm::TargetMachine &targetMachine) {
   llvmModule.setDataLayout(targetMachine.createDataLayout());
 
   llvm::raw_string_ostream stream(targetISA);
   llvm::buffer_ostream pstream(stream);
   llvm::legacy::PassManager codegenPasses;
   std::unique_ptr<llvm::legacy::FunctionPassManager> funPasses =
-    std::make_unique<llvm::legacy::FunctionPassManager>(&llvmModule);
+      std::make_unique<llvm::legacy::FunctionPassManager>(&llvmModule);
   funPasses->add(llvm::createTargetTransformInfoWrapperPass(
-    targetMachine.getTargetIRAnalysis()));
+      targetMachine.getTargetIRAnalysis()));
 
-  addOptimizationPasses(codegenPasses, *funPasses, targetMachine,
-                        optLevel, /*sizeLevel*/ 0);
+  addOptimizationPasses(codegenPasses, *funPasses, targetMachine, optLevel,
+                        /*sizeLevel*/ 0);
   funPasses->doInitialization();
-  for (llvm::Function& F : llvmModule) {
+  for (llvm::Function &F : llvmModule) {
     funPasses->run(F);
   }
 
   funPasses->doFinalization();
   codegenPasses.add(llvm::createVerifierPass());
   targetMachine.addPassesToEmitFile(codegenPasses, pstream, nullptr,
-    llvm::CGFT_AssemblyFile);
+                                    llvm::CGFT_AssemblyFile);
   codegenPasses.run(llvmModule);
 }
 
-std::unique_ptr<llvm::Module> 
-SerializeToPTX::translateToLLVMIR(llvm::LLVMContext& llvmContext) {
+std::unique_ptr<llvm::Module>
+SerializeToPTX::translateToLLVMIR(llvm::LLVMContext &llvmContext) {
   return translateModuleToLLVMIR(getOperation(), llvmContext,
-    "LLVMDialectModule");
+                                 "LLVMDialectModule");
 }
 
-LogicalResult SerializeToPTX::linkLibdevice(llvm::Module& llvmModule,
-                                            llvm::LLVMContext& llvmContext) {
+LogicalResult SerializeToPTX::linkLibdevice(llvm::Module &llvmModule,
+                                            llvm::LLVMContext &llvmContext) {
   if (libdeviceFile == "") {
     llvm::errs() << "Fatal: unable to locate libdevice.10.bc\n";
     return failure();
@@ -214,10 +212,10 @@ LogicalResult SerializeToPTX::linkLibdevice(llvm::Module& llvmModule,
   }
 
   auto moduleOrErr =
-    llvm::getOwningLazyBitcodeModule(std::move(libdeviceBuf), llvmContext);
+      llvm::getOwningLazyBitcodeModule(std::move(libdeviceBuf), llvmContext);
   if (!moduleOrErr) {
     llvm::errs() << "Failed to load libdevice bitcode from " << libdeviceFile
-      << "\n";
+                 << "\n";
     return failure();
   }
 
@@ -225,7 +223,7 @@ LogicalResult SerializeToPTX::linkLibdevice(llvm::Module& llvmModule,
   // Setup the same function attributes as those used by compiling a cuda
   // code with ``clang -O3''. The default function attributes are retrieved
   // based on the values from CodeGenModule::getDefaultFunctionAttributes
-  for (llvm::Function& F : *libdeviceModule.get()) {
+  for (llvm::Function &F : *libdeviceModule.get()) {
 
     // intrinsic not use attr
     if (F.isIntrinsic()) {
@@ -248,19 +246,19 @@ LogicalResult SerializeToPTX::linkLibdevice(llvm::Module& llvmModule,
     FuncAttrs.addAttribute(llvm::Attribute::Convergent);
     // no exceptions for cuda device code
     FuncAttrs.addAttribute(llvm::Attribute::NoUnwind);
- 
+
     F.addFnAttrs(FuncAttrs);
   }
 
   // libdevice module is of an ``internalize'' module
   if (llvm::Linker::linkModules(
-    llvmModule, std::move(libdeviceModule),
-    /*LinkFlags*/ llvm::Linker::Flags::LinkOnlyNeeded,
-    [](llvm::Module& M, const llvm::StringSet<>& GS) {
-      llvm::internalizeModule(M, [&GS](const llvm::GlobalValue& GV) {
-        return !GV.hasName() || (GS.count(GV.getName()) == 0);
-        });
-    })) {
+          llvmModule, std::move(libdeviceModule),
+          /*LinkFlags*/ llvm::Linker::Flags::LinkOnlyNeeded,
+          [](llvm::Module &M, const llvm::StringSet<> &GS) {
+            llvm::internalizeModule(M, [&GS](const llvm::GlobalValue &GV) {
+              return !GV.hasName() || (GS.count(GV.getName()) == 0);
+            });
+          })) {
     llvm::errs() << "failed to link libdevice module\n";
     return failure();
   }
@@ -268,15 +266,13 @@ LogicalResult SerializeToPTX::linkLibdevice(llvm::Module& llvmModule,
   return success();
 }
 
-} // namespace anonymous
+} // namespace
 
-std::unique_ptr<OperationPass<gpu::GPUModuleOp>>
-mlir::createSerializeToPTXPass(
-  unsigned optLevel, const std::string& libdeviceFile,
-  const std::string& triple, const std::string& chip,
-  const std::string& features, std::string& targetISA) {
+std::unique_ptr<OperationPass<gpu::GPUModuleOp>> mlir::createSerializeToPTXPass(
+    unsigned optLevel, const std::string &libdeviceFile,
+    const std::string &triple, const std::string &chip,
+    const std::string &features, std::string &targetISA) {
 
-  return std::make_unique<SerializeToPTX>(
-    optLevel, libdeviceFile, triple, chip, features,
-    targetISA);
+  return std::make_unique<SerializeToPTX>(optLevel, libdeviceFile, triple, chip,
+                                          features, targetISA);
 }

@@ -1,4 +1,5 @@
-//===- NVVMCodegen.cpp -----------------------------------------*--- C++ -*-===//
+//===- NVVMCodegen.cpp -----------------------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -13,20 +14,20 @@
 #include "byteir/Pipelines/Common.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToStandard/SCFToStandard.h"
-#include "mlir/Transforms/Passes.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
-#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/LLVMIR/NVVMDialect.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/Pass/PassManager.h"
+#include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
 
 namespace {
 
-  struct NVVMCodegenPipelinePass : public NVVMCodegenPipelineBase<NVVMCodegenPipelinePass> {
-  NVVMCodegenPipelinePass()
-    : NVVMCodegenPipelineBase() {
+struct NVVMCodegenPipelinePass
+    : public NVVMCodegenPipelineBase<NVVMCodegenPipelinePass> {
+  NVVMCodegenPipelinePass() : NVVMCodegenPipelineBase() {
     // TODO add target for supporting different SMs
     // TODO use target to decide passes
   }
@@ -46,12 +47,10 @@ namespace {
       signalPassFailure();
     }
   }
-
 };
 
 } // namespace
 
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createNVVMCodegenPipelinePass() {
+std::unique_ptr<OperationPass<ModuleOp>> mlir::createNVVMCodegenPipelinePass() {
   return std::make_unique<NVVMCodegenPipelinePass>();
 }

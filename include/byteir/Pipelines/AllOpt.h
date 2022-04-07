@@ -15,7 +15,8 @@
 namespace mlir {
 
 std::unique_ptr<OperationPass<ModuleOp>>
-createByteIRAllOptPipelinePass(const std::string& entry = "main", const std::string& target = "");
+createByteIRAllOptPipelinePass(const std::string &entry = "main",
+                               const std::string &target = "");
 
 } // namespace mlir
 

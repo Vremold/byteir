@@ -21,11 +21,12 @@ using namespace mlir::linalg;
 namespace {
 
 // Local utils
-// Return memory space from 'memSpaces' (a list of memory space) for a gvien idx. 
-// If out-of-bound, use the last value.
+// Return memory space from 'memSpaces' (a list of memory space) for a gvien
+// idx. If out-of-bound, use the last value.
 
 static int64_t getSpace(ArrayRef<int64_t> memSpaces, unsigned idx) {
-  if (memSpaces.size() == 0) return getUnplacedSpace();
+  if (memSpaces.size() == 0)
+    return getUnplacedSpace();
 
   if (idx < memSpaces.size()) {
     return memSpaces[idx];
@@ -33,9 +34,9 @@ static int64_t getSpace(ArrayRef<int64_t> memSpaces, unsigned idx) {
   return memSpaces.back();
 }
 
-static void dataPlaceImpl(
-  OpBuilder& b, LinalgOp op) {
-  if (op == nullptr) return;
+static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
+  if (op == nullptr)
+    return;
 
   SmallVector<int64_t> memSpaces;
 
@@ -110,23 +111,23 @@ static void dataPlaceImpl(
       ++idx;
     }
   }
-  
+
   op.erase();
 }
 
-static void collectAnchorOp(
-  FuncOp func, SmallVectorImpl<LinalgOp>& collection, ArrayRef<int64_t> spaces) {
+static void collectAnchorOp(FuncOp func, SmallVectorImpl<LinalgOp> &collection,
+                            ArrayRef<int64_t> spaces) {
   auto ctx = func.getContext();
 
   // collect op with getDataPlaceAttrName as intial values
   func.walk([&](LinalgOp op) {
     // skip non-targeting or visited block
     if (op->hasAttr(getDataPlaceAttrName())) {
-      
+
       // rewrite attribute to 'spaces' if it is UnitAttr
       if (op->hasAttrOfType<UnitAttr>(getDataPlaceAttrName())) {
         SmallVector<Attribute> arrayAttr;
-        
+
         for (auto s : spaces) {
           arrayAttr.push_back(IntegerAttr::get(IntegerType::get(ctx, 32), s));
         }
@@ -140,12 +141,9 @@ static void collectAnchorOp(
   });
 }
 
-
 struct LinalgDataPlacePass : public LinalgDataPlaceBase<LinalgDataPlacePass> {
   LinalgDataPlacePass() = default;
-  LinalgDataPlacePass(ArrayRef<int64_t> spaces) {
-    this->memSpaces = spaces;
-  }
+  LinalgDataPlacePass(ArrayRef<int64_t> spaces) { this->memSpaces = spaces; }
 
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
@@ -159,10 +157,9 @@ struct LinalgDataPlacePass : public LinalgDataPlaceBase<LinalgDataPlacePass> {
       dataPlaceImpl(b, op);
     }
   }
-
 };
 
-} // anonymous 
+} // namespace
 
 std::unique_ptr<OperationPass<FuncOp>>
 mlir::createLinalgDataPlacePass(ArrayRef<int64_t> spaces) {

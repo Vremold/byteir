@@ -47,8 +47,8 @@ namespace byteir {
 namespace test {
 void registerTestPrintLivenessPass();
 void registerTestPrintUseRangePass();
-}
-}
+} // namespace test
+} // namespace byteir
 
 #ifdef BYTEIR_INCLUDE_TESTS
 void registerTestPasses() {

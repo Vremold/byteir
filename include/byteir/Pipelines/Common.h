@@ -12,9 +12,9 @@
 
 namespace mlir {
 
-void addCleanUpPassPipeline(OpPassManager& pm);
+void addCleanUpPassPipeline(OpPassManager &pm);
 
-void addMultiCSEPipeline(OpPassManager& pm, unsigned cnt);
+void addMultiCSEPipeline(OpPassManager &pm, unsigned cnt);
 
 } // namespace mlir
 

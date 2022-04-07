@@ -26,10 +26,9 @@ using namespace mlir::memref;
 
 namespace {
 
-static 
-void collectAnchorCopy(
-  FuncOp func, SmallVectorImpl<linalg::CopyOp> &collection, 
-  IntegerAttr anchorAttr) {
+static void collectAnchorCopy(FuncOp func,
+                              SmallVectorImpl<linalg::CopyOp> &collection,
+                              IntegerAttr anchorAttr) {
   // collect op with getPrefetchAttrName as intial values
   func.walk([&](linalg::CopyOp op) {
     // skip non-targeting or visited block
@@ -45,10 +44,11 @@ void collectAnchorCopy(
   });
 }
 
-static 
-bool isLoopCountEnoughForPrefetch(LoopLikeOpInterface looplike, int64_t prefetchCnt) {
+static bool isLoopCountEnoughForPrefetch(LoopLikeOpInterface looplike,
+                                         int64_t prefetchCnt) {
 
-  if (prefetchCnt <= 0 || looplike == nullptr) return false;
+  if (prefetchCnt <= 0 || looplike == nullptr)
+    return false;
 
   // handle scf::ForOp
   if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
@@ -57,29 +57,23 @@ bool isLoopCountEnoughForPrefetch(LoopLikeOpInterface looplike, int64_t prefetch
     auto maybeStep = getConstantIntValue(forOp.getStep());
 
     // always allowed if dynamic
-    if (!maybeLowerBoundInt.hasValue() || 
-        !maybeUpperBoundInt.hasValue() ||
+    if (!maybeLowerBoundInt.hasValue() || !maybeUpperBoundInt.hasValue() ||
         !maybeStep.hasValue()) {
       return true;
     } else {
-      // check loop count as least prefetchCnt 
+      // check loop count as least prefetchCnt
       int64_t range =
-        maybeUpperBoundInt.getValue() - maybeLowerBoundInt.getValue();
+          maybeUpperBoundInt.getValue() - maybeLowerBoundInt.getValue();
 
       return range >= prefetchCnt * maybeStep.getValue();
     }
   }
   return false;
-
 }
 
-static 
-Operation* CloneCopy(
-  OpBuilder &b, linalg::CopyOp oldCopy, 
-  Value iv, Value index,
-  Operation *output = nullptr) {
+static Operation *CloneCopy(OpBuilder &b, linalg::CopyOp oldCopy, Value iv,
+                            Value index, Operation *output = nullptr) {
 
-  
   auto inputDef = oldCopy.input().getDefiningOp();
   BlockAndValueMapping bvm;
   bvm.map(iv, index);
@@ -92,17 +86,14 @@ Operation* CloneCopy(
 
   // create a copy
   auto loc = oldCopy.getLoc();
-  b.create<linalg::CopyOp>(loc, input->getResult(0), 
-                           output->getResult(0));
+  b.create<linalg::CopyOp>(loc, input->getResult(0), output->getResult(0));
   return output;
 }
 
-
-static
-void createPrefetchAllocAndCopyInPrologue(
-  OpBuilder &b, linalg::CopyOp oldCopy,
-  LoopLikeOpInterface looplike, int64_t cnt, 
-  SmallVectorImpl<Operation*> &newDsts) {
+static void
+createPrefetchAllocAndCopyInPrologue(OpBuilder &b, linalg::CopyOp oldCopy,
+                                     LoopLikeOpInterface looplike, int64_t cnt,
+                                     SmallVectorImpl<Operation *> &newDsts) {
 
   auto loopIV = getInductionVar(looplike);
   auto outputDef = oldCopy.output().getDefiningOp();
@@ -113,7 +104,7 @@ void createPrefetchAllocAndCopyInPrologue(
     auto prefetchIndex = createIndexValue(b, looplike, i);
 
     if (i == 0) {
-      (void) CloneCopy(b, oldCopy, loopIV, prefetchIndex, outputDef);
+      (void)CloneCopy(b, oldCopy, loopIV, prefetchIndex, outputDef);
     } else {
       auto alloc = CloneCopy(b, oldCopy, loopIV, prefetchIndex);
       newDsts.push_back(alloc);
@@ -125,10 +116,9 @@ void createPrefetchAllocAndCopyInPrologue(
   newDsts.push_back(alloc);
 }
 
-static void modifyLoopBody(
-  OpBuilder &b, linalg::CopyOp oldCopy,
-  LoopLikeOpInterface looplike, int64_t cnt,
-  ArrayRef<Operation *> newDsts, bool unroll) {
+static void modifyLoopBody(OpBuilder &b, linalg::CopyOp oldCopy,
+                           LoopLikeOpInterface looplike, int64_t cnt,
+                           ArrayRef<Operation *> newDsts, bool unroll) {
 
   auto loopIV = getInductionVar(looplike);
   auto &loopBlock = looplike.getLoopBody().front();
@@ -145,37 +135,38 @@ static void modifyLoopBody(
       // set insert point every iteration
       b.setInsertionPoint(loopBlock.getTerminator());
       // unrollIndex is for non-prefetch
-      auto unrollIndex = createRelativeIndexValue(b, looplike, i + 1);  
+      auto unrollIndex = createRelativeIndexValue(b, looplike, i + 1);
 
       BlockAndValueMapping bvm;
       bvm.map(loopIV, unrollIndex);
       bvm.map(oldCopy.output(), newDsts[i]->getResult(0));
 
       auto guardedUnrollBlock = createGuardedBranch(b, unrollIndex, looplike);
-      if (guardedUnrollBlock == nullptr) return;
+      if (guardedUnrollBlock == nullptr)
+        return;
       b.setInsertionPointToStart(guardedUnrollBlock);
-   
+
       for (auto op : opsInBlock) {
         if (op == oldCopy.getOperation()) {
 
           // unrollPrefetchIndex is for prefetch
-          auto unrolllb =
-              createRelativeIndexValue(b, looplike, cnt + 1);
+          auto unrolllb = createRelativeIndexValue(b, looplike, cnt + 1);
 
-          auto unrollPrefetchIndex = 
+          auto unrollPrefetchIndex =
               createLinearIndexValue(b, unrolllb, oldStep, i);
 
           // clone copy into a guarded copy with last prefetch index
           auto guardedBlock =
               createGuardedBranch(b, unrollPrefetchIndex, looplike);
-          if (guardedBlock == nullptr) return;
+          if (guardedBlock == nullptr)
+            return;
 
           auto ip = b.saveInsertionPoint();
           b.setInsertionPointToStart(guardedBlock);
           Operation *ouput =
               i == 0 ? oldCopy.output().getDefiningOp() : newDsts[i - 1];
-              
-          (void) CloneCopy(b, oldCopy, loopIV, unrollPrefetchIndex, ouput);
+
+          (void)CloneCopy(b, oldCopy, loopIV, unrollPrefetchIndex, ouput);
           b.restoreInsertionPoint(ip);
         } else {
           b.clone(*op, bvm);
@@ -191,9 +182,10 @@ static void modifyLoopBody(
 
     // clone copy into a guarded copy with last prefetch index
     auto guardedBlock = createGuardedBranch(b, prefetchIndex, looplike);
-    if (guardedBlock == nullptr) return;
+    if (guardedBlock == nullptr)
+      return;
     b.setInsertionPointToStart(guardedBlock);
-    (void) CloneCopy(b, oldCopy, loopIV, prefetchIndex, newDsts.back());
+    (void)CloneCopy(b, oldCopy, loopIV, prefetchIndex, newDsts.back());
 
     oldCopy.erase();
   }
@@ -216,17 +208,16 @@ static void modifyLoopBody(
   }
 }
 
-static 
-void prefetchImpl(OpBuilder &b, linalg::CopyOp oldCopy, bool unroll) {
+static void prefetchImpl(OpBuilder &b, linalg::CopyOp oldCopy, bool unroll) {
   // get prefetchCnt
-  auto prefetchCnt = 
-    oldCopy->getAttrOfType<IntegerAttr>(getPrefetchAttrName()).getInt();
-
+  auto prefetchCnt =
+      oldCopy->getAttrOfType<IntegerAttr>(getPrefetchAttrName()).getInt();
 
   auto looplike = oldCopy->getParentOfType<LoopLikeOpInterface>();
 
   // check whether it is valid first
-  if (!isLoopCountEnoughForPrefetch(looplike, prefetchCnt)) return;
+  if (!isLoopCountEnoughForPrefetch(looplike, prefetchCnt))
+    return;
 
   SmallVector<Operation *> newDsts;
   createPrefetchAllocAndCopyInPrologue(b, oldCopy, looplike, prefetchCnt,
@@ -236,8 +227,7 @@ void prefetchImpl(OpBuilder &b, linalg::CopyOp oldCopy, bool unroll) {
 }
 
 struct LinalgPrefetchPass : public LinalgPrefetchBase<LinalgPrefetchPass> {
-  LinalgPrefetchPass(int64_t cnt, bool unroll)
-      : LinalgPrefetchBase() {
+  LinalgPrefetchPass(int64_t cnt, bool unroll) : LinalgPrefetchBase() {
     this->prefetchCnt = cnt;
     this->unroll = unroll;
   }
@@ -245,8 +235,8 @@ struct LinalgPrefetchPass : public LinalgPrefetchBase<LinalgPrefetchPass> {
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
     auto ctx = funcOp.getContext();
-    auto anchoredAttr = 
-      IntegerAttr::get(IntegerType::get(ctx, 32), prefetchCnt);
+    auto anchoredAttr =
+        IntegerAttr::get(IntegerType::get(ctx, 32), prefetchCnt);
 
     SmallVector<linalg::CopyOp> collection;
     collectAnchorCopy(funcOp, collection, anchoredAttr);
@@ -257,10 +247,9 @@ struct LinalgPrefetchPass : public LinalgPrefetchBase<LinalgPrefetchPass> {
       prefetchImpl(b, op, unroll);
     }
   }
-
 };
 
-} // anonymous 
+} // namespace
 
 std::unique_ptr<OperationPass<FuncOp>>
 mlir::createLinalgPrefetchPass(int64_t prefetchCnt, bool unroll) {

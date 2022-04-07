@@ -6,14 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Byre/Transforms/Fold.h"
+#include "PassDetail.h"
+#include "byteir/Analysis/Alias.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Analysis/Alias.h"
-#include "llvm/ADT/EquivalenceClasses.h"
 #include "mlir/IR/Builders.h"
-#include "PassDetail.h"
+#include "llvm/ADT/EquivalenceClasses.h"
 #include <functional>
-
 
 using namespace byteir;
 using namespace llvm;
@@ -23,10 +22,9 @@ using namespace mlir::byre;
 namespace {
 
 struct ByreAliasAnalysis : public AliasAnalysis {
-  ByreAliasAnalysis(mlir::Block* b,
-                   llvm::ArrayRef<mlir::Value> initial_copy,
-                   std::function<bool(mlir::Operation& op)> is_alias)
-    : AliasAnalysis(b, initial_copy, is_alias) {
+  ByreAliasAnalysis(mlir::Block *b, llvm::ArrayRef<mlir::Value> initial_copy,
+                    std::function<bool(mlir::Operation &op)> is_alias)
+      : AliasAnalysis(b, initial_copy, is_alias) {
     offsets.resize(values.size(), 0);
   }
 
@@ -42,9 +40,10 @@ struct ByreAliasAnalysis : public AliasAnalysis {
   }
 
   void RunOnBlock() override {
-    if (block->empty()) return;
+    if (block->empty())
+      return;
 
-    for (auto& op : block->without_terminator()) {
+    for (auto &op : block->without_terminator()) {
       if (is_alias(op)) {
         int in_idx = GetOrCreateIndex(op.getOperand(0));
         int in_leader = leader_to_index.getLeaderValue(in_idx);
@@ -69,7 +68,7 @@ struct ByreAliasAnalysis : public AliasAnalysis {
   SmallVector<int> offsets;
 };
 
-bool IsAliasOp(Operation& op) {
+bool IsAliasOp(Operation &op) {
   if (auto compute_op = dyn_cast<byre::ComputeOp>(op)) {
     return compute_op.getCallee() == "AliasOp";
   }
@@ -84,7 +83,7 @@ void FoldAlias(FuncOp func) {
     initial_copy.push_back(val);
   }
 
-  auto& func_block = func.getBody().front();
+  auto &func_block = func.getBody().front();
   ByreAliasAnalysis byre_alias(&func_block, initial_copy, IsAliasOp);
   byre_alias.RunOnBlock();
 
@@ -103,7 +102,8 @@ void FoldAlias(FuncOp func) {
         int out_idx = byre_alias.GetOrCreateIndex(out_val);
         auto offset = byre_alias.offsets[out_idx];
         compute_op.setOperand(0, leader_val);
-        compute_op->setAttr("offset", IntegerAttr::get(IntegerType::get(ctx, 32), offset));
+        compute_op->setAttr(
+            "offset", IntegerAttr::get(IntegerType::get(ctx, 32), offset));
 
         if (leader_val.getDefiningOp() == nullptr) {
           compute_op->setAttr("arg_alias", UnitAttr::get(ctx));
@@ -122,7 +122,7 @@ struct ByreHoldPass : public ByreFoldBase<ByreHoldPass> {
     FoldAlias(func);
   }
 };
-} // namespace anonymous
+} // namespace
 
 std::unique_ptr<OperationPass<FuncOp>> mlir::createByreFoldPass() {
   return std::make_unique<ByreHoldPass>();

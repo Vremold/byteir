@@ -7,28 +7,30 @@
 
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
-#include "llvm/ADT/SmallVector.h"
 #include "mlir/IR/Block.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/TypeRange.h"
+#include "llvm/ADT/SmallVector.h"
 
 #include <tuple>
 
 using namespace llvm;
 using namespace mlir;
 
-void mlir::ReplicateDefiningOp(Block* block, std::function<bool(Operation*)> checkFunc) {
-  if (block->empty()) return;
+void mlir::ReplicateDefiningOp(Block *block,
+                               std::function<bool(Operation *)> checkFunc) {
+  if (block->empty())
+    return;
   auto ctx = block->front().getContext();
   OpBuilder builder(ctx);
 
-  SmallVector<std::tuple<Operation*, unsigned int, unsigned int>> replaceOps;
+  SmallVector<std::tuple<Operation *, unsigned int, unsigned int>> replaceOps;
 
   for (auto it = block->begin(); it != block->end(); ++it) {
-    auto& op = *it;
-   
+    auto &op = *it;
+
     for (unsigned int i = 0; i < op.getNumOperands(); ++i) {
       auto val = op.getOperand(i);
       auto opDef = val.getDefiningOp();
@@ -39,7 +41,7 @@ void mlir::ReplicateDefiningOp(Block* block, std::function<bool(Operation*)> che
     }
   }
 
-  for (auto& t : replaceOps) {
+  for (auto &t : replaceOps) {
     auto op = std::get<0>(t);
     auto opId = std::get<1>(t);
     auto resId = std::get<2>(t);
@@ -47,19 +49,22 @@ void mlir::ReplicateDefiningOp(Block* block, std::function<bool(Operation*)> che
   }
 }
 
-Operation* mlir::ReplicateDefiningOp(OpBuilder& b, Operation* op, unsigned opIdx, unsigned resIdx) {
-  if (op == nullptr) return nullptr; 
+Operation *mlir::ReplicateDefiningOp(OpBuilder &b, Operation *op,
+                                     unsigned opIdx, unsigned resIdx) {
+  if (op == nullptr)
+    return nullptr;
   auto opDef = op->getOperand(opIdx).getDefiningOp();
-  if (opDef == nullptr) return nullptr;
+  if (opDef == nullptr)
+    return nullptr;
   b.setInsertionPoint(opDef);
   auto cloned = b.clone(*opDef);
   op->setOperand(opIdx, cloned->getResult(resIdx));
   return cloned;
 }
 
-
 Operation *mlir::cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
-  BlockAndValueMapping bvm, TypeRange types) {
+                                            BlockAndValueMapping bvm,
+                                            TypeRange types) {
 
   auto newOp = b.clone(*op, bvm);
   // force resetting type since we didn't perform type inference
@@ -69,4 +74,3 @@ Operation *mlir::cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
   }
   return newOp;
 }
-

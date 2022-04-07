@@ -13,8 +13,7 @@
 
 namespace mlir {
 
-std::unique_ptr<OperationPass<ModuleOp>>
-createFusionOutliningPass();
+std::unique_ptr<OperationPass<ModuleOp>> createFusionOutliningPass();
 
 } // namespace mlir
 

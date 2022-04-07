@@ -105,11 +105,13 @@ std::unique_ptr<OperationPass<ModuleOp>> mlir::createSetArgShapePass() {
 std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createSetArgShapePass(int dim, int size, std::string entryFuncName,
                             std::string argAttrName) {
-  return std::make_unique<SetArgShapePass>(dim, size, entryFuncName, argAttrName);
+  return std::make_unique<SetArgShapePass>(dim, size, entryFuncName,
+                                           argAttrName);
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createSetArgShapePass(int dim, int size, std::string entryFuncName,
                             std::function<bool(BlockArgument)> shouldSetShape) {
-  return std::make_unique<SetArgShapePass>(dim, size, entryFuncName, shouldSetShape);
+  return std::make_unique<SetArgShapePass>(dim, size, entryFuncName,
+                                           shouldSetShape);
 }

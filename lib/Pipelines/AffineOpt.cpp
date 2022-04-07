@@ -1,4 +1,5 @@
-//===- AffineOpt.cpp ---------------------------------------------*--- C++ -*-===//
+//===- AffineOpt.cpp ---------------------------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -11,20 +12,20 @@
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/Common.h"
 #include "byteir/Transforms/Passes.h"
+#include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 
 using namespace mlir;
 using namespace mlir::mhlo;
 
 namespace {
 
-  struct AffineOptPipelinePass : public AffineOptPipelineBase<AffineOptPipelinePass> {
-  AffineOptPipelinePass()
-    : AffineOptPipelineBase() {}
+struct AffineOptPipelinePass
+    : public AffineOptPipelineBase<AffineOptPipelinePass> {
+  AffineOptPipelinePass() : AffineOptPipelineBase() {}
 
   void runOnOperation() override {
     auto m = getOperation();
@@ -34,8 +35,8 @@ namespace {
     pm.addNestedPass<FuncOp>(createLoopCoalescingPass());
     pm.addNestedPass<FuncOp>(createSimplifyAffineStructuresPass());
     pm.addNestedPass<FuncOp>(createAffineLoopFusionExPass());
-    pm.addNestedPass<FuncOp>(
-      createInsertTrivialAffineLoopPass(getByteIRElementwiseFusionAttrName()));
+    pm.addNestedPass<FuncOp>(createInsertTrivialAffineLoopPass(
+        getByteIRElementwiseFusionAttrName()));
     pm.addPass(createCSEPass());
     pm.addNestedPass<FuncOp>(createCMAEPass());
 
@@ -43,13 +44,10 @@ namespace {
       signalPassFailure();
     }
   }
-
 };
-
 
 } // namespace
 
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createAffineOptPipelinePass() {
+std::unique_ptr<OperationPass<ModuleOp>> mlir::createAffineOptPipelinePass() {
   return std::make_unique<AffineOptPipelinePass>();
 }

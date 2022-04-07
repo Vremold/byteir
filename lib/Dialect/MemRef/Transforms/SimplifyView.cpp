@@ -6,12 +6,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/MemRef/Transforms/SimplifyView.h"
+#include "PassDetail.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/StandardOps/Transforms/ComposeSubView.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -22,8 +22,10 @@ using namespace mlir::memref;
 namespace {
 
 // Util linearize
-Optional<int64_t> getLinearizeOffset(ArrayRef<int64_t> offsets, ArrayRef<int64_t> sizes) {
-  if (sizes.size() == 0) return 0;
+Optional<int64_t> getLinearizeOffset(ArrayRef<int64_t> offsets,
+                                     ArrayRef<int64_t> sizes) {
+  if (sizes.size() == 0)
+    return 0;
 
   int64_t sum = 0;
   int64_t prod = 1;
@@ -45,9 +47,7 @@ Optional<int64_t> getLinearizeOffset(ArrayRef<int64_t> offsets, ArrayRef<int64_t
   return sum;
 }
 
-inline int64_t getBytes(int64_t bits) { 
-  return (bits + 7) >> 3; 
-}
+inline int64_t getBytes(int64_t bits) { return (bits + 7) >> 3; }
 
 struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
   using OpRewritePattern<memref::SubViewOp>::OpRewritePattern;
@@ -56,8 +56,8 @@ struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
                                 PatternRewriter &rewriter) const override {
 
     auto srcView = op.source().getDefiningOp<memref::ViewOp>();
-    if (!srcView) return failure();
-
+    if (!srcView)
+      return failure();
 
     // A 'SubViewOp' can be "rank-reducing" by eliminating dimensions of the
     // output memref that are statically known to be equal to 1. We do not
@@ -73,7 +73,6 @@ struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
     if (!isStaticShapeAndContiguousRowMajor(op.getType())) {
       return failure();
     }
-
 
     SmallVector<OpFoldResult> strides = op.getMixedStrides();
 
@@ -99,26 +98,25 @@ struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
     }
 
     auto maybeInt = getLinearizeOffset(offsets, srcView.getType().getShape());
-    if (!maybeInt.hasValue()) failure();
+    if (!maybeInt.hasValue())
+      failure();
 
-    int64_t offsetInByte 
-      = maybeInt.getValue() * getBytes(op.getType().getElementTypeBitWidth());
+    int64_t offsetInByte =
+        maybeInt.getValue() * getBytes(op.getType().getElementTypeBitWidth());
 
-    auto lieanrizedOffset = 
-      rewriter.create<arith::ConstantIndexOp>(op.getLoc(), offsetInByte);
+    auto lieanrizedOffset =
+        rewriter.create<arith::ConstantIndexOp>(op.getLoc(), offsetInByte);
 
     auto newShift = rewriter.create<arith::AddIOp>(
         op.getLoc(), srcView.byte_shift(), lieanrizedOffset.getResult());
 
     // New MemRefType
     auto newMemRefType = MemRefType::get(
-      op.getType().getShape(), 
-      op.getType().getElementType(), 
-      MemRefLayoutAttrInterface{}, 
-      op.getType().getMemorySpace());
+        op.getType().getShape(), op.getType().getElementType(),
+        MemRefLayoutAttrInterface{}, op.getType().getMemorySpace());
 
     rewriter.replaceOpWithNewOp<memref::ViewOp>(
-      op, newMemRefType, srcView.source(), newShift.getResult(), op.sizes());
+        op, newMemRefType, srcView.source(), newShift.getResult(), op.sizes());
 
     return success();
   }
@@ -130,13 +128,14 @@ struct ComposeViewOfView : public OpRewritePattern<memref::ViewOp> {
   LogicalResult matchAndRewrite(memref::ViewOp op,
                                 PatternRewriter &rewriter) const override {
     auto srcView = op.source().getDefiningOp<memref::ViewOp>();
-    if (!srcView) return failure();
+    if (!srcView)
+      return failure();
 
-    auto newShift = rewriter.create<arith::AddIOp>(
-      op.getLoc(), op.byte_shift(), srcView.byte_shift());
+    auto newShift = rewriter.create<arith::AddIOp>(op.getLoc(), op.byte_shift(),
+                                                   srcView.byte_shift());
 
-    rewriter.replaceOpWithNewOp<memref::ViewOp>(op, 
-      op.getType(), srcView.source(), newShift.getResult(), op.sizes());
+    rewriter.replaceOpWithNewOp<memref::ViewOp>(
+        op, op.getType(), srcView.source(), newShift.getResult(), op.sizes());
 
     return success();
   }
@@ -157,12 +156,11 @@ public:
   }
 };
 
-} // namespace anonymous
+} // namespace
 
 void mlir::populateSimplifyViewPattern(RewritePatternSet &patterns) {
   populateComposeSubViewPatterns(patterns, patterns.getContext());
-  patterns.add<ComposeViewOfView, 
-               ComposeSubViewOfView>(patterns.getContext());
+  patterns.add<ComposeViewOfView, ComposeSubViewOfView>(patterns.getContext());
 }
 
 std::unique_ptr<OperationPass<FuncOp>> mlir::createSimplifyViewPass() {

@@ -6,10 +6,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/GraphClusteringByDevice.h"
+#include "PassDetail.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
-#include "PassDetail.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"

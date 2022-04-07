@@ -84,7 +84,7 @@ SmallVector<bool> BinaryElementwiseHandleFlag(Operation *op,
   }
   return res;
 }
-}
+} // namespace
 
 SmallVector<bool> DimFromBroadcast::Compute(Value v) {
   auto shaped_type = v.getType().dyn_cast<ShapedType>();

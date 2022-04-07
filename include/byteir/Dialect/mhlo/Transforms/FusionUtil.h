@@ -27,7 +27,7 @@ namespace mhlo {
 class FusionOp;
 } // namespace mhlo
 
-using MhloFusionPattern = llvm::SmallVector<Operation*, 8>;
+using MhloFusionPattern = llvm::SmallVector<Operation *, 8>;
 using MhloFusionPlan = llvm::SmallVector<MhloFusionPattern, 8>;
 
 // A generic way rewriting MhloFusionPattern to FusionOps
@@ -47,7 +47,8 @@ mhlo::FusionOp createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
                                            ValueRange outputs,
                                            const MhloFusionPattern &pattern);
 
-void applyMhloFusionPattern(const MhloFusionPattern& pattern, llvm::StringRef tag);
+void applyMhloFusionPattern(const MhloFusionPattern &pattern,
+                            llvm::StringRef tag);
 
 // A predefined FusionPlanner using 3 criteria funcs
 // It can be used to as a skeleton for fusion pass
@@ -58,33 +59,31 @@ void applyMhloFusionPattern(const MhloFusionPattern& pattern, llvm::StringRef ta
 // TODO implement consumer direction later
 class ProducerFusionPlanner {
 public:
-  ProducerFusionPlanner(mlir::FuncOp funcOp,
-    std::function<bool(Operation*)> fuse_candidate,
-    std::function<bool(Operation*)> fuse_start,
-    std::function<bool(Operation*, Operation*)> fuse_with);
+  ProducerFusionPlanner(
+      mlir::FuncOp funcOp, std::function<bool(Operation *)> fuse_candidate,
+      std::function<bool(Operation *)> fuse_start,
+      std::function<bool(Operation *, Operation *)> fuse_with);
 
   void Run();
 
-  const MhloFusionPlan& GetFusionPlan() {
-    return fusion_plan_;
-  }
+  const MhloFusionPlan &GetFusionPlan() { return fusion_plan_; }
 
 private:
   // OpDependenceInfo analysis
   std::unique_ptr<OpDependenceInfo> dependence_;
 
   // Fusible criteria functions
-  std::function<bool(Operation*)> fuse_candidate_;
+  std::function<bool(Operation *)> fuse_candidate_;
 
-  std::function<bool(Operation*)> fuse_start_;
+  std::function<bool(Operation *)> fuse_start_;
 
-  std::function<bool(Operation*, Operation*)> fuse_with_;
+  std::function<bool(Operation *, Operation *)> fuse_with_;
 
   // a list of all candidates
-  SmallVector<Operation*, 8> op_list_;
+  SmallVector<Operation *, 8> op_list_;
 
   // NodeMap from op to id
-  llvm::DenseMap<Operation*, int> op_to_node_id_;
+  llvm::DenseMap<Operation *, int> op_to_node_id_;
 
   // a UnionFind set
   llvm::EquivalenceClasses<int> leader_to_nodes_;
@@ -96,13 +95,13 @@ private:
   MhloFusionPlan fusion_plan_;
 
   // return true, when two clusters already fused
-  bool AlreayFused(Operation* pre_op, Operation* cur_op);
+  bool AlreayFused(Operation *pre_op, Operation *cur_op);
 
   // return true, when two clusters can be fused
-  bool CheckFusionLegal(Operation* pre_op, Operation* cur_op);
+  bool CheckFusionLegal(Operation *pre_op, Operation *cur_op);
 
   // fuse two clusters, each having each op
-  void Merge(Operation* pre_op, Operation* cur_op);
+  void Merge(Operation *pre_op, Operation *cur_op);
 };
 
 } // namespace mlir

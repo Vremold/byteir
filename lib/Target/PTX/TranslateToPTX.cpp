@@ -9,13 +9,6 @@
 
 #include "byteir/Target/Common/Common.h"
 #include "byteir/Target/PTX/Passes.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/InitLLVM.h"
-#include "llvm/Support/Path.h"
-#include "llvm/Support/Process.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Support/ToolOutputFile.h"
 #include "mlir/ExecutionEngine/OptUtils.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Dialect.h"
@@ -27,6 +20,13 @@
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Support/FileUtilities.h"
 #include "mlir/Support/ToolUtilities.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/Path.h"
+#include "llvm/Support/Process.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/ToolOutputFile.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -38,213 +38,211 @@ extern "C" void LLVMInitializeNVPTXAsmPrinter();
 
 namespace {
 
-  const char* nvptxTriple = "nvptx64-nvidia-cuda";
-  const char* ptxFeatures = "+ptx64";
+const char *nvptxTriple = "nvptx64-nvidia-cuda";
+const char *ptxFeatures = "+ptx64";
 
-  static void findLibDeviceFile(std::string& libdeviceFile) {
-    // Get the cuda installation path from CUDA_HOME environment. If it's not
-    // set, we will try to find one from the default installation location for
-    // CUDA 11.5 in the corresponding system.
-    Optional<std::string> cudaHome = llvm::sys::Process::GetEnv("CUDA_HOME");
-    SmallVector<std::string, 2> defaultPaths;
-    if (cudaHome.hasValue()) {
-      defaultPaths.emplace_back(cudaHome.getValue());
-    }
-    else {
-      // try to get libdevice.bc from the default location for CUDA 11.5
-      const char* cudaVer = "11.5";
+static void findLibDeviceFile(std::string &libdeviceFile) {
+  // Get the cuda installation path from CUDA_HOME environment. If it's not
+  // set, we will try to find one from the default installation location for
+  // CUDA 11.5 in the corresponding system.
+  Optional<std::string> cudaHome = llvm::sys::Process::GetEnv("CUDA_HOME");
+  SmallVector<std::string, 2> defaultPaths;
+  if (cudaHome.hasValue()) {
+    defaultPaths.emplace_back(cudaHome.getValue());
+  } else {
+    // try to get libdevice.bc from the default location for CUDA 11.5
+    const char *cudaVer = "11.5";
 #ifdef _WIN32
-      defaultPaths.push_back(
+    defaultPaths.push_back(
         std::string(
-          "c:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v") +
+            "c:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v") +
         cudaVer);
 #elif __linux__
-      defaultPaths.push_back("/usr/local/cuda");
-      defaultPaths.push_back(std::string("/usr/local/cuda-") + cudaVer);
+    defaultPaths.push_back("/usr/local/cuda");
+    defaultPaths.push_back(std::string("/usr/local/cuda-") + cudaVer);
 #else
 #error "Unsupported platform"
 #endif
-    }
+  }
 
-    for (auto const& p : defaultPaths) {
-      llvm::SmallString<256> path(p);
-      llvm::sys::path::append(path, "nvvm", "libdevice", "libdevice.10.bc");
-      if (llvm::sys::fs::exists(path)) {
-        libdeviceFile = path.c_str();
-        break;
-      }
+  for (auto const &p : defaultPaths) {
+    llvm::SmallString<256> path(p);
+    llvm::sys::path::append(path, "nvvm", "libdevice", "libdevice.10.bc");
+    if (llvm::sys::fs::exists(path)) {
+      libdeviceFile = path.c_str();
+      break;
+    }
+  }
+}
+
+struct ptxGenerator {
+  std::string outPrefix;
+  OptLevel codeGenOpt;
+  std::string gpuArch;
+  bool dumpPtx;
+  bool saveTemps;
+  bool verbose;
+  std::string libdeviceFile;
+
+  ptxGenerator(const std::string &prefix, OptLevel level,
+               const std::string &arch, bool dump, bool save, bool verb)
+      : outPrefix(prefix), codeGenOpt(level), gpuArch(arch), dumpPtx(dump),
+        saveTemps(save), verbose(verb) {
+    findLibDeviceFile(libdeviceFile);
+  }
+
+  void printVerbose(llvm::Twine msg) {
+    if (verbose) {
+      llvm::outs() << msg;
     }
   }
 
-  struct ptxGenerator {
-    std::string outPrefix;
-    OptLevel codeGenOpt;
-    std::string gpuArch;
-    bool dumpPtx;
-    bool saveTemps;
-    bool verbose;
-    std::string libdeviceFile;
-
-    ptxGenerator(const std::string& prefix, OptLevel level, const std::string& arch,
-      bool dump, bool save, bool verb)
-      : outPrefix(prefix), codeGenOpt(level), gpuArch(arch), dumpPtx(dump),
-      saveTemps(save), verbose(verb) {
-      findLibDeviceFile(libdeviceFile);
-    }
-
-    void printVerbose(llvm::Twine msg) {
-      if (verbose) {
-        llvm::outs() << msg;
-      }
-    }
-
-    mlir::LogicalResult dumpModuleOpToFile(
-      mlir::ModuleOp moduleOp,
-      const llvm::Twine& filename) {
-      std::string errorMessage;
-      SmallString<64> tmpBuf;
-      auto outputFile =
+  mlir::LogicalResult dumpModuleOpToFile(mlir::ModuleOp moduleOp,
+                                         const llvm::Twine &filename) {
+    std::string errorMessage;
+    SmallString<64> tmpBuf;
+    auto outputFile =
         mlir::openOutputFile(filename.toStringRef(tmpBuf), &errorMessage);
-      if (!outputFile) {
-        llvm::errs() << errorMessage << "\n";
-        return mlir::failure();
-      }
-      moduleOp.print(outputFile->os());
-      outputFile->keep();
-      printVerbose("...saved module to " + filename + "\n");
-      return mlir::success();
+    if (!outputFile) {
+      llvm::errs() << errorMessage << "\n";
+      return mlir::failure();
+    }
+    moduleOp.print(outputFile->os());
+    outputFile->keep();
+    printVerbose("...saved module to " + filename + "\n");
+    return mlir::success();
+  }
+
+  mlir::LogicalResult runMLIRPass(mlir::ModuleOp moduleOp,
+                                  std::unique_ptr<mlir::Pass> pass,
+                                  const llvm::Twine &outputName,
+                                  StringRef passName, bool save_output = true,
+                                  bool gpu_pass = false) {
+    printVerbose("Start running pass " + passName + "\n");
+    mlir::PassManager pm(moduleOp.getContext(),
+                         OpPassManager::Nesting::Implicit);
+    applyPassManagerCLOptions(pm);
+    if (gpu_pass) {
+      auto &kernelPm = pm.nest<mlir::gpu::GPUModuleOp>();
+      kernelPm.addPass(std::move(pass));
+    } else {
+      pm.addPass(std::move(pass));
     }
 
-    mlir::LogicalResult
-      runMLIRPass(mlir::ModuleOp moduleOp, std::unique_ptr<mlir::Pass> pass,
-        const llvm::Twine& outputName, StringRef passName,
-        bool save_output = true, bool gpu_pass = false) {
-      printVerbose("Start running pass " + passName + "\n");
-      mlir::PassManager pm(moduleOp.getContext(), OpPassManager::Nesting::Implicit);
-      applyPassManagerCLOptions(pm);
-      if (gpu_pass) {
-        auto& kernelPm = pm.nest<mlir::gpu::GPUModuleOp>();
-        kernelPm.addPass(std::move(pass));
-      } else {
-        pm.addPass(std::move(pass));
-      }
-
-      if (failed(pm.run(moduleOp))) {
-        llvm::errs() << "Failed to run " << passName << "\n";
-        return mlir::failure();
-      }
-
-      if (saveTemps && save_output) {
-        if (failed(dumpModuleOpToFile(moduleOp, outputName))) {
-          llvm::errs() << "Failed to dump " << passName << " output\n";
-          return mlir::failure();
-        }
-      }
-
-      printVerbose("...successfully ran pass " + passName + "\n");
-      return mlir::success();
+    if (failed(pm.run(moduleOp))) {
+      llvm::errs() << "Failed to run " << passName << "\n";
+      return mlir::failure();
     }
 
-    LogicalResult compileModule(
-      ModuleOp moduleOp,
-      const std::string& prefixName,
-      const std::string& libdeviceFile,
-      std::string& ptxStr) {
-
-      if (failed(runMLIRPass(moduleOp, mlir::createStripDebugInfoPass(),
-        prefixName + ".dummy.mlir", "createStripDebugInfoPass",
-        /*save_output*/ false,
-        /*gpu_pass*/ true))) {
+    if (saveTemps && save_output) {
+      if (failed(dumpModuleOpToFile(moduleOp, outputName))) {
+        llvm::errs() << "Failed to dump " << passName << " output\n";
         return mlir::failure();
       }
-
-      if (failed(runMLIRPass(
-        moduleOp,
-        createSerializeToPTXPass(static_cast<unsigned>(codeGenOpt), libdeviceFile, nvptxTriple,
-          gpuArch, ptxFeatures, ptxStr), prefixName + ".gpuptx.mlir", "createSerializeToPTXPass",
-        /*save_output*/ true,
-        /*gpu_pass*/ true))) {
-        return mlir::failure();
-      }
-
-      return mlir::success();
     }
 
-    void initGenPtxPasses() {
-      // initialize passes for generating ptx
-      llvm::InitializeNativeTarget();
-      llvm::InitializeNativeTargetAsmPrinter();
+    printVerbose("...successfully ran pass " + passName + "\n");
+    return mlir::success();
+  }
 
-      LLVMInitializeNVPTXTarget();
-      LLVMInitializeNVPTXTargetInfo();
-      LLVMInitializeNVPTXTargetMC();
-      LLVMInitializeNVPTXAsmPrinter();
+  LogicalResult compileModule(ModuleOp moduleOp, const std::string &prefixName,
+                              const std::string &libdeviceFile,
+                              std::string &ptxStr) {
 
-      mlir::initializeLLVMPasses();
+    if (failed(runMLIRPass(moduleOp, mlir::createStripDebugInfoPass(),
+                           prefixName + ".dummy.mlir",
+                           "createStripDebugInfoPass",
+                           /*save_output*/ false,
+                           /*gpu_pass*/ true))) {
+      return mlir::failure();
     }
 
-    LogicalResult generatePtx(ModuleOp moduleOp,
-      const std::string& prefixName,
-      const std::string& libdeviceFile) {
-      std::string ptxStr;
-      if (failed(compileModule(moduleOp, prefixName, libdeviceFile, ptxStr))) {
-        return mlir::failure();
-      }
-
-      std::string errorMessage;
-      std::string ptxFilename = prefixName + ".ptx";
-
-      auto ptxFile = mlir::openOutputFile(ptxFilename, &errorMessage);
-      if (!ptxFile) {
-        llvm::errs() << errorMessage << "\n";
-        return mlir::failure();
-      }
-      ptxFile->os() << ptxStr;
-      ptxFile->keep();
-
-      if (dumpPtx) {
-        llvm::outs() << ptxStr;
-      }
-
-      return mlir::success();
+    if (failed(runMLIRPass(moduleOp,
+                           createSerializeToPTXPass(
+                               static_cast<unsigned>(codeGenOpt), libdeviceFile,
+                               nvptxTriple, gpuArch, ptxFeatures, ptxStr),
+                           prefixName + ".gpuptx.mlir",
+                           "createSerializeToPTXPass",
+                           /*save_output*/ true,
+                           /*gpu_pass*/ true))) {
+      return mlir::failure();
     }
 
-    LogicalResult emitOperation(ModuleOp m) {
-      auto context = m.getContext();
-      PassManager pm(context, OpPassManager::Nesting::Implicit);
-      applyPassManagerCLOptions(pm);
+    return mlir::success();
+  }
 
-      initGenPtxPasses();
-      std::string outPrefixName = outPrefix + ".genptx.mlir";
-      SmallString<64> tmpBuf;
-      // Save the MLIR input passed to genPtx
-      if (saveTemps) {
-        if (failed(
-          dumpModuleOpToFile(m, outPrefixName))) {
-          llvm::errs() << "Failed to dump input to genPtx\n";
-          return failure();
-        }
-      }
+  void initGenPtxPasses() {
+    // initialize passes for generating ptx
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
 
-      if (failed(generatePtx(m, outPrefix, libdeviceFile))) {
+    LLVMInitializeNVPTXTarget();
+    LLVMInitializeNVPTXTargetInfo();
+    LLVMInitializeNVPTXTargetMC();
+    LLVMInitializeNVPTXAsmPrinter();
+
+    mlir::initializeLLVMPasses();
+  }
+
+  LogicalResult generatePtx(ModuleOp moduleOp, const std::string &prefixName,
+                            const std::string &libdeviceFile) {
+    std::string ptxStr;
+    if (failed(compileModule(moduleOp, prefixName, libdeviceFile, ptxStr))) {
+      return mlir::failure();
+    }
+
+    std::string errorMessage;
+    std::string ptxFilename = prefixName + ".ptx";
+
+    auto ptxFile = mlir::openOutputFile(ptxFilename, &errorMessage);
+    if (!ptxFile) {
+      llvm::errs() << errorMessage << "\n";
+      return mlir::failure();
+    }
+    ptxFile->os() << ptxStr;
+    ptxFile->keep();
+
+    if (dumpPtx) {
+      llvm::outs() << ptxStr;
+    }
+
+    return mlir::success();
+  }
+
+  LogicalResult emitOperation(ModuleOp m) {
+    auto context = m.getContext();
+    PassManager pm(context, OpPassManager::Nesting::Implicit);
+    applyPassManagerCLOptions(pm);
+
+    initGenPtxPasses();
+    std::string outPrefixName = outPrefix + ".genptx.mlir";
+    SmallString<64> tmpBuf;
+    // Save the MLIR input passed to genPtx
+    if (saveTemps) {
+      if (failed(dumpModuleOpToFile(m, outPrefixName))) {
+        llvm::errs() << "Failed to dump input to genPtx\n";
         return failure();
       }
-
-      return success();
     }
 
-  };
+    if (failed(generatePtx(m, outPrefix, libdeviceFile))) {
+      return failure();
+    }
 
-} // namespace anonymous
+    return success();
+  }
+};
 
-LogicalResult mlir::translateToPTX(
-  Operation* op, raw_ostream& os, const std::string& prefix,
-  OptLevel level, const std::string& gpuArch,
-  bool dumpPtx, bool saveTemp, bool verbose) {
+} // namespace
+
+LogicalResult mlir::translateToPTX(Operation *op, raw_ostream &os,
+                                   const std::string &prefix, OptLevel level,
+                                   const std::string &gpuArch, bool dumpPtx,
+                                   bool saveTemp, bool verbose) {
   // only take module
   auto m = dyn_cast<ModuleOp>(op);
-  if (!m) return failure();
+  if (!m)
+    return failure();
   ptxGenerator ptxGen(prefix, level, gpuArch, dumpPtx, saveTemp, verbose);
   return ptxGen.emitOperation(m);
 }
-

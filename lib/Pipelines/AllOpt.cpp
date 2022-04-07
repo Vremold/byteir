@@ -5,9 +5,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Pipelines/Passes.h"
 #include "./PassDetail.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
+#include "byteir/Pipelines/Passes.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
@@ -22,9 +22,10 @@ using namespace mlir::byre;
 
 namespace {
 
-  struct ByteirAllOptPipelinePass : public ByteirAllOptPipelineBase<ByteirAllOptPipelinePass> {
+struct ByteirAllOptPipelinePass
+    : public ByteirAllOptPipelineBase<ByteirAllOptPipelinePass> {
   ByteirAllOptPipelinePass(const std::string &entry, const std::string &target)
-        : ByteirAllOptPipelineBase() {
+      : ByteirAllOptPipelineBase() {
     // TODO use target to decide passes
     this->entryFunc = entry;
     this->target = target;
@@ -34,7 +35,7 @@ namespace {
     auto m = getOperation();
     OpPassManager pm(m.getOperationName());
 
-    pm.addPass(createHloOptPipelinePass(entryFunc, target, 
+    pm.addPass(createHloOptPipelinePass(entryFunc, target,
                                         true /*outlineSingleElemwiseOp*/));
 
     pm.addPass(createLinalgOptPipelinePass(target));
@@ -42,18 +43,16 @@ namespace {
 
     pm.addPass(createAffineOptPipelinePass());
     pm.addPass(createGPUOptPipelinePass(target));
-    pm.addPass(createByreOptPipelinePass(entryFunc, 
-                                         true /*appendArgTypes*/));
+    pm.addPass(createByreOptPipelinePass(entryFunc, true /*appendArgTypes*/));
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();
     }
-    
   }
 };
 } // namespace
 
-
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createByteIRAllOptPipelinePass(const std::string& entry, const std::string& target) {
+mlir::createByteIRAllOptPipelinePass(const std::string &entry,
+                                     const std::string &target) {
   return std::make_unique<ByteirAllOptPipelinePass>(entry, target);
 }

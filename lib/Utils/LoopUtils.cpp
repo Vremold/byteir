@@ -1,4 +1,5 @@
-//===- LoopUtils.cpp -------------------------------------------------------===//
+//===- LoopUtils.cpp
+//-------------------------------------------------------===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -14,7 +15,6 @@
 using namespace llvm;
 using namespace mlir;
 using namespace mlir::arith;
-
 
 Value mlir::getInductionVar(LoopLikeOpInterface looplike) {
   // TODO add support for ohter loop
@@ -33,7 +33,8 @@ Value mlir::getLoopStep(LoopLikeOpInterface looplike) {
 }
 
 // return lbs + idx * step
-Value mlir::createLinearIndexValue(OpBuilder &b, Value lb, Value step, int64_t idx) {
+Value mlir::createLinearIndexValue(OpBuilder &b, Value lb, Value step,
+                                   int64_t idx) {
   auto loc = lb.getLoc();
   Value cntValue = b.create<ConstantIndexOp>(loc, idx);
   auto mul = b.create<MulIOp>(loc, cntValue, step);
@@ -42,9 +43,8 @@ Value mlir::createLinearIndexValue(OpBuilder &b, Value lb, Value step, int64_t i
 }
 
 // return lbs + idx * step
-Value mlir::createIndexValue(
-  OpBuilder &b, LoopLikeOpInterface looplike,
-  int64_t idx) {
+Value mlir::createIndexValue(OpBuilder &b, LoopLikeOpInterface looplike,
+                             int64_t idx) {
 
   // TODO add support for ohter loop
   if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
@@ -57,7 +57,7 @@ Value mlir::createIndexValue(
 
 // return loopIV + idx * step
 Value mlir::createRelativeIndexValue(OpBuilder &b, LoopLikeOpInterface looplike,
-  int64_t idx) {
+                                     int64_t idx) {
 
   // TODO add support for ohter loop
   if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
@@ -70,7 +70,7 @@ Value mlir::createRelativeIndexValue(OpBuilder &b, LoopLikeOpInterface looplike,
 
 // create if index < ub (of looplike)
 // and return the block of created if
-Block* mlir::createGuardedBranch(OpBuilder &b, Value index,
+Block *mlir::createGuardedBranch(OpBuilder &b, Value index,
                                  LoopLikeOpInterface looplike) {
   auto loc = looplike.getLoc();
 
@@ -85,8 +85,8 @@ Block* mlir::createGuardedBranch(OpBuilder &b, Value index,
 }
 
 // change loop step by multiplying original step by cnt
-void mlir::multiplyLoopStep(OpBuilder& b, LoopLikeOpInterface looplike,
-  int64_t cnt) {
+void mlir::multiplyLoopStep(OpBuilder &b, LoopLikeOpInterface looplike,
+                            int64_t cnt) {
   b.setInsertionPoint(looplike);
   auto loc = looplike.getLoc();
   // TODO add support for ohter loop
@@ -112,19 +112,21 @@ Optional<uint64_t> mlir::getConstantTripCount(scf::ForOp forOp) {
     // TODO: please check whether negative also works
     int64_t tripCnt = (ubCst - lbCst + stepCst - 1) / stepCst;
 
-    if (tripCnt >= 0) return tripCnt;
+    if (tripCnt >= 0)
+      return tripCnt;
   }
   return llvm::None;
 }
 
 LogicalResult mlir::loopUnrollFull(scf::ForOp forOp) {
   auto mayBeConstantCount = getConstantTripCount(forOp);
-  if (!mayBeConstantCount.hasValue()) return failure();
+  if (!mayBeConstantCount.hasValue())
+    return failure();
   return loopUnrollByFactor(forOp, mayBeConstantCount.getValue());
 }
 
-LogicalResult 
-mlir::loopUnrollUpToFactor(scf::ForOp forOp, uint64_t unrollFactor) {
+LogicalResult mlir::loopUnrollUpToFactor(scf::ForOp forOp,
+                                         uint64_t unrollFactor) {
   auto mayBeConstantCount = getConstantTripCount(forOp);
   if (mayBeConstantCount.hasValue() &&
       mayBeConstantCount.getValue() <= unrollFactor) {

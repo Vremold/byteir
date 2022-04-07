@@ -8,11 +8,11 @@
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
 
 #include "mlir/Conversion/ArithmeticToLLVM/ArithmeticToLLVM.h"
+#include "mlir/Conversion/GPUToNVVM/GPUToNVVMPass.h"
 #include "mlir/Conversion/LLVMCommon/ConversionTarget.h"
 #include "mlir/Conversion/LLVMCommon/LoweringOptions.h"
 #include "mlir/Conversion/LLVMCommon/Pattern.h"
 #include "mlir/Conversion/LLVMCommon/TypeConverter.h"
-#include "mlir/Conversion/GPUToNVVM/GPUToNVVMPass.h"
 #include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
 #include "mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h"
@@ -25,8 +25,8 @@
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
-#include "mlir/Interfaces/DataLayoutInterfaces.h"
 #include "mlir/IR/BlockAndValueMapping.h"
+#include "mlir/Interfaces/DataLayoutInterfaces.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/Support/FormatVariadic.h"
@@ -45,24 +45,23 @@ namespace {
 template <typename SourceOp>
 struct OpToFuncCallLowering : public ConvertOpToLLVMPattern<SourceOp> {
 public:
-  explicit OpToFuncCallLowering(LLVMTypeConverter& lowering_, StringRef f32Func,
-    StringRef f64Func)
-    : ConvertOpToLLVMPattern<SourceOp>(lowering_), f32Func(f32Func),
-    f64Func(f64Func) {}
-
+  explicit OpToFuncCallLowering(LLVMTypeConverter &lowering_, StringRef f32Func,
+                                StringRef f64Func)
+      : ConvertOpToLLVMPattern<SourceOp>(lowering_), f32Func(f32Func),
+        f64Func(f64Func) {}
 
   LogicalResult
-    matchAndRewrite(SourceOp op, typename SourceOp::Adaptor adaptor,
-      ConversionPatternRewriter& rewriter) const override {
+  matchAndRewrite(SourceOp op, typename SourceOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
     using LLVM::LLVMFuncOp;
 
     static_assert(
-      std::is_base_of<OpTrait::OneResult<SourceOp>, SourceOp>::value,
-      "expected single result op");
+        std::is_base_of<OpTrait::OneResult<SourceOp>, SourceOp>::value,
+        "expected single result op");
 
     static_assert(std::is_base_of<OpTrait::SameOperandsAndResultType<SourceOp>,
-      SourceOp>::value,
-      "expected op with same operand and result types");
+                                  SourceOp>::value,
+                  "expected op with same operand and result types");
 
     SmallVector<mlir::Value, 1> castedOperands;
     for (mlir::Value operand : adaptor.getOperands())
@@ -71,34 +70,34 @@ public:
     mlir::Type resultType = castedOperands.front().getType();
     mlir::Type funcType = getFunctionType(resultType, castedOperands);
     StringRef funcName = getFunctionName(
-      funcType.cast<LLVM::LLVMFunctionType>().getReturnType());
+        funcType.cast<LLVM::LLVMFunctionType>().getReturnType());
     if (funcName.empty())
       return failure();
 
     LLVMFuncOp funcOp = appendOrGetFuncOp(funcName, funcType, op);
     auto callOp = rewriter.create<LLVM::CallOp>(
-      op->getLoc(), resultType, SymbolRefAttr::get(funcOp), castedOperands);
+        op->getLoc(), resultType, SymbolRefAttr::get(funcOp), castedOperands);
 
     if (resultType == adaptor.getOperands().front().getType()) {
-      rewriter.replaceOp(op, { callOp.getResult(0) });
+      rewriter.replaceOp(op, {callOp.getResult(0)});
       return success();
     }
 
     mlir::Value truncated = rewriter.create<LLVM::FPTruncOp>(
-      op->getLoc(), adaptor.getOperands().front().getType(),
-      callOp.getResult(0));
-    rewriter.replaceOp(op, { truncated });
+        op->getLoc(), adaptor.getOperands().front().getType(),
+        callOp.getResult(0));
+    rewriter.replaceOp(op, {truncated});
     return success();
   }
 
 private:
-  mlir::Value maybeCast(mlir::Value operand, PatternRewriter& rewriter) const {
+  mlir::Value maybeCast(mlir::Value operand, PatternRewriter &rewriter) const {
     mlir::Type type = operand.getType();
     if (!type.isa<Float16Type>())
       return operand;
 
     return rewriter.create<LLVM::FPExtOp>(
-      operand.getLoc(), Float32Type::get(rewriter.getContext()), operand);
+        operand.getLoc(), Float32Type::get(rewriter.getContext()), operand);
   }
 
   mlir::Type getFunctionType(mlir::Type resultType, ValueRange operands) const {
@@ -115,11 +114,11 @@ private:
   }
 
   LLVM::LLVMFuncOp appendOrGetFuncOp(StringRef funcName, mlir::Type funcType,
-    Operation* op) const {
+                                     Operation *op) const {
     using LLVM::LLVMFuncOp;
 
     auto funcAttr = StringAttr::get(op->getContext(), funcName);
-    Operation* funcOp = SymbolTable::lookupNearestSymbolFrom(op, funcAttr);
+    Operation *funcOp = SymbolTable::lookupNearestSymbolFrom(op, funcAttr);
     if (funcOp)
       return cast<LLVMFuncOp>(*funcOp);
 
@@ -132,8 +131,8 @@ private:
 };
 
 // TODO: push back to LLVM later
-void populateGpuToNVVMExtConversionPatterns(LLVMTypeConverter& converter,
-    RewritePatternSet& patterns) {
+void populateGpuToNVVMExtConversionPatterns(LLVMTypeConverter &converter,
+                                            RewritePatternSet &patterns) {
 
   patterns.add<OpToFuncCallLowering<arith::MaxFOp>>(converter, "__nv_fmaxf",
                                                     "__nv_fmax");
@@ -141,8 +140,7 @@ void populateGpuToNVVMExtConversionPatterns(LLVMTypeConverter& converter,
                                                     "__nv_fmin");
 }
 
-struct GPUToNVVMExtPass
-    : public GPUToNVVMExtBase<GPUToNVVMExtPass> {
+struct GPUToNVVMExtPass : public GPUToNVVMExtBase<GPUToNVVMExtPass> {
   GPUToNVVMExtPass() = default;
   GPUToNVVMExtPass(unsigned indexBitwidth) {
     this->indexBitwidth = indexBitwidth;
@@ -178,7 +176,6 @@ struct GPUToNVVMExtPass
       (void)applyPatternsAndFoldGreedily(m, std::move(patterns));
     }
 
-
     // llvm lowering
     {
       RewritePatternSet llvmPatterns(m.getContext());
@@ -191,7 +188,7 @@ struct GPUToNVVMExtPass
       populateStdToLLVMConversionPatterns(converter, llvmPatterns);
       populateVectorToLLVMConversionPatterns(converter, llvmPatterns);
       populateStdToLLVMFuncOpConversionPattern(converter, llvmPatterns);
-      
+
       // our extension fixing
       populateGpuToNVVMExtConversionPatterns(converter, llvmPatterns);
 
@@ -205,9 +202,6 @@ struct GPUToNVVMExtPass
       }
     }
   }
-
-
-
 };
 
 } // anonymous namespace

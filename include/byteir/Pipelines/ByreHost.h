@@ -15,7 +15,8 @@
 namespace mlir {
 
 std::unique_ptr<OperationPass<ModuleOp>>
-createByreHostPipelinePass(const std::string& entry = "main", const std::string& deviceFile = "kernel");
+createByreHostPipelinePass(const std::string &entry = "main",
+                           const std::string &deviceFile = "kernel");
 
 } // namespace mlir
 

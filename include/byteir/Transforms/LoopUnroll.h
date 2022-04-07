@@ -15,8 +15,9 @@ namespace mlir {
 
 constexpr StringRef getByteIRUnorllAttrName() { return "__byteir_unroll__"; }
 
-std::unique_ptr<OperationPass<FuncOp>> 
-createByteIRLoopUnrollPass(unsigned factor = 2, bool upTo = false, bool full = false, int depth = -1);
+std::unique_ptr<OperationPass<FuncOp>>
+createByteIRLoopUnrollPass(unsigned factor = 2, bool upTo = false,
+                           bool full = false, int depth = -1);
 
 } // namespace mlir
 

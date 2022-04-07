@@ -1,4 +1,5 @@
-//===- ByreHost.cpp ---------------------------------------------*--- C++ -*-===//
+//===- ByreHost.cpp ---------------------------------------------*--- C++
+//-*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -17,9 +18,10 @@ using namespace mlir::byre;
 
 namespace {
 
-  struct ByreHostPipelinePass : public ByreHostPipelineBase<ByreHostPipelinePass> {
+struct ByreHostPipelinePass
+    : public ByreHostPipelineBase<ByreHostPipelinePass> {
   ByreHostPipelinePass(const std::string &entry, const std::string &device)
-        : ByreHostPipelineBase() {
+      : ByreHostPipelineBase() {
     // TODO use target to decide passes
     this->entryFunc = entry;
     this->deviceFile = device;
@@ -42,8 +44,8 @@ namespace {
 };
 } // namespace
 
-
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createByreHostPipelinePass(const std::string& entry, const std::string& deviceFile) {
+mlir::createByreHostPipelinePass(const std::string &entry,
+                                 const std::string &deviceFile) {
   return std::make_unique<ByreHostPipelinePass>(entry, deviceFile);
 }
