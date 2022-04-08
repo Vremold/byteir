@@ -252,7 +252,8 @@ struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
     OwningRewritePatternList patterns(funcOp.getContext());
 
     // add pattern
-    populateHloMoveDownPattern(patterns, {}, allMultiUser, multiUser);
+    llvm::DenseSet<StringRef> blocker{"mhlo.convert"};
+    populateHloMoveDownPattern(patterns, blocker, allMultiUser, multiUser);
 
     // also add canoncializationExt pattern
     mhlo::getCanonicalizationExtPatterns(patterns, patterns.getContext());

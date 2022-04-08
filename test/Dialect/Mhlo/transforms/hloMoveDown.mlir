@@ -130,6 +130,18 @@ func @reshape_move_down_unary(%arg0 : tensor<31x20x32xf32>) -> tensor<31x640xf32
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: return
 
+func @reshape_not_move_down_convert(%142: tensor<1x32xi32>) -> tensor<1x32x32xf32> {
+    %144 = "mhlo.reshape"(%142) : (tensor<1x32xi32>) -> tensor<1x1x32xi32>
+    %145 = "mhlo.convert"(%144) : (tensor<1x1x32xi32>) -> tensor<1x1x32xf32>
+    %179 = "mhlo.broadcast_in_dim"(%145) {broadcast_dimensions = dense<[0, 1, 2]> : tensor<3xi64>} : (tensor<1x1x32xf32>) -> tensor<1x32x32xf32>
+    return %179 : tensor<1x32x32xf32>
+}
+// CHECK-LABEL: func @reshape_not_move_down_convert
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: mhlo.convert
+// CHECK-NEXT: mhlo.broadcast_in_dim
+// CHECK-NEXT: return
+
 func @reshape_binary_same(%arg0 : tensor<31x20x32xf32>) -> tensor<31x640xf32> {
     %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x640xf32>
     %1 = mhlo.add %0, %0 : tensor<31x640xf32>
