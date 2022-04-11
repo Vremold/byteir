@@ -11,6 +11,18 @@ func @transpose_move_up_unary(%arg0: tensor<31x20x32xf32>) -> tensor<20x31x32xf3
 // CHECK-NEXT: mhlo.abs
 // CHECK-NEXT: return
 
+func @reshape_move_up_convert(%arg0: tensor<1x32xi32>) -> tensor<1x32x32xf32> {
+    %0 = "mhlo.convert"(%arg0) : (tensor<1x32xi32>) -> tensor<1x32xf32>
+    %1 = "mhlo.reshape"(%0) : (tensor<1x32xf32>) -> tensor<1x1x32xf32>
+    %2 = "mhlo.broadcast_in_dim"(%1) {broadcast_dimensions = dense<[0, 1, 2]> : tensor<3xi64>} : (tensor<1x1x32xf32>) -> tensor<1x32x32xf32>
+    return %2 : tensor<1x32x32xf32>
+}
+// CHECK-LABEL: func @reshape_move_up_convert
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: mhlo.convert
+// CHECK-NEXT: mhlo.broadcast_in_dim
+// CHECK-NEXT: return
+
 func @transpose_unary_side_user(%arg0: tensor<31x20x32xf32>) -> (tensor<20x31x32xf32>, tensor<31x20x32xf32>) {
     %0 = "mhlo.abs"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x20x32xf32>
     %1 = "mhlo.transpose"(%0) {permutation = dense<[1, 0, 2]> : tensor<3xi64>} : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>

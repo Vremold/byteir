@@ -67,10 +67,41 @@ Operation *mlir::cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
                                             TypeRange types) {
 
   auto newOp = b.clone(*op, bvm);
+
   // force resetting type since we didn't perform type inference
   // FIXME: change to type inference later if possible
   for (size_t i = 0; i < types.size(); ++i) {
     newOp->getResult(i).setType(types[i]);
   }
   return newOp;
+}
+
+Type mlir::mixType(ShapedType cloneFromElementType, ShapedType cloneFromShape) {
+  return cloneFromElementType.clone(cloneFromShape.getShape());
+}
+
+Optional<SmallVector<Type>> mlir::mixTypes(TypeRange cloneFromElementTypes,
+                                           TypeRange cloneFromShapes) {
+
+  if (cloneFromElementTypes.size() != cloneFromShapes.size()) {
+    return llvm::None;
+  }
+
+  llvm::SmallVector<Type> ret;
+  ret.reserve(cloneFromElementTypes.size());
+
+  for (auto item : llvm::zip(cloneFromElementTypes, cloneFromShapes)) {
+
+    if (!std::get<0>(item).isa<ShapedType>() ||
+        !std::get<1>(item).isa<ShapedType>()) {
+      return llvm::None;
+    }
+
+    auto fromElementType = std::get<0>(item).cast<ShapedType>();
+    auto fromShape = std::get<1>(item).cast<ShapedType>();
+
+    ret.push_back(fromElementType.clone(fromShape.getShape()));
+  }
+
+  return ret;
 }

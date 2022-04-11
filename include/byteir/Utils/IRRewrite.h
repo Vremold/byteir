@@ -8,6 +8,9 @@
 #ifndef BYTEIR_UTILS_IRREWRITE_H
 #define BYTEIR_UTILS_IRREWRITE_H
 
+#include "mlir/IR/Types.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/ADT/SmallVector.h"
 #include <functional>
 
 namespace mlir {
@@ -15,6 +18,7 @@ class OpBuilder;
 class Operation;
 class Block;
 class BlockAndValueMapping;
+class ShapedType;
 class TypeRange;
 
 // replicate specific ops satisfying func
@@ -31,6 +35,15 @@ Operation *ReplicateDefiningOp(OpBuilder &b, Operation *op, unsigned opIdx,
 Operation *cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
                                       BlockAndValueMapping bvm,
                                       TypeRange types);
+
+// create a new type by mixing two ShapedType
+// aka cloneFromElementType.clone(cloneFromShape.getShape());
+Type mixType(ShapedType cloneFromElementType, ShapedType cloneFromShape);
+
+// create new types, each of which call mixType
+// return None if two lists have non-equal length or not all ShapedType
+llvm::Optional<llvm::SmallVector<Type>>
+mixTypes(TypeRange cloneFromElementTypes, TypeRange cloneFromShapes);
 
 } // namespace mlir
 

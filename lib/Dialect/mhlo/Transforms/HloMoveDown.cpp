@@ -124,13 +124,21 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
         bvm.map(input, newConstOp.output());
       }
 
+      auto maybeResultTypes =
+          mixTypes(/*cloneFromElementTypes*/ user->getResultTypes(),
+                   /*cloneFromShapes*/ op->getOperandTypes());
+
+      // maybeResultTypes should always have value
+      assert(maybeResultTypes.hasValue());
+
       // clone an elementwise op as producer
-      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                                    op->getOperandTypes());
+      auto newProducer = cloneAndReplaceResultTypes(
+          rewriter, user, bvm, maybeResultTypes.getValue());
 
       // create transpose op
       auto trans = rewriter.replaceOpWithNewOp<mhlo::TransposeOp>(
-          user, op.getType(), newProducer->getResult(0), op.permutation());
+          user, user->getResultTypes(), newProducer->getResult(0),
+          op.permutation());
     }
 
     return success();
@@ -226,13 +234,20 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         bvm.map(input, newConstOp.output());
       }
 
+      auto maybeResultTypes =
+          mixTypes(/*cloneFromElementTypes*/ user->getResultTypes(),
+                   /*cloneFromShapes*/ op->getOperandTypes());
+
+      // maybeResultTypes should always have value
+      assert(maybeResultTypes.hasValue());
+
       // clone an elementwise op as producer
-      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                                    op->getOperandTypes());
+      auto newProducer = cloneAndReplaceResultTypes(
+          rewriter, user, bvm, maybeResultTypes.getValue());
 
       // create reshape op
       auto reshape = rewriter.replaceOpWithNewOp<mhlo::ReshapeOp>(
-          user, op.getType(), newProducer->getResult(0));
+          user, user->getResultTypes(), newProducer->getResult(0));
     }
 
     return success();
@@ -252,8 +267,7 @@ struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
     OwningRewritePatternList patterns(funcOp.getContext());
 
     // add pattern
-    llvm::DenseSet<StringRef> blocker{"mhlo.convert"};
-    populateHloMoveDownPattern(patterns, blocker, allMultiUser, multiUser);
+    populateHloMoveDownPattern(patterns, {}, allMultiUser, multiUser);
 
     // also add canoncializationExt pattern
     mhlo::getCanonicalizationExtPatterns(patterns, patterns.getContext());

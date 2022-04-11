@@ -92,15 +92,24 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
     for (auto input : nonConstInputs) {
       BlockAndValueMapping bvmTrans;
       bvmTrans.map(op.getOperand(), input);
-      auto newTrans = rewriter.clone(*op, bvmTrans);
+      auto newTransType =
+          mixType(/*cloneFromElementType*/ input.getType().cast<ShapedType>(),
+                  /*cloneFromShapes*/ op.getType());
+      auto newTrans =
+          cloneAndReplaceResultTypes(rewriter, op, bvmTrans, {newTransType});
       bvm.map(input, newTrans->getResult(0));
     }
 
     // clone a new elementwise as consumer
-    auto newConsumer =
-        cloneAndReplaceResultTypes(rewriter, defOp, bvm, op->getResultTypes());
-    rewriter.replaceOp(op, newConsumer->getResults());
+    auto maybeResultTypes =
+        mixTypes(/*cloneFromElementTypes*/ defOp->getResultTypes(),
+                 /*cloneFromShapes*/ op->getResultTypes());
+    // maybeResultTypes should always have value
+    assert(maybeResultTypes.hasValue());
 
+    auto newConsumer = cloneAndReplaceResultTypes(rewriter, defOp, bvm,
+                                                  maybeResultTypes.getValue());
+    rewriter.replaceOp(op, newConsumer->getResults());
     return success();
   }
 };
@@ -163,13 +172,25 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
     for (auto input : nonConstInputs) {
       BlockAndValueMapping bvmReshape;
       bvmReshape.map(op.getOperand(), input);
-      auto newReshape = rewriter.clone(*op, bvmReshape);
+
+      auto newReshapeType =
+          mixType(/*cloneFromElementType*/ input.getType().cast<ShapedType>(),
+                  /*cloneFromShapes*/ op.getType());
+
+      auto newReshape = cloneAndReplaceResultTypes(rewriter, op, bvmReshape,
+                                                   {newReshapeType});
       bvm.map(input, newReshape->getResult(0));
     }
 
     // clone a new elementwise as consumer
-    auto newConsumer =
-        cloneAndReplaceResultTypes(rewriter, defOp, bvm, op->getResultTypes());
+    auto maybeResultTypes =
+        mixTypes(/*cloneFromElementTypes*/ defOp->getResultTypes(),
+                 /*cloneFromShapes*/ op->getResultTypes());
+    // maybeResultTypes should always have value
+    assert(maybeResultTypes.hasValue());
+
+    auto newConsumer = cloneAndReplaceResultTypes(rewriter, defOp, bvm,
+                                                  maybeResultTypes.getValue());
     rewriter.replaceOp(op, newConsumer->getResults());
 
     return success();
