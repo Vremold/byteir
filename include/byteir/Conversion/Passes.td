@@ -82,6 +82,16 @@ def UnrealizedCastToLinalg : Pass<"unrealized-cast-to-linalg", "mlir::FuncOp"> {
   ];
 }
 
+
+//===----------------------------------------------------------------------===//
+// LmhloToMemref
+//===----------------------------------------------------------------------===//
+
+def LmhloToMemref : Pass<"lmhlo-to-memref", "mlir::FuncOp"> {
+  let summary = "Convert from Lmhlo Dialect to MemRef Dialect.";
+  let constructor = "mlir::createLmhloToMemrefPass()";
+}
+
 //===----------------------------------------------------------------------===//
 // ToAce
 //===----------------------------------------------------------------------===//
