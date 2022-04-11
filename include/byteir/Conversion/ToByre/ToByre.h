@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_CONVERSION_CONVERTTOBYRE_H
-#define BYTEIR_CONVERSION_CONVERTTOBYRE_H
+#ifndef BYTEIR_CONVERSION_TOBYRE_H
+#define BYTEIR_CONVERSION_TOBYRE_H
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
@@ -32,4 +32,4 @@ createConvertToByrePass(bool appendArgTypes = false);
 
 } // namespace mlir
 
-#endif // BYTEIR_CONVERSION_CONVERTTOBYRE_H
+#endif // BYTEIR_CONVERSION_TOBYRE_H

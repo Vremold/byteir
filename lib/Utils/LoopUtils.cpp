@@ -34,12 +34,32 @@ Value mlir::getLoopStep(LoopLikeOpInterface looplike) {
 
 // return lbs + idx * step
 Value mlir::createLinearIndexValue(OpBuilder &b, Value lb, Value step,
+                                   Value idx) {
+  auto loc = lb.getLoc();
+  auto mul = b.create<MulIOp>(loc, idx, step);
+  auto add = b.create<AddIOp>(loc, lb, mul);
+  return add.getResult();
+}
+
+// return lbs + idx * step
+Value mlir::createLinearIndexValue(OpBuilder &b, Value lb, Value step,
                                    int64_t idx) {
   auto loc = lb.getLoc();
   Value cntValue = b.create<ConstantIndexOp>(loc, idx);
-  auto mul = b.create<MulIOp>(loc, cntValue, step);
-  auto add = b.create<AddIOp>(loc, lb, mul);
-  return add.getResult();
+  return createLinearIndexValue(b, lb, step, cntValue);
+}
+
+// return lbs + idx * step
+Value mlir::createIndexValue(OpBuilder &b, LoopLikeOpInterface looplike,
+                             Value idx) {
+
+  // TODO add support for ohter loop
+  if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
+    auto lb = forOp.getLowerBound();
+    auto step = forOp.getStep();
+    return createLinearIndexValue(b, lb, step, idx);
+  }
+  return Value();
 }
 
 // return lbs + idx * step
@@ -86,19 +106,55 @@ Block *mlir::createGuardedBranch(OpBuilder &b, Value index,
 
 // change loop step by multiplying original step by cnt
 void mlir::multiplyLoopStep(OpBuilder &b, LoopLikeOpInterface looplike,
-                            int64_t cnt) {
+                            int64_t multiplier) {
+  b.setInsertionPoint(looplike);
+  Value mValue = b.create<ConstantIndexOp>(looplike.getLoc(), multiplier);
+  multiplyLoopStep(b, looplike, mValue);
+}
+
+void mlir::multiplyLoopStep(OpBuilder &b, LoopLikeOpInterface looplike,
+                            Value multiplier) {
   b.setInsertionPoint(looplike);
   auto loc = looplike.getLoc();
   // TODO add support for ohter loop
   if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
     auto step = forOp.getStep();
-    Value cntValue = b.create<ConstantIndexOp>(loc, cnt);
-    auto mul = b.create<MulIOp>(loc, cntValue, step);
+    auto mul = b.create<MulIOp>(loc, multiplier, step);
     forOp.setStep(mul.getResult());
   }
 }
 
-Optional<uint64_t> mlir::getConstantTripCount(scf::ForOp forOp) {
+void mlir::setLoopLowerBound(OpBuilder &b, LoopLikeOpInterface looplike,
+                             Value lb) {
+  // TODO add support for ohter loop
+  if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
+    forOp.setLowerBound(lb);
+  }
+}
+
+void mlir::addLoopLowerBound(OpBuilder &b, LoopLikeOpInterface looplike,
+                             Value val) {
+  // TODO add support for ohter loop
+  b.setInsertionPoint(looplike);
+  auto loc = looplike.getLoc();
+  if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
+    auto lb = forOp.getLowerBound();
+    auto add = b.create<AddIOp>(loc, lb, val);
+    forOp.setLowerBound(add);
+  }
+}
+
+Optional<uint64_t> mlir::getConstantTripCount(LoopLikeOpInterface looplike,
+                                              int64_t stepMultiplier) {
+  // TODO add support for ohter loop
+  if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
+    return getConstantTripCount(forOp, stepMultiplier);
+  }
+  return llvm::None;
+}
+
+Optional<uint64_t> mlir::getConstantTripCount(scf::ForOp forOp,
+                                              int64_t stepMultiplier) {
   auto lbCstOp = forOp.getLowerBound().getDefiningOp<arith::ConstantIndexOp>();
   auto ubCstOp = forOp.getUpperBound().getDefiningOp<arith::ConstantIndexOp>();
   auto stepCstOp = forOp.getStep().getDefiningOp<arith::ConstantIndexOp>();
@@ -107,7 +163,7 @@ Optional<uint64_t> mlir::getConstantTripCount(scf::ForOp forOp) {
     // Constant loop bounds computation.
     int64_t lbCst = lbCstOp.value();
     int64_t ubCst = ubCstOp.value();
-    int64_t stepCst = stepCstOp.value();
+    int64_t stepCst = stepCstOp.value() * stepMultiplier;
 
     // TODO: please check whether negative also works
     int64_t tripCnt = (ubCst - lbCst + stepCst - 1) / stepCst;

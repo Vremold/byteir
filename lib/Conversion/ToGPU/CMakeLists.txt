@@ -1,18 +1,23 @@
-add_byteir_conversion_library(ByteIRAffineToGPU
+add_byteir_conversion_library(ByteIRToGPU
   CoalescedForToGPU.cpp
+  FuncToGPU.cpp
+  Utils.cpp
 
   ADDITIONAL_HEADER_DIRS
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Conversion/AffineToGPU
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Conversion/ToGPU
 
   DEPENDS
   ByteIRConversionPassIncGen
   ByteIRConversionCommon
+  ByteIRUtils
 
   LINK_LIBS PUBLIC
   MLIRIR
   MLIRAffine
   MLIRGPUOps
   MLIRMemRef
+  MLIRSCF
   MLIRTransforms
   ByteIRConversionCommon
+  ByteIRUtils
   )

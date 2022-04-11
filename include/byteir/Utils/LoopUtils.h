@@ -27,7 +27,13 @@ Value getInductionVar(LoopLikeOpInterface looplike);
 Value getLoopStep(LoopLikeOpInterface looplike);
 
 // return lb + idx * step
+Value createLinearIndexValue(OpBuilder &b, Value lb, Value step, Value idx);
+
+// return lb + idx * step
 Value createLinearIndexValue(OpBuilder &b, Value lb, Value step, int64_t idx);
+
+// return lb (of looplike) + idx * step (of looplike)
+Value createIndexValue(OpBuilder &b, LoopLikeOpInterface looplike, Value idx);
 
 // return lb (of looplike) + idx * step (of looplike)
 Value createIndexValue(OpBuilder &b, LoopLikeOpInterface looplike, int64_t idx);
@@ -41,12 +47,26 @@ Value createRelativeIndexValue(OpBuilder &b, LoopLikeOpInterface looplike,
 Block *createGuardedBranch(OpBuilder &b, Value index,
                            LoopLikeOpInterface looplike);
 
-// change loop step by multiplying original step by cnt
-void multiplyLoopStep(OpBuilder &b, LoopLikeOpInterface looplike, int64_t cnt);
+// change loop step by multiplying original step by multiplier
+void multiplyLoopStep(OpBuilder &b, LoopLikeOpInterface looplike,
+                      int64_t multiplier);
 
+void multiplyLoopStep(OpBuilder &b, LoopLikeOpInterface looplike,
+                      Value multiplier);
+
+void setLoopLowerBound(OpBuilder &b, LoopLikeOpInterface looplike, Value lb);
+
+// lb = lb + val
+void addLoopLowerBound(OpBuilder &b, LoopLikeOpInterface looplike, Value val);
+
+// Return ConstantTripCount for a looplike
+// Return None, if not applicable.
+llvm::Optional<uint64_t> getConstantTripCount(LoopLikeOpInterface looplike,
+                                              int64_t stepMultiplier = 1);
 // Return ConstantTripCount for a ForOp
 // Return None, if not applicable.
-llvm::Optional<uint64_t> getConstantTripCount(scf::ForOp forOp);
+llvm::Optional<uint64_t> getConstantTripCount(scf::ForOp forOp,
+                                              int64_t stepMultiplier = 1);
 
 LogicalResult loopUnrollFull(scf::ForOp forOp);
 

@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_CONVERSION_CONVERTHLOTOLHLO_H
-#define BYTEIR_CONVERSION_CONVERTHLOTOLHLO_H
+#ifndef BYTEIR_CONVERSION_HLOTOLHLO_H
+#define BYTEIR_CONVERSION_HLOTOLHLO_H
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
@@ -27,4 +27,4 @@ std::unique_ptr<OperationPass<ModuleOp>> createConvertHloToLHloPass();
 
 } // namespace mlir
 
-#endif // BYTEIR_CONVERSION_CONVERTHLOTOLHLO_H
+#endif // BYTEIR_CONVERSION_HLOTOLHLO_H

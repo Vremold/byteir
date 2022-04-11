@@ -11,23 +11,6 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
-// AffineToGPU
-//===----------------------------------------------------------------------===//
-
-def CoalescedForToGPULaunch : Pass<"coalesced-for-to-gpu", "mlir::FuncOp"> {
-  let summary = "Convert from a coalesced affine loop to gpu launch";
-  let constructor = "mlir::createCoalescedForToGPULaunchPass()";
-  let dependentDialects = [
-    "mlir::gpu::GPUDialect",
-    "mlir::scf::SCFDialect",
-  ];
-  let options = [
-      Option<"blockSize", "bsize", "int64_t",  /*default=*/"32",
-             "block size for GPU">,
-  ];
-}
-
-//===----------------------------------------------------------------------===//
 // GPUToNVVM
 //===----------------------------------------------------------------------===//
 
@@ -90,6 +73,42 @@ def UnrealizedCastToLinalg : Pass<"unrealized-cast-to-linalg", "mlir::FuncOp"> {
 def LmhloToMemref : Pass<"lmhlo-to-memref", "mlir::FuncOp"> {
   let summary = "Convert from Lmhlo Dialect to MemRef Dialect.";
   let constructor = "mlir::createLmhloToMemrefPass()";
+}
+
+//===----------------------------------------------------------------------===//
+// ToGPU
+//===----------------------------------------------------------------------===//
+
+def CoalescedForToGPULaunch : Pass<"coalesced-for-to-gpu", "mlir::FuncOp"> {
+  let summary = "Convert from a coalesced affine loop to gpu launch";
+  let constructor = "mlir::createCoalescedForToGPULaunchPass()";
+  let dependentDialects = [
+    "mlir::gpu::GPUDialect",
+    "mlir::scf::SCFDialect",
+  ];
+  let options = [
+      Option<"blockSize", "bsize", "int64_t", /*default=*/"32",
+             "block size for GPU">,
+  ];
+}
+
+def ConvertFuncToGPU : Pass<"convert-func-to-gpu", "ModuleOp"> {
+  let summary = "Cconvert func to GPU func";
+  let constructor = "mlir::createConvertFuncToGPUPass()";
+  let dependentDialects = [
+    "mlir::gpu::GPUDialect",
+  ];
+  let options = [
+    ListOption<"blockSizes", "bsizes", "int64_t",
+               "block sizes (up to 3 numbers) for GPU",
+               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+    ListOption<"gridSizes", "gsizes", "int64_t",
+               "grid sizes (up to 3 numbers) for GPU",
+               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+    Option<"moduleName", "module-name", "std::string",
+            /*default=*/"\"unified\"",
+            "Optional name for GPUModule to put all gpu kernels">,
+  ];
 }
 
 //===----------------------------------------------------------------------===//

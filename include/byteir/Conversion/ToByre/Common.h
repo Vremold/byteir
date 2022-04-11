@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_CONVERSION_CONVERTTOBYRE_COMMON_H
-#define BYTEIR_CONVERSION_CONVERTTOBYRE_COMMON_H
+#ifndef BYTEIR_CONVERSION_TOBYRE_COMMON_H
+#define BYTEIR_CONVERSION_TOBYRE_COMMON_H
 
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Utils/Utils.h"
@@ -88,4 +88,4 @@ protected:
 
 } // namespace mlir
 
-#endif // BYTEIR_CONVERSION_CONVERTTOBYRE_COMMON_H
+#endif // BYTEIR_CONVERSION_TOBYRE_COMMON_H

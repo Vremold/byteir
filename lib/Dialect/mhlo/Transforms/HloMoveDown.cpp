@@ -41,7 +41,6 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
                            bool allMultiUser = false, bool multiUser = false)
       : HloMoveDownPattern<mhlo::TransposeOp>(context, blocker, allMultiUser,
                                               multiUser) {}
-
   LogicalResult matchAndRewrite(mhlo::TransposeOp op,
                                 PatternRewriter &rewriter) const override {
     auto value = op.getResult();

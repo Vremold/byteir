@@ -6,7 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "../PassDetail.h"
-#include "byteir/Conversion/AffineToGPU/AffineToGPU.h"
+#include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"

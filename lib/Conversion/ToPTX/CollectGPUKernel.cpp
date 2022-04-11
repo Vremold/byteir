@@ -50,7 +50,7 @@ struct CollectGPUKernelPass
       }
     }
 
-    // FuncOps not in m.getBody()->without_terminator()
+    // Note FuncOps not in m.getBody()->without_terminator()
     for (auto func : m.getOps<FuncOp>()) {
       removeOps.push_back(func);
     }

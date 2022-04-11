@@ -8,7 +8,6 @@
 #ifndef BYTEIR_CONVERSION_PASSES_H
 #define BYTEIR_CONVERSION_PASSES_H
 
-#include "byteir/Conversion/AffineToGPU/AffineToGPU.h"
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
@@ -16,6 +15,7 @@
 #include "byteir/Conversion/ToAce/MhloToAce.h"
 #include "byteir/Conversion/ToAce/UnregisteredToAce.h"
 #include "byteir/Conversion/ToByre/ToByre.h"
+#include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 
 namespace mlir {

@@ -7,7 +7,7 @@
 
 #include "byteir/Pipelines/GPUOpt.h"
 #include "./PassDetail.h"
-#include "byteir/Conversion/AffineToGPU/AffineToGPU.h"
+#include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Dialect/Affine/Passes.h"
 #include "byteir/Pipelines/Common.h"
