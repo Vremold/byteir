@@ -23,7 +23,7 @@ namespace {
 
 int64_t prod(ArrayRef<int64_t> a) {
   int64_t ret = 1;
-  for (int i = 0; i < a.size(); ++i)
+  for (size_t i = 0; i < a.size(); ++i)
     ret *= a[i];
   return ret;
 }
@@ -86,12 +86,12 @@ struct SliceToSubview : public OpRewritePattern<lmhlo::SliceOp> {
     getValuesFromDenseIntElementsAttr(op.strides(), strides);
     auto input_shape = inMemRefType.getShape();
 
-    if (start_indices.size() != limit_indices.size() or
+    if (start_indices.size() != limit_indices.size() ||
         limit_indices.size() != strides.size())
       return failure();
     // check: 0 <= start_indices[d] < limit_indices[d] < full_dim[d]
     // check: (limit_indices[d] - start_indices[d]) % strides[d] == 0
-    for (int i = 0; i < start_indices.size(); ++i) {
+    for (size_t i = 0; i < start_indices.size(); ++i) {
       if (!(0 <= start_indices[i] && start_indices[i] < limit_indices[i] &&
             limit_indices[i] <= input_shape[i]))
         return failure();
@@ -100,7 +100,7 @@ struct SliceToSubview : public OpRewritePattern<lmhlo::SliceOp> {
     }
 
     SmallVector<int64_t> sizes;
-    for (int i = 0; i < start_indices.size(); ++i)
+    for (size_t i = 0; i < start_indices.size(); ++i)
       sizes.push_back((limit_indices[i] - start_indices[i]) / strides[i]);
 
     auto newSubViewOp = rewriter.create<memref::SubViewOp>(
