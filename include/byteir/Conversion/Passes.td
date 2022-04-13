@@ -167,5 +167,15 @@ def CollectGPUKernel : Pass<"collect-gpu-kernel", "ModuleOp"> {
   ];
 }
 
+//===----------------------------------------------------------------------===//
+// ToMhlo
+//===----------------------------------------------------------------------===//
+
+def ConvertArithToMhlo : Pass<"convert-arith-to-mhlo", "FuncOp"> {
+  let summary = "Convert Arith op to Mhlo op";
+  let constructor = "mlir::createConvertArithToMhloPass()";
+  let dependentDialects = ["mlir::mhlo::MhloDialect"];
+}
+
 
 #endif // BYTEIR_CONVERSION_PASSES

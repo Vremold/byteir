@@ -18,6 +18,10 @@ namespace ace {
 class AceDialect;
 } // namespace ace
 
+namespace arith {
+class ArithmeticDialect;
+} // namespace arith
+
 namespace bufferization {
 class BufferizationDialect;
 } // namespace bufferization
@@ -42,6 +46,10 @@ class LinalgDialect;
 namespace memref {
 class MemRefDialect;
 } // namespace memref
+
+namespace mhlo {
+class MhloDialect;
+} // namespace mhlo
 
 namespace NVVM {
 class NVVMDialect;
