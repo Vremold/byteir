@@ -24,6 +24,9 @@ reshapeSplatElementsAttr(ElementsAttr attr, llvm::ArrayRef<int64_t> newShape);
 llvm::Optional<ElementsAttr> reshapeSplatElementsAttr(ElementsAttr attr,
                                                       ShapedType newShape);
 
+llvm::Optional<ElementsAttr> cloneSplatElementsAttr(ElementsAttr attr,
+                                                    ShapedType newShape);
+
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_ATTRUTILS_H

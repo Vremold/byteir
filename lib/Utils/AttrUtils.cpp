@@ -28,3 +28,20 @@ mlir::reshapeSplatElementsAttr(ElementsAttr attr, ShapedType newShape) {
   }
   return None;
 }
+
+llvm::Optional<ElementsAttr> mlir::cloneSplatElementsAttr(ElementsAttr attr,
+                                                          ShapedType type) {
+  if (!attr.isSplat())
+    return None;
+
+  if (attr.isa<DenseFPElementsAttr>()) {
+    ElementsAttr ret =
+        DenseElementsAttr::get(type, attr.getSplatValue<FloatAttr>());
+    return ret;
+  } else if (attr.isa<DenseIntElementsAttr>()) {
+    ElementsAttr ret =
+        DenseElementsAttr::get(type, attr.getSplatValue<IntegerAttr>());
+    return ret;
+  }
+  return None;
+}
