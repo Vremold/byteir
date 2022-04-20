@@ -17,8 +17,8 @@ limitations under the License.
 #include "byteir/Analysis/UseRange.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir/Analysis/BufferViewFlowAnalysis.h"
+#include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
 #include "mlir/Pass/Pass.h"
-#include "mlir/Transforms/BufferUtils.h"
 
 using namespace mlir;
 using namespace byteir;
@@ -40,7 +40,8 @@ struct TestPrintUseRangePass
     llvm::outs() << "Testing : " << getOperation().getName() << "\n";
     auto op = getOperation();
     byteir::Liveness liveness(op);
-    UserangeAnalysis(op, &liveness, BufferPlacementAllocs(getOperation()),
+    UserangeAnalysis(op, &liveness,
+                     bufferization::BufferPlacementAllocs(getOperation()),
                      BufferViewFlowAnalysis(getOperation()))
         .dump(llvm::outs());
   }

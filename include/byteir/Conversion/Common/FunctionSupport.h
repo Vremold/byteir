@@ -8,7 +8,7 @@
 #ifndef BYTEIR_CONVERSION_COMMON_H
 #define BYTEIR_CONVERSION_COMMON_H
 
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Value.h"
@@ -22,15 +22,14 @@ namespace mlir {
 // meaning directly returning an input as an results
 // LWC NOTE Also DO NOT support duplicated results.
 //
-void replicateFuncOpResults(mlir::FuncOp funcOp);
+void replicateFuncOpResults(FuncOp funcOp);
 
-void replicateFuncOpResults(mlir::FuncOp funcOp,
-                            std::function<void(mlir::ReturnOp)> retOpHandling);
+void replicateFuncOpResults(FuncOp funcOp,
+                            std::function<void(func::ReturnOp)> retOpHandling);
 
 void relocateFuncOpConstantLike(
-    mlir::FuncOp funcOp, std::function<bool(mlir::Operation *)> checkOp,
-    std::function<std::tuple<mlir::Value, NamedAttrList>(mlir::Operation *)>
-        getValue);
+    FuncOp funcOp, std::function<bool(Operation *)> checkOp,
+    std::function<std::tuple<Value, NamedAttrList>(Operation *)> getValue);
 
 } // namespace mlir
 

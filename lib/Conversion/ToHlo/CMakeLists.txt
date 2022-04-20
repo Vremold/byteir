@@ -5,9 +5,6 @@ add_public_tablegen_target(ArithToMhloPatternIncGen)
 add_byteir_conversion_library(ByteIRToMhlo
   ArithToMhlo.cpp
 
-  ADDITIONAL_HEADER_DIRS
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Conversion/ToMhlo
-
   DEPENDS
   ByteIRConversionPassIncGen
   ArithToMhloPatternIncGen
@@ -17,3 +14,5 @@ add_byteir_conversion_library(ByteIRToMhlo
   MLIRArithmetic
   MLIRIR
   )
+
+target_include_directories(ByteIRToMhlo PUBLIC ${CMAKE_CURRENT_BINARY_DIR})

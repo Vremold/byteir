@@ -7,8 +7,8 @@
 
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Operation.h"
@@ -153,7 +153,7 @@ void mlir::removeAttrPlaceholders(mlir::Operation *op,
   }
 }
 
-mlir::FuncOp mlir::GetFuncOp(mlir::CallOp callOp) {
+mlir::FuncOp mlir::GetFuncOp(func::CallOp callOp) {
   Operation *op = callOp.getOperation();
   CallOpInterface call = dyn_cast<CallOpInterface>(op);
   Operation *defOp = call.resolveCallable();

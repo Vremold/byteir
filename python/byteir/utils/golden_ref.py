@@ -37,7 +37,7 @@ class MhloGoldenRefGenerator:
                     loc=0.0, scale=0.1, size=shape).astype(dtype)
 
         for op in func.entry_block:
-            if op.operation.name == "std.return":
+            if op.operation.name == "func.return":
                 continue
             inputs = list(self.value2tensor.get(i) for i in op.operands)
             outputs = IRExecutor.execute(op, inputs)

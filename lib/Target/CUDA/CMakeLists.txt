@@ -12,10 +12,10 @@ add_byteir_translation_library(ByteIRTargetCUDA
   MLIREmitC
   MLIRIR
   MLIRSCF
-  MLIRStandard
+  MLIRControlFlow
   MLIRMemRef
   MLIRGPUOps
   MLIRSupport
-  MLIRTranslation
+  # MLIRTranslation
   ByteIRTargetCpp
   )

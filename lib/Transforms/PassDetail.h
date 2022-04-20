@@ -13,7 +13,14 @@
 // forward dialects for conversions
 namespace mlir {
 class AffineDialect;
-class StandardOpsDialect;
+
+namespace cf {
+class ControlFlowDialect;
+} // namespace cf
+
+namespace func {
+class FuncDialect;
+} // namespace func
 
 namespace memref {
 class MemRefDialect;

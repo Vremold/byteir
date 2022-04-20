@@ -73,14 +73,16 @@ static bool isLoopCountEnoughForPrefetch(LoopLikeOpInterface looplike,
 
 static Operation *CloneCopy(OpBuilder &b, linalg::CopyOp oldCopy, Value iv,
                             Value index, Operation *output = nullptr) {
+  assert(oldCopy.inputs().size() == 1);
+  assert(oldCopy.outputs().size() == 1);
 
-  auto inputDef = oldCopy.input().getDefiningOp();
+  auto inputDef = oldCopy.inputs()[0].getDefiningOp();
   BlockAndValueMapping bvm;
   bvm.map(iv, index);
   auto input = b.clone(*inputDef, bvm);
 
   if (output == nullptr) {
-    auto outputDef = oldCopy.output().getDefiningOp();
+    auto outputDef = oldCopy.outputs()[0].getDefiningOp();
     output = b.clone(*outputDef, bvm);
   }
 
@@ -94,9 +96,11 @@ static void
 createPrefetchAllocAndCopyInPrologue(OpBuilder &b, linalg::CopyOp oldCopy,
                                      LoopLikeOpInterface looplike, int64_t cnt,
                                      SmallVectorImpl<Operation *> &newDsts) {
+  assert(oldCopy.inputs().size() == 1);
+  assert(oldCopy.outputs().size() == 1);
 
   auto loopIV = getInductionVar(looplike);
-  auto outputDef = oldCopy.output().getDefiningOp();
+  auto outputDef = oldCopy.outputs()[0].getDefiningOp();
   // set insert point before loop
   b.setInsertionPoint(looplike);
 
@@ -119,6 +123,8 @@ createPrefetchAllocAndCopyInPrologue(OpBuilder &b, linalg::CopyOp oldCopy,
 static void modifyLoopBody(OpBuilder &b, linalg::CopyOp oldCopy,
                            LoopLikeOpInterface looplike, int64_t cnt,
                            ArrayRef<Operation *> newDsts, bool unroll) {
+  assert(oldCopy.inputs().size() == 1);
+  assert(oldCopy.outputs().size() == 1);
 
   auto loopIV = getInductionVar(looplike);
   auto &loopBlock = looplike.getLoopBody().front();
@@ -139,7 +145,7 @@ static void modifyLoopBody(OpBuilder &b, linalg::CopyOp oldCopy,
 
       BlockAndValueMapping bvm;
       bvm.map(loopIV, unrollIndex);
-      bvm.map(oldCopy.output(), newDsts[i]->getResult(0));
+      bvm.map(oldCopy.outputs()[0], newDsts[i]->getResult(0));
 
       auto guardedUnrollBlock = createGuardedBranch(b, unrollIndex, looplike);
       if (guardedUnrollBlock == nullptr)
@@ -164,7 +170,7 @@ static void modifyLoopBody(OpBuilder &b, linalg::CopyOp oldCopy,
           auto ip = b.saveInsertionPoint();
           b.setInsertionPointToStart(guardedBlock);
           Operation *ouput =
-              i == 0 ? oldCopy.output().getDefiningOp() : newDsts[i - 1];
+              i == 0 ? oldCopy.outputs()[0].getDefiningOp() : newDsts[i - 1];
 
           (void)CloneCopy(b, oldCopy, loopIV, unrollPrefetchIndex, ouput);
           b.restoreInsertionPoint(ip);
@@ -199,7 +205,7 @@ static void modifyLoopBody(OpBuilder &b, linalg::CopyOp oldCopy,
     // swap copy
     auto loc = loopBlock.getTerminator()->getLoc();
     b.create<linalg::CopyOp>(loc, newDsts.front()->getResult(0),
-                             oldCopy.output());
+                             oldCopy.outputs()[0]);
 
     for (int64_t i = 1; i < cnt; ++i) {
       b.create<linalg::CopyOp>(loc, newDsts[i]->getResult(0),

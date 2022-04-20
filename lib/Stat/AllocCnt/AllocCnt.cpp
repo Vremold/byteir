@@ -10,6 +10,7 @@
 #include "byteir/Analysis/UseRange.h"
 #include "byteir/Stat/Common/Reg.h"
 #include "byteir/Utils/MemUtils.h"
+#include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "llvm/Support/CommandLine.h"
 
@@ -53,7 +54,7 @@ std::string allocCntStatisticsSingle(FuncOp func) {
   std::vector<Event> events;
 
   byteir::Liveness liveness(func);
-  mlir::BufferPlacementAllocs allocs(func);
+  mlir::bufferization::BufferPlacementAllocs allocs(func);
   mlir::BufferViewFlowAnalysis aliases(func);
   byteir::UserangeAnalysis useRange(func, &liveness, allocs, aliases);
 

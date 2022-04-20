@@ -1,4 +1,4 @@
-// RUN: byteir-opt -hlo-legalize-to-linalg -linalg-fuse-elementwise-ops -linalg-bufferize -func-bufferize -canonicalize -cse -sccp -pass-pipeline="builtin.func(linalg-detensorize)" -convert-linalg-to-affine-loops -rewrite-affine-to-memref -convert-affine-for-to-gpu -cse -lower-affine -gpu-kernel-outlining -cse %s | FileCheck %s
+// RUN: byteir-opt -hlo-legalize-to-linalg -linalg-fuse-elementwise-ops -linalg-bufferize -func-bufferize -canonicalize -cse -sccp -pass-pipeline="builtin.func(linalg-detensorize)" -convert-linalg-to-affine-loops -rewrite-affine-to-memref -pass-pipeline="builtin.func(convert-affine-for-to-gpu)" -cse -lower-affine -gpu-kernel-outlining -cse %s | FileCheck %s
 
 func @fusion_broadcast(%arg0: tensor<6x12x96xf32>, %arg1: tensor<6x12x96x96xf32>) -> tensor<6x12x96x96xf32> {
   %0 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<[0, 1, 2]> : tensor<3xi64>} : (tensor<6x12x96xf32>) -> tensor<6x12x96x96xf32>

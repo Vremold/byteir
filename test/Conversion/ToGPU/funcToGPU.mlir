@@ -13,10 +13,10 @@ func private @matmul_tiled_1(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>
   scf.for %arg3 = %c0 to %c128 step %c8 {
     %3 = memref.subview %arg0[%arg3, 0] [8, 64] [1, 1] : memref<128x64xf32> to memref<8x64xf32, #map>
     %4 = memref.subview %arg2[%arg3, 0] [8, 64] [1, 1] : memref<128x64xf32> to memref<8x64xf32, #map>
-    linalg.copy(%3, %0) : memref<8x64xf32, #map>, memref<8x64xf32, 1>
-    linalg.copy(%arg1, %1) : memref<64x64xf32>, memref<64x64xf32, 2>
+    linalg.copy ins(%3 : memref<8x64xf32, #map>) outs(%0 : memref<8x64xf32, 1>)
+    linalg.copy ins(%arg1 : memref<64x64xf32>) outs(%1 : memref<64x64xf32, 2>)
     linalg.matmul ins(%0, %1 : memref<8x64xf32, 1>, memref<64x64xf32, 2>) outs(%2 : memref<8x64xf32, 3>)
-    linalg.copy(%2, %4) : memref<8x64xf32, 3>, memref<8x64xf32, #map>
+    linalg.copy ins(%2 : memref<8x64xf32, 3>) outs(%4 : memref<8x64xf32, #map>)
   } {__byteir_loop_to_simt__ = "block_id.x"}
   return
 }
@@ -31,10 +31,10 @@ func @matmul_tiled_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2:
   scf.for %arg3 = %c0 to %c128 step %c8 {
     %3 = memref.subview %arg0[%arg3, 0] [8, 64] [1, 1] : memref<128x64xf32> to memref<8x64xf32, #map>
     %4 = memref.subview %arg2[%arg3, 0] [8, 64] [1, 1] : memref<128x64xf32> to memref<8x64xf32, #map>
-    linalg.copy(%3, %0) : memref<8x64xf32, #map>, memref<8x64xf32, 1>
-    linalg.copy(%arg1, %1) : memref<64x64xf32>, memref<64x64xf32, 2>
+    linalg.copy ins(%3 : memref<8x64xf32, #map>) outs(%0 : memref<8x64xf32, 1>)
+    linalg.copy ins(%arg1 : memref<64x64xf32>) outs(%1 : memref<64x64xf32, 2>)
     linalg.matmul ins(%0, %1 : memref<8x64xf32, 1>, memref<64x64xf32, 2>) outs(%2 : memref<8x64xf32, 3>)
-    linalg.copy(%2, %4) : memref<8x64xf32, 3>, memref<8x64xf32, #map>
+    linalg.copy ins(%2 : memref<8x64xf32, 3>) outs(%4 : memref<8x64xf32, #map>)
   } {__byteir_coarsen_simt__, __byteir_loop_to_simt__ = "block_id.y"}
   return
 }

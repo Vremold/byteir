@@ -9,7 +9,7 @@
 #include "PassDetail.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/StandardOps/Transforms/ComposeSubView.h"
+#include "mlir/Dialect/MemRef/Transforms/ComposeSubView.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
@@ -146,7 +146,7 @@ public:
   SimplifyViewPass() = default;
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
-    OwningRewritePatternList patterns(funcOp.getContext());
+    RewritePatternSet patterns(funcOp.getContext());
     populateSimplifyViewPattern(patterns);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
       funcOp.emitError("SimplifyViewPass applyPatternsAndFoldGreedily "

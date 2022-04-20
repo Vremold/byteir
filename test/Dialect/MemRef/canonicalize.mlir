@@ -29,10 +29,10 @@ func @matmul_tiled_hoist(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %a
   scf.for %arg3 = %c0 to %c128 step %c8 {
     %3 = memref.subview %arg0[%arg3, 0] [%c8, 64] [1, 1] : memref<128x64xf32> to memref<?x64xf32, #map1>
     %4 = memref.subview %arg2[%arg3, 0] [%c8, 64] [1, 1] : memref<128x64xf32> to memref<?x64xf32, #map1>
-    linalg.copy(%3, %0) : memref<?x64xf32, #map1>, memref<?x64xf32, 3>
-    linalg.copy(%arg1, %1) : memref<64x64xf32>, memref<64x64xf32, 4>
+    linalg.copy ins(%3: memref<?x64xf32, #map1>) outs(%0: memref<?x64xf32, 3>)
+    linalg.copy ins(%arg1: memref<64x64xf32>) outs(%1: memref<64x64xf32, 4>) 
     linalg.matmul {anchor} ins(%0, %1 : memref<?x64xf32, 3>, memref<64x64xf32, 4>) outs(%2 : memref<?x64xf32, 5>)
-    linalg.copy(%2, %4) : memref<?x64xf32, 5>, memref<?x64xf32, #map1>
+    linalg.copy ins(%2: memref<?x64xf32, 5>) outs(%4: memref<?x64xf32, #map1>)
   }
   return
 }
@@ -47,13 +47,13 @@ func @matmul_tiled_non_hoist(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>
     %1 = memref.subview %arg2[%arg3, 0] [%c8, 64] [1, 1] : memref<128x64xf32> to memref<?x64xf32, #map1>
     %2 = memref.alloc(%c8) : memref<?x64xf32, 3>
 // CHECK-DAG: memref.alloc() : memref<8x64xf32, 3>
-    linalg.copy(%0, %2) : memref<?x64xf32, #map1>, memref<?x64xf32, 3>
+    linalg.copy ins(%0: memref<?x64xf32, #map1>) outs(%2: memref<?x64xf32, 3>)
     %3 = memref.alloc() : memref<64x64xf32, 4>
-    linalg.copy(%arg1, %3) : memref<64x64xf32>, memref<64x64xf32, 4>
+    linalg.copy ins(%arg1: memref<64x64xf32>) outs(%3: memref<64x64xf32, 4>)
     %4 = memref.alloc(%c8) : memref<?x64xf32, 5>
 // CHECK-DAG: memref.alloc() : memref<8x64xf32, 5>
     linalg.matmul {anchor} ins(%2, %3 : memref<?x64xf32, 3>, memref<64x64xf32, 4>) outs(%4 : memref<?x64xf32, 5>)
-    linalg.copy(%4, %1) : memref<?x64xf32, 5>, memref<?x64xf32, #map1>
+    linalg.copy ins(%4: memref<?x64xf32, 5>) outs(%1: memref<?x64xf32, #map1>)
   }
   return
 }

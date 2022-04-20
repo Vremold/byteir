@@ -13,12 +13,13 @@
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
 #include "byteir/Utils/Utils.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionInterfaces.h"
-#include "mlir/Parser.h"
+#include "mlir/Parser/Parser.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/EquivalenceClasses.h"
 #include "llvm/ADT/SmallVector.h"
@@ -78,7 +79,7 @@ static void AddFuncAttrs(FuncOp func) {
       initial_copy.push_back(val);
     }
 
-    mlir::ReturnOp ret = *func.getOps<mlir::ReturnOp>().begin();
+    func::ReturnOp ret = *func.getOps<func::ReturnOp>().begin();
     for (auto val : ret.getOperands()) {
       initial_copy.push_back(val);
     }

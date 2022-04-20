@@ -61,7 +61,7 @@ struct RewriteWithConstraintPass
   RewriteWithConstraintPass() = default;
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
-    OwningRewritePatternList patterns(funcOp.getContext());
+    RewritePatternSet patterns(funcOp.getContext());
     populateRewriteWithConstraintConstraintPattern(patterns);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
       funcOp.emitError("RewriteWithConstraintPass applyPatternsAndFoldGreedily "

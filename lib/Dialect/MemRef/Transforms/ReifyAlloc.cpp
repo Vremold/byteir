@@ -98,7 +98,7 @@ void mlir::populateReifyAllocLikePatterns(RewritePatternSet &patterns) {
 void ReifyAllocPass::runOnOperation() {
   auto funcOp = getOperation();
 
-  OwningRewritePatternList patterns(funcOp.getContext());
+  RewritePatternSet patterns(funcOp.getContext());
   populateReifyAllocLikePatterns(patterns);
 
   if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {

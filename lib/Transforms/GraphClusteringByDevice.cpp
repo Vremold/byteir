@@ -10,7 +10,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Dialect.h"
@@ -142,7 +142,8 @@ void createFunctions(ModuleOp module_op,
     for (Value result : metadata.results) {
       resultsAfterMapping.push_back(mapping.lookupOrDefault(result));
     }
-    builder.create<ReturnOp>(UnknownLoc::get(context), resultsAfterMapping);
+    builder.create<func::ReturnOp>(UnknownLoc::get(context),
+                                   resultsAfterMapping);
     symbolTable.insert(funcOp, metadata.insertionPoint++);
     // Record the actual name. The symbol table might rename the FuncOp if there
     // is name collision.
@@ -166,7 +167,7 @@ void createCalls(MLIRContext *context,
       inputsAfterMapping.push_back(mapping.lookupOrDefault(input));
     }
 
-    CallOp callOp = builder.create<CallOp>(
+    func::CallOp callOp = builder.create<func::CallOp>(
         UnknownLoc::get(context), metadata.partitionOp, inputsAfterMapping);
     // Clones the CallOp operation to replace its callee args with
     // the results of the other CallOp operations using the

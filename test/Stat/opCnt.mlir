@@ -26,33 +26,33 @@ module {
   }
 }
 // DEFAULT: builtin.func 2
+// DEFAULT: func.call 1
+// DEFAULT: func.return 2
 // DEFAULT: mhlo.add 6
 // DEFAULT: mhlo.fusion 1
 // DEFAULT: mhlo.return 1
-// DEFAULT: std.call 1
-// DEFAULT: std.return 2
 // DEFAULT: tf.Add 2
 // DEFAULT: tf.Mul 2  
 
 // FUNCNAME: builtin.func 1
+// FUNCNAME: func.call 1
+// FUNCNAME: func.return 1
 // FUNCNAME: mhlo.add 4
 // FUNCNAME: mhlo.fusion 1
 // FUNCNAME: mhlo.return 1
-// FUNCNAME: std.call 1
-// FUNCNAME: std.return 1
 // FUNCNAME: tf.Add 1
 // FUNCNAME: tf.Mul 1
 
+// TOPONLY: func.call 1
+// TOPONLY: func.return 2
 // TOPONLY: mhlo.add 4
 // TOPONLY: mhlo.fusion 1
-// TOPONLY: std.call 1
-// TOPONLY: std.return 2
 // TOPONLY: tf.Add 2
 // TOPONLY: tf.Mul 2
 
+// FUNCNAMETOPONLY: func.call 1
+// FUNCNAMETOPONLY: func.return 1
 // FUNCNAMETOPONLY: mhlo.add 2
 // FUNCNAMETOPONLY: mhlo.fusion 1
-// FUNCNAMETOPONLY: std.call 1
-// FUNCNAMETOPONLY: std.return 1
 // FUNCNAMETOPONLY: tf.Add 1
 // FUNCNAMETOPONLY: tf.Mul 1

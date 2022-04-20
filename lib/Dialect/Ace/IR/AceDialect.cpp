@@ -37,6 +37,8 @@ Block *mlir::ace::OpaqueOp::addEntryBlock() {
   assert(body().empty() && "opaqueOp already has an entry block");
   auto *entry = new Block();
   body().push_back(entry);
-  entry->addArguments(getOperandTypes());
+  for (auto type : getOperandTypes()) {
+    entry->addArgument(type, /*Location*/ getLoc());
+  }
   return entry;
 }

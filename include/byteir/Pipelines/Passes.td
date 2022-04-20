@@ -130,7 +130,9 @@ def NVVMCodegenPipeline : Pass<"nvvm-codegen", "mlir::ModuleOp"> {
   let dependentDialects = [
     "mlir::memref::MemRefDialect",
     "mlir::NVVM::NVVMDialect",
-    "mlir::StandardOpsDialect",   
+    "mlir::cf::ControlFlowDialect",   
+    "mlir::arith::ArithmeticDialect",
+    "mlir::func::FuncDialect",
   ];
 }
 

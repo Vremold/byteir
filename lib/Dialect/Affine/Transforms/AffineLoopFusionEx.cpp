@@ -10,9 +10,9 @@
 #include "byteir/Utils/Hoist.h"
 #include "mlir/Dialect/Affine/Analysis/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Affine/LoopFusionUtils.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Dominance.h"
-#include "mlir/Transforms/LoopFusionUtils.h"
 #include <utility>
 
 using namespace llvm;

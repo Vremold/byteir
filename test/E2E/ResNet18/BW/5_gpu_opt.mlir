@@ -46,7 +46,7 @@
 module {
   func private @Unknown0(%arg0: memref<1x512xf16>, %arg1: memref<1x512x7x7xf16>) -> memref<1x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x512x7x7xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x512x7x7xf16>
     %cst_0 = arith.constant 4.900000e+01 : f16
     affine.for %arg2 = 0 to 25088 {
       %1 = affine.apply #map0(%arg2)
@@ -57,7 +57,7 @@ module {
       %6 = affine.load %arg0[%4, %3] : memref<1x512xf16>
       %7 = arith.divf %6, %cst_0 : f16
       %8 = arith.cmpf ogt, %5, %cst : f16
-      %9 = select %8, %7, %cst : f16
+      %9 = arith.select %8, %7, %cst : f16
       affine.store %9, %0[%4, %3, %2, %1] : memref<1x512x7x7xf16>
     }
     return %0 : memref<1x512x7x7xf16>
@@ -95,7 +95,7 @@ module {
   }
   func private @Unknown4(%arg0: memref<1x512x7x7xf16>, %arg1: memref<1x512x7x7xf16>) -> memref<1x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x512x7x7xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x512x7x7xf16>
     affine.for %arg2 = 0 to 25088 {
       %1 = affine.apply #map0(%arg2)
       %2 = affine.apply #map1(%arg2)
@@ -104,7 +104,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x512x7x7xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x512x7x7xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x512x7x7xf16>
     }
     return %0 : memref<1x512x7x7xf16>
@@ -142,7 +142,7 @@ module {
   }
   func private @Unknown8(%arg0: memref<1x512x7x7xf16>, %arg1: memref<1x512x7x7xf16>, %arg2: memref<1x512x7x7xf16>) -> memref<1x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x512x7x7xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x512x7x7xf16>
     affine.for %arg3 = 0 to 25088 {
       %1 = affine.apply #map0(%arg3)
       %2 = affine.apply #map1(%arg3)
@@ -153,7 +153,7 @@ module {
       %7 = affine.load %arg1[%4, %3, %2, %1] : memref<1x512x7x7xf16>
       %8 = arith.addf %6, %7 : f16
       %9 = arith.cmpf ogt, %5, %cst : f16
-      %10 = select %9, %8, %cst : f16
+      %10 = arith.select %9, %8, %cst : f16
       affine.store %10, %0[%4, %3, %2, %1] : memref<1x512x7x7xf16>
     }
     return %0 : memref<1x512x7x7xf16>
@@ -191,7 +191,7 @@ module {
   }
   func private @Unknown12(%arg0: memref<1x512x7x7xf16>, %arg1: memref<1x512x7x7xf16>) -> memref<1x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x512x7x7xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x512x7x7xf16>
     affine.for %arg2 = 0 to 25088 {
       %1 = affine.apply #map0(%arg2)
       %2 = affine.apply #map1(%arg2)
@@ -200,7 +200,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x512x7x7xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x512x7x7xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x512x7x7xf16>
     }
     return %0 : memref<1x512x7x7xf16>
@@ -267,7 +267,7 @@ module {
   }
   func private @Unknown19(%arg0: memref<1x256x14x14xf16>, %arg1: memref<1x256x14x14xf16>, %arg2: memref<1x256x14x14xf16>) -> memref<1x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x256x14x14xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x256x14x14xf16>
     affine.for %arg3 = 0 to 50176 {
       %1 = affine.apply #map4(%arg3)
       %2 = affine.apply #map5(%arg3)
@@ -278,7 +278,7 @@ module {
       %7 = affine.load %arg1[%4, %3, %2, %1] : memref<1x256x14x14xf16>
       %8 = arith.addf %6, %7 : f16
       %9 = arith.cmpf ogt, %5, %cst : f16
-      %10 = select %9, %8, %cst : f16
+      %10 = arith.select %9, %8, %cst : f16
       affine.store %10, %0[%4, %3, %2, %1] : memref<1x256x14x14xf16>
     }
     return %0 : memref<1x256x14x14xf16>
@@ -316,7 +316,7 @@ module {
   }
   func private @Unknown23(%arg0: memref<1x256x14x14xf16>, %arg1: memref<1x256x14x14xf16>) -> memref<1x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x256x14x14xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x256x14x14xf16>
     affine.for %arg2 = 0 to 50176 {
       %1 = affine.apply #map4(%arg2)
       %2 = affine.apply #map5(%arg2)
@@ -325,7 +325,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x256x14x14xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x256x14x14xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x256x14x14xf16>
     }
     return %0 : memref<1x256x14x14xf16>
@@ -363,7 +363,7 @@ module {
   }
   func private @Unknown27(%arg0: memref<1x256x14x14xf16>, %arg1: memref<1x256x14x14xf16>, %arg2: memref<1x256x14x14xf16>) -> memref<1x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x256x14x14xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x256x14x14xf16>
     affine.for %arg3 = 0 to 50176 {
       %1 = affine.apply #map4(%arg3)
       %2 = affine.apply #map5(%arg3)
@@ -374,7 +374,7 @@ module {
       %7 = affine.load %arg1[%4, %3, %2, %1] : memref<1x256x14x14xf16>
       %8 = arith.addf %6, %7 : f16
       %9 = arith.cmpf ogt, %5, %cst : f16
-      %10 = select %9, %8, %cst : f16
+      %10 = arith.select %9, %8, %cst : f16
       affine.store %10, %0[%4, %3, %2, %1] : memref<1x256x14x14xf16>
     }
     return %0 : memref<1x256x14x14xf16>
@@ -412,7 +412,7 @@ module {
   }
   func private @Unknown31(%arg0: memref<1x256x14x14xf16>, %arg1: memref<1x256x14x14xf16>) -> memref<1x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x256x14x14xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x256x14x14xf16>
     affine.for %arg2 = 0 to 50176 {
       %1 = affine.apply #map4(%arg2)
       %2 = affine.apply #map5(%arg2)
@@ -421,7 +421,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x256x14x14xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x256x14x14xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x256x14x14xf16>
     }
     return %0 : memref<1x256x14x14xf16>
@@ -488,7 +488,7 @@ module {
   }
   func private @Unknown38(%arg0: memref<1x128x28x28xf16>, %arg1: memref<1x128x28x28xf16>, %arg2: memref<1x128x28x28xf16>) -> memref<1x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x128x28x28xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x128x28x28xf16>
     affine.for %arg3 = 0 to 100352 {
       %1 = affine.apply #map8(%arg3)
       %2 = affine.apply #map9(%arg3)
@@ -499,7 +499,7 @@ module {
       %7 = affine.load %arg1[%4, %3, %2, %1] : memref<1x128x28x28xf16>
       %8 = arith.addf %6, %7 : f16
       %9 = arith.cmpf ogt, %5, %cst : f16
-      %10 = select %9, %8, %cst : f16
+      %10 = arith.select %9, %8, %cst : f16
       affine.store %10, %0[%4, %3, %2, %1] : memref<1x128x28x28xf16>
     }
     return %0 : memref<1x128x28x28xf16>
@@ -537,7 +537,7 @@ module {
   }
   func private @Unknown42(%arg0: memref<1x128x28x28xf16>, %arg1: memref<1x128x28x28xf16>) -> memref<1x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x128x28x28xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x128x28x28xf16>
     affine.for %arg2 = 0 to 100352 {
       %1 = affine.apply #map8(%arg2)
       %2 = affine.apply #map9(%arg2)
@@ -546,7 +546,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x128x28x28xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x128x28x28xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x128x28x28xf16>
     }
     return %0 : memref<1x128x28x28xf16>
@@ -584,7 +584,7 @@ module {
   }
   func private @Unknown46(%arg0: memref<1x128x28x28xf16>, %arg1: memref<1x128x28x28xf16>, %arg2: memref<1x128x28x28xf16>) -> memref<1x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x128x28x28xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x128x28x28xf16>
     affine.for %arg3 = 0 to 100352 {
       %1 = affine.apply #map8(%arg3)
       %2 = affine.apply #map9(%arg3)
@@ -595,7 +595,7 @@ module {
       %7 = affine.load %arg1[%4, %3, %2, %1] : memref<1x128x28x28xf16>
       %8 = arith.addf %6, %7 : f16
       %9 = arith.cmpf ogt, %5, %cst : f16
-      %10 = select %9, %8, %cst : f16
+      %10 = arith.select %9, %8, %cst : f16
       affine.store %10, %0[%4, %3, %2, %1] : memref<1x128x28x28xf16>
     }
     return %0 : memref<1x128x28x28xf16>
@@ -633,7 +633,7 @@ module {
   }
   func private @Unknown50(%arg0: memref<1x128x28x28xf16>, %arg1: memref<1x128x28x28xf16>) -> memref<1x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x128x28x28xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x128x28x28xf16>
     affine.for %arg2 = 0 to 100352 {
       %1 = affine.apply #map8(%arg2)
       %2 = affine.apply #map9(%arg2)
@@ -642,7 +642,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x128x28x28xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x128x28x28xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x128x28x28xf16>
     }
     return %0 : memref<1x128x28x28xf16>
@@ -709,7 +709,7 @@ module {
   }
   func private @Unknown57(%arg0: memref<1x64x56x56xf16>, %arg1: memref<1x64x56x56xf16>, %arg2: memref<1x64x56x56xf16>) -> memref<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x64x56x56xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
     affine.for %arg3 = 0 to 200704 {
       %1 = affine.apply #map12(%arg3)
       %2 = affine.apply #map13(%arg3)
@@ -720,7 +720,7 @@ module {
       %7 = affine.load %arg1[%4, %3, %2, %1] : memref<1x64x56x56xf16>
       %8 = arith.addf %6, %7 : f16
       %9 = arith.cmpf ogt, %5, %cst : f16
-      %10 = select %9, %8, %cst : f16
+      %10 = arith.select %9, %8, %cst : f16
       affine.store %10, %0[%4, %3, %2, %1] : memref<1x64x56x56xf16>
     }
     return %0 : memref<1x64x56x56xf16>
@@ -758,7 +758,7 @@ module {
   }
   func private @Unknown61(%arg0: memref<1x64x56x56xf16>, %arg1: memref<1x64x56x56xf16>) -> memref<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x64x56x56xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
     affine.for %arg2 = 0 to 200704 {
       %1 = affine.apply #map12(%arg2)
       %2 = affine.apply #map13(%arg2)
@@ -767,7 +767,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x64x56x56xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x64x56x56xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x64x56x56xf16>
     }
     return %0 : memref<1x64x56x56xf16>
@@ -805,7 +805,7 @@ module {
   }
   func private @Unknown65(%arg0: memref<1x64x56x56xf16>, %arg1: memref<1x64x56x56xf16>, %arg2: memref<1x64x56x56xf16>) -> memref<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x64x56x56xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
     affine.for %arg3 = 0 to 200704 {
       %1 = affine.apply #map12(%arg3)
       %2 = affine.apply #map13(%arg3)
@@ -816,7 +816,7 @@ module {
       %7 = affine.load %arg1[%4, %3, %2, %1] : memref<1x64x56x56xf16>
       %8 = arith.addf %6, %7 : f16
       %9 = arith.cmpf ogt, %5, %cst : f16
-      %10 = select %9, %8, %cst : f16
+      %10 = arith.select %9, %8, %cst : f16
       affine.store %10, %0[%4, %3, %2, %1] : memref<1x64x56x56xf16>
     }
     return %0 : memref<1x64x56x56xf16>
@@ -854,7 +854,7 @@ module {
   }
   func private @Unknown69(%arg0: memref<1x64x56x56xf16>, %arg1: memref<1x64x56x56xf16>) -> memref<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x64x56x56xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
     affine.for %arg2 = 0 to 200704 {
       %1 = affine.apply #map12(%arg2)
       %2 = affine.apply #map13(%arg2)
@@ -863,7 +863,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x64x56x56xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x64x56x56xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x64x56x56xf16>
     }
     return %0 : memref<1x64x56x56xf16>
@@ -900,7 +900,7 @@ module {
     return %1 : memref<64x64x3x3xf16>
   }
   func private @Unknown73(%arg0: memref<1x64x56x56xf16>, %arg1: memref<1x64x56x56xf16>) -> memref<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<1x64x56x56xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
     affine.for %arg2 = 0 to 200704 {
       %1 = affine.apply #map12(%arg2)
       %2 = affine.apply #map13(%arg2)
@@ -915,7 +915,7 @@ module {
   }
   func private @Unknown74(%arg0: memref<1x64x112x112xf16>, %arg1: memref<1x64x112x112xf16>) -> memref<1x64x112x112xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
-    %0 = memref.alloc() : memref<1x64x112x112xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x64x112x112xf16>
     affine.for %arg2 = 0 to 802816 {
       %1 = affine.apply #map16(%arg2)
       %2 = affine.apply #map17(%arg2)
@@ -924,7 +924,7 @@ module {
       %5 = affine.load %arg0[%4, %3, %2, %1] : memref<1x64x112x112xf16>
       %6 = affine.load %arg1[%4, %3, %2, %1] : memref<1x64x112x112xf16>
       %7 = arith.cmpf ogt, %5, %cst : f16
-      %8 = select %7, %6, %cst : f16
+      %8 = arith.select %7, %6, %cst : f16
       affine.store %8, %0[%4, %3, %2, %1] : memref<1x64x112x112xf16>
     }
     return %0 : memref<1x64x112x112xf16>
@@ -952,7 +952,7 @@ module {
     return %1 : memref<64x3x7x7xf16>
   }
   func private @Unknown77(%arg0: memref<64x3x7x7xf16>) -> memref<64x3x7x7xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<64x3x7x7xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<64x3x7x7xf32>
     affine.for %arg1 = 0 to 9408 {
       %1 = affine.apply #map0(%arg1)
       %2 = affine.apply #map1(%arg1)
@@ -965,7 +965,7 @@ module {
     return %0 : memref<64x3x7x7xf32>
   }
   func private @Unknown78(%arg0: memref<1x1000xf16>) -> memref<1x1000xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<1x1000xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x1000xf32>
     affine.for %arg1 = 0 to 1000 {
       %1 = affine.apply #map22(%arg1)
       %2 = affine.apply #map23(%arg1)
@@ -976,7 +976,7 @@ module {
     return %0 : memref<1x1000xf32>
   }
   func private @Unknown79(%arg0: memref<1000xf32>) -> memref<1000xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<1000xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1000xf32>
     affine.for %arg1 = 0 to 1000 {
       %1 = affine.load %arg0[%arg1] : memref<1000xf32>
       %2 = arith.truncf %1 : f32 to f16
@@ -986,7 +986,7 @@ module {
     return %0 : memref<1000xf32>
   }
   func private @Unknown80(%arg0: memref<1000x512xf16>) -> memref<1000x512xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<1000x512xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1000x512xf32>
     affine.for %arg1 = 0 to 512000 {
       %1 = affine.apply #map24(%arg1)
       %2 = affine.apply #map25(%arg1)
@@ -997,7 +997,7 @@ module {
     return %0 : memref<1000x512xf32>
   }
   func private @Unknown81(%arg0: memref<64x64x3x3xf16>) -> memref<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<64x64x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<64x64x3x3xf32>
     affine.for %arg1 = 0 to 36864 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1010,7 +1010,7 @@ module {
     return %0 : memref<64x64x3x3xf32>
   }
   func private @Unknown82(%arg0: memref<64x64x3x3xf16>) -> memref<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<64x64x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<64x64x3x3xf32>
     affine.for %arg1 = 0 to 36864 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1023,7 +1023,7 @@ module {
     return %0 : memref<64x64x3x3xf32>
   }
   func private @Unknown83(%arg0: memref<64x64x3x3xf16>) -> memref<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<64x64x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<64x64x3x3xf32>
     affine.for %arg1 = 0 to 36864 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1036,7 +1036,7 @@ module {
     return %0 : memref<64x64x3x3xf32>
   }
   func private @Unknown84(%arg0: memref<64x64x3x3xf16>) -> memref<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<64x64x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<64x64x3x3xf32>
     affine.for %arg1 = 0 to 36864 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1049,7 +1049,7 @@ module {
     return %0 : memref<64x64x3x3xf32>
   }
   func private @Unknown85(%arg0: memref<128x64x3x3xf16>) -> memref<128x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<128x64x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<128x64x3x3xf32>
     affine.for %arg1 = 0 to 73728 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1062,7 +1062,7 @@ module {
     return %0 : memref<128x64x3x3xf32>
   }
   func private @Unknown86(%arg0: memref<128x128x3x3xf16>) -> memref<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<128x128x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<128x128x3x3xf32>
     affine.for %arg1 = 0 to 147456 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1076,7 +1076,7 @@ module {
   }
   func private @Unknown87(%arg0: memref<128x64x1x1xf16>) -> memref<128x64x1x1xf32> attributes {__byteir_elementwise_fusion__} {
     %c0 = arith.constant 0 : index
-    %0 = memref.alloc() : memref<128x64x1x1xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<128x64x1x1xf32>
     affine.for %arg1 = 0 to 8192 {
       %1 = affine.apply #map32(%arg1)
       %2 = affine.apply #map33(%arg1)
@@ -1087,7 +1087,7 @@ module {
     return %0 : memref<128x64x1x1xf32>
   }
   func private @Unknown88(%arg0: memref<128x128x3x3xf16>) -> memref<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<128x128x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<128x128x3x3xf32>
     affine.for %arg1 = 0 to 147456 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1100,7 +1100,7 @@ module {
     return %0 : memref<128x128x3x3xf32>
   }
   func private @Unknown89(%arg0: memref<128x128x3x3xf16>) -> memref<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<128x128x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<128x128x3x3xf32>
     affine.for %arg1 = 0 to 147456 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1113,7 +1113,7 @@ module {
     return %0 : memref<128x128x3x3xf32>
   }
   func private @Unknown90(%arg0: memref<256x128x3x3xf16>) -> memref<256x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<256x128x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<256x128x3x3xf32>
     affine.for %arg1 = 0 to 294912 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1126,7 +1126,7 @@ module {
     return %0 : memref<256x128x3x3xf32>
   }
   func private @Unknown91(%arg0: memref<256x256x3x3xf16>) -> memref<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<256x256x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<256x256x3x3xf32>
     affine.for %arg1 = 0 to 589824 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1140,7 +1140,7 @@ module {
   }
   func private @Unknown92(%arg0: memref<256x128x1x1xf16>) -> memref<256x128x1x1xf32> attributes {__byteir_elementwise_fusion__} {
     %c0 = arith.constant 0 : index
-    %0 = memref.alloc() : memref<256x128x1x1xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<256x128x1x1xf32>
     affine.for %arg1 = 0 to 32768 {
       %1 = affine.apply #map36(%arg1)
       %2 = affine.apply #map37(%arg1)
@@ -1151,7 +1151,7 @@ module {
     return %0 : memref<256x128x1x1xf32>
   }
   func private @Unknown93(%arg0: memref<256x256x3x3xf16>) -> memref<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<256x256x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<256x256x3x3xf32>
     affine.for %arg1 = 0 to 589824 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1164,7 +1164,7 @@ module {
     return %0 : memref<256x256x3x3xf32>
   }
   func private @Unknown94(%arg0: memref<256x256x3x3xf16>) -> memref<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<256x256x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<256x256x3x3xf32>
     affine.for %arg1 = 0 to 589824 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1177,7 +1177,7 @@ module {
     return %0 : memref<256x256x3x3xf32>
   }
   func private @Unknown95(%arg0: memref<512x256x3x3xf16>) -> memref<512x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<512x256x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<512x256x3x3xf32>
     affine.for %arg1 = 0 to 1179648 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1190,7 +1190,7 @@ module {
     return %0 : memref<512x256x3x3xf32>
   }
   func private @Unknown96(%arg0: memref<512x512x3x3xf16>) -> memref<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<512x512x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<512x512x3x3xf32>
     affine.for %arg1 = 0 to 2359296 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1204,7 +1204,7 @@ module {
   }
   func private @Unknown97(%arg0: memref<512x256x1x1xf16>) -> memref<512x256x1x1xf32> attributes {__byteir_elementwise_fusion__} {
     %c0 = arith.constant 0 : index
-    %0 = memref.alloc() : memref<512x256x1x1xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<512x256x1x1xf32>
     affine.for %arg1 = 0 to 131072 {
       %1 = affine.apply #map40(%arg1)
       %2 = affine.apply #map41(%arg1)
@@ -1215,7 +1215,7 @@ module {
     return %0 : memref<512x256x1x1xf32>
   }
   func private @Unknown98(%arg0: memref<512x512x3x3xf16>) -> memref<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<512x512x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<512x512x3x3xf32>
     affine.for %arg1 = 0 to 2359296 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1228,7 +1228,7 @@ module {
     return %0 : memref<512x512x3x3xf32>
   }
   func private @Unknown99(%arg0: memref<512x512x3x3xf16>) -> memref<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.alloc() : memref<512x512x3x3xf32>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<512x512x3x3xf32>
     affine.for %arg1 = 0 to 2359296 {
       %1 = affine.apply #map26(%arg1)
       %2 = affine.apply #map27(%arg1)
@@ -1325,11 +1325,11 @@ module {
     %78 = call @ConvBackwardFilterOp72(%arg84, %76#0) : (memref<1x64x56x56xf16>, memref<1x64x56x56xf16>) -> memref<64x64x3x3xf16>
     %79 = call @Unknown73(%71, %77) : (memref<1x64x56x56xf16>, memref<1x64x56x56xf16>) -> memref<1x64x56x56xf16>
     "lmhlo.select_and_scatter"(%arg83, %79, %5, %3) ({
-    ^bb0(%arg142: tensor<f16>, %arg143: tensor<f16>):  // no predecessors
+    ^bb0(%arg142: tensor<f16>, %arg143: tensor<f16>):
       %106 = "mhlo.compare"(%arg142, %arg143) {comparison_direction = "GE"} : (tensor<f16>, tensor<f16>) -> tensor<i1>
       "mhlo.return"(%106) : (tensor<i1>) -> ()
     }, {
-    ^bb0(%arg142: tensor<f16>, %arg143: tensor<f16>):  // no predecessors
+    ^bb0(%arg142: tensor<f16>, %arg143: tensor<f16>):
       %106 = mhlo.add %arg142, %arg143 : tensor<f16>
       "mhlo.return"(%106) : (tensor<f16>) -> ()
     }) {padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (memref<1x64x112x112xf16>, memref<1x64x56x56xf16>, memref<f16>, memref<1x64x112x112xf16>) -> ()
@@ -1339,7 +1339,7 @@ module {
     %83 = call @Unknown77(%82) : (memref<64x3x7x7xf16>) -> memref<64x3x7x7xf32>
     %84 = call @Unknown78(%arg141) : (memref<1x1000xf16>) -> memref<1x1000xf32>
     "lmhlo.reduce"(%84, %0, %2) ({
-    ^bb0(%arg142: memref<f32>, %arg143: memref<f32>, %arg144: memref<f32>):  // no predecessors
+    ^bb0(%arg142: memref<f32>, %arg143: memref<f32>, %arg144: memref<f32>):
       "lmhlo.add"(%arg142, %arg143, %arg144) : (memref<f32>, memref<f32>, memref<f32>) -> ()
       "lmhlo.terminator"() : () -> ()
     }) {dimensions = dense<0> : tensor<1xi64>} : (memref<1x1000xf32>, memref<f32>, memref<1000xf32>) -> ()

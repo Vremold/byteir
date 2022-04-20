@@ -68,7 +68,7 @@ struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
 
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
-    OwningRewritePatternList patterns(funcOp.getContext());
+    RewritePatternSet patterns(funcOp.getContext());
     populateTrivialFusionPattern(patterns, mhloNameMap);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
       funcOp.emitError(

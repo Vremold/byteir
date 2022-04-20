@@ -1,0 +1,18 @@
+diff --git a/lib/CAPI/CMakeLists.txt b/lib/CAPI/CMakeLists.txt
+index a8b2f0f5..46557adb 100644
+--- a/lib/CAPI/CMakeLists.txt
++++ b/lib/CAPI/CMakeLists.txt
+@@ -6,5 +6,12 @@ add_mlir_public_c_api_library(MLIRHLOCAPIDialects
+   LINK_LIBS PUBLIC
+   ChloDialect
+   MhloDialect
++  ChloPasses
++  MhloPasses
++  MhloToLhloConversion
++  MhloToArithmeticConversion
++  MhloToMemrefConversion
++  MhloToStandard
++  MhloToLinalg
++  MhloShapeOpsToStandard
+ )
+-target_link_libraries(MLIRHLOCAPIDialects PRIVATE AllMhLoPasses)

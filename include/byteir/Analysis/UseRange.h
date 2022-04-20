@@ -19,9 +19,9 @@ limitations under the License.
 #include <vector>
 
 #include "byteir/Analysis/Liveness.h"
+#include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Value.h"
-#include "mlir/Transforms/BufferUtils.h"
 
 using namespace mlir;
 
@@ -106,7 +106,7 @@ public:
   using UsePositionList = std::vector<UsePosition>;
 
   UserangeAnalysis(Operation *op, Liveness *liveness,
-                   const BufferPlacementAllocs &allocs,
+                   const bufferization::BufferPlacementAllocs &allocs,
                    const BufferViewFlowAnalysis &aliases);
 
   /// Returns the index of the first operation that uses the given value or an

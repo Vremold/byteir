@@ -14,14 +14,6 @@ using namespace mlir;
 
 namespace {
 
-struct ConvertUnregisteredToAcePass
-    : public ConvertUnregisteredToAceBase<ConvertUnregisteredToAcePass> {
-
-  ConvertUnregisteredToAcePass() : ConvertUnregisteredToAceBase() {}
-
-  void runOnOperation() override;
-};
-
 static void WrapUnregisteredOpWithOpaque(Operation *op) {
   Block *block = op->getBlock();
   OpBuilder opBuilder(block, block->begin());
@@ -45,14 +37,21 @@ static void WrapUnregisteredOpWithOpaque(Operation *op) {
   }
 }
 
-void ConvertUnregisteredToAcePass::runOnOperation() {
-  FuncOp funcOp = getOperation();
-  funcOp.walk([&](mlir::Operation *op) {
-    if (!op->getDialect()) {
-      WrapUnregisteredOpWithOpaque(op);
-    }
-  });
-}
+struct ConvertUnregisteredToAcePass
+    : public ConvertUnregisteredToAceBase<ConvertUnregisteredToAcePass> {
+
+  ConvertUnregisteredToAcePass() : ConvertUnregisteredToAceBase() {}
+
+  void runOnOperation() override {
+    FuncOp funcOp = getOperation();
+    funcOp.walk([&](mlir::Operation *op) {
+      if (!op->getDialect()) {
+        WrapUnregisteredOpWithOpaque(op);
+      }
+    });
+  }
+};
+
 } // namespace
 
 std::unique_ptr<OperationPass<FuncOp>>

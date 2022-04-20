@@ -1,4 +1,4 @@
-// RUN: byteir-opt -convert-scf-to-std -convert-arith-to-llvm -gpu-to-nvvm-ext -cse  %s | FileCheck %s
+// RUN: byteir-opt -convert-scf-to-cf -convert-arith-to-llvm -gpu-to-nvvm-ext -cse  %s | FileCheck %s
 
 module attributes {gpu.container_module}  {
   func @fusion_broadcast(%arg0: memref<6x12x96xf32>, %arg1: memref<6x12x96x96xf32>) -> memref<6x12x96x96xf32> {
@@ -16,7 +16,7 @@ module attributes {gpu.container_module}  {
     gpu.func @fusion_broadcast_kernel(%arg0: memref<6x12x96x96xf32>, %arg1: memref<6x12x96xf32>, %arg2: memref<6x12x96x96xf32>) kernel {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
       %2 = arith.addi %c0, %0 : index

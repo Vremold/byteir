@@ -9,7 +9,7 @@ module {
   func private @Unknown0(%arg0: tensor<1x3x224x224xf32>) -> tensor<1x3x224x224xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [1, 3, 224, 224] : tensor<1x3x224x224xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x3x224x224xf32>) outs(%0 : tensor<1x3x224x224xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<1x3x224x224xf16>
@@ -18,7 +18,7 @@ module {
   func private @Unknown1(%arg0: tensor<64x3x7x7xf32>) -> tensor<64x3x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 3, 7, 7] : tensor<64x3x7x7xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x3x7x7xf32>) outs(%0 : tensor<64x3x7x7xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<64x3x7x7xf16>
@@ -26,15 +26,15 @@ module {
   }
   func private @BatchNormTrainingOp2(%arg0: tensor<1x64x112x112xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> (tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x64x112x112xf16>) -> tensor<1x64x112x112xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x64x112x112xf32>) -> tensor<1x64x112x112xf16>
-    return %2, %1#1, %1#2 : tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x64x112x112xf32>) -> tensor<1x64x112x112xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func private @Unknown3(%arg0: tensor<1x64x112x112xf16>) -> tensor<1x64x112x112xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 64, 112, 112] : tensor<1x64x112x112xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x64x112x112xf16>) outs(%0 : tensor<1x64x112x112xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x64x112x112xf16>
@@ -43,7 +43,7 @@ module {
   func private @Unknown4(%arg0: tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 64, 3, 3] : tensor<64x64x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x64x3x3xf32>) outs(%0 : tensor<64x64x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<64x64x3x3xf16>
@@ -51,15 +51,15 @@ module {
   }
   func private @BatchNormTrainingOp5(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
-    return %2, %1#1, %1#2 : tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func private @Unknown6(%arg0: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 64, 56, 56] : tensor<1x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x64x56x56xf16>) outs(%0 : tensor<1x64x56x56xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x64x56x56xf16>
@@ -68,7 +68,7 @@ module {
   func private @Unknown7(%arg0: tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 64, 3, 3] : tensor<64x64x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x64x3x3xf32>) outs(%0 : tensor<64x64x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<64x64x3x3xf16>
@@ -76,15 +76,15 @@ module {
   }
   func private @BatchNormTrainingOp8(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
-    return %2, %1#1, %1#2 : tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func private @Unknown9(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 64, 56, 56] : tensor<1x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>) outs(%0 : tensor<1x64x56x56xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %2 = arith.addf %arg2, %arg3 : f16
       %3 = arith.maxf %2, %cst : f16
       linalg.yield %3 : f16
@@ -94,7 +94,7 @@ module {
   func private @Unknown10(%arg0: tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 64, 3, 3] : tensor<64x64x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x64x3x3xf32>) outs(%0 : tensor<64x64x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<64x64x3x3xf16>
@@ -102,15 +102,15 @@ module {
   }
   func private @BatchNormTrainingOp11(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
-    return %2, %1#1, %1#2 : tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func private @Unknown12(%arg0: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 64, 56, 56] : tensor<1x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x64x56x56xf16>) outs(%0 : tensor<1x64x56x56xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x64x56x56xf16>
@@ -119,7 +119,7 @@ module {
   func private @Unknown13(%arg0: tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [64, 64, 3, 3] : tensor<64x64x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<64x64x3x3xf32>) outs(%0 : tensor<64x64x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<64x64x3x3xf16>
@@ -127,15 +127,15 @@ module {
   }
   func private @BatchNormTrainingOp14(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
-    return %2, %1#1, %1#2 : tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func private @Unknown15(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 64, 56, 56] : tensor<1x64x56x56xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>) outs(%0 : tensor<1x64x56x56xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %2 = arith.addf %arg2, %arg3 : f16
       %3 = arith.maxf %2, %cst : f16
       linalg.yield %3 : f16
@@ -145,7 +145,7 @@ module {
   func private @Unknown16(%arg0: tensor<128x64x1x1xf32>) -> tensor<128x64x1x1xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 64, 1, 1] : tensor<128x64x1x1xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x64x1x1xf32>) outs(%0 : tensor<128x64x1x1xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<128x64x1x1xf16>
@@ -153,14 +153,14 @@ module {
   }
   func private @BatchNormTrainingOp17(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
-    return %2, %1#1, %1#2 : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func private @Unknown18(%arg0: tensor<128x64x3x3xf32>) -> tensor<128x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 64, 3, 3] : tensor<128x64x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x64x3x3xf32>) outs(%0 : tensor<128x64x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<128x64x3x3xf16>
@@ -168,15 +168,15 @@ module {
   }
   func private @BatchNormTrainingOp19(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
-    return %2, %1#1, %1#2 : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func private @Unknown20(%arg0: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 128, 28, 28] : tensor<1x128x28x28xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x128x28x28xf16>) outs(%0 : tensor<1x128x28x28xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x128x28x28xf16>
@@ -185,7 +185,7 @@ module {
   func private @Unknown21(%arg0: tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 128, 3, 3] : tensor<128x128x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x128x3x3xf32>) outs(%0 : tensor<128x128x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<128x128x3x3xf16>
@@ -193,15 +193,15 @@ module {
   }
   func private @BatchNormTrainingOp22(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
-    return %2, %1#1, %1#2 : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func private @Unknown23(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 128, 28, 28] : tensor<1x128x28x28xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>) outs(%0 : tensor<1x128x28x28xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %2 = arith.addf %arg2, %arg3 : f16
       %3 = arith.maxf %2, %cst : f16
       linalg.yield %3 : f16
@@ -211,7 +211,7 @@ module {
   func private @Unknown24(%arg0: tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 128, 3, 3] : tensor<128x128x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x128x3x3xf32>) outs(%0 : tensor<128x128x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<128x128x3x3xf16>
@@ -219,15 +219,15 @@ module {
   }
   func private @BatchNormTrainingOp25(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
-    return %2, %1#1, %1#2 : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func private @Unknown26(%arg0: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 128, 28, 28] : tensor<1x128x28x28xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x128x28x28xf16>) outs(%0 : tensor<1x128x28x28xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x128x28x28xf16>
@@ -236,7 +236,7 @@ module {
   func private @Unknown27(%arg0: tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [128, 128, 3, 3] : tensor<128x128x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<128x128x3x3xf32>) outs(%0 : tensor<128x128x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<128x128x3x3xf16>
@@ -244,15 +244,15 @@ module {
   }
   func private @BatchNormTrainingOp28(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
-    return %2, %1#1, %1#2 : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func private @Unknown29(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 128, 28, 28] : tensor<1x128x28x28xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>) outs(%0 : tensor<1x128x28x28xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %2 = arith.addf %arg2, %arg3 : f16
       %3 = arith.maxf %2, %cst : f16
       linalg.yield %3 : f16
@@ -262,7 +262,7 @@ module {
   func private @Unknown30(%arg0: tensor<256x128x1x1xf32>) -> tensor<256x128x1x1xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 128, 1, 1] : tensor<256x128x1x1xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x128x1x1xf32>) outs(%0 : tensor<256x128x1x1xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<256x128x1x1xf16>
@@ -270,14 +270,14 @@ module {
   }
   func private @BatchNormTrainingOp31(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
-    return %2, %1#1, %1#2 : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func private @Unknown32(%arg0: tensor<256x128x3x3xf32>) -> tensor<256x128x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 128, 3, 3] : tensor<256x128x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x128x3x3xf32>) outs(%0 : tensor<256x128x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<256x128x3x3xf16>
@@ -285,15 +285,15 @@ module {
   }
   func private @BatchNormTrainingOp33(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
-    return %2, %1#1, %1#2 : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func private @Unknown34(%arg0: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 256, 14, 14] : tensor<1x256x14x14xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x256x14x14xf16>) outs(%0 : tensor<1x256x14x14xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x256x14x14xf16>
@@ -302,7 +302,7 @@ module {
   func private @Unknown35(%arg0: tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 256, 3, 3] : tensor<256x256x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x256x3x3xf32>) outs(%0 : tensor<256x256x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<256x256x3x3xf16>
@@ -310,15 +310,15 @@ module {
   }
   func private @BatchNormTrainingOp36(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
-    return %2, %1#1, %1#2 : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func private @Unknown37(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 256, 14, 14] : tensor<1x256x14x14xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>) outs(%0 : tensor<1x256x14x14xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %2 = arith.addf %arg2, %arg3 : f16
       %3 = arith.maxf %2, %cst : f16
       linalg.yield %3 : f16
@@ -328,7 +328,7 @@ module {
   func private @Unknown38(%arg0: tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 256, 3, 3] : tensor<256x256x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x256x3x3xf32>) outs(%0 : tensor<256x256x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<256x256x3x3xf16>
@@ -336,15 +336,15 @@ module {
   }
   func private @BatchNormTrainingOp39(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
-    return %2, %1#1, %1#2 : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func private @Unknown40(%arg0: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 256, 14, 14] : tensor<1x256x14x14xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x256x14x14xf16>) outs(%0 : tensor<1x256x14x14xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x256x14x14xf16>
@@ -353,7 +353,7 @@ module {
   func private @Unknown41(%arg0: tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [256, 256, 3, 3] : tensor<256x256x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<256x256x3x3xf32>) outs(%0 : tensor<256x256x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<256x256x3x3xf16>
@@ -361,15 +361,15 @@ module {
   }
   func private @BatchNormTrainingOp42(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
-    return %2, %1#1, %1#2 : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func private @Unknown43(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 256, 14, 14] : tensor<1x256x14x14xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>) outs(%0 : tensor<1x256x14x14xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %2 = arith.addf %arg2, %arg3 : f16
       %3 = arith.maxf %2, %cst : f16
       linalg.yield %3 : f16
@@ -379,7 +379,7 @@ module {
   func private @Unknown44(%arg0: tensor<512x256x1x1xf32>) -> tensor<512x256x1x1xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 256, 1, 1] : tensor<512x256x1x1xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x256x1x1xf32>) outs(%0 : tensor<512x256x1x1xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<512x256x1x1xf16>
@@ -387,14 +387,14 @@ module {
   }
   func private @BatchNormTrainingOp45(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
-    return %2, %1#1, %1#2 : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func private @Unknown46(%arg0: tensor<512x256x3x3xf32>) -> tensor<512x256x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 256, 3, 3] : tensor<512x256x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x256x3x3xf32>) outs(%0 : tensor<512x256x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<512x256x3x3xf16>
@@ -402,15 +402,15 @@ module {
   }
   func private @BatchNormTrainingOp47(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
-    return %2, %1#1, %1#2 : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func private @Unknown48(%arg0: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 512, 7, 7] : tensor<1x512x7x7xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x512x7x7xf16>) outs(%0 : tensor<1x512x7x7xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x512x7x7xf16>
@@ -419,7 +419,7 @@ module {
   func private @Unknown49(%arg0: tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 512, 3, 3] : tensor<512x512x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x512x3x3xf32>) outs(%0 : tensor<512x512x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<512x512x3x3xf16>
@@ -427,15 +427,15 @@ module {
   }
   func private @BatchNormTrainingOp50(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
-    return %2, %1#1, %1#2 : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func private @Unknown51(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 512, 7, 7] : tensor<1x512x7x7xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>) outs(%0 : tensor<1x512x7x7xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %2 = arith.addf %arg2, %arg3 : f16
       %3 = arith.maxf %2, %cst : f16
       linalg.yield %3 : f16
@@ -445,7 +445,7 @@ module {
   func private @Unknown52(%arg0: tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 512, 3, 3] : tensor<512x512x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x512x3x3xf32>) outs(%0 : tensor<512x512x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<512x512x3x3xf16>
@@ -453,15 +453,15 @@ module {
   }
   func private @BatchNormTrainingOp53(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
-    return %2, %1#1, %1#2 : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func private @Unknown54(%arg0: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 512, 7, 7] : tensor<1x512x7x7xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<1x512x7x7xf16>) outs(%0 : tensor<1x512x7x7xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.maxf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x512x7x7xf16>
@@ -470,7 +470,7 @@ module {
   func private @Unknown55(%arg0: tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [512, 512, 3, 3] : tensor<512x512x3x3xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0 : tensor<512x512x3x3xf32>) outs(%0 : tensor<512x512x3x3xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<512x512x3x3xf16>
@@ -478,15 +478,15 @@ module {
   }
   func private @BatchNormTrainingOp56(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
     %0 = "mhlo.convert"(%arg0) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %2 = "mhlo.convert"(%1#0) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
-    return %2, %1#1, %1#2 : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %1 = "mhlo.convert"(%output) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
+    return %1, %batch_mean, %batch_var : tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func private @Unknown57(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16
     %0 = linalg.init_tensor [1, 512, 7, 7] : tensor<1x512x7x7xf16>
     %1 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>) outs(%0 : tensor<1x512x7x7xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %2 = arith.addf %arg2, %arg3 : f16
       %3 = arith.maxf %2, %cst : f16
       linalg.yield %3 : f16
@@ -497,7 +497,7 @@ module {
     %cst = arith.constant 2.040100e-02 : f16
     %0 = linalg.init_tensor [1, 512] : tensor<1x512xf16>
     %1 = linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<1x512xf16>) outs(%0 : tensor<1x512xf16>) {
-    ^bb0(%arg1: f16, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f16, %arg2: f16):
       %2 = arith.mulf %arg1, %cst : f16
       linalg.yield %2 : f16
     } -> tensor<1x512xf16>
@@ -506,7 +506,7 @@ module {
   func private @Unknown59(%arg0: tensor<1000x512xf32>) -> tensor<1000x512xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [1000, 512] : tensor<1000x512xf16>
     %1 = linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<1000x512xf32>) outs(%0 : tensor<1000x512xf16>) {
-    ^bb0(%arg1: f32, %arg2: f16):  // no predecessors
+    ^bb0(%arg1: f32, %arg2: f16):
       %2 = arith.truncf %arg1 : f32 to f16
       linalg.yield %2 : f16
     } -> tensor<1000x512xf16>
@@ -515,13 +515,13 @@ module {
   func private @Unknown60(%arg0: tensor<1000xf32>, %arg1: tensor<1x1000xf16>) -> tensor<1x1000xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = linalg.init_tensor [1000] : tensor<1000xf16>
     %1 = linalg.generic {indexing_maps = [#map2, #map2], iterator_types = ["parallel"]} ins(%arg0 : tensor<1000xf32>) outs(%0 : tensor<1000xf16>) {
-    ^bb0(%arg2: f32, %arg3: f16):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f16):
       %4 = arith.truncf %arg2 : f32 to f16
       linalg.yield %4 : f16
     } -> tensor<1000xf16>
     %2 = linalg.init_tensor [1, 1000] : tensor<1x1000xf16>
     %3 = linalg.generic {indexing_maps = [#map1, #map3, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg1, %1 : tensor<1x1000xf16>, tensor<1000xf16>) outs(%2 : tensor<1x1000xf16>) {
-    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):  // no predecessors
+    ^bb0(%arg2: f16, %arg3: f16, %arg4: f16):
       %4 = arith.addf %arg2, %arg3 : f16
       linalg.yield %4 : f16
     } -> tensor<1x1000xf16>
@@ -532,7 +532,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -545,7 +545,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -558,7 +558,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -571,7 +571,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -584,7 +584,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -597,7 +597,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -610,7 +610,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -623,7 +623,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -636,7 +636,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -649,7 +649,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [64] : tensor<64xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<64xf32>, tensor<64xf32>) outs(%0 : tensor<64xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -662,7 +662,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -675,7 +675,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -688,7 +688,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -701,7 +701,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -714,7 +714,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -727,7 +727,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -740,7 +740,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -753,7 +753,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -766,7 +766,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -779,7 +779,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [128] : tensor<128xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, tensor<128xf32>) outs(%0 : tensor<128xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -792,7 +792,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -805,7 +805,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -818,7 +818,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -831,7 +831,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -844,7 +844,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -857,7 +857,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -870,7 +870,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -883,7 +883,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -896,7 +896,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -909,7 +909,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [256] : tensor<256xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<256xf32>, tensor<256xf32>) outs(%0 : tensor<256xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -922,7 +922,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -935,7 +935,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -948,7 +948,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -961,7 +961,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -974,7 +974,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -987,7 +987,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -1000,7 +1000,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -1013,7 +1013,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -1026,7 +1026,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -1039,7 +1039,7 @@ module {
     %cst_0 = arith.constant 1.000000e-01 : f32
     %0 = linalg.init_tensor [512] : tensor<512xf32>
     %1 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<512xf32>, tensor<512xf32>) outs(%0 : tensor<512xf32>) {
-    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):  // no predecessors
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
       %2 = arith.mulf %arg3, %cst : f32
       %3 = arith.mulf %arg2, %cst_0 : f32
       %4 = arith.addf %3, %2 : f32
@@ -1056,7 +1056,7 @@ module {
     %5:3 = call @BatchNormTrainingOp2(%4, %arg1, %arg0) : (tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>)
     %6 = call @Unknown3(%5#0) : (tensor<1x64x112x112xf16>) -> tensor<1x64x112x112xf16>
     %7 = "mhlo.reduce_window"(%6, %1) ({
-    ^bb0(%arg123: tensor<f16>, %arg124: tensor<f16>):  // no predecessors
+    ^bb0(%arg123: tensor<f16>, %arg124: tensor<f16>):
       %127 = mhlo.maximum %arg123, %arg124 : tensor<f16>
       "mhlo.return"(%127) : (tensor<f16>) -> ()
     }) {base_dilations = dense<1> : tensor<4xi64>, padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dilations = dense<1> : tensor<4xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (tensor<1x64x112x112xf16>, tensor<f16>) -> tensor<1x64x56x56xf16>

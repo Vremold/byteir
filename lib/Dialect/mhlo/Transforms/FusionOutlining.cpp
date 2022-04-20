@@ -10,7 +10,7 @@
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/SymbolTable.h"
@@ -108,7 +108,7 @@ static FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
   auto *terminator = secondBlock.getTerminator();
   opBuilder.setInsertionPoint(
       block, block->end()); // the point set at the end of block
-  opBuilder.create<mlir::ReturnOp>(terminator->getLoc(),
+  opBuilder.create<func::ReturnOp>(terminator->getLoc(),
                                    terminator->getOperands());
 
   // erase terminator first, and then erase the block
@@ -123,7 +123,7 @@ static FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
 static void RewriteFusionOpToCall(mhlo::FusionOp fusionOp, FuncOp funcOp) {
   // create a call
   OpBuilder opBuilder(fusionOp);
-  auto callOp = opBuilder.create<mlir::CallOp>(fusionOp.getLoc(), funcOp,
+  auto callOp = opBuilder.create<func::CallOp>(fusionOp.getLoc(), funcOp,
                                                fusionOp.getOperands());
 
   // replace all uses of fusionOp by callOp

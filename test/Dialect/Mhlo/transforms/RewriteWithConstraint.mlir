@@ -6,4 +6,4 @@ func @batch_norm_grad(%arg0: tensor<32x256x14x14xf32>, %arg1: tensor<32x256x14x1
 }
 // CHECK-LABEL: func @batch_norm_grad
 // CHECK-NEXT:  %0 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
-// CHECK-NEXT:  %1:3 = "mhlo.batch_norm_grad"(%arg1, %arg2, %0, %0, %arg0)
+// CHECK-NEXT:  %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%arg1, %arg2, %0, %0, %arg0)

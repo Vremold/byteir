@@ -8,12 +8,13 @@
 #include "../PassDetail.h"
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Transforms/DialectConversion.h"
 
@@ -140,22 +141,22 @@ struct UnrealizedCastToLinalgPass
   UnrealizedCastToLinalgPass() = default;
 
   void getDependentDialects(DialectRegistry &registry) const final {
-    registry.insert<linalg::LinalgDialect, scf::SCFDialect, StandardOpsDialect,
-                    math::MathDialect, memref::MemRefDialect,
-                    shape::ShapeDialect>();
+    registry.insert<cf::ControlFlowDialect, func::FuncDialect,
+                    linalg::LinalgDialect, scf::SCFDialect, math::MathDialect,
+                    memref::MemRefDialect, shape::ShapeDialect>();
   }
 
   void runOnOperation() final {
     FuncOp func = getOperation();
 
     MLIRContext &ctx = getContext();
-    OwningRewritePatternList patterns(&ctx);
+    RewritePatternSet patterns(&ctx);
     ConversionTarget target(ctx);
 
-    target.addLegalDialect<arith::ArithmeticDialect, linalg::LinalgDialect,
-                           math::MathDialect, StandardOpsDialect,
-                           tensor::TensorDialect, scf::SCFDialect,
-                           shape::ShapeDialect>();
+    target.addLegalDialect<arith::ArithmeticDialect, cf::ControlFlowDialect,
+                           func::FuncDialect, linalg::LinalgDialect,
+                           math::MathDialect, tensor::TensorDialect,
+                           scf::SCFDialect, shape::ShapeDialect>();
 
     target.addDynamicallyLegalOp<UnrealizedConversionCastOp>(
         [&](UnrealizedConversionCastOp op) {
@@ -173,7 +174,7 @@ struct UnrealizedCastToLinalgPass
 } // namespace
 
 void mlir::populateUnrealizedCastToLinalgConversionPattern(
-    MLIRContext *context, OwningRewritePatternList *patterns) {
+    MLIRContext *context, RewritePatternSet *patterns) {
   patterns->insert<UnrealizedCastToLinalgConverter>(context);
 }
 

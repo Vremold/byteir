@@ -2,7 +2,7 @@ import numpy as np
 
 from mlir import ir
 from mlir.dialects import builtin
-from mlir.dialects import std
+from mlir.dialects import func
 
 def mlir_type_to_dtype(mlir_type):
     if str(mlir_type) == 'f64':
@@ -68,7 +68,7 @@ def mlir_single_op_outlining(op):
             entry_block = f_op.add_entry_block()
             with ir.InsertionPoint(entry_block):
                 new_op = mlir_clone_op(op, dict(zip(op.operands, f_op.arguments)))
-                std.ReturnOp(new_op.results)
+                func.ReturnOp(new_op.results)
             assert f_op.operation.verify()
 
         assert module.operation.verify()

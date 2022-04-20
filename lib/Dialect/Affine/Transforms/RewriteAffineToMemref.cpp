@@ -8,8 +8,9 @@
 
 #include "byteir/Dialect/Affine/Transforms/RewriteAffineToMemref.h"
 #include "PassDetail.h"
-#include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Affine/Utils.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Transforms/DialectConversion.h"
 
@@ -73,11 +74,11 @@ public:
     auto &ctx = getContext();
     ConversionTarget target(ctx);
 
-    target.addLegalDialect<memref::MemRefDialect, StandardOpsDialect>();
+    target.addLegalDialect<cf::ControlFlowDialect, memref::MemRefDialect>();
 
     target.addIllegalOp<mlir::AffineLoadOp, mlir::AffineStoreOp>();
 
-    OwningRewritePatternList patterns(&ctx);
+    RewritePatternSet patterns(&ctx);
     populateAffineLoadStoreConversionPatterns(patterns);
 
     if (failed(applyPartialConversion(f, target, std::move(patterns)))) {

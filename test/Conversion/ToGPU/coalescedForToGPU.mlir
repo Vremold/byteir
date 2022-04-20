@@ -1,5 +1,5 @@
 
-// RUN: byteir-opt -loop-coalescing -simplify-affine-structures -coalesced-for-to-gpu %s | FileCheck %s
+// RUN: byteir-opt -affine-loop-coalescing -affine-simplify-structures -coalesced-for-to-gpu %s | FileCheck %s
 
 // CHECK-LABEL: loop1
 func @loop1(%arg0: memref<16xf32>, %arg1: memref<16xf32>, %arg2: memref<f32>, %arg3: memref<16xf32>) -> memref<16xui32> attributes {__byteir_elementwise_fusion__} {

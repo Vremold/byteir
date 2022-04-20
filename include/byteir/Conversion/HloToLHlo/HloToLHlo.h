@@ -21,7 +21,7 @@ namespace mlir {
 // Collection of rewrite patterns for lowering of HLO to LHLO dialect.
 void populateHLOToLHLOConversionPatternExtension(
     MLIRContext *context, bufferization::BufferizeTypeConverter *converter,
-    OwningRewritePatternList *patterns);
+    RewritePatternSet *patterns);
 
 std::unique_ptr<OperationPass<ModuleOp>> createConvertHloToLHloPass();
 

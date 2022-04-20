@@ -9,6 +9,8 @@ add_byteir_conversion_library(ByteIRGPUToNVVM
   ByteIRConversionCommon
 
   LINK_LIBS PUBLIC
+  MLIRArithmeticToLLVM
+  MLIRFuncToLLVM
   MLIRGPUOps
   MLIRGPUToGPURuntimeTransforms
   MLIRGPUToNVVMTransforms
@@ -18,6 +20,5 @@ add_byteir_conversion_library(ByteIRGPUToNVVM
   MLIRMemRefToLLVM
   MLIRNVVMIR
   MLIRPass
-  MLIRStandardToLLVM
   MLIRTransformUtils
   )

@@ -205,7 +205,7 @@ struct HloMoveUpPass : public HloMoveUpBase<HloMoveUpPass> {
 
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
-    OwningRewritePatternList patterns(funcOp.getContext());
+    RewritePatternSet patterns(funcOp.getContext());
 
     // add pattern
     populateHloMoveUpPattern(patterns, {}, multiInput);

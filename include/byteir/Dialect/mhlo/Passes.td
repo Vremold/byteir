@@ -73,7 +73,7 @@ def FusionOutlining : Pass<"fusion-outlining", "ModuleOp"> {
   let summary = "Outline mhlo FusionOp to a FuncOp";
   let constructor = "mlir::createFusionOutliningPass()";
   let dependentDialects = [
-    "StandardOpsDialect"
+    "mlir::func::FuncDialect"
   ];
 }
 

@@ -21,6 +21,11 @@ An external dialect from https://github.com/tensorflow/mlir-hlo.
 ***Python*** (for python binding): minimum version is 3.6, requiring numpy and pybind11 installed.
 
 ## Build
+### Apply Patch
+```bash
+cd external/mlir-hlo
+git apply ../mhlo_patch.diff
+```
 ### Linux/Mac 
 ```bash
 mkdir /path_to_byteir/build

@@ -15,7 +15,7 @@
 namespace mlir {
 
 void populateUnrealizedCastToLinalgConversionPattern(
-    MLIRContext *context, OwningRewritePatternList *patterns);
+    MLIRContext *context, RewritePatternSet *patterns);
 
 std::unique_ptr<OperationPass<FuncOp>>
 createHloFusionToLinalgPass(llvm::StringRef anchorTag = "");

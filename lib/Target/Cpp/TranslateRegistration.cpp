@@ -7,13 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Target/Cpp/ToCpp.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Dialect.h"
-#include "mlir/Translation.h"
+#include "mlir/Tools/mlir-translate/Translation.h"
 #include "llvm/Support/CommandLine.h"
 
 using namespace byteir;
@@ -42,9 +43,10 @@ void byteir::registerToCppTranslation() {
       [](DialectRegistry &registry) {
         // clang-format off
         registry.insert<arith::ArithmeticDialect,
+                        cf::ControlFlowDialect,
                         emitc::EmitCDialect,
+                        func::FuncDialect,
                         memref::MemRefDialect,
-                        StandardOpsDialect,
                         scf::SCFDialect>();
         // clang-format on
       });

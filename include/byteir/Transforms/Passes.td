@@ -82,8 +82,8 @@ def RewriteOpToStdCall : Pass<"rewrite-op-to-std-call", "ModuleOp"> {
   let summary = "Rewrite any op of memref to external std call.";
   let constructor = "mlir::createRewriteOpToStdCallPass()";
   let dependentDialects = [
-    "memref::MemRefDialect",
-    "StandardOpsDialect"
+    "mlir::memref::MemRefDialect",
+    "mlir::func::FuncDialect"
   ];
   let options = [
     ListOption<"callTable", "call-table", "std::string",

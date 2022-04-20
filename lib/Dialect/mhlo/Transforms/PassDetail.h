@@ -13,7 +13,9 @@
 // forward dialects for conversions
 namespace mlir {
 
-class StandardOpsDialect;
+namespace func {
+class FuncDialect;
+} // namespace func
 
 #define GEN_PASS_CLASSES
 #include "byteir/Dialect/mhlo/Passes.h.inc"

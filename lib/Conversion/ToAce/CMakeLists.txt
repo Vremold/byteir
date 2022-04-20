@@ -6,9 +6,6 @@ add_byteir_conversion_library(ByteIRToAce
   MhloToAce.cpp
   UnregisteredToAce.cpp
 
-  ADDITIONAL_HEADER_DIRS
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Conversion/ToAce
-
   DEPENDS
   ByteIRConversionPassIncGen
   ByteIRConversionCommon
@@ -20,3 +17,5 @@ add_byteir_conversion_library(ByteIRToAce
   MhloDialect
   MLIRIR
   )
+
+target_include_directories(ByteIRToAce PUBLIC ${CMAKE_CURRENT_BINARY_DIR})

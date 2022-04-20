@@ -36,6 +36,7 @@ struct GPUOptPipelinePass : public GPUOptPipelineBase<GPUOptPipelinePass> {
     pm.addNestedPass<FuncOp>(createCoalescedForToGPULaunchPass(128));
     addCleanUpPassPipeline(pm);
     pm.addPass(createLowerAffinePass());
+    pm.addPass(createGpuLauchSinkIndexComputationsPass());
     pm.addPass(createGpuKernelOutliningPass());
     pm.addPass(createCSEPass());
     pm.addNestedPass<FuncOp>(createGenPTXConfigPass());

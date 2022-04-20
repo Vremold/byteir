@@ -21,7 +21,7 @@
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionInterfaces.h"
-#include "mlir/Parser.h"
+#include "mlir/Parser/Parser.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
@@ -276,16 +276,16 @@ LogicalResult ConvertToByrePattern<lmhlo::ReshapeOp>::matchAndRewrite(
 
 namespace {
 
-class ConvertCallOpToByrePattern : public OpConversionPattern<mlir::CallOp> {
+class ConvertCallOpToByrePattern : public OpConversionPattern<func::CallOp> {
 private:
   bool appendArgTypes;
 
 public:
   ConvertCallOpToByrePattern(MLIRContext *ctx, bool appendTypes)
-      : OpConversionPattern<mlir::CallOp>(ctx), appendArgTypes(appendTypes) {}
+      : OpConversionPattern<func::CallOp>(ctx), appendArgTypes(appendTypes) {}
 
   LogicalResult
-  matchAndRewrite(mlir::CallOp op, mlir::CallOp::Adaptor adaptor,
+  matchAndRewrite(func::CallOp op, func::CallOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
 
     auto funcOp = GetFuncOp(op);
@@ -912,7 +912,7 @@ static bool isRewritablePrivateFunc(FuncOp func) {
 static void
 identifyEntryPointFuncAndCalls(ModuleOp m,
                                llvm::SmallVector<FuncOp, 4> &entries,
-                               llvm::SmallVector<mlir::CallOp, 16> &calls,
+                               llvm::SmallVector<func::CallOp, 16> &calls,
                                llvm::SmallVector<FuncOp, 16> &removeFuncs) {
   // get first entry func
 
@@ -925,7 +925,7 @@ identifyEntryPointFuncAndCalls(ModuleOp m,
     }
     entries.push_back(func);
 
-    for (auto callOp : func.getOps<mlir::CallOp>()) {
+    for (auto callOp : func.getOps<func::CallOp>()) {
       auto calleeFuncOp = GetFuncOp(callOp);
       if (isRewritablePrivateFunc(calleeFuncOp) && !callSet.contains(callOp)) {
         calls.push_back(callOp);
@@ -938,7 +938,7 @@ identifyEntryPointFuncAndCalls(ModuleOp m,
 
 static inline void relocateFuncOpResultsForLmhlo(FuncOp func) {
   unsigned idx = func.getNumArguments();
-  replicateFuncOpResults(func, [&](mlir::ReturnOp retOp) {
+  replicateFuncOpResults(func, [&](func::ReturnOp retOp) {
     llvm::SmallPtrSet<mlir::Operation *, 16> removeOps;
     mlir::OpBuilder opBuilder(retOp);
     for (auto retVal : retOp.getOperands()) {
@@ -951,7 +951,7 @@ static inline void relocateFuncOpResultsForLmhlo(FuncOp func) {
 
     // build and remove return first
     opBuilder.setInsertionPoint(retOp);
-    opBuilder.create<mlir::ReturnOp>(retOp.getLoc());
+    opBuilder.create<func::ReturnOp>(retOp.getLoc());
     retOp.erase();
 
     // remove all remove ops
@@ -961,7 +961,7 @@ static inline void relocateFuncOpResultsForLmhlo(FuncOp func) {
   });
 }
 
-static inline void rewriteCallOpsForFuncOp(ArrayRef<mlir::CallOp> calls) {
+static inline void rewriteCallOpsForFuncOp(ArrayRef<func::CallOp> calls) {
 
   for (auto callOp : calls) {
     if (callOp.getNumResults() == 0) {
@@ -979,7 +979,7 @@ static inline void rewriteCallOpsForFuncOp(ArrayRef<mlir::CallOp> calls) {
       oprands.push_back(alloc.getResult());
     }
 
-    mlir::CallOp newCallOp = opBuilder.create<mlir::CallOp>(
+    func::CallOp newCallOp = opBuilder.create<func::CallOp>(
         callOp.getLoc(), callOp.getCalleeAttr(), TypeRange(), oprands);
     newCallOp->setAttrs(callOp->getAttrs());
   }
@@ -1072,7 +1072,7 @@ void ConvertToByrePass::runOnOperation() {
   ModuleOp m = getOperation();
   MLIRContext &ctx = getContext();
   llvm::SmallVector<FuncOp, 4> entryCollector;
-  llvm::SmallVector<mlir::CallOp, 16> callCollector;
+  llvm::SmallVector<func::CallOp, 16> callCollector;
   llvm::SmallVector<FuncOp, 16> removeFuncCollector;
 
   identifyEntryPointFuncAndCalls(m, entryCollector, callCollector,
@@ -1117,18 +1117,18 @@ void ConvertToByrePass::runOnOperation() {
 
   // Below rewrite Lmhlo ops
   ConversionTarget target(getContext());
-  target
-      .addLegalDialect<byre::ByreDialect, memref::MemRefDialect,
-                       scf::SCFDialect, StandardOpsDialect, ace::AceDialect>();
+  target.addLegalDialect<byre::ByreDialect, func::FuncDialect,
+                         memref::MemRefDialect, scf::SCFDialect,
+                         ace::AceDialect>();
 
-  target.addLegalOp<ModuleOp, FuncOp, mlir::ReturnOp>();
+  target.addLegalOp<ModuleOp, FuncOp, func::ReturnOp>();
 
   target.addDynamicallyLegalDialect<LmhloDialect>([&](Operation *op) {
     auto func = op->getParentOfType<FuncOp>();
     return !isEntryPointFunc(func);
   });
 
-  target.addDynamicallyLegalOp<mlir::CallOp>([&](Operation *op) {
+  target.addDynamicallyLegalOp<func::CallOp>([&](Operation *op) {
     auto func = op->getParentOfType<FuncOp>();
     return !isEntryPointFunc(func);
   });

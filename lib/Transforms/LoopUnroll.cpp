@@ -9,9 +9,10 @@
 #include "./PassDetail.h"
 #include "byteir/Utils/LoopUtils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Affine/LoopUtils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/SCF/SCF.h"
-#include "mlir/Transforms/LoopUtils.h"
+#include "mlir/Dialect/SCF/Utils/Utils.h"
 
 using namespace llvm;
 using namespace mlir;

@@ -25,7 +25,7 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 //===----------------------------------------------------------------------===//
 
 // Base class
-class Byre_Op<string mnemonic, list<OpTrait> traits = []> :
+class Byre_Op<string mnemonic, list<Trait> traits = []> :
     Op<Byre_Dialect, mnemonic, traits>;
 
 def Byre_ComputeOp : Byre_Op<"compute",

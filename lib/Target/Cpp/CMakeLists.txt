@@ -9,8 +9,8 @@ add_byteir_translation_library(ByteIRTargetCpp
   MLIREmitC
   MLIRIR
   MLIRSCF
-  MLIRStandard
+  MLIRControlFlow
   MLIRMemRef
   MLIRSupport
-  MLIRTranslation
+  # MLIRTranslation
   )

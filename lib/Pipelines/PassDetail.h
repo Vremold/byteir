@@ -12,7 +12,10 @@
 
 namespace mlir {
 class AffineDialect;
-class StandardOpsDialect;
+
+namespace arith {
+class ArithmeticDialect;
+} // namespace arith
 
 namespace bufferization {
 class BufferizationDialect;
@@ -21,6 +24,14 @@ class BufferizationDialect;
 namespace byre {
 class ByreDialect;
 } // namespace byre
+
+namespace cf {
+class ControlFlowDialect;
+} // namespace cf
+
+namespace func {
+class FuncDialect;
+} // namespace func
 
 namespace gpu {
 class GPUDialect;

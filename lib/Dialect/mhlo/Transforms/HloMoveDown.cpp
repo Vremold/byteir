@@ -600,7 +600,7 @@ struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
 
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
-    OwningRewritePatternList patterns(funcOp.getContext());
+    RewritePatternSet patterns(funcOp.getContext());
 
     // add pattern
     populateHloMoveDownPattern(patterns, {}, allMultiUser, multiUser);

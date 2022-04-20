@@ -119,7 +119,7 @@ struct ReduceFusionPass : public ReduceFusionBase<ReduceFusionPass> {
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
 
-    OwningRewritePatternList patterns(funcOp.getContext());
+    RewritePatternSet patterns(funcOp.getContext());
     populateFuseReduceWindowPatterns(patterns);
 
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {

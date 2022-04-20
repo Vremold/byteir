@@ -4,7 +4,7 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/InitAllDialects.h"
-#include "mlir/Parser.h"
+#include "mlir/Parser/Parser.h"
 #include "mlir/Support/FileUtilities.h"
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/SourceMgr.h"
@@ -16,8 +16,8 @@ using namespace mlir;
 using namespace mlir::byre;
 
 // a mlir text loader example
-static OwningModuleRef parseMLIRInput(StringRef inputFilename,
-                                      MLIRContext *context) {
+static OwningOpRef<ModuleOp> parseMLIRInput(StringRef inputFilename,
+                                            MLIRContext *context) {
   // Set up the input file.
   std::string errorMessage;
   auto file = openInputFile(inputFilename, &errorMessage);
@@ -28,11 +28,11 @@ static OwningModuleRef parseMLIRInput(StringRef inputFilename,
 
   llvm::SourceMgr sourceMgr;
   sourceMgr.AddNewSourceBuffer(std::move(file), llvm::SMLoc());
-  return OwningModuleRef(parseSourceFile(sourceMgr, context));
+  return parseSourceFile<ModuleOp>(sourceMgr, context);
 }
 
 // a mlir module traverser example
-static void TraverseAllEntries(OwningModuleRef &m) {
+static void TraverseAllEntries(OwningOpRef<ModuleOp> &m) {
   // iterate all entry function ops in this module.
   for (FuncOp entry : m->getOps<FuncOp>()) {
     if (!entry->hasAttr(ByreDialect::getEntryPointFunctionAttrName())) {

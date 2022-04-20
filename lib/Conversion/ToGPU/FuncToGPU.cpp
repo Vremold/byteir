@@ -12,14 +12,15 @@
 #include "byteir/Utils/Utils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Affine/LoopUtils.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
 #include "mlir/Dialect/SCF/SCF.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
-#include "mlir/Transforms/LoopUtils.h"
 #include "mlir/Transforms/Passes.h"
 #include "mlir/Transforms/RegionUtils.h"
 #include "llvm/ADT/STLExtras.h"
@@ -197,7 +198,7 @@ static void rewriteToGPULaunchFuncImpl(OpBuilder &builder, FuncOp func,
                                     blockAndGrid.first, nullptr,
                                     func.getArguments());
 
-  builder.create<mlir::ReturnOp>(func.getLoc());
+  builder.create<func::ReturnOp>(func.getLoc());
 }
 
 int64_t estimateGridSize(LoopLikeOpInterface loopLike, int64_t currGs,

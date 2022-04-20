@@ -947,65 +947,6 @@ LBB12_2:
 	ret;
 
 }
-	// .globl	Unknown13_kernel
-.visible .entry Unknown13_kernel(
-	.param .u64 Unknown13_kernel_param_0,
-	.param .u64 Unknown13_kernel_param_1,
-	.param .u64 Unknown13_kernel_param_2,
-	.param .u64 Unknown13_kernel_param_3,
-	.param .u64 Unknown13_kernel_param_4,
-	.param .u64 Unknown13_kernel_param_5,
-	.param .u64 Unknown13_kernel_param_6,
-	.param .u64 Unknown13_kernel_param_7,
-	.param .u64 Unknown13_kernel_param_8,
-	.param .u64 Unknown13_kernel_param_9,
-	.param .u64 Unknown13_kernel_param_10,
-	.param .u64 Unknown13_kernel_param_11,
-	.param .u64 Unknown13_kernel_param_12,
-	.param .u64 Unknown13_kernel_param_13,
-	.param .u64 Unknown13_kernel_param_14,
-	.param .u64 Unknown13_kernel_param_15,
-	.param .u64 Unknown13_kernel_param_16,
-	.param .u64 Unknown13_kernel_param_17,
-	.param .u64 Unknown13_kernel_param_18,
-	.param .u64 Unknown13_kernel_param_19,
-	.param .u64 Unknown13_kernel_param_20,
-	.param .u64 Unknown13_kernel_param_21,
-	.param .u64 Unknown13_kernel_param_22,
-	.param .u64 Unknown13_kernel_param_23,
-	.param .u64 Unknown13_kernel_param_24,
-	.param .u64 Unknown13_kernel_param_25,
-	.param .u64 Unknown13_kernel_param_26
-)
-{
-	.reg .pred 	%p<2>;
-	.reg .b32 	%r<4>;
-	.reg .f32 	%f<4>;
-	.reg .b64 	%rd<11>;
-
-	mov.u32 	%r1, %ctaid.x;
-	mov.u32 	%r2, %tid.x;
-	cvt.u64.u32 	%rd5, %r2;
-	mov.u32 	%r3, %ntid.x;
-	mul.wide.u32 	%rd6, %r1, %r3;
-	add.s64 	%rd7, %rd6, %rd5;
-	setp.gt.u64 	%p1, %rd7, 32767;
-	@%p1 bra 	LBB13_2;
-	ld.param.u64 	%rd4, [Unknown13_kernel_param_1];
-	shl.b64 	%rd8, %rd7, 2;
-	add.s64 	%rd1, %rd4, %rd8;
-	ld.param.u64 	%rd9, [Unknown13_kernel_param_10];
-	add.s64 	%rd2, %rd9, %rd8;
-	ld.param.u64 	%rd10, [Unknown13_kernel_param_19];
-	add.s64 	%rd3, %rd10, %rd8;
-	ld.f32 	%f1, [%rd1];
-	ld.f32 	%f2, [%rd2];
-	add.rn.f32 	%f3, %f1, %f2;
-	st.f32 	[%rd3], %f3;
-LBB13_2:
-	ret;
-
-}
 	// .globl	Unknown14_kernel
 .visible .entry Unknown14_kernel(
 	.param .u64 Unknown14_kernel_param_0,
@@ -1034,60 +975,34 @@ LBB13_2:
 	.param .u64 Unknown14_kernel_param_23,
 	.param .u64 Unknown14_kernel_param_24,
 	.param .u64 Unknown14_kernel_param_25,
-	.param .u64 Unknown14_kernel_param_26,
-	.param .u64 Unknown14_kernel_param_27,
-	.param .u64 Unknown14_kernel_param_28,
-	.param .u64 Unknown14_kernel_param_29,
-	.param .u64 Unknown14_kernel_param_30,
-	.param .u64 Unknown14_kernel_param_31,
-	.param .u64 Unknown14_kernel_param_32,
-	.param .u64 Unknown14_kernel_param_33,
-	.param .u64 Unknown14_kernel_param_34,
-	.param .u64 Unknown14_kernel_param_35,
-	.param .u64 Unknown14_kernel_param_36,
-	.param .u64 Unknown14_kernel_param_37,
-	.param .u64 Unknown14_kernel_param_38,
-	.param .u64 Unknown14_kernel_param_39,
-	.param .u64 Unknown14_kernel_param_40,
-	.param .u64 Unknown14_kernel_param_41,
-	.param .u64 Unknown14_kernel_param_42,
-	.param .u64 Unknown14_kernel_param_43,
-	.param .u64 Unknown14_kernel_param_44
+	.param .u64 Unknown14_kernel_param_26
 )
 {
 	.reg .pred 	%p<2>;
 	.reg .b32 	%r<4>;
-	.reg .f32 	%f<8>;
-	.reg .b64 	%rd<15>;
+	.reg .f32 	%f<4>;
+	.reg .b64 	%rd<11>;
 
 	mov.u32 	%r1, %ctaid.x;
 	mov.u32 	%r2, %tid.x;
-	cvt.u64.u32 	%rd7, %r2;
+	cvt.u64.u32 	%rd5, %r2;
 	mov.u32 	%r3, %ntid.x;
-	mul.wide.u32 	%rd8, %r1, %r3;
-	add.s64 	%rd1, %rd8, %rd7;
-	setp.gt.u64 	%p1, %rd1, 32767;
-	@%p1 bra 	LBB14_2;
-	ld.param.u64 	%rd6, [Unknown14_kernel_param_37];
-	ld.param.u64 	%rd5, [Unknown14_kernel_param_28];
-	ld.param.u64 	%rd4, [Unknown14_kernel_param_19];
-	ld.param.u64 	%rd3, [Unknown14_kernel_param_10];
-	ld.param.u64 	%rd2, [Unknown14_kernel_param_1];
-	shl.b64 	%rd9, %rd1, 2;
-	add.s64 	%rd10, %rd2, %rd9;
-	ld.f32 	%f1, [%rd10];
-	add.s64 	%rd11, %rd3, %rd9;
-	ld.f32 	%f2, [%rd11];
-	add.s64 	%rd12, %rd4, %rd9;
-	ld.f32 	%f3, [%rd12];
-	add.s64 	%rd13, %rd5, %rd9;
-	ld.f32 	%f4, [%rd13];
-	add.rn.f32 	%f5, %f1, %f2;
-	add.rn.f32 	%f6, %f5, %f3;
-	add.rn.f32 	%f7, %f6, %f4;
-	add.s64 	%rd14, %rd6, %rd9;
-	st.f32 	[%rd14], %f7;
-LBB14_2:
+	mul.wide.u32 	%rd6, %r1, %r3;
+	add.s64 	%rd7, %rd6, %rd5;
+	setp.gt.u64 	%p1, %rd7, 32767;
+	@%p1 bra 	LBB13_2;
+	ld.param.u64 	%rd4, [Unknown14_kernel_param_1];
+	shl.b64 	%rd8, %rd7, 2;
+	add.s64 	%rd1, %rd4, %rd8;
+	ld.param.u64 	%rd9, [Unknown14_kernel_param_10];
+	add.s64 	%rd2, %rd9, %rd8;
+	ld.param.u64 	%rd10, [Unknown14_kernel_param_19];
+	add.s64 	%rd3, %rd10, %rd8;
+	ld.f32 	%f1, [%rd1];
+	ld.f32 	%f2, [%rd2];
+	add.rn.f32 	%f3, %f1, %f2;
+	st.f32 	[%rd3], %f3;
+LBB13_2:
 	ret;
 
 }
@@ -1119,34 +1034,60 @@ LBB14_2:
 	.param .u64 Unknown15_kernel_param_23,
 	.param .u64 Unknown15_kernel_param_24,
 	.param .u64 Unknown15_kernel_param_25,
-	.param .u64 Unknown15_kernel_param_26
+	.param .u64 Unknown15_kernel_param_26,
+	.param .u64 Unknown15_kernel_param_27,
+	.param .u64 Unknown15_kernel_param_28,
+	.param .u64 Unknown15_kernel_param_29,
+	.param .u64 Unknown15_kernel_param_30,
+	.param .u64 Unknown15_kernel_param_31,
+	.param .u64 Unknown15_kernel_param_32,
+	.param .u64 Unknown15_kernel_param_33,
+	.param .u64 Unknown15_kernel_param_34,
+	.param .u64 Unknown15_kernel_param_35,
+	.param .u64 Unknown15_kernel_param_36,
+	.param .u64 Unknown15_kernel_param_37,
+	.param .u64 Unknown15_kernel_param_38,
+	.param .u64 Unknown15_kernel_param_39,
+	.param .u64 Unknown15_kernel_param_40,
+	.param .u64 Unknown15_kernel_param_41,
+	.param .u64 Unknown15_kernel_param_42,
+	.param .u64 Unknown15_kernel_param_43,
+	.param .u64 Unknown15_kernel_param_44
 )
 {
 	.reg .pred 	%p<2>;
 	.reg .b32 	%r<4>;
-	.reg .f32 	%f<4>;
-	.reg .b64 	%rd<11>;
+	.reg .f32 	%f<8>;
+	.reg .b64 	%rd<15>;
 
 	mov.u32 	%r1, %ctaid.x;
 	mov.u32 	%r2, %tid.x;
-	cvt.u64.u32 	%rd5, %r2;
+	cvt.u64.u32 	%rd7, %r2;
 	mov.u32 	%r3, %ntid.x;
-	mul.wide.u32 	%rd6, %r1, %r3;
-	add.s64 	%rd7, %rd6, %rd5;
-	setp.gt.u64 	%p1, %rd7, 32767;
-	@%p1 bra 	LBB15_2;
-	ld.param.u64 	%rd4, [Unknown15_kernel_param_1];
-	shl.b64 	%rd8, %rd7, 2;
-	add.s64 	%rd1, %rd4, %rd8;
-	ld.param.u64 	%rd9, [Unknown15_kernel_param_10];
-	add.s64 	%rd2, %rd9, %rd8;
-	ld.param.u64 	%rd10, [Unknown15_kernel_param_19];
-	add.s64 	%rd3, %rd10, %rd8;
-	ld.f32 	%f1, [%rd1];
-	ld.f32 	%f2, [%rd2];
-	add.rn.f32 	%f3, %f1, %f2;
-	st.f32 	[%rd3], %f3;
-LBB15_2:
+	mul.wide.u32 	%rd8, %r1, %r3;
+	add.s64 	%rd1, %rd8, %rd7;
+	setp.gt.u64 	%p1, %rd1, 32767;
+	@%p1 bra 	LBB14_2;
+	ld.param.u64 	%rd6, [Unknown15_kernel_param_37];
+	ld.param.u64 	%rd5, [Unknown15_kernel_param_28];
+	ld.param.u64 	%rd4, [Unknown15_kernel_param_19];
+	ld.param.u64 	%rd3, [Unknown15_kernel_param_10];
+	ld.param.u64 	%rd2, [Unknown15_kernel_param_1];
+	shl.b64 	%rd9, %rd1, 2;
+	add.s64 	%rd10, %rd2, %rd9;
+	ld.f32 	%f1, [%rd10];
+	add.s64 	%rd11, %rd3, %rd9;
+	ld.f32 	%f2, [%rd11];
+	add.s64 	%rd12, %rd4, %rd9;
+	ld.f32 	%f3, [%rd12];
+	add.s64 	%rd13, %rd5, %rd9;
+	ld.f32 	%f4, [%rd13];
+	add.rn.f32 	%f5, %f1, %f2;
+	add.rn.f32 	%f6, %f5, %f3;
+	add.rn.f32 	%f7, %f6, %f4;
+	add.s64 	%rd14, %rd6, %rd9;
+	st.f32 	[%rd14], %f7;
+LBB14_2:
 	ret;
 
 }
@@ -1178,60 +1119,34 @@ LBB15_2:
 	.param .u64 Unknown16_kernel_param_23,
 	.param .u64 Unknown16_kernel_param_24,
 	.param .u64 Unknown16_kernel_param_25,
-	.param .u64 Unknown16_kernel_param_26,
-	.param .u64 Unknown16_kernel_param_27,
-	.param .u64 Unknown16_kernel_param_28,
-	.param .u64 Unknown16_kernel_param_29,
-	.param .u64 Unknown16_kernel_param_30,
-	.param .u64 Unknown16_kernel_param_31,
-	.param .u64 Unknown16_kernel_param_32,
-	.param .u64 Unknown16_kernel_param_33,
-	.param .u64 Unknown16_kernel_param_34,
-	.param .u64 Unknown16_kernel_param_35,
-	.param .u64 Unknown16_kernel_param_36,
-	.param .u64 Unknown16_kernel_param_37,
-	.param .u64 Unknown16_kernel_param_38,
-	.param .u64 Unknown16_kernel_param_39,
-	.param .u64 Unknown16_kernel_param_40,
-	.param .u64 Unknown16_kernel_param_41,
-	.param .u64 Unknown16_kernel_param_42,
-	.param .u64 Unknown16_kernel_param_43,
-	.param .u64 Unknown16_kernel_param_44
+	.param .u64 Unknown16_kernel_param_26
 )
 {
 	.reg .pred 	%p<2>;
 	.reg .b32 	%r<4>;
-	.reg .f32 	%f<8>;
-	.reg .b64 	%rd<15>;
+	.reg .f32 	%f<4>;
+	.reg .b64 	%rd<11>;
 
 	mov.u32 	%r1, %ctaid.x;
 	mov.u32 	%r2, %tid.x;
-	cvt.u64.u32 	%rd7, %r2;
+	cvt.u64.u32 	%rd5, %r2;
 	mov.u32 	%r3, %ntid.x;
-	mul.wide.u32 	%rd8, %r1, %r3;
-	add.s64 	%rd1, %rd8, %rd7;
-	setp.gt.u64 	%p1, %rd1, 32767;
-	@%p1 bra 	LBB16_2;
-	ld.param.u64 	%rd6, [Unknown16_kernel_param_37];
-	ld.param.u64 	%rd5, [Unknown16_kernel_param_28];
-	ld.param.u64 	%rd4, [Unknown16_kernel_param_19];
-	ld.param.u64 	%rd3, [Unknown16_kernel_param_10];
-	ld.param.u64 	%rd2, [Unknown16_kernel_param_1];
-	shl.b64 	%rd9, %rd1, 2;
-	add.s64 	%rd10, %rd2, %rd9;
-	ld.f32 	%f1, [%rd10];
-	add.s64 	%rd11, %rd3, %rd9;
-	ld.f32 	%f2, [%rd11];
-	add.s64 	%rd12, %rd4, %rd9;
-	ld.f32 	%f3, [%rd12];
-	add.s64 	%rd13, %rd5, %rd9;
-	ld.f32 	%f4, [%rd13];
-	add.rn.f32 	%f5, %f1, %f2;
-	add.rn.f32 	%f6, %f5, %f3;
-	add.rn.f32 	%f7, %f6, %f4;
-	add.s64 	%rd14, %rd6, %rd9;
-	st.f32 	[%rd14], %f7;
-LBB16_2:
+	mul.wide.u32 	%rd6, %r1, %r3;
+	add.s64 	%rd7, %rd6, %rd5;
+	setp.gt.u64 	%p1, %rd7, 32767;
+	@%p1 bra 	LBB15_2;
+	ld.param.u64 	%rd4, [Unknown16_kernel_param_1];
+	shl.b64 	%rd8, %rd7, 2;
+	add.s64 	%rd1, %rd4, %rd8;
+	ld.param.u64 	%rd9, [Unknown16_kernel_param_10];
+	add.s64 	%rd2, %rd9, %rd8;
+	ld.param.u64 	%rd10, [Unknown16_kernel_param_19];
+	add.s64 	%rd3, %rd10, %rd8;
+	ld.f32 	%f1, [%rd1];
+	ld.f32 	%f2, [%rd2];
+	add.rn.f32 	%f3, %f1, %f2;
+	st.f32 	[%rd3], %f3;
+LBB15_2:
 	ret;
 
 }
@@ -1273,14 +1188,21 @@ LBB16_2:
 	.param .u64 Unknown17_kernel_param_33,
 	.param .u64 Unknown17_kernel_param_34,
 	.param .u64 Unknown17_kernel_param_35,
-	.param .u64 Unknown17_kernel_param_36
+	.param .u64 Unknown17_kernel_param_36,
+	.param .u64 Unknown17_kernel_param_37,
+	.param .u64 Unknown17_kernel_param_38,
+	.param .u64 Unknown17_kernel_param_39,
+	.param .u64 Unknown17_kernel_param_40,
+	.param .u64 Unknown17_kernel_param_41,
+	.param .u64 Unknown17_kernel_param_42,
+	.param .u64 Unknown17_kernel_param_43,
+	.param .u64 Unknown17_kernel_param_44
 )
 {
-	.reg .pred 	%p<4>;
-	.reg .b16 	%rs<5>;
+	.reg .pred 	%p<2>;
 	.reg .b32 	%r<4>;
-	.reg .f32 	%f<4>;
-	.reg .b64 	%rd<16>;
+	.reg .f32 	%f<8>;
+	.reg .b64 	%rd<15>;
 
 	mov.u32 	%r1, %ctaid.x;
 	mov.u32 	%r2, %tid.x;
@@ -1289,31 +1211,27 @@ LBB16_2:
 	mul.wide.u32 	%rd8, %r1, %r3;
 	add.s64 	%rd1, %rd8, %rd7;
 	setp.gt.u64 	%p1, %rd1, 32767;
-	@%p1 bra 	LBB17_2;
-	ld.param.u64 	%rd6, [Unknown17_kernel_param_31];
-	ld.param.u64 	%rd5, [Unknown17_kernel_param_24];
-	ld.param.u64 	%rd4, [Unknown17_kernel_param_17];
-	ld.param.u64 	%rd3, [Unknown17_kernel_param_8];
+	@%p1 bra 	LBB16_2;
+	ld.param.u64 	%rd6, [Unknown17_kernel_param_37];
+	ld.param.u64 	%rd5, [Unknown17_kernel_param_28];
+	ld.param.u64 	%rd4, [Unknown17_kernel_param_19];
+	ld.param.u64 	%rd3, [Unknown17_kernel_param_10];
 	ld.param.u64 	%rd2, [Unknown17_kernel_param_1];
-	shr.u64 	%rd9, %rd1, 7;
+	shl.b64 	%rd9, %rd1, 2;
 	add.s64 	%rd10, %rd2, %rd9;
-	ld.u8 	%rs1, [%rd10];
-	and.b16  	%rs2, %rs1, 1;
-	setp.eq.b16 	%p2, %rs2, 1;
-	shl.b64 	%rd11, %rd1, 2;
-	add.s64 	%rd12, %rd3, %rd11;
-	ld.f32 	%f1, [%rd12];
-	selp.f32 	%f2, %f1, 0f00000000, %p2;
-	add.s64 	%rd13, %rd4, %rd11;
-	st.f32 	[%rd13], %f2;
-	add.s64 	%rd14, %rd5, %rd9;
-	ld.u8 	%rs3, [%rd14];
-	and.b16  	%rs4, %rs3, 1;
-	setp.eq.b16 	%p3, %rs4, 1;
-	selp.f32 	%f3, %f1, 0f00000000, %p3;
-	add.s64 	%rd15, %rd6, %rd11;
-	st.f32 	[%rd15], %f3;
-LBB17_2:
+	ld.f32 	%f1, [%rd10];
+	add.s64 	%rd11, %rd3, %rd9;
+	ld.f32 	%f2, [%rd11];
+	add.s64 	%rd12, %rd4, %rd9;
+	ld.f32 	%f3, [%rd12];
+	add.s64 	%rd13, %rd5, %rd9;
+	ld.f32 	%f4, [%rd13];
+	add.rn.f32 	%f5, %f1, %f2;
+	add.rn.f32 	%f6, %f5, %f3;
+	add.rn.f32 	%f7, %f6, %f4;
+	add.s64 	%rd14, %rd6, %rd9;
+	st.f32 	[%rd14], %f7;
+LBB16_2:
 	ret;
 
 }
@@ -1337,7 +1255,89 @@ LBB17_2:
 	.param .u64 Unknown18_kernel_param_15,
 	.param .u64 Unknown18_kernel_param_16,
 	.param .u64 Unknown18_kernel_param_17,
-	.param .u64 Unknown18_kernel_param_18
+	.param .u64 Unknown18_kernel_param_18,
+	.param .u64 Unknown18_kernel_param_19,
+	.param .u64 Unknown18_kernel_param_20,
+	.param .u64 Unknown18_kernel_param_21,
+	.param .u64 Unknown18_kernel_param_22,
+	.param .u64 Unknown18_kernel_param_23,
+	.param .u64 Unknown18_kernel_param_24,
+	.param .u64 Unknown18_kernel_param_25,
+	.param .u64 Unknown18_kernel_param_26,
+	.param .u64 Unknown18_kernel_param_27,
+	.param .u64 Unknown18_kernel_param_28,
+	.param .u64 Unknown18_kernel_param_29,
+	.param .u64 Unknown18_kernel_param_30,
+	.param .u64 Unknown18_kernel_param_31,
+	.param .u64 Unknown18_kernel_param_32,
+	.param .u64 Unknown18_kernel_param_33,
+	.param .u64 Unknown18_kernel_param_34,
+	.param .u64 Unknown18_kernel_param_35,
+	.param .u64 Unknown18_kernel_param_36
+)
+{
+	.reg .pred 	%p<4>;
+	.reg .b16 	%rs<5>;
+	.reg .b32 	%r<4>;
+	.reg .f32 	%f<4>;
+	.reg .b64 	%rd<16>;
+
+	mov.u32 	%r1, %ctaid.x;
+	mov.u32 	%r2, %tid.x;
+	cvt.u64.u32 	%rd7, %r2;
+	mov.u32 	%r3, %ntid.x;
+	mul.wide.u32 	%rd8, %r1, %r3;
+	add.s64 	%rd1, %rd8, %rd7;
+	setp.gt.u64 	%p1, %rd1, 32767;
+	@%p1 bra 	LBB17_2;
+	ld.param.u64 	%rd6, [Unknown18_kernel_param_31];
+	ld.param.u64 	%rd5, [Unknown18_kernel_param_24];
+	ld.param.u64 	%rd4, [Unknown18_kernel_param_17];
+	ld.param.u64 	%rd3, [Unknown18_kernel_param_8];
+	ld.param.u64 	%rd2, [Unknown18_kernel_param_1];
+	shr.u64 	%rd9, %rd1, 7;
+	add.s64 	%rd10, %rd2, %rd9;
+	ld.u8 	%rs1, [%rd10];
+	and.b16  	%rs2, %rs1, 1;
+	setp.eq.b16 	%p2, %rs2, 1;
+	shl.b64 	%rd11, %rd1, 2;
+	add.s64 	%rd12, %rd3, %rd11;
+	ld.f32 	%f1, [%rd12];
+	selp.f32 	%f2, %f1, 0f00000000, %p2;
+	add.s64 	%rd13, %rd4, %rd11;
+	st.f32 	[%rd13], %f2;
+	add.s64 	%rd14, %rd5, %rd9;
+	ld.u8 	%rs3, [%rd14];
+	and.b16  	%rs4, %rs3, 1;
+	setp.eq.b16 	%p3, %rs4, 1;
+	selp.f32 	%f3, %f1, 0f00000000, %p3;
+	add.s64 	%rd15, %rd6, %rd11;
+	st.f32 	[%rd15], %f3;
+LBB17_2:
+	ret;
+
+}
+	// .globl	Unknown19_kernel
+.visible .entry Unknown19_kernel(
+	.param .u64 Unknown19_kernel_param_0,
+	.param .u64 Unknown19_kernel_param_1,
+	.param .u64 Unknown19_kernel_param_2,
+	.param .u64 Unknown19_kernel_param_3,
+	.param .u64 Unknown19_kernel_param_4,
+	.param .u64 Unknown19_kernel_param_5,
+	.param .u64 Unknown19_kernel_param_6,
+	.param .u64 Unknown19_kernel_param_7,
+	.param .u64 Unknown19_kernel_param_8,
+	.param .u64 Unknown19_kernel_param_9,
+	.param .u64 Unknown19_kernel_param_10,
+	.param .u64 Unknown19_kernel_param_11,
+	.param .u64 Unknown19_kernel_param_12,
+	.param .u64 Unknown19_kernel_param_13,
+	.param .u64 Unknown19_kernel_param_14,
+	.param .u64 Unknown19_kernel_param_15,
+	.param .u64 Unknown19_kernel_param_16,
+	.param .u64 Unknown19_kernel_param_17,
+	.param .u64 Unknown19_kernel_param_18
 )
 {
 	.reg .pred 	%p<3>;
@@ -1354,13 +1354,13 @@ LBB17_2:
 	add.s64 	%rd8, %rd7, %rd5;
 	setp.gt.u64 	%p1, %rd8, 16383;
 	@%p1 bra 	LBB18_2;
-	ld.param.u64 	%rd4, [Unknown18_kernel_param_1];
-	ld.param.u64 	%rd6, [Unknown18_kernel_param_6];
+	ld.param.u64 	%rd4, [Unknown19_kernel_param_1];
+	ld.param.u64 	%rd6, [Unknown19_kernel_param_6];
 	shr.u64 	%rd9, %rd8, 7;
 	add.s64 	%rd1, %rd4, %rd9;
 	shl.b64 	%rd10, %rd8, 2;
 	add.s64 	%rd2, %rd6, %rd10;
-	ld.param.u64 	%rd11, [Unknown18_kernel_param_13];
+	ld.param.u64 	%rd11, [Unknown19_kernel_param_13];
 	add.s64 	%rd3, %rd11, %rd10;
 	ld.u8 	%rs1, [%rd1];
 	and.b16  	%rs2, %rs1, 1;

@@ -8,9 +8,9 @@
 #include "byteir/Transforms/RewriteOpToStdCall.h"
 #include "./PassDetail.h"
 
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/PatternMatch.h"
@@ -57,7 +57,7 @@ struct RewriteOpToStdCallPattern : public RewritePattern {
     if (iter != callTable.end()) {
       FlatSymbolRefAttr libraryCallName =
           getLibraryCallSymbolRef(op, rewriter, iter->second);
-      rewriter.replaceOpWithNewOp<mlir::CallOp>(op, libraryCallName.getValue(),
+      rewriter.replaceOpWithNewOp<func::CallOp>(op, libraryCallName.getValue(),
                                                 TypeRange(), op->getOperands());
       return success();
     }
@@ -87,8 +87,8 @@ struct RewriteOpToStdCallPass
 
     ModuleOp module = getOperation();
     ConversionTarget target(getContext());
-    target.addLegalDialect<StandardOpsDialect, memref::MemRefDialect>();
-    target.addLegalOp<ModuleOp, FuncOp, ReturnOp>();
+    target.addLegalDialect<func::FuncDialect, memref::MemRefDialect>();
+    target.addLegalOp<ModuleOp, FuncOp, func::ReturnOp>();
     RewritePatternSet patterns(&getContext());
     patterns.add<RewriteOpToStdCallPattern>(patterns.getContext(),
                                             this->_callTable);

@@ -118,7 +118,7 @@ public:
   LmhloToMemrefPass() = default;
   void runOnOperation() override {
     MLIRContext &ctx = getContext();
-    OwningRewritePatternList patterns(&ctx);
+    RewritePatternSet patterns(&ctx);
     ConversionTarget target(ctx);
     auto funcOp = getOperation();
 

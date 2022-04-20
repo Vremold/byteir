@@ -12,6 +12,7 @@
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
@@ -40,6 +41,7 @@ void mlir::addByteIRTotalBufferizePatterns(OpPassManager &pm) {
   pm.addPass(createConvertHloToLHloPass());
   pm.addPass(createCSEPass());
   pm.addNestedPass<FuncOp>(createLinalgBufferizePass());
+  pm.addNestedPass<FuncOp>(createTensorBufferizePass());
   addCleanUpPassPipeline(pm);
 }
 

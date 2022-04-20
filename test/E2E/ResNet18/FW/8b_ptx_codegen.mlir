@@ -3410,28 +3410,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3447,28 +3441,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3484,28 +3472,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3521,28 +3503,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3558,28 +3534,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3595,28 +3565,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3632,28 +3596,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3669,28 +3627,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3706,28 +3658,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3743,28 +3689,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(64 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3780,28 +3720,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3817,28 +3751,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3854,28 +3782,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3891,28 +3813,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3928,28 +3844,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -3965,28 +3875,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -4002,28 +3906,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -4039,28 +3937,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -4076,28 +3968,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return
@@ -4113,28 +3999,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %7 = llvm.mlir.constant(128 : index) : i64
       %8 = llvm.mlir.constant(0.899999976 : f32) : f32
       %9 = llvm.mlir.constant(1.000000e-01 : f32) : f32
-      %10 = nvvm.read.ptx.sreg.ctaid.x : i32
+      %10 = nvvm.read.ptx.sreg.tid.x : i32
       %11 = llvm.sext %10 : i32 to i64
-      %12 = nvvm.read.ptx.sreg.tid.x : i32
-      %13 = llvm.sext %12 : i32 to i64
-      %14 = nvvm.read.ptx.sreg.ntid.x : i32
-      %15 = llvm.sext %14 : i32 to i64
       llvm.br ^bb1
     ^bb1:  // pred: ^bb0
-      %16 = llvm.mul %11, %15  : i64
-      %17 = llvm.add %16, %13  : i64
-      %18 = llvm.icmp "slt" %17, %7 : i64
-      llvm.cond_br %18, ^bb2, ^bb3
+      %12 = llvm.icmp "slt" %11, %7 : i64
+      llvm.cond_br %12, ^bb2, ^bb3
     ^bb2:  // pred: ^bb1
-      %19 = llvm.getelementptr %arg1[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %20 = llvm.load %19 : !llvm.ptr<f32>
-      %21 = llvm.getelementptr %arg6[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %22 = llvm.load %21 : !llvm.ptr<f32>
-      %23 = llvm.fmul %22, %8  : f32
-      %24 = llvm.fmul %20, %9  : f32
-      %25 = llvm.fadd %24, %23  : f32
-      %26 = llvm.getelementptr %arg11[%17] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %25, %26 : !llvm.ptr<f32>
+      %13 = llvm.getelementptr %arg1[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %14 = llvm.load %13 : !llvm.ptr<f32>
+      %15 = llvm.getelementptr %arg6[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      %16 = llvm.load %15 : !llvm.ptr<f32>
+      %17 = llvm.fmul %16, %8  : f32
+      %18 = llvm.fmul %14, %9  : f32
+      %19 = llvm.fadd %18, %17  : f32
+      %20 = llvm.getelementptr %arg11[%11] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
+      llvm.store %19, %20 : !llvm.ptr<f32>
       llvm.br ^bb3
     ^bb3:  // 2 preds: ^bb1, ^bb2
       llvm.return

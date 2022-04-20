@@ -10,7 +10,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/Verifier.h"
-#include "mlir/Parser.h"
+#include "mlir/Parser/Parser.h"
 #include "mlir/Support/FileUtilities.h"
 #include "mlir/Support/ToolUtilities.h"
 #include "llvm/Support/InitLLVM.h"
@@ -55,7 +55,7 @@ MLIRStatRegistration::MLIRStatRegistration(StringRef name,
   registerStatistics(name, [function](llvm::SourceMgr &sourceMgr,
                                       raw_ostream &output,
                                       MLIRContext *context) {
-    auto module = OwningModuleRef(parseSourceFile(sourceMgr, context));
+    auto module = parseSourceFile<ModuleOp>(sourceMgr, context);
     if (!module || failed(verify(*module)))
       return failure();
     return function(module.get(), output);

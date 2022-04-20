@@ -12,10 +12,10 @@
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
 #include "mlir/Dialect/Bufferization/Transforms/Bufferize.h"
+#include "mlir/Dialect/Func/Transforms/FuncConversions.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Shape/Transforms/Passes.h"
-#include "mlir/Dialect/StandardOps/Transforms/FuncConversions.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Transforms/DialectConversion.h"
 
@@ -95,8 +95,8 @@ Value InsertDynamicAlloc(Location loc, Type result_type, Operation *def_op,
     Value alloc_operand =
         rewriter->create<tensor::ExtractOp>(loc, shape_operand, index);
     if (!alloc_operand.getType().isIndex()) {
-      alloc_operand = rewriter->create<IndexCastOp>(loc, alloc_operand,
-                                                    rewriter->getIndexType());
+      alloc_operand = rewriter->create<IndexCastOp>(
+          loc, rewriter->getIndexType(), alloc_operand);
     }
     dynamic_operands.push_back(alloc_operand);
   }
@@ -374,13 +374,14 @@ public:
   ConvertHloToLHloPass() = default;
   void runOnOperation() override {
     auto &context = getContext();
-    OwningRewritePatternList patterns(&context);
+    RewritePatternSet patterns(&context);
     ConversionTarget target(context);
 
     target.addLegalDialect<arith::ArithmeticDialect>();
     target.addLegalDialect<bufferization::BufferizationDialect>();
+    target.addLegalDialect<cf::ControlFlowDialect>();
+    target.addLegalDialect<func::FuncDialect>();
     target.addLegalDialect<lmhlo::LmhloDialect>();
-    target.addLegalDialect<StandardOpsDialect>();
     target.addLegalDialect<memref::MemRefDialect>();
     target.addLegalDialect<shape::ShapeDialect>();
     target.addLegalDialect<tensor::TensorDialect>();
@@ -414,13 +415,13 @@ public:
       return converter.isSignatureLegal(op.getType()) &&
              converter.isLegal(&op.getBody());
     });
-    target.addDynamicallyLegalOp<CallOp>([&](CallOp op) {
+    target.addDynamicallyLegalOp<func::CallOp>([&](func::CallOp op) {
       return std::all_of(op.operand_type_begin(), op.operand_type_end(),
                          isMemRefType) &&
              std::all_of(op.result_type_begin(), op.result_type_end(),
                          isMemRefType);
     });
-    target.addDynamicallyLegalOp<mlir::ReturnOp>([&](mlir::ReturnOp op) {
+    target.addDynamicallyLegalOp<func::ReturnOp>([&](func::ReturnOp op) {
       return std::all_of(op.operand_type_begin(), op.operand_type_end(),
                          isMemRefType);
     });
@@ -436,9 +437,6 @@ public:
     populateBranchOpInterfaceTypeConversionPattern(patterns, converter);
     populateReturnOpTypeConversionPattern(patterns, converter);
     populateEliminateBufferizeMaterializationsPatterns(converter, patterns);
-
-    populateShapeStructuralTypeConversionsAndLegality(converter, patterns,
-                                                      target);
 
     // LWC: Comment out this in our pass due to the scope
     // it has no impact
@@ -456,7 +454,7 @@ public:
 // Collection of rewrite patterns for lowering of HLO to LHLO dialect.
 void mlir::populateHLOToLHLOConversionPatternExtension(
     MLIRContext *context, bufferization::BufferizeTypeConverter *converter,
-    OwningRewritePatternList *patterns) {
+    RewritePatternSet *patterns) {
 
   patterns->insert<HloToLhloOpConverterLocal<mhlo::BatchNormGradOp>,
                    HloToLhloOpConverterLocal<mhlo::BatchNormTrainingOp>,

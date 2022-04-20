@@ -89,7 +89,7 @@ struct ClusterConstraintPass
   ClusterConstraintPass() : ClusterConstraintBase() {}
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
-    OwningRewritePatternList patterns(funcOp.getContext());
+    RewritePatternSet patterns(funcOp.getContext());
     populateClusterConstraintPattern(patterns);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
       funcOp.emitError("ClusterConstraintPass applyPatternsAndFoldGreedily "

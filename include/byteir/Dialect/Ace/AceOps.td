@@ -17,7 +17,7 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 // Ace Dialect operations.
 //===----------------------------------------------------------------------===//
 
-class Ace_Op<string mnemonic, list<OpTrait> traits = []> :
+class Ace_Op<string mnemonic, list<Trait> traits = []> :
     Op<Ace_Dialect, mnemonic, traits> {
   let verifier = [{ return Verify(*this); }];
 }

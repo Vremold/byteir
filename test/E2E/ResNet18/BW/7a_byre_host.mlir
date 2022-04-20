@@ -7,7 +7,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c25088 = arith.constant 25088 : index
       %cst = arith.constant 4.900000e+01 : f16
@@ -21,40 +21,40 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c7 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c7 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c7 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c7 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c7 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c512 = arith.constant 512 : index
         %26 = arith.remsi %25, %c512 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c512 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c512 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x512x7x7xf16>
         %37 = memref.load %arg1[%35, %29] : memref<1x512xf16>
         %38 = arith.divf %37, %cst : f16
         %39 = arith.cmpf ogt, %36, %cst_0 : f16
-        %40 = select %39, %38, %cst_0 : f16
+        %40 = arith.select %39, %38, %cst_0 : f16
         memref.store %40, %arg2[%35, %29, %19, %9] : memref<1x512x7x7xf16>
       }
       gpu.return
@@ -65,7 +65,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c25088 = arith.constant 25088 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -78,39 +78,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c7 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c7 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c7 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c7 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c7 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c512 = arith.constant 512 : index
         %26 = arith.remsi %25, %c512 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c512 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c512 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x512x7x7xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x512x7x7xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x512x7x7xf16>
       }
       gpu.return
@@ -121,7 +121,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c25088 = arith.constant 25088 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -134,41 +134,41 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c7 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c7 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c7 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c7 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c7 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c512 = arith.constant 512 : index
         %26 = arith.remsi %25, %c512 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c512 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c512 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x512x7x7xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x512x7x7xf16>
         %38 = memref.load %arg2[%35, %29, %19, %9] : memref<1x512x7x7xf16>
         %39 = arith.addf %37, %38 : f16
         %40 = arith.cmpf ogt, %36, %cst : f16
-        %41 = select %40, %39, %cst : f16
+        %41 = arith.select %40, %39, %cst : f16
         memref.store %41, %arg3[%35, %29, %19, %9] : memref<1x512x7x7xf16>
       }
       gpu.return
@@ -179,7 +179,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c25088 = arith.constant 25088 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -192,39 +192,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c7 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c7 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c7 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c7 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c7 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c512 = arith.constant 512 : index
         %26 = arith.remsi %25, %c512 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c512 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c512 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x512x7x7xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x512x7x7xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x512x7x7xf16>
       }
       gpu.return
@@ -235,7 +235,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c50176 = arith.constant 50176 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -248,41 +248,41 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c14 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c14 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c14 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c14 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c14 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c256 = arith.constant 256 : index
         %26 = arith.remsi %25, %c256 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c256 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c256 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %38 = memref.load %arg2[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %39 = arith.addf %37, %38 : f16
         %40 = arith.cmpf ogt, %36, %cst : f16
-        %41 = select %40, %39, %cst : f16
+        %41 = arith.select %40, %39, %cst : f16
         memref.store %41, %arg3[%35, %29, %19, %9] : memref<1x256x14x14xf16>
       }
       gpu.return
@@ -293,7 +293,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c50176 = arith.constant 50176 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -306,39 +306,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c14 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c14 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c14 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c14 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c14 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c256 = arith.constant 256 : index
         %26 = arith.remsi %25, %c256 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c256 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c256 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x256x14x14xf16>
       }
       gpu.return
@@ -349,7 +349,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c50176 = arith.constant 50176 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -362,41 +362,41 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c14 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c14 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c14 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c14 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c14 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c256 = arith.constant 256 : index
         %26 = arith.remsi %25, %c256 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c256 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c256 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %38 = memref.load %arg2[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %39 = arith.addf %37, %38 : f16
         %40 = arith.cmpf ogt, %36, %cst : f16
-        %41 = select %40, %39, %cst : f16
+        %41 = arith.select %40, %39, %cst : f16
         memref.store %41, %arg3[%35, %29, %19, %9] : memref<1x256x14x14xf16>
       }
       gpu.return
@@ -407,7 +407,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c50176 = arith.constant 50176 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -420,39 +420,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c14 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c14 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c14 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c14 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c14 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c256 = arith.constant 256 : index
         %26 = arith.remsi %25, %c256 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c256 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c256 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x256x14x14xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x256x14x14xf16>
       }
       gpu.return
@@ -463,7 +463,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c100352 = arith.constant 100352 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -476,41 +476,41 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c28 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c28 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c28 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c28 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c28 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c128 = arith.constant 128 : index
         %26 = arith.remsi %25, %c128 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c128 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c128 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %38 = memref.load %arg2[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %39 = arith.addf %37, %38 : f16
         %40 = arith.cmpf ogt, %36, %cst : f16
-        %41 = select %40, %39, %cst : f16
+        %41 = arith.select %40, %39, %cst : f16
         memref.store %41, %arg3[%35, %29, %19, %9] : memref<1x128x28x28xf16>
       }
       gpu.return
@@ -521,7 +521,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c100352 = arith.constant 100352 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -534,39 +534,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c28 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c28 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c28 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c28 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c28 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c128 = arith.constant 128 : index
         %26 = arith.remsi %25, %c128 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c128 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c128 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x128x28x28xf16>
       }
       gpu.return
@@ -577,7 +577,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c100352 = arith.constant 100352 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -590,41 +590,41 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c28 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c28 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c28 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c28 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c28 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c128 = arith.constant 128 : index
         %26 = arith.remsi %25, %c128 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c128 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c128 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %38 = memref.load %arg2[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %39 = arith.addf %37, %38 : f16
         %40 = arith.cmpf ogt, %36, %cst : f16
-        %41 = select %40, %39, %cst : f16
+        %41 = arith.select %40, %39, %cst : f16
         memref.store %41, %arg3[%35, %29, %19, %9] : memref<1x128x28x28xf16>
       }
       gpu.return
@@ -635,7 +635,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c100352 = arith.constant 100352 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -648,39 +648,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c28 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c28 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c28 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c28 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c28 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c128 = arith.constant 128 : index
         %26 = arith.remsi %25, %c128 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c128 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c128 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x128x28x28xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x128x28x28xf16>
       }
       gpu.return
@@ -691,7 +691,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c200704 = arith.constant 200704 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -704,41 +704,41 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c56 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c56 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c56 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c56 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c56 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %38 = memref.load %arg2[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %39 = arith.addf %37, %38 : f16
         %40 = arith.cmpf ogt, %36, %cst : f16
-        %41 = select %40, %39, %cst : f16
+        %41 = arith.select %40, %39, %cst : f16
         memref.store %41, %arg3[%35, %29, %19, %9] : memref<1x64x56x56xf16>
       }
       gpu.return
@@ -749,7 +749,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c200704 = arith.constant 200704 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -762,39 +762,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c56 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c56 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c56 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c56 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c56 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x64x56x56xf16>
       }
       gpu.return
@@ -805,7 +805,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c200704 = arith.constant 200704 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -818,41 +818,41 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c56 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c56 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c56 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c56 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c56 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %38 = memref.load %arg2[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %39 = arith.addf %37, %38 : f16
         %40 = arith.cmpf ogt, %36, %cst : f16
-        %41 = select %40, %39, %cst : f16
+        %41 = arith.select %40, %39, %cst : f16
         memref.store %41, %arg3[%35, %29, %19, %9] : memref<1x64x56x56xf16>
       }
       gpu.return
@@ -863,7 +863,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c200704 = arith.constant 200704 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -876,39 +876,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c56 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c56 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c56 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c56 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c56 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x64x56x56xf16>
       }
       gpu.return
@@ -919,7 +919,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c200704 = arith.constant 200704 : index
       %3 = arith.muli %0, %2 : index
@@ -931,35 +931,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c56 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c56 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c56 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c56 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c56 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x64x56x56xf16>
         %38 = arith.addf %36, %37 : f16
@@ -973,7 +973,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c802816 = arith.constant 802816 : index
       %cst = arith.constant 0.000000e+00 : f16
@@ -986,39 +986,39 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c112 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c112 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c112 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c112 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c112 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<1x64x112x112xf16>
         %37 = memref.load %arg1[%35, %29, %19, %9] : memref<1x64x112x112xf16>
         %38 = arith.cmpf ogt, %36, %cst : f16
-        %39 = select %38, %37, %cst : f16
+        %39 = arith.select %38, %37, %cst : f16
         memref.store %39, %arg2[%35, %29, %19, %9] : memref<1x64x112x112xf16>
       }
       gpu.return
@@ -1029,7 +1029,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c9408 = arith.constant 9408 : index
       %3 = arith.muli %0, %2 : index
@@ -1041,35 +1041,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c7 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c7 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c7 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c7 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c7 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c3 = arith.constant 3 : index
         %26 = arith.remsi %25, %c3 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c3 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c3 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<64x3x7x7xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<64x3x7x7xf32>
@@ -1082,7 +1082,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c1000 = arith.constant 1000 : index
       %3 = arith.muli %0, %2 : index
@@ -1093,14 +1093,14 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c1000 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c1000 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = memref.load %arg0[%15, %9] : memref<1x1000xf16>
         %17 = arith.extf %16 : f16 to f32
         memref.store %17, %arg1[%15, %9] : memref<1x1000xf32>
@@ -1113,7 +1113,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c1000 = arith.constant 1000 : index
       %3 = arith.muli %0, %2 : index
@@ -1133,7 +1133,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c512000 = arith.constant 512000 : index
       %3 = arith.muli %0, %2 : index
@@ -1145,14 +1145,14 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c512 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c512 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = memref.load %arg0[%15, %9] : memref<1000x512xf16>
         %17 = arith.extf %16 : f16 to f32
         memref.store %17, %arg1[%15, %9] : memref<1000x512xf32>
@@ -1165,7 +1165,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c36864 = arith.constant 36864 : index
       %3 = arith.muli %0, %2 : index
@@ -1177,35 +1177,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<64x64x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<64x64x3x3xf32>
@@ -1218,7 +1218,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c36864 = arith.constant 36864 : index
       %3 = arith.muli %0, %2 : index
@@ -1230,35 +1230,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<64x64x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<64x64x3x3xf32>
@@ -1271,7 +1271,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c36864 = arith.constant 36864 : index
       %3 = arith.muli %0, %2 : index
@@ -1283,35 +1283,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<64x64x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<64x64x3x3xf32>
@@ -1324,7 +1324,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c36864 = arith.constant 36864 : index
       %3 = arith.muli %0, %2 : index
@@ -1336,35 +1336,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<64x64x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<64x64x3x3xf32>
@@ -1377,7 +1377,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c73728 = arith.constant 73728 : index
       %3 = arith.muli %0, %2 : index
@@ -1389,35 +1389,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c64 = arith.constant 64 : index
         %26 = arith.remsi %25, %c64 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c64 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c64 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<128x64x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<128x64x3x3xf32>
@@ -1430,7 +1430,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c147456 = arith.constant 147456 : index
       %3 = arith.muli %0, %2 : index
@@ -1442,35 +1442,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c128 = arith.constant 128 : index
         %26 = arith.remsi %25, %c128 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c128 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c128 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<128x128x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<128x128x3x3xf32>
@@ -1483,7 +1483,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c8192 = arith.constant 8192 : index
       %c0 = arith.constant 0 : index
@@ -1495,14 +1495,14 @@ module attributes {byre.container_module, gpu.container_module} {
         %6 = arith.remsi %4, %c64 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c64 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c64 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = memref.load %arg0[%15, %9, %c0, %c0] : memref<128x64x1x1xf16>
         %17 = arith.extf %16 : f16 to f32
         memref.store %17, %arg1[%15, %9, %c0, %c0] : memref<128x64x1x1xf32>
@@ -1515,7 +1515,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c147456 = arith.constant 147456 : index
       %3 = arith.muli %0, %2 : index
@@ -1527,35 +1527,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c128 = arith.constant 128 : index
         %26 = arith.remsi %25, %c128 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c128 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c128 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<128x128x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<128x128x3x3xf32>
@@ -1568,7 +1568,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c147456 = arith.constant 147456 : index
       %3 = arith.muli %0, %2 : index
@@ -1580,35 +1580,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c128 = arith.constant 128 : index
         %26 = arith.remsi %25, %c128 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c128 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c128 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<128x128x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<128x128x3x3xf32>
@@ -1621,7 +1621,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c294912 = arith.constant 294912 : index
       %3 = arith.muli %0, %2 : index
@@ -1633,35 +1633,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c128 = arith.constant 128 : index
         %26 = arith.remsi %25, %c128 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c128 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c128 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<256x128x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<256x128x3x3xf32>
@@ -1674,7 +1674,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c589824 = arith.constant 589824 : index
       %3 = arith.muli %0, %2 : index
@@ -1686,35 +1686,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c256 = arith.constant 256 : index
         %26 = arith.remsi %25, %c256 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c256 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c256 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<256x256x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<256x256x3x3xf32>
@@ -1727,7 +1727,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c32768 = arith.constant 32768 : index
       %c0 = arith.constant 0 : index
@@ -1739,14 +1739,14 @@ module attributes {byre.container_module, gpu.container_module} {
         %6 = arith.remsi %4, %c128 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c128 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c128 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = memref.load %arg0[%15, %9, %c0, %c0] : memref<256x128x1x1xf16>
         %17 = arith.extf %16 : f16 to f32
         memref.store %17, %arg1[%15, %9, %c0, %c0] : memref<256x128x1x1xf32>
@@ -1759,7 +1759,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c589824 = arith.constant 589824 : index
       %3 = arith.muli %0, %2 : index
@@ -1771,35 +1771,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c256 = arith.constant 256 : index
         %26 = arith.remsi %25, %c256 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c256 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c256 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<256x256x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<256x256x3x3xf32>
@@ -1812,7 +1812,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c589824 = arith.constant 589824 : index
       %3 = arith.muli %0, %2 : index
@@ -1824,35 +1824,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c256 = arith.constant 256 : index
         %26 = arith.remsi %25, %c256 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c256 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c256 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<256x256x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<256x256x3x3xf32>
@@ -1865,7 +1865,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c1179648 = arith.constant 1179648 : index
       %3 = arith.muli %0, %2 : index
@@ -1877,35 +1877,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c256 = arith.constant 256 : index
         %26 = arith.remsi %25, %c256 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c256 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c256 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<512x256x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<512x256x3x3xf32>
@@ -1918,7 +1918,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c2359296 = arith.constant 2359296 : index
       %3 = arith.muli %0, %2 : index
@@ -1930,35 +1930,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c512 = arith.constant 512 : index
         %26 = arith.remsi %25, %c512 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c512 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c512 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<512x512x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<512x512x3x3xf32>
@@ -1971,7 +1971,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c131072 = arith.constant 131072 : index
       %c0 = arith.constant 0 : index
@@ -1983,14 +1983,14 @@ module attributes {byre.container_module, gpu.container_module} {
         %6 = arith.remsi %4, %c256 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c256 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c256 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = memref.load %arg0[%15, %9, %c0, %c0] : memref<512x256x1x1xf16>
         %17 = arith.extf %16 : f16 to f32
         memref.store %17, %arg1[%15, %9, %c0, %c0] : memref<512x256x1x1xf32>
@@ -2003,7 +2003,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c2359296 = arith.constant 2359296 : index
       %3 = arith.muli %0, %2 : index
@@ -2015,35 +2015,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c512 = arith.constant 512 : index
         %26 = arith.remsi %25, %c512 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c512 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c512 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<512x512x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<512x512x3x3xf32>
@@ -2056,7 +2056,7 @@ module attributes {byre.container_module, gpu.container_module} {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c2359296 = arith.constant 2359296 : index
       %3 = arith.muli %0, %2 : index
@@ -2068,35 +2068,35 @@ module attributes {byre.container_module, gpu.container_module} {
         %c0 = arith.constant 0 : index
         %7 = arith.cmpi slt, %6, %c0 : index
         %8 = arith.addi %6, %c3 : index
-        %9 = select %7, %8, %6 : index
+        %9 = arith.select %7, %8, %6 : index
         %c-1 = arith.constant -1 : index
         %10 = arith.cmpi slt, %4, %c0 : index
         %11 = arith.subi %c-1, %4 : index
-        %12 = select %10, %11, %4 : index
+        %12 = arith.select %10, %11, %4 : index
         %13 = arith.divsi %12, %c3 : index
         %14 = arith.subi %c-1, %13 : index
-        %15 = select %10, %14, %13 : index
+        %15 = arith.select %10, %14, %13 : index
         %16 = arith.remsi %15, %c3 : index
         %17 = arith.cmpi slt, %16, %c0 : index
         %18 = arith.addi %16, %c3 : index
-        %19 = select %17, %18, %16 : index
+        %19 = arith.select %17, %18, %16 : index
         %20 = arith.cmpi slt, %15, %c0 : index
         %21 = arith.subi %c-1, %15 : index
-        %22 = select %20, %21, %15 : index
+        %22 = arith.select %20, %21, %15 : index
         %23 = arith.divsi %22, %c3 : index
         %24 = arith.subi %c-1, %23 : index
-        %25 = select %20, %24, %23 : index
+        %25 = arith.select %20, %24, %23 : index
         %c512 = arith.constant 512 : index
         %26 = arith.remsi %25, %c512 : index
         %27 = arith.cmpi slt, %26, %c0 : index
         %28 = arith.addi %26, %c512 : index
-        %29 = select %27, %28, %26 : index
+        %29 = arith.select %27, %28, %26 : index
         %30 = arith.cmpi slt, %25, %c0 : index
         %31 = arith.subi %c-1, %25 : index
-        %32 = select %30, %31, %25 : index
+        %32 = arith.select %30, %31, %25 : index
         %33 = arith.divsi %32, %c512 : index
         %34 = arith.subi %c-1, %33 : index
-        %35 = select %30, %34, %33 : index
+        %35 = arith.select %30, %34, %33 : index
         %36 = memref.load %arg0[%35, %29, %19, %9] : memref<512x512x3x3xf16>
         %37 = arith.extf %36 : f16 to f32
         memref.store %37, %arg1[%35, %29, %19, %9] : memref<512x512x3x3xf32>
@@ -2111,7 +2111,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %3 = memref.alloc() : memref<1x512xf16>
     byre.compute @MatmulOpf16f16f16(%arg141, %arg140, %3) {lhs_contracting_dimension = 1 : i64, rhs_contracting_dimension = 1 : i64} : memref<1x1000xf16>, memref<512x1000xf16>, memref<1x512xf16>
     %4 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @PTXOp(%arg138, %3, %4) {BlockSize.x = 32 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 2 : i32, 4 : i32], kernel_name = "Unknown0_kernel"} : memref<1x512x7x7xf16>, memref<1x512xf16>, memref<1x512x7x7xf16>
+    byre.compute @PTXOp(%arg138, %3, %4) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 2 : i32, 4 : i32], kernel_name = "Unknown0_kernel"} : memref<1x512x7x7xf16>, memref<1x512xf16>, memref<1x512x7x7xf16>
     %5 = memref.alloc() : memref<1x512x7x7xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg137, %arg39, %4, %5, %arg201, %arg200) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
     %6 = memref.alloc() : memref<1x512x7x7xf16>
@@ -2119,7 +2119,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %7 = memref.alloc() : memref<512x512x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg135, %5, %7) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
     %8 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @PTXOp(%arg135, %6, %8) {BlockSize.x = 32 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown4_kernel"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
+    byre.compute @PTXOp(%arg135, %6, %8) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown4_kernel"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
     %9 = memref.alloc() : memref<1x512x7x7xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg134, %arg37, %8, %9, %arg199, %arg198) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
     %10 = memref.alloc() : memref<1x512x7x7xf16>
@@ -2127,7 +2127,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %11 = memref.alloc() : memref<512x512x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg132, %9, %11) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
     %12 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @PTXOp(%arg132, %4, %10, %12) {BlockSize.x = 32 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown8_kernel"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
+    byre.compute @PTXOp(%arg132, %4, %10, %12) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown8_kernel"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
     %13 = memref.alloc() : memref<1x512x7x7xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg129, %arg33, %12, %13, %arg192, %arg191) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
     %14 = memref.alloc() : memref<1x512x7x7xf16>
@@ -2135,7 +2135,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %15 = memref.alloc() : memref<512x512x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg127, %13, %15) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
     %16 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @PTXOp(%arg127, %14, %16) {BlockSize.x = 32 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown12_kernel"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
+    byre.compute @PTXOp(%arg127, %14, %16) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown12_kernel"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
     %17 = memref.alloc() : memref<1x512x7x7xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg126, %arg31, %16, %17, %arg190, %arg189) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
     %18 = memref.alloc() : memref<1x256x14x14xf16>
@@ -2149,7 +2149,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %22 = memref.alloc() : memref<512x256x1x1xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg124, %20, %22) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x512x7x7xf16>, memref<512x256x1x1xf16>
     %23 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @PTXOp(%arg124, %21, %18, %23) {BlockSize.x = 32 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown19_kernel"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
+    byre.compute @PTXOp(%arg124, %21, %18, %23) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown19_kernel"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
     %24 = memref.alloc() : memref<1x256x14x14xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg123, %arg29, %23, %24, %arg186, %arg185) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
     %25 = memref.alloc() : memref<1x256x14x14xf16>
@@ -2157,7 +2157,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %26 = memref.alloc() : memref<256x256x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg121, %24, %26) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
     %27 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @PTXOp(%arg121, %25, %27) {BlockSize.x = 32 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown23_kernel"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
+    byre.compute @PTXOp(%arg121, %25, %27) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown23_kernel"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
     %28 = memref.alloc() : memref<1x256x14x14xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg120, %arg27, %27, %28, %arg184, %arg183) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
     %29 = memref.alloc() : memref<1x256x14x14xf16>
@@ -2165,7 +2165,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %30 = memref.alloc() : memref<256x256x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg118, %28, %30) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
     %31 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @PTXOp(%arg118, %23, %29, %31) {BlockSize.x = 32 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown27_kernel"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
+    byre.compute @PTXOp(%arg118, %23, %29, %31) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown27_kernel"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
     %32 = memref.alloc() : memref<1x256x14x14xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg115, %arg23, %31, %32, %arg177, %arg176) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
     %33 = memref.alloc() : memref<1x256x14x14xf16>
@@ -2173,7 +2173,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %34 = memref.alloc() : memref<256x256x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg113, %32, %34) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
     %35 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @PTXOp(%arg113, %33, %35) {BlockSize.x = 32 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown31_kernel"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
+    byre.compute @PTXOp(%arg113, %33, %35) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown31_kernel"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
     %36 = memref.alloc() : memref<1x256x14x14xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg112, %arg21, %35, %36, %arg175, %arg174) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
     %37 = memref.alloc() : memref<1x128x28x28xf16>
@@ -2187,7 +2187,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %41 = memref.alloc() : memref<256x128x1x1xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg110, %39, %41) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x256x14x14xf16>, memref<256x128x1x1xf16>
     %42 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @PTXOp(%arg110, %40, %37, %42) {BlockSize.x = 32 : i32, GridSize.x = 3136 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown38_kernel"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
+    byre.compute @PTXOp(%arg110, %40, %37, %42) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown38_kernel"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
     %43 = memref.alloc() : memref<1x128x28x28xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg109, %arg19, %42, %43, %arg171, %arg170) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
     %44 = memref.alloc() : memref<1x128x28x28xf16>
@@ -2195,7 +2195,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %45 = memref.alloc() : memref<128x128x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg107, %43, %45) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
     %46 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @PTXOp(%arg107, %44, %46) {BlockSize.x = 32 : i32, GridSize.x = 3136 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown42_kernel"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
+    byre.compute @PTXOp(%arg107, %44, %46) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown42_kernel"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
     %47 = memref.alloc() : memref<1x128x28x28xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg106, %arg17, %46, %47, %arg169, %arg168) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
     %48 = memref.alloc() : memref<1x128x28x28xf16>
@@ -2203,7 +2203,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %49 = memref.alloc() : memref<128x128x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg104, %47, %49) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
     %50 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @PTXOp(%arg104, %42, %48, %50) {BlockSize.x = 32 : i32, GridSize.x = 3136 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown46_kernel"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
+    byre.compute @PTXOp(%arg104, %42, %48, %50) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown46_kernel"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
     %51 = memref.alloc() : memref<1x128x28x28xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg101, %arg13, %50, %51, %arg162, %arg161) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
     %52 = memref.alloc() : memref<1x128x28x28xf16>
@@ -2211,7 +2211,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %53 = memref.alloc() : memref<128x128x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg99, %51, %53) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
     %54 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @PTXOp(%arg99, %52, %54) {BlockSize.x = 32 : i32, GridSize.x = 3136 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown50_kernel"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
+    byre.compute @PTXOp(%arg99, %52, %54) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown50_kernel"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
     %55 = memref.alloc() : memref<1x128x28x28xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg98, %arg11, %54, %55, %arg160, %arg159) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
     %56 = memref.alloc() : memref<1x64x56x56xf16>
@@ -2225,7 +2225,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %60 = memref.alloc() : memref<128x64x1x1xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg96, %58, %60) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x128x28x28xf16>, memref<128x64x1x1xf16>
     %61 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%arg96, %59, %56, %61) {BlockSize.x = 32 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown57_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%arg96, %59, %56, %61) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown57_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
     %62 = memref.alloc() : memref<1x64x56x56xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg95, %arg9, %61, %62, %arg156, %arg155) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
     %63 = memref.alloc() : memref<1x64x56x56xf16>
@@ -2233,7 +2233,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %64 = memref.alloc() : memref<64x64x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg93, %62, %64) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
     %65 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%arg93, %63, %65) {BlockSize.x = 32 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown61_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%arg93, %63, %65) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown61_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
     %66 = memref.alloc() : memref<1x64x56x56xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg92, %arg7, %65, %66, %arg154, %arg153) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
     %67 = memref.alloc() : memref<1x64x56x56xf16>
@@ -2241,7 +2241,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %68 = memref.alloc() : memref<64x64x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg90, %66, %68) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
     %69 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%arg90, %61, %67, %69) {BlockSize.x = 32 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown65_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%arg90, %61, %67, %69) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown65_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
     %70 = memref.alloc() : memref<1x64x56x56xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg89, %arg5, %69, %70, %arg150, %arg149) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
     %71 = memref.alloc() : memref<1x64x56x56xf16>
@@ -2249,7 +2249,7 @@ module attributes {byre.container_module, gpu.container_module} {
     %72 = memref.alloc() : memref<64x64x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg87, %70, %72) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
     %73 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%arg87, %71, %73) {BlockSize.x = 32 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown69_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%arg87, %71, %73) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown69_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
     %74 = memref.alloc() : memref<1x64x56x56xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg86, %arg3, %73, %74, %arg148, %arg147) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
     %75 = memref.alloc() : memref<1x64x56x56xf16>
@@ -2257,40 +2257,40 @@ module attributes {byre.container_module, gpu.container_module} {
     %76 = memref.alloc() : memref<64x64x3x3xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg84, %74, %76) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
     %77 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%69, %75, %77) {BlockSize.x = 32 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown73_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%69, %75, %77) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown73_kernel"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
     byre.compute @PoolMaxGradOpf16f16f16(%arg83, %77, %2) {padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : memref<1x64x112x112xf16>, memref<1x64x56x56xf16>, memref<1x64x112x112xf16>
     %78 = memref.alloc() : memref<1x64x112x112xf16>
-    byre.compute @PTXOp(%arg83, %2, %78) {BlockSize.x = 32 : i32, GridSize.x = 25088 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown74_kernel"} : memref<1x64x112x112xf16>, memref<1x64x112x112xf16>, memref<1x64x112x112xf16>
+    byre.compute @PTXOp(%arg83, %2, %78) {BlockSize.x = 128 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown74_kernel"} : memref<1x64x112x112xf16>, memref<1x64x112x112xf16>, memref<1x64x112x112xf16>
     %79 = memref.alloc() : memref<1x64x112x112xf16>
     byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg82, %arg1, %78, %79, %arg143, %arg142) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x112x112xf16>, memref<64xf32>, memref<1x64x112x112xf16>, memref<1x64x112x112xf16>, memref<64xf32>, memref<64xf32>
     %80 = memref.alloc() : memref<64x3x7x7xf16>
     byre.compute @ConvBackwardFilterOpf16f16f16(%arg81, %79, %80) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<3> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x3x224x224xf16>, memref<1x64x112x112xf16>, memref<64x3x7x7xf16>
-    byre.compute @PTXOp(%80, %arg144) {BlockSize.x = 32 : i32, GridSize.x = 294 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown77_kernel"} : memref<64x3x7x7xf16>, memref<64x3x7x7xf32>
+    byre.compute @PTXOp(%80, %arg144) {BlockSize.x = 128 : i32, GridSize.x = 74 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown77_kernel"} : memref<64x3x7x7xf16>, memref<64x3x7x7xf32>
     %81 = memref.alloc() : memref<1x1000xf32>
-    byre.compute @PTXOp(%arg141, %81) {BlockSize.x = 32 : i32, GridSize.x = 32 : i32, arg_ranks = [2 : i32, 2 : i32], kernel_name = "Unknown78_kernel"} : memref<1x1000xf16>, memref<1x1000xf32>
+    byre.compute @PTXOp(%arg141, %81) {BlockSize.x = 128 : i32, GridSize.x = 8 : i32, arg_ranks = [2 : i32, 2 : i32], kernel_name = "Unknown78_kernel"} : memref<1x1000xf16>, memref<1x1000xf32>
     byre.compute @ReduceSumOpf32f32(%81, %1) {dimensions = dense<0> : tensor<1xi64>} : memref<1x1000xf32>, memref<1000xf32>
-    byre.compute @PTXOp(%1, %arg145) {BlockSize.x = 32 : i32, GridSize.x = 32 : i32, arg_ranks = [1 : i32, 1 : i32], kernel_name = "Unknown79_kernel"} : memref<1000xf32>, memref<1000xf32>
+    byre.compute @PTXOp(%1, %arg145) {BlockSize.x = 128 : i32, GridSize.x = 8 : i32, arg_ranks = [1 : i32, 1 : i32], kernel_name = "Unknown79_kernel"} : memref<1000xf32>, memref<1000xf32>
     byre.compute @MatmulOpf16f16f16(%arg141, %arg139, %0) {lhs_contracting_dimension = 0 : i64, rhs_contracting_dimension = 0 : i64} : memref<1x1000xf16>, memref<1x512xf16>, memref<1000x512xf16>
-    byre.compute @PTXOp(%0, %arg146) {BlockSize.x = 32 : i32, GridSize.x = 16000 : i32, arg_ranks = [2 : i32, 2 : i32], kernel_name = "Unknown80_kernel"} : memref<1000x512xf16>, memref<1000x512xf32>
-    byre.compute @PTXOp(%76, %arg151) {BlockSize.x = 32 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown81_kernel"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
-    byre.compute @PTXOp(%72, %arg152) {BlockSize.x = 32 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown82_kernel"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
-    byre.compute @PTXOp(%68, %arg157) {BlockSize.x = 32 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown83_kernel"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
-    byre.compute @PTXOp(%64, %arg158) {BlockSize.x = 32 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown84_kernel"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
-    byre.compute @PTXOp(%57, %arg163) {BlockSize.x = 32 : i32, GridSize.x = 2304 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown85_kernel"} : memref<128x64x3x3xf16>, memref<128x64x3x3xf32>
-    byre.compute @PTXOp(%53, %arg164) {BlockSize.x = 32 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown86_kernel"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
-    byre.compute @PTXOp(%60, %arg165) {BlockSize.x = 32 : i32, GridSize.x = 256 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown87_kernel"} : memref<128x64x1x1xf16>, memref<128x64x1x1xf32>
-    byre.compute @PTXOp(%49, %arg172) {BlockSize.x = 32 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown88_kernel"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
-    byre.compute @PTXOp(%45, %arg173) {BlockSize.x = 32 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown89_kernel"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
-    byre.compute @PTXOp(%38, %arg178) {BlockSize.x = 32 : i32, GridSize.x = 9216 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown90_kernel"} : memref<256x128x3x3xf16>, memref<256x128x3x3xf32>
-    byre.compute @PTXOp(%34, %arg179) {BlockSize.x = 32 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown91_kernel"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
-    byre.compute @PTXOp(%41, %arg180) {BlockSize.x = 32 : i32, GridSize.x = 1024 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown92_kernel"} : memref<256x128x1x1xf16>, memref<256x128x1x1xf32>
-    byre.compute @PTXOp(%30, %arg187) {BlockSize.x = 32 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown93_kernel"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
-    byre.compute @PTXOp(%26, %arg188) {BlockSize.x = 32 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown94_kernel"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
-    byre.compute @PTXOp(%19, %arg193) {BlockSize.x = 32 : i32, GridSize.x = 36864 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown95_kernel"} : memref<512x256x3x3xf16>, memref<512x256x3x3xf32>
-    byre.compute @PTXOp(%15, %arg194) {BlockSize.x = 32 : i32, GridSize.x = 73728 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown96_kernel"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
-    byre.compute @PTXOp(%22, %arg195) {BlockSize.x = 32 : i32, GridSize.x = 4096 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown97_kernel"} : memref<512x256x1x1xf16>, memref<512x256x1x1xf32>
-    byre.compute @PTXOp(%11, %arg202) {BlockSize.x = 32 : i32, GridSize.x = 73728 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown98_kernel"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
-    byre.compute @PTXOp(%7, %arg203) {BlockSize.x = 32 : i32, GridSize.x = 73728 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown99_kernel"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
+    byre.compute @PTXOp(%0, %arg146) {BlockSize.x = 128 : i32, GridSize.x = 4000 : i32, arg_ranks = [2 : i32, 2 : i32], kernel_name = "Unknown80_kernel"} : memref<1000x512xf16>, memref<1000x512xf32>
+    byre.compute @PTXOp(%76, %arg151) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown81_kernel"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
+    byre.compute @PTXOp(%72, %arg152) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown82_kernel"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
+    byre.compute @PTXOp(%68, %arg157) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown83_kernel"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
+    byre.compute @PTXOp(%64, %arg158) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown84_kernel"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
+    byre.compute @PTXOp(%57, %arg163) {BlockSize.x = 128 : i32, GridSize.x = 576 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown85_kernel"} : memref<128x64x3x3xf16>, memref<128x64x3x3xf32>
+    byre.compute @PTXOp(%53, %arg164) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown86_kernel"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
+    byre.compute @PTXOp(%60, %arg165) {BlockSize.x = 128 : i32, GridSize.x = 64 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown87_kernel"} : memref<128x64x1x1xf16>, memref<128x64x1x1xf32>
+    byre.compute @PTXOp(%49, %arg172) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown88_kernel"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
+    byre.compute @PTXOp(%45, %arg173) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown89_kernel"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
+    byre.compute @PTXOp(%38, %arg178) {BlockSize.x = 128 : i32, GridSize.x = 2304 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown90_kernel"} : memref<256x128x3x3xf16>, memref<256x128x3x3xf32>
+    byre.compute @PTXOp(%34, %arg179) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown91_kernel"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
+    byre.compute @PTXOp(%41, %arg180) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown92_kernel"} : memref<256x128x1x1xf16>, memref<256x128x1x1xf32>
+    byre.compute @PTXOp(%30, %arg187) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown93_kernel"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
+    byre.compute @PTXOp(%26, %arg188) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown94_kernel"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
+    byre.compute @PTXOp(%19, %arg193) {BlockSize.x = 128 : i32, GridSize.x = 9216 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown95_kernel"} : memref<512x256x3x3xf16>, memref<512x256x3x3xf32>
+    byre.compute @PTXOp(%15, %arg194) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown96_kernel"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
+    byre.compute @PTXOp(%22, %arg195) {BlockSize.x = 128 : i32, GridSize.x = 1024 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown97_kernel"} : memref<512x256x1x1xf16>, memref<512x256x1x1xf32>
+    byre.compute @PTXOp(%11, %arg202) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown98_kernel"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
+    byre.compute @PTXOp(%7, %arg203) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown99_kernel"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
     return
   }
 }

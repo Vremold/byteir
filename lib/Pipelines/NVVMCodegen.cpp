@@ -13,11 +13,12 @@
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/Common.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
-#include "mlir/Conversion/SCFToStandard/SCFToStandard.h"
+#include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
 #include "mlir/Dialect/LLVMIR/NVVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
@@ -37,7 +38,7 @@ struct NVVMCodegenPipelinePass
     OpPassManager pm(m.getOperationName());
 
     pm.addPass(createCollectGPUKernelPass());
-    pm.addPass(createLowerToCFGPass());
+    pm.addPass(createConvertSCFToCFPass());
     pm.addPass(createGPUToNVVMExtPass());
     pm.addPass(createCSEPass());
     pm.addPass(createReconcileUnrealizedCastsPass());

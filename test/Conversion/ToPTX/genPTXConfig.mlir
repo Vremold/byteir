@@ -18,7 +18,7 @@ module attributes {gpu.container_module}  {
       %0 = gpu.block_id  x
       %1 = gpu.thread_id  x
       %2 = gpu.block_dim  x
-      br ^bb1
+      cf.br ^bb1
     ^bb1:  // pred: ^bb0
       %c0 = arith.constant 0 : index
       %c128 = arith.constant 128 : index
@@ -35,7 +35,7 @@ module attributes {gpu.container_module}  {
         %11 = memref.load %arg3[%5] : memref<128xi64>
         %12 = arith.addi %7, %11 : i64
         %13 = arith.cmpi slt, %7, %10 : i64
-        %14 = select %13, %12, %7 : i64
+        %14 = arith.select %13, %12, %7 : i64
         memref.store %14, %arg4[%5] : memref<128xi64>
         %15 = memref.load %arg5[%5] : memref<128xf64>
         %16 = arith.sitofp %7 : i64 to f64

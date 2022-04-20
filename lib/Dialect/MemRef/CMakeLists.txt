@@ -19,6 +19,5 @@ add_mlir_dialect_library(ByteIRMemRefPasses
   MLIRAffine
   MLIRMemRef
   MLIRMemRefTransforms
-  MLIRStandardOpsTransforms
   MLIRSupport
   )

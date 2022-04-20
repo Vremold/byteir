@@ -21,7 +21,7 @@ func @regular(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<12
     %7 = affine.load %arg2[%arg4] : memref<128xi64>
     %8 = arith.addi %5, %7 : i64
     %9 = arith.cmpi slt, %5, %6 : i64
-    %10 = select %9, %8, %5 : i64
+    %10 = arith.select %9, %8, %5 : i64
     affine.store %10, %2[%arg4] : memref<128xi64>
   }
   %3 = memref.expand_shape %2 [[0, 1]] : memref<128xi64> into memref<128x1xi64>

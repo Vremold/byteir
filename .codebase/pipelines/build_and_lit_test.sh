@@ -8,13 +8,18 @@ export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
 git submodule update --init --recursive
 unset http_proxy; unset https_proxy
 
-LLVM_BUILD="llvm_install_579c4921c0105698617cc1e1b86a9ecf3b4717ce.tar.gz"
+LLVM_BUILD="llvm_install_8361c5da30588d3d4a48eae648f53be1feb5cfad.tar.gz"
 if [ ! -f "$LLVM_BUILD" ]; then
   rm -rf llvm_install*
   rm -rf llvm_build
   wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD"
   tar xzf "$LLVM_BUILD"
 fi
+
+# TODO(liuyuanqiang): remove patch when upstream fix this
+pushd external/mlir-hlo
+git apply ../mhlo_patch.diff
+popd
 
 mkdir build
 cd build

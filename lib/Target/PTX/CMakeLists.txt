@@ -19,5 +19,5 @@ add_byteir_translation_library(ByteIRTargetPTX
   MLIRTensorInferTypeOpInterfaceImpl
   MLIRTransforms
   MLIRTransformUtils
-  MLIRTranslation
+  # MLIRTranslation
   )

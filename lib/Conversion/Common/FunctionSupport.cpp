@@ -22,8 +22,8 @@ namespace function_interface_impl {
 static inline void
 insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
                           TypeRange argTypes, ArrayRef<DictionaryAttr> argAttrs,
-                          ArrayRef<Optional<Location>> argLocs,
-                          unsigned originalNumArgs, Type newType) {
+                          ArrayRef<Location> argLocs, unsigned originalNumArgs,
+                          Type newType) {
   assert(argIndices.size() == argTypes.size());
   assert(argIndices.size() == argAttrs.size() || argAttrs.empty());
   assert(argIndices.size() == argLocs.size() || argLocs.empty());
@@ -65,7 +65,7 @@ insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
   op->setAttr(getTypeAttrName(), TypeAttr::get(newType));
   for (unsigned i = 0, e = argIndices.size(); i < e; ++i)
     entry.insertArgument(argIndices[i], argTypes[i],
-                         argLocs.empty() ? Optional<Location>{} : argLocs[i]);
+                         argLocs.empty() ? op->getLoc() : argLocs[i]);
 }
 } // namespace function_interface_impl
 } // namespace mlir
@@ -77,7 +77,7 @@ insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
 //
 namespace {
 
-static inline void replicateFuncOpResultSigature(mlir::FuncOp funcOp) {
+static inline void replicateFuncOpResultSigature(FuncOp funcOp) {
   mlir::FunctionType oldFuncType = funcOp.getType();
 
   llvm::SmallVector<Type, 16> newInputTypes(oldFuncType.getInputs().begin(),
@@ -114,7 +114,7 @@ static inline void replicateFuncOpResultSigature(mlir::FuncOp funcOp) {
 }
 } // namespace
 
-void mlir::replicateFuncOpResults(mlir::FuncOp funcOp) {
+void mlir::replicateFuncOpResults(FuncOp funcOp) {
   unsigned idx = funcOp.getNumArguments();
 
   replicateFuncOpResultSigature(funcOp);
@@ -123,8 +123,8 @@ void mlir::replicateFuncOpResults(mlir::FuncOp funcOp) {
     return;
   }
 
-  mlir::ReturnOp retOp =
-      cast<mlir::ReturnOp>(funcOp.getBody().front().getTerminator());
+  func::ReturnOp retOp =
+      cast<func::ReturnOp>(funcOp.getBody().front().getTerminator());
 
   llvm::SmallPtrSet<mlir::Operation *, 16> retAllocs;
 
@@ -138,7 +138,7 @@ void mlir::replicateFuncOpResults(mlir::FuncOp funcOp) {
   }
 
   mlir::OpBuilder opBuilder(retOp);
-  opBuilder.create<mlir::ReturnOp>(retOp.getLoc());
+  opBuilder.create<func::ReturnOp>(retOp.getLoc());
   retOp.erase();
   for (auto op : retAllocs) {
     op->erase();
@@ -146,20 +146,20 @@ void mlir::replicateFuncOpResults(mlir::FuncOp funcOp) {
 }
 
 void mlir::replicateFuncOpResults(
-    mlir::FuncOp funcOp, std::function<void(mlir::ReturnOp)> retOpHandling) {
+    FuncOp funcOp, std::function<void(func::ReturnOp)> retOpHandling) {
   replicateFuncOpResultSigature(funcOp);
 
   if (funcOp.empty()) {
     return;
   }
 
-  mlir::ReturnOp retOp =
-      cast<mlir::ReturnOp>(funcOp.getBody().front().getTerminator());
+  func::ReturnOp retOp =
+      cast<func::ReturnOp>(funcOp.getBody().front().getTerminator());
   retOpHandling(retOp);
 }
 
 void mlir::relocateFuncOpConstantLike(
-    mlir::FuncOp funcOp, std::function<bool(mlir::Operation *)> checkOp,
+    FuncOp funcOp, std::function<bool(mlir::Operation *)> checkOp,
     std::function<std::tuple<mlir::Value, NamedAttrList>(mlir::Operation *)>
         getValue) {
   // skip empty func

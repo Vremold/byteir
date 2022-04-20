@@ -15,7 +15,7 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/InitAllDialects.h"
 #include "mlir/InitAllPasses.h"
-#include "mlir/Parser.h"
+#include "mlir/Parser/Parser.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Support/FileUtilities.h"
@@ -45,7 +45,7 @@ static void findLibDeviceFile(std::string &libdeviceFile) {
   // Get the cuda installation path from CUDA_HOME environment. If it's not
   // set, we will try to find one from the default installation location for
   // CUDA 11.5 in the corresponding system.
-  Optional<std::string> cudaHome = llvm::sys::Process::GetEnv("CUDA_HOME");
+  auto cudaHome = llvm::sys::Process::GetEnv("CUDA_HOME");
   SmallVector<std::string, 2> defaultPaths;
   if (cudaHome.hasValue()) {
     defaultPaths.emplace_back(cudaHome.getValue());
