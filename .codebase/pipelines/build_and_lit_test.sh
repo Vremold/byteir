@@ -16,11 +16,6 @@ if [ ! -f "$LLVM_BUILD" ]; then
   tar xzf "$LLVM_BUILD"
 fi
 
-# TODO(liuyuanqiang): remove patch when upstream fix this
-pushd external/mlir-hlo
-git apply ../mhlo_patch.diff
-popd
-
 mkdir build
 cd build
 cmake ../cmake/ -G Ninja -DCMAKE_BUILD_TYPE=Release \
