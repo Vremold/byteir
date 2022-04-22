@@ -16,6 +16,7 @@ class MLIRContext;
 
 namespace mhlo {
 class TransposeOp;
+class BroadcastInDimOp;
 
 // Most of these will push back to upstream
 // So this file only includes patterns, not a pass.
@@ -25,6 +26,19 @@ class TransposeOp;
 ///
 LogicalResult EliminateSplatConstantTranspose(mhlo::TransposeOp op,
                                               PatternRewriter &rewriter);
+
+///
+///  BroadcastInDim
+///
+/// BroadcastInDim could be folded in some special cases. Ex.
+///
+/// const
+///   \
+///   broadcast_in_dim  const
+///       \              /
+///             mul
+LogicalResult FoldBroadcastInDim(BroadcastInDimOp op,
+                                 PatternRewriter &rewriter);
 
 // Get all canoncializationExt on top of canoncialization
 void getCanonicalizationExtPatterns(RewritePatternSet &results,

@@ -8,6 +8,7 @@
 #include "byteir/Dialect/mhlo/Transforms/HloFolder.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/mhlo/Analysis/DimFromBroadcast.h"
+#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -20,6 +21,7 @@
 using namespace mlir;
 using namespace llvm;
 using namespace byteir;
+using namespace mlir::mhlo;
 
 namespace {
 
@@ -121,6 +123,196 @@ struct RemoveTrivialTorchIndexSelect
   DimFlagAnalysis *analysis_;
 };
 
+//===----------------------------------------------------------------------===//
+// ConvFollowedByMulOrAdd Pattern
+// TODO: handle similar cases of dot op followed by mul or add
+//===----------------------------------------------------------------------===//
+
+// Return the expanded constOp if applicable, return None if not. Applicable if
+// all following constraint satisfied:
+// 1. the op's input has static shape
+// 2. op's input rank is equal to output rank
+// 3. there's at most one dim in input shape whose size is not equal to 1, and
+//     it should be euqal to featureDim
+// 4. the input's DefiningOp is of type mhlo::ConstOp
+// 5. the const op's attr is of type DenseElementsAttr
+Optional<ConstOp> getBroadcastedConstOp(BroadcastInDimOp op,
+                                        int64_t featureDim) {
+  Value broadInDimInput = op.operand();
+  ShapedType broadInDimInpShape = broadInDimInput.getType().cast<ShapedType>();
+  Value broadInDimOutput = op->getResult(0);
+  ShapedType broadInDimOupShape = broadInDimOutput.getType().cast<ShapedType>();
+
+  // Only need to check the input shape of broadcast_in_dim
+  if (!broadInDimInpShape.hasStaticShape())
+    return None;
+
+  // The input shape has the same rank as the output shape
+  if (broadInDimInpShape.getRank() != broadInDimOupShape.getRank())
+    return None;
+
+  int64_t nonOneDim = -1;
+  for (int64_t i = 0; i < broadInDimInpShape.getRank(); ++i) {
+    int64_t dimSize = broadInDimInpShape.getDimSize(i);
+    if (dimSize != 1) {
+      if (nonOneDim >= 0)
+        return None;
+      else {
+        nonOneDim = i;
+      }
+    }
+  }
+
+  // There's at most one dim whose size is not equal to 1, and it should be
+  // euqal to featureDim.
+  if (nonOneDim != -1 && nonOneDim != featureDim)
+    return None;
+
+  auto constOp = dyn_cast_or_null<ConstOp>(broadInDimInput.getDefiningOp());
+  if (!constOp)
+    return None;
+
+  if (!constOp.value().dyn_cast_or_null<DenseElementsAttr>())
+    return None;
+
+  return constOp;
+}
+
+struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
+  using OpRewritePattern<mhlo::ConvOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(mhlo::ConvOp convOp,
+                                PatternRewriter &rewriter) const override {
+    Value convOrBiasOut = convOp->getResult(0);
+    if (!convOrBiasOut.hasOneUse())
+      return failure();
+
+    Operation *convOrBiasUser = *convOrBiasOut.user_begin();
+    int64_t featureDim = convOp.dimension_numbers().getOutputFeatureDimension();
+    Value convWeight = convOp.rhs();
+    if (!isa<ConstOp>(convWeight.getDefiningOp()))
+      return failure();
+    if (!convWeight.hasOneUse())
+      return failure();
+    if (!convWeight.getType().cast<ShapedType>().hasStaticShape())
+      return failure();
+
+    ArrayRef<int64_t> convWeightShape =
+        convWeight.getType().cast<ShapedType>().getShape();
+    Type elemType = convWeight.getType().cast<ShapedType>().getElementType();
+
+    // handle the conv + bias scenario
+    auto biasAddOp = dyn_cast_or_null<mhlo::AddOp>(convOrBiasUser);
+    ConstOp biasConst = nullptr;
+    BroadcastInDimOp biasBroadcastInDimOp = nullptr;
+    if (biasAddOp) {
+      // Here we update `convOrBiasOut` and `convOrBiasUser`
+      convOrBiasOut = biasAddOp->getResult(0);
+      if (!convOrBiasOut.hasOneUse())
+        return failure();
+      convOrBiasUser = *convOrBiasOut.user_begin();
+
+      unsigned convOperandNumber =
+          convOp->getResult(0).use_begin()->getOperandNumber();
+      assert(convOperandNumber < 2);
+      auto broadInDimOp = dyn_cast_or_null<mhlo::BroadcastInDimOp>(
+          biasAddOp->getOperand(1 - convOperandNumber).getDefiningOp());
+      if (!broadInDimOp)
+        return failure();
+
+      auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
+      if (!maybeConstOp.hasValue())
+        return failure();
+
+      biasConst = maybeConstOp.getValue();
+      biasBroadcastInDimOp = broadInDimOp;
+    }
+
+    unsigned convOrBiasOperandNumber =
+        convOrBiasOut.use_begin()->getOperandNumber();
+    assert(convOrBiasOperandNumber < 2);
+
+    if (auto scaleOp = dyn_cast_or_null<MulOp>(convOrBiasUser)) {
+      auto broadInDimOp = dyn_cast_or_null<mhlo::BroadcastInDimOp>(
+          scaleOp->getOperand(1 - convOrBiasOperandNumber).getDefiningOp());
+      if (!broadInDimOp)
+        return failure();
+
+      auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
+      if (!maybeConstOp.hasValue())
+        return failure();
+      ConstOp constOp = maybeConstOp.getValue();
+
+      // Start to construct a new subgraph which could be const folded.
+      if (!constOp->isBeforeInBlock(convOp))
+        constOp->moveBefore(convOp);
+
+      // construct new conv weight
+      OpBuilder builder(convOp);
+      auto newReshapeType = RankedTensorType::get(
+          {convOrBiasOut.getType().cast<ShapedType>().getDimSize(featureDim)},
+          elemType);
+      ReshapeOp newReshapeOp = builder.create<mhlo::ReshapeOp>(
+          constOp->getLoc(), newReshapeType, constOp.output());
+      auto newBroadInDimType = RankedTensorType::get(convWeightShape, elemType);
+      auto broadAttr = DenseIntElementsAttr::get(
+          RankedTensorType::get({1}, builder.getIntegerType(64)),
+          {convOp.dimension_numbers().getKernelOutputFeatureDimension()});
+      BroadcastInDimOp newBroadInDimOp = builder.create<mhlo::BroadcastInDimOp>(
+          constOp->getLoc(), newBroadInDimType, newReshapeOp->getResult(0),
+          broadAttr);
+      MulOp newMulOp = builder.create<MulOp>(constOp->getLoc(), convWeight,
+                                             newBroadInDimOp->getResult(0));
+      convOp->setOperand(1, newMulOp->getResult(0));
+
+      // construct new conv bias
+      if (biasAddOp) {
+        OpBuilder builder(biasAddOp);
+        ReshapeOp newReshapeOp = builder.create<mhlo::ReshapeOp>(
+            constOp->getLoc(), biasConst.output().getType(), constOp.output());
+        MulOp newMulOp = builder.create<MulOp>(
+            constOp->getLoc(), biasConst.output(), newReshapeOp->getResult(0));
+        biasBroadcastInDimOp->setOperand(0, newMulOp->getResult(0));
+      }
+
+      // update conv's uses
+      scaleOp->getResult(0).replaceAllUsesWith(convOrBiasOut);
+
+    } else if (auto offsetOp = dyn_cast_or_null<AddOp>(convOrBiasUser)) {
+      auto broadInDimOp = dyn_cast_or_null<mhlo::BroadcastInDimOp>(
+          offsetOp->getOperand(1 - convOrBiasOperandNumber).getDefiningOp());
+      if (!broadInDimOp)
+        return failure();
+
+      auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
+      if (!maybeConstOp.hasValue())
+        return failure();
+      ConstOp constOp = maybeConstOp.getValue();
+
+      // Start to construct a new subgraph which could be const folded.
+      if (!constOp->isBeforeInBlock(convOp))
+        constOp->moveBefore(convOp);
+
+      // construct new conv bias
+      assert(biasAddOp);
+      OpBuilder builder(biasAddOp);
+      ReshapeOp newReshapeOp = builder.create<mhlo::ReshapeOp>(
+          constOp->getLoc(), biasConst.output().getType(), constOp.output());
+      AddOp newAddOp = builder.create<AddOp>(
+          constOp->getLoc(), biasConst.output(), newReshapeOp->getResult(0));
+      biasBroadcastInDimOp->setOperand(0, newAddOp->getResult(0));
+
+      // update conv's uses
+      offsetOp->getResult(0).replaceAllUsesWith(convOrBiasOut);
+
+    } else {
+      return failure();
+    }
+
+    return success();
+  }
+};
+
 struct HloFolderPass : public HloFolderBase<HloFolderPass> {
   void runOnOperation() override {
     DimFromBroadcast dim_from_broadcast;
@@ -131,6 +323,9 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
     populateHloFoldPatterns(patterns);
     patterns.add<RemoveTrivialTorchIndexSelect>(patterns.getContext(),
                                                 &dim_from_broadcast_analysis);
+    // also add canoncializationExt pattern
+    mhlo::getCanonicalizationExtPatterns(patterns, patterns.getContext());
+
     LogicalResult status =
         applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
     if (failed(status)) {
@@ -143,6 +338,7 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
 
 void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
   patterns.add<AddScatterAddToScatterPattern>(patterns.getContext());
+  patterns.add<ConvFollowedByMulOrAdd>(patterns.getContext());
 }
 
 std::unique_ptr<OperationPass<FuncOp>> mlir::createHloFolderPass() {
