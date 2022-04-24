@@ -127,7 +127,8 @@ LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
     ///            mul          other ops
     ///
     /// Don't fold broadcast_in_dim if const_1 has other users
-    if (!isa<ConstOp>(otherOp) || !otherOp->getResult(0).hasOneUse())
+    if (!otherOp || !isa<ConstOp>(otherOp) ||
+        !otherOp->getResult(0).hasOneUse())
       return failure();
   }
 

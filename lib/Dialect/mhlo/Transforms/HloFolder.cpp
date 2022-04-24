@@ -190,7 +190,9 @@ struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
     Operation *convOrBiasUser = *convOrBiasOut.user_begin();
     int64_t featureDim = convOp.dimension_numbers().getOutputFeatureDimension();
     Value convWeight = convOp.rhs();
-    if (!isa<ConstOp>(convWeight.getDefiningOp()))
+
+    if (!convWeight.getDefiningOp() ||
+        !isa<ConstOp>(convWeight.getDefiningOp()))
       return failure();
     if (!convWeight.hasOneUse())
       return failure();
