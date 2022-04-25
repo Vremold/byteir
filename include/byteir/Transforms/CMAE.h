@@ -14,6 +14,7 @@
 
 namespace mlir {
 
+// CMAE pass
 std::unique_ptr<OperationPass<FuncOp>>
 createCMAEPass(const std::string &skip = "");
 

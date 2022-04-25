@@ -16,6 +16,10 @@ namespace mlir {
 class ElementsAttr;
 class ShapedType;
 
+// parse concatAttr into attrName:attrType:attrValue
+void parseConcatAttr(const std::string &concatAttr, std::string &attrName,
+                     std::string &attrType, std::string &attrValue);
+
 /// Return a new ElementsAttr that has the same data as the current
 /// attribute, but has been reshaped to 'newShape'.
 llvm::Optional<ElementsAttr>

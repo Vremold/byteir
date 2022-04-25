@@ -18,6 +18,9 @@ class OpBuilder;
 class Operation;
 class Block;
 class BlockAndValueMapping;
+class DominanceInfo;
+class FunctionOpInterface;
+class PostDominanceInfo;
 class ShapedType;
 class TypeRange;
 
@@ -44,6 +47,15 @@ Type mixType(ShapedType cloneFromElementType, ShapedType cloneFromShape);
 // return None if two lists have non-equal length or not all ShapedType
 llvm::Optional<llvm::SmallVector<Type>>
 mixTypes(TypeRange cloneFromElementTypes, TypeRange cloneFromShapes);
+
+// CMAE utils
+// perform CMAE in a Block based on DominanceInfo and PostDominanceInfo
+void runCMAEInBlock(Block &block, DominanceInfo &domInfo,
+                    PostDominanceInfo &postDomInfo);
+
+// perform CMAE in a FunctionOpInterface
+// Note it performs DominanceInfo and PostDominanceInfo internally
+void runCMAEInFuncLike(FunctionOpInterface funclike);
 
 } // namespace mlir
 

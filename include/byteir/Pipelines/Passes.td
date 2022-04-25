@@ -26,6 +26,7 @@ def AffineOptPipeline : Pass<"affine-opt", "mlir::ModuleOp"> {
   let constructor = "mlir::createAffineOptPipelinePass()";
   let dependentDialects = [
     "mlir::AffineDialect",
+    "mlir::scf::SCFDialect",
   ];
 }
 
@@ -136,6 +137,17 @@ def NVVMCodegenPipeline : Pass<"nvvm-codegen", "mlir::ModuleOp"> {
   ];
 }
 
+//===----------------------------------------------------------------------===//
+// SCF Opt Pipeline
+//===----------------------------------------------------------------------===//
+
+def SCFOptPipeline : Pass<"scf-opt", "mlir::ModuleOp"> {
+  let summary = "SCF Opt Pipeline";
+  let constructor = "mlir::createSCFOptPipelinePass()";
+  let dependentDialects = [
+    "mlir::scf::SCFDialect",
+  ];
+}
 
 //===----------------------------------------------------------------------===//
 // Total Bufferize Pipeline

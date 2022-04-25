@@ -11,7 +11,7 @@
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Dialect/mhlo/Passes.h"
-#include "byteir/Pipelines/Common.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"

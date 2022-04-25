@@ -14,7 +14,8 @@
 
 namespace mlir {
 
-// deprecated
+// Note: this pass is soft-deprecated
+// Please use FuncTag, LoopTag and ConvertFuncToGPUPass instead
 std::unique_ptr<OperationPass<FuncOp>>
 createCoalescedForToGPULaunchPass(int64_t bSize = 32);
 
@@ -51,7 +52,7 @@ constexpr StringRef getGridIdZName() { return "grid_id.z"; }
 std::unique_ptr<OperationPass<ModuleOp>>
 createConvertFuncToGPUPass(ArrayRef<int64_t> bs = {32, 1, 1},
                            ArrayRef<int64_t> gs = {32, 1, 1},
-                           const std::string &name = "unified");
+                           const std::string &moduleName = "unified");
 
 } // namespace mlir
 

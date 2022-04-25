@@ -1,4 +1,4 @@
-//===- AffineOpt.h --------------------------------------------*--- C++ -*-===//
+//===- AffineOpt.h ------------------------------------------------ C++ ---===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -10,7 +10,6 @@
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
-#include <string>
 
 namespace mlir {
 

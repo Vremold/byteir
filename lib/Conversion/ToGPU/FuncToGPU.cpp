@@ -8,7 +8,10 @@
 #include "../PassDetail.h"
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToGPU/Utils.h"
+#include "byteir/Utils/Hoist.h"
+#include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/LoopUtils.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -16,17 +19,20 @@
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/GPUDialect.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/Pass/Pass.h"
+#include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/Passes.h"
 #include "mlir/Transforms/RegionUtils.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Sequence.h"
 #include "llvm/Support/Debug.h"
-#include <utility> // pair
+#include <iostream> // debug
+#include <utility>  // pair
 
 #define DEBUG_TYPE "func-to-gpu"
 
@@ -183,22 +189,47 @@ static std::pair<KernelDim3, KernelDim3> createBlockAndGrid(OpBuilder &b,
   return {block, grid};
 }
 
+static bool isGlobalAllocAlias(Operation &op) {
+  if (isa<memref::CollapseShapeOp, memref::ExpandShapeOp, memref::ReshapeOp>(
+          op)) {
+    return true;
+    auto defOp = op.getOperand(0).getDefiningOp();
+    if (defOp == nullptr)
+      return true;
+    return isGlobalAllocAlias(*defOp);
+  }
+  return isGPUGlobalAlloc(op);
+};
+
+static bool isHoistUpOp(Operation *op) {
+  return isa<memref::AllocOp, memref::CollapseShapeOp, memref::DimOp,
+             memref::ExpandShapeOp, memref::ReshapeOp>(op);
+}
+
 static void rewriteToGPULaunchFuncImpl(OpBuilder &builder, FuncOp func,
+                                       ArrayRef<Value> args,
                                        gpu::GPUFuncOp gpuFunc) {
+  // Rewrite Orignal function
+  Region &funcBody = func.body();
+  Block &funcEntryBlock = funcBody.front();
+  SmallVector<Operation *> eraseOps;
+  for (auto &op : funcEntryBlock.without_terminator()) {
+    // FIXME: this might be buggy
+    if (!isGlobalAllocAlias(op)) {
+      eraseOps.push_back(&op);
+    }
+  }
 
-  // erase current body
-  func.getBody().front().erase();
+  // TODO add
+  for (auto it = eraseOps.rbegin(); it != eraseOps.rend(); ++it) {
+    (*it)->erase();
+  }
 
-  // create a new one body
-  auto funcEntryBlock = func.addEntryBlock();
-
-  builder.setInsertionPointToStart(funcEntryBlock);
+  builder.setInsertionPoint(funcEntryBlock.getTerminator());
   auto blockAndGrid = createBlockAndGrid(builder, func);
   builder.create<gpu::LaunchFuncOp>(func.getLoc(), gpuFunc, blockAndGrid.second,
-                                    blockAndGrid.first, nullptr,
-                                    func.getArguments());
-
-  builder.create<func::ReturnOp>(func.getLoc());
+                                    blockAndGrid.first,
+                                    /*dynamicSharedMemorySize=*/nullptr, args);
 }
 
 int64_t estimateGridSize(LoopLikeOpInterface loopLike, int64_t currGs,
@@ -336,13 +367,23 @@ struct ConvertFuncToGPUPass
     SymbolTable gmTable(gm);
 
     OpBuilder builder(gm.getContext());
-
+    SmallVector<gpu::GPUFuncOp> gFuncs;
     // create GPUFuncOp and gpu::LaunchFunc
     for (auto func : funcCollector) {
+      // perform hoist first
+      hoistUpOpsInFuncLike(func, isHoistUpOp);
+
       rewriteFuncImpl(builder, func);
-      auto gpuFunc = cloneFuncToGPUFunc(builder, func, gm);
+
+      // create GPUFunc
+      SmallVector<Value> args;
+      auto gpuFunc = cloneFuncToGPUFunc(builder, func, gm, args);
+
+      gFuncs.push_back(gpuFunc);
       gmTable.insert(gpuFunc);
-      rewriteToGPULaunchFuncImpl(builder, func, gpuFunc);
+
+      // create GPULaunchFunc
+      rewriteToGPULaunchFuncImpl(builder, func, args, gpuFunc);
 
       // remove attr
       func->removeAttr(getToGPUAttrName());
@@ -351,6 +392,25 @@ struct ConvertFuncToGPUPass
     // set gpu.container_module
     m->setAttr(gpu::GPUDialect::getContainerModuleAttrName(),
                UnitAttr::get(m.getContext()));
+
+    // perform clean ups
+    {
+      OpPassManager pm(m.getOperationName());
+      addCleanUpPassPipeline(pm);
+      addMultiCSEPipeline(pm, 2);
+
+      if (mlir::failed(runPipeline(pm, m))) {
+        signalPassFailure();
+      }
+    }
+
+    // perform CMAE
+    {
+      for (auto gFunc : gFuncs) {
+        runCMAEInFuncLike(gFunc);
+      }
+    }
+    //
   }
 };
 

@@ -1,5 +1,4 @@
-//===- LoopUtils.cpp
-//-------------------------------------------------------===//
+//===- LoopUtils.cpp ------------------------------------------------------===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +6,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Utils/LoopUtils.h"
+#include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/Dialect/SCF/Utils/Utils.h"
 #include "mlir/IR/Builders.h"
@@ -86,6 +87,26 @@ Value mlir::createRelativeIndexValue(OpBuilder &b, LoopLikeOpInterface looplike,
     return createLinearIndexValue(b, loopIV, step, idx);
   }
   return Value();
+}
+
+// check whether 'val' >= ub (of looplike).
+// return false if unknown statically
+bool mlir::confirmGEUpperBound(Value val, LoopLikeOpInterface looplike) {
+  auto maybeValI64 = getLiteralFromConstantLike(val);
+
+  if (!maybeValI64.hasValue())
+    return false;
+
+  // TODO add support for ohter loop
+  if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
+    auto ub = forOp.getUpperBound();
+    auto maybeUBI64 = getLiteralFromConstantLike(ub);
+    if (!maybeUBI64.hasValue())
+      return false;
+    return maybeValI64.getValue() >= maybeUBI64.getValue();
+  }
+
+  return false;
 }
 
 // create if index < ub (of looplike)
@@ -172,6 +193,85 @@ Optional<uint64_t> mlir::getConstantTripCount(scf::ForOp forOp,
       return tripCnt;
   }
   return llvm::None;
+}
+
+namespace {
+static void
+gatherLoopsWithDepthInBlock(Block *block, unsigned currLoopDepth,
+                            unsigned targetDepth,
+                            SmallVectorImpl<Operation *> &collector) {
+
+  currLoopDepth += 1;
+  if (currLoopDepth == targetDepth) {
+    for (auto &op : *block) {
+      // TODO add support for ohter loop
+      if (auto forOp = dyn_cast<scf::ForOp>(op)) {
+        collector.push_back(forOp);
+      }
+    }
+  } else {
+    for (auto &op : *block) {
+      // TODO add support for ohter loop
+      if (auto forOp = dyn_cast<scf::ForOp>(op)) {
+        gatherLoopsWithDepthInBlock(forOp.getBody(), currLoopDepth, targetDepth,
+                                    collector);
+      }
+    }
+  }
+}
+} // namespace
+
+void mlir::gatherLoopsWithDepth(FuncOp func, unsigned targetDepth,
+                                SmallVectorImpl<Operation *> &collector) {
+  for (auto &block : func) {
+    gatherLoopsWithDepthInBlock(&block, /*currLoopDepth=*/0, targetDepth,
+                                collector);
+  }
+}
+
+namespace {
+static bool isHoistableOp(Operation *op) {
+  return isa<arith::ConstantOp, memref::AllocOp, memref::CollapseShapeOp,
+             memref::DimOp, memref::ExpandShapeOp, memref::ReshapeOp>(op);
+}
+
+} // namespace
+
+llvm::Optional<scf::ForOp> mlir::createTrivialSCFForIfHaveNone(FuncOp funcOp) {
+
+  // if having scf::ForOp return None
+  if (!funcOp.getOps<scf::ForOp>().empty()) {
+    return llvm::None;
+  }
+
+  Operation *insertPt = nullptr;
+  SmallVector<Operation *> ops;
+
+  for (auto &block : funcOp.getBody()) {
+    for (auto &op : block.without_terminator()) {
+      if (!isHoistableOp(&op)) {
+        if (insertPt == nullptr) {
+          insertPt = &op;
+        }
+        ops.push_back(&op);
+      }
+    }
+  }
+
+  if (insertPt == nullptr)
+    return llvm::None;
+
+  OpBuilder b(insertPt);
+  auto loc = insertPt->getLoc();
+  Value zero = b.create<ConstantIndexOp>(loc, 0);
+  Value one = b.create<ConstantIndexOp>(loc, 1);
+  auto loop = b.create<scf::ForOp>(loc, zero, one, one);
+  auto terminator = loop.getBody()->getTerminator();
+  for (auto op : ops) {
+    op->moveBefore(terminator);
+  }
+
+  return loop;
 }
 
 LogicalResult mlir::loopUnrollFull(scf::ForOp forOp) {

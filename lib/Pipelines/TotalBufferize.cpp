@@ -8,7 +8,7 @@
 #include "byteir/Pipelines/TotalBufferize.h"
 #include "./PassDetail.h"
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
-#include "byteir/Pipelines/Common.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"

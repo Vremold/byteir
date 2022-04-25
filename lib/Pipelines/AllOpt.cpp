@@ -41,7 +41,8 @@ struct ByteirAllOptPipelinePass
     pm.addPass(createLinalgOptPipelinePass(target));
     pm.addPass(createByteIRTotalBufferizePipelinePass());
 
-    pm.addPass(createAffineOptPipelinePass());
+    // pm.addPass(createAffineOptPipelinePass());
+    pm.addPass(createSCFOptPipelinePass());
     pm.addPass(createGPUOptPipelinePass(target));
     pm.addPass(createByreOptPipelinePass(entryFunc, true /*appendArgTypes*/));
     if (mlir::failed(runPipeline(pm, m))) {

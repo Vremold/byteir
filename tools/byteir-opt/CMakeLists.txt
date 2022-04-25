@@ -9,6 +9,7 @@ set(BYTEIR_LIBS
   ByteIRMhlo
   ByteIRMhloPasses
   ByteIRPipelines
+  ByteIRSCFPasses
   ByteIRTransforms
   ${byteir_conversion_libs}
 )

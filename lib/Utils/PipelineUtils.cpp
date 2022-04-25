@@ -1,12 +1,11 @@
-//===- Common.cpp -----------------------------------------------*--- C++
-//-*-===//
+//===- PipelineUtils.cpp ------------------------------------------- C++--===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Pipelines/Common.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;

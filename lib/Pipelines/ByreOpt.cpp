@@ -34,6 +34,7 @@ struct ByreOptPipelinePass : public ByreOptPipelineBase<ByreOptPipelinePass> {
     OpPassManager pm(m.getOperationName());
 
     pm.addPass(createFuncTagPass(
+        /*anchorTag=*/"",
         getAttrPlaceholderName(ByreDialect::getEntryPointFunctionAttrName()),
         entryFunc));
 

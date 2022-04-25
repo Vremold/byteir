@@ -13,6 +13,24 @@
 using namespace llvm;
 using namespace mlir;
 
+void mlir::parseConcatAttr(const std::string &concatAttr, std::string &attrName,
+                           std::string &attrType, std::string &attrValue) {
+
+  size_t first_semi = concatAttr.find(':');
+
+  if (first_semi == std::string::npos) {
+    attrName = concatAttr;
+    attrType = "Unit";
+  } else {
+    attrName = concatAttr.substr(0, first_semi);
+    size_t second_semi = concatAttr.find(':', first_semi + 1);
+    attrType = concatAttr.substr(first_semi + 1, second_semi - first_semi - 1);
+    if (second_semi != std::string::npos) {
+      attrValue = concatAttr.substr(second_semi + 1);
+    }
+  }
+}
+
 llvm::Optional<ElementsAttr>
 mlir::reshapeSplatElementsAttr(ElementsAttr attr,
                                llvm::ArrayRef<int64_t> newShape) {

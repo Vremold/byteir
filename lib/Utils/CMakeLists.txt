@@ -4,6 +4,7 @@ add_mlir_library(ByteIRUtils
   IRRewrite.cpp
   LoopUtils.cpp
   MemUtils.cpp
+  PipelineUtils.cpp
   Utils.cpp
 
   ADDITIONAL_HEADER_DIRS

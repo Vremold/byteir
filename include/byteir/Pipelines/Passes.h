@@ -16,6 +16,7 @@
 #include "byteir/Pipelines/HloOpt.h"
 #include "byteir/Pipelines/LinalgOpt.h"
 #include "byteir/Pipelines/NVVMCodegen.h"
+#include "byteir/Pipelines/SCFOpt.h"
 #include "byteir/Pipelines/TotalBufferize.h"
 
 namespace mlir {

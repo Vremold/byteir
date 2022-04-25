@@ -10,7 +10,6 @@
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
-#include "byteir/Pipelines/Common.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Transforms/Passes.h"
 

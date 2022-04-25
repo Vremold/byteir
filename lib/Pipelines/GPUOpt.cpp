@@ -10,8 +10,12 @@
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Dialect/Affine/Passes.h"
-#include "byteir/Pipelines/Common.h"
+#include "byteir/Dialect/SCF/Passes.h"
+#include "byteir/Dialect/mhlo/Passes.h"
+#include "byteir/Transforms/Passes.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
+#include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/GPU/Passes.h"
 #include "mlir/Dialect/SCF/Passes.h"
 #include "mlir/Dialect/SCF/SCF.h"
@@ -19,6 +23,7 @@
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
+using namespace mlir::bufferization;
 
 namespace {
 
@@ -32,6 +37,38 @@ struct GPUOptPipelinePass : public GPUOptPipelineBase<GPUOptPipelinePass> {
     auto m = getOperation();
     OpPassManager pm(m.getOperationName());
 
+    {
+      OpPassManager anchoredPM(FuncOp::getOperationName());
+
+      anchoredPM.addPass(
+          createPromoteBuffersToStackPass([](Value) { return true; }));
+
+      pm.addNestedPass<FuncOp>(createAnchoredFuncPipelinePass(
+          getByteIRElementwiseFusionAttrName(), anchoredPM));
+    }
+
+    // Note: trivial loop will be removed by canonicalizer
+    // so no canonicalizer, before used
+    pm.addNestedPass<FuncOp>(
+        createInsertTrivialSCFLoopPass(getByteIRElementwiseFusionAttrName()));
+
+    // attach ToGPUAttr
+    pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
+                                 getToGPUAttrName()));
+
+    std::string iteratorAttr =
+        getLoopToSIMTAttrName().str() + ":String:" + getLinearIdXName().str();
+
+    pm.addNestedPass<FuncOp>(
+        createLoopTagPass(getByteIRElementwiseFusionAttrName(), iteratorAttr));
+
+    pm.addPass(createConvertFuncToGPUPass(/*bs=*/{128, 1, 1}));
+
+    addCleanUpPassPipeline(pm);
+    pm.addNestedPass<FuncOp>(createGenPTXConfigPass());
+
+    // soft-deprecated the following, since LoopFusionPass is buggy
+    /*
     pm.addNestedPass<FuncOp>(createRewriteAffineToMemrefPass());
     pm.addNestedPass<FuncOp>(createCoalescedForToGPULaunchPass(128));
     addCleanUpPassPipeline(pm);
@@ -40,6 +77,7 @@ struct GPUOptPipelinePass : public GPUOptPipelineBase<GPUOptPipelinePass> {
     pm.addPass(createGpuKernelOutliningPass());
     pm.addPass(createCSEPass());
     pm.addNestedPass<FuncOp>(createGenPTXConfigPass());
+    */
 
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();

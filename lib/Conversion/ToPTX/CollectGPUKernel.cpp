@@ -14,6 +14,7 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/SymbolTable.h"
 #include "llvm/ADT/SmallVector.h"
+#include <iostream>
 
 using namespace mlir;
 using namespace mlir::byre;
@@ -43,11 +44,9 @@ struct CollectGPUKernelPass
         if (gm.getName() == moduleName) {
           found = true;
           dst = gm;
-          continue;
+        } else {
+          gmCollector.push_back(gm);
         }
-        gmCollector.push_back(gm);
-      } else {
-        removeOps.push_back(&op);
       }
     }
 
@@ -57,6 +56,9 @@ struct CollectGPUKernelPass
     }
 
     if (gmCollector.size() == 0) {
+      for (auto op : removeOps) {
+        op->erase();
+      }
       return;
     }
 

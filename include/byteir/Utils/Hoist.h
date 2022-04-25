@@ -14,6 +14,7 @@ namespace mlir {
 class Value;
 class Block;
 class DominanceInfo;
+class FunctionOpInterface;
 class Operation;
 class PostDominanceInfo;
 
@@ -38,9 +39,19 @@ Operation *findHoistDownInBlock(Operation *op, PostDominanceInfo &postDomInfo);
 void hoistUpOpsInBlock(Block *block, DominanceInfo &domInfo,
                        std::function<bool(Operation *)> checkFunc);
 
+// hoist up ops in a given FunctionOpInterface
+// Note it performs DominanceInfo internally
+void hoistUpOpsInFuncLike(FunctionOpInterface funclike,
+                          std::function<bool(Operation *)> checkFunc);
+
 // hoist down ops in a given Block
 void hoistDownOpsInBlock(Block *block, PostDominanceInfo &postDomInfo,
                          std::function<bool(Operation *)> checkFunc);
+
+// hoist down ops in a given FunctionOpInterface
+// Note it performs DominanceInfo internally
+void hoistDownOpsInFuncLike(FunctionOpInterface funclike,
+                            std::function<bool(Operation *)> checkFunc);
 
 } // namespace mlir
 

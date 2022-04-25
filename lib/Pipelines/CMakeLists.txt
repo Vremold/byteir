@@ -3,11 +3,11 @@ add_mlir_library(ByteIRPipelines
   AllOpt.cpp
   ByreHost.cpp
   ByreOpt.cpp
-  Common.cpp
   GPUOpt.cpp
   HloOpt.cpp
   LinalgOpt.cpp
   NVVMCodegen.cpp
+  SCFOpt.cpp
   TotalBufferize.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -16,6 +16,7 @@ add_mlir_library(ByteIRPipelines
   DEPENDS
   ByteIRPipelinesPassIncGen
   ByteIRTransforms
+  ByteIRUtils
 
   LINK_LIBS PUBLIC
   ByteIRUtils

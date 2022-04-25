@@ -18,6 +18,7 @@
 #include "byteir/Dialect/Byre/Passes.h"
 #include "byteir/Dialect/Linalg/Passes.h"
 #include "byteir/Dialect/MemRef/Passes.h"
+#include "byteir/Dialect/SCF/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/Passes.h"
 #include "byteir/Transforms/Passes.h"
@@ -70,6 +71,7 @@ int main(int argc, char **argv) {
   registerByteIRLinalgPasses();
   registerByteIRMemRefPasses();
   registerByteIRMhloPasses();
+  registerByteIRSCFPasses();
 
   registerByteIRPipelinesPasses();
 

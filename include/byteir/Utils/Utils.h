@@ -29,6 +29,11 @@ class Operation;
 class Value;
 
 // Return literal from a constant-like value
+// return None if not applicable
+llvm::Optional<int64_t> getLiteralFromConstantLike(Value);
+
+// Return literal from a constant-like value,
+// return defaultLit if not applicable
 int64_t getLiteralFromConstantLike(Value, int64_t defaultLit);
 
 // Return literals from a list of constant-like values

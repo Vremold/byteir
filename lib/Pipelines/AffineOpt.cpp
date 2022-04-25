@@ -10,9 +10,10 @@
 #include "./PassDetail.h"
 #include "byteir/Dialect/Affine/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
-#include "byteir/Pipelines/Common.h"
 #include "byteir/Transforms/Passes.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
+#include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Pass/PassManager.h"
@@ -34,11 +35,21 @@ struct AffineOptPipelinePass
     pm.addNestedPass<FuncOp>(createConvertLinalgToAffineLoopsPass());
     pm.addNestedPass<FuncOp>(createLoopCoalescingPass());
     pm.addNestedPass<FuncOp>(createSimplifyAffineStructuresPass());
+    pm.addPass(createLowerAffinePass());
+    pm.addNestedPass<FuncOp>(createCondCanonicalizePass());
+    addCleanUpPassPipeline(pm);
+
+    // soft-deprecated the following, since LoopFusionPass is buggy
+    /*
+    pm.addNestedPass<FuncOp>(createConvertLinalgToAffineLoopsPass());
+    pm.addNestedPass<FuncOp>(createLoopCoalescingPass());
+    pm.addNestedPass<FuncOp>(createSimplifyAffineStructuresPass());
     pm.addNestedPass<FuncOp>(createAffineLoopFusionExPass());
     pm.addNestedPass<FuncOp>(createInsertTrivialAffineLoopPass(
         getByteIRElementwiseFusionAttrName()));
     pm.addPass(createCSEPass());
     pm.addNestedPass<FuncOp>(createCMAEPass());
+    */
 
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();

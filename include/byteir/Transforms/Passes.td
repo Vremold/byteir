@@ -12,10 +12,25 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
+// Anchored Func Pipeline
+//===----------------------------------------------------------------------===//
+
+def AnchoredFuncPipeline : Pass<"anchored-func-pipeline", "FuncOp"> {
+  let summary = "Apply a given pipeline when a func having anchorAttr";
+  let constructor = "mlir::createAnchoredFuncPipelinePass()";
+  let options = [
+    Option<"anchorAttr", "anchor-attr", "std::string",
+            /*default=*/"",
+            "An optional Unit attribute anchoring on target functions.">,
+  ];
+}
+
+
+//===----------------------------------------------------------------------===//
 // CMAE (Common Memory Access Elimination)
 //===----------------------------------------------------------------------===//
 
-def CMAE : Pass<"cmae", "mlir::FuncOp"> {
+def CMAE : Pass<"cmae", "FuncOp"> {
   let summary = "Eliminate common memory access within a block";
   let constructor = "mlir::createCMAEPass()";
   let options = [
@@ -24,6 +39,15 @@ def CMAE : Pass<"cmae", "mlir::FuncOp"> {
             "An optional attribute to skip this pass for specific function."
             "Use it for functions with non-restricted args.">
   ];
+}
+
+//===----------------------------------------------------------------------===//
+// Condition Canonicalization
+//===----------------------------------------------------------------------===//
+
+def CondCanonicalize : Pass<"cond-canonicalize", "FuncOp"> {
+  let summary = "canonicalization based on condition";
+  let constructor = "mlir::createCondCanonicalizePass()";
 }
 
 //===----------------------------------------------------------------------===//
@@ -45,9 +69,12 @@ def CollectFunc : Pass<"collect-func", "ModuleOp"> {
 //===----------------------------------------------------------------------===//
 
 def FuncTag : Pass<"func-tag", "ModuleOp"> {
-  let summary = "Attach Tag based on func name";
+  let summary = "Attach Tag based on func name or attr";
   let constructor = "mlir::createFuncTagPass()";
   let options = [
+    Option<"anchorAttr", "anchor-attr", "std::string",
+            /*default=*/"",
+            "An optional Unit attribute anchoring on target functions.">,
     Option<"attachAttr", "attach-attr", "std::string",
             /*default=*/"",
             "An optional attribute attaching on target functions: <attr_name>:<type>:<value>">,
@@ -71,6 +98,28 @@ def GraphClusteringByDevice : Pass<"graph-clustering-by-device", "ModuleOp"> {
            "The concrete device name for newly created device functions.">,
     Option<"dupNonSplat", "dup-non-splat", "bool", /*default=*/"false",
            "duplicate a non-splat const if it is used by both host and device side."> 
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// LoopTag
+//===----------------------------------------------------------------------===//
+
+def LoopTag : Pass<"loop-tag", "FuncOp"> {
+  let summary = "Attach Tag based on func name";
+  let constructor = "mlir::createLoopTagPass()";
+  let options = [
+    Option<"anchorAttr", "anchor-attr", "std::string",
+            /*default=*/"",
+            "An optional Unit attribute anchoring on target functions.">,
+    Option<"attachAttr", "attach-attr", "std::string",
+            /*default=*/"",
+            "An optional attribute attaching on target functions: <attr_name>:<type>:<value>">,
+    Option<"depth", "depth", "unsigned", /*default=*/"1",
+           "Use this depth factor to specify loop">,
+    Option<"loopType", "loop-type", "std::string",
+            /*default=*/"\"scf.for\"",
+            "An optional name to specify loop type.">
   ];
 }
 

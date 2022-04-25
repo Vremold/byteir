@@ -7,18 +7,10 @@
 
 #include "byteir/Transforms/CMAE.h"
 #include "PassDetail.h"
-#include "byteir/Utils/Utils.h"
-#include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/IR/Dominance.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/DenseSet.h"
-#include "llvm/ADT/EquivalenceClasses.h"
-#include "llvm/ADT/SmallVector.h"
+#include "byteir/Utils/IRRewrite.h"
 
 using namespace llvm;
 using namespace mlir;
-using namespace mlir::memref;
 
 // CMAE use a conservative algorithm bying dominator and post dominator,
 // without fine doing dependence analysis.
@@ -44,261 +36,19 @@ using namespace mlir::memref;
 //       (basically checking S1 is not L's nearest store dominator)
 
 namespace {
-struct NearestDomAndPostInfo {
-  Operation *nearestDominator = nullptr;
-  Operation *nearestPostDominator = nullptr;
-  Operation *nearestLoadPostDominator = nullptr;
-  Operation *nearestStoreDominator = nullptr;
-
-  NearestDomAndPostInfo()
-      : nearestDominator(nullptr), nearestPostDominator(nullptr),
-        nearestLoadPostDominator(nullptr), nearestStoreDominator(nullptr) {}
-};
-
-static bool isLoad(Operation *op) {
-  return isa<AffineLoadOp>(op) || isa<LoadOp>(op);
-}
-
-static bool isStore(Operation *op) {
-  return isa<AffineStoreOp>(op) || isa<StoreOp>(op);
-}
-template <typename T> bool isSameAccessImpl(Operation *x, Operation *y) {
-  if (auto tX = dyn_cast<T>(x)) {
-    if (auto tY = dyn_cast<T>(y)) {
-      return tX.memref() == tY.memref() && tX.indices() == tY.indices();
-    }
-  }
-  return false;
-}
-
-static bool isSameAccessPattern(Operation *x, Operation *y) {
-  if (isSameAccessImpl<AffineLoadOp>(x, y))
-    return true;
-  if (isSameAccessImpl<AffineStoreOp>(x, y))
-    return true;
-  if (isSameAccessImpl<LoadOp>(x, y))
-    return true;
-  if (isSameAccessImpl<StoreOp>(x, y))
-    return true;
-  return false;
-}
-
-static bool isSameOperation(Operation *x, Operation *y) {
-  return x->getName() == y->getName();
-}
-
-static Value getMemoryAccessBase(Operation *op) {
-  if (auto load = dyn_cast<AffineLoadOp>(op)) {
-    return load.memref();
-  }
-
-  if (auto load = dyn_cast<LoadOp>(op)) {
-    return load.memref();
-  }
-
-  if (auto store = dyn_cast<AffineStoreOp>(op)) {
-    return store.memref();
-  }
-
-  if (auto store = dyn_cast<StoreOp>(op)) {
-    return store.memref();
-  }
-
-  // not reachable
-  return Value();
-}
 
 struct CMAEPass : public CMAEBase<CMAEPass> {
   explicit CMAEPass(const std::string &skip) : CMAEBase() { skipAttr = skip; }
-  void runOnOperation() final;
+  void runOnOperation() final {
+    auto f = getOperation();
 
-  void eliminateMemoryAccess(
-      llvm::EquivalenceClasses<Operation *> &leader_to_replaced);
-
-  void collectEliminableAccess(
-      Value base, DominanceInfo &domInfo, PostDominanceInfo &postDomInfo,
-      llvm::EquivalenceClasses<Operation *> &leader_to_replaced);
-};
-
-void CMAEPass::eliminateMemoryAccess(
-    llvm::EquivalenceClasses<Operation *> &leader_to_replaced) {
-
-  SmallVector<Operation *, 8> opsToErase;
-  for (auto it = leader_to_replaced.begin(); it != leader_to_replaced.end();
-       ++it) {
-    auto op = it->getData();
-    auto leader = leader_to_replaced.getLeaderValue(op);
-
-    if (op != leader) {
-      // op need to be replaced by leader
-      if (isLoad(op)) {
-        op->getResult(0).replaceAllUsesWith(leader->getResult(0));
-      }
-
-      opsToErase.push_back(op);
-    }
-  }
-
-  for (auto op : opsToErase) {
-    op->erase();
-  }
-}
-
-void CMAEPass::collectEliminableAccess(
-    Value base, DominanceInfo &domInfo, PostDominanceInfo &postDomInfo,
-    llvm::EquivalenceClasses<Operation *> &leader_to_replaced) {
-
-  llvm::DenseMap<Operation *, NearestDomAndPostInfo> dpTable;
-  SmallVector<SmallVector<Operation *>> reserveDomOrPostTable;
-
-  // help function
-  auto checkNearestDominator = [&](Operation *user, Operation *another,
-                                   Operation *&nearestDominator) {
-    if (nearestDominator == nullptr ||
-        domInfo.properlyDominates(nearestDominator, another)) {
-      if (isSameOperation(user, another)) {
-        if (isSameAccessPattern(user, another)) {
-          nearestDominator = another;
-        }
-      } else {
-        nearestDominator = another;
-      }
-    }
-  };
-
-  auto checkNearestPostDominator = [&](Operation *user, Operation *another,
-                                       Operation *&nearestPostDominator) {
-    if (nearestPostDominator == nullptr ||
-        postDomInfo.properlyPostDominates(nearestPostDominator, another)) {
-      if (isSameOperation(user, another)) {
-        if (isSameAccessPattern(user, another)) {
-          nearestPostDominator = another;
-        }
-      } else {
-        nearestPostDominator = another;
-      }
-    }
-  };
-
-  // build dominator and postDominator Table;
-  for (auto user : base.getUsers()) {
-    if (isLoad(user) || isStore(user)) {
-      leader_to_replaced.insert(user);
-    }
-    // skip user without side-effect
-    if (MemoryEffectOpInterface::hasNoEffect(user))
-      continue;
-
-    NearestDomAndPostInfo dpInfo;
-    SmallVector<Operation *> reserveDomOrPost;
-    for (auto another : base.getUsers()) {
-      // skip user itself
-      // skip user without side-effect
-      if (user == another || MemoryEffectOpInterface::hasNoEffect(another)) {
-        continue;
-      }
-
-      // handle nearest dominator
-      if (domInfo.properlyDominates(another, user)) {
-        checkNearestDominator(user, another, dpInfo.nearestDominator);
-        if (isStore(another)) {
-          checkNearestDominator(user, another, dpInfo.nearestStoreDominator);
-        }
-      }
-
-      // handle nearest postDominator
-      if (postDomInfo.properlyPostDominates(another, user)) {
-        checkNearestPostDominator(user, another, dpInfo.nearestPostDominator);
-        if (isLoad(another)) {
-          checkNearestPostDominator(user, another,
-                                    dpInfo.nearestLoadPostDominator);
-        }
-      }
-
-      // handle reverse
-      if ((isLoad(user) && (isStore(another) || !isLoad(another)) &&
-           postDomInfo.properlyPostDominates(user, another)) ||
-          (isStore(user) && !isStore(another) &&
-           domInfo.properlyDominates(user, another))) {
-        reserveDomOrPost.push_back(another);
-      }
-    }
-
-    dpTable[user] = dpInfo;
-    reserveDomOrPostTable.push_back(reserveDomOrPost);
-  }
-
-  // check eliminable memory access
-  size_t i = 0;
-  for (auto user : base.getUsers()) {
-    Operation *replaceOp = nullptr;
-    bool noRAW = true;
-    if (isLoad(user)) {
-      if (dpTable[user].nearestDominator != nullptr &&
-          isLoad(dpTable[user].nearestDominator) &&
-          user->getBlock() == dpTable[user].nearestDominator->getBlock()) {
-        for (auto s : reserveDomOrPostTable[i]) {
-          if (dpTable[s].nearestLoadPostDominator == user) {
-            noRAW = false;
-            break;
-          }
-        }
-        if (noRAW) {
-          replaceOp = dpTable[user].nearestDominator;
-        }
-      }
-    } else if (isStore(user)) {
-      if (dpTable[user].nearestPostDominator != nullptr &&
-          isStore(dpTable[user].nearestPostDominator) &&
-          user->getBlock() == dpTable[user].nearestPostDominator->getBlock()) {
-        for (auto l : reserveDomOrPostTable[i]) {
-          if (dpTable[l].nearestStoreDominator == user) {
-            noRAW = false;
-            break;
-          }
-        }
-        if (noRAW) {
-          replaceOp = dpTable[user].nearestPostDominator;
-        }
-      }
-    }
-
-    // unionSet
-    if (replaceOp != nullptr) {
-      auto replaceLeader = leader_to_replaced.getLeaderValue(replaceOp);
-      leader_to_replaced.unionSets(replaceLeader, user);
-    }
-
-    ++i;
-  }
-}
-
-void CMAEPass::runOnOperation() {
-  auto f = getOperation();
-
-  // early terimination
-  if (f->hasAttr(skipAttr)) {
-    return;
-  }
-
-  auto &domInfo = getAnalysis<DominanceInfo>();
-  auto &postDomInfo = getAnalysis<PostDominanceInfo>();
-  llvm::EquivalenceClasses<Operation *> leader_to_replaced;
-
-  llvm::SmallDenseSet<Value> examed;
-  // collect memory access
-  f.walk([&](Operation *op) {
-    if (!isLoad(op) && !isStore(op))
+    if (f->hasAttr(skipAttr)) {
       return;
-    auto base = getMemoryAccessBase(op);
-    if (examed.contains(base))
-      return collectEliminableAccess(base, domInfo, postDomInfo,
-                                     leader_to_replaced);
-    examed.insert(base);
-  });
+    }
 
-  eliminateMemoryAccess(leader_to_replaced);
-}
+    runCMAEInFuncLike(f);
+  }
+};
 
 } // namespace
 

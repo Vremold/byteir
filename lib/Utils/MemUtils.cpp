@@ -157,3 +157,12 @@ Optional<int64_t> mlir::getSizeInBits(MemRefType t) {
   }
   return None;
 }
+
+MemRefType mlir::cloneMemRefTypeWithMemSpace(MemRefType t, Attribute space) {
+  return MemRefType::get(t.getShape(), t.getElementType(), t.getLayout(),
+                         space);
+}
+
+MemRefType mlir::cloneMemRefTypeAndRemoveMemSpace(MemRefType t) {
+  return MemRefType::get(t.getShape(), t.getElementType(), t.getLayout());
+}

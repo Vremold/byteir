@@ -8,6 +8,7 @@
 #include "byteir/Utils/Hoist.h"
 #include "mlir/IR/Block.h"
 #include "mlir/IR/Dominance.h"
+#include "mlir/IR/FunctionInterfaces.h"
 #include "mlir/IR/Operation.h"
 
 using namespace mlir;
@@ -120,6 +121,15 @@ void mlir::hoistUpOpsInBlock(Block *block, DominanceInfo &domInfo,
   }
 }
 
+void mlir::hoistUpOpsInFuncLike(FunctionOpInterface funclike,
+                                std::function<bool(Operation *)> checkFunc) {
+  auto domInfo = DominanceInfo(funclike);
+
+  for (auto &block : funclike.getBlocks()) {
+    hoistUpOpsInBlock(&block, domInfo, checkFunc);
+  }
+}
+
 // hoist down ops in a given Block
 void mlir::hoistDownOpsInBlock(Block *block, PostDominanceInfo &postDomInfo,
                                std::function<bool(Operation *)> checkFunc) {
@@ -143,5 +153,14 @@ void mlir::hoistDownOpsInBlock(Block *block, PostDominanceInfo &postDomInfo,
 
   for (auto &p : moveBeforeOps) {
     p.first->moveBefore(p.second);
+  }
+}
+
+void mlir::hoistDownOpsInFuncLike(FunctionOpInterface funclike,
+                                  std::function<bool(Operation *)> checkFunc) {
+  auto postDomInfo = PostDominanceInfo(funclike);
+
+  for (auto &block : funclike.getBlocks()) {
+    hoistDownOpsInBlock(&block, postDomInfo, checkFunc);
   }
 }

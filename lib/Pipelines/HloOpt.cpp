@@ -8,7 +8,7 @@
 #include "byteir/Pipelines/HloOpt.h"
 #include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/Passes.h"
-#include "byteir/Pipelines/Common.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 #include "mlir/Transforms/Passes.h"
 

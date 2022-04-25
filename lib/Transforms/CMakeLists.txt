@@ -1,8 +1,11 @@
 add_mlir_library(ByteIRTransforms
+  AnchoredFuncPipeline.cpp
   CMAE.cpp
+  CondCanonicalize.cpp
   CollectFunc.cpp
   FuncTag.cpp
   GraphClusteringByDevice.cpp
+  LoopTag.cpp
   LoopUnroll.cpp
   RewriteOpToStdCall.cpp
   SetArgShape.cpp

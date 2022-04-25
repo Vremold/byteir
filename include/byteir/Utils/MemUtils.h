@@ -44,6 +44,12 @@ llvm::Optional<int64_t> getSizeInBits(MemRefType t);
 // stride and offset are all static value.
 bool isStatic(MemRefType t);
 
+// Returns a new MemRefType with a new MemSpace 'attr'
+MemRefType cloneMemRefTypeWithMemSpace(MemRefType t, Attribute attr);
+
+// Reutrns a new MemRefType and remove MemSpace
+MemRefType cloneMemRefTypeAndRemoveMemSpace(MemRefType t);
+
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_MEMUTILS_H

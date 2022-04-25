@@ -21,7 +21,7 @@
 using namespace llvm;
 using namespace mlir;
 
-int64_t mlir::getLiteralFromConstantLike(Value v, int64_t defaultLit) {
+llvm::Optional<int64_t> mlir::getLiteralFromConstantLike(Value v) {
   if (auto cOp = dyn_cast_or_null<arith::ConstantIndexOp>(v.getDefiningOp())) {
     return cOp.value();
   }
@@ -36,6 +36,14 @@ int64_t mlir::getLiteralFromConstantLike(Value v, int64_t defaultLit) {
       }
     }
   }
+
+  return llvm::None;
+}
+
+int64_t mlir::getLiteralFromConstantLike(Value v, int64_t defaultLit) {
+  auto maybeI64 = getLiteralFromConstantLike(v);
+  if (maybeI64.hasValue())
+    return maybeI64.getValue();
   return defaultLit;
 }
 

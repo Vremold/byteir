@@ -35,7 +35,7 @@ struct ByreHostPipelinePass
         byre::ByreDialect::getEntryPointFunctionAttrName()));
 
     std::string stringAttr = "device_file_name:String:" + deviceFile;
-    pm.addPass(createFuncTagPass(stringAttr, entryFunc));
+    pm.addPass(createFuncTagPass(/*anchorTag=*/"", stringAttr, entryFunc));
 
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();

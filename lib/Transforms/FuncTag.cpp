@@ -1,5 +1,4 @@
-//===- FuncTag.cpp ---------------------------------------------*--- C++
-//-*-===//
+//===- FuncTag.cpp ------------------------------------------------- C++ --===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -8,6 +7,7 @@
 
 #include "byteir/Transforms/FuncTag.h"
 #include "./PassDetail.h"
+#include "byteir/Utils/AttrUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/MLIRContext.h"
 
@@ -16,9 +16,11 @@ using namespace mlir;
 namespace {
 
 struct FuncTagPass : public FuncTagBase<FuncTagPass> {
-  FuncTagPass(const std::string &tag, const std::string &name)
+  FuncTagPass(const std::string &anchor, const std::string &attach,
+              const std::string &name)
       : FuncTagBase<FuncTagPass>() {
-    this->attachAttr = tag;
+    this->anchorAttr = anchor;
+    this->attachAttr = attach;
     this->funcName = name;
   }
 
@@ -39,9 +41,14 @@ struct FuncTagPass : public FuncTagBase<FuncTagPass> {
   }
 
   void runOnOperation() override {
-    if (attachAttr.empty())
+    // early termination if
+    // 1) no attachAttr or
+    // 2) no specified funcName or anchorAttr
+    if (attachAttr.empty() || (funcName.empty() && anchorAttr.empty()))
       return;
-    parseAttachAttr(attachAttr);
+
+    parseConcatAttr(attachAttr, attrName, attrType, attrValue);
+
     if (attrName.empty())
       return;
 
@@ -49,7 +56,7 @@ struct FuncTagPass : public FuncTagBase<FuncTagPass> {
     auto ctx = m.getContext();
 
     for (auto funcOp : m.getOps<FuncOp>()) {
-      if (funcName.empty() || funcOp.getName() == funcName) {
+      if (funcOp.getName() == funcName || funcOp->hasAttr(anchorAttr)) {
 
         if (attrType == "Unit") {
           funcOp->setAttr(attrName, UnitAttr::get(ctx));
@@ -78,7 +85,8 @@ struct FuncTagPass : public FuncTagBase<FuncTagPass> {
 } // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createFuncTagPass(const std::string &attachTag,
+mlir::createFuncTagPass(llvm::StringRef anchorTag, llvm::StringRef attachTag,
                         const std::string &funcName) {
-  return std::make_unique<FuncTagPass>(attachTag, funcName);
+  return std::make_unique<FuncTagPass>(anchorTag.str(), attachTag.str(),
+                                       funcName);
 }

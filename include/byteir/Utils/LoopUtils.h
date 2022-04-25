@@ -14,8 +14,10 @@
 
 namespace mlir {
 class Block;
+class FuncOp;
 class LoopLikeOpInterface;
 class OpBuilder;
+class Operation;
 class Value;
 
 namespace scf {
@@ -42,6 +44,10 @@ Value createIndexValue(OpBuilder &b, LoopLikeOpInterface looplike, int64_t idx);
 Value createRelativeIndexValue(OpBuilder &b, LoopLikeOpInterface looplike,
                                int64_t idx);
 
+// check whether 'val' >= ub (of looplike).
+// return false if unknown statically
+bool confirmGEUpperBound(Value val, LoopLikeOpInterface looplike);
+
 // create if index < ub (of looplike)
 // and return the block of created if
 Block *createGuardedBranch(OpBuilder &b, Value index,
@@ -67,6 +73,13 @@ llvm::Optional<uint64_t> getConstantTripCount(LoopLikeOpInterface looplike,
 // Return None, if not applicable.
 llvm::Optional<uint64_t> getConstantTripCount(scf::ForOp forOp,
                                               int64_t stepMultiplier = 1);
+
+void gatherLoopsWithDepth(FuncOp func, unsigned depth,
+                          SmallVectorImpl<Operation *> &collector);
+
+// create a scf::ForOp(0, 1, 1) if possible
+// if FuncOp is trivally empty return None.
+llvm::Optional<scf::ForOp> createTrivialSCFForIfHaveNone(FuncOp);
 
 LogicalResult loopUnrollFull(scf::ForOp forOp);
 

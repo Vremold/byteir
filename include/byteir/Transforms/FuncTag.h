@@ -15,7 +15,7 @@
 namespace mlir {
 
 std::unique_ptr<OperationPass<ModuleOp>>
-createFuncTagPass(const std::string &attachTag = "",
+createFuncTagPass(llvm::StringRef anchorTag = "", llvm::StringRef = "",
                   const std::string &funcName = "");
 
 } // namespace mlir
