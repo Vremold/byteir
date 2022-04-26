@@ -131,7 +131,7 @@ struct RemoveTrivialTorchIndexSelect
 // Return the expanded constOp if applicable, return None if not. Applicable if
 // all following constraint satisfied:
 // 1. the op's input has static shape
-// 2. op's input rank is equal to output rank
+// 2. op's input rank equals 1, or it is equal to output rank
 // 3. there's at most one dim in input shape whose size is not equal to 1, and
 //     it should be euqal to featureDim
 // 4. the input's DefiningOp is of type mhlo::ConstOp
@@ -147,26 +147,32 @@ Optional<ConstOp> getBroadcastedConstOp(BroadcastInDimOp op,
   if (!broadInDimInpShape.hasStaticShape())
     return None;
 
-  // The input shape has the same rank as the output shape
-  if (broadInDimInpShape.getRank() != broadInDimOupShape.getRank())
-    return None;
-
-  int64_t nonOneDim = -1;
-  for (int64_t i = 0; i < broadInDimInpShape.getRank(); ++i) {
-    int64_t dimSize = broadInDimInpShape.getDimSize(i);
-    if (dimSize != 1) {
-      if (nonOneDim >= 0)
-        return None;
-      else {
-        nonOneDim = i;
+  // op's input rank equals 1, or it is equal to output rank
+  if (broadInDimInpShape.getRank() == 1) {
+    SmallVector<int64_t> broadcastDims;
+    int64_t bdim = (*op.broadcast_dimensions().begin()).getSExtValue();
+    if (featureDim != bdim)
+      return None;
+  } else if (broadInDimInpShape.getRank() == broadInDimOupShape.getRank()) {
+    int64_t nonOneDim = -1;
+    for (int64_t i = 0; i < broadInDimInpShape.getRank(); ++i) {
+      int64_t dimSize = broadInDimInpShape.getDimSize(i);
+      if (dimSize != 1) {
+        if (nonOneDim >= 0)
+          return None;
+        else {
+          nonOneDim = i;
+        }
       }
     }
-  }
 
-  // There's at most one dim whose size is not equal to 1, and it should be
-  // euqal to featureDim.
-  if (nonOneDim != -1 && nonOneDim != featureDim)
+    // There's at most one dim whose size is not equal to 1, and it should be
+    // euqal to featureDim.
+    if (nonOneDim != -1 && nonOneDim != featureDim)
+      return None;
+  } else {
     return None;
+  }
 
   auto constOp = dyn_cast_or_null<ConstOp>(broadInDimInput.getDefiningOp());
   if (!constOp)
@@ -232,7 +238,6 @@ struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
 
     unsigned convOrBiasOperandNumber =
         convOrBiasOut.use_begin()->getOperandNumber();
-    assert(convOrBiasOperandNumber < 2);
 
     if (auto scaleOp = dyn_cast_or_null<MulOp>(convOrBiasUser)) {
       auto broadInDimOp = dyn_cast_or_null<mhlo::BroadcastInDimOp>(

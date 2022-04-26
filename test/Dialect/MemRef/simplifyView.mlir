@@ -6,6 +6,8 @@
 #map3 = affine_map<(d0, d1) -> (d0 * 64 + d1)>
 #map4 = affine_map<(d0, d1) -> (d0 * 192 + d1)>
 #map5 = affine_map<(d0, d1) -> (d0 * 384 + d1)>
+#map6 = affine_map<(d0, d1) -> (d0 * 256 + d1 + 128)>
+#map7 = affine_map<(d0, d1) -> (d0 * 256 + d1)>
 
 // CHECK-LABEL: func @subview_no_canonical
 func @subview_no_canonical(%arg0: memref<128x64xf32>) {
@@ -118,4 +120,13 @@ func @many_contiguous(%arg0: memref<8192xi8>) {
   %5 = arith.addf %4, %4 : f32
   memref.store %5, %3[%c0, %c1] : memref<2x64xf32, #map2>
   return
+}
+
+// CHECK-LABEL: func @subview_non_one_strides
+func @subview_non_one_strides(%arg0: memref<14x256xf16>) -> memref<14x64xf16, #map6> {
+  // CHECK: memref.subview %arg0[0, 0] [14, 256] [256, 1]
+  %0 = memref.subview %arg0[0, 0] [14, 256] [256, 1] : memref<14x256xf16> to memref<14x256xf16, #map7>
+  // CHECK: memref.subview %0[0, 128] [14, 64] [256, 1]
+  %1 = memref.subview %0[0, 128] [14, 64] [256, 1] : memref<14x256xf16, #map7> to memref<14x64xf16, #map6>
+  return %1 : memref<14x64xf16, #map6>
 }
