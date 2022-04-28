@@ -19,9 +19,6 @@ void populateIOConvertBatchNormPattern(RewritePatternSet &patterns);
 
 std::unique_ptr<OperationPass<FuncOp>> createIOConvertFusionPass();
 
-std::unique_ptr<OperationPass<FuncOp>>
-createIOConvertFusionPass(std::string opName, std::string byreComputeName);
-
 } // namespace mlir
 
 #endif // BYTEIR_DIALECT_MHLO_TRANSFORMS_BATCHNORMTRAININGFUSION_H

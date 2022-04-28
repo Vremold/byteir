@@ -82,7 +82,7 @@ struct RewriteOpToStdCallPass
     }
 
     if (this->_callTable.size() == 0) {
-      signalPassFailure();
+      return signalPassFailure();
     }
 
     ModuleOp module = getOperation();

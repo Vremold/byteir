@@ -13,6 +13,7 @@
 #include "mlir/IR/Operation.h"
 
 using namespace llvm;
+using namespace mlir;
 
 bool mlir::IsSplatMhloConstant(Operation *op) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
@@ -89,60 +90,179 @@ bool mlir::IsBlockSingleAdd(Block *block) {
   return false;
 }
 
-template <typename T>
-void mlir::HandleConvAttribute(NamedAttrList &attrs, T conv_op,
-                               OpBuilder &rewriter) {
-  auto dimension_numbers = conv_op.dimension_numbersAttr();
+#define UNKNOWN_STR "UNKNOWN_LAYOUT"
 
-  StringAttr input_layout;
+std::string mlir::GetPoolLayout(mlir::mhlo::ReduceWindowOp op) {
+  auto base_dilations = op.base_dilationsAttr();
+  if (base_dilations && !isSplatValue(base_dilations, 1)) {
+    assert(false && "expected base_dilations to be dense<1>");
+  }
+  auto window_dilations = op.window_dilationsAttr();
+  if (window_dilations && !isSplatValue(window_dilations, 1)) {
+    assert(false && "expected window_dilations to be dense<1>");
+  }
+
+  auto kernel = op.window_dimensions().getValues<int64_t>();
+  SmallVector<int64_t> strides;
+  if (auto strides_ = op.window_stridesAttr()) {
+    strides = SmallVector<int64_t>(strides_.getValues<int64_t>().begin(),
+                                   strides_.getValues<int64_t>().end());
+  }
+  SmallVector<int64_t> padding;
+  if (auto padding_ = op.paddingAttr()) {
+    padding = SmallVector<int64_t>(padding_.getValues<int64_t>().begin(),
+                                   padding_.getValues<int64_t>().end());
+  }
+
+  int64_t rank = kernel.size();
+  if (rank != 4 && rank != 5) {
+    assert(false && "expected dimension number to be 4 or 5");
+  }
+
+  std::string layout = UNKNOWN_STR;
+  if (kernel[0] == 1 && kernel[rank - 1] == 1) {
+    if (rank == 4) {
+      layout = "NHWC";
+    }
+    if (rank == 5) {
+      layout = "NDHWC";
+    }
+    if (strides.size() != 0 && (strides[0] != 1 || strides[rank - 1] != 1)) {
+      layout = UNKNOWN_STR;
+    }
+    if (layout != UNKNOWN_STR && padding.size() != 0 &&
+        (padding[0] != 0 || padding[1] != 0 || padding[rank * 2 - 2] != 0 ||
+         padding[rank * 2 - 1] != 0)) {
+      layout = UNKNOWN_STR;
+    }
+  }
+  if (layout == UNKNOWN_STR && kernel[0] == 1 && kernel[1] == 1) {
+    if (rank == 4) {
+      layout = "NCHW";
+    }
+    if (rank == 5) {
+      layout = "NCDHW";
+    }
+    if (strides.size() != 0 && (strides[0] != 1 || strides[1] != 1)) {
+      layout = UNKNOWN_STR;
+    }
+    if (layout != UNKNOWN_STR && padding.size() != 0 &&
+        (padding[0] != 0 || padding[1] != 0 || padding[2] != 0 ||
+         padding[3] != 0)) {
+      layout = UNKNOWN_STR;
+    }
+  }
+  return layout;
+}
+
+std::tuple<std::string, std::string, std::string>
+mlir::GetConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
+  std::string input_layout;
   auto input_batch_dimension = dimension_numbers.getInputBatchDimension();
   auto input_feature_dimension = dimension_numbers.getInputFeatureDimension();
-  assert(dimension_numbers.getInputSpatialDimensions().size() == 2);
-  if (input_batch_dimension == 0 && input_feature_dimension == 1) {
-    input_layout = rewriter.getStringAttr("NCHW");
-  } else if (input_batch_dimension == 0 && input_feature_dimension == 3) {
-    input_layout = rewriter.getStringAttr("NHWC");
+  auto input_spatial_dimensions = dimension_numbers.getInputSpatialDimensions();
+  if (input_spatial_dimensions.size() == 2) {
+    if (input_batch_dimension == 0 && input_feature_dimension == 1) {
+      input_layout = "NCHW";
+    } else if (input_batch_dimension == 0 && input_feature_dimension == 3) {
+      input_layout = "NHWC";
+    } else {
+      input_layout = UNKNOWN_STR;
+    }
+  } else if (input_spatial_dimensions.size() == 3) {
+    if (input_batch_dimension == 0 && input_feature_dimension == 1) {
+      input_layout = "NCDHW";
+    } else if (input_batch_dimension == 0 && input_feature_dimension == 4) {
+      input_layout = "NDHWC";
+    } else {
+      input_layout = UNKNOWN_STR;
+    }
   } else {
-    assert(false && "Unsupported convolution input layout.");
+    input_layout = UNKNOWN_STR;
   }
 
-  StringAttr output_layout;
+  std::string output_layout;
   auto output_batch_dimension = dimension_numbers.getOutputBatchDimension();
   auto output_feature_dimension = dimension_numbers.getOutputFeatureDimension();
-  assert(dimension_numbers.getOutputSpatialDimensions().size() == 2);
-  if (output_batch_dimension == 0 && output_feature_dimension == 1) {
-    output_layout = rewriter.getStringAttr("NCHW");
-  } else if (output_batch_dimension == 0 && output_feature_dimension == 3) {
-    output_layout = rewriter.getStringAttr("NHWC");
+  auto output_spatial_dimensions =
+      dimension_numbers.getOutputSpatialDimensions();
+  if (output_spatial_dimensions.size() == 2) {
+    if (output_batch_dimension == 0 && output_feature_dimension == 1) {
+      output_layout = "NCHW";
+    } else if (output_batch_dimension == 0 && output_feature_dimension == 3) {
+      output_layout = "NHWC";
+    } else {
+      output_layout = UNKNOWN_STR;
+    }
+  } else if (output_spatial_dimensions.size() == 3) {
+    if (output_batch_dimension == 0 && output_feature_dimension == 1) {
+      output_layout = "NCDHW";
+    } else if (output_batch_dimension == 0 && output_feature_dimension == 4) {
+      output_layout = "NDHWC";
+    } else {
+      output_layout = UNKNOWN_STR;
+    }
   } else {
-    assert(false && "Unsupported convolution output layout.");
+    output_layout = UNKNOWN_STR;
   }
 
-  assert(input_layout.getValue() == output_layout.getValue() &&
-         "Input layout should be same as output layout.");
-
-  StringAttr kernel_layout;
+  std::string kernel_layout;
   auto kernel_input_feature_dimension =
       dimension_numbers.getKernelInputFeatureDimension();
   auto kernel_output_feature_dimension =
       dimension_numbers.getKernelOutputFeatureDimension();
-  assert(dimension_numbers.getKernelSpatialDimensions().size() == 2);
-  if (kernel_input_feature_dimension == 1 &&
-      kernel_output_feature_dimension == 0) {
-    kernel_layout = rewriter.getStringAttr("NCHW");
-  } else if (kernel_input_feature_dimension == 3 &&
-             kernel_output_feature_dimension == 0) {
-    kernel_layout = rewriter.getStringAttr("NHWC");
-  } else if (kernel_input_feature_dimension == 2 &&
-             kernel_output_feature_dimension == 3) {
-    kernel_layout = rewriter.getStringAttr("HWCN");
+  auto kernel_spatial_dimensions =
+      dimension_numbers.getKernelSpatialDimensions();
+  if (kernel_spatial_dimensions.size() == 2) {
+    if (kernel_input_feature_dimension == 1 &&
+        kernel_output_feature_dimension == 0) {
+      kernel_layout = "NCHW";
+    } else if (kernel_input_feature_dimension == 3 &&
+               kernel_output_feature_dimension == 0) {
+      kernel_layout = "NHWC";
+    } else if (kernel_input_feature_dimension == 2 &&
+               kernel_output_feature_dimension == 3) {
+      kernel_layout = "HWCN";
+    } else {
+      kernel_layout = UNKNOWN_STR;
+    }
+  } else if (kernel_spatial_dimensions.size() == 3) {
+    if (kernel_input_feature_dimension == 1 &&
+        kernel_output_feature_dimension == 0) {
+      kernel_layout = "NCDHW";
+    } else if (kernel_input_feature_dimension == 4 &&
+               kernel_output_feature_dimension == 0) {
+      kernel_layout = "NDHWC";
+    } else if (kernel_input_feature_dimension == 3 &&
+               kernel_output_feature_dimension == 4) {
+      kernel_layout = "DHWCN";
+    } else {
+      kernel_layout = UNKNOWN_STR;
+    }
   } else {
-    assert(false && "Unsupported convolution kernel layout.");
+    kernel_layout = UNKNOWN_STR;
   }
 
-  attrs.append("input_layout", input_layout);
-  attrs.append("output_layout", output_layout);
-  attrs.append("kernel_layout", kernel_layout);
+  return std::make_tuple(input_layout, kernel_layout, output_layout);
+}
+
+template <typename T>
+void mlir::HandleConvAttribute(NamedAttrList &attrs, T conv_op,
+                               OpBuilder &rewriter) {
+  auto dimension_numbers = conv_op.dimension_numbersAttr();
+  auto conv_layout = mlir::GetConvLayout(dimension_numbers);
+
+  auto input_layout = std::get<0>(conv_layout);
+  auto kernel_layout = std::get<1>(conv_layout);
+  auto output_layout = std::get<2>(conv_layout);
+  assert(input_layout != UNKNOWN_STR && kernel_layout != UNKNOWN_STR &&
+         output_layout != UNKNOWN_STR);
+  assert(input_layout == kernel_layout && input_layout == output_layout);
+
+  attrs.append("input_layout", rewriter.getStringAttr(input_layout));
+  attrs.append("output_layout", rewriter.getStringAttr(output_layout));
+  attrs.append("kernel_layout", rewriter.getStringAttr(kernel_layout));
+
   if (conv_op.window_strides()) {
     attrs.append("window_strides", conv_op.window_stridesAttr());
   }
@@ -167,3 +287,5 @@ template void mlir::HandleConvAttribute<mlir::mhlo::ConvOp>(NamedAttrList &,
                                                             OpBuilder &);
 template void mlir::HandleConvAttribute<mlir::lmhlo::ConvOp>(
     NamedAttrList &, mlir::lmhlo::ConvOp, OpBuilder &);
+
+#undef UNKNOWN_STR

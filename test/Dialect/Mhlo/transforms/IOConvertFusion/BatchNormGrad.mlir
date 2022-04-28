@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -fuse-io-convert="op-name=mhlo.batch_norm_grad byre-compute-name=BatchNormGradOp" | FileCheck %s
+// RUN: byteir-opt %s -fuse-io-convert | FileCheck %s
 
 func @batch_norm_grad_fp16(%arg0: tensor<32x256x14x14xf16>, %arg1: tensor<32x256x14x14xf16>, %arg2: tensor<256xf32>, %arg3: tensor<256xf32>, %7: tensor<256xf32>) -> (tensor<32x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) {
     %0 = "mhlo.convert"(%arg1) : (tensor<32x256x14x14xf16>) -> tensor<32x256x14x14xf32>

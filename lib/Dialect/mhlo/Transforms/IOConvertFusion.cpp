@@ -25,18 +25,15 @@ using namespace llvm;
 namespace {
 
 // Note IOConvert will keep input/output sequence order as orginal op
-struct IOConvertFusionPattern : public RewritePattern {
-  IOConvertFusionPattern(MLIRContext *context, StringRef _opName,
-                         StringRef _byreComputeName)
-      : RewritePattern(MatchAnyOpTypeTag(), 3, context), opName(_opName),
-        byreComputeName(_byreComputeName) {}
+template <typename OpTy>
+struct IOConvertFusionPattern : public OpRewritePattern<OpTy> {
+  IOConvertFusionPattern(MLIRContext *context, StringRef _byreComputeName)
+      : OpRewritePattern<OpTy>(context), byreComputeName(_byreComputeName) {}
 
-  LogicalResult matchAndRewrite(Operation *op,
+  LogicalResult matchAndRewrite(OpTy op,
                                 PatternRewriter &rewriter) const override {
-
     // early termination
-    if (op->getName().getStringRef() != opName ||
-        op->getParentOfType<mhlo::FusionOp>()) {
+    if (op->template getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
 
@@ -100,64 +97,39 @@ struct IOConvertFusionPattern : public RewritePattern {
 
     mhlo::FusionOp fusionOp =
         createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
-    fusionOp->setAttrs(attrs.getDictionary(getContext()));
+    fusionOp->setAttrs(attrs.getDictionary(this->getContext()));
 
     return success();
   }
 
-  StringRef opName;
   StringRef byreComputeName;
 };
 
 struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
-  IOConvertFusionPass() = default;
-  IOConvertFusionPass(std::string _opName, std::string _byreComputeName)
-      : _opName(_opName), _byreComputeName(_byreComputeName) {
-    this->opName = "";
-    this->byreComputeName = "";
-  }
+  IOConvertFusionPass() : IOConvertFusionBase() {}
 
   void runOnOperation() override {
-    if (this->opName != "") {
-      this->_opName = this->opName;
-      this->_byreComputeName = this->byreComputeName;
-    }
-
-    if (_opName == "" || _byreComputeName == "") {
-      signalPassFailure();
-    }
-
     FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
-    RewritePatternSet patterns(context);
-    patterns.add<IOConvertFusionPattern>(context, _opName, _byreComputeName);
 
+    RewritePatternSet patterns(context);
+    populateIOConvertBatchNormPattern(patterns);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
       funcOp.emitError("IOConvertFusionPass applyPatternsAndFoldGreedily "
                        "does not converge");
       signalPassFailure();
     }
   }
-
-  std::string _opName;
-  std::string _byreComputeName;
 };
 } // namespace
 
-void populateIOConvertBatchNormPattern(RewritePatternSet &patterns) {
-  patterns.add(std::make_unique<IOConvertFusionPattern>(
-      patterns.getContext(), "mhlo.batch_norm_training",
-      "BatchNormTrainingOp"));
-  patterns.add(std::make_unique<IOConvertFusionPattern>(
-      patterns.getContext(), "mhlo.batch_norm_grad", "BatchNormGradOp"));
+void mlir::populateIOConvertBatchNormPattern(RewritePatternSet &patterns) {
+  patterns.add<IOConvertFusionPattern<mhlo::BatchNormTrainingOp>>(
+      patterns.getContext(), "BatchNormTrainingOp");
+  patterns.add<IOConvertFusionPattern<mhlo::BatchNormGradOp>>(
+      patterns.getContext(), "BatchNormGradOp");
 }
 
 std::unique_ptr<OperationPass<FuncOp>> mlir::createIOConvertFusionPass() {
   return std::make_unique<IOConvertFusionPass>();
-}
-
-std::unique_ptr<OperationPass<FuncOp>>
-mlir::createIOConvertFusionPass(std::string opName,
-                                std::string byreComputeName) {
-  return std::make_unique<IOConvertFusionPass>(opName, byreComputeName);
 }

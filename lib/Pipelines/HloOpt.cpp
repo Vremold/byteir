@@ -68,10 +68,7 @@ void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
 
   // Fusion passes
   pm.addNestedPass<FuncOp>(createConvBackwardFusionPass());
-  pm.addNestedPass<FuncOp>(createIOConvertFusionPass("mhlo.batch_norm_training",
-                                                     "BatchNormTrainingOp"));
-  pm.addNestedPass<FuncOp>(
-      createIOConvertFusionPass("mhlo.batch_norm_grad", "BatchNormGradOp"));
+  pm.addNestedPass<FuncOp>(createIOConvertFusionPass());
   pm.addNestedPass<FuncOp>(createDotTransposeFusionPass());
 
   // expand tuple

@@ -18,6 +18,7 @@
 #include "byteir/Dialect/mhlo/Transforms/HloMove.h"
 #include "byteir/Dialect/mhlo/Transforms/HloTransposeDotToDotGeneral.h"
 #include "byteir/Dialect/mhlo/Transforms/IOConvertFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/LayoutTransformation.h"
 #include "byteir/Dialect/mhlo/Transforms/ReduceFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/RewriteWithConstraint.h"
 #include "byteir/Dialect/mhlo/Transforms/TrivialFusion.h"

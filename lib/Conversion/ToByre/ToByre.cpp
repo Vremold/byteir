@@ -1140,7 +1140,7 @@ void ConvertToByrePass::runOnOperation() {
   populateStdToByreConversionPatterns(patterns, appendArgTypes);
 
   if (failed(applyPartialConversion(m, target, std::move(patterns)))) {
-    signalPassFailure();
+    return signalPassFailure();
   }
 
   for (auto func : removeFuncCollector) {

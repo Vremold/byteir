@@ -1,4 +1,4 @@
-add_mlir_dialect_library(ByteIRMhlo
+add_mlir_dialect_library(ByteIRMhloUtils
   Util/Util.cpp
   
   ADDITIONAL_HEADER_DIRS
@@ -50,6 +50,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/HloMoveUp.cpp
   Transforms/HloTransposeDotToDotGeneral.cpp
   Transforms/IOConvertFusion.cpp
+  Transforms/LayoutTransformation.cpp
   Transforms/ReduceFusion.cpp
   Transforms/RewriteWithConstraint.cpp
   Transforms/TrivialFusion.cpp
@@ -61,7 +62,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   ByteIRMhloPassIncGen
   ByteIRAnalysis
   MhloDialect
-  ByteIRMhlo
+  ByteIRMhloUtils
   ByteIRUtils
   ByteIRMhloAnalysis
 
@@ -71,7 +72,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   MLIRSideEffectInterfaces
   MLIRSupport
   ByteIRAnalysis
-  ByteIRMhlo
+  ByteIRMhloUtils
   ByteIRUtils
   ByteIRMhloAnalysis
   )

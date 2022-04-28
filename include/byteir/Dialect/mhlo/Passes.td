@@ -104,18 +104,6 @@ def HloTransposeDotToDotGeneral : Pass<"hlo-transpose-dot-to-dot-general", "mlir
 def IOConvertFusion : Pass<"fuse-io-convert", "mlir::FuncOp"> {
   let summary = "Fuse op with Input/Output convert";
   let constructor = "mlir::createIOConvertFusionPass()";
-  let options = [
-    Option<"opName", "op-name", "std::string", /*default=*/"",
-           "Fuse op with Input/Output convert into mhlo.fusion">,
-    // ListOption<"inputArgIdx", "input-arg-idx", "int",
-    //            "input args with convert: input-arg-index=0,1,...",
-    //            "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
-    // ListOption<"outputArgIdx", "output-arg-idx", "int",
-    //            "output args with convert: output-arg-index=0,1,...",
-    //            "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
-    Option<"byreComputeName", "byre-compute-name", "std::string", /*default=*/"",
-            "Set mhlo.fusion with byre-compute-name">,
-  ];
 }
 
 //===----------------------------------------------------------------------===//
@@ -146,6 +134,19 @@ def HloMoveUp : Pass<"hlo-move-up", "mlir::FuncOp"> {
     Option<"multiInput", "multi-input", 
            "bool", /*default=*/"false",
            "whether to support multiple inputs">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// LayoutTransformation
+//===----------------------------------------------------------------------===//
+
+def LayoutTransformation : Pass<"transform-layout", "mlir::FuncOp"> {
+  let summary = "Layout Transformation: Conv2d, BatchNormTraining";
+  let constructor = "mlir::createLayoutTransformationPass()";
+  let options = [
+    Option<"targetLayout", "target-layout", "std::string", /*default=*/"",
+           "Target Layout">,
   ];
 }
 

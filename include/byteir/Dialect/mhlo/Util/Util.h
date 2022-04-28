@@ -12,6 +12,8 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include <stdint.h>
+#include <string>
+#include <tuple>
 
 namespace mlir {
 class Attribute;
@@ -40,6 +42,14 @@ bool IsSplatMhloConstantValue(Value val, int64_t splat_val);
 bool IsSplatMhloConstantValue(Value val, double splat_val);
 
 bool IsBlockSingleAdd(Block *block);
+
+// Return layout like "NCHW"/"NHWC"/"NDHWC"/"NCDHW" if success,
+// Return "UNKNOWN" if failed.
+std::string GetPoolLayout(mhlo::ReduceWindowOp op);
+
+// Return {input_layout, kernel_layout, output_layout} like PoolLayout
+std::tuple<std::string, std::string, std::string>
+GetConvLayout(mhlo::ConvDimensionNumbersAttr dimension_numbers);
 
 template <typename T>
 void HandleConvAttribute(NamedAttrList &attrs, T conv_op, OpBuilder &rewriter);
