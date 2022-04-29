@@ -35,8 +35,12 @@ def ReifyAlloc : Pass<"reify-alloc", "mlir::FuncOp"> {
 //===----------------------------------------------------------------------===//
 
 def SimplifyView : Pass<"simplify-view", "mlir::FuncOp"> {
-  let summary = "Simplify subview and view";
+  let summary = "Simplify subview and view. Note it might create new affine.apply op if the "
+                "offset of subview is dynamic.";
   let constructor = "mlir::createSimplifyViewPass()";
+  let dependentDialects = [
+    "AffineDialect"
+  ];
 }
 
 

@@ -6,8 +6,10 @@
 #map3 = affine_map<(d0, d1) -> (d0 * 64 + d1)>
 #map4 = affine_map<(d0, d1) -> (d0 * 192 + d1)>
 #map5 = affine_map<(d0, d1) -> (d0 * 384 + d1)>
-#map6 = affine_map<(d0, d1) -> (d0 * 256 + d1 + 128)>
-#map7 = affine_map<(d0, d1) -> (d0 * 256 + d1)>
+#map6 = affine_map<(d0, d1) -> (d0 * 1024 + d1 * 2 + 2304)>
+#map7 = affine_map<(d0, d1) -> (d0 * 2048 + d1 * 2 + 3584)>
+#map8 = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1 * 2)>
+#map9 = affine_map<(d0, d1)[s0] -> (d0 * 2048 + s0 + d1 * 2)>
 
 // CHECK-LABEL: func @subview_no_canonical
 func @subview_no_canonical(%arg0: memref<128x64xf32>) {
@@ -122,11 +124,19 @@ func @many_contiguous(%arg0: memref<8192xi8>) {
   return
 }
 
-// CHECK-LABEL: func @subview_non_one_strides
-func @subview_non_one_strides(%arg0: memref<14x256xf16>) -> memref<14x64xf16, #map6> {
-  // CHECK: memref.subview %arg0[0, 0] [14, 256] [256, 1]
-  %0 = memref.subview %arg0[0, 0] [14, 256] [256, 1] : memref<14x256xf16> to memref<14x256xf16, #map7>
-  // CHECK: memref.subview %0[0, 128] [14, 64] [256, 1]
-  %1 = memref.subview %0[0, 128] [14, 64] [256, 1] : memref<14x256xf16, #map7> to memref<14x64xf16, #map6>
-  return %1 : memref<14x64xf16, #map6>
+// CHECK-LABEL: func @subview_of_subview_non_one_stride
+func @subview_of_subview_non_one_stride(%input: memref<4x1024xf32>) -> memref<1x128xf32, #map7> {
+  %0 = memref.subview %input[2, 256] [2, 256] [1, 2] : memref<4x1024xf32> to memref<2x256xf32, #map6>
+  %1 = memref.subview %0[1, 128] [1, 128] [2, 1] : memref<2x256xf32, #map6> to memref<1x128xf32, #map7>
+// CHECK:  memref.subview %arg0[3, 512] [1, 128] [2, 2]
+  return %1 : memref<1x128xf32, #map7>
+}
+
+// CHECK-LABEL: func @subview_of_subview_non_one_stride_dynamic_offset
+func @subview_of_subview_non_one_stride_dynamic_offset(%input: memref<4x1024xf32>, %offset_0 : index, %offset_1 : index) -> memref<1x128xf32, #map9> {
+  %0 = memref.subview %input[%offset_0, 256] [2, 256] [1, 2] : memref<4x1024xf32> to memref<2x256xf32, #map8>
+  %1 = memref.subview %0[%offset_1, 128] [1, 128] [2, 1] : memref<2x256xf32, #map8> to memref<1x128xf32, #map9>
+// CHECK: %0 = affine.apply
+// CHECK: memref.subview %arg0[%0, 512] [1, 128] [2, 2]
+  return %1 : memref<1x128xf32, #map9>
 }

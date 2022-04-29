@@ -13,6 +13,8 @@
 // forward dialects for conversions
 namespace mlir {
 
+class AffineDialect;
+
 #define GEN_PASS_CLASSES
 #include "byteir/Dialect/MemRef/Passes.h.inc"
 
