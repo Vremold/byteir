@@ -105,6 +105,7 @@ public:
   using UsePosition = std::pair<size_t, Operation *>;
   using UsePositionList = std::vector<UsePosition>;
 
+  UserangeAnalysis(Liveness *liveness) : liveness(liveness) {}
   UserangeAnalysis(Operation *op, Liveness *liveness,
                    const bufferization::BufferPlacementAllocs &allocs,
                    const BufferViewFlowAnalysis &aliases);
@@ -158,7 +159,7 @@ public:
   /// Dumps the liveness information to the given stream.
   void dump(raw_ostream &os);
 
-private:
+protected:
   using ValueSetT = BufferViewFlowAnalysis::ValueSetT;
   using OperationListT = Liveness::OperationListT;
 
