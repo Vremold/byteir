@@ -826,14 +826,8 @@ public:
     auto compute_op =
         rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
 
-    compute_op->setAttr("window_dimensions", op.window_dimensions());
-
-    if (op.window_strides().hasValue()) {
-      compute_op->setAttr("window_strides", op.window_strides().getValue());
-    }
-
-    if (op.padding().hasValue()) {
-      compute_op->setAttr("padding", op.padding().getValue());
+    for (auto attr : op->getAttrs()) {
+      compute_op->setAttr(attr.getName(), attr.getValue());
     }
 
     return success();
