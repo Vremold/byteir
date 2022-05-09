@@ -110,6 +110,8 @@ llvm::Optional<int64_t> mlir::getByteShiftFromAllocOrArgument(Value val) {
     }
   } else if (auto subViewOp = dyn_cast<memref::SubViewOp>(op)) {
     return getByteShiftFromAllocOrArgument(subViewOp.source());
+  } else if (auto viewLike = dyn_cast<ViewLikeOpInterface>(op)) {
+    return getByteShiftFromAllocOrArgument(viewLike.getViewSource());
   }
   return None;
 }
