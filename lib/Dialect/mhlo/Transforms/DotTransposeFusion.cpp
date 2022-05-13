@@ -7,7 +7,7 @@
 
 #include "byteir/Dialect/mhlo/Transforms/DotTransposeFusion.h"
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"

@@ -8,7 +8,7 @@
 #include "byteir/Dialect/mhlo/Transforms/TrivialFusion.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"

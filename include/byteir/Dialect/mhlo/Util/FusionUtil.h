@@ -14,6 +14,7 @@
 #include "mlir/IR/Operation.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/EquivalenceClasses.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -62,21 +63,31 @@ public:
   ProducerFusionPlanner(
       mlir::FuncOp funcOp, std::function<bool(Operation *)> fuse_candidate,
       std::function<bool(Operation *)> fuse_start,
+      std::function<bool(Operation *)> fuse_trigger,
       std::function<bool(Operation *, Operation *)> fuse_with);
 
-  void Run();
+  void run();
 
-  const MhloFusionPlan &GetFusionPlan() { return fusion_plan_; }
+  const MhloFusionPlan &getFusionPlan() { return fusion_plan_; }
 
 private:
   // OpDependenceInfo analysis
   std::unique_ptr<OpDependenceInfo> dependence_;
 
   // Fusible criteria functions
+
+  // Return true, if op is fusible
   std::function<bool(Operation *)> fuse_candidate_;
 
+  // Return true, if op can be a starting op of a fusion
   std::function<bool(Operation *)> fuse_start_;
 
+  // Return true, if op will actively trigger a fusion action
+  // Note if false, the op won't actively trigger a fusion action with others,
+  // but the op might still be fused by others' trigger
+  std::function<bool(Operation *)> fuse_trigger_;
+
+  // Return true, if two ops can be fused
   std::function<bool(Operation *, Operation *)> fuse_with_;
 
   // a list of all candidates
@@ -88,6 +99,8 @@ private:
   // a UnionFind set
   llvm::EquivalenceClasses<int> leader_to_nodes_;
 
+  llvm::SmallDenseSet<int> fused_leaders_;
+
   // leader to value cnt, where use cnt
   llvm::SmallDenseMap<int, llvm::DenseMap<Value, int>> leader_to_value_count_;
 
@@ -95,13 +108,13 @@ private:
   MhloFusionPlan fusion_plan_;
 
   // return true, when two clusters already fused
-  bool AlreayFused(Operation *pre_op, Operation *cur_op);
+  bool alreadyFused(Operation *pre_op, Operation *cur_op);
 
   // return true, when two clusters can be fused
-  bool CheckFusionLegal(Operation *pre_op, Operation *cur_op);
+  bool checkFusionLegal(Operation *pre_op, Operation *cur_op);
 
   // fuse two clusters, each having each op
-  void Merge(Operation *pre_op, Operation *cur_op);
+  void merge(Operation *pre_op, Operation *cur_op);
 };
 
 } // namespace mlir

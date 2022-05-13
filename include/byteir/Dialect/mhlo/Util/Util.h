@@ -23,36 +23,38 @@ class Operation;
 class OpBuilder;
 class Value;
 
-bool IsSplatMhloConstant(Operation *op);
+bool isMhlo(Operation *op);
+
+bool isSplatMhloConstant(Operation *op);
 
 // Return true if op is either a splat constant, or another constant-like op
 // like iota
-bool IsSplatMhloConstantLike(Operation *op);
+bool isSplatMhloConstantLike(Operation *op);
 
-bool IsMhloConstantLike(Operation *op);
+bool isMhloConstantLike(Operation *op);
 
-bool IsSplatMhloConstantValue(Operation *op, int64_t splat_val);
+bool isSplatMhloConstantValue(Operation *op, int64_t splat_val);
 
-bool IsSplatMhloConstantValue(Operation *op, double splat_val);
+bool isSplatMhloConstantValue(Operation *op, double splat_val);
 
-bool IsSplatMhloConstantValue(Value val);
+bool isSplatMhloConstantValue(Value val);
 
-bool IsSplatMhloConstantValue(Value val, int64_t splat_val);
+bool isSplatMhloConstantValue(Value val, int64_t splat_val);
 
-bool IsSplatMhloConstantValue(Value val, double splat_val);
+bool isSplatMhloConstantValue(Value val, double splat_val);
 
-bool IsBlockSingleAdd(Block *block);
+bool isBlockSingleAdd(Block *block);
 
 // Return layout like "NCHW"/"NHWC"/"NDHWC"/"NCDHW" if success,
 // Return "UNKNOWN" if failed.
-std::string GetPoolLayout(mhlo::ReduceWindowOp op);
+std::string getPoolLayout(mhlo::ReduceWindowOp op);
 
 // Return {input_layout, kernel_layout, output_layout} like PoolLayout
 std::tuple<std::string, std::string, std::string>
-GetConvLayout(mhlo::ConvDimensionNumbersAttr dimension_numbers);
+getConvLayout(mhlo::ConvDimensionNumbersAttr dimension_numbers);
 
 template <typename T>
-void HandleConvAttribute(NamedAttrList &attrs, T conv_op, OpBuilder &rewriter);
+void handleConvAttribute(NamedAttrList &attrs, T conv_op, OpBuilder &rewriter);
 
 } // namespace mlir
 

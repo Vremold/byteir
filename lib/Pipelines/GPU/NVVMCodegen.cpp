@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Pipelines/NVVMCodegen.h"
+#include "byteir/Pipelines/GPU/NVVMCodegen.h"
 #include "./PassDetail.h"
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"

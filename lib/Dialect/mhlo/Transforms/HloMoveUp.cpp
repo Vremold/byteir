@@ -62,7 +62,7 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
     SmallDenseSet<Value> constInputs;
     SmallDenseSet<Value> nonConstInputs;
     for (auto operand : defOp->getOperands()) {
-      if (IsSplatMhloConstantValue(operand)) {
+      if (isSplatMhloConstantValue(operand)) {
         if (!constInputs.contains(operand)) {
           constInputs.insert(operand);
         }
@@ -142,7 +142,7 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
     SmallDenseSet<Value> constInputs;
     SmallDenseSet<Value> nonConstInputs;
     for (auto operand : defOp->getOperands()) {
-      if (IsSplatMhloConstantValue(operand)) {
+      if (isSplatMhloConstantValue(operand)) {
         if (!constInputs.contains(operand)) {
           constInputs.insert(operand);
         }

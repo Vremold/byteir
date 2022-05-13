@@ -169,7 +169,7 @@ LogicalResult ConvertToByrePattern<lmhlo::ScatterOp>::matchAndRewrite(
   }
 
   auto &block = region.front();
-  if (!IsBlockSingleAdd(&block)) {
+  if (!isBlockSingleAdd(&block)) {
     return rewriter.notifyMatchFailure(op, "unsupported block in scatter");
   }
 
@@ -476,7 +476,7 @@ public:
   matchAndRewrite(mlir::lmhlo::ConvOp op, mlir::lmhlo::ConvOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     NamedAttrList attrs;
-    HandleConvAttribute(attrs, op, rewriter);
+    handleConvAttribute(attrs, op, rewriter);
     auto key = getByreKey("ConvOp", op->getOperandTypes(), appendArgTypes);
     auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
         op, key, adaptor.getOperands());

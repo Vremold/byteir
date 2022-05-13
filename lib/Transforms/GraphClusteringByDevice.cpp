@@ -208,9 +208,9 @@ void GraphClusteringByDevicePass::runOnOperation() {
   for (auto funcOp : moduleOp.getOps<FuncOp>()) {
     for (auto &block : funcOp.getBlocks()) {
       if (dupNonSplat)
-        ReplicateDefiningOp(&block, IsMhloConstantLike);
+        ReplicateDefiningOp(&block, isMhloConstantLike);
       else
-        ReplicateDefiningOp(&block, IsSplatMhloConstantLike);
+        ReplicateDefiningOp(&block, isSplatMhloConstantLike);
     }
     originalFuncs.push_back(funcOp);
   }

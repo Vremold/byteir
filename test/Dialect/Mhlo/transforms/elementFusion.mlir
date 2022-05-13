@@ -1,5 +1,5 @@
 // RUN: byteir-opt %s -fuse-element | FileCheck %s
-// RUN: byteir-opt %s -fuse-element="cluster-single-elemwise-op" | FileCheck %s --check-prefix CHECK-SINGLE
+// RUN: byteir-opt %s -fuse-element="cluster-single-op" | FileCheck %s --check-prefix CHECK-SINGLE
 
 func @mhlo_element(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tensor<4xf32>) -> tensor<4xf32> {
   %0 = "mhlo.add"(%arg0, %arg1) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
@@ -10,14 +10,13 @@ func @mhlo_element(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tensor<
 }
 // CHECK-LABEL: func @mhlo_element
 // CHECK-NEXT:  mhlo.fusion
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.abs
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.return
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.abs
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.return
 // CHECK: {__byteir_elementwise_fusion__}
 // CHECK:  return
-
 
 func @mhlo_element_broadcast(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tensor<3x4xf32>) -> tensor<3x4xf32> {
   %0 = "mhlo.add"(%arg0, %arg1) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
@@ -30,14 +29,16 @@ func @mhlo_element_broadcast(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2
 }
 // CHECK-LABEL: func @mhlo_element_broadcast
 // CHECK-NEXT:  mhlo.fusion
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.abs
-// CHECK:  mhlo.fusion
-// CHECK-NEXT:  mhlo.broadcast_in_dim
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.broadcast_in_dim
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.return
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.abs
+// CHECK-NEXT:    mhlo.return
+// CHECK: {__byteir_elementwise_fusion__}
+// CHECK:       mhlo.fusion
+// CHECK-NEXT:    mhlo.broadcast_in_dim
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.broadcast_in_dim
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.return
 // CHECK: {__byteir_elementwise_fusion__}
 // CHECK:  return
 
@@ -50,11 +51,12 @@ func @mhlo_element_reshape(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 :
   return %3 : tensor<4xf32>
 }
 // CHECK-LABEL: func @mhlo_element_reshape
-// CHECK:  mhlo.fusion
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.abs
-// CHECK-NEXT:  mhlo.reshape
-// CHECK-NEXT:  mhlo.add
+// CHECK:       mhlo.fusion
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.abs
+// CHECK-NEXT:    mhlo.reshape
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.return
 // CHECK: {__byteir_elementwise_fusion__}
 // CHECK:  return
 
@@ -68,12 +70,13 @@ func @shared_constant(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>, %arg2 : tens
   return %4, %5 : tensor<4xf32>, tensor<4xf32>
 }
 // CHECK-LABEL: func @shared_constant
-// CHECK:  mhlo.fusion
-// CHECK-NEXT:  mhlo.constant
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.abs
-// CHECK-NEXT:  mhlo.add
-// CHECK-NEXT:  mhlo.add
+// CHECK:       mhlo.fusion
+// CHECK-NEXT:    mhlo.constant
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.abs
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.add
+// CHECK-NEXT:    mhlo.return
 // CHECK: {__byteir_elementwise_fusion__}
 // CHECK:  return
 

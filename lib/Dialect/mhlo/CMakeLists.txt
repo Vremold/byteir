@@ -1,5 +1,6 @@
 add_mlir_dialect_library(ByteIRMhloUtils
   Util/Util.cpp
+  Util/FusionUtil.cpp
   
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Util
@@ -42,9 +43,8 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/ConvBackwardFusion.cpp
   Transforms/ConvBiasActFusion.cpp
   Transforms/DotTransposeFusion.cpp
-  Transforms/ElementFusion.cpp
   Transforms/FusionOutlining.cpp
-  Transforms/FusionUtil.cpp
+  Transforms/GenericFusion.cpp
   Transforms/HloFolder.cpp
   Transforms/HloMoveDown.cpp
   Transforms/HloMoveUp.cpp
@@ -57,6 +57,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Transforms
 
   DEPENDS
   ByteIRMhloPassIncGen

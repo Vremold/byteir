@@ -49,13 +49,13 @@ AddScatterAddMatchAndRewriteHelper(mhlo::AddOp add_op, int idx,
   }
 
   auto &block = region.front();
-  if (!IsBlockSingleAdd(&block)) {
+  if (!isBlockSingleAdd(&block)) {
     return failure();
   }
 
   Value initial_val = scatter_op.operand();
-  if (!IsSplatMhloConstantValue(initial_val, (int64_t)0) &&
-      !IsSplatMhloConstantValue(initial_val, 0.0)) {
+  if (!isSplatMhloConstantValue(initial_val, (int64_t)0) &&
+      !isSplatMhloConstantValue(initial_val, 0.0)) {
     return failure();
   }
 

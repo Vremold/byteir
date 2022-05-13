@@ -203,6 +203,7 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
 
         auto cloned =
             linalgOp.clone(b, loc, resultTensorTypes, localTiledOperands);
+
         // remove attr
         cloned->removeAttr(getScopeTilingAxisAttrName());
         cloned->removeAttr(getScopeTilingRankAttrName());
@@ -217,6 +218,7 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
       } else {
         auto cloned =
             linalgOp.clone(b, loc, resultTensorTypes, localTiledOperands);
+
         // remove attr
         cloned->removeAttr(getScopeTilingAxisAttrName());
         cloned->removeAttr(getScopeTilingRankAttrName());

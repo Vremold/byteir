@@ -1,5 +1,4 @@
-//===- AttrUtils.h ---------------------------------------------*--- C++
-//-*-===//
+//===- AttrUtils.h ------------------------------------------------ C++---===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -14,11 +13,16 @@
 
 namespace mlir {
 class ElementsAttr;
+class Operation;
 class ShapedType;
 
 // parse concatAttr into attrName:attrType:attrValue
 void parseConcatAttr(const std::string &concatAttr, std::string &attrName,
                      std::string &attrType, std::string &attrValue);
+
+void setParsedConcatAttr(Operation *op, const std::string &attrName,
+                         const std::string &attrType,
+                         const std::string &attrValue);
 
 /// Return a new ElementsAttr that has the same data as the current
 /// attribute, but has been reshaped to 'newShape'.

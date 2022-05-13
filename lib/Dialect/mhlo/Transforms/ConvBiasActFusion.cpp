@@ -8,7 +8,7 @@
 #include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -56,7 +56,7 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
     MhloFusionPattern pattern{convOp, broadcastOp, addOp, op};
 
     NamedAttrList origin_attrs;
-    HandleConvAttribute(origin_attrs, convOp, rewriter);
+    handleConvAttribute(origin_attrs, convOp, rewriter);
 
     NamedAttrList attrs;
     for (const auto &attr : origin_attrs) {

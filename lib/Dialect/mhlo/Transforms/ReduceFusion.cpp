@@ -8,7 +8,7 @@
 
 #include "byteir/Dialect/mhlo/Transforms/ReduceFusion.h"
 #include "PassDetail.h"
-#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
@@ -80,7 +80,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
         auto pad = cast<mhlo::PadOp>(op.inputs().front().getDefiningOp());
         // handle pad of constant
         auto paddingValDefOp = pad.padding_value().getDefiningOp();
-        if (IsSplatMhloConstant(paddingValDefOp)) {
+        if (isSplatMhloConstant(paddingValDefOp)) {
           auto cloned = ReplicateDefiningOp(rewriter, pad, 1, 0);
           pattern.push_back(cloned);
         }
@@ -93,7 +93,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     size_t idx = op.inputs().size();
     for (auto val : op.init_values()) {
       auto initialDefOp = val.getDefiningOp();
-      if (IsSplatMhloConstant(initialDefOp)) {
+      if (isSplatMhloConstant(initialDefOp)) {
         auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
         pattern.push_back(cloned);
       }

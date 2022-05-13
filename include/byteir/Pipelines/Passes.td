@@ -67,24 +67,6 @@ def ByreOptPipeline : Pass<"byre-opt", "mlir::ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// GPU Opt Pipeline
-//===----------------------------------------------------------------------===//
-
-def GPUOptPipeline : Pass<"gpu-opt", "mlir::ModuleOp"> {
-  let summary = "GPU Opt Pipeline";
-  let constructor = "mlir::createGPUOptPipelinePass()";
-  let dependentDialects = [
-    "mlir::gpu::GPUDialect",
-    "mlir::scf::SCFDialect",
-  ];
-  let options = [
-    Option<"target", "target", "std::string",
-            /*default=*/"",
-            "An optional attribute to speicify target.">,
-  ];
-}
-
-//===----------------------------------------------------------------------===//
 // Hlo Opt Pipeline
 //===----------------------------------------------------------------------===//
 
@@ -105,12 +87,12 @@ def HloOptPipeline : Pass<"hlo-opt", "mlir::ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// Linalg Opt Pipeline
+// Linalg Tensor Opt Pipeline
 //===----------------------------------------------------------------------===//
 
-def LinalgOptPipeline : Pass<"linalg-opt", "mlir::ModuleOp"> {
-  let summary = "Linalg Opt Pipeline";
-  let constructor = "mlir::createLinalgOptPipelinePass()";
+def LinalgTensorOptPipeline : Pass<"linalg-tensor-opt", "mlir::ModuleOp"> {
+  let summary = "Linalg Opt Pipeline in Tensor";
+  let constructor = "mlir::createLinalgTensorOptPipelinePass()";
   let dependentDialects = [
     "mlir::linalg::LinalgDialect",
   ];
@@ -118,22 +100,6 @@ def LinalgOptPipeline : Pass<"linalg-opt", "mlir::ModuleOp"> {
     Option<"target", "target", "std::string",
             /*default=*/"",
             "An optional attribute to speicify target.">,
-  ];
-}
-
-//===----------------------------------------------------------------------===//
-// NVVM Codegen Pipeline
-//===----------------------------------------------------------------------===//
-
-def NVVMCodegenPipeline : Pass<"nvvm-codegen", "mlir::ModuleOp"> {
-  let summary = "NVVM Codegen Pipeline";
-  let constructor = "mlir::createNVVMCodegenPipelinePass()";
-  let dependentDialects = [
-    "mlir::memref::MemRefDialect",
-    "mlir::NVVM::NVVMDialect",
-    "mlir::cf::ControlFlowDialect",   
-    "mlir::arith::ArithmeticDialect",
-    "mlir::func::FuncDialect",
   ];
 }
 
@@ -200,4 +166,4 @@ def ByteirAllOptPipeline : Pass<"byteir-all-opt", "mlir::ModuleOp"> {
 
 
 
-#endif // BYTEIR_TRANSFORMS_PASSES
+#endif // BYTEIR_PIPELINES_PASSES

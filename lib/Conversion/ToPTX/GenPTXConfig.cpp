@@ -11,7 +11,7 @@
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/GenericFusion.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"

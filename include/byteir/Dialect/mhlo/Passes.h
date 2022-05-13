@@ -12,8 +12,8 @@
 #include "byteir/Dialect/mhlo/Transforms/ConvBackwardFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/DotTransposeFusion.h"
-#include "byteir/Dialect/mhlo/Transforms/ElementFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/FusionOutlining.h"
+#include "byteir/Dialect/mhlo/Transforms/GenericFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/HloFolder.h"
 #include "byteir/Dialect/mhlo/Transforms/HloMove.h"
 #include "byteir/Dialect/mhlo/Transforms/HloTransposeDotToDotGeneral.h"
@@ -28,6 +28,23 @@ namespace mlir {
 /// Generate the code for registering transforms passes.
 #define GEN_PASS_REGISTRATION
 #include "byteir/Dialect/mhlo/Passes.h.inc"
+
+// also all pass including ones from td and non-td
+inline void registerByteIRMhloPassesExt() {
+  // ones from td
+  registerByteIRMhloPasses();
+
+  // ones not from td
+  // register createElementFusionPass
+  ::mlir::registerPass([]() -> std::unique_ptr<::mlir::Pass> {
+    return mlir::createElementFusionPass();
+  });
+
+  // register createMatmulEpilogueFusionPass
+  ::mlir::registerPass([]() -> std::unique_ptr<::mlir::Pass> {
+    return mlir::createMatmulEpilogueFusionPass();
+  });
+}
 
 } // namespace mlir
 

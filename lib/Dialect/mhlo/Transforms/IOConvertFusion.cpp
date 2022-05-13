@@ -8,7 +8,7 @@
 #include "byteir/Dialect/mhlo/Transforms/IOConvertFusion.h"
 #include "./PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
@@ -49,7 +49,7 @@ struct IOConvertFusionPattern : public OpRewritePattern<OpTy> {
         auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
         pattern.push_back(cloned);
         inputs.push_back(cloned->getOperand(0));
-      } else if (IsSplatMhloConstant(defOp)) {
+      } else if (isSplatMhloConstant(defOp)) {
         auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
         pattern.push_back(cloned);
       } else {

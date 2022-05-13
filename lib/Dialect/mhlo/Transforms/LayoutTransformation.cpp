@@ -120,7 +120,7 @@ struct ConvLayoutTransformationPattern : public OpRewritePattern<mhlo::ConvOp> {
       return failure();
     }
     auto dimension_numbers = op.dimension_numbers();
-    auto conv_layout = GetConvLayout(dimension_numbers);
+    auto conv_layout = getConvLayout(dimension_numbers);
     auto input_layout = std::get<0>(conv_layout);
     auto kernel_layout = std::get<1>(conv_layout);
     auto output_layout = std::get<2>(conv_layout);
@@ -190,7 +190,7 @@ struct ReduceWindownLayoutTransformationPattern
       return failure();
     }
     auto operand = *(op.inputs().begin());
-    auto layout = GetPoolLayout(op);
+    auto layout = getPoolLayout(op);
 
     if (targetLayout == "NHWC" && layout == "NCHW") {
       Value operand_transpose =

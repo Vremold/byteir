@@ -46,7 +46,6 @@ struct LoopTagPass : public LoopTagBase<LoopTagPass> {
       return;
     }
 
-    auto ctx = funcOp.getContext();
     parseConcatAttr(attachAttr, attrName, attrType, attrValue);
 
     for (auto *op : collector) {
@@ -54,20 +53,7 @@ struct LoopTagPass : public LoopTagBase<LoopTagPass> {
         continue;
       }
 
-      if (attrType == "Unit") {
-        op->setAttr(attrName, UnitAttr::get(ctx));
-      } else if (attrType == "String") {
-        op->setAttr(attrName, StringAttr::get(ctx, attrValue));
-      } else if (attrType == "I32") {
-        int intVal = std::stoi(attrValue);
-        op->setAttr(attrName,
-                    IntegerAttr::get(IntegerType::get(ctx, 32), intVal));
-      } else if (attrType == "F32") {
-        float f32Val = std::stof(attrValue);
-        op->setAttr(attrName, FloatAttr::get(Float32Type::get(ctx), f32Val));
-      } else {
-        op->emitOpError() << "unsupport attachAttr";
-      }
+      setParsedConcatAttr(op, attrName, attrType, attrValue);
     }
   }
 

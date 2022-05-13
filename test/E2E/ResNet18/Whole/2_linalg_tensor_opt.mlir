@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -linalg-opt | FileCheck %s
+// RUN: byteir-opt %s -linalg-tensor-opt | FileCheck %s
 
 // CHECK-LABEL: func @main
 module @IrToMhlo.2452 {

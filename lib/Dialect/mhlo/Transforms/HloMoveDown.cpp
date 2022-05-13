@@ -79,7 +79,7 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       // isElementwiseOneResult(user) == true
       bool failed = false;
       for (auto operand : user->getOperands()) {
-        if (operand != value && !IsSplatMhloConstantValue(operand)) {
+        if (operand != value && !isSplatMhloConstantValue(operand)) {
           if (allMultiUser)
             return failure();
           failed = true;
@@ -105,7 +105,7 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
             bvm.map(value, op.getOperand());
           }
         } else {
-          // IsSplatMhloConstantValue(operand) == true
+          // isSplatMhloConstantValue(operand) == true
           // since it has been checked when collecting users
           if (!constInputs.contains(operand)) {
             constInputs.insert(operand);
@@ -189,7 +189,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       // isElementwiseOneResult(user) == true
       bool failed = false;
       for (auto operand : user->getOperands()) {
-        if (operand != value && !IsSplatMhloConstantValue(operand)) {
+        if (operand != value && !isSplatMhloConstantValue(operand)) {
           if (allMultiUser)
             return failure();
           failed = true;
@@ -215,7 +215,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
             bvm.map(value, op.getOperand());
           }
         } else {
-          // IsSplatMhloConstantValue(operand) == true
+          // isSplatMhloConstantValue(operand) == true
           // since it has been checked when collecting users
           if (!constInputs.contains(operand)) {
             constInputs.insert(operand);
@@ -300,7 +300,7 @@ struct BroadcastMoveDownPattern
       // isElementwiseOneResult(user) == true
       bool failed = false;
       for (auto operand : user->getOperands()) {
-        if (operand != value && !IsSplatMhloConstantValue(operand)) {
+        if (operand != value && !isSplatMhloConstantValue(operand)) {
           if (allMultiUser)
             return failure();
           failed = true;
@@ -326,7 +326,7 @@ struct BroadcastMoveDownPattern
             bvm.map(value, op.getOperand());
           }
         } else {
-          // IsSplatMhloConstantValue(operand) == true
+          // isSplatMhloConstantValue(operand) == true
           // since it has been checked when collecting users
           if (!constInputs.contains(operand)) {
             constInputs.insert(operand);

@@ -4,6 +4,7 @@ set(BYTEIR_LIBS
   MLIRByre
   ByteIRAffinePasses
   ByteIRByrePasses
+  ByteIRGPUPipelines
   ByteIRLinalgPasses
   ByteIRMemRefPasses
   ByteIRMhloUtils

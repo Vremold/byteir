@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Pipelines/GPUOpt.h"
+#include "byteir/Pipelines/GPU/GPUOpt.h"
 #include "./PassDetail.h"
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
@@ -40,15 +40,15 @@ struct GPUOptPipelinePass : public GPUOptPipelineBase<GPUOptPipelinePass> {
     {
       OpPassManager anchoredPM(FuncOp::getOperationName());
 
-      anchoredPM.addPass(
-          createPromoteBuffersToStackPass([](Value) { return true; }));
+      anchoredPM.addPass(createPromoteBuffersToStackPass(
+          /*isSmallAlloc =*/[](Value) { return true; }));
 
       pm.addNestedPass<FuncOp>(createAnchoredFuncPipelinePass(
           getByteIRElementwiseFusionAttrName(), anchoredPM));
     }
 
-    // Note: trivial loop will be removed by canonicalizer
-    // so no canonicalizer, before used
+    // Note: a trivial loop will be removed by canonicalizer
+    // so no canonicalizer before used
     pm.addNestedPass<FuncOp>(
         createInsertTrivialSCFLoopPass(getByteIRElementwiseFusionAttrName()));
 

@@ -29,10 +29,10 @@ struct BatchNormGradDropMeanAndVarPattern
                                 PatternRewriter &rewriter) const override {
     auto mean = op.mean().getDefiningOp();
     auto variance = op.variance().getDefiningOp();
-    if (IsSplatMhloConstant(mean) && IsSplatMhloConstant(variance)) {
+    if (isSplatMhloConstant(mean) && isSplatMhloConstant(variance)) {
       return failure();
     }
-    if (!IsSplatMhloConstant(mean)) {
+    if (!isSplatMhloConstant(mean)) {
       auto type = op.mean().getType().template cast<RankedTensorType>();
       auto fp_type = type.getElementType().template dyn_cast<FloatType>();
       assert(fp_type);
@@ -42,7 +42,7 @@ struct BatchNormGradDropMeanAndVarPattern
               type, APFloat::getZero(fp_type.getFloatSemantics())));
       op->setOperand(2, zero);
     }
-    if (!IsSplatMhloConstant(variance)) {
+    if (!isSplatMhloConstant(variance)) {
       auto type = op.variance().getType().template cast<RankedTensorType>();
       auto fp_type = type.getElementType().template dyn_cast<FloatType>();
       assert(fp_type);

@@ -53,26 +53,10 @@ struct FuncTagPass : public FuncTagBase<FuncTagPass> {
       return;
 
     auto m = getOperation();
-    auto ctx = m.getContext();
 
     for (auto funcOp : m.getOps<FuncOp>()) {
       if (funcOp.getName() == funcName || funcOp->hasAttr(anchorAttr)) {
-
-        if (attrType == "Unit") {
-          funcOp->setAttr(attrName, UnitAttr::get(ctx));
-        } else if (attrType == "String") {
-          funcOp->setAttr(attrName, StringAttr::get(ctx, attrValue));
-        } else if (attrType == "I32") {
-          int intVal = std::stoi(attrValue);
-          funcOp->setAttr(attrName,
-                          IntegerAttr::get(IntegerType::get(ctx, 32), intVal));
-        } else if (attrType == "F32") {
-          float f32Val = std::stof(attrValue);
-          funcOp->setAttr(attrName,
-                          FloatAttr::get(Float32Type::get(ctx), f32Val));
-        } else {
-          m.emitOpError() << "unsupport attachAttr";
-        }
+        setParsedConcatAttr(funcOp, attrName, attrType, attrValue);
       }
     }
   }

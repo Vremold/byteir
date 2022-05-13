@@ -10,6 +10,7 @@
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
+#include "mlir-hlo/Transforms/passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
@@ -43,6 +44,9 @@ void mlir::addByteIRTotalBufferizePatterns(OpPassManager &pm) {
   pm.addNestedPass<FuncOp>(createLinalgBufferizePass());
   pm.addNestedPass<FuncOp>(createTensorBufferizePass());
   addCleanUpPassPipeline(pm);
+  // clean-up possible redudant copy-removal from bufferization
+  // TODO: enable it after fixing crash
+  // pm.addNestedPass<FuncOp>(createCopyRemovalPass());
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>

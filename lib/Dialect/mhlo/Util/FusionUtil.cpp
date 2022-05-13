@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/Transforms/FusionUtil.h"
+#include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Builders.h"
@@ -15,30 +15,6 @@
 using namespace mlir;
 using namespace mlir::mhlo;
 using namespace llvm;
-
-namespace {
-
-llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
-  llvm::DenseMap<Value, int> ret;
-
-  // output
-  for (auto val : op->getResults()) {
-    ret[val] = UseCount(val);
-  }
-
-  // input
-  for (auto val : op->getOperands()) {
-    // skip block arg
-    if (val.getDefiningOp() == nullptr) {
-      continue;
-    }
-    ret[val]--;
-  }
-
-  return ret;
-}
-
-} // namespace
 
 // This code is from mhlo repo
 // but it was in the local namespace, so cannot be directly call.
@@ -132,12 +108,37 @@ void mlir::applyMhloFusionPattern(const MhloFusionPattern &pattern,
   }
 }
 
+namespace {
+
+llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
+  llvm::DenseMap<Value, int> ret;
+
+  // output
+  for (auto val : op->getResults()) {
+    ret[val] = UseCount(val);
+  }
+
+  // input
+  for (auto val : op->getOperands()) {
+    // skip block arg
+    if (val.getDefiningOp() == nullptr) {
+      continue;
+    }
+    ret[val]--;
+  }
+
+  return ret;
+}
+
+} // namespace
+
 mlir::ProducerFusionPlanner::ProducerFusionPlanner(
     FuncOp funcOp, std::function<bool(Operation *)> is_fusible,
     std::function<bool(Operation *)> fuse_start,
+    std::function<bool(Operation *)> fuse_trigger,
     std::function<bool(Operation *, Operation *)> fuse_with)
     : fuse_candidate_(is_fusible), fuse_start_(fuse_start),
-      fuse_with_(fuse_with) {
+      fuse_trigger_(fuse_trigger), fuse_with_(fuse_with) {
 
   // if empty function jus terminate
   if (funcOp.getBlocks().empty()) {
@@ -162,8 +163,8 @@ mlir::ProducerFusionPlanner::ProducerFusionPlanner(
   }
 }
 
-bool mlir::ProducerFusionPlanner::AlreayFused(Operation *pre_op,
-                                              Operation *cur_op) {
+bool mlir::ProducerFusionPlanner::alreadyFused(Operation *pre_op,
+                                               Operation *cur_op) {
   assert(op_to_node_id_.count(pre_op) > 0);
   assert(op_to_node_id_.count(cur_op) > 0);
 
@@ -172,7 +173,7 @@ bool mlir::ProducerFusionPlanner::AlreayFused(Operation *pre_op,
   return leader_to_nodes_.isEquivalent(pre_id, cur_id);
 }
 
-bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation *pre_op,
+bool mlir::ProducerFusionPlanner::checkFusionLegal(Operation *pre_op,
                                                    Operation *cur_op) {
   assert(op_to_node_id_.count(pre_op) > 0);
   assert(op_to_node_id_.count(cur_op) > 0);
@@ -180,6 +181,9 @@ bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation *pre_op,
   int pre_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[pre_op]);
   const auto &pre_cluster = leader_to_value_count_[pre_leader];
   int cur_id = op_to_node_id_[cur_op];
+
+  if (!fused_leaders_.contains(pre_leader))
+    return false;
 
   for (auto it : pre_cluster) {
 
@@ -219,7 +223,7 @@ bool mlir::ProducerFusionPlanner::CheckFusionLegal(Operation *pre_op,
   return true;
 }
 
-void mlir::ProducerFusionPlanner::Merge(Operation *pre_op, Operation *cur_op) {
+void mlir::ProducerFusionPlanner::merge(Operation *pre_op, Operation *cur_op) {
   assert(op_to_node_id_.count(pre_op) > 0);
   assert(op_to_node_id_.count(cur_op) > 0);
 
@@ -244,16 +248,22 @@ void mlir::ProducerFusionPlanner::Merge(Operation *pre_op, Operation *cur_op) {
   }
 
   leader_to_value_count_.erase(large_leader);
+  fused_leaders_.erase(large_leader);
 }
 
-void mlir::ProducerFusionPlanner::Run() {
+void mlir::ProducerFusionPlanner::run() {
 
   SmallVector<Operation *, 8> op_iteration = op_list_;
 
   for (auto *op : op_iteration) {
 
-    // fusion only can start when fuse_start_ is true
-    if (!fuse_start_(op)) {
+    if (fuse_start_(op)) {
+      auto id = op_to_node_id_[op];
+      fused_leaders_.insert(id);
+    }
+
+    // fusion check  when fuse_trigger_ is true
+    if (!fuse_trigger_(op)) {
       continue;
     }
 
@@ -266,16 +276,16 @@ void mlir::ProducerFusionPlanner::Run() {
       // or not in candidate
       // or already fused
       if (op_def == nullptr || op_to_node_id_.count(op_def) == 0 ||
-          AlreayFused(op_def, op)) {
+          alreadyFused(op_def, op)) {
         continue;
       }
 
-      if (!fuse_with_(op_def, op) || !CheckFusionLegal(op_def, op)) {
+      if (!fuse_with_(op_def, op) || !checkFusionLegal(op_def, op)) {
         continue;
       }
 
       // now we can fuse
-      Merge(op_def, op);
+      merge(op_def, op);
     }
   }
 

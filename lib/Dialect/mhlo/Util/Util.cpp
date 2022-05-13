@@ -14,29 +14,35 @@
 
 using namespace llvm;
 using namespace mlir;
+using namespace mlir::mhlo;
 
-bool mlir::IsSplatMhloConstant(Operation *op) {
+bool mlir::isMhlo(Operation *op) {
+  Dialect *dialect = op->getDialect();
+  return dialect && isa<MhloDialect>(dialect);
+}
+
+bool mlir::isSplatMhloConstant(Operation *op) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     return constOp.value().isSplat();
   }
   return false;
 }
 
-bool mlir::IsSplatMhloConstantLike(Operation *op) {
-  return IsSplatMhloConstant(op) || isa_and_nonnull<mhlo::IotaOp>(op);
+bool mlir::isSplatMhloConstantLike(Operation *op) {
+  return isSplatMhloConstant(op) || isa_and_nonnull<mhlo::IotaOp>(op);
 }
 
-bool mlir::IsMhloConstantLike(Operation *op) {
+bool mlir::isMhloConstantLike(Operation *op) {
   if (!op)
     return false;
   return isa<mhlo::ConstOp>(op) || isa<mhlo::IotaOp>(op);
 }
 
-bool mlir::IsSplatMhloConstantValue(Value val) {
-  return IsSplatMhloConstant(val.getDefiningOp());
+bool mlir::isSplatMhloConstantValue(Value val) {
+  return isSplatMhloConstant(val.getDefiningOp());
 }
 
-bool mlir::IsSplatMhloConstantValue(Operation *op, int64_t splat_val) {
+bool mlir::isSplatMhloConstantValue(Operation *op, int64_t splat_val) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     // only handle DenseFPElementsAttr for now
     // TODO extend it
@@ -47,7 +53,7 @@ bool mlir::IsSplatMhloConstantValue(Operation *op, int64_t splat_val) {
   return false;
 }
 
-bool mlir::IsSplatMhloConstantValue(Operation *op, double splat_val) {
+bool mlir::isSplatMhloConstantValue(Operation *op, double splat_val) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
     // only handle DenseFPElementsAttr for now
     // TODO extend it
@@ -58,16 +64,16 @@ bool mlir::IsSplatMhloConstantValue(Operation *op, double splat_val) {
   return false;
 }
 
-bool mlir::IsSplatMhloConstantValue(Value val, int64_t splat_val) {
-  return IsSplatMhloConstantValue(val.getDefiningOp(), splat_val);
+bool mlir::isSplatMhloConstantValue(Value val, int64_t splat_val) {
+  return isSplatMhloConstantValue(val.getDefiningOp(), splat_val);
 }
 
-bool mlir::IsSplatMhloConstantValue(Value val, double splat_val) {
-  return IsSplatMhloConstantValue(val.getDefiningOp(), splat_val);
+bool mlir::isSplatMhloConstantValue(Value val, double splat_val) {
+  return isSplatMhloConstantValue(val.getDefiningOp(), splat_val);
 }
 
 // TODO: make this a template later for max/min
-bool mlir::IsBlockSingleAdd(Block *block) {
+bool mlir::isBlockSingleAdd(Block *block) {
   if (block == nullptr)
     return false;
 
@@ -92,7 +98,7 @@ bool mlir::IsBlockSingleAdd(Block *block) {
 
 #define UNKNOWN_STR "UNKNOWN_LAYOUT"
 
-std::string mlir::GetPoolLayout(mlir::mhlo::ReduceWindowOp op) {
+std::string mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
   auto base_dilations = op.base_dilationsAttr();
   if (base_dilations && !isSplatValue(base_dilations, 1)) {
     assert(false && "expected base_dilations to be dense<1>");
@@ -156,7 +162,7 @@ std::string mlir::GetPoolLayout(mlir::mhlo::ReduceWindowOp op) {
 }
 
 std::tuple<std::string, std::string, std::string>
-mlir::GetConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
+mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
   std::string input_layout;
   auto input_batch_dimension = dimension_numbers.getInputBatchDimension();
   auto input_feature_dimension = dimension_numbers.getInputFeatureDimension();
@@ -247,10 +253,10 @@ mlir::GetConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
 }
 
 template <typename T>
-void mlir::HandleConvAttribute(NamedAttrList &attrs, T conv_op,
+void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
                                OpBuilder &rewriter) {
   auto dimension_numbers = conv_op.dimension_numbersAttr();
-  auto conv_layout = mlir::GetConvLayout(dimension_numbers);
+  auto conv_layout = mlir::getConvLayout(dimension_numbers);
 
   auto input_layout = std::get<0>(conv_layout);
   auto kernel_layout = std::get<1>(conv_layout);
@@ -282,10 +288,10 @@ void mlir::HandleConvAttribute(NamedAttrList &attrs, T conv_op,
   }
 }
 
-template void mlir::HandleConvAttribute<mlir::mhlo::ConvOp>(NamedAttrList &,
+template void mlir::handleConvAttribute<mlir::mhlo::ConvOp>(NamedAttrList &,
                                                             mlir::mhlo::ConvOp,
                                                             OpBuilder &);
-template void mlir::HandleConvAttribute<mlir::lmhlo::ConvOp>(
+template void mlir::handleConvAttribute<mlir::lmhlo::ConvOp>(
     NamedAttrList &, mlir::lmhlo::ConvOp, OpBuilder &);
 
 #undef UNKNOWN_STR

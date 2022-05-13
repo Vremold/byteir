@@ -52,20 +52,6 @@ def DotTransposeFusion : Pass<"fuse-dot-transpose", "mlir::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// ElementFusion
-//===----------------------------------------------------------------------===//
-
-def ElementFusion : Pass<"fuse-element", "mlir::FuncOp"> {
-  let summary = "Fuse elementwise op";
-  let constructor = "mlir::createElementFusionPass()";
-  let options = [
-    Option<"clusterSingleElemwiseOp", "cluster-single-elemwise-op", 
-           "bool", /*default=*/"false",
-           "whether to cluster single element-wise operation into mhlo.fusion op">,
-  ];
-}
-
-//===----------------------------------------------------------------------===//
 // FusionOutlining
 //===----------------------------------------------------------------------===//
 

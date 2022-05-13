@@ -1,12 +1,12 @@
+add_subdirectory(GPU)
+
 add_mlir_library(ByteIRPipelines
   AffineOpt.cpp
   AllOpt.cpp
   ByreHost.cpp
   ByreOpt.cpp
-  GPUOpt.cpp
   HloOpt.cpp
-  LinalgOpt.cpp
-  NVVMCodegen.cpp
+  LinalgTensorOpt.cpp
   SCFOpt.cpp
   TotalBufferize.cpp
 
@@ -14,11 +14,13 @@ add_mlir_library(ByteIRPipelines
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Pipelines
 
   DEPENDS
+  ByteIRGPUPipelines
   ByteIRPipelinesPassIncGen
   ByteIRTransforms
   ByteIRUtils
 
   LINK_LIBS PUBLIC
+  ByteIRGPUPipelines
   ByteIRUtils
   MLIRIR
   MLIRAffine
