@@ -39,6 +39,7 @@ llvm::Optional<int64_t> getByteShiftFromAllocOrArgument(Value val);
 // cannot be computed statically, e.g. if the type has a dynamic shape or if its
 // elemental type does not have a known bit width.
 llvm::Optional<int64_t> getSizeInBits(MemRefType t);
+llvm::Optional<int64_t> getSizeInBytes(MemRefType t);
 
 // Returns whether a value of MemRefType is static. It requires the shape,
 // stride and offset are all static value.
@@ -50,6 +51,14 @@ MemRefType cloneMemRefTypeWithMemSpace(MemRefType t, Attribute attr);
 // Reutrns a new MemRefType and remove MemSpace
 MemRefType cloneMemRefTypeAndRemoveMemSpace(MemRefType t);
 
+// Helper determining if a memref is static-shape and contiguous-row-major
+// layout, while still allowing for an arbitrary offset (any static or
+// dynamic value).
+//
+// If the size of some dimension is `1`, the stride of this dimension can be
+// treaeted as any integer and will be canonicalized in linear contiguous format
+// because the only index could be taken on this dimension is zero
+bool isStaticShapeAndContiguousRowMajorEx(MemRefType memref);
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_MEMUTILS_H

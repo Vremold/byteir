@@ -56,13 +56,16 @@ def ByreOptPipeline : Pass<"byre-opt", "mlir::ModuleOp"> {
   let constructor = "mlir::createByreOptPipelinePass()";
   let dependentDialects = [
     "mlir::byre::ByreDialect",
+    "mlir::lace::LaceDialect",
   ];
   let options = [
     Option<"entryFunc", "entry-func", "std::string",
             /*default=*/"\"main\"",
             "An optional string to speicify entry function.">,
     Option<"appendArgTypes", "append-arg-types", "bool", /*default=*/"false",
-           "append arg types to Byre">,	
+           "append arg types to Byre">,
+    Option<"disableMemoryPlanning", "disable-memory-planning", "bool", /*default=*/"false",
+           "disable memory planning">,
   ];
 }
 
@@ -149,6 +152,7 @@ def ByteirAllOptPipeline : Pass<"byteir-all-opt", "mlir::ModuleOp"> {
     "mlir::bufferization::BufferizationDialect",
     "mlir::byre::ByreDialect",
     "mlir::gpu::GPUDialect",
+    "mlir::lace::LaceDialect",
     "mlir::linalg::LinalgDialect",
     "mlir::lmhlo::LmhloDialect",
     "mlir::memref::MemRefDialect",

@@ -11,6 +11,7 @@
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
+#include "byteir/Conversion/LmhloToLace/LmhloToLace.h"
 #include "byteir/Conversion/LmhloToMemref/LmhloToMemref.h"
 #include "byteir/Conversion/ToAce/MhloToAce.h"
 #include "byteir/Conversion/ToAce/UnregisteredToAce.h"

@@ -7,6 +7,7 @@
 
 #include "./PassDetail.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
+#include "byteir/Dialect/Lace/LaceDialect.h"
 #include "byteir/Pipelines/GPU/Passes.h"
 #include "byteir/Pipelines/Passes.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
@@ -47,7 +48,8 @@ struct ByteirAllOptPipelinePass
     // pm.addPass(createSCFOptPipelinePass());
 
     pm.addPass(createGPUOptPipelinePass(target));
-    pm.addPass(createByreOptPipelinePass(entryFunc, true /*appendArgTypes*/));
+    pm.addPass(createByreOptPipelinePass(entryFunc, true /*appendArgTypes*/,
+                                         false /*disableMemoryPlanning*/));
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();
     }

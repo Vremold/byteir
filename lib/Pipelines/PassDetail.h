@@ -37,6 +37,10 @@ namespace gpu {
 class GPUDialect;
 } // namespace gpu
 
+namespace lace {
+class LaceDialect;
+} // namespace lace
+
 namespace linalg {
 class LinalgDialect;
 } // namespace linalg

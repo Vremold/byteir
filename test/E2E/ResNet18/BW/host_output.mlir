@@ -3,192 +3,296 @@
 // CHECK-LABEL: func @main
 module attributes {byre.container_module, gpu.container_module} {
   func @main(%arg0: memref<64xf32> {byre.argname = "Input0", byre.argtype = 1 : i32}, %arg1: memref<64xf32> {byre.argname = "Input1", byre.argtype = 1 : i32}, %arg2: memref<64xf32> {byre.argname = "Input2", byre.argtype = 1 : i32}, %arg3: memref<64xf32> {byre.argname = "Input3", byre.argtype = 1 : i32}, %arg4: memref<64xf32> {byre.argname = "Input4", byre.argtype = 1 : i32}, %arg5: memref<64xf32> {byre.argname = "Input5", byre.argtype = 1 : i32}, %arg6: memref<64xf32> {byre.argname = "Input6", byre.argtype = 1 : i32}, %arg7: memref<64xf32> {byre.argname = "Input7", byre.argtype = 1 : i32}, %arg8: memref<64xf32> {byre.argname = "Input8", byre.argtype = 1 : i32}, %arg9: memref<64xf32> {byre.argname = "Input9", byre.argtype = 1 : i32}, %arg10: memref<128xf32> {byre.argname = "Input10", byre.argtype = 1 : i32}, %arg11: memref<128xf32> {byre.argname = "Input11", byre.argtype = 1 : i32}, %arg12: memref<128xf32> {byre.argname = "Input12", byre.argtype = 1 : i32}, %arg13: memref<128xf32> {byre.argname = "Input13", byre.argtype = 1 : i32}, %arg14: memref<128xf32> {byre.argname = "Input14", byre.argtype = 1 : i32}, %arg15: memref<128xf32> {byre.argname = "Input15", byre.argtype = 1 : i32}, %arg16: memref<128xf32> {byre.argname = "Input16", byre.argtype = 1 : i32}, %arg17: memref<128xf32> {byre.argname = "Input17", byre.argtype = 1 : i32}, %arg18: memref<128xf32> {byre.argname = "Input18", byre.argtype = 1 : i32}, %arg19: memref<128xf32> {byre.argname = "Input19", byre.argtype = 1 : i32}, %arg20: memref<256xf32> {byre.argname = "Input20", byre.argtype = 1 : i32}, %arg21: memref<256xf32> {byre.argname = "Input21", byre.argtype = 1 : i32}, %arg22: memref<256xf32> {byre.argname = "Input22", byre.argtype = 1 : i32}, %arg23: memref<256xf32> {byre.argname = "Input23", byre.argtype = 1 : i32}, %arg24: memref<256xf32> {byre.argname = "Input24", byre.argtype = 1 : i32}, %arg25: memref<256xf32> {byre.argname = "Input25", byre.argtype = 1 : i32}, %arg26: memref<256xf32> {byre.argname = "Input26", byre.argtype = 1 : i32}, %arg27: memref<256xf32> {byre.argname = "Input27", byre.argtype = 1 : i32}, %arg28: memref<256xf32> {byre.argname = "Input28", byre.argtype = 1 : i32}, %arg29: memref<256xf32> {byre.argname = "Input29", byre.argtype = 1 : i32}, %arg30: memref<512xf32> {byre.argname = "Input30", byre.argtype = 1 : i32}, %arg31: memref<512xf32> {byre.argname = "Input31", byre.argtype = 1 : i32}, %arg32: memref<512xf32> {byre.argname = "Input32", byre.argtype = 1 : i32}, %arg33: memref<512xf32> {byre.argname = "Input33", byre.argtype = 1 : i32}, %arg34: memref<512xf32> {byre.argname = "Input34", byre.argtype = 1 : i32}, %arg35: memref<512xf32> {byre.argname = "Input35", byre.argtype = 1 : i32}, %arg36: memref<512xf32> {byre.argname = "Input36", byre.argtype = 1 : i32}, %arg37: memref<512xf32> {byre.argname = "Input37", byre.argtype = 1 : i32}, %arg38: memref<512xf32> {byre.argname = "Input38", byre.argtype = 1 : i32}, %arg39: memref<512xf32> {byre.argname = "Input39", byre.argtype = 1 : i32}, %arg40: memref<64xf32> {byre.argname = "Input40", byre.argtype = 1 : i32}, %arg41: memref<64xf32> {byre.argname = "Input41", byre.argtype = 1 : i32}, %arg42: memref<64xf32> {byre.argname = "Input42", byre.argtype = 1 : i32}, %arg43: memref<64xf32> {byre.argname = "Input43", byre.argtype = 1 : i32}, %arg44: memref<64xf32> {byre.argname = "Input44", byre.argtype = 1 : i32}, %arg45: memref<64xf32> {byre.argname = "Input45", byre.argtype = 1 : i32}, %arg46: memref<64xf32> {byre.argname = "Input46", byre.argtype = 1 : i32}, %arg47: memref<64xf32> {byre.argname = "Input47", byre.argtype = 1 : i32}, %arg48: memref<64xf32> {byre.argname = "Input48", byre.argtype = 1 : i32}, %arg49: memref<64xf32> {byre.argname = "Input49", byre.argtype = 1 : i32}, %arg50: memref<128xf32> {byre.argname = "Input50", byre.argtype = 1 : i32}, %arg51: memref<128xf32> {byre.argname = "Input51", byre.argtype = 1 : i32}, %arg52: memref<128xf32> {byre.argname = "Input52", byre.argtype = 1 : i32}, %arg53: memref<128xf32> {byre.argname = "Input53", byre.argtype = 1 : i32}, %arg54: memref<128xf32> {byre.argname = "Input54", byre.argtype = 1 : i32}, %arg55: memref<128xf32> {byre.argname = "Input55", byre.argtype = 1 : i32}, %arg56: memref<128xf32> {byre.argname = "Input56", byre.argtype = 1 : i32}, %arg57: memref<128xf32> {byre.argname = "Input57", byre.argtype = 1 : i32}, %arg58: memref<128xf32> {byre.argname = "Input58", byre.argtype = 1 : i32}, %arg59: memref<128xf32> {byre.argname = "Input59", byre.argtype = 1 : i32}, %arg60: memref<256xf32> {byre.argname = "Input60", byre.argtype = 1 : i32}, %arg61: memref<256xf32> {byre.argname = "Input61", byre.argtype = 1 : i32}, %arg62: memref<256xf32> {byre.argname = "Input62", byre.argtype = 1 : i32}, %arg63: memref<256xf32> {byre.argname = "Input63", byre.argtype = 1 : i32}, %arg64: memref<256xf32> {byre.argname = "Input64", byre.argtype = 1 : i32}, %arg65: memref<256xf32> {byre.argname = "Input65", byre.argtype = 1 : i32}, %arg66: memref<256xf32> {byre.argname = "Input66", byre.argtype = 1 : i32}, %arg67: memref<256xf32> {byre.argname = "Input67", byre.argtype = 1 : i32}, %arg68: memref<256xf32> {byre.argname = "Input68", byre.argtype = 1 : i32}, %arg69: memref<256xf32> {byre.argname = "Input69", byre.argtype = 1 : i32}, %arg70: memref<512xf32> {byre.argname = "Input70", byre.argtype = 1 : i32}, %arg71: memref<512xf32> {byre.argname = "Input71", byre.argtype = 1 : i32}, %arg72: memref<512xf32> {byre.argname = "Input72", byre.argtype = 1 : i32}, %arg73: memref<512xf32> {byre.argname = "Input73", byre.argtype = 1 : i32}, %arg74: memref<512xf32> {byre.argname = "Input74", byre.argtype = 1 : i32}, %arg75: memref<512xf32> {byre.argname = "Input75", byre.argtype = 1 : i32}, %arg76: memref<512xf32> {byre.argname = "Input76", byre.argtype = 1 : i32}, %arg77: memref<512xf32> {byre.argname = "Input77", byre.argtype = 1 : i32}, %arg78: memref<512xf32> {byre.argname = "Input78", byre.argtype = 1 : i32}, %arg79: memref<512xf32> {byre.argname = "Input79", byre.argtype = 1 : i32}, %arg80: memref<64x3x7x7xf16> {byre.argname = "Input80", byre.argtype = 1 : i32}, %arg81: memref<1x3x224x224xf16> {byre.argname = "Input81", byre.argtype = 1 : i32}, %arg82: memref<1x64x112x112xf16> {byre.argname = "Input82", byre.argtype = 1 : i32}, %arg83: memref<1x64x112x112xf16> {byre.argname = "Input83", byre.argtype = 1 : i32}, %arg84: memref<1x64x56x56xf16> {byre.argname = "Input84", byre.argtype = 1 : i32}, %arg85: memref<64x64x3x3xf16> {byre.argname = "Input85", byre.argtype = 1 : i32}, %arg86: memref<1x64x56x56xf16> {byre.argname = "Input86", byre.argtype = 1 : i32}, %arg87: memref<1x64x56x56xf16> {byre.argname = "Input87", byre.argtype = 1 : i32}, %arg88: memref<64x64x3x3xf16> {byre.argname = "Input88", byre.argtype = 1 : i32}, %arg89: memref<1x64x56x56xf16> {byre.argname = "Input89", byre.argtype = 1 : i32}, %arg90: memref<1x64x56x56xf16> {byre.argname = "Input90", byre.argtype = 1 : i32}, %arg91: memref<64x64x3x3xf16> {byre.argname = "Input91", byre.argtype = 1 : i32}, %arg92: memref<1x64x56x56xf16> {byre.argname = "Input92", byre.argtype = 1 : i32}, %arg93: memref<1x64x56x56xf16> {byre.argname = "Input93", byre.argtype = 1 : i32}, %arg94: memref<64x64x3x3xf16> {byre.argname = "Input94", byre.argtype = 1 : i32}, %arg95: memref<1x64x56x56xf16> {byre.argname = "Input95", byre.argtype = 1 : i32}, %arg96: memref<1x64x56x56xf16> {byre.argname = "Input96", byre.argtype = 1 : i32}, %arg97: memref<128x64x3x3xf16> {byre.argname = "Input97", byre.argtype = 1 : i32}, %arg98: memref<1x128x28x28xf16> {byre.argname = "Input98", byre.argtype = 1 : i32}, %arg99: memref<1x128x28x28xf16> {byre.argname = "Input99", byre.argtype = 1 : i32}, %arg100: memref<128x128x3x3xf16> {byre.argname = "Input100", byre.argtype = 1 : i32}, %arg101: memref<1x128x28x28xf16> {byre.argname = "Input101", byre.argtype = 1 : i32}, %arg102: memref<128x64x1x1xf16> {byre.argname = "Input102", byre.argtype = 1 : i32}, %arg103: memref<1x128x28x28xf16> {byre.argname = "Input103", byre.argtype = 1 : i32}, %arg104: memref<1x128x28x28xf16> {byre.argname = "Input104", byre.argtype = 1 : i32}, %arg105: memref<128x128x3x3xf16> {byre.argname = "Input105", byre.argtype = 1 : i32}, %arg106: memref<1x128x28x28xf16> {byre.argname = "Input106", byre.argtype = 1 : i32}, %arg107: memref<1x128x28x28xf16> {byre.argname = "Input107", byre.argtype = 1 : i32}, %arg108: memref<128x128x3x3xf16> {byre.argname = "Input108", byre.argtype = 1 : i32}, %arg109: memref<1x128x28x28xf16> {byre.argname = "Input109", byre.argtype = 1 : i32}, %arg110: memref<1x128x28x28xf16> {byre.argname = "Input110", byre.argtype = 1 : i32}, %arg111: memref<256x128x3x3xf16> {byre.argname = "Input111", byre.argtype = 1 : i32}, %arg112: memref<1x256x14x14xf16> {byre.argname = "Input112", byre.argtype = 1 : i32}, %arg113: memref<1x256x14x14xf16> {byre.argname = "Input113", byre.argtype = 1 : i32}, %arg114: memref<256x256x3x3xf16> {byre.argname = "Input114", byre.argtype = 1 : i32}, %arg115: memref<1x256x14x14xf16> {byre.argname = "Input115", byre.argtype = 1 : i32}, %arg116: memref<256x128x1x1xf16> {byre.argname = "Input116", byre.argtype = 1 : i32}, %arg117: memref<1x256x14x14xf16> {byre.argname = "Input117", byre.argtype = 1 : i32}, %arg118: memref<1x256x14x14xf16> {byre.argname = "Input118", byre.argtype = 1 : i32}, %arg119: memref<256x256x3x3xf16> {byre.argname = "Input119", byre.argtype = 1 : i32}, %arg120: memref<1x256x14x14xf16> {byre.argname = "Input120", byre.argtype = 1 : i32}, %arg121: memref<1x256x14x14xf16> {byre.argname = "Input121", byre.argtype = 1 : i32}, %arg122: memref<256x256x3x3xf16> {byre.argname = "Input122", byre.argtype = 1 : i32}, %arg123: memref<1x256x14x14xf16> {byre.argname = "Input123", byre.argtype = 1 : i32}, %arg124: memref<1x256x14x14xf16> {byre.argname = "Input124", byre.argtype = 1 : i32}, %arg125: memref<512x256x3x3xf16> {byre.argname = "Input125", byre.argtype = 1 : i32}, %arg126: memref<1x512x7x7xf16> {byre.argname = "Input126", byre.argtype = 1 : i32}, %arg127: memref<1x512x7x7xf16> {byre.argname = "Input127", byre.argtype = 1 : i32}, %arg128: memref<512x512x3x3xf16> {byre.argname = "Input128", byre.argtype = 1 : i32}, %arg129: memref<1x512x7x7xf16> {byre.argname = "Input129", byre.argtype = 1 : i32}, %arg130: memref<512x256x1x1xf16> {byre.argname = "Input130", byre.argtype = 1 : i32}, %arg131: memref<1x512x7x7xf16> {byre.argname = "Input131", byre.argtype = 1 : i32}, %arg132: memref<1x512x7x7xf16> {byre.argname = "Input132", byre.argtype = 1 : i32}, %arg133: memref<512x512x3x3xf16> {byre.argname = "Input133", byre.argtype = 1 : i32}, %arg134: memref<1x512x7x7xf16> {byre.argname = "Input134", byre.argtype = 1 : i32}, %arg135: memref<1x512x7x7xf16> {byre.argname = "Input135", byre.argtype = 1 : i32}, %arg136: memref<512x512x3x3xf16> {byre.argname = "Input136", byre.argtype = 1 : i32}, %arg137: memref<1x512x7x7xf16> {byre.argname = "Input137", byre.argtype = 1 : i32}, %arg138: memref<1x512x7x7xf16> {byre.argname = "Input138", byre.argtype = 1 : i32}, %arg139: memref<1x512xf16> {byre.argname = "Input139", byre.argtype = 1 : i32}, %arg140: memref<512x1000xf16> {byre.argname = "Input140", byre.argtype = 1 : i32}, %arg141: memref<1x1000xf16> {byre.argname = "Input141", byre.argtype = 1 : i32}, %arg142: memref<64xf32> {byre.argname = "Output0", byre.argtype = 2 : i32}, %arg143: memref<64xf32> {byre.argname = "Output1", byre.argtype = 2 : i32}, %arg144: memref<64x3x7x7xf32> {byre.argname = "Output2", byre.argtype = 2 : i32}, %arg145: memref<1000xf32> {byre.argname = "Output3", byre.argtype = 2 : i32}, %arg146: memref<1000x512xf32> {byre.argname = "Output4", byre.argtype = 2 : i32}, %arg147: memref<64xf32> {byre.argname = "Output5", byre.argtype = 2 : i32}, %arg148: memref<64xf32> {byre.argname = "Output6", byre.argtype = 2 : i32}, %arg149: memref<64xf32> {byre.argname = "Output7", byre.argtype = 2 : i32}, %arg150: memref<64xf32> {byre.argname = "Output8", byre.argtype = 2 : i32}, %arg151: memref<64x64x3x3xf32> {byre.argname = "Output9", byre.argtype = 2 : i32}, %arg152: memref<64x64x3x3xf32> {byre.argname = "Output10", byre.argtype = 2 : i32}, %arg153: memref<64xf32> {byre.argname = "Output11", byre.argtype = 2 : i32}, %arg154: memref<64xf32> {byre.argname = "Output12", byre.argtype = 2 : i32}, %arg155: memref<64xf32> {byre.argname = "Output13", byre.argtype = 2 : i32}, %arg156: memref<64xf32> {byre.argname = "Output14", byre.argtype = 2 : i32}, %arg157: memref<64x64x3x3xf32> {byre.argname = "Output15", byre.argtype = 2 : i32}, %arg158: memref<64x64x3x3xf32> {byre.argname = "Output16", byre.argtype = 2 : i32}, %arg159: memref<128xf32> {byre.argname = "Output17", byre.argtype = 2 : i32}, %arg160: memref<128xf32> {byre.argname = "Output18", byre.argtype = 2 : i32}, %arg161: memref<128xf32> {byre.argname = "Output19", byre.argtype = 2 : i32}, %arg162: memref<128xf32> {byre.argname = "Output20", byre.argtype = 2 : i32}, %arg163: memref<128x64x3x3xf32> {byre.argname = "Output21", byre.argtype = 2 : i32}, %arg164: memref<128x128x3x3xf32> {byre.argname = "Output22", byre.argtype = 2 : i32}, %arg165: memref<128x64x1x1xf32> {byre.argname = "Output23", byre.argtype = 2 : i32}, %arg166: memref<128xf32> {byre.argname = "Output24", byre.argtype = 2 : i32}, %arg167: memref<128xf32> {byre.argname = "Output25", byre.argtype = 2 : i32}, %arg168: memref<128xf32> {byre.argname = "Output26", byre.argtype = 2 : i32}, %arg169: memref<128xf32> {byre.argname = "Output27", byre.argtype = 2 : i32}, %arg170: memref<128xf32> {byre.argname = "Output28", byre.argtype = 2 : i32}, %arg171: memref<128xf32> {byre.argname = "Output29", byre.argtype = 2 : i32}, %arg172: memref<128x128x3x3xf32> {byre.argname = "Output30", byre.argtype = 2 : i32}, %arg173: memref<128x128x3x3xf32> {byre.argname = "Output31", byre.argtype = 2 : i32}, %arg174: memref<256xf32> {byre.argname = "Output32", byre.argtype = 2 : i32}, %arg175: memref<256xf32> {byre.argname = "Output33", byre.argtype = 2 : i32}, %arg176: memref<256xf32> {byre.argname = "Output34", byre.argtype = 2 : i32}, %arg177: memref<256xf32> {byre.argname = "Output35", byre.argtype = 2 : i32}, %arg178: memref<256x128x3x3xf32> {byre.argname = "Output36", byre.argtype = 2 : i32}, %arg179: memref<256x256x3x3xf32> {byre.argname = "Output37", byre.argtype = 2 : i32}, %arg180: memref<256x128x1x1xf32> {byre.argname = "Output38", byre.argtype = 2 : i32}, %arg181: memref<256xf32> {byre.argname = "Output39", byre.argtype = 2 : i32}, %arg182: memref<256xf32> {byre.argname = "Output40", byre.argtype = 2 : i32}, %arg183: memref<256xf32> {byre.argname = "Output41", byre.argtype = 2 : i32}, %arg184: memref<256xf32> {byre.argname = "Output42", byre.argtype = 2 : i32}, %arg185: memref<256xf32> {byre.argname = "Output43", byre.argtype = 2 : i32}, %arg186: memref<256xf32> {byre.argname = "Output44", byre.argtype = 2 : i32}, %arg187: memref<256x256x3x3xf32> {byre.argname = "Output45", byre.argtype = 2 : i32}, %arg188: memref<256x256x3x3xf32> {byre.argname = "Output46", byre.argtype = 2 : i32}, %arg189: memref<512xf32> {byre.argname = "Output47", byre.argtype = 2 : i32}, %arg190: memref<512xf32> {byre.argname = "Output48", byre.argtype = 2 : i32}, %arg191: memref<512xf32> {byre.argname = "Output49", byre.argtype = 2 : i32}, %arg192: memref<512xf32> {byre.argname = "Output50", byre.argtype = 2 : i32}, %arg193: memref<512x256x3x3xf32> {byre.argname = "Output51", byre.argtype = 2 : i32}, %arg194: memref<512x512x3x3xf32> {byre.argname = "Output52", byre.argtype = 2 : i32}, %arg195: memref<512x256x1x1xf32> {byre.argname = "Output53", byre.argtype = 2 : i32}, %arg196: memref<512xf32> {byre.argname = "Output54", byre.argtype = 2 : i32}, %arg197: memref<512xf32> {byre.argname = "Output55", byre.argtype = 2 : i32}, %arg198: memref<512xf32> {byre.argname = "Output56", byre.argtype = 2 : i32}, %arg199: memref<512xf32> {byre.argname = "Output57", byre.argtype = 2 : i32}, %arg200: memref<512xf32> {byre.argname = "Output58", byre.argtype = 2 : i32}, %arg201: memref<512xf32> {byre.argname = "Output59", byre.argtype = 2 : i32}, %arg202: memref<512x512x3x3xf32> {byre.argname = "Output60", byre.argtype = 2 : i32}, %arg203: memref<512x512x3x3xf32> {byre.argname = "Output61", byre.argtype = 2 : i32}) attributes {byre.entry_point, device_file_name = "your_file"} {
-    %0 = memref.alloc() : memref<1x512xf16>
-    byre.compute @MatmulOpf16f16f16(%arg141, %arg140, %0) {lhs_contracting_dimension = 1 : i64, rhs_contracting_dimension = 1 : i64} : memref<1x1000xf16>, memref<512x1000xf16>, memref<1x512xf16>
-    %1 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @PTXOp(%0, %arg138, %1) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [2 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown0"} : memref<1x512xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
-    %2 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg137, %arg39, %1, %2, %arg201, %arg200) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
-    %3 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%2, %arg136, %3) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x512x3x3xf16>, memref<1x512x7x7xf16>
-    %4 = memref.alloc() : memref<512x512x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg135, %2, %4) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
-    %5 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @PTXOp(%arg135, %3, %5) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown4"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
-    %6 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg134, %arg37, %5, %6, %arg199, %arg198) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
-    %7 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%6, %arg133, %7) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x512x3x3xf16>, memref<1x512x7x7xf16>
-    %8 = memref.alloc() : memref<512x512x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg132, %6, %8) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
-    %9 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @PTXOp(%1, %7, %arg132, %9) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown8"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
-    %10 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg129, %arg33, %9, %10, %arg192, %arg191) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
-    %11 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%10, %arg128, %11) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x512x3x3xf16>, memref<1x512x7x7xf16>
-    %12 = memref.alloc() : memref<512x512x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg127, %10, %12) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
-    %13 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @PTXOp(%arg127, %11, %13) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown12"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
-    %14 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg126, %arg31, %13, %14, %arg190, %arg189) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
-    %15 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%14, %arg125, %15) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x256x3x3xf16>, memref<1x256x14x14xf16>
-    %16 = memref.alloc() : memref<512x256x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg124, %14, %16) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x512x7x7xf16>, memref<512x256x3x3xf16>
-    %17 = memref.alloc() : memref<1x512x7x7xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg131, %arg35, %9, %17, %arg197, %arg196) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
-    %18 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%17, %arg130, %18) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x256x1x1xf16>, memref<1x256x14x14xf16>
-    %19 = memref.alloc() : memref<512x256x1x1xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg124, %17, %19) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x512x7x7xf16>, memref<512x256x1x1xf16>
-    %20 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @PTXOp(%18, %15, %arg124, %20) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown19"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
-    %21 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg123, %arg29, %20, %21, %arg186, %arg185) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
-    %22 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%21, %arg122, %22) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x256x3x3xf16>, memref<1x256x14x14xf16>
-    %23 = memref.alloc() : memref<256x256x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg121, %21, %23) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
-    %24 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @PTXOp(%arg121, %22, %24) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown23"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
-    %25 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg120, %arg27, %24, %25, %arg184, %arg183) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
-    %26 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%25, %arg119, %26) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x256x3x3xf16>, memref<1x256x14x14xf16>
-    %27 = memref.alloc() : memref<256x256x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg118, %25, %27) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
-    %28 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @PTXOp(%20, %26, %arg118, %28) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown27"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
-    %29 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg115, %arg23, %28, %29, %arg177, %arg176) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
-    %30 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%29, %arg114, %30) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x256x3x3xf16>, memref<1x256x14x14xf16>
-    %31 = memref.alloc() : memref<256x256x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg113, %29, %31) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
-    %32 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @PTXOp(%arg113, %30, %32) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown31"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
-    %33 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg112, %arg21, %32, %33, %arg175, %arg174) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
-    %34 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%33, %arg111, %34) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x128x3x3xf16>, memref<1x128x28x28xf16>
-    %35 = memref.alloc() : memref<256x128x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg110, %33, %35) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x256x14x14xf16>, memref<256x128x3x3xf16>
-    %36 = memref.alloc() : memref<1x256x14x14xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg117, %arg25, %28, %36, %arg182, %arg181) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
-    %37 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%36, %arg116, %37) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x128x1x1xf16>, memref<1x128x28x28xf16>
-    %38 = memref.alloc() : memref<256x128x1x1xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg110, %36, %38) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x256x14x14xf16>, memref<256x128x1x1xf16>
-    %39 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @PTXOp(%37, %34, %arg110, %39) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown38"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
-    %40 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg109, %arg19, %39, %40, %arg171, %arg170) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
-    %41 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%40, %arg108, %41) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x128x3x3xf16>, memref<1x128x28x28xf16>
-    %42 = memref.alloc() : memref<128x128x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg107, %40, %42) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
-    %43 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @PTXOp(%arg107, %41, %43) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown42"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
-    %44 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg106, %arg17, %43, %44, %arg169, %arg168) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
-    %45 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%44, %arg105, %45) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x128x3x3xf16>, memref<1x128x28x28xf16>
-    %46 = memref.alloc() : memref<128x128x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg104, %44, %46) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
-    %47 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @PTXOp(%39, %45, %arg104, %47) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown46"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
-    %48 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg101, %arg13, %47, %48, %arg162, %arg161) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
-    %49 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%48, %arg100, %49) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x128x3x3xf16>, memref<1x128x28x28xf16>
-    %50 = memref.alloc() : memref<128x128x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg99, %48, %50) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
-    %51 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @PTXOp(%arg99, %49, %51) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown50"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
-    %52 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg98, %arg11, %51, %52, %arg160, %arg159) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
-    %53 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%52, %arg97, %53) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x64x3x3xf16>, memref<1x64x56x56xf16>
-    %54 = memref.alloc() : memref<128x64x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg96, %52, %54) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x128x28x28xf16>, memref<128x64x3x3xf16>
-    %55 = memref.alloc() : memref<1x128x28x28xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg103, %arg15, %47, %55, %arg167, %arg166) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
-    %56 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%55, %arg102, %56) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x64x1x1xf16>, memref<1x64x56x56xf16>
-    %57 = memref.alloc() : memref<128x64x1x1xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg96, %55, %57) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x128x28x28xf16>, memref<128x64x1x1xf16>
-    %58 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%56, %53, %arg96, %58) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown57"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
-    %59 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg95, %arg9, %58, %59, %arg156, %arg155) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
-    %60 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%59, %arg94, %60) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
-    %61 = memref.alloc() : memref<64x64x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg93, %59, %61) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
-    %62 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%arg93, %60, %62) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown61"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
-    %63 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg92, %arg7, %62, %63, %arg154, %arg153) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
-    %64 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%63, %arg91, %64) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
-    %65 = memref.alloc() : memref<64x64x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg90, %63, %65) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
-    %66 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%58, %64, %arg90, %66) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown65"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
-    %67 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg89, %arg5, %66, %67, %arg150, %arg149) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
-    %68 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%67, %arg88, %68) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
-    %69 = memref.alloc() : memref<64x64x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg87, %67, %69) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
-    %70 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%arg87, %68, %70) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown69"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
-    %71 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg86, %arg3, %70, %71, %arg148, %arg147) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
-    %72 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @ConvBackwardDataOpf16f16f16(%71, %arg85, %72) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
-    %73 = memref.alloc() : memref<64x64x3x3xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg84, %71, %73) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
-    %74 = memref.alloc() : memref<1x64x56x56xf16>
-    byre.compute @PTXOp(%66, %72, %74) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown73"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
-    %75 = memref.alloc() : memref<1x64x112x112xf16>
-    byre.compute @PoolMaxGradOpf16f16f16(%arg83, %74, %75) {padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : memref<1x64x112x112xf16>, memref<1x64x56x56xf16>, memref<1x64x112x112xf16>
-    %76 = memref.alloc() : memref<1x64x112x112xf16>
-    byre.compute @PTXOp(%arg83, %75, %76) {BlockSize.x = 128 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown74"} : memref<1x64x112x112xf16>, memref<1x64x112x112xf16>, memref<1x64x112x112xf16>
-    %77 = memref.alloc() : memref<1x64x112x112xf16>
-    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg82, %arg1, %76, %77, %arg143, %arg142) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x112x112xf16>, memref<64xf32>, memref<1x64x112x112xf16>, memref<1x64x112x112xf16>, memref<64xf32>, memref<64xf32>
-    %78 = memref.alloc() : memref<64x3x7x7xf16>
-    byre.compute @ConvBackwardFilterOpf16f16f16(%arg81, %77, %78) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<3> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x3x224x224xf16>, memref<1x64x112x112xf16>, memref<64x3x7x7xf16>
-    byre.compute @PTXOp(%78, %arg144) {BlockSize.x = 128 : i32, GridSize.x = 74 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown77"} : memref<64x3x7x7xf16>, memref<64x3x7x7xf32>
-    %79 = memref.alloc() : memref<1x1000xf32>
-    byre.compute @PTXOp(%arg141, %79) {BlockSize.x = 128 : i32, GridSize.x = 8 : i32, arg_ranks = [2 : i32, 2 : i32], kernel_name = "Unknown78"} : memref<1x1000xf16>, memref<1x1000xf32>
-    %80 = memref.alloc() : memref<1000xf32>
-    byre.compute @ReduceSumOpf32f32(%79, %80) {dimensions = dense<0> : tensor<1xi64>} : memref<1x1000xf32>, memref<1000xf32>
-    byre.compute @PTXOp(%80, %arg145) {BlockSize.x = 128 : i32, GridSize.x = 8 : i32, arg_ranks = [1 : i32, 1 : i32], kernel_name = "Unknown79"} : memref<1000xf32>, memref<1000xf32>
-    %81 = memref.alloc() : memref<1000x512xf16>
-    byre.compute @MatmulOpf16f16f16(%arg141, %arg139, %81) {lhs_contracting_dimension = 0 : i64, rhs_contracting_dimension = 0 : i64} : memref<1x1000xf16>, memref<1x512xf16>, memref<1000x512xf16>
-    byre.compute @PTXOp(%81, %arg146) {BlockSize.x = 128 : i32, GridSize.x = 4000 : i32, arg_ranks = [2 : i32, 2 : i32], kernel_name = "Unknown80"} : memref<1000x512xf16>, memref<1000x512xf32>
-    byre.compute @PTXOp(%73, %arg151) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown81"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
-    byre.compute @PTXOp(%69, %arg152) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown82"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
-    byre.compute @PTXOp(%65, %arg157) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown83"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
-    byre.compute @PTXOp(%61, %arg158) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown84"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
-    byre.compute @PTXOp(%54, %arg163) {BlockSize.x = 128 : i32, GridSize.x = 576 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown85"} : memref<128x64x3x3xf16>, memref<128x64x3x3xf32>
-    byre.compute @PTXOp(%50, %arg164) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown86"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
-    byre.compute @PTXOp(%57, %arg165) {BlockSize.x = 128 : i32, GridSize.x = 64 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown87"} : memref<128x64x1x1xf16>, memref<128x64x1x1xf32>
-    byre.compute @PTXOp(%46, %arg172) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown88"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
-    byre.compute @PTXOp(%42, %arg173) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown89"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
-    byre.compute @PTXOp(%35, %arg178) {BlockSize.x = 128 : i32, GridSize.x = 2304 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown90"} : memref<256x128x3x3xf16>, memref<256x128x3x3xf32>
-    byre.compute @PTXOp(%31, %arg179) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown91"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
-    byre.compute @PTXOp(%38, %arg180) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown92"} : memref<256x128x1x1xf16>, memref<256x128x1x1xf32>
-    byre.compute @PTXOp(%27, %arg187) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown93"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
-    byre.compute @PTXOp(%23, %arg188) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown94"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
-    byre.compute @PTXOp(%16, %arg193) {BlockSize.x = 128 : i32, GridSize.x = 9216 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown95"} : memref<512x256x3x3xf16>, memref<512x256x3x3xf32>
-    byre.compute @PTXOp(%12, %arg194) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown96"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
-    byre.compute @PTXOp(%19, %arg195) {BlockSize.x = 128 : i32, GridSize.x = 1024 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown97"} : memref<512x256x1x1xf16>, memref<512x256x1x1xf32>
-    byre.compute @PTXOp(%8, %arg202) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown98"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
-    byre.compute @PTXOp(%4, %arg203) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown99"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
+    %0 = memref.alloc() : memref<16384xi8>
+    %1 = memref.alloc() : memref<65536xi8>
+    %2 = memref.alloc() : memref<73728xi8>
+    %3 = memref.alloc() : memref<73728xi8>
+    %4 = memref.alloc() : memref<73728xi8>
+    %5 = memref.alloc() : memref<73728xi8>
+    %6 = memref.alloc() : memref<147456xi8>
+    %7 = memref.alloc() : memref<262144xi8>
+    %8 = memref.alloc() : memref<294912xi8>
+    %9 = memref.alloc() : memref<294912xi8>
+    %10 = memref.alloc() : memref<294912xi8>
+    %11 = memref.alloc() : memref<401408xi8>
+    %12 = memref.alloc() : memref<589824xi8>
+    %13 = memref.alloc() : memref<1179648xi8>
+    %14 = memref.alloc() : memref<1179648xi8>
+    %15 = memref.alloc() : memref<1179648xi8>
+    %16 = memref.alloc() : memref<1605632xi8>
+    %17 = memref.alloc() : memref<1605632xi8>
+    %18 = memref.alloc() : memref<2359296xi8>
+    %19 = memref.alloc() : memref<4718592xi8>
+    %20 = memref.alloc() : memref<4718592xi8>
+    %21 = memref.alloc() : memref<4718592xi8>
+    %22 = memref.alloc() : memref<1x512xf16>
+    byre.compute @AliasOp(%21, %22) {offset = 0 : index} : memref<4718592xi8>, memref<1x512xf16>
+    byre.compute @MatmulOpf16f16f16(%arg141, %arg140, %22) {lhs_contracting_dimension = 1 : i64, rhs_contracting_dimension = 1 : i64} : memref<1x1000xf16>, memref<512x1000xf16>, memref<1x512xf16>
+    %23 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%19, %23) {offset = 0 : index} : memref<4718592xi8>, memref<1x512x7x7xf16>
+    byre.compute @PTXOp(%22, %arg138, %23) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [2 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown0"} : memref<1x512xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
+    %24 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%20, %24) {offset = 0 : index} : memref<4718592xi8>, memref<1x512x7x7xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg137, %arg39, %23, %24, %arg201, %arg200) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
+    %25 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%19, %25) {offset = 50176 : index} : memref<4718592xi8>, memref<1x512x7x7xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%24, %arg136, %25) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x512x3x3xf16>, memref<1x512x7x7xf16>
+    %26 = memref.alloc() : memref<512x512x3x3xf16>
+    byre.compute @AliasOp(%21, %26) {offset = 0 : index} : memref<4718592xi8>, memref<512x512x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg135, %24, %26) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
+    %27 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%20, %27) {offset = 0 : index} : memref<4718592xi8>, memref<1x512x7x7xf16>
+    byre.compute @PTXOp(%arg135, %25, %27) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown4"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
+    %28 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%19, %28) {offset = 50176 : index} : memref<4718592xi8>, memref<1x512x7x7xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg134, %arg37, %27, %28, %arg199, %arg198) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
+    %29 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%18, %29) {offset = 0 : index} : memref<2359296xi8>, memref<1x512x7x7xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%28, %arg133, %29) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x512x3x3xf16>, memref<1x512x7x7xf16>
+    %30 = memref.alloc() : memref<512x512x3x3xf16>
+    byre.compute @AliasOp(%20, %30) {offset = 0 : index} : memref<4718592xi8>, memref<512x512x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg132, %28, %30) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
+    %31 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%15, %31) {offset = 0 : index} : memref<1179648xi8>, memref<1x512x7x7xf16>
+    byre.compute @PTXOp(%23, %29, %arg132, %31) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown8"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
+    %32 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%18, %32) {offset = 0 : index} : memref<2359296xi8>, memref<1x512x7x7xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg129, %arg33, %31, %32, %arg192, %arg191) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
+    %33 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%17, %33) {offset = 0 : index} : memref<1605632xi8>, memref<1x512x7x7xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%32, %arg128, %33) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x512x3x3xf16>, memref<1x512x7x7xf16>
+    %34 = memref.alloc() : memref<512x512x3x3xf16>
+    byre.compute @AliasOp(%19, %34) {offset = 0 : index} : memref<4718592xi8>, memref<512x512x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg127, %32, %34) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512x512x3x3xf16>
+    %35 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%18, %35) {offset = 0 : index} : memref<2359296xi8>, memref<1x512x7x7xf16>
+    byre.compute @PTXOp(%arg127, %33, %35) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown12"} : memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>
+    %36 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%16, %36) {offset = 0 : index} : memref<1605632xi8>, memref<1x512x7x7xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg126, %arg31, %35, %36, %arg190, %arg189) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
+    %37 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%17, %37) {offset = 0 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%36, %arg125, %37) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x256x3x3xf16>, memref<1x256x14x14xf16>
+    %38 = memref.alloc() : memref<512x256x3x3xf16>
+    byre.compute @AliasOp(%18, %38) {offset = 0 : index} : memref<2359296xi8>, memref<512x256x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg124, %36, %38) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x512x7x7xf16>, memref<512x256x3x3xf16>
+    %39 = memref.alloc() : memref<1x512x7x7xf16>
+    byre.compute @AliasOp(%16, %39) {offset = 0 : index} : memref<1605632xi8>, memref<1x512x7x7xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg131, %arg35, %31, %39, %arg197, %arg196) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16>, memref<512xf32>, memref<1x512x7x7xf16>, memref<1x512x7x7xf16>, memref<512xf32>, memref<512xf32>
+    %40 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%17, %40) {offset = 100352 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%39, %arg130, %40) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x512x7x7xf16>, memref<512x256x1x1xf16>, memref<1x256x14x14xf16>
+    %41 = memref.alloc() : memref<512x256x1x1xf16>
+    byre.compute @AliasOp(%7, %41) {offset = 0 : index} : memref<262144xi8>, memref<512x256x1x1xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg124, %39, %41) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x512x7x7xf16>, memref<512x256x1x1xf16>
+    %42 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%16, %42) {offset = 0 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @PTXOp(%40, %37, %arg124, %42) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown19"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
+    %43 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%17, %43) {offset = 0 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg123, %arg29, %42, %43, %arg186, %arg185) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
+    %44 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%16, %44) {offset = 100352 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%43, %arg122, %44) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x256x3x3xf16>, memref<1x256x14x14xf16>
+    %45 = memref.alloc() : memref<256x256x3x3xf16>
+    byre.compute @AliasOp(%15, %45) {offset = 0 : index} : memref<1179648xi8>, memref<256x256x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg121, %43, %45) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
+    %46 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%17, %46) {offset = 0 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @PTXOp(%arg121, %44, %46) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown23"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
+    %47 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%16, %47) {offset = 100352 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg120, %arg27, %46, %47, %arg184, %arg183) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
+    %48 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%17, %48) {offset = 0 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%47, %arg119, %48) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x256x3x3xf16>, memref<1x256x14x14xf16>
+    %49 = memref.alloc() : memref<256x256x3x3xf16>
+    byre.compute @AliasOp(%13, %49) {offset = 0 : index} : memref<1179648xi8>, memref<256x256x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg118, %47, %49) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
+    %50 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%11, %50) {offset = 0 : index} : memref<401408xi8>, memref<1x256x14x14xf16>
+    byre.compute @PTXOp(%42, %48, %arg118, %50) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown27"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
+    %51 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%17, %51) {offset = 0 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg115, %arg23, %50, %51, %arg177, %arg176) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
+    %52 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%16, %52) {offset = 0 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%51, %arg114, %52) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x256x3x3xf16>, memref<1x256x14x14xf16>
+    %53 = memref.alloc() : memref<256x256x3x3xf16>
+    byre.compute @AliasOp(%14, %53) {offset = 0 : index} : memref<1179648xi8>, memref<256x256x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg113, %51, %53) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256x256x3x3xf16>
+    %54 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%17, %54) {offset = 0 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @PTXOp(%arg113, %52, %54) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown31"} : memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>
+    %55 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%11, %55) {offset = 100352 : index} : memref<401408xi8>, memref<1x256x14x14xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg112, %arg21, %54, %55, %arg175, %arg174) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
+    %56 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%16, %56) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%55, %arg111, %56) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x128x3x3xf16>, memref<1x128x28x28xf16>
+    %57 = memref.alloc() : memref<256x128x3x3xf16>
+    byre.compute @AliasOp(%12, %57) {offset = 0 : index} : memref<589824xi8>, memref<256x128x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg110, %55, %57) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x256x14x14xf16>, memref<256x128x3x3xf16>
+    %58 = memref.alloc() : memref<1x256x14x14xf16>
+    byre.compute @AliasOp(%16, %58) {offset = 200704 : index} : memref<1605632xi8>, memref<1x256x14x14xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg117, %arg25, %50, %58, %arg182, %arg181) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16>, memref<256xf32>, memref<1x256x14x14xf16>, memref<1x256x14x14xf16>, memref<256xf32>, memref<256xf32>
+    %59 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%17, %59) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%58, %arg116, %59) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16>, memref<256x128x1x1xf16>, memref<1x128x28x28xf16>
+    %60 = memref.alloc() : memref<256x128x1x1xf16>
+    byre.compute @AliasOp(%1, %60) {offset = 0 : index} : memref<65536xi8>, memref<256x128x1x1xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg110, %58, %60) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x256x14x14xf16>, memref<256x128x1x1xf16>
+    %61 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%8, %61) {offset = 0 : index} : memref<294912xi8>, memref<1x128x28x28xf16>
+    byre.compute @PTXOp(%59, %56, %arg110, %61) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown38"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
+    %62 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%17, %62) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg109, %arg19, %61, %62, %arg171, %arg170) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
+    %63 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%16, %63) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%62, %arg108, %63) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x128x3x3xf16>, memref<1x128x28x28xf16>
+    %64 = memref.alloc() : memref<128x128x3x3xf16>
+    byre.compute @AliasOp(%10, %64) {offset = 0 : index} : memref<294912xi8>, memref<128x128x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg107, %62, %64) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
+    %65 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%17, %65) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @PTXOp(%arg107, %63, %65) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown42"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
+    %66 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%16, %66) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg106, %arg17, %65, %66, %arg169, %arg168) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
+    %67 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%17, %67) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%66, %arg105, %67) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x128x3x3xf16>, memref<1x128x28x28xf16>
+    %68 = memref.alloc() : memref<128x128x3x3xf16>
+    byre.compute @AliasOp(%9, %68) {offset = 0 : index} : memref<294912xi8>, memref<128x128x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg104, %66, %68) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
+    %69 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%11, %69) {offset = 0 : index} : memref<401408xi8>, memref<1x128x28x28xf16>
+    byre.compute @PTXOp(%61, %67, %arg104, %69) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown46"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
+    %70 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%17, %70) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg101, %arg13, %69, %70, %arg162, %arg161) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
+    %71 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%16, %71) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%70, %arg100, %71) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x128x3x3xf16>, memref<1x128x28x28xf16>
+    %72 = memref.alloc() : memref<128x128x3x3xf16>
+    byre.compute @AliasOp(%8, %72) {offset = 0 : index} : memref<294912xi8>, memref<128x128x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg99, %70, %72) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128x128x3x3xf16>
+    %73 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%17, %73) {offset = 0 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @PTXOp(%arg99, %71, %73) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown50"} : memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>
+    %74 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%11, %74) {offset = 200704 : index} : memref<401408xi8>, memref<1x128x28x28xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg98, %arg11, %73, %74, %arg160, %arg159) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
+    %75 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%16, %75) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%74, %arg97, %75) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x64x3x3xf16>, memref<1x64x56x56xf16>
+    %76 = memref.alloc() : memref<128x64x3x3xf16>
+    byre.compute @AliasOp(%6, %76) {offset = 0 : index} : memref<147456xi8>, memref<128x64x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg96, %74, %76) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x128x28x28xf16>, memref<128x64x3x3xf16>
+    %77 = memref.alloc() : memref<1x128x28x28xf16>
+    byre.compute @AliasOp(%16, %77) {offset = 401408 : index} : memref<1605632xi8>, memref<1x128x28x28xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg103, %arg15, %69, %77, %arg167, %arg166) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16>, memref<128xf32>, memref<1x128x28x28xf16>, memref<1x128x28x28xf16>, memref<128xf32>, memref<128xf32>
+    %78 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%17, %78) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%77, %arg102, %78) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16>, memref<128x64x1x1xf16>, memref<1x64x56x56xf16>
+    %79 = memref.alloc() : memref<128x64x1x1xf16>
+    byre.compute @AliasOp(%0, %79) {offset = 0 : index} : memref<16384xi8>, memref<128x64x1x1xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg96, %77, %79) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<0> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x128x28x28xf16>, memref<128x64x1x1xf16>
+    %80 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%11, %80) {offset = 0 : index} : memref<401408xi8>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%78, %75, %arg96, %80) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown57"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    %81 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%17, %81) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg95, %arg9, %80, %81, %arg156, %arg155) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
+    %82 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%16, %82) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%81, %arg94, %82) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
+    %83 = memref.alloc() : memref<64x64x3x3xf16>
+    byre.compute @AliasOp(%2, %83) {offset = 0 : index} : memref<73728xi8>, memref<64x64x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg93, %81, %83) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
+    %84 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%17, %84) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%arg93, %82, %84) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown61"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    %85 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%16, %85) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg92, %arg7, %84, %85, %arg154, %arg153) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
+    %86 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%17, %86) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%85, %arg91, %86) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
+    %87 = memref.alloc() : memref<64x64x3x3xf16>
+    byre.compute @AliasOp(%4, %87) {offset = 0 : index} : memref<73728xi8>, memref<64x64x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg90, %85, %87) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
+    %88 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%16, %88) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%80, %86, %arg90, %88) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown65"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    %89 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%17, %89) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg89, %arg5, %88, %89, %arg150, %arg149) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
+    %90 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%16, %90) {offset = 401408 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%89, %arg88, %90) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
+    %91 = memref.alloc() : memref<64x64x3x3xf16>
+    byre.compute @AliasOp(%5, %91) {offset = 0 : index} : memref<73728xi8>, memref<64x64x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg87, %89, %91) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
+    %92 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%17, %92) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%arg87, %90, %92) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown69"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    %93 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%16, %93) {offset = 401408 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg86, %arg3, %92, %93, %arg148, %arg147) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16>, memref<64xf32>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64xf32>, memref<64xf32>
+    %94 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%17, %94) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x56x56xf16>
+    byre.compute @ConvBackwardDataOpf16f16f16(%93, %arg85, %94) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<64x64x3x3xf16>, memref<1x64x56x56xf16>
+    %95 = memref.alloc() : memref<64x64x3x3xf16>
+    byre.compute @AliasOp(%3, %95) {offset = 0 : index} : memref<73728xi8>, memref<64x64x3x3xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg84, %93, %95) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<1> : tensor<4xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<64x64x3x3xf16>
+    %96 = memref.alloc() : memref<1x64x56x56xf16>
+    byre.compute @AliasOp(%11, %96) {offset = 0 : index} : memref<401408xi8>, memref<1x64x56x56xf16>
+    byre.compute @PTXOp(%88, %94, %96) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown73"} : memref<1x64x56x56xf16>, memref<1x64x56x56xf16>, memref<1x64x56x56xf16>
+    %97 = memref.alloc() : memref<1x64x112x112xf16>
+    byre.compute @AliasOp(%17, %97) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x112x112xf16>
+    byre.compute @PoolMaxGradOpf16f16f16(%arg83, %96, %97) {padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : memref<1x64x112x112xf16>, memref<1x64x56x56xf16>, memref<1x64x112x112xf16>
+    %98 = memref.alloc() : memref<1x64x112x112xf16>
+    byre.compute @AliasOp(%16, %98) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x112x112xf16>
+    byre.compute @PTXOp(%arg83, %97, %98) {BlockSize.x = 128 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], kernel_name = "Unknown74"} : memref<1x64x112x112xf16>, memref<1x64x112x112xf16>, memref<1x64x112x112xf16>
+    %99 = memref.alloc() : memref<1x64x112x112xf16>
+    byre.compute @AliasOp(%17, %99) {offset = 0 : index} : memref<1605632xi8>, memref<1x64x112x112xf16>
+    byre.compute @BatchNormGradOpf16f32f16f16f32f32(%arg82, %arg1, %98, %99, %arg143, %arg142) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x112x112xf16>, memref<64xf32>, memref<1x64x112x112xf16>, memref<1x64x112x112xf16>, memref<64xf32>, memref<64xf32>
+    %100 = memref.alloc() : memref<64x3x7x7xf16>
+    byre.compute @AliasOp(%16, %100) {offset = 0 : index} : memref<1605632xi8>, memref<64x3x7x7xf16>
+    byre.compute @ConvBackwardFilterOpf16f16f16(%arg81, %99, %100) {batch_group_count = 1 : i64, feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", output_layout = "NCHW", padding = dense<3> : tensor<4xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x3x224x224xf16>, memref<1x64x112x112xf16>, memref<64x3x7x7xf16>
+    byre.compute @PTXOp(%100, %arg144) {BlockSize.x = 128 : i32, GridSize.x = 74 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown77"} : memref<64x3x7x7xf16>, memref<64x3x7x7xf32>
+    %101 = memref.alloc() : memref<1x1000xf32>
+    byre.compute @AliasOp(%17, %101) {offset = 0 : index} : memref<1605632xi8>, memref<1x1000xf32>
+    byre.compute @PTXOp(%arg141, %101) {BlockSize.x = 128 : i32, GridSize.x = 8 : i32, arg_ranks = [2 : i32, 2 : i32], kernel_name = "Unknown78"} : memref<1x1000xf16>, memref<1x1000xf32>
+    %102 = memref.alloc() : memref<1000xf32>
+    byre.compute @AliasOp(%16, %102) {offset = 0 : index} : memref<1605632xi8>, memref<1000xf32>
+    byre.compute @ReduceSumOpf32f32(%101, %102) {dimensions = dense<0> : tensor<1xi64>} : memref<1x1000xf32>, memref<1000xf32>
+    byre.compute @PTXOp(%102, %arg145) {BlockSize.x = 128 : i32, GridSize.x = 8 : i32, arg_ranks = [1 : i32, 1 : i32], kernel_name = "Unknown79"} : memref<1000xf32>, memref<1000xf32>
+    %103 = memref.alloc() : memref<1000x512xf16>
+    byre.compute @AliasOp(%17, %103) {offset = 0 : index} : memref<1605632xi8>, memref<1000x512xf16>
+    byre.compute @MatmulOpf16f16f16(%arg141, %arg139, %103) {lhs_contracting_dimension = 0 : i64, rhs_contracting_dimension = 0 : i64} : memref<1x1000xf16>, memref<1x512xf16>, memref<1000x512xf16>
+    byre.compute @PTXOp(%103, %arg146) {BlockSize.x = 128 : i32, GridSize.x = 4000 : i32, arg_ranks = [2 : i32, 2 : i32], kernel_name = "Unknown80"} : memref<1000x512xf16>, memref<1000x512xf32>
+    byre.compute @PTXOp(%95, %arg151) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown81"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
+    byre.compute @PTXOp(%91, %arg152) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown82"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
+    byre.compute @PTXOp(%87, %arg157) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown83"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
+    byre.compute @PTXOp(%83, %arg158) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown84"} : memref<64x64x3x3xf16>, memref<64x64x3x3xf32>
+    byre.compute @PTXOp(%76, %arg163) {BlockSize.x = 128 : i32, GridSize.x = 576 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown85"} : memref<128x64x3x3xf16>, memref<128x64x3x3xf32>
+    byre.compute @PTXOp(%72, %arg164) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown86"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
+    byre.compute @PTXOp(%79, %arg165) {BlockSize.x = 128 : i32, GridSize.x = 64 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown87"} : memref<128x64x1x1xf16>, memref<128x64x1x1xf32>
+    byre.compute @PTXOp(%68, %arg172) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown88"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
+    byre.compute @PTXOp(%64, %arg173) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown89"} : memref<128x128x3x3xf16>, memref<128x128x3x3xf32>
+    byre.compute @PTXOp(%57, %arg178) {BlockSize.x = 128 : i32, GridSize.x = 2304 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown90"} : memref<256x128x3x3xf16>, memref<256x128x3x3xf32>
+    byre.compute @PTXOp(%53, %arg179) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown91"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
+    byre.compute @PTXOp(%60, %arg180) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown92"} : memref<256x128x1x1xf16>, memref<256x128x1x1xf32>
+    byre.compute @PTXOp(%49, %arg187) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown93"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
+    byre.compute @PTXOp(%45, %arg188) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown94"} : memref<256x256x3x3xf16>, memref<256x256x3x3xf32>
+    byre.compute @PTXOp(%38, %arg193) {BlockSize.x = 128 : i32, GridSize.x = 9216 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown95"} : memref<512x256x3x3xf16>, memref<512x256x3x3xf32>
+    byre.compute @PTXOp(%34, %arg194) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown96"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
+    byre.compute @PTXOp(%41, %arg195) {BlockSize.x = 128 : i32, GridSize.x = 1024 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown97"} : memref<512x256x1x1xf16>, memref<512x256x1x1xf32>
+    byre.compute @PTXOp(%30, %arg202) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown98"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
+    byre.compute @PTXOp(%26, %arg203) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], kernel_name = "Unknown99"} : memref<512x512x3x3xf16>, memref<512x512x3x3xf32>
     return
   }
 }

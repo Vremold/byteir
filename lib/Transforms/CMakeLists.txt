@@ -7,6 +7,7 @@ add_mlir_library(ByteIRTransforms
   GraphClusteringByDevice.cpp
   LoopTag.cpp
   LoopUnroll.cpp
+  MemoryPlanning.cpp
   RewriteOpToStdCall.cpp
   SetArgShape.cpp
 

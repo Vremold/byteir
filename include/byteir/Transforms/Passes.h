@@ -16,6 +16,7 @@
 #include "byteir/Transforms/GraphClusteringByDevice.h"
 #include "byteir/Transforms/LoopTag.h"
 #include "byteir/Transforms/LoopUnroll.h"
+#include "byteir/Transforms/MemoryPlanning.h"
 #include "byteir/Transforms/RewriteOpToStdCall.h"
 #include "byteir/Transforms/SetArgShape.h"
 

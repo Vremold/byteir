@@ -1,4 +1,4 @@
-// RUN: byteir-opt --convert-to-byre %s | FileCheck %s
+// RUN: byteir-opt --convert-func-and-call-to-byre %s | FileCheck %s
 
 module {
 // CHECK: module attributes {byre.container_module}  {

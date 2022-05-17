@@ -12,6 +12,7 @@
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "byteir/Dialect/Lace/LaceDialect.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h" // LmhloDialect
@@ -21,7 +22,9 @@
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionInterfaces.h"
+#include "mlir/IR/Matchers.h"
 #include "mlir/Parser/Parser.h"
+#include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
@@ -859,18 +862,87 @@ public:
   }
 };
 
-// Main Pass
+class ConvertViewOpToByrePattern : public OpConversionPattern<memref::ViewOp> {
+public:
+  ConvertViewOpToByrePattern(MLIRContext *ctx)
+      : OpConversionPattern<memref::ViewOp>(ctx) {}
+
+  LogicalResult
+  matchAndRewrite(memref::ViewOp op, memref::ViewOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    IntegerAttr offset;
+    if (!matchPattern(adaptor.byte_shift(), m_Constant(&offset))) {
+      return failure();
+    }
+    auto output = rewriter.create<memref::AllocOp>(op->getLoc(), op.getType());
+    SmallVector<Value, 2> operands;
+    bool isArgAlias = IsArgAlias(operands, adaptor.source(), output);
+
+    auto new_op =
+        rewriter.create<byre::ComputeOp>(op->getLoc(), "AliasOp", operands);
+
+    new_op->setAttr("offset", offset);
+
+    if (isArgAlias) {
+      new_op->setAttr("arg_alias", rewriter.getUnitAttr());
+    }
+
+    rewriter.replaceOp(op, {output});
+
+    return success();
+  }
+};
+
+class ConvertAliasLikeOpToByrePattern
+    : public OpInterfaceConversionPattern<lace::AliasLikeOpInterface> {
+public:
+  using OpInterfaceConversionPattern<
+      lace::AliasLikeOpInterface>::OpInterfaceConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(lace::AliasLikeOpInterface op, ArrayRef<Value> operands,
+                  ConversionPatternRewriter &rewriter) const override {
+    auto dstMemRefType =
+        op->getResult(0).getType().dyn_cast_or_null<MemRefType>();
+    if (!dstMemRefType)
+      return failure();
+
+    auto output = rewriter.create<memref::AllocOp>(op->getLoc(), dstMemRefType);
+    SmallVector<Value, 2> newOperands;
+    bool isArgAlias = IsArgAlias(newOperands, operands[0], output);
+
+    auto new_op =
+        rewriter.create<byre::ComputeOp>(op->getLoc(), "AliasOp", newOperands);
+
+    new_op->setAttr(
+        "offset",
+        rewriter.getI32IntegerAttr(
+            (op.getOffsetElem() * dstMemRefType.getElementTypeBitWidth() + 7) >>
+            3));
+
+    if (isArgAlias) {
+      new_op->setAttr("arg_alias", rewriter.getUnitAttr());
+    }
+    rewriter.replaceOp(op, {output});
+
+    return success();
+  }
+};
+
+// Main Passes
 struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
   ConvertToByrePass(bool appendArgTypes) : ConvertToByreBase() {
     this->appendArgTypes = appendArgTypes;
+  }
 
-    // TODO: change to loading from outside
-    lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
-    lmhloSupportMap.insert({"lmhlo.scatter", "IndexPutOp"});
-    lmhloSupportMap.insert({"lmhlo.gather", "IndexSelectOp"});
-    lmhloSupportMap.insert({"lmhlo.reshape", "AliasOp"});
-    lmhloSupportMap.insert({"lmhlo.slice", "AliasOp"});
-    lmhloSupportMap.insert({"lmhlo.transpose", "TransposeOp"});
+  void runOnOperation() override;
+};
+
+struct ConvertFuncAndCallToByrePass
+    : public ConvertFuncAndCallToByreBase<ConvertFuncAndCallToByrePass> {
+  ConvertFuncAndCallToByrePass(bool appendArgTypes)
+      : ConvertFuncAndCallToByreBase() {
+    this->appendArgTypes = appendArgTypes;
 
     // insert attrNames
     attrNames.push_back(byre::ByreDialect::getEntryPointFunctionAttrName());
@@ -882,10 +954,28 @@ struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
 
   void runOnOperation() override;
 
-  llvm::DenseMap<StringRef, StringRef> lmhloSupportMap;
   llvm::SmallVector<StringRef, 4> attrNames;
   llvm::SmallVector<StringRef, 4> argAttrNames;
   llvm::SmallVector<StringRef, 4> resultAttrNames;
+};
+
+struct ConvertLmhloToByrePass
+    : public ConvertLmhloToByreBase<ConvertLmhloToByrePass> {
+  ConvertLmhloToByrePass(bool appendArgTypes) : ConvertLmhloToByreBase() {
+    this->appendArgTypes = appendArgTypes;
+
+    // TODO: change to loading from outside
+    lmhloSupportMap.insert({"lmhlo.add", "AddOp"});
+    lmhloSupportMap.insert({"lmhlo.scatter", "IndexPutOp"});
+    lmhloSupportMap.insert({"lmhlo.gather", "IndexSelectOp"});
+    lmhloSupportMap.insert({"lmhlo.reshape", "AliasOp"});
+    lmhloSupportMap.insert({"lmhlo.slice", "AliasOp"});
+    lmhloSupportMap.insert({"lmhlo.transpose", "TransposeOp"});
+  }
+
+  void runOnOperation() override;
+
+  llvm::DenseMap<StringRef, StringRef> lmhloSupportMap;
 };
 
 static bool isFuncWithEntryPointPlaceholder(FuncOp func) {
@@ -966,7 +1056,6 @@ static inline void rewriteCallOpsForFuncOp(ArrayRef<func::CallOp> calls) {
 
     // change result to alloc
     for (auto r : callOp.getResults()) {
-
       auto alloc = opBuilder.create<memref::AllocOp>(
           callOp.getLoc(), r.getType().dyn_cast<MemRefType>());
       r.replaceAllUsesExcept(alloc.getResult(), callOp);
@@ -1063,6 +1152,18 @@ static inline void rewriteByreResultAttrsToFuncResultAttr(FuncOp func) {
 }
 
 void ConvertToByrePass::runOnOperation() {
+  auto m = getOperation();
+  OpPassManager pm(m.getOperationName());
+
+  pm.addPass(createConvertFuncAndCallToByrePass(appendArgTypes));
+  pm.addNestedPass<FuncOp>(createConvertLmhloToByrePass(appendArgTypes));
+
+  if (mlir::failed(runPipeline(pm, m))) {
+    signalPassFailure();
+  }
+}
+
+void ConvertFuncAndCallToByrePass::runOnOperation() {
   ModuleOp m = getOperation();
   MLIRContext &ctx = getContext();
   llvm::SmallVector<FuncOp, 4> entryCollector;
@@ -1109,7 +1210,7 @@ void ConvertToByrePass::runOnOperation() {
     removeArgAttrPlaceholders(func, argAttrNames);
   }
 
-  // Below rewrite Lmhlo ops
+  // Below rewrite std.call to byre.compute
   ConversionTarget target(getContext());
   target.addLegalDialect<byre::ByreDialect, func::FuncDialect,
                          memref::MemRefDialect, scf::SCFDialect,
@@ -1117,20 +1218,12 @@ void ConvertToByrePass::runOnOperation() {
 
   target.addLegalOp<ModuleOp, FuncOp, func::ReturnOp>();
 
-  target.addDynamicallyLegalDialect<LmhloDialect>([&](Operation *op) {
-    auto func = op->getParentOfType<FuncOp>();
-    return !isEntryPointFunc(func);
-  });
-
   target.addDynamicallyLegalOp<func::CallOp>([&](Operation *op) {
     auto func = op->getParentOfType<FuncOp>();
     return !isEntryPointFunc(func);
   });
 
   RewritePatternSet patterns(&ctx);
-  populateLmhloToByreConversionPatterns(patterns, lmhloSupportMap,
-                                        appendArgTypes);
-
   populateStdToByreConversionPatterns(patterns, appendArgTypes);
 
   if (failed(applyPartialConversion(m, target, std::move(patterns)))) {
@@ -1140,10 +1233,52 @@ void ConvertToByrePass::runOnOperation() {
   for (auto func : removeFuncCollector) {
     func->erase();
   }
+}
+
+void ConvertLmhloToByrePass::runOnOperation() {
+  FuncOp func = getOperation();
+  MLIRContext &ctx = getContext();
+  if (!isEntryPointFunc(func) && !isFuncWithEntryPointPlaceholder(func)) {
+    return;
+  }
+
+  // Below rewriet lace ops
+  {
+    ConversionTarget target(getContext());
+    target.addLegalDialect<byre::ByreDialect, memref::MemRefDialect>();
+    target.addIllegalDialect<lace::LaceDialect>();
+    target.addIllegalOp<memref::ViewOp>();
+    RewritePatternSet patterns(&ctx);
+    populateViewLikeToByreConversionPatterns(patterns);
+
+    if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
+      signalPassFailure();
+    }
+  }
+
+  // Below rewrite Lmhlo ops
+  {
+    ConversionTarget target(getContext());
+    target
+        .addLegalDialect<ace::AceDialect, byre::ByreDialect, func::FuncDialect,
+                         memref::MemRefDialect, scf::SCFDialect>();
+
+    target.addLegalOp<ModuleOp, FuncOp, func::ReturnOp>();
+
+    target.addIllegalDialect<LmhloDialect>();
+
+    RewritePatternSet patterns(&ctx);
+    populateLmhloToByreConversionPatterns(patterns, lmhloSupportMap,
+                                          appendArgTypes);
+
+    if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
+      signalPassFailure();
+    }
+  }
 
   // TODO move this to fold
   // remove unused fill op
-  m.walk([&](byre::ComputeOp op) {
+  func.walk([&](byre::ComputeOp op) {
     if (op.callee() == "FillOp") {
       auto value = op->getOperand(0);
       if (value.hasOneUse() && value.getDefiningOp<memref::AllocOp>()) {
@@ -1182,6 +1317,12 @@ void mlir::populateLmhloToByreConversionPatterns(
   // clang-format on
 }
 
+void mlir::populateViewLikeToByreConversionPatterns(
+    RewritePatternSet &patterns) {
+  patterns.add<ConvertAliasLikeOpToByrePattern, ConvertViewOpToByrePattern>(
+      patterns.getContext());
+}
+
 void mlir::populateStdToByreConversionPatterns(RewritePatternSet &patterns,
                                                bool appendArgTypes) {
   patterns.add<ConvertCallOpToByrePattern>(patterns.getContext(),
@@ -1191,4 +1332,14 @@ void mlir::populateStdToByreConversionPatterns(RewritePatternSet &patterns,
 std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createConvertToByrePass(bool appendArgTypes) {
   return std::make_unique<ConvertToByrePass>(appendArgTypes);
+}
+
+std::unique_ptr<OperationPass<ModuleOp>>
+mlir::createConvertFuncAndCallToByrePass(bool appendArgTypes) {
+  return std::make_unique<ConvertFuncAndCallToByrePass>(appendArgTypes);
+}
+
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createConvertLmhloToByrePass(bool appendArgTypes) {
+  return std::make_unique<ConvertLmhloToByrePass>(appendArgTypes);
 }

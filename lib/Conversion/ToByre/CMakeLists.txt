@@ -7,6 +7,7 @@ add_byteir_conversion_library(ByteIRToByre
 
   DEPENDS
   MLIRByre
+  MLIRLace
   ByteIRConversionPassIncGen
   ByteIRConversionCommon
   ByteIRMhloUtils
@@ -14,6 +15,7 @@ add_byteir_conversion_library(ByteIRToByre
   LINK_LIBS PUBLIC
   MLIRByre
   MLIRIR
+  MLIRLace
   MLIRMemRef
   MLIRTransforms
   ByteIRConversionCommon

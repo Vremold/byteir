@@ -168,3 +168,29 @@ MemRefType mlir::cloneMemRefTypeWithMemSpace(MemRefType t, Attribute space) {
 MemRefType mlir::cloneMemRefTypeAndRemoveMemSpace(MemRefType t) {
   return MemRefType::get(t.getShape(), t.getElementType(), t.getLayout());
 }
+
+bool mlir::isStaticShapeAndContiguousRowMajorEx(MemRefType memref) {
+  auto canonicalizer = [](MemRefType memref) -> MemRefType {
+    if (!memref.hasStaticShape())
+      return memref;
+    int64_t offset;
+    SmallVector<int64_t, 4> strides;
+    if (failed(getStridesAndOffset(memref, strides, offset)))
+      return memref;
+    int64_t runningSize = 1;
+    for (auto &&pi :
+         llvm::zip(llvm::reverse(strides), llvm::reverse(memref.getShape()))) {
+      auto &&stride = std::get<0>(pi);
+      auto &&size = std::get<1>(pi);
+      if (stride != ShapedType::kDynamicStrideOrOffset && size == 1) {
+        stride = runningSize;
+      }
+      runningSize *= size;
+    }
+    AffineMap newLayout =
+        makeStridedLinearLayoutMap(strides, offset, memref.getContext());
+    return MemRefType::get(memref.getShape(), memref.getElementType(),
+                           newLayout);
+  };
+  return isStaticShapeAndContiguousRowMajor(canonicalizer(memref));
+}

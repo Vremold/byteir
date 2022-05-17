@@ -182,4 +182,19 @@ def SetArgShape: Pass<"set-arg-shape", "ModuleOp"> {
   ];
 }
 
+//===----------------------------------------------------------------------===//
+// Memory planning
+//===----------------------------------------------------------------------===//
+def MemoryPlanning: Pass<"memory-planning", "mlir::FuncOp"> {
+  let summary = "Pass to perform static memory planning";
+  let constructor = "mlir::createMemoryPlanningPass()";
+  let dependentDialects = [
+    "memref::MemRefDialect"
+  ];
+  let options = [
+    Option<"alignment", "alignment", "size_t", /*default=*/"1",
+           "Memory address alignment, must be power of 2">
+  ];
+}
+
 #endif // BYTEIR_TRANSFORMS_PASSES

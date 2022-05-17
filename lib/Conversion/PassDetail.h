@@ -35,6 +35,10 @@ class GPUDialect;
 class GPUModuleOp;
 } // namespace gpu
 
+namespace lace {
+class LaceDialect;
+} // namespace lace
+
 namespace lmhlo {
 class LmhloDialect;
 } // namespace lmhlo

@@ -111,6 +111,30 @@ void FoldAlias(FuncOp func) {
       }
     }
   }
+
+  for (auto compute_op : func.getOps<ComputeOp>()) {
+    if (compute_op.getCallee() == "AliasOp") {
+      auto in_val = compute_op.getOperand(0);
+      auto out_val = compute_op.getOperand(1);
+      if (in_val.getType() == out_val.getType() &&
+          compute_op->getAttrOfType<IntegerAttr>("offset").getInt() == 0) {
+        out_val.replaceAllUsesExcept(in_val, compute_op);
+      }
+    }
+  }
+
+  for (auto op : func.getOps<ComputeOp>()) {
+    if (op.callee() == "AliasOp") {
+      auto value = op->getOperand(1);
+      if (value.hasOneUse()) {
+        remove_ops.emplace_back(op);
+      }
+    }
+  };
+
+  for (auto op : remove_ops) {
+    op->erase();
+  }
 }
 
 struct ByreHoldPass : public ByreFoldBase<ByreHoldPass> {

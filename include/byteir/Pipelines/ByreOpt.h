@@ -17,7 +17,8 @@ namespace mlir {
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createByreOptPipelinePass(const std::string &entry = "main",
-                          bool appendArgTypes = false);
+                          bool appendArgTypes = false,
+                          bool disableMemoryPlanning = false);
 
 } // namespace mlir
 

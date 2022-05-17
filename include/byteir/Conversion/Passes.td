@@ -65,6 +65,17 @@ def UnrealizedCastToLinalg : Pass<"unrealized-cast-to-linalg", "mlir::FuncOp"> {
   ];
 }
 
+//===----------------------------------------------------------------------===//
+// LmhloToLace
+//===----------------------------------------------------------------------===//
+
+def LmhloToLace : Pass<"lmhlo-to-lace", "mlir::FuncOp"> {
+  let summary = "Convert from Lmhlo Dialect to Lace Dialect.";
+  let constructor = "mlir::createLmhloToLacePass()";
+  let dependentDialects = [
+    "mlir::lace::LaceDialect",
+  ];
+}
 
 //===----------------------------------------------------------------------===//
 // LmhloToMemref
@@ -143,7 +154,33 @@ def ConvertToByre : Pass<"convert-to-byre", "ModuleOp"> {
   ];
   let options = [
     Option<"appendArgTypes", "append-arg-types", "bool", /*default=*/"false",
-           "append arg types to Byre">,	
+           "append arg types to Byre">,
+  ];
+
+}
+
+def ConvertFuncAndCallToByre : Pass<"convert-func-and-call-to-byre", "ModuleOp"> {
+  let summary = "Convert func and call to Byre";
+  let constructor = "mlir::createConvertFuncAndCallToByrePass()";
+  let dependentDialects = [
+    "mlir::byre::ByreDialect",
+  ];
+  let options = [
+    Option<"appendArgTypes", "append-arg-types", "bool", /*default=*/"false",
+           "append arg types to Byre">,
+  ];
+}
+
+def ConvertLmhloToByre : Pass<"convert-lmhlo-to-byre", "FuncOp"> {
+  let summary = "Convert lmhlo to Byre";
+  let constructor = "mlir::createConvertLmhloToByrePass()";
+  let dependentDialects = [
+    "mlir::byre::ByreDialect",
+    "mlir::memref::MemRefDialect",
+  ];
+  let options = [
+    Option<"appendArgTypes", "append-arg-types", "bool", /*default=*/"false",
+           "append arg types to Byre">,
   ];
 
 }
