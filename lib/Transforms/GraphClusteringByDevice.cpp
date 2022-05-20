@@ -25,6 +25,7 @@ namespace {
 constexpr const char *DEVICE_ATTR_HOST = "host";
 
 struct FunctionMetadata {
+  StringRef anchorName;
   // The device where function will run
   StringRef deviceAttr;
   // The original function name before partition.
@@ -55,7 +56,8 @@ void insertOpsRecursively(Operation *op, SmallDenseSet<Operation *> &opSet) {
 }
 
 Optional<SmallVector<FunctionMetadata>>
-getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr) {
+getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr,
+                     StringRef deviceAnchorName) {
   SmallVector<FunctionMetadata> metadatas;
   SmallDenseSet<Operation *> hostOps;
   for (Operation &op : funcOp.front().without_terminator()) {
@@ -69,6 +71,7 @@ getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr) {
 
   if (hostOps.size() > 0) {
     FunctionMetadata hostFuncMetadata;
+    hostFuncMetadata.anchorName = getHostAnchorName();
     hostFuncMetadata.deviceAttr = DEVICE_ATTR_HOST;
     hostFuncMetadata.originalName = funcOp.sym_name();
     hostFuncMetadata.insertionPoint = ++Block::iterator(funcOp);
@@ -83,6 +86,7 @@ getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr) {
   }
 
   FunctionMetadata deviceFuncMetadata;
+  deviceFuncMetadata.anchorName = deviceAnchorName;
   deviceFuncMetadata.deviceAttr = deviceAttr;
   deviceFuncMetadata.originalName = funcOp.sym_name();
   deviceFuncMetadata.insertionPoint = ++Block::iterator(funcOp);
@@ -120,6 +124,7 @@ void createFunctions(ModuleOp module_op,
     FuncOp funcOp =
         FuncOp::create(UnknownLoc::get(context), funcName, funcType);
     funcOp->setAttr(attrName, StringAttr::get(context, metadata.deviceAttr));
+    funcOp->setAttr(metadata.anchorName, UnitAttr::get(context));
     funcOp.setPublic();
     Block *block = funcOp.addEntryBlock();
 
@@ -190,11 +195,13 @@ struct GraphClusteringByDevicePass
     : public GraphClusteringByDeviceBase<GraphClusteringByDevicePass> {
 
   explicit GraphClusteringByDevicePass(std::string attrName, std::string device,
+                                       std::string deviceAnchorName,
                                        bool dupNonSplat)
       : GraphClusteringByDeviceBase<
             GraphClusteringByDevicePass>::GraphClusteringByDeviceBase() {
     this->attrName = attrName;
     this->device = device;
+    this->deviceAnchorName = deviceAnchorName;
     this->dupNonSplat = dupNonSplat;
   }
 
@@ -216,7 +223,7 @@ void GraphClusteringByDevicePass::runOnOperation() {
   }
   for (auto funcOp : originalFuncs) {
     Optional<SmallVector<FunctionMetadata>> metadatas =
-        getFunctionMetadatas(funcOp, attrName, device);
+        getFunctionMetadatas(funcOp, attrName, device, deviceAnchorName);
     if (!metadatas) {
       signalPassFailure();
       return;
@@ -239,7 +246,9 @@ void GraphClusteringByDevicePass::runOnOperation() {
 
 std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createGraphClusteringByDevicePass(std::string attrName,
-                                        std::string device, bool dupNonSplat) {
-  return std::make_unique<GraphClusteringByDevicePass>(attrName, device,
-                                                       dupNonSplat);
+                                        std::string device,
+                                        std::string deviceAnchorName,
+                                        bool dupNonSplat) {
+  return std::make_unique<GraphClusteringByDevicePass>(
+      attrName, device, deviceAnchorName, dupNonSplat);
 }

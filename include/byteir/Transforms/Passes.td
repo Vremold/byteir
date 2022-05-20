@@ -111,8 +111,10 @@ def GraphClusteringByDevice : Pass<"graph-clustering-by-device", "ModuleOp"> {
   let options = [
     Option<"attrName", "attr-name", "std::string", /*default=*/"\"device\"",
            "The attr name used for clustering.">,
-    Option<"device", "device", "std::string", /*default=*/"\"cuda\"",
+    Option<"device", "device", "std::string", /*default=*/"\"test\"",
            "The concrete device name for newly created device functions.">,
+    Option<"deviceAnchorName", "device-anchor-name", "std::string", /*default=*/"\"test_device\"",
+           "An anchor used to trigger specific pipeline.">,
     Option<"dupNonSplat", "dup-non-splat", "bool", /*default=*/"false",
            "duplicate a non-splat const if it is used by both host and device side."> 
   ];
