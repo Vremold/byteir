@@ -96,7 +96,33 @@ bool mlir::isBlockSingleAdd(Block *block) {
   return false;
 }
 
-#define UNKNOWN_STR "UNKNOWN_LAYOUT"
+#define UNKNOWN_LAYOUT "UNKNOWN"
+
+static std::string
+parsePoolLayout(size_t rank, const SmallVector<int64_t> &window_dimensions,
+                const SmallVector<int64_t> &strides,
+                const SmallVector<int64_t> &padding) {
+  std::string layout = UNKNOWN_LAYOUT;
+  if (window_dimensions[0] == 1 && window_dimensions[rank - 1] == 1 &&
+      strides[0] == 1 && strides[rank - 1] == 1 && padding[0] == 0 &&
+      padding[1] == 0 && padding[2 * rank - 2] == 0 &&
+      padding[2 * rank - 1] == 0) {
+    if (rank == 4) {
+      layout = "NHWC";
+    } else if (rank == 5) {
+      layout = "NDHWC";
+    }
+  } else if (window_dimensions[0] == 1 && window_dimensions[1] == 1 &&
+             strides[0] == 1 && strides[1] == 1 && padding[0] == 0 &&
+             padding[1] == 0 && padding[2] == 0 && padding[3] == 0) {
+    if (rank == 4) {
+      layout = "NCHW";
+    } else if (rank == 5) {
+      layout = "NCDHW";
+    }
+  }
+  return layout;
+}
 
 std::string mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
   auto base_dilations = op.base_dilationsAttr();
@@ -108,57 +134,49 @@ std::string mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
     assert(false && "expected window_dilations to be dense<1>");
   }
 
-  auto kernel = op.window_dimensions().getValues<int64_t>();
-  SmallVector<int64_t> strides;
+  SmallVector<int64_t> window_dimensions =
+      SmallVector<int64_t>(op.window_dimensions().getValues<int64_t>().begin(),
+                           op.window_dimensions().getValues<int64_t>().end());
+  size_t rank = window_dimensions.size();
+  SmallVector<int64_t> strides(rank, 1);
   if (auto strides_ = op.window_stridesAttr()) {
     strides = SmallVector<int64_t>(strides_.getValues<int64_t>().begin(),
                                    strides_.getValues<int64_t>().end());
   }
-  SmallVector<int64_t> padding;
+  SmallVector<int64_t> padding(rank * 2, 0);
   if (auto padding_ = op.paddingAttr()) {
     padding = SmallVector<int64_t>(padding_.getValues<int64_t>().begin(),
                                    padding_.getValues<int64_t>().end());
   }
 
-  int64_t rank = kernel.size();
   if (rank != 4 && rank != 5) {
     assert(false && "expected dimension number to be 4 or 5");
   }
+  return parsePoolLayout(rank, window_dimensions, strides, padding);
+}
 
-  std::string layout = UNKNOWN_STR;
-  if (kernel[0] == 1 && kernel[rank - 1] == 1) {
-    if (rank == 4) {
-      layout = "NHWC";
-    }
-    if (rank == 5) {
-      layout = "NDHWC";
-    }
-    if (strides.size() != 0 && (strides[0] != 1 || strides[rank - 1] != 1)) {
-      layout = UNKNOWN_STR;
-    }
-    if (layout != UNKNOWN_STR && padding.size() != 0 &&
-        (padding[0] != 0 || padding[1] != 0 || padding[rank * 2 - 2] != 0 ||
-         padding[rank * 2 - 1] != 0)) {
-      layout = UNKNOWN_STR;
-    }
+std::string mlir::getPoolGradLayout(mlir::mhlo::SelectAndScatterOp op) {
+  std::string layout = UNKNOWN_LAYOUT;
+  SmallVector<int64_t> window_dimensions;
+  if (auto window_dimensions_ = op.window_dimensionsAttr()) {
+    window_dimensions =
+        SmallVector<int64_t>(window_dimensions_.getValues<int64_t>().begin(),
+                             window_dimensions_.getValues<int64_t>().end());
   }
-  if (layout == UNKNOWN_STR && kernel[0] == 1 && kernel[1] == 1) {
-    if (rank == 4) {
-      layout = "NCHW";
-    }
-    if (rank == 5) {
-      layout = "NCDHW";
-    }
-    if (strides.size() != 0 && (strides[0] != 1 || strides[1] != 1)) {
-      layout = UNKNOWN_STR;
-    }
-    if (layout != UNKNOWN_STR && padding.size() != 0 &&
-        (padding[0] != 0 || padding[1] != 0 || padding[2] != 0 ||
-         padding[3] != 0)) {
-      layout = UNKNOWN_STR;
-    }
+  size_t rank = window_dimensions.size();
+  SmallVector<int64_t> strides(rank, 1);
+  if (auto window_strides = op.window_stridesAttr()) {
+    strides = SmallVector<int64_t>(window_strides.getValues<int64_t>().begin(),
+                                   window_strides.getValues<int64_t>().end());
   }
-  return layout;
+  SmallVector<int64_t> padding(rank * 2, 0);
+  if (auto padding_ = op.paddingAttr()) {
+    padding = SmallVector<int64_t>(padding_.getValues<int64_t>().begin(),
+                                   padding_.getValues<int64_t>().end());
+  }
+
+  assert(rank == 4 || rank == 5);
+  return parsePoolLayout(rank, window_dimensions, strides, padding);
 }
 
 std::tuple<std::string, std::string, std::string>
@@ -173,7 +191,7 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
     } else if (input_batch_dimension == 0 && input_feature_dimension == 3) {
       input_layout = "NHWC";
     } else {
-      input_layout = UNKNOWN_STR;
+      input_layout = UNKNOWN_LAYOUT;
     }
   } else if (input_spatial_dimensions.size() == 3) {
     if (input_batch_dimension == 0 && input_feature_dimension == 1) {
@@ -181,10 +199,10 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
     } else if (input_batch_dimension == 0 && input_feature_dimension == 4) {
       input_layout = "NDHWC";
     } else {
-      input_layout = UNKNOWN_STR;
+      input_layout = UNKNOWN_LAYOUT;
     }
   } else {
-    input_layout = UNKNOWN_STR;
+    input_layout = UNKNOWN_LAYOUT;
   }
 
   std::string output_layout;
@@ -198,7 +216,7 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
     } else if (output_batch_dimension == 0 && output_feature_dimension == 3) {
       output_layout = "NHWC";
     } else {
-      output_layout = UNKNOWN_STR;
+      output_layout = UNKNOWN_LAYOUT;
     }
   } else if (output_spatial_dimensions.size() == 3) {
     if (output_batch_dimension == 0 && output_feature_dimension == 1) {
@@ -206,10 +224,10 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
     } else if (output_batch_dimension == 0 && output_feature_dimension == 4) {
       output_layout = "NDHWC";
     } else {
-      output_layout = UNKNOWN_STR;
+      output_layout = UNKNOWN_LAYOUT;
     }
   } else {
-    output_layout = UNKNOWN_STR;
+    output_layout = UNKNOWN_LAYOUT;
   }
 
   std::string kernel_layout;
@@ -230,7 +248,7 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
                kernel_output_feature_dimension == 3) {
       kernel_layout = "HWCN";
     } else {
-      kernel_layout = UNKNOWN_STR;
+      kernel_layout = UNKNOWN_LAYOUT;
     }
   } else if (kernel_spatial_dimensions.size() == 3) {
     if (kernel_input_feature_dimension == 1 &&
@@ -243,10 +261,10 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
                kernel_output_feature_dimension == 4) {
       kernel_layout = "DHWCN";
     } else {
-      kernel_layout = UNKNOWN_STR;
+      kernel_layout = UNKNOWN_LAYOUT;
     }
   } else {
-    kernel_layout = UNKNOWN_STR;
+    kernel_layout = UNKNOWN_LAYOUT;
   }
 
   return std::make_tuple(input_layout, kernel_layout, output_layout);
@@ -261,8 +279,8 @@ void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
   auto input_layout = std::get<0>(conv_layout);
   auto kernel_layout = std::get<1>(conv_layout);
   auto output_layout = std::get<2>(conv_layout);
-  assert(input_layout != UNKNOWN_STR && kernel_layout != UNKNOWN_STR &&
-         output_layout != UNKNOWN_STR);
+  assert(input_layout != UNKNOWN_LAYOUT && kernel_layout != UNKNOWN_LAYOUT &&
+         output_layout != UNKNOWN_LAYOUT);
   assert(input_layout == kernel_layout && input_layout == output_layout);
 
   attrs.append("input_layout", rewriter.getStringAttr(input_layout));
@@ -294,4 +312,4 @@ template void mlir::handleConvAttribute<mlir::mhlo::ConvOp>(NamedAttrList &,
 template void mlir::handleConvAttribute<mlir::lmhlo::ConvOp>(
     NamedAttrList &, mlir::lmhlo::ConvOp, OpBuilder &);
 
-#undef UNKNOWN_STR
+#undef UNKNOWN_LAYOUT

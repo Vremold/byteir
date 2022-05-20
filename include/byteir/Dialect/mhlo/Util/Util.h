@@ -46,10 +46,16 @@ bool isSplatMhloConstantValue(Value val, double splat_val);
 bool isBlockSingleAdd(Block *block);
 
 // Return layout like "NCHW"/"NHWC"/"NDHWC"/"NCDHW" if success,
-// Return "UNKNOWN" if failed.
+// return "UNKNOWN" if failed.
 std::string getPoolLayout(mhlo::ReduceWindowOp op);
 
-// Return {input_layout, kernel_layout, output_layout} like PoolLayout
+// Return layout like "NCHW"/"NHWC"/"NDHWC"/"NCDHW" if success,
+// return "UNKNOWN" if failed.
+std::string getPoolGradLayout(mhlo::SelectAndScatterOp op);
+
+// Return {input_layout, kernel_layout, output_layout} like PoolLayout,
+// layout could be "NCHW"/"NHWC"/"HWCN"/"NDHWC"/"NCDHW"/"DHWCN",
+// return "UNKNOWN" if failed.
 std::tuple<std::string, std::string, std::string>
 getConvLayout(mhlo::ConvDimensionNumbersAttr dimension_numbers);
 
