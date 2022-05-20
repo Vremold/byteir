@@ -65,6 +65,23 @@ def CollectFunc : Pass<"collect-func", "ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// GenericDeviceConfig
+//===----------------------------------------------------------------------===//
+
+def GenericDeviceConfig : Pass<"generic-device-config", "mlir::FuncOp"> {
+  let summary = "Generate Generic Device configuration";
+  let constructor = "mlir::createGenericDeviceConfigPass()";
+  let options = [
+    Option<"anchorAttr", "anchor-attr", "std::string",
+            /*default=*/"",
+            "An attribute anchoring on target functions.">,
+    Option<"computeName", "compute-name", "std::string",
+            /*default=*/"",
+            "An attribute setting compute name.">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // FuncTag
 //===----------------------------------------------------------------------===//
 
@@ -172,6 +189,21 @@ def LoopUnroll : Pass<"unroll", "mlir::FuncOp"> {
            "Fully unroll loops">,
     Option<"depth", "depth", "int", /*default=*/"-1",
            "Loop depth, a negative number implies disabling">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// Remove func body
+//===----------------------------------------------------------------------===//
+def RemoveFuncBody: Pass<"remove-func-body", "mlir::FuncOp"> {
+  let summary = "Remove func body for func having specific attr";
+  let constructor = "mlir::createRemoveFuncBodyPass()";
+  let options = [
+    Option<"anchorAttr", "anchor-attr", "std::string",
+            /*default=*/"",
+            "An optional attribute anchoring on target functions.">,
+    Option<"disableForcePrivate", "disable-force-private", "bool", /*default=*/"false",
+           "Disable force public functon to private function"> 
   ];
 }
 

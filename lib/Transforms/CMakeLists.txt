@@ -4,10 +4,12 @@ add_mlir_library(ByteIRTransforms
   CondCanonicalize.cpp
   CollectFunc.cpp
   FuncTag.cpp
+  GenericDeviceConfig.cpp
   GraphClusteringByDevice.cpp
   LoopTag.cpp
   LoopUnroll.cpp
   MemoryPlanning.cpp
+  RemoveFuncBody.cpp
   RewriteOpToStdCall.cpp
   SetArgShape.cpp
   SetArgSpace.cpp

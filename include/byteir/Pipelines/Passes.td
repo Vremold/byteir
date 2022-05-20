@@ -57,6 +57,7 @@ def ByreOptPipeline : Pass<"byre-opt", "mlir::ModuleOp"> {
   let dependentDialects = [
     "mlir::byre::ByreDialect",
     "mlir::lace::LaceDialect",
+    "mlir::memref::MemRefDialect",
   ];
   let options = [
     Option<"entryFunc", "entry-func", "std::string",
