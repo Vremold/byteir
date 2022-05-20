@@ -5,12 +5,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include <vector>
-
-#include "./PassDetail.h"
 #include "byteir/Transforms/SetArgShape.h"
+#include "./PassDetail.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include <vector>
 
 #define DEBUG_TYPE "set-arg-shape-pass"
 

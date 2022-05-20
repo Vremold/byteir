@@ -124,6 +124,21 @@ def LoopTag : Pass<"loop-tag", "FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// Memory planning
+//===----------------------------------------------------------------------===//
+def MemoryPlanning: Pass<"memory-planning", "mlir::FuncOp"> {
+  let summary = "Pass to perform static memory planning";
+  let constructor = "mlir::createMemoryPlanningPass()";
+  let dependentDialects = [
+    "memref::MemRefDialect"
+  ];
+  let options = [
+    Option<"alignment", "alignment", "size_t", /*default=*/"1",
+           "Memory address alignment, must be power of 2">
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // MemrefOpToStdCall
 //===----------------------------------------------------------------------===//
 
@@ -183,17 +198,19 @@ def SetArgShape: Pass<"set-arg-shape", "ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// Memory planning
+// SetArgMemSpace
 //===----------------------------------------------------------------------===//
-def MemoryPlanning: Pass<"memory-planning", "mlir::FuncOp"> {
-  let summary = "Pass to perform static memory planning";
-  let constructor = "mlir::createMemoryPlanningPass()";
-  let dependentDialects = [
-    "memref::MemRefDialect"
-  ];
+
+def SetArgSpace: Pass<"set-arg-space", "ModuleOp"> {
+  let summary = "Set arg memSpace for the entry function specified.";
+  let constructor = "mlir::createSetArgSpacePass()";
   let options = [
-    Option<"alignment", "alignment", "size_t", /*default=*/"1",
-           "Memory address alignment, must be power of 2">
+    Option<"entryFunc", "entry-func", "std::string",
+            /*default=*/"\"main\"",
+            "Used to specify the entry-function.">,
+    Option<"allSpace", "all-space", "std::string",
+            /*default=*/"",
+            "Specified space for all args">,
   ];
 }
 

@@ -45,8 +45,8 @@ llvm::Optional<int64_t> getSizeInBytes(MemRefType t);
 // stride and offset are all static value.
 bool isStatic(MemRefType t);
 
-// Returns a new MemRefType with a new MemSpace 'attr'
-MemRefType cloneMemRefTypeWithMemSpace(MemRefType t, Attribute attr);
+// Returns a new MemRefType with a new MemSpace 'space'
+MemRefType cloneMemRefTypeWithMemSpace(MemRefType t, Attribute space);
 
 // Reutrns a new MemRefType and remove MemSpace
 MemRefType cloneMemRefTypeAndRemoveMemSpace(MemRefType t);

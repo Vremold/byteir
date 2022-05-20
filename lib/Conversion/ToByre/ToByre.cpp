@@ -929,6 +929,44 @@ public:
   }
 };
 
+Optional<StringAttr> getCalleeAttr(memref::CopyOp op) {
+  auto ctx = op->getContext();
+  auto srcSpace = op.source().getType().cast<MemRefType>().getMemorySpace();
+  auto dstSpace = op.target().getType().cast<MemRefType>().getMemorySpace();
+
+  if (!srcSpace.isa_and_nonnull<StringAttr>() ||
+      !dstSpace.isa_and_nonnull<StringAttr>()) {
+    return None;
+  }
+
+  auto srcRef = srcSpace.cast<StringAttr>().strref();
+  auto dstRef = dstSpace.cast<StringAttr>().strref();
+  return StringAttr::get(ctx, srcRef + "2" + dstRef);
+}
+
+class ConvertMemrefCopyOpToByrePattern
+    : public OpConversionPattern<memref::CopyOp> {
+public:
+  ConvertMemrefCopyOpToByrePattern(MLIRContext *ctx)
+      : OpConversionPattern<memref::CopyOp>(ctx) {}
+
+  LogicalResult
+  matchAndRewrite(memref::CopyOp op, memref::CopyOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+
+    auto newOp = rewriter.replaceOpWithNewOp<byre::CopyOp>(
+        op, adaptor.getOperands()[0], adaptor.getOperands()[1]);
+
+    auto maybeCallee = getCalleeAttr(op);
+
+    if (maybeCallee.hasValue()) {
+      newOp->setAttr("callee", maybeCallee.getValue());
+    }
+
+    return success();
+  }
+};
+
 // Main Passes
 struct ConvertToByrePass : public ConvertToByreBase<ConvertToByrePass> {
   ConvertToByrePass(bool appendArgTypes) : ConvertToByreBase() {
@@ -1242,12 +1280,12 @@ void ConvertLmhloToByrePass::runOnOperation() {
     return;
   }
 
-  // Below rewriet lace ops
+  // Below rewrite lace ops, view Op
   {
     ConversionTarget target(getContext());
     target.addLegalDialect<byre::ByreDialect, memref::MemRefDialect>();
     target.addIllegalDialect<lace::LaceDialect>();
-    target.addIllegalOp<memref::ViewOp>();
+    target.addIllegalOp<memref::ViewOp, memref::CopyOp>();
     RewritePatternSet patterns(&ctx);
     populateViewLikeToByreConversionPatterns(patterns);
 
@@ -1319,7 +1357,8 @@ void mlir::populateLmhloToByreConversionPatterns(
 
 void mlir::populateViewLikeToByreConversionPatterns(
     RewritePatternSet &patterns) {
-  patterns.add<ConvertAliasLikeOpToByrePattern, ConvertViewOpToByrePattern>(
+  patterns.add<ConvertAliasLikeOpToByrePattern,
+               ConvertMemrefCopyOpToByrePattern, ConvertViewOpToByrePattern>(
       patterns.getContext());
 }
 

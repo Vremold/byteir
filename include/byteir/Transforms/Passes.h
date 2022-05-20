@@ -19,6 +19,7 @@
 #include "byteir/Transforms/MemoryPlanning.h"
 #include "byteir/Transforms/RewriteOpToStdCall.h"
 #include "byteir/Transforms/SetArgShape.h"
+#include "byteir/Transforms/SetArgSpace.h"
 
 namespace mlir {
 
