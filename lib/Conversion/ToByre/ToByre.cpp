@@ -172,7 +172,7 @@ LogicalResult ConvertToByrePattern<lmhlo::ScatterOp>::matchAndRewrite(
   }
 
   auto &block = region.front();
-  if (!isBlockSingleAdd(&block)) {
+  if (!isBlockSingleOp<mhlo::AddOp>(&block)) {
     return rewriter.notifyMatchFailure(op, "unsupported block in scatter");
   }
 

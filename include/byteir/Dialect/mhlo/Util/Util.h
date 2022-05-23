@@ -43,7 +43,8 @@ bool isSplatMhloConstantValue(Value val, int64_t splat_val);
 
 bool isSplatMhloConstantValue(Value val, double splat_val);
 
-bool isBlockSingleAdd(Block *block);
+// Return ture if block contains single op: AddOp, MaxOp, MinOp
+template <typename Op> bool isBlockSingleOp(Block *block);
 
 // Return layout like "NCHW"/"NHWC"/"NDHWC"/"NCDHW" if success,
 // return "UNKNOWN" if failed.

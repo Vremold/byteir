@@ -72,8 +72,7 @@ bool mlir::isSplatMhloConstantValue(Value val, double splat_val) {
   return isSplatMhloConstantValue(val.getDefiningOp(), splat_val);
 }
 
-// TODO: make this a template later for max/min
-bool mlir::isBlockSingleAdd(Block *block) {
+template <typename Op> bool mlir::isBlockSingleOp(Block *block) {
   if (block == nullptr)
     return false;
 
@@ -86,7 +85,7 @@ bool mlir::isBlockSingleAdd(Block *block) {
     return false;
 
   auto compute_op = mhlo_ret.getOperand(0).getDefiningOp();
-  if (auto add_op = dyn_cast_or_null<mhlo::AddOp>(compute_op)) {
+  if (auto add_op = dyn_cast_or_null<Op>(compute_op)) {
     return (compute_op->getOperand(0) == block->getArgument(0) &&
             compute_op->getOperand(1) == block->getArgument(1)) ||
            (compute_op->getOperand(0) == block->getArgument(1) &&
@@ -95,6 +94,10 @@ bool mlir::isBlockSingleAdd(Block *block) {
 
   return false;
 }
+
+template bool mlir::isBlockSingleOp<mhlo::AddOp>(Block *);
+template bool mlir::isBlockSingleOp<mhlo::MaxOp>(Block *);
+template bool mlir::isBlockSingleOp<mhlo::MinOp>(Block *);
 
 #define UNKNOWN_LAYOUT "UNKNOWN"
 

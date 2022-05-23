@@ -49,7 +49,7 @@ AddScatterAddMatchAndRewriteHelper(mhlo::AddOp add_op, int idx,
   }
 
   auto &block = region.front();
-  if (!isBlockSingleAdd(&block)) {
+  if (!isBlockSingleOp<mhlo::AddOp>(&block)) {
     return failure();
   }
 
