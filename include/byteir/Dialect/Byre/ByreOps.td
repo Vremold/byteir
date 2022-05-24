@@ -9,8 +9,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef Byre_OPS
-#define Byre_OPS
+#ifndef BYRE_OPS
+#define BYRE_OPS
 
 include "mlir/Dialect/DLTI/DLTIBase.td"
 include "byteir/Dialect/Byre/ByreBase.td"
@@ -29,7 +29,7 @@ class Byre_Op<string mnemonic, list<Trait> traits = []> :
     Op<Byre_Dialect, mnemonic, traits>;
 
 def Byre_ComputeOp : Byre_Op<"compute",
-    [HasParent<"FuncOp">, MemRefsNormalizable]> {
+    [HasParent<"FuncOp">, ByreInterface, MemRefsNormalizable]> {
   let summary = "compute operation defines a kernel in runtime";
   let description = [{ 
     Example:
@@ -39,7 +39,6 @@ def Byre_ComputeOp : Byre_Op<"compute",
   }];
 
   let arguments = (ins FlatSymbolRefAttr:$callee, Variadic<AnyType>:$operands);
-  //let results = (outs Variadic<AnyType>);
 
   let extraClassDeclaration = [{
     StringRef getCallee() { return callee(); }
@@ -67,7 +66,7 @@ def Byre_ComputeOp : Byre_Op<"compute",
 }
 
 def Byre_CopyOp : Byre_Op<"copy",
-    [HasParent<"FuncOp">, CopyOpInterface]> {
+    [HasParent<"FuncOp">, ByreInterface, CopyOpInterface]> {
   let summary = "copy operation";
   let description = [{ 
     Copies the data to from the source memref to the target memref .

@@ -99,6 +99,32 @@ def Byre_AsyncOpInterface : OpInterface<"AsyncOpInterface"> {
   ];
 }
 
+// The 'ByreInterface' provides access to the 'ByreOp' interface.
+def ByreInterface : OpInterface<"ByreOp"> {
+  let cppNamespace = "::mlir::byre";
+  let methods = [
+    InterfaceMethod<
+      /*desc=*/[{
+        Return the name of callee for this op.
+      }],
+      /*retTy=*/"std::string",
+      /*methodName=*/"getCalleeName",
+      /*args=*/(ins),
+      /*methodBody=*/"",
+      /*defaultImplementation=*/[{
+        Operation* op = $_op.getOperation();
+        if (auto flatSymAttr = op->getAttrOfType<::mlir::FlatSymbolRefAttr>("callee")) {
+          return flatSymAttr.getValue().str();
+        } else if (auto strAttr = op->getAttrOfType<::mlir::StringAttr>("callee")) {
+          return strAttr.str();
+        }
+        return "";
+      }]
+    >
+  ];
+
+}
+
 def Byre_ArgType_None: BitEnumAttrCase<"None", 0x0000>;
 def Byre_ArgType_Input: BitEnumAttrCase<"Input", 0x0001>;
 def Byre_ArgType_Output: BitEnumAttrCase<"Output", 0x0002>;
