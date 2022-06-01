@@ -50,6 +50,7 @@ namespace byteir {
 namespace test {
 void registerTestPrintLivenessPass();
 void registerTestPrintUseRangePass();
+void registerTestPrintSymbolicShapePass();
 } // namespace test
 } // namespace byteir
 
@@ -57,6 +58,7 @@ void registerTestPrintUseRangePass();
 void registerTestPasses() {
   byteir::test::registerTestPrintLivenessPass();
   byteir::test::registerTestPrintUseRangePass();
+  byteir::test::registerTestPrintSymbolicShapePass();
 }
 #endif
 

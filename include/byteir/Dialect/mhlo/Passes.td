@@ -155,6 +155,18 @@ def RewriteWithConstraint :  Pass<"rewrite-with-constraint", "mlir::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// ShapeReification
+//===----------------------------------------------------------------------===//
+
+def ShapeReification : Pass<"shape-reification", "FuncOp"> {
+  let summary = "Iteratively reify all shape computations.";
+  let constructor = "mlir::createShapeReificationPass()";
+  let dependentDialects = [
+    "mlir::shape::ShapeDialect"
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // TrivialFusion
 //===----------------------------------------------------------------------===//
 

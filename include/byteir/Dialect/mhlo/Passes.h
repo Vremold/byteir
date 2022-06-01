@@ -21,6 +21,7 @@
 #include "byteir/Dialect/mhlo/Transforms/LayoutTransformation.h"
 #include "byteir/Dialect/mhlo/Transforms/ReduceFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/RewriteWithConstraint.h"
+#include "byteir/Dialect/mhlo/Transforms/ShapeReification.h"
 #include "byteir/Dialect/mhlo/Transforms/TrivialFusion.h"
 
 namespace mlir {

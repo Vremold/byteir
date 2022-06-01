@@ -17,6 +17,10 @@ namespace func {
 class FuncDialect;
 } // namespace func
 
+namespace shape {
+class ShapeDialect;
+}
+
 #define GEN_PASS_CLASSES
 #include "byteir/Dialect/mhlo/Passes.h.inc"
 

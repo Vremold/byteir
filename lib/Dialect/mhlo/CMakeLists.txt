@@ -53,6 +53,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/LayoutTransformation.cpp
   Transforms/ReduceFusion.cpp
   Transforms/RewriteWithConstraint.cpp
+  Transforms/ShapeReification.cpp
   Transforms/TrivialFusion.cpp
 
   ADDITIONAL_HEADER_DIRS

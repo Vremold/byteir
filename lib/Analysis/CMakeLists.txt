@@ -2,6 +2,7 @@ add_mlir_library(ByteIRAnalysis
   DimFlag.cpp
   Liveness.cpp
   OpDependence.cpp
+  SymbolicShape.cpp
   UseRange.cpp
 
   ADDITIONAL_HEADER_DIRS
