@@ -21,7 +21,7 @@
 #include "byteir/Transforms/RemoveFuncBody.h"
 #include "byteir/Transforms/RewriteOpToStdCall.h"
 #include "byteir/Transforms/SetArgShape.h"
-#include "byteir/Transforms/SetArgSpace.h"
+#include "byteir/Transforms/SetSpace.h"
 
 namespace mlir {
 

@@ -55,10 +55,10 @@ void insertOpsRecursively(Operation *op, SmallDenseSet<Operation *> &opSet) {
   }
 }
 
-Optional<SmallVector<FunctionMetadata>>
+Optional<SmallVector<FunctionMetadata, 4>>
 getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr,
                      StringRef deviceAnchorName) {
-  SmallVector<FunctionMetadata> metadatas;
+  SmallVector<FunctionMetadata, 4> metadatas;
   SmallDenseSet<Operation *> hostOps;
   for (Operation &op : funcOp.front().without_terminator()) {
     if (op.hasAttr(attrName)) {
@@ -105,7 +105,7 @@ getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr,
 }
 
 void createFunctions(ModuleOp module_op,
-                     SmallVector<FunctionMetadata> &metadatas,
+                     SmallVector<FunctionMetadata, 4> &metadatas,
                      StringRef attrName) {
   MLIRContext *context = module_op.getContext();
   SymbolTable symbolTable(module_op);
@@ -158,7 +158,7 @@ void createFunctions(ModuleOp module_op,
 }
 
 void createCalls(MLIRContext *context,
-                 const SmallVector<FunctionMetadata> &metadatas) {
+                 const SmallVector<FunctionMetadata, 4> &metadatas) {
   BlockAndValueMapping mapping;
   for (auto &metadata : metadatas) {
     // Creates the CallOp.
@@ -222,7 +222,7 @@ void GraphClusteringByDevicePass::runOnOperation() {
     originalFuncs.push_back(funcOp);
   }
   for (auto funcOp : originalFuncs) {
-    Optional<SmallVector<FunctionMetadata>> metadatas =
+    Optional<SmallVector<FunctionMetadata, 4>> metadatas =
         getFunctionMetadatas(funcOp, attrName, device, deviceAnchorName);
     if (!metadatas) {
       signalPassFailure();
