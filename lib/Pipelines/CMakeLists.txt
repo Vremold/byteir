@@ -28,4 +28,8 @@ add_mlir_library(ByteIRPipelines
   MLIRMemRef
   MLIRSCF
   MLIRTransforms
+  ByteIRHloToLhlo
+  ByteIRLmhloToLace
+  ByteIRByrePasses
+  ByteIRToByre
 )

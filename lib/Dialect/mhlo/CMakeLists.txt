@@ -10,10 +10,12 @@ add_mlir_dialect_library(ByteIRMhloUtils
   ByteIRUtils
 
   LINK_LIBS PUBLIC
+  LmhloDialect
   MLIRIR
   MhloDialect
   MLIRSideEffectInterfaces
   MLIRSupport
+  ByteIRAnalysis
   ByteIRUtils
   )
 
