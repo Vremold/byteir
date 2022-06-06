@@ -1,4 +1,4 @@
-//===- ShapeReification.h -------------------------------------*--- C++ -*-===//
+//===- ShapeReification.cpp -----------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,6 +7,8 @@
 
 #include "byteir/Dialect/mhlo/Transforms/ShapeReification.h"
 #include "./PassDetail.h"
+#include "byteir/Dialect/mhlo/ReifyShapes/Register.h"
+#include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
@@ -19,48 +21,38 @@
 
 using namespace mlir;
 using namespace llvm;
+using namespace byteir;
 
 namespace {
 
-// The function signature is similar to reifyReturnTypeShapes's, except that
-// it has an additional argument of type `Operation *`. It should be easy if
-// we decice to contribute some of the implementation to upstream later.
-LogicalResult
-reifyDotReturnTypeShapes(Operation *op, OpBuilder &builder, ValueRange operands,
-                         SmallVectorImpl<::mlir::Value> &reifiedReturnShapes) {
-  auto dotOp = cast<mhlo::DotOp>(op);
-  auto lhs_type = dotOp.lhs().getType().dyn_cast<ShapedType>();
-  auto rhs_type = dotOp.rhs().getType().dyn_cast<ShapedType>();
-  if (!lhs_type || !rhs_type || !lhs_type.hasRank() || !rhs_type.hasRank()) {
+LogicalResult reifyShapes(OpBuilder &builder, Operation *op,
+                          SmallVectorImpl<Value> &reifications) {
+  if (!op)
     return failure();
-  }
-
-  mhlo::DotOp::Adaptor adaptor(operands);
-  auto lhs = adaptor.lhs();
-  auto rhs = adaptor.rhs();
-  SmallVector<Value> dimensions;
-
-  // vector dot vector
-  if (1 == lhs_type.getRank() && 1 == rhs_type.getRank()) {
-    ;
-  }
-  // matrix dot vector
-  else if (2 == lhs_type.getRank() && 1 == rhs_type.getRank()) {
-    dimensions.push_back(builder.create<tensor::DimOp>(dotOp.getLoc(), lhs, 0));
-  }
-  // vector dot matrix
-  else if (1 == lhs_type.getRank() && 2 == rhs_type.getRank()) {
-    dimensions.push_back(builder.create<tensor::DimOp>(dotOp.getLoc(), rhs, 1));
-  }
-  // matrix dot matrix
-  else if (2 == lhs_type.getRank() && 2 == rhs_type.getRank()) {
-    dimensions.push_back(builder.create<tensor::DimOp>(dotOp.getLoc(), lhs, 0));
-    dimensions.push_back(builder.create<tensor::DimOp>(dotOp.getLoc(), rhs, 1));
+  // TODO: support nested function call
+  if (auto origin = dyn_cast<InferShapedTypeOpInterface>(op)) {
+    if (failed(origin.reifyReturnTypeShapes(builder, origin->getOperands(),
+                                            reifications))) {
+      return failure();
+    }
+  } else if (auto reifyFunc =
+                 reifyReturnTypeShapes(op->getName().getStringRef())) {
+    if (failed(reifyFunc(op, builder, op->getOperands(), reifications))) {
+      return failure();
+    }
+  } else if (auto customCall = dyn_cast<mhlo::CustomCallOp>(op)) {
+    auto inferFunc = reifyReturnTypeShapes(customCall.call_target_name());
+    if (!inferFunc) {
+      return failure();
+    }
+    if (failed(inferFunc(op, builder, op->getOperands(), reifications)))
+      return failure();
   } else {
+    // Return failure if op doesn't have InferShapedTypeOpInterface and not
+    // registered.
     return failure();
   }
-  reifiedReturnShapes.push_back(
-      builder.create<tensor::FromElementsOp>(dotOp.getLoc(), dimensions));
+
   return success();
 }
 
@@ -74,14 +66,13 @@ struct ShapeReificationOnTensorDimPattern
 
   LogicalResult matchAndRewrite(tensor::DimOp op,
                                 PatternRewriter &rewriter) const override {
-    auto origin = op.source().getDefiningOp<InferShapedTypeOpInterface>();
-    if (!origin)
-      return failure();
+    auto origin = op.source().getDefiningOp();
     SmallVector<Value, 1> reifications;
-    if (failed(origin.reifyReturnTypeShapes(rewriter, origin->getOperands(),
-                                            reifications))) {
+
+    if (failed(reifyShapes(rewriter, origin, reifications))) {
       return failure();
     }
+
     Value shape = reifications[op.source().cast<OpResult>().getResultNumber()];
     Value dimOfShape =
         rewriter.create<tensor::ExtractOp>(op.getLoc(), shape, op.index());
@@ -107,21 +98,8 @@ struct ShapeReificationPattern : public OpRewritePattern<shape::ShapeOfOp> {
   LogicalResult matchAndRewrite(shape::ShapeOfOp op,
                                 PatternRewriter &rewriter) const override {
     Operation *defOp = op.getArg().getDefiningOp();
-    if (!defOp)
-      return failure();
     SmallVector<Value, 1> reifications;
-    // TODO: support nested function call
-    if (auto origin = dyn_cast<InferShapedTypeOpInterface>(defOp)) {
-      if (failed(origin.reifyReturnTypeShapes(rewriter, origin->getOperands(),
-                                              reifications))) {
-        return failure();
-      }
-    } else if (isa<mhlo::DotOp>(defOp)) {
-      if (failed(reifyDotReturnTypeShapes(defOp, rewriter, defOp->getOperands(),
-                                          reifications))) {
-        return failure();
-      }
-    } else {
+    if (failed(reifyShapes(rewriter, defOp, reifications))) {
       return failure();
     }
 
@@ -144,6 +122,14 @@ void PopulateShapeReificationPatterns(MLIRContext *ctx,
 
 struct ShapeReificationPass
     : public ShapeReificationBase<ShapeReificationPass> {
+
+  ShapeReificationPass()
+      : ShapeReificationBase<ShapeReificationPass>::ShapeReificationBase() {
+    // ReifyReturnType implementation could also be registered outside
+    // ShapeReificationPass
+    registerAllMhloReifyReturnTypeShapes();
+  }
+
   void runOnOperation() override {
     // Collect patterns.
     MLIRContext *ctx = &getContext();

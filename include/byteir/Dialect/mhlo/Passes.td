@@ -12,6 +12,15 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
+// Bounded Shape Inference
+//===----------------------------------------------------------------------===//
+
+def BoundedShapeInference : Pass<"bounded-shape-infer", "FuncOp"> {
+  let summary = "Bounded shape inference";
+  let constructor = "mlir::createBoundedShapeInferencePass()";
+}
+
+//===----------------------------------------------------------------------===//
 // ClusterConstraint
 //===----------------------------------------------------------------------===//
 
@@ -164,6 +173,15 @@ def ShapeReification : Pass<"shape-reification", "FuncOp"> {
   let dependentDialects = [
     "mlir::shape::ShapeDialect"
   ];
+}
+
+//===----------------------------------------------------------------------===//
+// Static Shape Inference
+//===----------------------------------------------------------------------===//
+
+def StaticShapeInference : Pass<"static-shape-infer", "FuncOp"> {
+  let summary = "Static shape inference";
+  let constructor = "mlir::createStaticShapeInferencePass()";
 }
 
 //===----------------------------------------------------------------------===//

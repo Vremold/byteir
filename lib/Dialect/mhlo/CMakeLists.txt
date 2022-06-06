@@ -1,6 +1,7 @@
 add_mlir_dialect_library(ByteIRMhloUtils
-  Util/Util.cpp
   Util/FusionUtil.cpp
+  Util/ShapeInferUtil.cpp
+  Util/Util.cpp
   
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Util
@@ -18,6 +19,42 @@ add_mlir_dialect_library(ByteIRMhloUtils
   ByteIRAnalysis
   ByteIRUtils
   )
+
+add_mlir_dialect_library(ByteIRMhloReifyShapes
+  ReifyShapes/DotRegister.cpp
+
+  ADDITIONAL_HEADER_DIRS
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ReifyShapes
+
+  DEPENDS
+  MhloDialect
+  ByteIRMhloUtils
+  ByteIRUtils
+
+  LINK_LIBS PUBLIC
+  MLIRIR
+  MhloDialect
+  MLIRSupport
+  ByteIRUtils
+)
+
+add_mlir_dialect_library(ByteIRMhloBoundedShapes
+  BoundedShapes/NonZeroRegister.cpp
+
+  ADDITIONAL_HEADER_DIRS
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/BoundedShapes
+
+  DEPENDS
+  MhloDialect
+  ByteIRMhloUtils
+  ByteIRUtils
+
+  LINK_LIBS PUBLIC
+  MLIRIR
+  MhloDialect
+  MLIRSupport
+  ByteIRUtils
+)
 
 add_mlir_dialect_library(ByteIRMhloAnalysis
   Analysis/DimFromBroadcast.cpp
@@ -40,6 +77,7 @@ add_mlir_dialect_library(ByteIRMhloAnalysis
 )
 
 add_mlir_dialect_library(ByteIRMhloPasses
+  Transforms/BoundedShapeInference.cpp
   Transforms/CanonicalExt.cpp
   Transforms/ClusterConstraint.cpp
   Transforms/ConvBackwardFusion.cpp
@@ -56,6 +94,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/ReduceFusion.cpp
   Transforms/RewriteWithConstraint.cpp
   Transforms/ShapeReification.cpp
+  Transforms/StaticShapeInference.cpp
   Transforms/TrivialFusion.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -63,12 +102,14 @@ add_mlir_dialect_library(ByteIRMhloPasses
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Transforms
 
   DEPENDS
+  ByteIRMhloBoundedShapes
   ByteIRMhloPassIncGen
   ByteIRAnalysis
   MhloDialect
   ByteIRMhloUtils
   ByteIRUtils
   ByteIRMhloAnalysis
+  ByteIRMhloReifyShapes
 
   LINK_LIBS PUBLIC
   MLIRIR
@@ -76,7 +117,9 @@ add_mlir_dialect_library(ByteIRMhloPasses
   MLIRSideEffectInterfaces
   MLIRSupport
   ByteIRAnalysis
+  ByteIRMhloBoundedShapes
   ByteIRMhloUtils
   ByteIRUtils
   ByteIRMhloAnalysis
+  ByteIRMhloReifyShapes
   )

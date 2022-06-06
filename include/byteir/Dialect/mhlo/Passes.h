@@ -8,6 +8,7 @@
 #ifndef BYTEIR_MHLO_PASSES_H
 #define BYTEIR_MHLO_PASSES_H
 
+#include "byteir/Dialect/mhlo/Transforms/BoundedShapeInference.h"
 #include "byteir/Dialect/mhlo/Transforms/ClusterConstraint.h"
 #include "byteir/Dialect/mhlo/Transforms/ConvBackwardFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
@@ -22,6 +23,7 @@
 #include "byteir/Dialect/mhlo/Transforms/ReduceFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/RewriteWithConstraint.h"
 #include "byteir/Dialect/mhlo/Transforms/ShapeReification.h"
+#include "byteir/Dialect/mhlo/Transforms/StaticShapeInference.h"
 #include "byteir/Dialect/mhlo/Transforms/TrivialFusion.h"
 
 namespace mlir {

@@ -24,7 +24,7 @@ using namespace byteir;
 namespace {
 
 constexpr StringRef getSymbolicShapeFuncAttrName() {
-  return "__byteir__.auxiliary_of";
+  return "__byteir_auxiliary_of__";
 }
 
 Value getArgIfIsAValueAsShapeOp(Value v) {

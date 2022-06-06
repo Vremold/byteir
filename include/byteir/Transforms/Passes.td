@@ -25,7 +25,6 @@ def AnchoredFuncPipeline : Pass<"anchored-func-pipeline", "FuncOp"> {
   ];
 }
 
-
 //===----------------------------------------------------------------------===//
 // CMAE (Common Memory Access Elimination)
 //===----------------------------------------------------------------------===//
