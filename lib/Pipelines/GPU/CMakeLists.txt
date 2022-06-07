@@ -12,7 +12,9 @@ add_mlir_library(ByteIRGPUPipelines
   ByteIRUtils
 
   LINK_LIBS PUBLIC
+  ByteIRLinalgPasses
   ByteIRUtils
+  ByteIRSCFPasses
   MLIRIR
   MLIRAffine
   MLIRLinalg
