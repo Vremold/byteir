@@ -12,6 +12,7 @@
 #include "byteir/Dialect/mhlo/Transforms/ClusterConstraint.h"
 #include "byteir/Dialect/mhlo/Transforms/ConvBackwardFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/ConvertInsertion.h"
 #include "byteir/Dialect/mhlo/Transforms/DotTransposeFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/FusionOutlining.h"
 #include "byteir/Dialect/mhlo/Transforms/GenericFusion.h"

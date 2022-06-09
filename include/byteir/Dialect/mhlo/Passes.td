@@ -52,6 +52,18 @@ def ConvBiasActFusion : Pass<"fuse-conv-bias-act", "mlir::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// ConvertInsertion (for CallOps and FunOps now)
+//===----------------------------------------------------------------------===//
+
+//def ConvertInsertion : Pass<"insert-convert", "ModuleOp"> {
+//  let summary = "Insert ConvertOps (for CallOps and FuncOps now)";
+//  let constructor = "mlir::createConvertInsertionPass()";
+//  let dependentDialects = [
+//    "mlir::mhlo::MhloDialect"
+//  ];
+//}
+
+//===----------------------------------------------------------------------===//
 // DotTransposeFusion : this pass should run after HloTransposeDotToDotGeneral
 //===----------------------------------------------------------------------===//
 

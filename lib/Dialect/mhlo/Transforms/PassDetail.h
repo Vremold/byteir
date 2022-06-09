@@ -17,6 +17,10 @@ namespace func {
 class FuncDialect;
 } // namespace func
 
+namespace mhlo {
+class MhloDialect;
+} // namespace mhlo
+
 namespace shape {
 class ShapeDialect;
 }

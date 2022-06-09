@@ -81,6 +81,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/ClusterConstraint.cpp
   Transforms/ConvBackwardFusion.cpp
   Transforms/ConvBiasActFusion.cpp
+  Transforms/ConvertInsertion.cpp
   Transforms/DotTransposeFusion.cpp
   Transforms/FusionOutlining.cpp
   Transforms/GenericFusion.cpp

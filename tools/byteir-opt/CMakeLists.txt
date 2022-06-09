@@ -19,6 +19,7 @@ set(BYTEIR_LIBS
 if(BYTEIR_INCLUDE_TESTS)
   set(test_libs
     ByteIRTestAnalysis
+    ByteIRTestTransformation
     )
 endif()
 
