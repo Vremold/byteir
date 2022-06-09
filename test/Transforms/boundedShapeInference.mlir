@@ -8,10 +8,10 @@ func @SameOperandsAndResultShape(%arg0: tensor<?x4xf32> {byteir.bounded_shape = 
 }
 
 // CHECK-LABEL: @InferShapedTypeOpInterface
-func @InferShapedTypeOpInterface(%pred : tensor<i1>, %a : tensor<?x2xf32> {byteir.bounded_shape = [4, 2]}, %b : tensor<?x2xf32> {byteir.bounded_shape = [4, 2]}) -> tensor<?x2xf32> {
-  // CHECK-NEXT: byteir.bounded_shape0 = [4, 2]
-  %0 = "mhlo.select"(%pred, %a, %b) : (tensor<i1>, tensor<?x2xf32>, tensor<?x2xf32>) -> tensor<?x2xf32>
-  return %0 : tensor<?x2xf32>
+func @InferShapedTypeOpInterface(%arg0 : tensor<8x4xi32>, %arg1 : tensor<8x4xi32>) -> tensor<?x4xi1> {
+  // CHECK-NEXT: byteir.bounded_shape0 = [8, 4]
+  %0 = "mhlo.compare"(%arg0, %arg1) {comparison_direction = "LT"} : (tensor<8x4xi32>, tensor<8x4xi32>) -> tensor<?x4xi1>
+  return %0 : tensor<?x4xi1>
 }
 
 // CHECK-LABEL: @several_ops

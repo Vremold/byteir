@@ -10,13 +10,10 @@
 
 #include "byteir/Analysis/DimFlag.h"
 
-using namespace llvm;
-using namespace mlir;
-
 namespace byteir {
 
 class DimFromBroadcast : public ComputeFlag {
-  SmallVector<bool> Compute(Value v) override;
+  llvm::SmallVector<bool> Compute(mlir::Value v) override;
 };
 } // namespace byteir
 

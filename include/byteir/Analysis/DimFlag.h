@@ -13,9 +13,6 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Mutex.h"
 
-using namespace llvm;
-using namespace mlir;
-
 namespace byteir {
 
 struct DimFlagAnalysis;
@@ -26,7 +23,7 @@ public:
     assert(!analysis_ && "analysis_ is already set.");
     analysis_ = analysis;
   }
-  virtual SmallVector<bool> Compute(Value v) = 0;
+  virtual llvm::SmallVector<bool> Compute(mlir::Value v) = 0;
 
 protected:
   DimFlagAnalysis *analysis_{nullptr};
@@ -39,11 +36,11 @@ struct DimFlagAnalysis {
   DimFlagAnalysis(ComputeFlag *compute_flag) : compute_flag_(compute_flag) {
     compute_flag_->SetAnalysis(this);
   }
-  SmallVector<bool> GetDimFlag(Value value);
+  llvm::SmallVector<bool> GetDimFlag(mlir::Value value);
 
-  llvm::DenseMap<Value, SmallVector<bool>> memorized_;
+  llvm::DenseMap<mlir::Value, llvm::SmallVector<bool>> memorized_;
   ComputeFlag *compute_flag_;
-  sys::SmartMutex<true> mutex_;
+  llvm::sys::SmartMutex<true> mutex_;
 };
 
 } // namespace byteir

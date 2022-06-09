@@ -14,23 +14,37 @@
 #include <memory>
 #include <string>
 
+namespace byteir {
+struct ArgSideEffectAnalysis;
+}
+
 namespace mlir {
+class FuncOp;
+class ModuleOp;
 
 // Set all memref to a space including intermediate and args
 std::unique_ptr<OperationPass<ModuleOp>>
-createSetAllSpacePass(std::string entryFunc = "",
-                      const std::string &space = "");
+createSetAllSpacePass(const std::string &entryFunc = "",
+                      const std::string &space = "",
+                      byteir::ArgSideEffectAnalysis *analysis = nullptr);
 
 // Set all args (including return) to a space
 std::unique_ptr<OperationPass<ModuleOp>>
-createSetArgSpacePass(std::string entryFunc = "",
+createSetArgSpacePass(const std::string &entryFunc = "",
                       const std::string &allSpace = "",
-                      bool allowArgWritable = false);
+                      bool allowArgWritable = false,
+                      byteir::ArgSideEffectAnalysis *analysis = nullptr);
 
 // Set all args and return to a set of specific spaces
 std::unique_ptr<OperationPass<ModuleOp>> createSetArgSpacePass(
-    std::string entryFunc, llvm::ArrayRef<std::string> argSpaces,
-    llvm::ArrayRef<std::string> retSpaces, bool allowArgWritable = false);
+    const std::string &entryFunc, llvm::ArrayRef<std::string> argSpaces,
+    llvm::ArrayRef<std::string> retSpaces, bool allowArgWritable = false,
+    byteir::ArgSideEffectAnalysis *analysis = nullptr);
+
+// Set space for all ops
+std::unique_ptr<OperationPass<FuncOp>>
+createSetOpSpacePass(const std::string &entryFunc = "",
+                     const std::string &Space = "");
 
 } // namespace mlir
 

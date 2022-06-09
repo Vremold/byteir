@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_MHLO_UTILUTIL_H
-#define BYTEIR_DIALECT_MHLO_UTILUTIL_H
+#ifndef BYTEIR_MHLO_UTIL_UTIL_H
+#define BYTEIR_MHLO_UTIL_UTIL_H
 
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "llvm/ADT/DenseMap.h"
@@ -65,4 +65,4 @@ void handleConvAttribute(NamedAttrList &attrs, T conv_op, OpBuilder &rewriter);
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_MHLO_UTILUTIL_H
+#endif // BYTEIR_MHLO_UTIL_UTIL_H

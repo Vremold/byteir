@@ -209,26 +209,6 @@ def RemoveFuncBody: Pass<"remove-func-body", "mlir::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// SetAllSpace (mainly use for all in the same device)
-//===----------------------------------------------------------------------===//
-
-def SetAllSpace: Pass<"set-all-space", "ModuleOp"> {
-  let summary = "Set all memSpace including intermediate for the entry function specified.";
-  let constructor = "mlir::createSetAllSpacePass()";
-  let options = [
-    Option<"entryFunc", "entry-func", "std::string",
-            /*default=*/"\"main\"",
-            "Used to specify the entry-function.">,
-    Option<"space", "space", "std::string",
-            /*default=*/"",
-            "Specified space for all value">,
-  ];
-  let dependentDialects = [
-    "mlir::memref::MemRefDialect",
-  ];
-}
-
-//===----------------------------------------------------------------------===//
 // SetArgShape
 //===----------------------------------------------------------------------===//
 
@@ -251,7 +231,31 @@ def SetArgShape: Pass<"set-arg-shape", "ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// SetSpace
+// SetSpace Passes
+//===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+// SetAllSpace (mainly use for all in the same device)
+//===----------------------------------------------------------------------===//
+
+def SetAllSpace: Pass<"set-all-space", "ModuleOp"> {
+  let summary = "Set all memSpace including intermediate for the entry function specified.";
+  let constructor = "mlir::createSetAllSpacePass()";
+  let options = [
+    Option<"entryFunc", "entry-func", "std::string",
+            /*default=*/"\"main\"",
+            "Used to specify the entry-function.">,
+    Option<"space", "space", "std::string",
+            /*default=*/"",
+            "Specified space for all value">,
+  ];
+  let dependentDialects = [
+    "mlir::memref::MemRefDialect",
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// SetArgSpace: Set argument spaces
 //===----------------------------------------------------------------------===//
 
 def SetArgSpace: Pass<"set-arg-space", "ModuleOp"> {
@@ -269,6 +273,23 @@ def SetArgSpace: Pass<"set-arg-space", "ModuleOp"> {
   ];
   let dependentDialects = [
     "mlir::memref::MemRefDialect",
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// SetOpSpace: Set Op Space, only attach attribute
+//===----------------------------------------------------------------------===//
+
+def SetOpSpace: Pass<"set-op-space", "FuncOp"> {
+  let summary = "Set op device attribute for the entry function specified.";
+  let constructor = "mlir::createSetOpSpacePass()";
+  let options = [
+    Option<"entryFunc", "entry-func", "std::string",
+            /*default=*/"\"main\"",
+            "Used to specify the entry-function.">,
+    Option<"space", "space", "std::string",
+            /*default=*/"",
+            "Specified space for all ops">,
   ];
 }
 

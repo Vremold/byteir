@@ -129,6 +129,7 @@ inferShapeUsingInferShapedTypeOpInterface(InferShapedTypeOpInterface op) {
       llvm::map_range(resultShapeComps, [](ShapedTypeComponents comp) {
         return comp.getDims();
       }));
+
   return checkAndSetTypes(op, resultShapes);
 }
 

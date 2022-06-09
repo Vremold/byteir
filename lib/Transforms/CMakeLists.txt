@@ -18,10 +18,12 @@ add_mlir_library(ByteIRTransforms
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Transforms
 
   DEPENDS
+  ByteIRAnalysis
   ByteIRTransformsPassIncGen
   ByteIRUtils
 
   LINK_LIBS PUBLIC
+  ByteIRAnalysis
   ByteIRUtils
   MLIRIR
   MLIRAffine

@@ -7,6 +7,7 @@
 
 #include "byteir/Transforms/SetSpace.h"
 #include "./PassDetail.h"
+#include "byteir/Analysis/SideEffect.h"
 #include "byteir/Utils/MemUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -15,17 +16,19 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include <iostream>
 #include <utility>
 
 #define DEBUG_TYPE "set-space-passes"
+#define SPACE_ATTR_NAME "device"
 
+using namespace byteir;
 using namespace mlir;
 using namespace mlir::func;
 using namespace mlir::memref;
 
 namespace {
 
+// common types
 using UpdateFuncType_t = std::pair<SmallVector<Type, 4>, SmallVector<Type, 4>>;
 using CopyType_t = std::pair<Value, Attribute>;
 
@@ -61,7 +64,7 @@ bool isFuncCorrectSpace(FuncOp func, size_t offset, Attribute space,
 }
 
 bool isFuncNotCompatiableWithSpace(FuncOp func, Attribute space) {
-  if (auto funcSpaceAttr = func->getAttrOfType<StringAttr>("device")) {
+  if (auto funcSpaceAttr = func->getAttrOfType<StringAttr>(SPACE_ATTR_NAME)) {
     return funcSpaceAttr != space;
   }
 
@@ -71,8 +74,93 @@ bool isFuncNotCompatiableWithSpace(FuncOp func, Attribute space) {
 }
 
 // Maybe change this to bind Module Op later
-Attribute getOrCreateSpaceAttr(Operation *op, llvm::StringRef name) {
-  return StringAttr::get(op->getContext(), name);
+Attribute getOrCreateSpaceAttr(ModuleOp m, llvm::StringRef name) {
+  return StringAttr::get(m.getContext(), name);
+}
+
+// creat copy for input Arg
+/* Op(A)
+=> newA = Alloc() in dstMemrefTy (new space);
+   copy(A, newA);
+   Op(newA)
+and record {{A, dstSpace}, newA} in copyPairToCopyTargets
+*/
+Value createCopyInputArg(Operation *op, Value oldArg, MemRefType dstMemrefTy,
+                         Attribute desiredSpaceAttr,
+                         DenseMap<CopyType_t, Value> &copyPairToCopyTargets) {
+  OpBuilder b(op);
+  auto loc = op->getLoc();
+  auto newAlloc = b.create<memref::AllocOp>(loc, dstMemrefTy);
+  newAlloc.dump();
+  auto newArg = newAlloc.getResult();
+  b.create<memref::CopyOp>(loc, oldArg, newArg);
+
+  auto dstSpaceAttr = dstMemrefTy.getMemorySpace();
+  CopyType_t copyKey = {oldArg, desiredSpaceAttr};
+  copyPairToCopyTargets.try_emplace(copyKey, newArg);
+  return newArg;
+}
+
+// creat copy for return
+/* A = Op()
+   someusers(A)
+=> A = Op()
+   newA = Alloc() in dstMemrefTy (new space);
+   copy(A, newA)
+   someusers(newA)
+and record {{A, dstSpace}, newA} in copyPairToCopyTargets
+*/
+Value createCopyReturn(Operation *op, Value oldArg, MemRefType dstMemrefTy,
+                       DenseMap<CopyType_t, Value> &copyPairToCopyTargets) {
+  OpBuilder b(op);
+  b.setInsertionPointAfter(op);
+  auto loc = op->getLoc();
+  auto newAlloc = b.create<memref::AllocOp>(loc, dstMemrefTy);
+  auto newArg = newAlloc.getResult();
+  oldArg.replaceAllUsesExcept(newArg, op);
+  b.create<memref::CopyOp>(loc, oldArg, newArg);
+  CopyType_t copyKey = {oldArg, dstMemrefTy.getMemorySpace()};
+  copyPairToCopyTargets.try_emplace(copyKey, newArg);
+  return newArg;
+}
+
+// creat copy for output Arg
+/* Op(A)
+=> newA = Alloc() in dstMemrefTy (new space);
+   Op(newA)
+   copy(newA, A);
+and record {{newA, srcSpace}, A} in copyPairToCopyTargets
+*/
+Value createCopyOutputArg(Operation *op, Value oldArg, MemRefType dstMemrefTy,
+                          DenseMap<CopyType_t, Value> &copyPairToCopyTargets) {
+  OpBuilder b(op);
+  auto loc = op->getLoc();
+  // create alloc before op
+  auto newAlloc = b.create<memref::AllocOp>(loc, dstMemrefTy);
+  auto newArg = newAlloc.getResult();
+  // create copy after op
+  b.setInsertionPointAfter(op);
+  b.create<memref::CopyOp>(loc, newArg, oldArg);
+  auto srcSpaceAttr = oldArg.getType().dyn_cast<MemRefType>().getMemorySpace();
+  CopyType_t copyKey = {newArg, srcSpaceAttr};
+  copyPairToCopyTargets.try_emplace(copyKey, oldArg);
+  return newArg;
+}
+
+Value createCopyArg(Operation *op, Value oldArg, MemRefType dstMemrefTy,
+                    Attribute desiredSpaceAttr,
+                    DenseMap<CopyType_t, Value> &copyPairToCopyTargets,
+                    ArgSideEffectType aSETy) {
+  if (aSETy == ArgSideEffectType::kInput) {
+    return createCopyInputArg(op, oldArg, dstMemrefTy, desiredSpaceAttr,
+                              copyPairToCopyTargets);
+  }
+
+  if (aSETy == ArgSideEffectType::kOutput) {
+    return createCopyOutputArg(op, oldArg, dstMemrefTy, copyPairToCopyTargets);
+  }
+
+  return Value();
 }
 
 // Only implement Non-allow-output-writable
@@ -80,7 +168,8 @@ Attribute getOrCreateSpaceAttr(Operation *op, llvm::StringRef name) {
 void updateFuncArgTypes(FuncOp func, ModuleOp m,
                         DenseMap<FuncOp, UpdateFuncType_t> &funcToUpdateTypes,
                         DenseMap<CopyType_t, Value> &copyPairToCopyTargets,
-                        size_t offset, Attribute spaceAttr) {
+                        size_t offset, Attribute spaceAttr,
+                        ArgSideEffectAnalysis *analysis) {
   // skip if suggest spaceAttr is empty
   // or already right space
   if (isEmptyStringAttr(spaceAttr) ||
@@ -115,19 +204,17 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
 
     // handle users
     for (auto user : arg.getUsers()) {
-      // handle recursive calls
+
+      // handle call
       if (auto callOp = dyn_cast<CallOp>(user)) {
         auto anotherFunc = m.lookupSymbol<FuncOp>(callOp.getCallee());
-
-        // if (isFuncNotCompatiableWithSpace(anotherFunc, spaceAttr)) {
-        //}
 
         if (anotherFunc == nullptr || !anotherFunc.isPrivate()) {
           continue;
         }
 
         if (auto privateSpaceAttr =
-                anotherFunc->getAttrOfType<StringAttr>("device")) {
+                anotherFunc->getAttrOfType<StringAttr>(SPACE_ATTR_NAME)) {
 
           if (privateSpaceAttr != spaceAttr) {
             // check this specific exist or not
@@ -139,14 +226,12 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
               };
 
               if (copyPairToCopyTargets.count(copyKey) == 0) {
-                // if copy not exist
-                // insert alloc and copy
-                OpBuilder b(callOp);
-                auto loc = callOp.getLoc();
-                auto newArg = b.create<memref::AllocOp>(
-                    loc, privateFuncType.getInput(i).dyn_cast<MemRefType>());
-                b.create<memref::CopyOp>(callOp.getLoc(), arg, newArg);
-                copyPairToCopyTargets.try_emplace(copyKey, newArg);
+                // if copy not exist, insert copy
+                auto argSEType = analysis->getType(user, i);
+                auto newArg = createCopyArg(
+                    user, arg,
+                    privateFuncType.getInput(i).dyn_cast<MemRefType>(),
+                    privateSpaceAttr, copyPairToCopyTargets, argSEType);
                 callOp.setOperand(i, newArg);
               } else {
                 // if copy already exist, directly refer it
@@ -163,9 +248,11 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
               continue;
             }
             updateFuncArgTypes(anotherFunc, m, funcToUpdateTypes,
-                               copyPairToCopyTargets, i, spaceAttr);
+                               copyPairToCopyTargets, i, spaceAttr, analysis);
           }
         }
+      } else {
+        // TODO handle regular ops here
       }
     }
   }
@@ -214,21 +301,18 @@ void updateFuncReturnTypes(
       if (auto anotherFunc = m.lookupSymbol<FuncOp>(callOp.getCallee())) {
 
         if (isFuncNotCompatiableWithSpace(anotherFunc, spaceAttr)) {
-          // insert copy after
-          OpBuilder b(callOp);
-          b.setInsertionPointAfter(callOp);
-          auto loc = callOp.getLoc();
+          // insert a CopyFrom after the CallOp
           FunctionType privateFuncType = anotherFunc.getType();
+          auto retMemrefTy = retType.dyn_cast<MemRefType>();
+          CopyType_t copyKey = {ret, retMemrefTy.getMemorySpace()};
 
           for (unsigned i = 0; i < callOp.getNumResults(); ++i) {
             if (ret != callOp.getResult(i)) {
               continue;
             }
 
-            auto newRet =
-                b.create<memref::AllocOp>(loc, retType.dyn_cast<MemRefType>());
-            ret.replaceAllUsesWith(newRet);
-            b.create<memref::CopyOp>(callOp.getLoc(), ret, newRet);
+            auto newRet = createCopyReturn(callOp, ret, retMemrefTy,
+                                           copyPairToCopyTargets);
             ret = newRet;
             break;
           }
@@ -257,10 +341,23 @@ void updateFuncReturnTypes(
 struct SetAllSpacePass : public SetAllSpaceBase<SetAllSpacePass> {
   explicit SetAllSpacePass() = default;
 
-  SetAllSpacePass(std::string entryFuncName, const std::string &space_)
+  SetAllSpacePass(const std::string &entryFuncName, const std::string &space_,
+                  ArgSideEffectAnalysis *externalAnalysis = nullptr)
       : SetAllSpaceBase() {
     entryFunc = entryFuncName;
     space = space_;
+    if (nullptr != externalAnalysis) {
+      analysis = externalAnalysis;
+    } else {
+      interalAnalysis = new ArgSideEffectAnalysis;
+      analysis = interalAnalysis;
+    }
+  }
+
+  ~SetAllSpacePass() {
+    if (nullptr != interalAnalysis) {
+      delete interalAnalysis;
+    }
   }
 
   void runOnOperation() override {
@@ -288,7 +385,7 @@ struct SetAllSpacePass : public SetAllSpaceBase<SetAllSpacePass> {
     // argumenets
     for (unsigned i = 0, e = funcOp.getNumArguments(); i < e; ++i) {
       updateFuncArgTypes(funcOp, m, funcToArgTypes, copyPairToCopyTargets, i,
-                         newSpace);
+                         newSpace, analysis);
     }
 
     // results
@@ -313,26 +410,49 @@ struct SetAllSpacePass : public SetAllSpaceBase<SetAllSpacePass> {
           FunctionType::get(ctx, it.second.first, it.second.second));
     }
   }
+
+  ArgSideEffectAnalysis *interalAnalysis = nullptr;
+  ArgSideEffectAnalysis *analysis = nullptr;
 };
 
 struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
-
-  explicit SetArgSpacePass() = default;
-
-  SetArgSpacePass(std::string entryFuncName, const std::string &space,
-                  bool allowOutWritable)
+  SetArgSpacePass(const std::string &entryFuncName, const std::string &space,
+                  bool allowOutWritable,
+                  ArgSideEffectAnalysis *externalAnalysis = nullptr)
       : SetArgSpaceBase() {
     entryFunc = entryFuncName;
     allSpace = space;
     allowArgWritable = allowOutWritable;
+
+    if (nullptr != externalAnalysis) {
+      analysis = externalAnalysis;
+    } else {
+      interalAnalysis = new ArgSideEffectAnalysis;
+      analysis = interalAnalysis;
+    }
   }
 
-  SetArgSpacePass(std::string entryFuncName, ArrayRef<std::string> argList,
-                  ArrayRef<std::string> retList, bool allowOutWritable)
+  SetArgSpacePass(const std::string &entryFuncName,
+                  ArrayRef<std::string> argList, ArrayRef<std::string> retList,
+                  bool allowOutWritable,
+                  ArgSideEffectAnalysis *externalAnalysis = nullptr)
       : SetArgSpaceBase(), argSpaces(argList.begin(), argList.end()),
         retSpaces(retList.begin(), retList.end()) {
     entryFunc = entryFuncName;
     allowArgWritable = allowOutWritable;
+
+    if (nullptr != externalAnalysis) {
+      analysis = externalAnalysis;
+    } else {
+      interalAnalysis = new ArgSideEffectAnalysis;
+      analysis = interalAnalysis;
+    }
+  }
+
+  ~SetArgSpacePass() {
+    if (nullptr != interalAnalysis) {
+      delete interalAnalysis;
+    }
   }
 
   void runOnOperation() override {
@@ -384,7 +504,7 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
     for (unsigned i = 0, e = funcOp.getNumArguments(); i < e; ++i) {
       auto newSpace = getOrCreateSpaceAttr(m, getSpace(argSpaces, i));
       updateFuncArgTypes(funcOp, m, funcToArgTypes, copyPairToCopyTargets, i,
-                         newSpace);
+                         newSpace, analysis);
     }
     // results
     for (unsigned i = 0, e = funcOp.getNumResults(); i < e; ++i) {
@@ -398,16 +518,17 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
 
       // skip non-private or one without device attr
       if (!deviceFuncOp.isPrivate() ||
-          !deviceFuncOp->hasAttrOfType<StringAttr>("device")) {
+          !deviceFuncOp->hasAttrOfType<StringAttr>(SPACE_ATTR_NAME)) {
         continue;
       }
 
-      auto deviceAttr = deviceFuncOp->getAttrOfType<StringAttr>("device");
+      auto deviceAttr =
+          deviceFuncOp->getAttrOfType<StringAttr>(SPACE_ATTR_NAME);
 
       // argumenets
       for (unsigned i = 0, e = deviceFuncOp.getNumArguments(); i < e; ++i) {
         updateFuncArgTypes(deviceFuncOp, m, funcToArgTypes,
-                           copyPairToCopyTargets, i, deviceAttr);
+                           copyPairToCopyTargets, i, deviceAttr, analysis);
       }
 
       // results
@@ -435,7 +556,6 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
     }
 
     // rewrite FunctionType
-
     for (auto it : funcToArgTypes) {
       FunctionType funcType = it.first.getType();
       it.first.setType(
@@ -445,25 +565,88 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
 
   llvm::SmallVector<std::string, 16> argSpaces;
   llvm::SmallVector<std::string, 16> retSpaces;
+  ArgSideEffectAnalysis *interalAnalysis = nullptr;
+  ArgSideEffectAnalysis *analysis = nullptr;
+};
+
+bool isMemref(Operation &op) {
+  Dialect *dialect = op.getDialect();
+  return dialect && isa<MemRefDialect>(dialect);
+}
+
+struct SetOpSpacePass : public SetOpSpaceBase<SetOpSpacePass> {
+
+  SetOpSpacePass(const std::string &entryFuncName, const std::string &spaceName)
+      : SetOpSpaceBase() {
+    entryFunc = entryFuncName;
+    space = spaceName;
+  }
+
+  void runOnOperation() override {
+    // early termination
+    if (entryFunc.empty()) {
+      LLVM_DEBUG(llvm::dbgs() << "No speficied function.\n");
+      return;
+    }
+
+    FuncOp f = getOperation();
+    // early termination
+    if (f.getName() != entryFunc) {
+      return;
+    }
+
+    auto m = f->getParentOfType<ModuleOp>();
+    for (auto &block : f.getBlocks()) {
+      for (auto &op : block.without_terminator()) {
+        // skip if attr was set
+        if (op.hasAttr(SPACE_ATTR_NAME) || isMemref(op)) {
+          continue;
+        }
+
+        if (auto callOp = dyn_cast<CallOp>(op)) {
+          // handle a call
+          auto anotherFunc = m.lookupSymbol<FuncOp>(callOp.getCallee());
+          if (anotherFunc == nullptr || anotherFunc->hasAttr(SPACE_ATTR_NAME)) {
+            continue;
+          }
+          anotherFunc->setAttr(SPACE_ATTR_NAME, getOrCreateSpaceAttr(m, space));
+
+        } else {
+          // handle a regular op
+          op.setAttr(SPACE_ATTR_NAME, getOrCreateSpaceAttr(m, space));
+        }
+      }
+    }
+  }
 };
 
 } // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createSetAllSpacePass(std::string entryFunc, const std::string &space) {
-  return std::make_unique<SetAllSpacePass>(entryFunc, space);
+mlir::createSetAllSpacePass(const std::string &entryFunc,
+                            const std::string &space,
+                            byteir::ArgSideEffectAnalysis *analysis) {
+  return std::make_unique<SetAllSpacePass>(entryFunc, space, analysis);
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createSetArgSpacePass(std::string entryFunc, const std::string &allSpace,
-                            bool allowArgWritable) {
+mlir::createSetArgSpacePass(const std::string &entryFunc,
+                            const std::string &allSpace, bool allowArgWritable,
+                            byteir::ArgSideEffectAnalysis *analysis) {
   return std::make_unique<SetArgSpacePass>(entryFunc, allSpace,
-                                           allowArgWritable);
+                                           allowArgWritable, analysis);
 }
 
 std::unique_ptr<OperationPass<ModuleOp>> mlir::createSetArgSpacePass(
-    std::string entryFunc, llvm::ArrayRef<std::string> argSpaces,
-    llvm::ArrayRef<std::string> retSpaces, bool allowArgWritable) {
+    const std::string &entryFunc, llvm::ArrayRef<std::string> argSpaces,
+    llvm::ArrayRef<std::string> retSpaces, bool allowArgWritable,
+    byteir::ArgSideEffectAnalysis *analysis) {
   return std::make_unique<SetArgSpacePass>(entryFunc, argSpaces, retSpaces,
-                                           allowArgWritable);
+                                           allowArgWritable, analysis);
+}
+
+std::unique_ptr<OperationPass<FuncOp>>
+mlir::createSetOpSpacePass(const std::string &entryFunc,
+                           const std::string &space) {
+  return std::make_unique<SetOpSpacePass>(entryFunc, space);
 }

@@ -67,7 +67,6 @@ add_mlir_dialect_library(ByteIRMhloAnalysis
   MhloDialect
   LmhloDialect
   
-
   LINK_LIBS PUBLIC
   ByteIRAnalysis
   MLIRIR

@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_MHLO_TRANSFORM_FUSIONUTIL_H
-#define BYTEIR_MHLO_TRANSFORM_FUSIONUTIL_H
+#ifndef BYTEIR_MHLO_UTIL_FUSIONUTIL_H
+#define BYTEIR_MHLO_UTIL_FUSIONUTIL_H
 
 #include "byteir/Analysis/OpDependence.h"
 #include "mlir/IR/Block.h"
@@ -119,4 +119,4 @@ private:
 
 } // namespace mlir
 
-#endif // BYTEIR_MHLO_TRANSFORM_FUSIONUTIL_H
+#endif // BYTEIR_MHLO_UTIL_FUSIONUTIL_H
