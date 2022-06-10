@@ -1009,6 +1009,7 @@ struct ConvertLmhloToByrePass
     lmhloSupportMap.insert({"lmhlo.reshape", "AliasOp"});
     lmhloSupportMap.insert({"lmhlo.slice", "AliasOp"});
     lmhloSupportMap.insert({"lmhlo.transpose", "TransposeOp"});
+    lmhloSupportMap.insert({"lmhlo.convert", "Typecvt"});
   }
 
   void runOnOperation() override;
@@ -1335,6 +1336,7 @@ void mlir::populateLmhloToByreConversionPatterns(
   // TODO move this from a file
   // TODO use MACRO trick to add patterns
   patterns.add<ConvertToByrePattern<lmhlo::AddOp>,
+               ConvertToByrePattern<lmhlo::ConvertOp>, 
                ConvertToByrePattern<lmhlo::GatherOp>,
                ConvertToByrePattern<lmhlo::ReshapeOp>,
                ConvertToByrePattern<lmhlo::ScatterOp>,

@@ -144,6 +144,14 @@ module {
   // CHECK-LABEL: select_and_scatter
   // CHECK-NEXT: byre.compute @PoolMaxGradOpf16f16f16(%arg0, %arg1, %arg2)
 
+    func @convert(%arg0: memref<3x4xf32> {__placeholder__byre.argname = "A"}) -> (memref<3x4xf16> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<3x4xf16>
+    "lmhlo.convert"(%arg0, %0) : (memref<3x4xf32>, memref<3x4xf16>) -> ()
+    return %0 : memref<3x4xf16>
+  }
+  // CHECK-LABEL: convert
+  // CHECK-NEXT: byre.compute @Typecvtf32f16
+
   func @test_call(%arg0: memref<4xf32> {__placeholder__byre.argname = "A"}, %arg1: memref<4xf32> {__placeholder__byre.argname = "B"}) -> (memref<4xf32> {__placeholder__byre.argname = "C"}) attributes { __placeholder__byre.entry_point } {
     %0 = call @some_func(%arg0, %arg1) : (memref<4xf32>, memref<4xf32>) -> memref<4xf32>
     return %0 : memref<4xf32>

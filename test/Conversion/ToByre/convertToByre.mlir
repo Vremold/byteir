@@ -251,4 +251,12 @@ module {
   }
   // CHECK-LABEL: transpose
   // CHECK-NEXT: byre.compute @TransposeOp
+
+  func @convert(%arg0: memref<3x4xf32> {__placeholder__byre.argname = "A"}) -> (memref<3x4xf16> {__placeholder__byre.argname = "B"}) attributes { __placeholder__byre.entry_point} {
+    %0 = memref.alloc() : memref<3x4xf16>
+    "lmhlo.convert"(%arg0, %0) : (memref<3x4xf32>, memref<3x4xf16>) -> ()
+    return %0 : memref<3x4xf16>
+  }
+  // CHECK-LABEL: convert
+  // CHECK-NEXT: byre.compute @Typecvt
 }
