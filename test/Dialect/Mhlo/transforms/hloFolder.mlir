@@ -153,6 +153,41 @@ func @conv_bias_one_rank_mul_offset(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x
 // CHECK-NEXT: mhlo.add
 // CHECK-NEXT: return
 
+func @conv_subtract(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
+  %weight = mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]> : tensor<1x1x1x2xf32>
+  %bias = mhlo.constant dense<[[[[2.000000e+00]], [[1.000000e+00]]]]> : tensor<1x2x1x1xf32>
+  %conv = mhlo.convolution(%arg0, %weight) dim_numbers = [b, f, 0, 1]x[0, 1, i, o]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[0, 0], [0, 0]], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<1x1x2x2xf32>, tensor<1x1x1x2xf32>) -> tensor<1x2x2x2xf32>
+  %bias_1 = "mhlo.broadcast_in_dim"(%bias) {broadcast_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>} : (tensor<1x2x1x1xf32>) -> tensor<1x2x2x2xf32>
+  %conv_sub = mhlo.subtract %conv, %bias_1 : tensor<1x2x2x2xf32>
+  return %conv_sub : tensor<1x2x2x2xf32>
+}
+// CHECK-LABEL:  func @conv_subtract
+// CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]>
+// CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[-2.000000e+00]], [[-1.000000e+00]]]]>
+// CHECK-NEXT: mhlo.convolution
+// CHECK-NEXT: "mhlo.broadcast_in_dim"
+// CHECK-NEXT: mhlo.add
+// CHECK-NEXT: return
+
+func @conv_bias_div(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
+  %weight = mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]> : tensor<1x1x1x2xf32>
+  %bias = mhlo.constant dense<[[[[2.000000e+00]], [[1.000000e+00]]]]> : tensor<1x2x1x1xf32>
+  %bias1 = mhlo.constant dense<[[[[8.000000e+00]], [[2.000000e+00]]]]> : tensor<1x2x1x1xf32>
+  %conv = mhlo.convolution(%arg0, %weight) dim_numbers = [b, f, 0, 1]x[0, 1, i, o]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[0, 0], [0, 0]], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<1x1x2x2xf32>, tensor<1x1x1x2xf32>) -> tensor<1x2x2x2xf32>
+  %b_bias = "mhlo.broadcast_in_dim"(%bias) {broadcast_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>} : (tensor<1x2x1x1xf32>) -> tensor<1x2x2x2xf32>
+  %conv_bias = mhlo.add %conv, %b_bias : tensor<1x2x2x2xf32>
+  %b_bias1 = "mhlo.broadcast_in_dim"(%bias1) {broadcast_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>} : (tensor<1x2x1x1xf32>) -> tensor<1x2x2x2xf32>
+  %conv_div = mhlo.divide %conv_bias, %b_bias1 : tensor<1x2x2x2xf32>
+  return %conv_div : tensor<1x2x2x2xf32>
+}
+// CHECK-LABEL:  func @conv_bias_div
+// CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[1.250000e-01, 1.000000e+00]]]]>
+// CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[2.500000e-01]], [[5.000000e-01]]]]>
+// CHECK-NEXT: mhlo.convolution
+// CHECK-NEXT: "mhlo.broadcast_in_dim"
+// CHECK-NEXT: mhlo.add
+// CHECK-NEXT: return
+
 func @conv_no_fold(%arg0: tensor<1x1x2x2xf32>, %arg1: tensor<2xf32>) -> tensor<1x2x2x2xf32> {
   %weight = mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]> : tensor<1x1x1x2xf32>
   %conv = mhlo.convolution(%arg0, %weight) dim_numbers = [b, f, 0, 1]x[0, 1, i, o]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[0, 0], [0, 0]], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<1x1x2x2xf32>, tensor<1x1x1x2xf32>) -> tensor<1x2x2x2xf32>

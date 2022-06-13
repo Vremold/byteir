@@ -184,7 +184,8 @@ Optional<ConstOp> getBroadcastedConstOp(BroadcastInDimOp op,
   return constOp;
 }
 
-struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
+struct ConvOrConvBiasFollowedByBroadcastOp
+    : public OpRewritePattern<mhlo::ConvOp> {
   using OpRewritePattern<mhlo::ConvOp>::OpRewritePattern;
 
   LogicalResult matchAndRewrite(mhlo::ConvOp convOp,
@@ -205,8 +206,6 @@ struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
     if (!convWeight.getType().cast<ShapedType>().hasStaticShape())
       return failure();
 
-    ArrayRef<int64_t> convWeightShape =
-        convWeight.getType().cast<ShapedType>().getShape();
     Type elemType = convWeight.getType().cast<ShapedType>().getElementType();
 
     // handle the conv + bias scenario
@@ -223,8 +222,8 @@ struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
       unsigned convOperandNumber =
           convOp->getResult(0).use_begin()->getOperandNumber();
       assert(convOperandNumber < 2);
-      auto broadInDimOp = dyn_cast_or_null<mhlo::BroadcastInDimOp>(
-          biasAddOp->getOperand(1 - convOperandNumber).getDefiningOp());
+      auto broadInDimOp = biasAddOp->getOperand(1 - convOperandNumber)
+                              .getDefiningOp<mhlo::BroadcastInDimOp>();
       if (!broadInDimOp)
         return failure();
 
@@ -240,8 +239,8 @@ struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
         convOrBiasOut.use_begin()->getOperandNumber();
 
     if (auto scaleOp = dyn_cast_or_null<MulOp>(convOrBiasUser)) {
-      auto broadInDimOp = dyn_cast_or_null<mhlo::BroadcastInDimOp>(
-          scaleOp->getOperand(1 - convOrBiasOperandNumber).getDefiningOp());
+      auto broadInDimOp = scaleOp->getOperand(1 - convOrBiasOperandNumber)
+                              .getDefiningOp<mhlo::BroadcastInDimOp>();
       if (!broadInDimOp)
         return failure();
 
@@ -256,18 +255,17 @@ struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
 
       // construct new conv weight
       OpBuilder builder(convOp);
-      auto newReshapeType = RankedTensorType::get(
-          {convOrBiasOut.getType().cast<ShapedType>().getDimSize(featureDim)},
-          elemType);
+      auto convWeightType = convOp.rhs().getType().cast<ShapedType>();
+      auto weightFeatureDim =
+          convOp.dimension_numbers().getKernelOutputFeatureDimension();
       ReshapeOp newReshapeOp = builder.create<mhlo::ReshapeOp>(
-          constOp->getLoc(), newReshapeType, constOp.output());
-      auto newBroadInDimType = RankedTensorType::get(convWeightShape, elemType);
-      auto broadAttr = DenseIntElementsAttr::get(
-          RankedTensorType::get({1}, builder.getIntegerType(64)),
-          {convOp.dimension_numbers().getKernelOutputFeatureDimension()});
+          constOp->getLoc(),
+          RankedTensorType::get({convWeightType.getDimSize(weightFeatureDim)},
+                                convWeightType.getElementType()),
+          constOp.output());
       BroadcastInDimOp newBroadInDimOp = builder.create<mhlo::BroadcastInDimOp>(
-          constOp->getLoc(), newBroadInDimType, newReshapeOp->getResult(0),
-          broadAttr);
+          constOp->getLoc(), convWeightType, newReshapeOp->getResult(0),
+          rewriter.getI64TensorAttr({weightFeatureDim}));
       MulOp newMulOp = builder.create<MulOp>(constOp->getLoc(), convWeight,
                                              newBroadInDimOp->getResult(0));
       convOp->setOperand(1, newMulOp->getResult(0));
@@ -286,8 +284,8 @@ struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
       scaleOp->getResult(0).replaceAllUsesWith(convOrBiasOut);
 
     } else if (auto offsetOp = dyn_cast_or_null<AddOp>(convOrBiasUser)) {
-      auto broadInDimOp = dyn_cast_or_null<mhlo::BroadcastInDimOp>(
-          offsetOp->getOperand(1 - convOrBiasOperandNumber).getDefiningOp());
+      auto broadInDimOp = offsetOp->getOperand(1 - convOrBiasOperandNumber)
+                              .getDefiningOp<mhlo::BroadcastInDimOp>();
       if (!broadInDimOp)
         return failure();
 
@@ -311,6 +309,68 @@ struct ConvFollowedByMulOrAdd : public OpRewritePattern<mhlo::ConvOp> {
 
       // update conv's uses
       offsetOp->getResult(0).replaceAllUsesWith(convOrBiasOut);
+
+    } else if (auto subOp = dyn_cast_or_null<SubOp>(convOrBiasUser)) {
+      // conv_or_bias - a => conv_or_bias + (- a)
+
+      // b_const should be rhs
+      auto broadInDimOp = subOp.rhs().getDefiningOp<mhlo::BroadcastInDimOp>();
+      if (!broadInDimOp)
+        return failure();
+
+      auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
+      if (!maybeConstOp.hasValue())
+        return failure();
+      ConstOp constOp = maybeConstOp.getValue();
+
+      OpBuilder builder(subOp);
+      // replace b_const with (- b_const)
+      NegOp negOp = builder.create<mhlo::NegOp>(
+          constOp->getLoc(), constOp.output().getType(), constOp.output());
+      negOp->moveBefore(broadInDimOp);
+      broadInDimOp->setOperand(0, negOp.getResult());
+
+      // replace mhlo.sub with mhlo.add
+      AddOp addOp = builder.create<mhlo::AddOp>(
+          subOp->getLoc(), subOp.result().getType(), subOp.lhs(), subOp.rhs());
+      subOp.result().replaceAllUsesWith(addOp.result());
+
+    } else if (auto divOp = dyn_cast_or_null<DivOp>(convOrBiasUser)) {
+      // conv_or_bias / a => conv_or_bias * (1 / a)
+
+      // b_const should be rhs
+      auto broadInDimOp = divOp.rhs().getDefiningOp<mhlo::BroadcastInDimOp>();
+      if (!broadInDimOp)
+        return failure();
+
+      auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
+      if (!maybeConstOp.hasValue())
+        return failure();
+      ConstOp constOp = maybeConstOp.getValue();
+
+      OpBuilder builder(divOp);
+      // replace b_const with 1 / b_const
+      auto constType = constOp.output().getType().cast<RankedTensorType>();
+      auto fpType = constType.getElementType().dyn_cast<FloatType>();
+      if (!fpType) {
+        return failure();
+      }
+      llvm::APFloat one(static_cast<double>(1));
+      bool losesInfo; // didn't check this
+      one.convert(fpType.getFloatSemantics(), APFloat::rmNearestTiesToEven,
+                  &losesInfo);
+      ConstOp constOne = builder.create<mhlo::ConstOp>(
+          constOp->getLoc(), DenseFPElementsAttr::get(constType, one));
+      constOne->moveBefore(broadInDimOp);
+      DivOp oneDiv = builder.create<mhlo::DivOp>(
+          constOp->getLoc(), constType, constOne.output(), constOp.output());
+      oneDiv->moveBefore(broadInDimOp);
+      broadInDimOp->setOperand(0, oneDiv.result());
+
+      // replace mhlo.div with mhlo.mul
+      MulOp mulOp = builder.create<mhlo::MulOp>(
+          divOp->getLoc(), divOp.result().getType(), divOp.lhs(), divOp.rhs());
+      divOp.result().replaceAllUsesWith(mulOp.result());
 
     } else {
       return failure();
@@ -345,7 +405,7 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
 
 void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
   patterns.add<AddScatterAddToScatterPattern>(patterns.getContext());
-  patterns.add<ConvFollowedByMulOrAdd>(patterns.getContext());
+  patterns.add<ConvOrConvBiasFollowedByBroadcastOp>(patterns.getContext());
 }
 
 std::unique_ptr<OperationPass<FuncOp>> mlir::createHloFolderPass() {
