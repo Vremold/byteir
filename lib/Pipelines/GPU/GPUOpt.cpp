@@ -37,6 +37,8 @@ struct GPUOptPipelinePass : public GPUOptPipelineBase<GPUOptPipelinePass> {
     auto m = getOperation();
     OpPassManager pm(m.getOperationName());
 
+    // apply PromotoBufferStack to func's with
+    // getByteIRElementwiseFusionAttrName
     {
       OpPassManager anchoredPM(FuncOp::getOperationName());
 
@@ -55,6 +57,11 @@ struct GPUOptPipelinePass : public GPUOptPipelineBase<GPUOptPipelinePass> {
     // attach ToGPUAttr
     pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
                                  getToGPUAttrName()));
+
+    // TODO add device here after general copy finished
+    // std::string deviceCudaAttr = "device:String:cuda";
+    // pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
+    //                              deviceCudaAttr));
 
     std::string iteratorAttr =
         getLoopToSIMTAttrName().str() + ":String:" + getLinearIdXName().str();

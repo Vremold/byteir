@@ -91,7 +91,6 @@ Value createCopyInputArg(Operation *op, Value oldArg, MemRefType dstMemrefTy,
   OpBuilder b(op);
   auto loc = op->getLoc();
   auto newAlloc = b.create<memref::AllocOp>(loc, dstMemrefTy);
-  newAlloc.dump();
   auto newArg = newAlloc.getResult();
   b.create<memref::CopyOp>(loc, oldArg, newArg);
 
@@ -197,6 +196,7 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
     argType = newArgType;
   }
 
+  // rewrite body if it's not empty
   if (!func.empty()) {
     Value arg = func.getArgument(offset);
     DenseMap<Attribute, SmallVector<FuncOp, 4>> spaceToCalleeFuncs;
@@ -252,7 +252,7 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
           }
         }
       } else {
-        // TODO handle regular ops here
+        // TODO handle regular op
       }
     }
   }
@@ -334,6 +334,54 @@ void updateFuncReturnTypes(
       // regular alloc
       LLVM_DEBUG(llvm::dbgs()
                  << "arg is modified in " << func.getName() << "\n");
+    }
+  }
+}
+
+// update op's types
+void updateOpTypes(FuncOp func, ModuleOp m,
+                   DenseMap<CopyType_t, Value> &copyPairToCopyTargets,
+                   ArgSideEffectAnalysis *analysis) {
+  // rewrite all types
+  for (auto &block : func.getBlocks()) {
+    for (auto &op : block.without_terminator()) {
+      if (auto opSpaceAttr = op.getAttrOfType<StringAttr>(SPACE_ATTR_NAME)) {
+        for (unsigned i = 0; i < op.getNumOperands(); ++i) {
+          auto operand = op.getOperand(i);
+          if (auto MemrefTy = operand.getType().dyn_cast<MemRefType>()) {
+            auto curSpace = MemrefTy.getMemorySpace();
+
+            if (curSpace == nullptr) {
+              // if no space, use opSpaceAttr
+              auto newOperandType =
+                  cloneMemRefTypeWithMemSpace(MemrefTy, opSpaceAttr);
+              operand.setType(newOperandType);
+            } else if (opSpaceAttr != curSpace) {
+              CopyType_t copyKey = {operand, opSpaceAttr};
+
+              if (copyPairToCopyTargets.count(copyKey) == 0) {
+                // if copy not exist, insert copy
+                auto argSEType = analysis->getType(&op, i);
+                auto newArg = createCopyArg(&op, operand, MemrefTy, opSpaceAttr,
+                                            copyPairToCopyTargets, argSEType);
+                op.setOperand(i, newArg);
+              } else {
+                // if copy already exist, directly refer it
+                auto taget = copyPairToCopyTargets[copyKey];
+                op.setOperand(i, taget);
+              }
+            }
+          }
+        }
+
+        for (auto operand : op.getOperands()) {
+          if (auto MemrefTy = operand.getType().dyn_cast<MemRefType>()) {
+            auto newOperandType =
+                cloneMemRefTypeWithMemSpace(MemrefTy, opSpaceAttr);
+            operand.setType(newOperandType);
+          }
+        }
+      }
     }
   }
 }
@@ -561,6 +609,8 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
       it.first.setType(
           FunctionType::get(ctx, it.second.first, it.second.second));
     }
+
+    updateOpTypes(funcOp, m, copyPairToCopyTargets, analysis);
   }
 
   llvm::SmallVector<std::string, 16> argSpaces;

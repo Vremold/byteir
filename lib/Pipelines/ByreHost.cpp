@@ -20,11 +20,13 @@ namespace {
 
 struct ByreHostPipelinePass
     : public ByreHostPipelineBase<ByreHostPipelinePass> {
-  ByreHostPipelinePass(const std::string &entry, const std::string &device)
+  ByreHostPipelinePass(const std::string &entry, const std::string &deviceFile,
+                       const std::string &target)
       : ByreHostPipelineBase() {
     // TODO use target to decide passes
     this->entryFunc = entry;
-    this->deviceFile = device;
+    this->deviceFile = deviceFile;
+    this->target = target;
   }
 
   void runOnOperation() override {
@@ -37,6 +39,12 @@ struct ByreHostPipelinePass
     std::string stringAttr = "device_file_name:String:" + deviceFile;
     pm.addPass(createFuncTagPass(/*anchorTag=*/"", stringAttr, entryFunc));
 
+    // currently use SetAllSpacve to specify space
+    // TODO: later move to GPUOpt after general copy finish
+    if (!target.empty()) {
+      pm.addPass(createSetAllSpacePass(entryFunc, target));
+    }
+
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();
     }
@@ -46,6 +54,7 @@ struct ByreHostPipelinePass
 
 std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createByreHostPipelinePass(const std::string &entry,
-                                 const std::string &deviceFile) {
-  return std::make_unique<ByreHostPipelinePass>(entry, deviceFile);
+                                 const std::string &deviceFile,
+                                 const std::string &target) {
+  return std::make_unique<ByreHostPipelinePass>(entry, deviceFile, target);
 }

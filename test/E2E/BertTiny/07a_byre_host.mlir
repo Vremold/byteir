@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -byre-host="device-file-name=your_file" | FileCheck %s
+// RUN: byteir-opt %s -byre-host="device-file-name=your_file target=cuda" | FileCheck %s
 
 // CHECK-LABEL: func @main
 module attributes {byre.container_module, gpu.container_module} {

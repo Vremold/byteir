@@ -44,6 +44,9 @@ def ByreHostPipeline : Pass<"byre-host", "mlir::ModuleOp"> {
     Option<"deviceFile", "device-file-name", "std::string",
             /*default=*/"\"kernel\"",
             "An optional string to speicify device file name.">,
+    Option<"target", "target", "std::string",
+            /*default=*/"",
+            "An optional attribute to target device.">,
   ];
 }
 
