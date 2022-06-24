@@ -23,13 +23,11 @@ limitations under the License.
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Value.h"
 
-using namespace mlir;
-
 namespace byteir {
 
 /// Representation of an inclusive Interval for the Userange.
 struct UseInterval {
-  using Vector = SmallVector<UseInterval, 8>;
+  using Vector = mlir::SmallVector<UseInterval, 8>;
 
 public:
   /// UseInterval Constructor.
@@ -102,17 +100,17 @@ public:
 /// every alloc value.
 class UserangeAnalysis {
 public:
-  using UsePosition = std::pair<size_t, Operation *>;
+  using UsePosition = std::pair<size_t, mlir::Operation *>;
   using UsePositionList = std::vector<UsePosition>;
 
   UserangeAnalysis(Liveness *liveness) : liveness(liveness) {}
-  UserangeAnalysis(Operation *op, Liveness *liveness,
-                   const bufferization::BufferPlacementAllocs &allocs,
-                   const BufferViewFlowAnalysis &aliases);
+  UserangeAnalysis(mlir::Operation *op, Liveness *liveness,
+                   const mlir::bufferization::BufferPlacementAllocs &allocs,
+                   const mlir::BufferViewFlowAnalysis &aliases);
 
   /// Returns the index of the first operation that uses the given value or an
   /// empty Optional if the value has no uses.
-  llvm::Optional<size_t> getFirstUseIndex(Value value) const {
+  llvm::Optional<size_t> getFirstUseIndex(mlir::Value value) const {
     auto &intervals = useIntervalMap.find(value)->second;
     if (intervals.empty())
       return llvm::None;
@@ -121,7 +119,7 @@ public:
 
   /// Returns the UseInterval::Vector of the given value.
   llvm::Optional<const UseInterval::Vector *>
-  getUserangeInterval(Value value) const {
+  getUserangeInterval(mlir::Value value) const {
     auto intervals = useIntervalMap.find(value);
     if (intervals == useIntervalMap.end())
       return llvm::None;
@@ -131,7 +129,7 @@ public:
   /// Returns an UsePositionList* of the given value or an empty Optional
   /// if the value has no uses.
   llvm::Optional<const UsePositionList *>
-  getUserangePositions(Value value) const {
+  getUserangePositions(mlir::Value value) const {
     auto usePosition = usePositionMap.find(value);
     if (usePosition == usePositionMap.end() || usePosition->second.empty())
       return llvm::None;
@@ -139,68 +137,74 @@ public:
   }
 
   /// Returns the operation associated with a given Id.
-  Operation *getOperation(size_t id) const { return operations[unwrapId(id)]; };
+  mlir::Operation *getOperation(size_t id) const {
+    return operations[unwrapId(id)];
+  };
 
   /// Computes the doubled Id for the given value inside the operation based on
   /// the program sequence. If the value has only read effects, the returning ID
   /// will be even, otherwise odd.
-  size_t computeId(Value v, Operation *op) const;
+  size_t computeId(mlir::Value v, mlir::Operation *op) const;
 
   /// Checks if the use intervals of the given values interfere.
-  bool rangesInterfere(Value itemA, Value itemB) const;
+  bool rangesInterfere(mlir::Value itemA, mlir::Value itemB) const;
 
   /// Merges the userange of itemB into the userange of itemA.
-  void unionRanges(Value itemA, Value itemB);
+  void unionRanges(mlir::Value itemA, mlir::Value itemB);
 
   /// Merges listB into listA, sorts the result and removes all duplicates.
   static void mergeUsePositions(UsePositionList &listA,
                                 const UsePositionList &listB);
 
   /// Dumps the liveness information to the given stream.
-  void dump(raw_ostream &os);
+  void dump(llvm::raw_ostream &os);
 
 protected:
-  using ValueSetT = BufferViewFlowAnalysis::ValueSetT;
+  using ValueSetT = mlir::BufferViewFlowAnalysis::ValueSetT;
   using OperationListT = Liveness::OperationListT;
 
   /// Builds an UseInterval::Vector corresponding to the given OperationList.
   UseInterval::Vector
-  computeInterval(Value value, const Liveness::OperationListT &operationList);
+  computeInterval(mlir::Value value,
+                  const Liveness::OperationListT &operationList);
 
-  /// Computes the UsePositions of the given Value, sorts and inserts them into
-  /// the usePositionMap.
-  void computeUsePositions(Value v);
+  /// Computes the UsePositions of the given mlir::Value, sorts and inserts them
+  /// into the usePositionMap.
+  void computeUsePositions(mlir::Value v);
 
   /// Checks each operand within the operation for its memory effects and
   /// separates them into read and write.
-  virtual void gatherMemoryEffects(Operation *op);
+  virtual void gatherMemoryEffects(mlir::Operation *op);
 
   /// Computes the doubled Id back to the OperationId.
   size_t unwrapId(size_t id) const;
 
-  /// Maps each Operation to a unique ID according to the program sequence.
-  DenseMap<Operation *, size_t> operationIds;
+  /// Maps each mlir::Operation to a unique ID according to the program
+  /// sequence.
+  mlir::DenseMap<mlir::Operation *, size_t> operationIds;
 
   /// Stores all operations according to the program sequence.
-  std::vector<Operation *> operations;
+  std::vector<mlir::Operation *> operations;
 
   /// Maps a value to its UseInterval::Vector.
-  DenseMap<Value, UseInterval::Vector> useIntervalMap;
+  mlir::DenseMap<mlir::Value, UseInterval::Vector> useIntervalMap;
 
-  /// Maps an Operation to a pair of read and write Operands.
-  DenseMap<Operation *, std::pair<SmallPtrSet<Value, 2>, SmallPtrSet<Value, 2>>>
+  /// Maps an mlir::Operation to a pair of read and write Operands.
+  mlir::DenseMap<mlir::Operation *,
+                 std::pair<mlir::SmallPtrSet<mlir::Value, 2>,
+                           mlir::SmallPtrSet<mlir::Value, 2>>>
       opReadWriteMap;
 
   /// Maps aliasValues to their use ranges. This is necessary to prevent
   /// recomputations of the use range intervals of the aliases.
-  DenseMap<Value, OperationListT> aliasUseranges;
+  mlir::DenseMap<mlir::Value, OperationListT> aliasUseranges;
 
-  /// Maps a Value to a UsePostionList which contains all uses of the Value and
-  /// their userange position.
-  DenseMap<Value, UsePositionList> usePositionMap;
+  /// Maps a mlir::Value to a UsePostionList which contains all uses of the
+  /// mlir::Value and their userange position.
+  mlir::DenseMap<mlir::Value, UsePositionList> usePositionMap;
 
   /// Cache the alias lists for all values to avoid recomputation.
-  BufferViewFlowAnalysis::ValueMapT aliasCache;
+  mlir::BufferViewFlowAnalysis::ValueMapT aliasCache;
 
   /// The current liveness info.
   Liveness *liveness;

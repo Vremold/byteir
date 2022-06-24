@@ -13,9 +13,7 @@
 #include "mlir/IR/Operation.h"
 #include "llvm/ADT/StringRef.h"
 
-using namespace mlir;
-
-namespace byteir {
+namespace mlir {
 
 //===----------------------------------------------------------------------===//
 // runShapeInference
@@ -59,6 +57,6 @@ struct InferBoundedReturnTypesRegistration {
 
 InferBoundedReturnTypes inferBoundedReturnTypes(llvm::StringRef name);
 
-} // namespace byteir
+} // namespace mlir
 
 #endif // BYTEIR_DIALECT_MHLO_UTIL_SHAPEINFERUTIL_H

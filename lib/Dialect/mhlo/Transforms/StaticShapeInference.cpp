@@ -11,7 +11,6 @@
 #include "mlir/Pass/Pass.h"
 
 using namespace mlir;
-using namespace byteir;
 
 namespace {
 

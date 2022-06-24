@@ -123,6 +123,21 @@ def SCFOptPipeline : Pass<"scf-opt", "mlir::ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// Shape Opt Pipeline
+//===----------------------------------------------------------------------===//
+
+def ShapeOptPipeline : Pass<"shape-opt", "mlir::ModuleOp"> {
+  let summary = "Shape Opt Pipeline";
+  let constructor = "mlir::createShapeOptPipelinePass()";
+  let dependentDialects = [
+    "mlir::tensor::TensorDialect",
+    "mlir::arith::ArithmeticDialect",
+    "mlir::shape::ShapeDialect",
+    "mlir::shape_ext::ShapeExtDialect",
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // Total Bufferize Pipeline
 //===----------------------------------------------------------------------===//
 

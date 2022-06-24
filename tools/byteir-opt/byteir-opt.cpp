@@ -20,6 +20,8 @@
 #include "byteir/Dialect/Linalg/Passes.h"
 #include "byteir/Dialect/MemRef/Passes.h"
 #include "byteir/Dialect/SCF/Passes.h"
+#include "byteir/Dialect/Shape/Passes.h"
+#include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/GPU/Passes.h"
 #include "byteir/Pipelines/Passes.h"
@@ -80,6 +82,7 @@ int main(int argc, char **argv) {
   registerByteIRMemRefPasses();
   registerByteIRMhloPassesExt();
   registerByteIRSCFPasses();
+  registerByteIRShapePasses();
 
   registerByteIRPipelinesPasses();
   registerByteIRGPUPipelinesPasses();
@@ -97,6 +100,7 @@ int main(int argc, char **argv) {
   registry.insert<mlir::mhlo::MhloDialect>();
   registry.insert<mlir::lace::LaceDialect>();
   registry.insert<mlir::lmhlo::LmhloDialect>();
+  registry.insert<mlir::shape_ext::ShapeExtDialect>();
 
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "ByteIR pass driver\n", registry,

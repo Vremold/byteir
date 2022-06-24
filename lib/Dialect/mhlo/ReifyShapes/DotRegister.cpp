@@ -11,7 +11,7 @@
 
 using namespace mlir;
 
-void byteir::registerDotReifyReturnTypeShapes() {
+void mlir::registerDotReifyReturnTypeShapes() {
   static ReifyReturnTypeShapesRegistration shapeRegister(
       mhlo::DotOp::getOperationName(),
       [](Operation *op, OpBuilder &builder, ValueRange operands,

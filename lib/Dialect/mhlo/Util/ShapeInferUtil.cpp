@@ -14,7 +14,6 @@
 #include "llvm/Support/Debug.h"
 
 using namespace mlir;
-using namespace byteir;
 
 #define DEBUG_TYPE "shape-infer-util"
 
@@ -29,8 +28,8 @@ LogicalResult checkAndSetTypes(Operation *op,
   // check
   for (auto it : llvm::zip(results, inferredShapes)) {
     auto result = std::get<0>(it);
-    auto resultShape = result.getType().cast<ShapedType>();
-    if (!resultShape.hasRank())
+    auto resultShape = result.getType().dyn_cast<ShapedType>();
+    if (!resultShape || !resultShape.hasRank())
       continue;
     auto inferredShape = std::get<1>(it);
 
@@ -57,7 +56,10 @@ LogicalResult checkAndSetTypes(Operation *op,
   // set
   for (auto it : llvm::zip(results, inferredShapes)) {
     Value result = std::get<0>(it);
-    result.setType(result.getType().cast<ShapedType>().clone(std::get<1>(it)));
+    auto shapedType = result.getType().dyn_cast<ShapedType>();
+    if (!shapedType)
+      continue;
+    result.setType(shapedType.clone(std::get<1>(it)));
   }
 
   return success();
@@ -87,7 +89,9 @@ LogicalResult inferBoundedShapeUsingRegistry(Operation *op) {
 
   ResultShapes resultShapes =
       llvm::to_vector(llvm::map_range(resultShapeTypes, [](Type t) {
-        return t.cast<ShapedType>().getShape();
+        if (auto shape = t.dyn_cast<ShapedType>())
+          return shape.getShape();
+        return ArrayRef<int64_t>(llvm::None);
       }));
   return checkAndSetTypes(op, resultShapes);
 }
@@ -149,13 +153,17 @@ LogicalResult inferShapeUsingInferTypeOpInterface(InferTypeOpInterface op) {
 
   ResultShapes resultShapes =
       llvm::to_vector(llvm::map_range(resultShapeTypes, [](Type t) {
-        return t.cast<ShapedType>().getShape();
+        if (auto shape = t.dyn_cast<ShapedType>())
+          return shape.getShape();
+        return ArrayRef<int64_t>(llvm::None);
       }));
   return checkAndSetTypes(op, resultShapes);
 }
 
 LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer) {
-  if (op->hasTrait<OpTrait::SameOperandsAndResultShape>()) {
+  if (isBoundedShapeInfer && failed(inferBoundedShapeUsingRegistry(op))) {
+    return failure();
+  } else if (op->hasTrait<OpTrait::SameOperandsAndResultShape>()) {
     // Note: some ops has InferShapedTypeOpInterface but it will return
     // failure() directly in the implementation, therefore
     // SameOperandsAndResultShape trait should be checked before checking
@@ -165,8 +173,6 @@ LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer) {
     return inferShapeUsingInferShapedTypeOpInterface(shapeInferOp);
   } else if (auto shapeInferOp = dyn_cast<InferTypeOpInterface>(op)) {
     return inferShapeUsingInferTypeOpInterface(shapeInferOp);
-  } else if (isBoundedShapeInfer) {
-    return inferBoundedShapeUsingRegistry(op);
   }
   return success();
 }
@@ -178,8 +184,7 @@ LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer) {
 //===----------------------------------------------------------------------===//
 
 // TODO: supported nested function call
-LogicalResult byteir::runShapeInference(FuncOp funcOp,
-                                        bool isBoundedShapeInfer) {
+LogicalResult mlir::runShapeInference(FuncOp funcOp, bool isBoundedShapeInfer) {
   bool interrupted =
       funcOp
           ->walk([&](Operation *op) {
@@ -229,7 +234,7 @@ ReifyReturnTypeShapesRegistration::ReifyReturnTypeShapesRegistration(
   registerReifyReturnTypeShapes(name, function);
 }
 
-ReifyReturnTypeShapes byteir::reifyReturnTypeShapes(llvm::StringRef name) {
+ReifyReturnTypeShapes mlir::reifyReturnTypeShapes(llvm::StringRef name) {
   auto &reifyReturnTypeShapesRegistry = getReifyReturnTypeShapesRegistry();
   auto it = reifyReturnTypeShapesRegistry.find(name);
   if (it != reifyReturnTypeShapesRegistry.end())
@@ -265,7 +270,7 @@ InferBoundedReturnTypesRegistration::InferBoundedReturnTypesRegistration(
   registerInferBoundedReturnTypes(name, function);
 }
 
-InferBoundedReturnTypes byteir::inferBoundedReturnTypes(llvm::StringRef name) {
+InferBoundedReturnTypes mlir::inferBoundedReturnTypes(llvm::StringRef name) {
   auto &registry = getInferBoundedReturnTypesRegistry();
   auto it = registry.find(name);
   if (it != registry.end())

@@ -22,6 +22,7 @@ add_mlir_dialect_library(ByteIRMhloUtils
 
 add_mlir_dialect_library(ByteIRMhloReifyShapes
   ReifyShapes/DotRegister.cpp
+  ReifyShapes/DynamicStitchRegister.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ReifyShapes
@@ -40,6 +41,7 @@ add_mlir_dialect_library(ByteIRMhloReifyShapes
 
 add_mlir_dialect_library(ByteIRMhloBoundedShapes
   BoundedShapes/NonZeroRegister.cpp
+  BoundedShapes/DynamicPartitionRegister.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/BoundedShapes
@@ -83,12 +85,14 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/ConvBiasActFusion.cpp
   Transforms/ConvertInsertion.cpp
   Transforms/DotTransposeFusion.cpp
+  Transforms/DynamicShapeClustering.cpp
   Transforms/FusionOutlining.cpp
   Transforms/GenericFusion.cpp
   Transforms/HloFolder.cpp
   Transforms/HloMoveDown.cpp
   Transforms/HloMoveUp.cpp
   Transforms/HloTransposeDotToDotGeneral.cpp
+  Transforms/InsertShapeConstraint.cpp
   Transforms/IOConvertFusion.cpp
   Transforms/LayoutTransformation.cpp
   Transforms/ReduceFusion.cpp

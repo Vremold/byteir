@@ -21,7 +21,6 @@
 
 using namespace mlir;
 using namespace llvm;
-using namespace byteir;
 
 namespace {
 

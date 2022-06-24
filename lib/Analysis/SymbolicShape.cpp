@@ -17,7 +17,6 @@
 
 using namespace llvm;
 using namespace mlir;
-using namespace byteir;
 
 #define DEBUG_TYPE "symbolic-shape-analysis"
 

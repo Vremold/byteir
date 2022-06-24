@@ -11,16 +11,17 @@
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "llvm/ADT/StringRef.h"
 
-using namespace mlir;
-
-namespace byteir {
+namespace mlir {
 
 void registerDotReifyReturnTypeShapes();
 
+void registerDynamicStitchReifyReturnTypeShapes();
+
 inline void registerAllMhloReifyReturnTypeShapes() {
   registerDotReifyReturnTypeShapes();
+  registerDynamicStitchReifyReturnTypeShapes();
 }
 
-} // namespace byteir
+} // namespace mlir
 
 #endif // BYTEIR_DIALECT_MHLO_REIFYSHAPES_REGISTER_H

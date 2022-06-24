@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -shape-reification -cse | FileCheck %s
+// RUN: byteir-opt %s -shape-reification -canonicalize -cse | FileCheck %s
 
 func @several_ops(%arg0: tensor<?x2xf32>, %arg1: tensor<2x4xf32>, %arg2: tensor<4xf32>) -> (!shape.shape, !shape.shape, !shape.shape, !shape.shape) {                                                             
   %0 = "mhlo.dot"(%arg0, %arg1) : (tensor<?x2xf32>, tensor<2x4xf32>) -> tensor<?x4xf32>               
@@ -26,18 +26,30 @@ func @several_ops(%arg0: tensor<?x2xf32>, %arg1: tensor<2x4xf32>, %arg2: tensor<
 // CHECK-DAG:     %[[V3:.+]] = shape.value_as_shape %[[C2]] : tensor<1xindex> -> !shape.shape
 // CHECK-DAG:     return %[[V2]], %[[V3]], %[[V2]], %[[V2]] : !shape.shape, !shape.shape, !shape.shape, !shape.shape
 
+// CHECK-LABEL: @infer_shape_using_dim_op
 func @infer_shape_using_dim_op(%arg0: tensor<?x4xf32>, %arg1: tensor<?x4xf32>, %arg2: tensor<4x4xf32>) -> !shape.shape {
   %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
   %1 = "mhlo.dot"(%0, %arg2) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
   // CHECK-DAG: %[[C0:.*]] = arith.constant 0 : index
   // CHECK-DAG: %[[C4:.*]] = arith.constant 4 : index
-  // CHECK-DAG: %[[SHAPE0:.*]] = shape.shape_of %arg0 : tensor<?x4xf32> -> tensor<2xindex>
-  // CHECK-DAG: %[[DIM0:.*]] = tensor.extract %[[SHAPE0]][%[[C0]]] : tensor<2xindex>
-  // CHECK-DAG: %[[SHAPE:.*]] = tensor.from_elements %[[DIM0]], %[[C4]] : tensor<2xindex>
+  // CHECK-DAG: %[[V0:.*]] = tensor.dim %arg0, %[[C0]] : tensor<?x4xf32>
+  // CHECK-DAG: %[[V1:.*]] = tensor.from_elements %[[V0]], %[[C1]] : tensor<2xindex>
   %2 = shape.shape_of %1 : tensor<?x4xf32> -> tensor<2xindex>
-  // CHECK-DAG: %[[V0:.*]] = shape.value_as_shape %[[SHAPE]] : tensor<2xindex> -> !shape.shape
+  // CHECK-DAG: %[[V2:.*]] = shape.value_as_shape %[[V1]] : tensor<2xindex> -> !shape.shape
   %3 = shape.value_as_shape %2 : tensor<2xindex> -> !shape.shape
   return %3 : !shape.shape
+}
+
+func @dynamic_stitch(%arg0: tensor<?xi32>, %arg1: tensor<?xi32>, %arg2: tensor<?x4xf32>, %arg3: tensor<?x4xf32>) -> tensor<?x4xf32> {
+  %0 = "mhlo.custom_call"(%arg0, %arg1, %arg2, %arg3) {call_target_name = "byteir.dynamic_stitch", has_side_effect = false} : (tensor<?xi32>, tensor<?xi32>, tensor<?x4xf32>, tensor<?x4xf32>) -> tensor<?x4xf32>
+  %c0 = arith.constant 0 : index
+  %1 = tensor.dim %0, %c0 : tensor<?x4xf32>
+  // CHECK-DAG: %[[V0:.*]] = tensor.dim %arg0, %c0 : tensor<?xi32>
+  // CHECK-DAG: %[[V1:.*]] = tensor.dim %arg1, %c0 : tensor<?xi32>
+  // CHECK-DAG: %[[V2:.*]] = shape.add %[[V0]], %[[V1]] : index, index -> index
+  // CHECK-DAG: "shape_ext.tie"(%0, %[[V2]]) : (tensor<?x4xf32>, index) -> ()
+  "shape_ext.tie"(%0, %1) : (tensor<?x4xf32>, index) -> ()
+  return %0 : tensor<?x4xf32>
 }
 
 // TODO: Check this after nested function call is supported

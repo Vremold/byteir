@@ -29,6 +29,6 @@ func @several_ops(%arg0: tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}, %arg1:
 // CHECK-LABEL: @registered_shape_infer
 func @registered_shape_infer(%arg0 : tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}) -> tensor<?xi64> {
   // CHECK-NEXT: byteir.bounded_shape0 = [32]
-  %0 = "mhlo.custom_call"(%arg0) {call_target_name = "NonZero"} : (tensor<?x4xf32>) -> tensor<?xi64>
+  %0 = "mhlo.custom_call"(%arg0) {call_target_name = "byteir.non_zero"} : (tensor<?x4xf32>) -> tensor<?xi64>
   return %0 : tensor<?xi64>
 }

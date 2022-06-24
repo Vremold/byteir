@@ -8,6 +8,7 @@ add_mlir_library(ByteIRPipelines
   HloOpt.cpp
   LinalgTensorOpt.cpp
   SCFOpt.cpp
+  ShapeOpt.cpp
   TotalBufferize.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -15,7 +16,9 @@ add_mlir_library(ByteIRPipelines
 
   DEPENDS
   ByteIRGPUPipelines
+  ByteIRMhloPasses
   ByteIRPipelinesPassIncGen
+  ByteIRShapePasses
   ByteIRTransforms
   ByteIRUtils
 
@@ -28,8 +31,10 @@ add_mlir_library(ByteIRPipelines
   MLIRMemRef
   MLIRSCF
   MLIRTransforms
+  ByteIRByrePasses
   ByteIRHloToLhlo
   ByteIRLmhloToLace
-  ByteIRByrePasses
+  ByteIRMhloPasses
+  ByteIRShapePasses
   ByteIRToByre
 )

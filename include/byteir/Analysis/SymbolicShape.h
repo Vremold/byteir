@@ -17,14 +17,14 @@
 #include "llvm/ADT/SmallVector.h"
 #include <memory>
 
-using namespace mlir;
+namespace mlir {
 
-namespace byteir {
-
-// A auxiliary symbolic shape inference function will be created for each
-// original function, and a ShapeReification pass will be run on the newly
-// created function. A table mapping the value in the original function to the
-// corresponding symbolic shape will also be created for later query and
+// [Deperated] Use ShapeOpt pipeline as a new version for the dynamic shape
+// optimization.
+// A auxiliary symbolic shape inference function will be created
+// for each original function, and a ShapeReification pass will be run on the
+// newly created function. A table mapping the value in the original function to
+// the corresponding symbolic shape will also be created for later query and
 // analysis.
 // Ex. Let's say the original function is as below:
 // clang-format off
@@ -75,6 +75,6 @@ private:
   DenseMap<Value, OpOperand *> symbolisShapeTable_;
 };
 
-} // namespace byteir
+} // namespace mlir
 
 #endif // BYTEIR_ANALYSIS_SYMBOLICSHAPE_H

@@ -18,7 +18,6 @@
 #include "llvm/Support/ToolOutputFile.h"
 
 using namespace mlir;
-using namespace byteir;
 
 /// Get the mutable static map between registered MLIR statistics
 /// and the MLIRFunctionStats that perform those statistics.

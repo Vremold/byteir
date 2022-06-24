@@ -17,6 +17,12 @@ include "mlir/Pass/PassBase.td"
 
 def BoundedShapeInference : Pass<"bounded-shape-infer", "FuncOp"> {
   let summary = "Bounded shape inference";
+  let description = [{
+    Some operations have dynamic output shapes, which could not be deduced at 
+    compiling time, but their bound value could be. Note we only need to 
+    implement the bounded shape inference functions for the dynamic operations, 
+    and reuse the static operations' shape inference implementation. 
+  }];
   let constructor = "mlir::createBoundedShapeInferencePass()";
 }
 
@@ -70,6 +76,19 @@ def ConvBiasActFusion : Pass<"fuse-conv-bias-act", "mlir::FuncOp"> {
 def DotTransposeFusion : Pass<"fuse-dot-transpose", "mlir::FuncOp"> {
   let summary = "Fuse dot/dot_general + transpose";
   let constructor = "mlir::createDotTransposeFusionPass()";
+}
+
+//===----------------------------------------------------------------------===//
+// DynamicShapeClustering
+//===----------------------------------------------------------------------===//
+
+def DynamicShapeClustering : Pass<"dynamic-shape-clustering", "mlir::ModuleOp"> {
+  let summary = "Dynamic shape clustering";
+  let description = [{
+    Clustering based on the shape information. After the pass, the dynamic 
+    source are only from function arguments.
+  }];
+  let constructor = "mlir::createDynamicShapeClusteringPass()";
 }
 
 //===----------------------------------------------------------------------===//
@@ -145,6 +164,24 @@ def HloMoveUp : Pass<"hlo-move-up", "mlir::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// InsertShapeConstraint
+//===----------------------------------------------------------------------===//
+def InsertShapeConstraint : Pass<"insert-shape-constraint", "FuncOp"> {
+  let summary = "Insert shape constraint for some special operations";
+  let description = [{
+    Some operations have constraints on the inputs and(or) outputs. Ex. mhlo.add
+    requires that all the inputs and outputs' shape should be same. And a MeetOp 
+    will be created to express the constraint.
+  }];
+  let constructor = "mlir::createInsertShapeConstraintPass()";
+  let dependentDialects = [
+    "mlir::shape::ShapeDialect",
+    "mlir::shape_ext::ShapeExtDialect",
+    "mlir::tensor::TensorDialect"
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // LayoutTransformation
 //===----------------------------------------------------------------------===//
 
@@ -181,9 +218,16 @@ def RewriteWithConstraint :  Pass<"rewrite-with-constraint", "mlir::FuncOp"> {
 
 def ShapeReification : Pass<"shape-reification", "FuncOp"> {
   let summary = "Iteratively reify all shape computations.";
+  let description = [{
+    If an operation has a shape reification implementation, that is to say, we 
+    know how to express the outputs' shape by it's inputs' shape symbolicly, 
+    then a tensor.dim or shape.shape_of on this type of operation could be 
+    reified. And shape reification procedure could be handled recursively.
+  }];
   let constructor = "mlir::createShapeReificationPass()";
   let dependentDialects = [
-    "mlir::shape::ShapeDialect"
+    "mlir::shape::ShapeDialect",
+    "mlir::tensor::TensorDialect"
   ];
 }
 

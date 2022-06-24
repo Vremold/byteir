@@ -11,16 +11,17 @@
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "llvm/ADT/StringRef.h"
 
-using namespace mlir;
+namespace mlir {
 
-namespace byteir {
+void registerDynamicPartitionInferBoundedReturnTypes();
 
 void registerNonZeroInferBoundedReturnTypes();
 
 inline void registerAllMhloInferBoundedReturnTypes() {
+  registerDynamicPartitionInferBoundedReturnTypes();
   registerNonZeroInferBoundedReturnTypes();
 }
 
-} // namespace byteir
+} // namespace mlir
 
 #endif // BYTEIR_DIALECT_MHLO_BOUNDEDSHAPES_REGISTER_H

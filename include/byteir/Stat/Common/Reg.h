@@ -23,9 +23,7 @@ class MLIRContext;
 class ModuleOp;
 } // namespace mlir
 
-using namespace mlir;
-
-namespace byteir {
+namespace mlir {
 
 /// Interface of the function that do some statistics on the ModuleOp and
 /// outputs the result to a stream.
@@ -50,6 +48,6 @@ struct MLIRStatRegistration {
 
   MLIRStatRegistration(llvm::StringRef name, const MLIRFunctionStat &function);
 };
-} // namespace byteir
+} // namespace mlir
 
 #endif // MLIR_STAT_COMMON_REG_H

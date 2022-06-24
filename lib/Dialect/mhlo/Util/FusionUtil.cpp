@@ -8,37 +8,21 @@
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Matchers.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/Support/Debug.h"
 
 using namespace mlir;
 using namespace mlir::mhlo;
 using namespace llvm;
 
-// This code is from mhlo repo
-// but it was in the local namespace, so cannot be directly call.
-// TODO: we might update upstream to make it accessible later
-mhlo::FusionOp
-mlir::createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
-                                  ValueRange outputs,
-                                  const MhloFusionPattern &pattern) {
+#define DEBUG_TYPE "fusion-util"
 
-  b.setInsertionPoint(pattern.back());
-
-  SmallVector<Location, 4> locations;
-  locations.reserve(pattern.size());
-  for (Operation *op : pattern) {
-    locations.push_back(op->getLoc());
-  }
-  Location fused_loc = FusedLoc::get(pattern.back()->getContext(), locations);
-
-  SmallVector<Type, 4> output_types;
-  output_types.reserve(outputs.size());
-  for (Value v : outputs) {
-    output_types.push_back(v.getType());
-  }
-
+namespace {
+void moveConsumer(const MhloFusionPattern &pattern) {
   SmallDenseSet<Operation *> fused_set(pattern.begin(), pattern.end());
   SmallDenseSet<Operation *> consumers_set;
 
@@ -66,6 +50,98 @@ mlir::createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
   for (auto op : llvm::reverse(consumers_vec)) {
     op->moveAfter(pattern.back());
   }
+}
+} // namespace
+
+FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
+                                     ValueRange inputs, ValueRange outputs,
+                                     const MhloFusionPattern &pattern) {
+  SmallVector<Location, 4> locations;
+  locations.reserve(pattern.size());
+  for (Operation *op : pattern) {
+    locations.push_back(op->getLoc());
+  }
+  Location fused_loc = FusedLoc::get(pattern.back()->getContext(), locations);
+
+  SmallVector<Type, 4> output_types;
+  output_types.reserve(outputs.size());
+  for (Value v : outputs) {
+    output_types.push_back(v.getType());
+  }
+  SmallVector<Type, 4> input_types;
+  input_types.reserve(inputs.size());
+  for (Value v : inputs) {
+    input_types.push_back(v.getType());
+  }
+
+  moveConsumer(pattern);
+
+  auto sub_fn_type = b.getFunctionType(input_types, output_types);
+  b.setInsertionPointAfter(pattern[0]->getParentOp());
+  FuncOp sub_fn_op = b.create<FuncOp>(fused_loc, sub_fn_name, sub_fn_type);
+  b.setInsertionPoint(pattern.back());
+  auto call_op = b.create<func::CallOp>(fused_loc, sub_fn_op, inputs);
+
+  Block *block = sub_fn_op.addEntryBlock();
+  b.setInsertionPoint(block, block->end());
+  BlockAndValueMapping bvm;
+  for (auto input_and_arg : llvm::zip(inputs, sub_fn_op.getArguments())) {
+    bvm.map(std::get<0>(input_and_arg), std::get<1>(input_and_arg));
+  }
+  for (Operation *op : pattern) {
+    b.clone(*op, bvm);
+  }
+  llvm::SmallVector<Value, 4> func_returns;
+  for (Value output : outputs) {
+    func_returns.push_back(bvm.lookupOrDefault(output));
+  }
+  b.create<func::ReturnOp>(fused_loc, func_returns);
+
+  for (auto output_and_result : llvm::zip(outputs, call_op.getResults())) {
+    Value output = std::get<0>(output_and_result);
+    Value call_result = std::get<1>(output_and_result);
+    for (OpOperand &use : llvm::make_early_inc_range(output.getUses())) {
+      use.set(call_result);
+    }
+  }
+
+  for (auto op : llvm::reverse(pattern)) {
+    op->erase();
+  }
+  return sub_fn_op;
+}
+
+FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
+                                     const MhloFusionPattern &pattern) {
+  SmallVector<Value, 4> inputs = GetInputsOfCluster(pattern);
+  SmallVector<Value, 4> outputs = GetOutputsOfCluster(pattern);
+  return createFuncOpFromPattern(b, sub_fn_name, inputs, outputs, pattern);
+}
+
+// This code is from mhlo repo
+// but it was in the local namespace, so cannot be directly call.
+// TODO: we might update upstream to make it accessible later
+mhlo::FusionOp
+mlir::createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
+                                  ValueRange outputs,
+                                  const MhloFusionPattern &pattern) {
+
+  b.setInsertionPoint(pattern.back());
+
+  SmallVector<Location, 4> locations;
+  locations.reserve(pattern.size());
+  for (Operation *op : pattern) {
+    locations.push_back(op->getLoc());
+  }
+  Location fused_loc = FusedLoc::get(pattern.back()->getContext(), locations);
+
+  SmallVector<Type, 4> output_types;
+  output_types.reserve(outputs.size());
+  for (Value v : outputs) {
+    output_types.push_back(v.getType());
+  }
+
+  moveConsumer(pattern);
 
   FusionOp fusion = b.create<mhlo::FusionOp>(fused_loc, output_types, inputs);
   Region &region = fusion.fused_computation();
@@ -267,6 +343,8 @@ void mlir::ProducerFusionPlanner::run() {
       continue;
     }
 
+    LLVM_DEBUG(llvm::dbgs() << "try to fuse: " << *op << "\n");
+
     // check fusion in the operand sequence
     for (unsigned i = 0; i < op->getNumOperands(); ++i) {
       auto val = op->getOperand(i);
@@ -284,6 +362,7 @@ void mlir::ProducerFusionPlanner::run() {
         continue;
       }
 
+      LLVM_DEBUG(llvm::dbgs() << "fused: " << *op << "\n");
       // now we can fuse
       merge(op_def, op);
     }
@@ -306,4 +385,14 @@ void mlir::ProducerFusionPlanner::run() {
       fusion_plan_[offset].push_back(op);
     }
   }
+
+  // clang-format off
+  LLVM_DEBUG(llvm::dbgs() << "============== plan result ===============\n";
+             for (auto it : llvm::enumerate(fusion_plan_)) {
+               llvm::dbgs() << "============ pattern " << it.index() << " =============\n";
+               for (auto v : it.value()) {
+                 llvm::outs() << *v << "\n";
+               }
+             });
+  // clang-format on
 }

@@ -23,6 +23,14 @@ class MhloDialect;
 
 namespace shape {
 class ShapeDialect;
+} // namespace shape
+
+namespace shape_ext {
+class ShapeExtDialect;
+} // namespace shape_ext
+
+namespace tensor {
+class TensorDialect;
 }
 
 #define GEN_PASS_CLASSES

@@ -21,7 +21,6 @@
 #include <vector>
 
 using namespace mlir;
-using namespace byteir;
 
 #define DEBUG_TYPE "bounded-shape-infer"
 
@@ -120,11 +119,11 @@ struct BoundedShapeInferencePass
       for (auto it : llvm::enumerate(
                llvm::zip(originalOp->getResults(), op->getResults()))) {
         auto originalType =
-            std::get<0>(it.value()).getType().cast<ShapedType>();
-        if (originalType.hasStaticShape())
+            std::get<0>(it.value()).getType().dyn_cast<ShapedType>();
+        if (!originalType || originalType.hasStaticShape())
           continue;
-        auto newType = std::get<1>(it.value()).getType().cast<ShapedType>();
-        if (!newType.hasRank())
+        auto newType = std::get<1>(it.value()).getType().dyn_cast<ShapedType>();
+        if (!newType || !newType.hasRank())
           continue;
         std::string boundedShapeAttrName =
             getBoundedShapeAttrName().str() + std::to_string(it.index());

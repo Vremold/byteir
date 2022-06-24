@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
+#include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
 
@@ -13,11 +14,11 @@ using namespace mlir;
 
 /// See NonZero's signature on
 /// https://github.com/onnx/onnx/blob/main/docs/Operators.md#nonzero
-void byteir::registerNonZeroInferBoundedReturnTypes() {
+void mlir::registerNonZeroInferBoundedReturnTypes() {
   static InferBoundedReturnTypesRegistration shapeRegister(
-      "NonZero", [](MLIRContext *context, Optional<Location>,
-                    ValueRange operands, DictionaryAttr, RegionRange,
-                    SmallVectorImpl<Type> &inferredReturnTypes) {
+      getNonZeroName(), [](MLIRContext *context, Optional<Location>,
+                           ValueRange operands, DictionaryAttr, RegionRange,
+                           SmallVectorImpl<Type> &inferredReturnTypes) {
         Value input = operands[0];
         ShapedType inputShape = input.getType().dyn_cast<ShapedType>();
         if (!inputShape || !inputShape.hasStaticShape())

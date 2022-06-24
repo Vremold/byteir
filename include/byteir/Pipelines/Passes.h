@@ -15,6 +15,7 @@
 #include "byteir/Pipelines/HloOpt.h"
 #include "byteir/Pipelines/LinalgTensorOpt.h"
 #include "byteir/Pipelines/SCFOpt.h"
+#include "byteir/Pipelines/ShapeOpt.h"
 #include "byteir/Pipelines/TotalBufferize.h"
 
 namespace mlir {
