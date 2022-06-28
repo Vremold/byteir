@@ -91,9 +91,9 @@ struct AddScatterAddToScatterPattern : public OpRewritePattern<mhlo::AddOp> {
 
 struct RemoveTrivialTorchIndexSelect
     : public OpRewritePattern<mhlo::TorchIndexSelectOp> {
-  using OpRewritePattern<mhlo::TorchIndexSelectOp>::OpRewritePattern;
   RemoveTrivialTorchIndexSelect(MLIRContext *context, DimFlagAnalysis *analysis)
-      : OpRewritePattern(context), analysis_(analysis) {}
+      : OpRewritePattern<mhlo::TorchIndexSelectOp>(context),
+        analysis_(analysis) {}
 
   LogicalResult matchAndRewrite(mhlo::TorchIndexSelectOp op,
                                 PatternRewriter &rewriter) const override {
@@ -121,6 +121,65 @@ struct RemoveTrivialTorchIndexSelect
   }
 
   DimFlagAnalysis *analysis_;
+};
+
+//===----------------------------------------------------------------------===//
+// PadConvolution Pattern
+//===----------------------------------------------------------------------===//
+
+struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvOp> {
+  using OpRewritePattern<mhlo::ConvOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(mhlo::ConvOp op,
+                                PatternRewriter &rewriter) const override {
+    auto padOp = op.lhs().getDefiningOp<mhlo::PadOp>();
+    if (!padOp || !isZeroAttribute(padOp.interior_padding())) {
+      return failure();
+    }
+    auto constOp = padOp.padding_value().getDefiningOp<mhlo::ConstOp>();
+    if (!constOp || !isZeroAttribute(constOp.value())) {
+      return failure();
+    }
+
+    const auto edge_padding_low = padOp.edge_padding_low().getValues<int64_t>();
+    const auto edge_padding_high =
+        padOp.edge_padding_high().getValues<int64_t>();
+    auto dimension_numbers = op.dimension_numbers();
+    auto input_spatial_dims = dimension_numbers.getInputSpatialDimensions();
+    llvm::SmallDenseSet<int64_t> input_spatial_dims_set(
+        input_spatial_dims.begin(), input_spatial_dims.end());
+    for (size_t i = 0; i < edge_padding_low.size(); i++) {
+      if (!input_spatial_dims_set.contains(i)) {
+        if (edge_padding_low[i] != 0 || edge_padding_high[i] != 0) {
+          return failure();
+        }
+      }
+    }
+
+    SmallVector<int64_t> oldPadding(input_spatial_dims.size() * 2, 0);
+    if (op.padding().hasValue()) {
+      oldPadding =
+          SmallVector<int64_t>(op.paddingAttr().getValues<int64_t>().begin(),
+                               op.paddingAttr().getValues<int64_t>().end());
+    }
+    SmallVector<int64_t> newPadding;
+    for (size_t i = 0; i < input_spatial_dims.size(); i++) {
+      newPadding.push_back(edge_padding_low[input_spatial_dims[i]] +
+                           oldPadding[i * 2]);
+      newPadding.push_back(edge_padding_high[input_spatial_dims[i]] +
+                           oldPadding[i * 2 + 1]);
+    }
+    auto newPaddingAttr = DenseIntElementsAttr::get(
+        RankedTensorType::get({input_spatial_dims.size(), 2},
+                              rewriter.getI64Type()),
+        newPadding);
+
+    auto newOp = cast<mhlo::ConvOp>(rewriter.clone(*op));
+    newOp.setOperand(0, padOp.operand());
+    newOp.paddingAttr(newPaddingAttr);
+    rewriter.replaceOp(op, newOp->getResult(0));
+    return success();
+  }
 };
 
 //===----------------------------------------------------------------------===//
@@ -405,6 +464,7 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
 
 void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
   patterns.add<AddScatterAddToScatterPattern>(patterns.getContext());
+  patterns.add<PadConvToConvPattern>(patterns.getContext());
   patterns.add<ConvOrConvBiasFollowedByBroadcastOp>(patterns.getContext());
 }
 

@@ -45,6 +45,36 @@ func @non_trivial_torch_index_select(%arg0: tensor<1x1024xf32>, %arg1: tensor<28
 // CHECK-LABEL: func @non_trivial_torch_index_select
 // CHECK-NEXT: mhlo.torch_index_select
 
+func @pad_conv2d_NHWC(%arg0: tensor<1x3x3x1xf32>, %arg1: tensor<2x2x1x2xf32>) -> tensor<1x4x4x2xf32> {
+  %0 = mhlo.constant dense<0.000000e+00> : tensor<f32>
+  %1 = "mhlo.pad"(%arg0, %0) {edge_padding_high = dense<[0, 1, 1, 0]> : tensor<4xi64>, edge_padding_low = dense<[0, 1, 1, 0]> : tensor<4xi64>, interior_padding = dense<0> : tensor<4xi64>} : (tensor<1x3x3x1xf32>, tensor<f32>) -> tensor<1x5x5x1xf32>
+  %2 = mhlo.convolution(%1, %arg1) dim_numbers = [b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f], window = {stride = [1, 1], pad = [[0, 0], [0, 0]], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<1x5x5x1xf32>, tensor<2x2x1x2xf32>) -> tensor<1x4x4x2xf32>
+  return %2 : tensor<1x4x4x2xf32>
+}
+// CHECK-LABEL: func @pad_conv2d_NHWC
+// CHECK-NEXT:  mhlo.convolution
+// CHECK{LITERAL}:  pad = [[1, 1], [1, 1]]
+
+func @pad_conv2d_NCHW(%arg0: tensor<1x1x38x78xf32>, %arg1: tensor<128x1x3x3xf32>) -> tensor<1x128x20x40xf32> {
+  %0 = mhlo.constant dense<0.000000e+00> : tensor<f32>
+  %1 = "mhlo.pad"(%arg0, %0) {edge_padding_high = dense<[0, 0, 1, 1]> : tensor<4xi64>, edge_padding_low = dense<[0, 0, 1, 1]> : tensor<4xi64>, interior_padding = dense<0> : tensor<4xi64>} : (tensor<1x1x38x78xf32>, tensor<f32>) -> tensor<1x1x40x80xf32>
+  %2 = mhlo.convolution(%1, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x1x40x80xf32>, tensor<128x1x3x3xf32>) -> tensor<1x128x20x40xf32>
+  return %2 : tensor<1x128x20x40xf32>
+}
+// CHECK-LABEL: func @pad_conv2d_NCHW
+// CHECK-NEXT:  mhlo.convolution
+// CHECK{LITERAL}:  pad = [[2, 2], [2, 2]]
+
+func @pad_conv3d(%arg0: tensor<1x100x25x46x3xf32>, %arg1: tensor<1x3x3x3x32xf32>) -> tensor<1x100x27x48x32xf32> {
+  %0 = mhlo.constant dense<0.000000e+00> : tensor<f32>
+  %1 = "mhlo.pad"(%arg0, %0) {edge_padding_high = dense<[0, 0, 1, 1, 0]> : tensor<5xi64>, edge_padding_low = dense<[0, 0, 1, 1, 0]> : tensor<5xi64>, interior_padding = dense<0> : tensor<5xi64>} : (tensor<1x100x25x46x3xf32>, tensor<f32>) -> tensor<1x100x27x48x3xf32>
+  %2 = "mhlo.convolution"(%1, %arg1) {batch_group_count = 1 : i64, dimension_numbers = #mhlo.conv<[b, 0, 1, 2, f]x[0, 1, 2, i, o]->[b, 0, 1, 2, f]>, feature_group_count = 1 : i64, padding = dense<[[0, 0], [1, 1], [1, 1]]> : tensor<3x2xi64>, rhs_dilation = dense<1> : tensor<3xi64>, window_strides = dense<1> : tensor<3xi64>} : (tensor<1x100x27x48x3xf32>, tensor<1x3x3x3x32xf32>) -> tensor<1x100x27x48x32xf32>
+  return %2 : tensor<1x100x27x48x32xf32>
+}
+// CHECK-LABEL: func @pad_conv3d
+// CHECK-NEXT:  mhlo.convolution
+// CHECK{LITERAL}:  pad = [[0, 0], [2, 2], [2, 2]]
+
 func @conv_mul(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
   %weight = mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]> : tensor<1x1x1x2xf32>
   %conv = mhlo.convolution(%arg0, %weight) dim_numbers = [b, f, 0, 1]x[0, 1, i, o]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[0, 0], [0, 0]], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<1x1x2x2xf32>, tensor<1x1x1x2xf32>) -> tensor<1x2x2x2xf32>
