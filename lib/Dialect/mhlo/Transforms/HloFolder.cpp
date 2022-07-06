@@ -439,6 +439,59 @@ struct ConvOrConvBiasFollowedByBroadcastOp
   }
 };
 
+//===----------------------------------------------------------------------===//
+// PadReduceWindowToReduceWindow Pattern
+//===----------------------------------------------------------------------===//
+
+struct PadReduceWindowToReduceWindowPattern
+    : public OpRewritePattern<mhlo::ReduceWindowOp> {
+  using OpRewritePattern<mhlo::ReduceWindowOp>::OpRewritePattern;
+  LogicalResult matchAndRewrite(mhlo::ReduceWindowOp op,
+                                PatternRewriter &rewriter) const override {
+    if (op.inputs().size() != 1 || op.init_values().size() != 1 ||
+        op.getResults().size() != 1) {
+      return failure();
+    }
+    // handle a common, special case of ReduceWindow for 1 input, 1 init_values,
+    // and 1 result
+    if (auto pad = dyn_cast_or_null<mhlo::PadOp>(
+            op.inputs().front().getDefiningOp())) {
+      if (pad.padding_value() == op.init_values().front() &&
+          isZeroAttribute(pad.interior_padding())) {
+        // create a padding
+        const auto edge_padding_low =
+            pad.edge_padding_low().getValues<int64_t>();
+        const auto edge_padding_high =
+            pad.edge_padding_high().getValues<int64_t>();
+        SmallVector<int64_t> oldPadding(edge_padding_low.size() * 2, 0);
+        if (op.padding().hasValue()) {
+          oldPadding = SmallVector<int64_t>(
+              op.paddingAttr().getValues<int64_t>().begin(),
+              op.paddingAttr().getValues<int64_t>().end());
+        }
+        SmallVector<int64_t> newPadding;
+        for (size_t i = 0; i < edge_padding_low.size(); i++) {
+          newPadding.push_back(oldPadding[i * 2] + edge_padding_low[i]);
+          newPadding.push_back(oldPadding[i * 2 + 1] + edge_padding_high[i]);
+        }
+
+        auto newPaddingAttr = DenseIntElementsAttr::get(
+            RankedTensorType::get({edge_padding_low.size(), 2},
+                                  rewriter.getI64Type()),
+            newPadding);
+
+        auto newOp = cast<mhlo::ReduceWindowOp>(rewriter.clone(*op));
+        newOp.setOperand(0, pad.operand());
+        newOp.paddingAttr(newPaddingAttr);
+        rewriter.replaceOp(op, newOp->getResult(0));
+        return success();
+      }
+    }
+
+    return failure();
+  }
+};
+
 struct HloFolderPass : public HloFolderBase<HloFolderPass> {
   void runOnOperation() override {
     DimFromBroadcast dim_from_broadcast;
@@ -466,6 +519,7 @@ void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
   patterns.add<AddScatterAddToScatterPattern>(patterns.getContext());
   patterns.add<PadConvToConvPattern>(patterns.getContext());
   patterns.add<ConvOrConvBiasFollowedByBroadcastOp>(patterns.getContext());
+  patterns.add<PadReduceWindowToReduceWindowPattern>(patterns.getContext());
 }
 
 std::unique_ptr<OperationPass<FuncOp>> mlir::createHloFolderPass() {
