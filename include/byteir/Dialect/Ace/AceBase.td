@@ -26,4 +26,16 @@ def Ace_Dialect : Dialect {
   let cppNamespace = "::mlir::ace";
 }
 
+class Ace_Type<string name, string typeMnemonic> : TypeDef<Ace_Dialect, name> {
+  let mnemonic = typeMnemonic;
+}
+
+def Ace_StringType : Ace_Type<"String", "string"> {
+  let description = [{`ace.string` represents string type}];
+}
+
+def Ace_ResourceType : Ace_Type<"Resource", "resource"> {
+  let description = [{`ace.string` represents resource type from tensorflow}];
+}
+
 #endif // ACE_BASE

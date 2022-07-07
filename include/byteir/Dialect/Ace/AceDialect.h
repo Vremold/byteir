@@ -11,6 +11,9 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
+#define GET_TYPEDEF_CLASSES
+#include "byteir/Dialect/Ace/AceOpsTypes.h.inc"
+
 #include "byteir/Dialect/Ace/AceOpsDialect.h.inc"
 
 #define GET_OP_CLASSES

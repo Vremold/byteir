@@ -7,6 +7,8 @@
 
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/DialectImplementation.h"
+#include "llvm/ADT/TypeSwitch.h"
 
 using namespace mlir;
 using namespace mlir::ace;
@@ -24,10 +26,17 @@ void AceDialect::initialize() {
 #define GET_OP_LIST
 #include "byteir/Dialect/Ace/AceOps.cpp.inc"
       >();
+  addTypes<
+#define GET_TYPEDEF_LIST
+#include "byteir/Dialect/Ace/AceOpsTypes.cpp.inc"
+      >();
 }
 
 #define GET_OP_CLASSES
 #include "byteir/Dialect/Ace/AceOps.cpp.inc"
+
+#define GET_TYPEDEF_CLASSES
+#include "byteir/Dialect/Ace/AceOpsTypes.cpp.inc"
 
 //===----------------------------------------------------------------------===//
 // OpaqueOp

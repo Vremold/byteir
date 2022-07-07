@@ -90,5 +90,16 @@ def Ace_OpaqueOp : Ace_Op<"opaque", [SingleBlockImplicitTerminator<"ReturnOp">]>
 
 }
 
+def Ace_CustomCallOp : Ace_Op<"custom_call", [NoSideEffect]> {
+  let summary = "CustomCall operator";
+
+  let arguments = (ins
+    Variadic<AnyTensor>:$inputs,
+    StrAttr:$call_target_name
+  );
+
+  let results = (outs Variadic<AnyTensor>:$results);
+}
+
 
 #endif // ACE_OPS
