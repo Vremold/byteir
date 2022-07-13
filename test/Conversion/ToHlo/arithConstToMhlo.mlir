@@ -7,3 +7,9 @@ func @const() -> tensor<4x4xf32> {
   return %0 : tensor<4x4xf32>
 }
 
+// CHECK-LABEL: func @not_mhlo_const
+func @not_mhlo_const() -> i32 {
+  // CHECK-NOT: mhlo.constant
+  %0 = arith.constant 1 : i32
+  return %0 : i32
+}
