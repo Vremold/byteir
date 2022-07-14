@@ -14,6 +14,9 @@
 #define GET_TYPEDEF_CLASSES
 #include "byteir/Dialect/Ace/AceOpsTypes.h.inc"
 
+#define GET_ATTRDEF_CLASSES
+#include "byteir/Dialect/Ace/AceOpsAttributes.h.inc"
+
 #include "byteir/Dialect/Ace/AceOpsDialect.h.inc"
 
 #define GET_OP_CLASSES

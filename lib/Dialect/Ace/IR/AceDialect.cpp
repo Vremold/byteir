@@ -30,6 +30,10 @@ void AceDialect::initialize() {
 #define GET_TYPEDEF_LIST
 #include "byteir/Dialect/Ace/AceOpsTypes.cpp.inc"
       >();
+  addAttributes<
+#define GET_ATTRDEF_LIST
+#include "byteir/Dialect/Ace/AceOpsAttributes.cpp.inc"
+      >();
 }
 
 #define GET_OP_CLASSES
@@ -37,6 +41,9 @@ void AceDialect::initialize() {
 
 #define GET_TYPEDEF_CLASSES
 #include "byteir/Dialect/Ace/AceOpsTypes.cpp.inc"
+
+#define GET_ATTRDEF_CLASSES
+#include "byteir/Dialect/Ace/AceOpsAttributes.cpp.inc"
 
 //===----------------------------------------------------------------------===//
 // ConstOp

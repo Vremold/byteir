@@ -6,6 +6,7 @@ add_mlir_dialect_library(MLIRAce
 
   DEPENDS
   MLIRAceOpsIncGen
+  MLIRAceOpsAttrIncGen
 
   LINK_LIBS PUBLIC
   MLIRIR
