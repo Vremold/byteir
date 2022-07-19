@@ -21,6 +21,36 @@ constexpr llvm::StringRef getNonZeroName() {
   return CUSTOM_CALL_NAME_PREFIX "non_zero";
 }
 
+constexpr llvm::StringRef getSoftmaxName() {
+  return CUSTOM_CALL_NAME_PREFIX "softmax";
+}
+
+constexpr llvm::StringRef getLogSoftmaxName() {
+  return CUSTOM_CALL_NAME_PREFIX "log_softmax";
+}
+
+constexpr llvm::StringRef getGeLUName() {
+  return CUSTOM_CALL_NAME_PREFIX "gelu";
+}
+
+constexpr llvm::StringRef getErfName() { return CUSTOM_CALL_NAME_PREFIX "erf"; }
+
+constexpr llvm::StringRef getTopKName() {
+  return CUSTOM_CALL_NAME_PREFIX "top_k";
+}
+
+constexpr llvm::StringRef getArgMaxName() {
+  return CUSTOM_CALL_NAME_PREFIX "arg_max";
+}
+
+constexpr llvm::StringRef getArgMinName() {
+  return CUSTOM_CALL_NAME_PREFIX "arg_min";
+}
+
+constexpr llvm::StringRef getLayerNormName() {
+  return CUSTOM_CALL_NAME_PREFIX "layer_norm";
+}
+
 constexpr llvm::StringRef getDynamicPartitionName() {
   return TF_NAME_PREFIX "DynamicPartition";
 }
