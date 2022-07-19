@@ -14,7 +14,7 @@ func @main(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
   %10 = "mhlo.dot"(%arg0, %1) : (tensor<4x4xf32>, tensor<4x4xf32>) -> tensor<4x4xf32>
   %11 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<4xf32>) -> tensor<4x4xf32>
   %12 = mhlo.add %10, %11 : tensor<4x4xf32>
-  %13:2 = "mhlo.custom_call"(%12, %arg1) {byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "byteir.dynamic_partition", has_side_effect = false} : (tensor<4x4xf32>, tensor<4xi32>) -> (tensor<?x4xf32>, tensor<?x4xf32>)
+  %13:2 = "mhlo.custom_call"(%12, %arg1) {byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "tf.DynamicPartition", has_side_effect = false} : (tensor<4x4xf32>, tensor<4xi32>) -> (tensor<?x4xf32>, tensor<?x4xf32>)
   %14 = "mhlo.dot"(%13#0, %3) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
   %15 = shape.shape_of %14 : tensor<?x4xf32> -> tensor<2xindex>
   %18 = "mhlo.dynamic_broadcast_in_dim"(%4, %15) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
@@ -23,8 +23,8 @@ func @main(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
   %21 = shape.shape_of %20 : tensor<?x4xf32> -> tensor<2xindex>
   %24 = "mhlo.dynamic_broadcast_in_dim"(%6, %21) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
   %25 = mhlo.add %20, %24 : tensor<?x4xf32>
-  %26:2 = "mhlo.custom_call"(%9, %arg1) {byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "byteir.dynamic_partition", has_side_effect = false} : (tensor<4xi32>, tensor<4xi32>) -> (tensor<?xi32>, tensor<?xi32>)
-  %27 = "mhlo.custom_call"(%26#0, %26#1, %19, %25) {call_target_name = "byteir.dynamic_stitch", has_side_effect = false} : (tensor<?xi32>, tensor<?xi32>, tensor<?x4xf32>, tensor<?x4xf32>) -> tensor<?x4xf32>
+  %26:2 = "mhlo.custom_call"(%9, %arg1) {byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "tf.DynamicPartition", has_side_effect = false} : (tensor<4xi32>, tensor<4xi32>) -> (tensor<?xi32>, tensor<?xi32>)
+  %27 = "mhlo.custom_call"(%26#0, %26#1, %19, %25) {call_target_name = "tf.DynamicStitch", has_side_effect = false} : (tensor<?xi32>, tensor<?xi32>, tensor<?x4xf32>, tensor<?x4xf32>) -> tensor<?x4xf32>
   %28 = "mhlo.dot"(%27, %7) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
   %29 = shape.shape_of %28 : tensor<?x4xf32> -> tensor<2xindex>
   %32 = "mhlo.dynamic_broadcast_in_dim"(%8, %29) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
@@ -63,6 +63,6 @@ func @main(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
 // CHECK-NEXT: }
 
 // CHECK-LABEL: func @main_sub_0(%arg0: tensor<?xi32>, %arg1: tensor<?xi32>, %arg2: tensor<?x4xf32>, %arg3: tensor<?x4xf32>) -> tensor<4x4xf32> {
-// CHECK-NEXT:   %0 = "mhlo.custom_call"(%arg0, %arg1, %arg2, %arg3) {call_target_name = "byteir.dynamic_stitch", has_side_effect = false} : (tensor<?xi32>, tensor<?xi32>, tensor<?x4xf32>, tensor<?x4xf32>) -> tensor<4x4xf32>
+// CHECK-NEXT:   %0 = "mhlo.custom_call"(%arg0, %arg1, %arg2, %arg3) {call_target_name = "tf.DynamicStitch", has_side_effect = false} : (tensor<?xi32>, tensor<?xi32>, tensor<?x4xf32>, tensor<?x4xf32>) -> tensor<4x4xf32>
 // CHECK-NEXT:   return %0 : tensor<4x4xf32>
 // CHECK-NEXT: }

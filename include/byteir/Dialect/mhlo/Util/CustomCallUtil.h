@@ -11,6 +11,7 @@
 #include "llvm/ADT/StringRef.h"
 
 #define CUSTOM_CALL_NAME_PREFIX "byteir."
+#define TF_NAME_PREFIX "tf."
 
 namespace mlir {
 
@@ -21,11 +22,11 @@ constexpr llvm::StringRef getNonZeroName() {
 }
 
 constexpr llvm::StringRef getDynamicPartitionName() {
-  return CUSTOM_CALL_NAME_PREFIX "dynamic_partition";
+  return TF_NAME_PREFIX "DynamicPartition";
 }
 
 constexpr llvm::StringRef getDynamicStitchName() {
-  return CUSTOM_CALL_NAME_PREFIX "dynamic_stitch";
+  return TF_NAME_PREFIX "DynamicStitch";
 }
 
 } // namespace mlir

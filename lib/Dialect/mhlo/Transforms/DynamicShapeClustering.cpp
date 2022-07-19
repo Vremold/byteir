@@ -163,7 +163,7 @@ struct DynamicShapeClusteringPass
 
       auto isFusibleCandidate = [&](Operation *op) {
         if (llvm::isa<tensor::DimOp, tensor::FromElementsOp, shape::ShapeOfOp,
-                      mhlo::DynamicBroadcastInDimOp>(op) ||
+                      mhlo::DynamicBroadcastInDimOp, shape::BroadcastOp>(op) ||
             op->hasTrait<OpTrait::ConstantLike>())
           return true;
 
@@ -181,8 +181,9 @@ struct DynamicShapeClusteringPass
 
       auto isFusibleStart = [&](Operation *op) {
         for (Value operand : op->getOperands()) {
-          if (dynSrcAnalysis.isDynamicSource(operand))
+          if (dynSrcAnalysis.isDynamicSource(operand)) {
             return true;
+          }
         }
 
         if (op->hasTrait<OpTrait::ConstantLike>())
@@ -195,7 +196,7 @@ struct DynamicShapeClusteringPass
 
       auto isFusibleWith = [&](Operation *target, Operation *start) {
         if (llvm::isa<tensor::DimOp, tensor::FromElementsOp, shape::ShapeOfOp,
-                      mhlo::DynamicBroadcastInDimOp>(start))
+                      mhlo::DynamicBroadcastInDimOp, shape::BroadcastOp>(start))
           return true;
 
         DenseSet<Value> targetSources;
