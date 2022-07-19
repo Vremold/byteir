@@ -8,6 +8,7 @@
 #include "byteir/Dialect/Shape/Transforms/ResolveShapeConstraint.h"
 #include "PassDetail.h"
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
+#include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -34,7 +35,19 @@ struct ResolveShapeConstraintPass
         return WalkResult::advance();
       }
 
-      if (isLhsConstLike) {
+      if (isLhsConstLike && isRhsConstLike) {
+        llvm::Optional<int64_t> lhsValue =
+            getLiteralFromConstantLike(lhsOp->getResults()[0]);
+        llvm::Optional<int64_t> rhsValue =
+            getLiteralFromConstantLike(rhsOp->getResults()[0]);
+        if (lhsValue != rhsValue) {
+          std::string msg;
+          llvm::raw_string_ostream ss(msg);
+          ss << "constant operands not equal: " << lhsValue
+             << " != " << rhsValue;
+          meetOp->emitOpError(std::move(msg));
+        }
+      } else if (isLhsConstLike) {
         rhs.replaceAllUsesWith(lhs);
       } else if (isRhsConstLike) {
         lhs.replaceAllUsesWith(rhs);

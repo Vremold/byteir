@@ -99,9 +99,16 @@ LogicalResult inferBoundedShapeUsingRegistry(Operation *op) {
 LogicalResult inferShapeUsingSameOperandsAndResultShapeTrait(Operation *op) {
   Type staticShapedType = nullptr;
   for (Type t : op->getOperandTypes()) {
-    if (t.cast<ShapedType>().hasStaticShape()) {
-      staticShapedType = t;
-      break;
+    if (auto shape_type = t.dyn_cast<ShapedType>()) {
+      if (shape_type.hasStaticShape()) {
+        staticShapedType = t;
+        break;
+      }
+    } else {
+      LLVM_DEBUG(llvm::dbgs()
+                 << "Operand type " << t << " is not ShapedType in op: " << *op
+                 << ", skip infer\n");
+      return success();
     }
   }
   if (!staticShapedType) {
@@ -238,6 +245,43 @@ ReifyReturnTypeShapes mlir::reifyReturnTypeShapes(llvm::StringRef name) {
   auto &reifyReturnTypeShapesRegistry = getReifyReturnTypeShapesRegistry();
   auto it = reifyReturnTypeShapesRegistry.find(name);
   if (it != reifyReturnTypeShapesRegistry.end())
+    return it->second;
+  return nullptr;
+}
+
+//===----------------------------------------------------------------------===//
+// InsertShapeConstraint Registration
+//===----------------------------------------------------------------------===//
+
+static llvm::StringMap<InsertShapeConstraint> &
+getInsertShapeConstraintRegistry() {
+  static llvm::StringMap<InsertShapeConstraint> insertShapeConstraintRegistry;
+  return insertShapeConstraintRegistry;
+}
+
+/// Register the given ReifyReturnTypeShapes function.
+static void
+registerInsertShapeConstraint(StringRef name,
+                              const InsertShapeConstraint &function) {
+  auto &insertShapeConstraintRegistry = getInsertShapeConstraintRegistry();
+  if (insertShapeConstraintRegistry.find(name) !=
+      insertShapeConstraintRegistry.end())
+    llvm::report_fatal_error(
+        "Attempting to overwrite an existing InsertShapeConstraint function");
+  assert(function &&
+         "Attempting to register an empty InsertShapeConstraint function");
+  insertShapeConstraintRegistry[name] = function;
+}
+
+InsertShapeConstraintRegistration::InsertShapeConstraintRegistration(
+    StringRef name, const InsertShapeConstraint &function) {
+  registerInsertShapeConstraint(name, function);
+}
+
+InsertShapeConstraint mlir::insertShapeConstraint(llvm::StringRef name) {
+  auto &insertShapeConstraintRegistry = getInsertShapeConstraintRegistry();
+  auto it = insertShapeConstraintRegistry.find(name);
+  if (it != insertShapeConstraintRegistry.end())
     return it->second;
   return nullptr;
 }

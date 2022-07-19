@@ -43,6 +43,20 @@ struct ReifyReturnTypeShapesRegistration {
 ReifyReturnTypeShapes reifyReturnTypeShapes(llvm::StringRef name);
 
 //===----------------------------------------------------------------------===//
+// InsertShapeConstraint Registration
+//===----------------------------------------------------------------------===//
+
+using InsertShapeConstraint =
+    std::function<LogicalResult(Operation *op, OpBuilder &builder)>;
+
+struct InsertShapeConstraintRegistration {
+  InsertShapeConstraintRegistration(llvm::StringRef name,
+                                    const InsertShapeConstraint &function);
+};
+
+InsertShapeConstraint insertShapeConstraint(llvm::StringRef name);
+
+//===----------------------------------------------------------------------===//
 // InferBoundedReturnTypes Registration
 //===----------------------------------------------------------------------===//
 

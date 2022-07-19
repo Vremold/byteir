@@ -54,3 +54,13 @@ func @dynamic_partition_constraint(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>)
   "shape_ext.tie"(%25, %26) : (tensor<?x4xf32>, index) -> ()
   return %25 : tensor<?x4xf32>
 }
+
+func @einsum_shape_constraint_1(%arg0: tensor<2x3x?x2xf32>, %arg1: tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32> { 
+  %0 = "mhlo.einsum"(%arg0, %arg1) {einsum_config = "dcbq,btd->bqtc"} : (tensor<2x3x?x2xf32>, tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32>
+  return %0 : tensor<2x2x2x3xf32>
+}
+// CHECK-LABEL: einsum_shape_constraint_1
+// CHECK-NEXT: %c2 = arith.constant 2 : index
+// CHECK-NEXT: %0 = "mhlo.einsum"(%arg0, %arg1) {einsum_config = "dcbq,btd->bqtc"} : (tensor<2x3x?x2xf32>, tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32>
+// CHECK-NEXT: %1 = tensor.dim %arg0, %c2 : tensor<2x3x?x2xf32>
+// CHECK-NEXT: "shape_ext.meet"(%1, %c2) : (index, index) -> ()

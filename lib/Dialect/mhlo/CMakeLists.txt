@@ -39,6 +39,25 @@ add_mlir_dialect_library(ByteIRMhloReifyShapes
   ByteIRUtils
 )
 
+add_mlir_dialect_library(ByteIRMhloShapeConstraints
+  ShapeConstraints/DynamicPartitionRegister.cpp
+  ShapeConstraints/EinsumRegister.cpp
+
+  ADDITIONAL_HEADER_DIRS
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ShapeConstraints
+
+  DEPENDS
+  MhloDialect
+  ByteIRMhloUtils
+  ByteIRUtils
+
+  LINK_LIBS PUBLIC
+  MLIRIR
+  MhloDialect
+  MLIRSupport
+  ByteIRUtils
+)
+
 add_mlir_dialect_library(ByteIRMhloBoundedShapes
   BoundedShapes/NonZeroRegister.cpp
   BoundedShapes/DynamicPartitionRegister.cpp
@@ -113,6 +132,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   ByteIRMhloUtils
   ByteIRUtils
   ByteIRMhloAnalysis
+  ByteIRMhloShapeConstraints
   ByteIRMhloReifyShapes
 
   LINK_LIBS PUBLIC
@@ -125,5 +145,6 @@ add_mlir_dialect_library(ByteIRMhloPasses
   ByteIRMhloUtils
   ByteIRUtils
   ByteIRMhloAnalysis
+  ByteIRMhloShapeConstraints
   ByteIRMhloReifyShapes
   )
