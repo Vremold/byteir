@@ -26,6 +26,10 @@ namespace memref {
 class MemRefDialect;
 } // namespace memref
 
+namespace mhlo {
+class MhloDialect;
+} // namespace mhlo
+
 namespace scf {
 class SCFDialect;
 } // namespace scf

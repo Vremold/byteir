@@ -1,5 +1,6 @@
 add_mlir_library(ByteIRTransforms
   AnchoredFuncPipeline.cpp
+  CanonicalizeExt.cpp
   CMAE.cpp
   CondCanonicalize.cpp
   CollectFunc.cpp
@@ -19,11 +20,13 @@ add_mlir_library(ByteIRTransforms
 
   DEPENDS
   ByteIRAnalysis
+  ByteIRMhloPasses
   ByteIRTransformsPassIncGen
   ByteIRUtils
 
   LINK_LIBS PUBLIC
   ByteIRAnalysis
+  ByteIRMhloPasses
   ByteIRUtils
   MLIRIR
   MLIRAffine

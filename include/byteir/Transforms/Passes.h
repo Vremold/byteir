@@ -10,6 +10,7 @@
 
 #include "byteir/Transforms/AnchoredFuncPipeline.h"
 #include "byteir/Transforms/CMAE.h"
+#include "byteir/Transforms/CanonicalizeExt.h"
 #include "byteir/Transforms/CollectFunc.h"
 #include "byteir/Transforms/CondCanonicalize.h"
 #include "byteir/Transforms/FuncTag.h"

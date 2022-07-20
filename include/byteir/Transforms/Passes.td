@@ -10,6 +10,7 @@
 #define BYTEIR_TRANSFORMS_PASSES
 
 include "mlir/Pass/PassBase.td"
+include "mlir/Rewrite/PassUtil.td"
 
 //===----------------------------------------------------------------------===//
 // Anchored Func Pipeline
@@ -23,6 +24,30 @@ def AnchoredFuncPipeline : Pass<"anchored-func-pipeline", "FuncOp"> {
             /*default=*/"",
             "An optional Unit attribute anchoring on target functions.">,
   ];
+}
+
+//===----------------------------------------------------------------------===//
+// CanonicalizeExt
+//===----------------------------------------------------------------------===//
+
+def CanonicalizeExt : Pass<"canonicalize-ext"> {
+  let summary = "Perform as an extension of upstream canonicalize pass.";
+  let description = [{
+    This pass performs as an extension of upstream canonicalize pass, with 
+    additional canonicalization pattens, and dce especially for mhlo.custom_call. 
+  }];
+  let constructor = "mlir::createCanonicalizeExtPass()";
+  let options = [
+    Option<"topDownProcessingEnabled", "top-down", "bool",
+           /*default=*/"true",
+           "Seed the worklist in general top-down order">,
+    Option<"enableRegionSimplification", "region-simplify", "bool",
+           /*default=*/"true",
+           "Seed the worklist in general top-down order">,
+    Option<"maxIterations", "max-iterations", "int64_t",
+           /*default=*/"10",
+           "Seed the worklist in general top-down order">
+  ] # RewritePassUtils.options;
 }
 
 //===----------------------------------------------------------------------===//
