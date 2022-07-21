@@ -14,10 +14,12 @@
 namespace mlir {
 
 void registerEinsumShapeConstraints();
+void registerDotGeneralShapeConstraints();
 void registerDynamicPartitionShapeConstraints();
 
 inline void registerAllMhloShapeConstraints() {
   registerEinsumShapeConstraints();
+  registerDotGeneralShapeConstraints();
   registerDynamicPartitionShapeConstraints();
 }
 

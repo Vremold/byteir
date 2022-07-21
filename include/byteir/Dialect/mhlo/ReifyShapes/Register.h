@@ -14,11 +14,12 @@
 namespace mlir {
 
 void registerDotReifyReturnTypeShapes();
-
+void registerDotGeneralReifyReturnTypeShapes();
 void registerDynamicStitchReifyReturnTypeShapes();
 
 inline void registerAllMhloReifyReturnTypeShapes() {
   registerDotReifyReturnTypeShapes();
+  registerDotGeneralReifyReturnTypeShapes();
   registerDynamicStitchReifyReturnTypeShapes();
 }
 

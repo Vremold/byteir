@@ -22,6 +22,7 @@ add_mlir_dialect_library(ByteIRMhloUtils
 
 add_mlir_dialect_library(ByteIRMhloReifyShapes
   ReifyShapes/DotRegister.cpp
+  ReifyShapes/DotGeneralRegister.cpp
   ReifyShapes/DynamicStitchRegister.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -41,6 +42,7 @@ add_mlir_dialect_library(ByteIRMhloReifyShapes
 
 add_mlir_dialect_library(ByteIRMhloShapeConstraints
   ShapeConstraints/DynamicPartitionRegister.cpp
+  ShapeConstraints/DotGeneralRegister.cpp
   ShapeConstraints/EinsumRegister.cpp
 
   ADDITIONAL_HEADER_DIRS

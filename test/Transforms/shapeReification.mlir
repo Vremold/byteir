@@ -52,6 +52,24 @@ func @dynamic_stitch(%arg0: tensor<?xi32>, %arg1: tensor<?xi32>, %arg2: tensor<?
   return %0 : tensor<?x4xf32>
 }
 
+// CHECK-LABEL: func @dot_general
+func @dot_general(%arg0: tensor<?x?x4xf32>, %arg1: tensor<?x4x128xf32>) -> tensor<3xindex> {
+  %c1 = arith.constant 1 : index
+  %c0 = arith.constant 0 : index
+  // CHECK-DAG: %[[C0:.+]] = arith.constant 0 : index
+  // CHECK-DAG: %[[C1:.+]] = arith.constant 1 : index
+  %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<?x?x4xf32>, tensor<?x4x128xf32>) -> tensor<?x?x128xf32>
+  // CHECK-DAG: %[[V0:.+]] = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<?x?x4xf32>, tensor<?x4x128xf32>) -> tensor<?x?x128xf32>
+  // CHECK-DAG: %[[V1:.+]] = tensor.dim %arg0, %[[C0]] : tensor<?x?x4xf32>
+  // CHECK-DAG: %[[V2:.+]] = tensor.dim %arg0, %[[C1]] : tensor<?x?x4xf32>
+  %1 = tensor.dim %0, %c0 : tensor<?x?x128xf32>
+  %2 = tensor.dim %0, %c1 : tensor<?x?x128xf32>
+  "shape_ext.tie"(%0, %1, %2) : (tensor<?x?x128xf32>, index, index) -> ()
+  // CHECK-DAG: "shape_ext.tie"(%[[V0]], %[[V1]], %[[V2]])
+  %3 = shape.shape_of %0 : tensor<?x?x128xf32> -> tensor<3xindex>
+  return %3 : tensor<3xindex>
+}
+
 // TODO: Check this after nested function call is supported
 func private @inner_func(%arg0 : tensor<?x4xf32>, %arg1 : tensor<?x4xf32>) -> tensor<?x4xf32> {
   %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
