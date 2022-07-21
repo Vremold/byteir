@@ -40,6 +40,7 @@ def Ace_ConstOp : Ace_Op<"constant", [
     OpBuilder<(ins "Attribute":$value)>];
 
   let assemblyFormat = "attr-dict $value";
+  let hasFolder = 1;
 }
 
 
