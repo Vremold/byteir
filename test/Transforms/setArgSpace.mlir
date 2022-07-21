@@ -1,17 +1,26 @@
 // RUN: byteir-opt %s -set-arg-space="entry-func=main all-space=cpu" | FileCheck %s
 
-func private @nested(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref<2x4xf32>)
-// CHECK-LABEL: func private @nested(memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu">
+func private @nested(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref<2x4xf32>) attributes {device = "gpu"}
+// CHECK-LABEL: func private @nested(memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu"> attributes {device = "gpu"}
 
 func private @local(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref<2x4xf32>) attributes {device = "gpu"}  {
   %0 = call @nested(%arg0, %arg1) : (memref<2x4xf32>, memref<2x4xf32>) -> (memref<2x4xf32>)
+  %1 = memref.alloc() : memref<2x4xf32>
+  %2 = memref.alloc() : memref<2x4xf32>
   "lmhlo.abs"(%arg0, %arg1) : (memref<2x4xf32>, memref<2x4xf32>) -> ()
-  return %0: memref<2x4xf32> 
+  "lmhlo.abs"(%arg1, %1) : (memref<2x4xf32>, memref<2x4xf32>) -> ()
+  "lmhlo.abs"(%1, %2) : (memref<2x4xf32>, memref<2x4xf32>) -> ()
+  return %2: memref<2x4xf32> 
 }
 // CHECK-LABEL: func private @local(%arg0: memref<2x4xf32, "gpu">, %arg1: memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu"> attributes {device = "gpu"}
 // CHECK-NEXT:    %0 = call @nested(%arg0, %arg1) : (memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu">
-// CHECK-NEXT:    "lmhlo.abs"(%arg0, %arg1) : (memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> ()
-// CHECK-NEXT:    return %0 : memref<2x4xf32, "gpu">
+// CHECK-NEXT:    %1 = memref.alloc() : memref<2x4xf32, "gpu">
+// CHECK-NEXT:    %2 = memref.alloc() : memref<2x4xf32, "gpu">
+// CHECK-NEXT:    "lmhlo.abs"(%arg0, %arg1) {device = "gpu"} : (memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> ()
+// CHECK-NEXT:    "lmhlo.abs"(%arg1, %1) {device = "gpu"} : (memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> ()
+// CHECK-NEXT:    "lmhlo.abs"(%1, %2) {device = "gpu"} : (memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> ()
+// CHECK-NEXT:    return %2 : memref<2x4xf32, "gpu">
+
 
 func @main(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>, %arg2 : memref<2x4xf32>) -> (memref<2x4xf32>, memref<2x4xf32>) {
   %0 = call @local(%arg0, %arg0) : (memref<2x4xf32>, memref<2x4xf32>) -> (memref<2x4xf32>)

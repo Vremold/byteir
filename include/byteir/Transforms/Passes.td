@@ -261,6 +261,8 @@ def SetArgShape: Pass<"set-arg-shape", "ModuleOp"> {
 
 //===----------------------------------------------------------------------===//
 // SetAllSpace (mainly use for all in the same device)
+// This pass is soft-deprecated.
+// Use SetOpSpace + SetArgSpace instead
 //===----------------------------------------------------------------------===//
 
 def SetAllSpace: Pass<"set-all-space", "ModuleOp"> {

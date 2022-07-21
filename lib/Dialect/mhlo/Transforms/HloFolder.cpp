@@ -170,8 +170,9 @@ struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvOp> {
                            oldPadding[i * 2 + 1]);
     }
     auto newPaddingAttr = DenseIntElementsAttr::get(
-        RankedTensorType::get({input_spatial_dims.size(), 2},
-                              rewriter.getI64Type()),
+        RankedTensorType::get(
+            {static_cast<int64_t>(input_spatial_dims.size()), 2},
+            rewriter.getI64Type()),
         newPadding);
 
     auto newOp = cast<mhlo::ConvOp>(rewriter.clone(*op));
@@ -476,8 +477,9 @@ struct PadReduceWindowToReduceWindowPattern
         }
 
         auto newPaddingAttr = DenseIntElementsAttr::get(
-            RankedTensorType::get({edge_padding_low.size(), 2},
-                                  rewriter.getI64Type()),
+            RankedTensorType::get(
+                {static_cast<int64_t>(edge_padding_low.size()), 2},
+                rewriter.getI64Type()),
             newPadding);
 
         auto newOp = cast<mhlo::ReduceWindowOp>(rewriter.clone(*op));

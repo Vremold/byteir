@@ -28,11 +28,16 @@ using namespace mlir::memref;
 
 namespace {
 
-// common types
+// local common types
 using UpdateFuncType_t = std::pair<SmallVector<Type, 4>, SmallVector<Type, 4>>;
 using CopyType_t = std::pair<Value, Attribute>;
 
-// utils
+// local utils
+bool isMemref(Operation &op) {
+  Dialect *dialect = op.getDialect();
+  return dialect && isa<MemRefDialect>(dialect);
+}
+
 const std::string &getSpace(ArrayRef<std::string> spaces, size_t offset) {
   if (offset < spaces.size()) {
     return spaces[offset];
@@ -82,7 +87,7 @@ Attribute getOrCreateSpaceAttr(ModuleOp m, llvm::StringRef name) {
 /* Op(A)
 => newA = Alloc() in dstMemrefTy (new space);
    copy(A, newA);
-   Op(newA)
+   Op(newA)  // set outside
 and record {{A, dstSpace}, newA} in copyPairToCopyTargets
 */
 Value createCopyInputArg(Operation *op, Value oldArg, MemRefType dstMemrefTy,
@@ -126,7 +131,7 @@ Value createCopyReturn(Operation *op, Value oldArg, MemRefType dstMemrefTy,
 // creat copy for output Arg
 /* Op(A)
 => newA = Alloc() in dstMemrefTy (new space);
-   Op(newA)
+   Op(newA)  // set outside
    copy(newA, A);
 and record {{newA, srcSpace}, A} in copyPairToCopyTargets
 */
@@ -162,7 +167,6 @@ Value createCopyArg(Operation *op, Value oldArg, MemRefType dstMemrefTy,
   return Value();
 }
 
-// Only implement Non-allow-output-writable
 // update function types for args recursively
 void updateFuncArgTypes(FuncOp func, ModuleOp m,
                         DenseMap<FuncOp, UpdateFuncType_t> &funcToUpdateTypes,
@@ -258,8 +262,7 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
   }
 }
 
-// Only implement Non-allow-output-writable
-// update function types for return types recursively
+// Update function types for return types recursively
 void updateFuncReturnTypes(
     FuncOp func, ModuleOp m,
     DenseMap<FuncOp, UpdateFuncType_t> &funcToUpdateTypes,
@@ -381,6 +384,37 @@ void updateOpTypes(FuncOp func, ModuleOp m,
             operand.setType(newOperandType);
           }
         }
+      }
+    }
+  }
+}
+
+// set op within a funcOp f to space
+void setOpSpace(FuncOp f, const std::string &space) {
+  if (f.empty()) {
+    return;
+  }
+
+  auto m = f->getParentOfType<ModuleOp>();
+  for (auto &block : f.getBlocks()) {
+    for (auto &op : block.without_terminator()) {
+      // skip if attr was set
+      if (op.hasAttr(SPACE_ATTR_NAME) || isMemref(op)) {
+        continue;
+      }
+
+      if (auto callOp = dyn_cast<CallOp>(op)) {
+        // handle a call
+        auto anotherFunc = m.lookupSymbol<FuncOp>(callOp.getCallee());
+        if (anotherFunc == nullptr || anotherFunc->hasAttr(SPACE_ATTR_NAME)) {
+          continue;
+        }
+        anotherFunc->setAttr(SPACE_ATTR_NAME, getOrCreateSpaceAttr(m, space));
+        // recursive
+        setOpSpace(anotherFunc, space);
+      } else {
+        // handle a regular op
+        op.setAttr(SPACE_ATTR_NAME, getOrCreateSpaceAttr(m, space));
       }
     }
   }
@@ -540,7 +574,7 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
     }
 
     if (retSpaces.empty()) {
-      LLVM_DEBUG(llvm::dbgs() << "No speficied retSpaces.\n");
+      LLVM_DEBUG(llvm::dbgs() << "No speficied return Spaces.\n");
       return;
     }
 
@@ -561,9 +595,35 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
                             newSpace);
     }
 
+    // resolve device functions for ops
+    // Note, it will also set a blank func (func without specifying device)
+    // called by a device func into a device
+    /*
+     *  func A
+     *  func B attribute {device = test} {
+     *    call A;
+     *  }
+     * ==>
+     *  func A attribute {device = test}
+     *  func B attribute {device = test} {
+     *    call A;
+     *  }
+     */
+    for (auto deviceFuncOp : m.getOps<FuncOp>()) {
+      // skip non-private or one without device attr
+      if (!deviceFuncOp.isPrivate() ||
+          !deviceFuncOp->hasAttrOfType<StringAttr>(SPACE_ATTR_NAME)) {
+        continue;
+      }
+
+      auto deviceAttr =
+          deviceFuncOp->getAttrOfType<StringAttr>(SPACE_ATTR_NAME);
+
+      setOpSpace(deviceFuncOp, deviceAttr.str());
+    }
+
     // resolve device functions
     for (auto deviceFuncOp : m.getOps<FuncOp>()) {
-
       // skip non-private or one without device attr
       if (!deviceFuncOp.isPrivate() ||
           !deviceFuncOp->hasAttrOfType<StringAttr>(SPACE_ATTR_NAME)) {
@@ -595,7 +655,7 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
             callOp.getOperand(i).setType(newArgTypes.first[i]);
           }
 
-          // resultss
+          // results
           for (unsigned i = 0, e = callOp.getNumResults(); i < e; ++i) {
             callOp.getResult(i).setType(newArgTypes.second[i]);
           }
@@ -608,9 +668,10 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
       FunctionType funcType = it.first.getType();
       it.first.setType(
           FunctionType::get(ctx, it.second.first, it.second.second));
-    }
 
-    updateOpTypes(funcOp, m, copyPairToCopyTargets, analysis);
+      // update all func ops
+      updateOpTypes(it.first, m, copyPairToCopyTargets, analysis);
+    }
   }
 
   llvm::SmallVector<std::string, 16> argSpaces;
@@ -618,11 +679,6 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
   ArgSideEffectAnalysis *interalAnalysis = nullptr;
   ArgSideEffectAnalysis *analysis = nullptr;
 };
-
-bool isMemref(Operation &op) {
-  Dialect *dialect = op.getDialect();
-  return dialect && isa<MemRefDialect>(dialect);
-}
 
 struct SetOpSpacePass : public SetOpSpaceBase<SetOpSpacePass> {
 
@@ -645,28 +701,7 @@ struct SetOpSpacePass : public SetOpSpaceBase<SetOpSpacePass> {
       return;
     }
 
-    auto m = f->getParentOfType<ModuleOp>();
-    for (auto &block : f.getBlocks()) {
-      for (auto &op : block.without_terminator()) {
-        // skip if attr was set
-        if (op.hasAttr(SPACE_ATTR_NAME) || isMemref(op)) {
-          continue;
-        }
-
-        if (auto callOp = dyn_cast<CallOp>(op)) {
-          // handle a call
-          auto anotherFunc = m.lookupSymbol<FuncOp>(callOp.getCallee());
-          if (anotherFunc == nullptr || anotherFunc->hasAttr(SPACE_ATTR_NAME)) {
-            continue;
-          }
-          anotherFunc->setAttr(SPACE_ATTR_NAME, getOrCreateSpaceAttr(m, space));
-
-        } else {
-          // handle a regular op
-          op.setAttr(SPACE_ATTR_NAME, getOrCreateSpaceAttr(m, space));
-        }
-      }
-    }
+    setOpSpace(f, space);
   }
 };
 

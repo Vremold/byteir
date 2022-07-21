@@ -39,10 +39,11 @@ struct ByreHostPipelinePass
     std::string stringAttr = "device_file_name:String:" + deviceFile;
     pm.addPass(createFuncTagPass(/*anchorTag=*/"", stringAttr, entryFunc));
 
-    // currently use SetAllSpacve to specify space
+    // currently use SetOpSpace + SetArgSpace to specify space here
     // TODO: later move to GPUOpt after general copy finish
     if (!target.empty()) {
-      pm.addPass(createSetAllSpacePass(entryFunc, target));
+      pm.addNestedPass<FuncOp>(createSetOpSpacePass(entryFunc, target));
+      pm.addPass(createSetArgSpacePass(entryFunc, target, true));
     }
 
     if (mlir::failed(runPipeline(pm, m))) {

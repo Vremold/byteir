@@ -23,6 +23,8 @@ class FuncOp;
 class ModuleOp;
 
 // Set all memref to a space including intermediate and args
+// This pass is soft-deprecated.
+// Use createSetOpSpacePass + createSetArgSpacePass instead.
 std::unique_ptr<OperationPass<ModuleOp>>
 createSetAllSpacePass(const std::string &entryFunc = "",
                       const std::string &space = "",
