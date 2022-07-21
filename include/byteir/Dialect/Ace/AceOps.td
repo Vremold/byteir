@@ -22,6 +22,26 @@ class Ace_Op<string mnemonic, list<Trait> traits = []> :
   let verifier = [{ return Verify(*this); }];
 }
 
+def Ace_ConstOp : Ace_Op<"constant", [
+    ConstantLike, NoSideEffect, AllTypesMatch<["value", "output"]>]> {
+  let summary = "Constant operator";
+  let description = [{
+    Represents a constant value.
+  }];
+  let arguments = (ins
+    ElementsAttr:$value
+  );
+
+  let results = (outs
+    Ace_StaticShapeTensor:$output
+  );
+
+  let builders = [
+    OpBuilder<(ins "Attribute":$value)>];
+
+  let assemblyFormat = "attr-dict $value";
+}
+
 
 def Ace_ActivateOp : Ace_Op<"activate", [NoSideEffect]> {
   let summary = "Activate operation";

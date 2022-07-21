@@ -38,4 +38,8 @@ def Ace_ResourceType : Ace_Type<"Resource", "resource"> {
   let description = [{`ace.string` represents resource type from tensorflow}];
 }
 
+def Ace_CustomType : AnyTypeOf<[Ace_StringType, Ace_ResourceType]>;
+
+def Ace_StaticShapeTensor : StaticShapeTensorOf<[Ace_CustomType]>;
+
 #endif // ACE_BASE
