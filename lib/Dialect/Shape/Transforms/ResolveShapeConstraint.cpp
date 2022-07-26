@@ -12,6 +12,7 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+#include "llvm/ADT/EquivalenceClasses.h"
 
 using namespace mlir;
 
@@ -19,40 +20,81 @@ namespace {
 
 struct ResolveShapeConstraintPass
     : public ResolveShapeConstraintBase<ResolveShapeConstraintPass> {
+  struct ValueComparator {
+    bool operator()(const Value &lhs, const Value &rhs) const {
+      return lhs.getAsOpaquePointer() < rhs.getAsOpaquePointer();
+    }
+  };
+
   void runOnOperation() override {
     FuncOp funcOp = getOperation();
-    SmallVector<Operation *> toRemoveMeetOp;
 
+    llvm::EquivalenceClasses<Value, ValueComparator> eqs;
+    llvm::SmallVector<Value> constValues;
+    funcOp.walk([&eqs, &constValues](shape_ext::MeetOp meetOp) {
+      Value lhs = meetOp.getArg0();
+      Value rhs = meetOp.getArg1();
+      eqs.unionSets(lhs, rhs);
+      Operation *lhsOp = lhs.getDefiningOp();
+      Operation *rhsOp = rhs.getDefiningOp();
+      if (lhsOp && lhsOp->hasTrait<OpTrait::ConstantLike>()) {
+        constValues.push_back(lhs);
+      }
+      if (rhsOp && rhsOp->hasTrait<OpTrait::ConstantLike>()) {
+        constValues.push_back(rhs);
+      }
+    });
+
+    // find constant value of each equivalence class
+    llvm::SmallDenseMap<Value, Value> eqsToConstant;
+    for (auto constVal : constValues) {
+      Value leader = eqs.getLeaderValue(constVal);
+      if (!eqsToConstant.count(leader)) {
+        eqsToConstant[leader] = constVal;
+      } else {
+        Value expectVal = eqsToConstant[leader];
+        Operation *curOp = constVal.getDefiningOp();
+        Operation *expectOp = expectVal.getDefiningOp();
+        llvm::Optional<int64_t> curI64Val =
+            getLiteralFromConstantLike(curOp->getResult(0));
+        llvm::Optional<int64_t> expectI64Val =
+            getLiteralFromConstantLike(expectOp->getResult(0));
+        if (expectI64Val != curI64Val) {
+          std::string msg;
+          llvm::raw_string_ostream ss(msg);
+          ss << "expect const values in the same shape_ext::meetOp equivalence "
+                "class to be the same, got "
+             << curI64Val << " while previous value is " << expectI64Val
+             << "\n";
+          // a bit strange to emit error from the constant op,
+          // better to emit from the meetOp but that requries additional mapping
+          curOp->emitError(std::move(msg));
+        }
+      }
+    }
+
+    SmallVector<Operation *> toRemoveMeetOp;
     funcOp.walk([&](shape_ext::MeetOp meetOp) {
       Value lhs = meetOp.getArg0();
       Value rhs = meetOp.getArg1();
-      Operation *lhsOp = lhs.getDefiningOp();
-      Operation *rhsOp = rhs.getDefiningOp();
-      bool isLhsConstLike = (lhsOp) && lhsOp->hasTrait<OpTrait::ConstantLike>();
-      bool isRhsConstLike = (rhsOp) && rhsOp->hasTrait<OpTrait::ConstantLike>();
+      Value lhsLeader = eqs.getLeaderValue(lhs);
+      Value rhsLeader = eqs.getLeaderValue(rhs);
+      assert(lhsLeader == rhsLeader &&
+             "operands of a meetOp must be of the same equivalence class");
 
-      if (!isLhsConstLike && !isRhsConstLike) {
+      if (!eqsToConstant.count(lhsLeader)) {
+        meetOp->emitWarning(
+            "meetOp not resolve, no constant equivalence value found");
         return WalkResult::advance();
       }
 
-      if (isLhsConstLike && isRhsConstLike) {
-        llvm::Optional<int64_t> lhsValue =
-            getLiteralFromConstantLike(lhsOp->getResults()[0]);
-        llvm::Optional<int64_t> rhsValue =
-            getLiteralFromConstantLike(rhsOp->getResults()[0]);
-        if (lhsValue != rhsValue) {
-          std::string msg;
-          llvm::raw_string_ostream ss(msg);
-          ss << "constant operands not equal: " << lhsValue
-             << " != " << rhsValue;
-          meetOp->emitOpError(std::move(msg));
-        }
-      } else if (isLhsConstLike) {
-        rhs.replaceAllUsesWith(lhs);
-      } else if (isRhsConstLike) {
-        lhs.replaceAllUsesWith(rhs);
+      Value constVal = eqsToConstant[lhsLeader];
+      if (constVal != lhs) {
+        lhs.replaceAllUsesWith(constVal);
       }
-
+      if (constVal != rhs) {
+        rhs.replaceAllUsesWith(constVal);
+      }
       toRemoveMeetOp.push_back(meetOp);
       return WalkResult::advance();
     });
@@ -71,9 +113,11 @@ struct ResolveShapeConstraintPass
     func::ReturnOp retOp = *funcOp.getOps<func::ReturnOp>().begin();
     // Canonicalize pattern will not modify the funcion type, therefore it need
     // to be set explicitly here.
-    funcOp.setType(FunctionType::get(funcOp.getContext(),
-                                     funcOp.getArgumentTypes(),
-                                     retOp.getOperandTypes()));
+    funcOp.setType(FunctionType::get(
+        funcOp.getContext(),
+        //  funcOp.getArgumentTypes(),
+        funcOp.getBody().getBlocks().front().getArgumentTypes(),
+        retOp.getOperandTypes()));
   }
 };
 

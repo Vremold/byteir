@@ -388,32 +388,52 @@ void mlir::registerEinsumShapeConstraints() {
     // iterate dimensions
     for (const auto dim :
          llvm::iota_range<int>(0, ctx.totalSize, /*Inclusive=*/false)) {
-      for (int i = ctx.numOps - 1; i >= 0; --i) {
-        Value iOperand = op->getOperand(i);
-        const auto iOriginDim = ctx.permuteDim[i][dim];
-        if (iOriginDim < 0) {
+      // the index of operand whose #dim-th dimension size is used for
+      // shape_ext.meet with all other operands and result
+      int baseOperandIndex = -1;
+
+      for (const auto i :
+           llvm::iota_range<int>(0, ctx.numOps, /*Inclusive=*/false)) {
+        Value operand = op->getOperand(i);
+        const auto originDim = ctx.permuteDim[i][dim];
+        if (originDim < 0) {
+          // #dim not from this operand, skip
           continue;
         }
-        const auto iDimSize = getDimSize(iOperand, iOriginDim);
-        if (iDimSize == 0) {
-          llvm::errs() << "einsum: dim size 0 is not supported for insert "
-                          "shape constraints\n";
-          return failure();
+        const auto dimSize = getDimSize(operand, originDim);
+        if (baseOperandIndex == -1 || dimSize > 0) {
+          baseOperandIndex = i;
         }
-        for (int j = i + 1; j < ctx.numOps; ++j) {
-          Value jOperand = op->getOperand(j);
-          const auto jOriginDim = ctx.permuteDim[j][dim];
-          if (jOriginDim < 0) {
-            continue;
-          }
-          const auto jDimSize = getDimSize(jOperand, jOriginDim);
-          // here we don't consider broadcast, just check dim size should meet
-          Value iDim =
-              builder.create<tensor::DimOp>(op->getLoc(), iOperand, iOriginDim);
-          Value jDim =
-              builder.create<tensor::DimOp>(op->getLoc(), jOperand, jOriginDim);
-          builder.create<shape_ext::MeetOp>(op->getLoc(), iDim, jDim);
+      }
+      if (baseOperandIndex < 0) {
+        llvm::errs() << "einsum: no base operand to dim " << dim << " found\n";
+        return failure();
+      }
+      Value baseOperand = op->getOperand(baseOperandIndex);
+      const auto baseOperandOriginDim = ctx.permuteDim[baseOperandIndex][dim];
+      Value baseDim = builder.create<tensor::DimOp>(op->getLoc(), baseOperand,
+                                                    baseOperandOriginDim);
+
+      for (const auto i :
+           llvm::iota_range<int>(0, ctx.numOps, /*Inclusive=*/false)) {
+        if (i == baseOperandIndex) {
+          continue;
         }
+        Value operand = op->getOperand(i);
+        const auto originDim = ctx.permuteDim[i][dim];
+        if (originDim < 0) {
+          continue;
+        }
+        Value dim =
+            builder.create<tensor::DimOp>(op->getLoc(), operand, originDim);
+        builder.create<shape_ext::MeetOp>(op->getLoc(), baseDim, dim);
+      }
+
+      if (dim < ctx.outSize) {
+        Value result = op->getResult(0);
+        Value resultDim =
+            builder.create<tensor::DimOp>(op->getLoc(), result, dim);
+        builder.create<shape_ext::MeetOp>(op->getLoc(), baseDim, resultDim);
       }
     }
 

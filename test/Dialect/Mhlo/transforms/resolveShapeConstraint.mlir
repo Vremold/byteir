@@ -43,3 +43,32 @@ func @dynamic_partition_constraint(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>)
   "shape_ext.tie"(%21, %20) : (tensor<?x4xf32>, index) -> ()
   return %21 : tensor<?x4xf32>
 }
+
+func @einsum_shape_constraint(%arg0: tensor<?x2x2xf32>, %arg1: tensor<2x2x3xf32>, %arg2: tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32> {
+    %c0 = arith.constant 0 : index
+    %c2 = arith.constant 2 : index
+    %c3 = arith.constant 3 : index
+    %0 = tensor.dim %arg0, %c0 : tensor<?x2x2xf32>
+    "shape_ext.tie"(%arg0, %0) : (tensor<?x2x2xf32>, index) -> ()
+    %1 = "mhlo.einsum"(%arg1, %arg0) {einsum_config = "edc,bqe->dcbq"} : (tensor<2x2x3xf32>, tensor<?x2x2xf32>) -> tensor<2x3x?x2xf32>
+    "shape_ext.meet"(%c2, %c2) : (index, index) -> ()
+    "shape_ext.meet"(%c3, %c3) : (index, index) -> ()
+    %2 = tensor.dim %1, %c2 : tensor<2x3x?x2xf32>
+    "shape_ext.meet"(%0, %2) : (index, index) -> ()
+    "shape_ext.meet"(%c2, %c2) : (index, index) -> ()
+    "shape_ext.meet"(%c2, %c2) : (index, index) -> ()
+    "shape_ext.tie"(%1, %2) : (tensor<2x3x?x2xf32>, index) -> ()
+    %3 = "mhlo.einsum"(%1, %arg2) {einsum_config = "dcbq,btd->bqtc"} : (tensor<2x3x?x2xf32>, tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32>
+    "shape_ext.meet"(%c2, %2) : (index, index) -> ()
+    "shape_ext.meet"(%c2, %c2) : (index, index) -> ()
+    "shape_ext.meet"(%c2, %c2) : (index, index) -> ()
+    "shape_ext.meet"(%c2, %c2) : (index, index) -> ()
+    "shape_ext.meet"(%c3, %c3) : (index, index) -> ()
+    "shape_ext.meet"(%c2, %c2) : (index, index) -> ()
+    return %3 : tensor<2x2x2x3xf32>
+}
+// CHECK-LABEL: @einsum_shape_constraint(%arg0: tensor<2x2x2xf32>
+// CHECK-NEXT: %0 = "mhlo.einsum"(%arg1, %arg0) {einsum_config = "edc,bqe->dcbq"} : (tensor<2x2x3xf32>, tensor<2x2x2xf32>) -> tensor<2x3x2x2xf32>
+// CHECK-NEXT: %1 = "mhlo.einsum"(%0, %arg2) {einsum_config = "dcbq,btd->bqtc"} : (tensor<2x3x2x2xf32>, tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32>
+// CHECK-NEXT: return %1 : tensor<2x2x2x3xf32>
+

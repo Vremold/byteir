@@ -60,10 +60,9 @@ func @einsum_shape_constraint_1(%arg0: tensor<2x3x?x2xf32>, %arg1: tensor<2x2x2x
   return %0 : tensor<2x2x2x3xf32>
 }
 // CHECK-LABEL: einsum_shape_constraint_1
-// CHECK-NEXT: %c2 = arith.constant 2 : index
-// CHECK-NEXT: %0 = "mhlo.einsum"(%arg0, %arg1) {einsum_config = "dcbq,btd->bqtc"} : (tensor<2x3x?x2xf32>, tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32>
-// CHECK-NEXT: %1 = tensor.dim %arg0, %c2 : tensor<2x3x?x2xf32>
-// CHECK-NEXT: "shape_ext.meet"(%1, %c2) : (index, index) -> ()
+// CHECK-DAG: %[[C0:.+]] = arith.constant 2 : index
+// CHECK-DAG: %[[V0:.+]] = tensor.dim %arg0, %[[C0]]
+// CHECK-DAG: "shape_ext.meet"(%[[C0]], %[[V0]]) : (index, index) -> ()
 
 func @dot_general(%arg0: tensor<?x?x4xf32>, %arg1: tensor<?x4x128xf32>) -> tensor<3xindex> {
   %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<?x?x4xf32>, tensor<?x4x128xf32>) -> tensor<?x?x128xf32>
