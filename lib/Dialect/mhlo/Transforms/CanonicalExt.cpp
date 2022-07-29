@@ -102,6 +102,72 @@ mlir::mhlo::EliminateSplatConstantTranspose(mhlo::TransposeOp op,
   return success();
 }
 
+LogicalResult mlir::mhlo::FoldShapeBroadcast(shape::BroadcastOp op,
+                                             PatternRewriter &rewriter) {
+
+  SmallVector<SmallVector<int64_t>> shapes;
+  SmallVector<Value> values;
+  for (auto shape : op.getShapes()) {
+    values.push_back(shape);
+    if (auto inputShape = shape.getDefiningOp<shape::ShapeOfOp>()) {
+      if (auto shapeType =
+              inputShape.getArg().getType().dyn_cast<ShapedType>()) {
+        shapes.push_back(llvm::to_vector(shapeType.getShape()));
+      } else {
+        return failure();
+      }
+    } else if (auto inputShape = shape.getDefiningOp<shape::ConstShapeOp>()) {
+      shapes.push_back(llvm::to_vector(
+          llvm::map_range(inputShape.getShape(), [](APInt elem) {
+            return static_cast<int64_t>(elem.getZExtValue());
+          })));
+    } else {
+      return failure();
+    }
+  }
+  // do broadcast
+  // see definition in https://mlir.llvm.org/docs/Dialects/ShapeDialect/
+  size_t size = 0;
+  for (auto &&shape : shapes) {
+    size = std::max(shape.size(), size);
+  }
+  auto copyShapes = shapes;
+  for (auto &shape : shapes) {
+    if (shape.size() < size) {
+      shape.insert(shape.begin(), size - shape.size(), 1);
+    }
+  }
+  for (size_t i = 0; i < size; ++i) {
+    int64_t res = 1;
+    for (auto &shape : shapes) {
+      if (shape[i] > 1) {
+        res = std::max(shape[i], res);
+      } else if (shape[i] == ShapedType::kDynamicSize && res == 1) {
+        res = ShapedType::kDynamicSize;
+      }
+    }
+    for (auto &shape : shapes) {
+      shape[i] = res;
+    }
+  }
+  // if output shape equal to the value shape, replace with SSA value
+  int index = 0;
+  for (auto &&shapePair : llvm::zip(shapes, copyShapes)) {
+    if (std::get<0>(shapePair).size() != std::get<1>(shapePair).size()) {
+      continue;
+    }
+    if (llvm::all_of(llvm::zip(std::get<0>(shapePair), std::get<1>(shapePair)),
+                     [](auto dimPair) {
+                       return std::get<0>(dimPair) == std::get<1>(dimPair);
+                     })) {
+      rewriter.replaceOp(op, values[index]);
+      return success();
+    }
+    index += 1;
+  }
+  return failure();
+}
+
 LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
                                              PatternRewriter &rewriter) {
   if (!op->getResult(0).hasOneUse())
@@ -123,7 +189,7 @@ LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
     /// const_0
     ///   \
     ///   broadcast_in_dim  const_1
-    ///       \            /     \ 
+    ///       \            /     \
     ///            mul          other ops
     ///
     /// Don't fold broadcast_in_dim if const_1 has other users
@@ -177,4 +243,5 @@ void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
   // add our extension
   results.add(mlir::mhlo::EliminateSplatConstantTranspose);
   results.add(mlir::mhlo::FoldBroadcastInDim);
+  results.add(mlir::mhlo::FoldShapeBroadcast);
 }

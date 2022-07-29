@@ -15,3 +15,16 @@ func.func @eliminate_splat_constant_transpose() -> tensor<2x1x4x3xi32> {
 }
 // CHECK-LABEL: eliminate_splat_constant_transpose
 // CHECK-NEXT: %0 = mhlo.constant dense<0> : tensor<2x1x4x3xi32>
+
+func.func @fold_useless_shape_broadcast(%arg0: tensor<?x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
+  %0 = shape.const_shape [4] : tensor<1xindex>
+  %1 = mhlo.constant dense<[[-0.570340514, 0.117151208, -0.135694504, -1.57919896], [0.520053327, 0.762166619, 0.322875232, -1.69871449], [-1.26622009, 0.63558042, 5.698780e-01, 0.954656243], [0.776482939, 0.348752886, 2.03235912, 0.837243676]]> : tensor<4x4xf32>
+  %2 = "mhlo.dot"(%arg0, %1) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
+  %3 = shape.shape_of %2 : tensor<?x4xf32> -> tensor<2xindex>
+  %4 = shape.broadcast %3, %0 : tensor<2xindex>, tensor<1xindex> -> tensor<2xindex>
+  %5 = "mhlo.dynamic_broadcast_in_dim"(%2, %4) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<?x4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
+  return %5 : tensor<?x4xf32>
+}
+
+// CHECK-LABEL: fold_useless_shape_broadcast
+// CHECK-NOT: shape.broadcast
