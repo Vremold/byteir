@@ -161,11 +161,12 @@ struct DynamicShapeClusteringPass
       DynamicSourceAnalysis dynSrcAnalysis(funcOp);
       // TODO: make removeTieOps optional or as an ioslated pass.
       dynSrcAnalysis.removeTieOps();
-      LLVM_DEBUG(dynSrcAnalysis.print(llvm::dbgs()));
 
       auto isFusibleCandidate = [&](Operation *op) {
         if (llvm::isa<tensor::DimOp, tensor::FromElementsOp, shape::ShapeOfOp,
-                      mhlo::DynamicBroadcastInDimOp, shape::BroadcastOp>(op) ||
+                      mhlo::DynamicBroadcastInDimOp, shape::BroadcastOp,
+                      shape::CstrBroadcastableOp, shape::AssumingOp,
+                      tensor::ExtractOp>(op) ||
             op->hasTrait<OpTrait::ConstantLike>())
           return true;
 
@@ -198,7 +199,9 @@ struct DynamicShapeClusteringPass
 
       auto isFusibleWith = [&](Operation *target, Operation *start) {
         if (llvm::isa<tensor::DimOp, tensor::FromElementsOp, shape::ShapeOfOp,
-                      mhlo::DynamicBroadcastInDimOp, shape::BroadcastOp>(start))
+                      mhlo::DynamicBroadcastInDimOp, shape::BroadcastOp,
+                      shape::CstrBroadcastableOp, shape::AssumingOp,
+                      tensor::ExtractOp>(start))
           return true;
 
         DenseSet<Value> targetSources;
@@ -214,8 +217,10 @@ struct DynamicShapeClusteringPass
           }
         }
 
-        if (!startSources.empty() && target->hasTrait<OpTrait::ConstantLike>())
+        if (!startSources.empty() &&
+            target->hasTrait<OpTrait::ConstantLike>()) {
           return true;
+        }
 
         llvm::set_intersect(targetSources, startSources);
         return !targetSources.empty();

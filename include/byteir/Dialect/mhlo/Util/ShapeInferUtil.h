@@ -16,6 +16,9 @@
 
 namespace mlir {
 
+constexpr StringRef getBoundedShapeDenseAttrName() {
+  return "byteir.bounded_shape_dense";
+}
 //===----------------------------------------------------------------------===//
 // runShapeInference
 //===----------------------------------------------------------------------===//

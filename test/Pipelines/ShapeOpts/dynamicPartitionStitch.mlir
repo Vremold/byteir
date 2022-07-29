@@ -44,7 +44,7 @@ func.func @dynamic_partition_and_stitch(%arg0: tensor<4x4xf32>, %arg1: tensor<4x
 // CHECK-DAG:     %[[V4:.*]] = tensor.dim %arg0, %[[V2]] : tensor<?x4xf32>
 // CHECK-DAG:     %[[V5:.*]] = "mhlo.dot"(%arg0, %[[V0]]) {byteir.bounded_shape0 = [4, 4]} : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
 // CHECK-DAG:     %[[V6:.*]] = tensor.from_elements %[[V4]], %[[V3]] : tensor<2xindex>
-// CHECK-DAG:     %[[V7:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V1]], %[[V6]]) {broadcast_dimensions = dense<1> : tensor<1xi64>, byteir.bounded_shape0 = [-1, 4]} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
+// CHECK-DAG:     %[[V7:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V1]], %[[V6]]) {broadcast_dimensions = dense<1> : tensor<1xi64>, byteir.bounded_shape0 = [4, 4]} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
 // CHECK-DAG:     %[[V8:.*]] = mhlo.add %[[V5]], %[[V7]] {byteir.bounded_shape0 = [4, 4]} : tensor<?x4xf32>
 // CHECK-DAG:    return %[[V8]] : tensor<?x4xf32>
 
@@ -56,7 +56,7 @@ func.func @dynamic_partition_and_stitch(%arg0: tensor<4x4xf32>, %arg1: tensor<4x
 // CHECK-DAG:     %[[V4:.*]] = tensor.dim %arg0, %[[V2]] : tensor<?x4xf32>
 // CHECK-DAG:     %[[V5:.*]] = "mhlo.dot"(%arg0, %[[V0]]) {byteir.bounded_shape0 = [4, 4]} : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
 // CHECK-DAG:     %[[V6:.*]] = tensor.from_elements %[[V4]], %[[V3]] : tensor<2xindex>
-// CHECK-DAG:     %[[V7:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V1]], %[[V6]]) {broadcast_dimensions = dense<1> : tensor<1xi64>, byteir.bounded_shape0 = [-1, 4]} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
+// CHECK-DAG:     %[[V7:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V1]], %[[V6]]) {broadcast_dimensions = dense<1> : tensor<1xi64>, byteir.bounded_shape0 = [4, 4]} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
 // CHECK-DAG:     %[[V8:.*]] = mhlo.add %[[V5]], %[[V7]] {byteir.bounded_shape0 = [4, 4]} : tensor<?x4xf32>
 // CHECK-DAG:     return %[[V8]] : tensor<?x4xf32>
 
@@ -117,9 +117,9 @@ func.func @dynamic_partition_and_mask_stitch(%arg0: tensor<4x4xf32>, %arg1: tens
 // CHECK-DAG:    %[[V6:.*]] = "mhlo.dot"(%arg0, %[[V3]]) {byteir.bounded_shape0 = [4, 4]} : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
 // CHECK-DAG:    %[[V7:.*]] = tensor.from_elements %[[V5]], %[[V0]] : tensor<2xindex>
 // CHECK-DAG:    %[[V8:.*]] = shape.broadcast %[[V7]], %[[V4]] : tensor<2xindex>, tensor<1xindex> -> tensor<2xindex>
-// CHECK-DAG:    %[[V9:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V6]], %[[V8]]) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>, byteir.bounded_shape0 = [-1, 4]} : (tensor<?x4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
-// CHECK-DAG:    %[[V10:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V2]], %[[V8]]) {broadcast_dimensions = dense<1> : tensor<1xi64>, byteir.bounded_shape0 = [-1, 4]} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
-// CHECK-DAG:    %[[V11:.*]] = mhlo.add %[[V9]], %[[V10]] {byteir.bounded_shape0 = [-1, 4]} : tensor<?x4xf32>
+// CHECK-DAG:    %[[V9:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V6]], %[[V8]]) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>, byteir.bounded_shape0 = [4, 4]} : (tensor<?x4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
+// CHECK-DAG:    %[[V10:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V2]], %[[V8]]) {broadcast_dimensions = dense<1> : tensor<1xi64>, byteir.bounded_shape0 = [4, 4]} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
+// CHECK-DAG:    %[[V11:.*]] = mhlo.add %[[V9]], %[[V10]] {byteir.bounded_shape0 = [4, 4]} : tensor<?x4xf32>
 // CHECK-DAG:    return %[[V11]] : tensor<?x4xf32>
 
 // CHECK-LABEL: func.func @dynamic_partition_and_mask_stitch_sub_1(%arg0: tensor<?x4xf32>) -> tensor<?x4xf32> {
@@ -132,9 +132,9 @@ func.func @dynamic_partition_and_mask_stitch(%arg0: tensor<4x4xf32>, %arg1: tens
 // CHECK-DAG:    %[[V6:.*]] = "mhlo.dot"(%arg0, %[[V3]]) {byteir.bounded_shape0 = [4, 4]} : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
 // CHECK-DAG:    %[[V7:.*]] = tensor.from_elements %[[V5]], %[[V0]] : tensor<2xindex>
 // CHECK-DAG:    %[[V8:.*]] = shape.broadcast %[[V7]], %[[V4]] : tensor<2xindex>, tensor<1xindex> -> tensor<2xindex>
-// CHECK-DAG:    %[[V9:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V6]], %[[V8]]) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>, byteir.bounded_shape0 = [-1, 4]} : (tensor<?x4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
-// CHECK-DAG:    %[[V10:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V2]], %[[V8]]) {broadcast_dimensions = dense<1> : tensor<1xi64>, byteir.bounded_shape0 = [-1, 4]} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
-// CHECK-DAG:    %[[V11:.*]] = mhlo.add %[[V9]], %[[V10]] {byteir.bounded_shape0 = [-1, 4]} : tensor<?x4xf32>
+// CHECK-DAG:    %[[V9:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V6]], %[[V8]]) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>, byteir.bounded_shape0 = [4, 4]} : (tensor<?x4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
+// CHECK-DAG:    %[[V10:.*]] = "mhlo.dynamic_broadcast_in_dim"(%[[V2]], %[[V8]]) {broadcast_dimensions = dense<1> : tensor<1xi64>, byteir.bounded_shape0 = [4, 4]} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
+// CHECK-DAG:    %[[V11:.*]] = mhlo.add %[[V9]], %[[V10]] {byteir.bounded_shape0 = [4, 4]} : tensor<?x4xf32>
 // CHECK-DAG:    return %[[V11]] : tensor<?x4xf32>
 
 // CHECK-LABEL:  func.func @dynamic_partition_and_mask_stitch_sub_0(%arg0: tensor<?x4xf32>, %arg1: tensor<?x4xf32>, %arg2: tensor<4xi32>) -> tensor<4x4xf32> {

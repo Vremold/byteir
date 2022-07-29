@@ -8,7 +8,9 @@
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/Support/Debug.h"
@@ -133,7 +135,7 @@ inferShapeUsingInferShapedTypeOpInterface(InferShapedTypeOpInterface op) {
   if (failed(inferStatus)) {
     LLVM_DEBUG(llvm::dbgs()
                << "InferReturnTypeComponents failed for " << op << "\n");
-    return success();
+    return failure();
   }
 
   ResultShapes resultShapes = llvm::to_vector(
@@ -141,7 +143,8 @@ inferShapeUsingInferShapedTypeOpInterface(InferShapedTypeOpInterface op) {
         return comp.getDims();
       }));
 
-  return checkAndSetTypes(op, resultShapes);
+  auto ret = checkAndSetTypes(op, resultShapes);
+  return ret;
 }
 
 LogicalResult inferShapeUsingInferTypeOpInterface(InferTypeOpInterface op) {
@@ -151,7 +154,7 @@ LogicalResult inferShapeUsingInferTypeOpInterface(InferTypeOpInterface op) {
       op->getAttrDictionary(), op->getRegions(), resultShapeTypes);
   if (failed(inferStatus)) {
     LLVM_DEBUG(llvm::dbgs() << "InferReturnTypes failed for " << op << "\n");
-    return success();
+    return failure();
   }
   for (auto it : llvm::zip(op->getResults(), resultShapeTypes)) {
     Value result = std::get<0>(it);
@@ -167,19 +170,75 @@ LogicalResult inferShapeUsingInferTypeOpInterface(InferTypeOpInterface op) {
   return checkAndSetTypes(op, resultShapes);
 }
 
-LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer) {
-  if (isBoundedShapeInfer && failed(inferBoundedShapeUsingRegistry(op))) {
+bool isShape(Operation *op) {
+  Dialect *dialect = op->getDialect();
+  return dialect && isa<shape::ShapeDialect>(dialect);
+}
+
+bool isTensor(Operation *op) {
+  Dialect *dialect = op->getDialect();
+  return dialect && isa<tensor::TensorDialect>(dialect);
+}
+
+bool isArith(Operation *op) {
+  Dialect *dialect = op->getDialect();
+  return dialect && isa<arith::ArithmeticDialect>(dialect);
+}
+
+LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer,
+                                DenseMap<Value, Attribute> &foldMap) {
+
+  if (isBoundedShapeInfer && (isShape(op) || isTensor(op) || isArith(op))) {
+    // skip the inference in shape dialect and tensor dialect
+    SmallVector<Attribute, 4> operands;
+    SmallVector<OpFoldResult, 4> foldResults;
+    for (auto value : op->getOperands()) {
+      if (!foldMap.count(value)) {
+        operands.push_back({});
+      } else {
+        operands.push_back(foldMap[value]);
+      }
+    }
+    if (op->fold(operands, foldResults).failed()) {
+      return success();
+    }
+    for (auto value : llvm::zip(op->getResults(), foldResults)) {
+      auto resultValue = std::get<0>(value);
+      auto foldResult = std::get<1>(value);
+      // set the fold result to tensor encoding
+      if (foldResult.dyn_cast<Attribute>()) {
+        foldMap[resultValue] = foldResult.dyn_cast<Attribute>();
+        if (auto ty = resultValue.getType().dyn_cast<RankedTensorType>()) {
+          auto newType = RankedTensorType::get(
+              ty.getShape(), ty.getElementType(),
+              DictionaryAttr::get(
+                  op->getContext(),
+                  {NamedAttribute(
+                      StringAttr::get(op->getContext(),
+                                      getBoundedShapeDenseAttrName()),
+                      foldResult.dyn_cast<Attribute>())}));
+          resultValue.setType(newType);
+        }
+      }
+    }
+  } else if (isBoundedShapeInfer &&
+             failed(inferBoundedShapeUsingRegistry(op))) {
     return failure();
-  } else if (op->hasTrait<OpTrait::SameOperandsAndResultShape>()) {
+  } else if (op->hasTrait<OpTrait::SameOperandsAndResultShape>() &&
+             succeeded(inferShapeUsingSameOperandsAndResultShapeTrait(op))) {
     // Note: some ops has InferShapedTypeOpInterface but it will return
     // failure() directly in the implementation, therefore
     // SameOperandsAndResultShape trait should be checked before checking
     // InferShapedTypeOpInterface
-    return inferShapeUsingSameOperandsAndResultShapeTrait(op);
-  } else if (auto shapeInferOp = dyn_cast<InferShapedTypeOpInterface>(op)) {
-    return inferShapeUsingInferShapedTypeOpInterface(shapeInferOp);
-  } else if (auto shapeInferOp = dyn_cast<InferTypeOpInterface>(op)) {
-    return inferShapeUsingInferTypeOpInterface(shapeInferOp);
+    return success();
+  } else if (dyn_cast<InferShapedTypeOpInterface>(op) &&
+             succeeded(inferShapeUsingInferShapedTypeOpInterface(
+                 dyn_cast<InferShapedTypeOpInterface>(op)))) {
+    return success();
+  } else if (dyn_cast<InferTypeOpInterface>(op) &&
+             succeeded(inferShapeUsingInferTypeOpInterface(
+                 dyn_cast<InferTypeOpInterface>(op)))) {
+    return success();
   }
   return success();
 }
@@ -193,10 +252,11 @@ LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer) {
 // TODO: supported nested function call
 LogicalResult mlir::runShapeInference(func::FuncOp funcOp,
                                       bool isBoundedShapeInfer) {
+  DenseMap<Value, Attribute> foldMap;
   bool interrupted =
       funcOp
           ->walk([&](Operation *op) {
-            if (failed(inferResultShapes(op, isBoundedShapeInfer))) {
+            if (failed(inferResultShapes(op, isBoundedShapeInfer, foldMap))) {
               return WalkResult::interrupt();
             }
             return WalkResult::advance();

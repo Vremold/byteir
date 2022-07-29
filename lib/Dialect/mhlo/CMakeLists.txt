@@ -2,7 +2,7 @@ add_mlir_dialect_library(ByteIRMhloUtils
   Util/FusionUtil.cpp
   Util/ShapeInferUtil.cpp
   Util/Util.cpp
-  
+
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Util
 
@@ -65,6 +65,7 @@ add_mlir_dialect_library(ByteIRMhloBoundedShapes
   BoundedShapes/NonZeroRegister.cpp
   BoundedShapes/WhereRegister.cpp
   BoundedShapes/DynamicPartitionRegister.cpp
+  BoundedShapes/DynamicBroadcastInDimRegister.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/BoundedShapes
@@ -83,7 +84,7 @@ add_mlir_dialect_library(ByteIRMhloBoundedShapes
 
 add_mlir_dialect_library(ByteIRMhloAnalysis
   Analysis/DimFromBroadcast.cpp
-  
+
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Analysis
 
@@ -91,7 +92,7 @@ add_mlir_dialect_library(ByteIRMhloAnalysis
   ByteIRAnalysis
   MhloDialect
   LmhloDialect
-  
+
   LINK_LIBS PUBLIC
   ByteIRAnalysis
   MLIRIR

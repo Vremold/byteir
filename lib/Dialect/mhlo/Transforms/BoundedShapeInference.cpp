@@ -103,7 +103,7 @@ struct BoundedShapeInferencePass
       std::get<1>(it).setType(std::get<0>(it));
     }
 
-    // Run shape inference on the new created function op
+    //  Run shape inference on the new created function op
     if (failed(runShapeInference(newFuncOp, /*isBoundedShapeInfer=*/true))) {
       return;
     }
@@ -128,6 +128,7 @@ struct BoundedShapeInferencePass
         std::string boundedShapeAttrName =
             getBoundedShapeAttrName().str() + std::to_string(it.index());
         ArrayRef<int64_t> shape = newType.getShape();
+
         originalOp->setAttr(boundedShapeAttrName,
                             builder.getI64ArrayAttr(shape));
       }
