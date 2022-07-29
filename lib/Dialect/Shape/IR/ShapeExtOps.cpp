@@ -67,11 +67,16 @@ struct TieWithConst : public OpRewritePattern<shape_ext::TieOp> {
     if (keepedDims.size() == dims.size())
       return failure();
     value.setType(shapeType.clone(shape));
+    FuncOp funcOp = op->getParentOfType<FuncOp>();
     if (keepedDims.size() == 0) {
       op->erase();
     } else {
       op.getDimsMutable().assign(keepedDims);
     }
+
+    funcOp.setType(FunctionType::get(
+        funcOp.getContext(), funcOp.front().getArgumentTypes(),
+        funcOp.front().getTerminator()->getOperandTypes()));
 
     return success();
   }

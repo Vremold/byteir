@@ -16,11 +16,13 @@ namespace mlir {
 void registerDotReifyReturnTypeShapes();
 void registerDotGeneralReifyReturnTypeShapes();
 void registerDynamicStitchReifyReturnTypeShapes();
+void registerDynamicMaskStitchReifyReturnTypeShapes();
 
 inline void registerAllMhloReifyReturnTypeShapes() {
   registerDotReifyReturnTypeShapes();
   registerDotGeneralReifyReturnTypeShapes();
   registerDynamicStitchReifyReturnTypeShapes();
+  registerDynamicMaskStitchReifyReturnTypeShapes();
 }
 
 } // namespace mlir

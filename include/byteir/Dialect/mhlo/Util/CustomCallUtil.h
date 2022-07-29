@@ -59,6 +59,10 @@ constexpr llvm::StringRef getDynamicStitchName() {
   return TF_NAME_PREFIX "DynamicStitch";
 }
 
+constexpr llvm::StringRef getDynamicMaskStitchName() {
+  return TF_NAME_PREFIX "DynamicMaskStitch";
+}
+
 } // namespace mlir
 
 #undef CUSTOM_CALL_NAME_PREFIX
