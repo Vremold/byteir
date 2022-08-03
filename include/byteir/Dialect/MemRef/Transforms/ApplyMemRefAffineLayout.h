@@ -12,8 +12,12 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>> createApplyMemRefAffineLayoutPass();
+std::unique_ptr<OperationPass<func::FuncOp>>
+createApplyMemRefAffineLayoutPass();
 
 } // namespace mlir
 

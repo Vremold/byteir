@@ -15,8 +15,6 @@ using namespace mlir::ace;
 
 #include "byteir/Dialect/Ace/AceOpsDialect.cpp.inc"
 
-template <typename T> static LogicalResult Verify(T op) { return success(); }
-
 //===----------------------------------------------------------------------===//
 // ace dialect.
 //===----------------------------------------------------------------------===//

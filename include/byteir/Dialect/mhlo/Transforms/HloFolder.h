@@ -12,11 +12,14 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 // Patterns to fold mhlo::TransposeOp
 void populateHloFoldPatterns(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createHloFolderPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createHloFolderPass();
 
 } // namespace mlir
 

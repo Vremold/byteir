@@ -9,9 +9,10 @@
 #include "PassDetail.h"
 #include "byteir/Utils/LoopUtils.h"
 #include "byteir/Utils/MemUtils.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
@@ -26,7 +27,7 @@ using namespace mlir::memref;
 
 namespace {
 
-static void collectAnchorCopy(FuncOp func,
+static void collectAnchorCopy(func::FuncOp func,
                               SmallVectorImpl<linalg::CopyOp> &collection,
                               IntegerAttr anchorAttr) {
   // collect op with getPrefetchAttrName as intial values
@@ -239,7 +240,7 @@ struct LinalgPrefetchPass : public LinalgPrefetchBase<LinalgPrefetchPass> {
   }
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     auto ctx = funcOp.getContext();
     auto anchoredAttr =
         IntegerAttr::get(IntegerType::get(ctx, 32), prefetchCnt);
@@ -257,7 +258,7 @@ struct LinalgPrefetchPass : public LinalgPrefetchBase<LinalgPrefetchPass> {
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createLinalgPrefetchPass(int64_t prefetchCnt, bool unroll) {
   return std::make_unique<LinalgPrefetchPass>(prefetchCnt, unroll);
 }

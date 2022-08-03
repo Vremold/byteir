@@ -13,6 +13,7 @@
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
@@ -34,14 +35,14 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     }
 
     // only support cases of all pads or none pads
-    size_t numPad = llvm::count_if(op.inputs(), [&](Value v) {
+    size_t numPad = llvm::count_if(op.operands(), [&](Value v) {
       return isa_and_nonnull<mhlo::PadOp>(v.getDefiningOp());
     });
 
     MhloFusionPattern pattern;
     // handle the case of all pads
-    if (numPad == op.inputs().size()) {
-      for (auto val : op.inputs()) {
+    if (numPad == op.operands().size()) {
+      for (auto val : op.operands()) {
         auto pad = cast<mhlo::PadOp>(val.getDefiningOp());
         // handle pad of constant
         auto paddingValDefOp = pad.padding_value().getDefiningOp();
@@ -57,7 +58,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     }
 
     // handle initial as a constant
-    size_t idx = op.inputs().size();
+    size_t idx = op.operands().size();
     for (auto val : op.init_values()) {
       auto initialDefOp = val.getDefiningOp();
       if (isSplatMhloConstant(initialDefOp)) {
@@ -84,7 +85,7 @@ struct ReduceFusionPass : public ReduceFusionBase<ReduceFusionPass> {
   ReduceFusionPass() : ReduceFusionBase() {}
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
 
     RewritePatternSet patterns(funcOp.getContext());
     populateFuseReduceWindowPatterns(patterns);
@@ -102,6 +103,6 @@ void mlir::populateFuseReduceWindowPatterns(RewritePatternSet &patterns) {
   patterns.add<PadReduceWindowPattern>(patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createReduceFusionPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createReduceFusionPass() {
   return std::make_unique<ReduceFusionPass>();
 }

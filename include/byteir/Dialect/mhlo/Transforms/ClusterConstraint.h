@@ -11,10 +11,13 @@
 #include "mlir/Pass/Pass.h"
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateClusterConstraintPattern(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createClusterConstraintPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createClusterConstraintPass();
 
 } // namespace mlir
 

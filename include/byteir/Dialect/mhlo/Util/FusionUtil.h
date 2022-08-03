@@ -23,6 +23,9 @@
 
 namespace mlir {
 class OpBuilder;
+namespace func {
+class FuncOp;
+} // namespace func
 
 namespace mhlo {
 class FusionOp;
@@ -50,14 +53,14 @@ mhlo::FusionOp createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
 
 // This is similar to createMhloFusionFromPattern, and it will create a outlined
 // FuncOp instead.
-FuncOp createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
-                               ValueRange inputs, ValueRange outputs,
-                               const MhloFusionPattern &pattern);
+func::FuncOp createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
+                                     ValueRange inputs, ValueRange outputs,
+                                     const MhloFusionPattern &pattern);
 
 // This is similar to createMhloFusionFromPattern, and it will create a outlined
 // FuncOp instead.
-FuncOp createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
-                               const MhloFusionPattern &pattern);
+func::FuncOp createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
+                                     const MhloFusionPattern &pattern);
 
 void applyMhloFusionPattern(const MhloFusionPattern &pattern,
                             llvm::StringRef tag);
@@ -72,7 +75,8 @@ void applyMhloFusionPattern(const MhloFusionPattern &pattern,
 class ProducerFusionPlanner {
 public:
   ProducerFusionPlanner(
-      mlir::FuncOp funcOp, std::function<bool(Operation *)> fuse_candidate,
+      mlir::func::FuncOp funcOp,
+      std::function<bool(Operation *)> fuse_candidate,
       std::function<bool(Operation *)> fuse_start,
       std::function<bool(Operation *)> fuse_trigger,
       std::function<bool(Operation *, Operation *)> fuse_with);

@@ -9,6 +9,7 @@
 #include "PassDetail.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include <utility>
@@ -28,7 +29,7 @@ static bool IsHoistableOp(Operation *op) {
              memref::DimOp, memref::ExpandShapeOp, memref::ReshapeOp>(op);
 }
 
-static TrivialAffineLoopOp IdentifyTrivialAffineLoopOp(FuncOp funcOp) {
+static TrivialAffineLoopOp IdentifyTrivialAffineLoopOp(func::FuncOp funcOp) {
   TrivialAffineLoopOp tal;
 
   for (auto &block : funcOp.getBody()) {
@@ -65,7 +66,7 @@ struct InsertTrivialAffineLoopPass
     anchorTag = anchor.str();
   }
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
 
     // skip non-anchored
     if (!anchorTag.empty() && !funcOp->hasAttrOfType<UnitAttr>(anchorTag)) {
@@ -84,7 +85,7 @@ struct InsertTrivialAffineLoopPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createInsertTrivialAffineLoopPass(llvm::StringRef anchor) {
   return std::make_unique<InsertTrivialAffineLoopPass>(anchor);
 }

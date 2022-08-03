@@ -9,11 +9,11 @@ add_byteir_translation_library(ByteIRTargetCUDA
   ByteIRTargetCpp
 
   LINK_LIBS PUBLIC
-  MLIREmitC
+  MLIREmitCDialect
   MLIRIR
-  MLIRSCF
-  MLIRControlFlow
-  MLIRMemRef
+  MLIRSCFDialect
+  MLIRControlFlowDialect
+  MLIRMemRefDialect
   MLIRGPUOps
   MLIRSupport
   # MLIRTranslation

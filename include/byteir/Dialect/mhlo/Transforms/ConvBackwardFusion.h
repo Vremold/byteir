@@ -12,10 +12,14 @@
 #include <memory>
 
 namespace mlir {
+class RewritePatternSet;
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateFuseConvBackwardPatterns(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createConvBackwardFusionPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createConvBackwardFusionPass();
 
 } // namespace mlir
 

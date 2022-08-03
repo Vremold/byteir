@@ -64,7 +64,7 @@ def mlir_single_op_outlining(op):
             f_type = ir.FunctionType.get(
                 [i.type for i in op.operands],
                 [i.type for i in op.results])
-            f_op = builtin.FuncOp("main", f_type)
+            f_op = func.FuncOp("main", f_type)
             entry_block = f_op.add_entry_block()
             with ir.InsertionPoint(entry_block):
                 new_op = mlir_clone_op(op, dict(zip(op.operands, f_op.arguments)))

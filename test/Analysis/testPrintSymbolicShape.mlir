@@ -1,12 +1,12 @@
 // RUN: byteir-opt %s -test-print-symbolic-shape -split-input-file 2>&1 | FileCheck %s
 
 
-func @simple(%arg0 : tensor<?x4xf32>, %arg1 : tensor<?x4xf32>) -> tensor<?x4xf32> {
+func.func @simple(%arg0 : tensor<?x4xf32>, %arg1 : tensor<?x4xf32>) -> tensor<?x4xf32> {
   %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
   return %0 : tensor<?x4xf32>
 }
 // CHECK-LABEL: ============= auxiliary shape function for @simple =============
-// CHECK-NEXT: func private @_shape_infer_simple
+// CHECK-NEXT: func.func private @_shape_infer_simple
 // CHECK-NEXT:   %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
 // CHECK-NEXT:   %1 = shape.shape_of %arg0 : tensor<?x4xf32> -> tensor<2xindex>
 // CHECK-NEXT:   %2 = shape.value_as_shape %1 : tensor<2xindex> -> !shape.shape
@@ -21,7 +21,7 @@ func @simple(%arg0 : tensor<?x4xf32>, %arg1 : tensor<?x4xf32>) -> tensor<?x4xf32
 // CHECK-NEXT: symbolic shape sources: 
 // CHECK-NEXT: <block argument> of type 'tensor<?x4xf32>' at index: 0
 
-func @several_ops(%arg0: tensor<?x4xf32>, %arg1: tensor<4x4xf32>, %arg2: tensor<4xf32>) -> tensor<?x4xf32> {
+func.func @several_ops(%arg0: tensor<?x4xf32>, %arg1: tensor<4x4xf32>, %arg2: tensor<4xf32>) -> tensor<?x4xf32> {
   %0 = "mhlo.dot"(%arg0, %arg1) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
   %1 = shape.shape_of %0 : tensor<?x4xf32> -> tensor<2xindex>
   %2 = "mhlo.dynamic_broadcast_in_dim"(%arg2, %1) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
@@ -29,7 +29,7 @@ func @several_ops(%arg0: tensor<?x4xf32>, %arg1: tensor<4x4xf32>, %arg2: tensor<
   return %3 : tensor<?x4xf32>
 }
 // CHECK-LABEL: ============= auxiliary shape function for @several_ops =============
-// CHECK-NEXT: func private @_shape_infer_several_ops
+// CHECK-NEXT: func.func private @_shape_infer_several_ops
 // CHECK-DAG:   %[[C0:.+]] = arith.constant 0 : index
 // CHECK-DAG:   %[[C4:.+]] = arith.constant 4 : index
 // CHECK-DAG:   %[[V0:.+]] = shape.const_shape [2] : tensor<1xindex>

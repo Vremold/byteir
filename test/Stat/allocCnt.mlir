@@ -2,7 +2,7 @@
 
 #map0 = affine_map<(d0, d1) -> (d0 * 8 + d1)>
 
-func @test_basic(%arg0 : memref<256xf32>, %arg1 : memref<256xf32>) -> memref<256xf32> {
+func.func @test_basic(%arg0 : memref<256xf32>, %arg1 : memref<256xf32>) -> memref<256xf32> {
   %0 = memref.alloc() : memref<256xf32>
   %1 = memref.alloc() : memref<256xf32>
   %2 = memref.alloc() : memref<256xf32>
@@ -22,7 +22,7 @@ func @test_basic(%arg0 : memref<256xf32>, %arg1 : memref<256xf32>) -> memref<256
 //   CHECK: total_static_allocated_memory = 5120
 //   CHECK: peak_static_memory = 2048
 
-func @test_strided(%arg0 : memref<16x3xf32, #map0>, %arg1 : memref<16x3xf32, #map0>) -> memref<16x3xf32, #map0> {
+func.func @test_strided(%arg0 : memref<16x3xf32, #map0>, %arg1 : memref<16x3xf32, #map0>) -> memref<16x3xf32, #map0> {
   %0 = memref.alloc() : memref<16x3xf32, #map0>
   %1 = memref.alloc() : memref<16x3xf32, #map0>
   %2 = memref.alloc() : memref<16x3xf32, #map0>

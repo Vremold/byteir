@@ -9,12 +9,12 @@ add_mlir_dialect_library(MLIRByre
   MLIRByreOpInterfacesIncGen
 
   LINK_LIBS PUBLIC
-  MLIRDLTI
+  MLIRDLTIDialect
   MLIRIR
-  MLIRMemRef
+  MLIRMemRefDialect
   MLIRSideEffectInterfaces
   MLIRSupport
-  MLIRLLVMIR
+  MLIRLLVMDialect
   )
 
 add_mlir_dialect_library(ByteIRByrePasses

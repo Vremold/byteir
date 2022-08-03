@@ -31,36 +31,11 @@ if (BYTEIR_ENABLE_BINDINGS_PYTHON)
     relocate_python_source_root(
       TARGETS
       MLIRPythonSources
-      MLIRPythonExtension.AllPassesRegistration)
+      MLIRPythonExtension.RegisterEverything)
   endif()
 endif()
 
 add_subdirectory(${REPO_ROOT_DIR}/external/mlir-hlo ${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo EXCLUDE_FROM_ALL)
-
-if (BYTEIR_ENABLE_BINDINGS_PYTHON)
-  # FIXME(xrzhang):
-  # Following code is about how to patch mlir arggregate with given linking
-  # libraries, this code snippet is highly dependent on the impelementation
-  # details of mhlo and mlir cmake build, and it might be unmaintainable.
-  function(patch_mlir_aggregate_lib)
-    cmake_parse_arguments(ARG "" "TARGET" "LINK_LIBS" ${ARGN})
-    set(FILTERED_LINK_LIBS)
-    get_mlir_filtered_link_libraries(FILTERED_LINK_LIBS ${ARG_LINK_LIBS})
-    set_property(TARGET ${ARG_TARGET} APPEND PROPERTY MLIR_AGGREGATE_DEPS ${FILTERED_LINK_LIBS})
-    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_LINK_LIBS})
-  endfunction()
-  patch_mlir_aggregate_lib(
-    TARGET MLIRHLOCAPIDialects
-    LINK_LIBS
-    ChloPasses
-    MhloPasses
-    MhloToLhloConversion
-    MhloToArithmeticConversion
-    MhloToMemrefConversion
-    MhloToStandard
-    MhloToLinalg
-    MhloShapeOpsToStandard)
-endif()
 
 include_directories(${REPO_ROOT_DIR}/external/mlir-hlo/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo/include)

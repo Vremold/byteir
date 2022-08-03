@@ -14,13 +14,16 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 constexpr StringRef getDataPlaceAttrName() { return "__byteir_data_place__"; }
 
 // TODO: change this to string, since memory space as int was soft-deprecated
 constexpr int64_t getUnplacedSpace() { return -1; }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createLinalgDataPlacePass(ArrayRef<int64_t> spaces = {});
 
 } // namespace mlir

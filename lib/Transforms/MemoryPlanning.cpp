@@ -29,6 +29,7 @@ limitations under the License.
 #include "mlir/Analysis/BufferViewFlowAnalysis.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/Pass/Pass.h"
@@ -456,7 +457,7 @@ private:
   }
 };
 
-inline void doBufferPacking(mlir::FuncOp func, size_t alignment,
+inline void doBufferPacking(mlir::func::FuncOp func, size_t alignment,
                             std::function<bool(Value)> couldReuseAllocation) {
   SortedPackingStrategy<AllocInfoMemSizeCompare> strategy(
       0,         // windowSize
@@ -485,11 +486,11 @@ struct MemoryPlanningPass : public MemoryPlanningBase<MemoryPlanningPass> {
 };
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createMemoryPlanningPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createMemoryPlanningPass() {
   return std::make_unique<MemoryPlanningPass>();
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createMemoryPlanningPass(
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createMemoryPlanningPass(
     std::function<bool(Value)> couldReuseAllocation) {
   return std::make_unique<MemoryPlanningPass>(couldReuseAllocation);
 }

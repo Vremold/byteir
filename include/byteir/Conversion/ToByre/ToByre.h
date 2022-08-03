@@ -14,6 +14,10 @@
 namespace mlir {
 // forward decl
 class RewritePatternSet;
+class ModuleOp;
+namespace func {
+class FuncOp;
+} // namespace func
 
 // Collect a set of patterns to convert ops from Lmhlo dialect to Byre dialect
 // Note: supportMap is a reference.
@@ -34,7 +38,7 @@ createConvertToByrePass(bool appendArgTypes = false);
 std::unique_ptr<OperationPass<ModuleOp>>
 createConvertFuncAndCallToByrePass(bool appendArgTypes = false);
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createConvertLmhloToByrePass(bool appendArgTypes = false);
 
 } // namespace mlir

@@ -15,7 +15,7 @@ include "mlir/Pass/PassBase.td"
 // Bounded Shape Inference
 //===----------------------------------------------------------------------===//
 
-def BoundedShapeInference : Pass<"bounded-shape-infer", "FuncOp"> {
+def BoundedShapeInference : Pass<"bounded-shape-infer", "func::FuncOp"> {
   let summary = "Bounded shape inference";
   let description = [{
     Some operations have dynamic output shapes, which could not be deduced at 
@@ -30,7 +30,7 @@ def BoundedShapeInference : Pass<"bounded-shape-infer", "FuncOp"> {
 // ClusterConstraint
 //===----------------------------------------------------------------------===//
 
-def ClusterConstraint : Pass<"cluster-constraint", "mlir::FuncOp"> {
+def ClusterConstraint : Pass<"cluster-constraint", "mlir::func::FuncOp"> {
   let summary = "Cluster mhlo ops with constraint";
   let description = [{
     This pass do some early check in the tensor world(i.e. mhlo) and also treat
@@ -43,7 +43,7 @@ def ClusterConstraint : Pass<"cluster-constraint", "mlir::FuncOp"> {
 // ConvBackwardFusion
 //===----------------------------------------------------------------------===//
 
-def ConvBackwardFusion : Pass<"fuse-conv-backward", "mlir::FuncOp"> {
+def ConvBackwardFusion : Pass<"fuse-conv-backward", "mlir::func::FuncOp"> {
   let summary = "Fuse convolution backward data & filter";
   let constructor = "mlir::createConvBackwardFusionPass()";
 }
@@ -52,7 +52,7 @@ def ConvBackwardFusion : Pass<"fuse-conv-backward", "mlir::FuncOp"> {
 // ConvBiasActFusion
 //===----------------------------------------------------------------------===//
 
-def ConvBiasActFusion : Pass<"fuse-conv-bias-act", "mlir::FuncOp"> {
+def ConvBiasActFusion : Pass<"fuse-conv-bias-act", "mlir::func::FuncOp"> {
   let summary = "Fuse convolution bias activation";
   let constructor = "mlir::createConvBiasActFusionPass()";
 }
@@ -62,7 +62,7 @@ def ConvBiasActFusion : Pass<"fuse-conv-bias-act", "mlir::FuncOp"> {
 //===----------------------------------------------------------------------===//
 
 //def ConvertInsertion : Pass<"insert-convert", "ModuleOp"> {
-//  let summary = "Insert ConvertOps (for CallOps and FuncOps now)";
+//  let summary = "Insert ConvertOps (for CallOps and func::FuncOps now)";
 //  let constructor = "mlir::createConvertInsertionPass()";
 //  let dependentDialects = [
 //    "mlir::mhlo::MhloDialect"
@@ -73,7 +73,7 @@ def ConvBiasActFusion : Pass<"fuse-conv-bias-act", "mlir::FuncOp"> {
 // DotTransposeFusion : this pass should run after HloTransposeDotToDotGeneral
 //===----------------------------------------------------------------------===//
 
-def DotTransposeFusion : Pass<"fuse-dot-transpose", "mlir::FuncOp"> {
+def DotTransposeFusion : Pass<"fuse-dot-transpose", "mlir::func::FuncOp"> {
   let summary = "Fuse dot/dot_general + transpose";
   let constructor = "mlir::createDotTransposeFusionPass()";
 }
@@ -96,7 +96,7 @@ def DynamicShapeClustering : Pass<"dynamic-shape-clustering", "mlir::ModuleOp"> 
 //===----------------------------------------------------------------------===//
 
 def FusionOutlining : Pass<"fusion-outlining", "ModuleOp"> {
-  let summary = "Outline mhlo FusionOp to a FuncOp";
+  let summary = "Outline mhlo FusionOp to a func::FuncOp";
   let constructor = "mlir::createFusionOutliningPass()";
   let dependentDialects = [
     "mlir::func::FuncDialect"
@@ -108,7 +108,7 @@ def FusionOutlining : Pass<"fusion-outlining", "ModuleOp"> {
 //===----------------------------------------------------------------------===//
 
 // TODO(liuyuanqiang): re-implement this as folder
-def HloFolder : Pass<"hlo-fold", "mlir::FuncOp"> {
+def HloFolder : Pass<"hlo-fold", "mlir::func::FuncOp"> {
   let summary = "Fold mhlo ops";
   let constructor = "mlir::createHloFolderPass()";
 }
@@ -118,7 +118,7 @@ def HloFolder : Pass<"hlo-fold", "mlir::FuncOp"> {
 // HloTransposeDotToDotGeneral
 //===----------------------------------------------------------------------===//
 
-def HloTransposeDotToDotGeneral : Pass<"hlo-transpose-dot-to-dot-general", "mlir::FuncOp"> {
+def HloTransposeDotToDotGeneral : Pass<"hlo-transpose-dot-to-dot-general", "mlir::func::FuncOp"> {
   let summary = "Fuse transpose dot to dot_general";
   let constructor = "mlir::createHloTransposeDotToDotGeneralPass()";
 }
@@ -127,7 +127,7 @@ def HloTransposeDotToDotGeneral : Pass<"hlo-transpose-dot-to-dot-general", "mlir
 // IOConvertFusion
 //===----------------------------------------------------------------------===//
 
-def IOConvertFusion : Pass<"fuse-io-convert", "mlir::FuncOp"> {
+def IOConvertFusion : Pass<"fuse-io-convert", "mlir::func::FuncOp"> {
   let summary = "Fuse op with Input/Output convert";
   let constructor = "mlir::createIOConvertFusionPass()";
 }
@@ -136,7 +136,7 @@ def IOConvertFusion : Pass<"fuse-io-convert", "mlir::FuncOp"> {
 // HloMoveDown
 //===----------------------------------------------------------------------===//
 
-def HloMoveDown : Pass<"hlo-move-down", "mlir::FuncOp"> {
+def HloMoveDown : Pass<"hlo-move-down", "mlir::func::FuncOp"> {
   let summary = "Move selected mhlo op down (to output)";
   let constructor = "mlir::createHloMoveDownPass()";
   let options = [
@@ -153,7 +153,7 @@ def HloMoveDown : Pass<"hlo-move-down", "mlir::FuncOp"> {
 // HloMoveUp
 //===----------------------------------------------------------------------===//
 
-def HloMoveUp : Pass<"hlo-move-up", "mlir::FuncOp"> {
+def HloMoveUp : Pass<"hlo-move-up", "mlir::func::FuncOp"> {
   let summary = "Move selected mhlo op up (to input)";
   let constructor = "mlir::createHloMoveUpPass()";
   let options = [
@@ -166,7 +166,7 @@ def HloMoveUp : Pass<"hlo-move-up", "mlir::FuncOp"> {
 //===----------------------------------------------------------------------===//
 // InsertShapeConstraint
 //===----------------------------------------------------------------------===//
-def InsertShapeConstraint : Pass<"insert-shape-constraint", "FuncOp"> {
+def InsertShapeConstraint : Pass<"insert-shape-constraint", "func::FuncOp"> {
   let summary = "Insert shape constraint for some special operations";
   let description = [{
     Some operations have constraints on the inputs and(or) outputs. Ex. mhlo.add
@@ -185,7 +185,7 @@ def InsertShapeConstraint : Pass<"insert-shape-constraint", "FuncOp"> {
 // LayoutTransformation
 //===----------------------------------------------------------------------===//
 
-def LayoutTransformation : Pass<"transform-layout", "mlir::FuncOp"> {
+def LayoutTransformation : Pass<"transform-layout", "mlir::func::FuncOp"> {
   let summary = "Layout Transformation: Conv2d, BatchNormTraining";
   let constructor = "mlir::createLayoutTransformationPass()";
   let options = [
@@ -198,7 +198,7 @@ def LayoutTransformation : Pass<"transform-layout", "mlir::FuncOp"> {
 // ReduceFusion
 //===----------------------------------------------------------------------===//
 
-def ReduceFusion : Pass<"fuse-reduce", "mlir::FuncOp"> {
+def ReduceFusion : Pass<"fuse-reduce", "mlir::func::FuncOp"> {
   let summary = "Fuse reduce and reduce-window ops";
   let constructor = "mlir::createReduceFusionPass()";
 }
@@ -207,7 +207,7 @@ def ReduceFusion : Pass<"fuse-reduce", "mlir::FuncOp"> {
 // RewriteWithConstraint
 //===----------------------------------------------------------------------===//
 
-def RewriteWithConstraint :  Pass<"rewrite-with-constraint", "mlir::FuncOp"> {
+def RewriteWithConstraint :  Pass<"rewrite-with-constraint", "mlir::func::FuncOp"> {
   let summary = "Rewrite operation with constraint";
   let constructor = "mlir::createRewriteWithConstraintPass()";
 }
@@ -216,7 +216,7 @@ def RewriteWithConstraint :  Pass<"rewrite-with-constraint", "mlir::FuncOp"> {
 // ShapeReification
 //===----------------------------------------------------------------------===//
 
-def ShapeReification : Pass<"shape-reification", "FuncOp"> {
+def ShapeReification : Pass<"byteir-shape-reification", "func::FuncOp"> {
   let summary = "Iteratively reify all shape computations.";
   let description = [{
     If an operation has a shape reification implementation, that is to say, we 
@@ -224,7 +224,7 @@ def ShapeReification : Pass<"shape-reification", "FuncOp"> {
     then a tensor.dim or shape.shape_of on this type of operation could be 
     reified. And shape reification procedure could be handled recursively.
   }];
-  let constructor = "mlir::createShapeReificationPass()";
+  let constructor = "mlir::createByteIRShapeReificationPass()";
   let dependentDialects = [
     "mlir::shape::ShapeDialect",
     "mlir::tensor::TensorDialect"
@@ -235,7 +235,7 @@ def ShapeReification : Pass<"shape-reification", "FuncOp"> {
 // Static Shape Inference
 //===----------------------------------------------------------------------===//
 
-def StaticShapeInference : Pass<"static-shape-infer", "FuncOp"> {
+def StaticShapeInference : Pass<"static-shape-infer", "func::FuncOp"> {
   let summary = "Static shape inference";
   let constructor = "mlir::createStaticShapeInferencePass()";
 }
@@ -244,7 +244,7 @@ def StaticShapeInference : Pass<"static-shape-infer", "FuncOp"> {
 // TrivialFusion
 //===----------------------------------------------------------------------===//
 
-def TrivialFusion : Pass<"fuse-trivial", "mlir::FuncOp"> {
+def TrivialFusion : Pass<"fuse-trivial", "mlir::func::FuncOp"> {
   let summary = "Fuse trivial single ops";
   let constructor = "mlir::createTrivialFusionPass()";
 }

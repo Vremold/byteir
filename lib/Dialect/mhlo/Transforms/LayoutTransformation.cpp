@@ -10,6 +10,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
@@ -134,12 +135,14 @@ DenseIntElementsAttr createNCDHW2NDHWCAttr2(PatternRewriter &rewriter,
                             {5, 2}, &rewriter);
 }
 
-struct ConvLayoutTransformationPattern : public OpRewritePattern<mhlo::ConvOp> {
+struct ConvLayoutTransformationPattern
+    : public OpRewritePattern<mhlo::ConvolutionOp> {
   ConvLayoutTransformationPattern(MLIRContext *context,
                                   std::string targetLayout)
-      : OpRewritePattern<mhlo::ConvOp>(context), targetLayout(targetLayout) {}
+      : OpRewritePattern<mhlo::ConvolutionOp>(context),
+        targetLayout(targetLayout) {}
 
-  LogicalResult matchAndRewrite(mhlo::ConvOp op,
+  LogicalResult matchAndRewrite(mhlo::ConvolutionOp op,
                                 PatternRewriter &rewriter) const override {
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
@@ -160,7 +163,7 @@ struct ConvLayoutTransformationPattern : public OpRewritePattern<mhlo::ConvOp> {
         Type output_type = createNCHW2NHWCType(op.getResult().getType());
         auto new_dimension_numbers = mhlo::ConvDimensionNumbersAttr::get(
             rewriter.getContext(), 0, 3, {1, 2}, 3, 0, {1, 2}, 0, 3, {1, 2});
-        auto newOp = rewriter.create<mhlo::ConvOp>(
+        auto newOp = rewriter.create<mhlo::ConvolutionOp>(
             op->getLoc(), output_type, lhs_transpose, rhs_transpose,
             op.window_stridesAttr(), op.paddingAttr(), op.lhs_dilationAttr(),
             op.rhs_dilationAttr(), op.window_reversalAttr(),
@@ -182,7 +185,7 @@ struct ConvLayoutTransformationPattern : public OpRewritePattern<mhlo::ConvOp> {
         auto new_dimension_numbers = mhlo::ConvDimensionNumbersAttr::get(
             rewriter.getContext(), 0, 4, {1, 2, 3}, 4, 0, {1, 2, 3}, 0, 4,
             {1, 2, 3});
-        auto newOp = rewriter.create<mhlo::ConvOp>(
+        auto newOp = rewriter.create<mhlo::ConvolutionOp>(
             op->getLoc(), output_type, lhs_transpose, rhs_transpose,
             op.window_stridesAttr(), op.paddingAttr(), op.lhs_dilationAttr(),
             op.rhs_dilationAttr(), op.window_reversalAttr(),
@@ -286,11 +289,11 @@ struct ReduceWindownLayoutTransformationPattern
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
-    if (op.inputs().size() != 1 || op.init_values().size() != 1 ||
+    if (op.operands().size() != 1 || op.init_values().size() != 1 ||
         op->getResults().size() != 1) {
       return failure();
     }
-    auto operand = *(op.inputs().begin());
+    auto operand = *(op.operands().begin());
     auto layout = getPoolLayout(op);
 
     if (targetLayout == "NHWC" && layout == "NCHW") {
@@ -480,7 +483,7 @@ struct LayoutTransformationPass
   }
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     if (this->targetLayout != "NHWC" && this->targetLayout != "NDHWC") {
       funcOp.emitError(
           "LayoutTransformationPass doesn't support target layout: ")
@@ -510,7 +513,7 @@ void mlir::populateLayoutTransformationPattern(RewritePatternSet &patterns,
                                                          targetLayout);
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createLayoutTransformationPass(std::string target_layout) {
   return std::make_unique<LayoutTransformationPass>(target_layout);
 }

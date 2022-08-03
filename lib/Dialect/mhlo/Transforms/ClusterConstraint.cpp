@@ -10,6 +10,7 @@
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -51,20 +52,20 @@ static inline mhlo::FusionOp fuseWithConstantArgs(Operation *op,
   return createMhloFusionFromPattern(rewriter, pattern);
 }
 
-struct RngUniformConstraint : public OpRewritePattern<mhlo::RngUniformOp> {
-  using OpRewritePattern<mhlo::RngUniformOp>::OpRewritePattern;
+struct RngConstraint : public OpRewritePattern<mhlo::RngOp> {
+  using OpRewritePattern<mhlo::RngOp>::OpRewritePattern;
 
-  LogicalResult matchAndRewrite(mhlo::RngUniformOp op,
+  LogicalResult matchAndRewrite(mhlo::RngOp op,
                                 PatternRewriter &rewriter) const override {
     // avoid already fused
     if (op->template getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
 
-    // check both low and high are constants
-    FloatAttr low, high;
-    if (!matchConstantValueFloatOrSplat(op->getOperand(0), &low) ||
-        !matchConstantValueFloatOrSplat(op->getOperand(1), &high)) {
+    // check both a and b are constants
+    FloatAttr a, b;
+    if (!matchConstantValueFloatOrSplat(op->getOperand(0), &a) ||
+        !matchConstantValueFloatOrSplat(op->getOperand(1), &b)) {
       return failure();
     }
     // ensure it has static-known shape
@@ -76,10 +77,19 @@ struct RngUniformConstraint : public OpRewritePattern<mhlo::RngUniformOp> {
     auto fusion = fuseWithConstantArgs(op, {0, 1, 2}, rewriter);
     fusion->setAttr(byre::getByreForceComputeNameAttrName(),
                     UnitAttr::get(fusion.getContext()));
-    fusion->setAttr(byre::getByrePrefix() + "low", low);
-    fusion->setAttr(byre::getByrePrefix() + "high", high);
-    fusion->setAttr(byre::getByreComputeName(),
-                    rewriter.getStringAttr("RngUniform"));
+    if (op.rng_distribution() == mhlo::RngDistribution::UNIFORM) {
+      fusion->setAttr(byre::getByrePrefix() + "low", a);
+      fusion->setAttr(byre::getByrePrefix() + "high", b);
+      fusion->setAttr(byre::getByreComputeName(),
+                      rewriter.getStringAttr("RngUniform"));
+    } else if (op.rng_distribution() == mhlo::RngDistribution::NORMAL) {
+      fusion->setAttr(byre::getByrePrefix() + "mu", a);
+      fusion->setAttr(byre::getByrePrefix() + "sigma", b);
+      fusion->setAttr(byre::getByreComputeName(),
+                      rewriter.getStringAttr("RngNormal"));
+    } else {
+      assert(false && "unsupported RngDistribution");
+    }
     return success();
   }
 };
@@ -88,7 +98,7 @@ struct ClusterConstraintPass
     : public ClusterConstraintBase<ClusterConstraintPass> {
   ClusterConstraintPass() : ClusterConstraintBase() {}
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
     populateClusterConstraintPattern(patterns);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
@@ -101,9 +111,10 @@ struct ClusterConstraintPass
 } // namespace
 
 void mlir::populateClusterConstraintPattern(RewritePatternSet &patterns) {
-  patterns.add<RngUniformConstraint>(patterns.getContext());
+  patterns.add<RngConstraint>(patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createClusterConstraintPass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createClusterConstraintPass() {
   return std::make_unique<ClusterConstraintPass>();
 }

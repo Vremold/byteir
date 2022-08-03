@@ -17,7 +17,7 @@
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -42,7 +42,7 @@ struct HloFusionToLinalgPass
   }
 
   void runOnOperation() final {
-    FuncOp func = getOperation();
+    func::FuncOp func = getOperation();
 
     bool valid = anchorTag.empty() || func->hasAttrOfType<UnitAttr>(anchorTag);
 
@@ -62,7 +62,7 @@ struct HloFusionToLinalgPass
 
     mhlo::RemoveSignTypeConverter type_converter;
 
-    mhlo::populateHLOToLinalgConversionPattern(&ctx, type_converter, &patterns);
+    mhlo::populateHloToLinalgConversionPattern(&ctx, type_converter, &patterns);
 
     if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
       signalPassFailure();
@@ -72,7 +72,7 @@ struct HloFusionToLinalgPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createHloFusionToLinalgPass(llvm::StringRef anchorTag) {
   return std::make_unique<HloFusionToLinalgPass>(anchorTag);
 }

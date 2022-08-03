@@ -7,6 +7,8 @@
 
 #include "byteir/Transforms/AnchoredFuncPipeline.h"
 #include "./PassDetail.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 
 using namespace mlir;
@@ -18,7 +20,7 @@ struct AnchoredFuncPipelinePass
 
   explicit AnchoredFuncPipelinePass(const std::string &anchor)
       : AnchoredFuncPipelineBase<AnchoredFuncPipelinePass>(),
-        pm(FuncOp::getOperationName()) {
+        pm(func::FuncOp::getOperationName()) {
     this->anchorAttr = anchor;
   }
 
@@ -48,13 +50,13 @@ struct AnchoredFuncPipelinePass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createAnchoredFuncPipelinePass(llvm::StringRef anchorTag,
                                      OpPassManager &otherPM) {
   return std::make_unique<AnchoredFuncPipelinePass>(anchorTag.str(), otherPM);
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createAnchoredFuncPipelinePass(llvm::StringRef anchorTag) {
   return std::make_unique<AnchoredFuncPipelinePass>(anchorTag.str());
 }

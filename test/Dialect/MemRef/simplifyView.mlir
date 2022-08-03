@@ -11,8 +11,8 @@
 #map8 = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1 * 2)>
 #map9 = affine_map<(d0, d1)[s0] -> (d0 * 2048 + s0 + d1 * 2)>
 
-// CHECK-LABEL: func @subview_no_canonical
-func @subview_no_canonical(%arg0: memref<128x64xf32>) {
+// CHECK-LABEL: func.func @subview_no_canonical
+func.func @subview_no_canonical(%arg0: memref<128x64xf32>) {
   %c0 = arith.constant 0 : index
   %c8 = arith.constant 8 : index
   %c1 = arith.constant 1 : index
@@ -28,8 +28,8 @@ func @subview_no_canonical(%arg0: memref<128x64xf32>) {
   return 
 }
 
-// CHECK-LABEL: func @subview_of_subview
-func @subview_of_subview(%arg0: memref<128x64xf32>) {
+// CHECK-LABEL: func.func @subview_of_subview
+func.func @subview_of_subview(%arg0: memref<128x64xf32>) {
   %c1 = arith.constant 1 : index
   %c0 = arith.constant 0 : index
   %0 = memref.subview %arg0[8, 0] [8, 64] [1, 1] : memref<128x64xf32> to memref<8x64xf32, #map1>
@@ -42,8 +42,8 @@ func @subview_of_subview(%arg0: memref<128x64xf32>) {
   return
 }
 
-// CHECK-LABEL: func @view_of_view
-func @view_of_view(%arg0: memref<8192xi8>) {
+// CHECK-LABEL: func.func @view_of_view
+func.func @view_of_view(%arg0: memref<8192xi8>) {
   %c128 = arith.constant 128 : index
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
@@ -56,8 +56,8 @@ func @view_of_view(%arg0: memref<8192xi8>) {
   return
 }
 
-// CHECK-LABEL: func @subview_of_view_contiguous_row_major
-func @subview_of_view_contiguous_row_major(%arg0: memref<8192xi8>) {
+// CHECK-LABEL: func.func @subview_of_view_contiguous_row_major
+func.func @subview_of_view_contiguous_row_major(%arg0: memref<8192xi8>) {
   %c128 = arith.constant 128 : index
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
@@ -70,8 +70,8 @@ func @subview_of_view_contiguous_row_major(%arg0: memref<8192xi8>) {
   return
 }
 
-// CHECK-LABEL: func @subview_of_view_not_contiguous_row_major
-func @subview_of_view_not_contiguous_row_major(%arg0: memref<8192xi8>) {  // last dim multiple of 64 example
+// CHECK-LABEL: func.func @subview_of_view_not_contiguous_row_major
+func.func @subview_of_view_not_contiguous_row_major(%arg0: memref<8192xi8>) {  // last dim multiple of 64 example
   %c128 = arith.constant 128 : index
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
@@ -84,8 +84,8 @@ func @subview_of_view_not_contiguous_row_major(%arg0: memref<8192xi8>) {  // las
   return
 }
 
-// CHECK-LABEL: func @interleave
-func @interleave(%arg0: memref<8192xi8>) {  // two access interleave access (128-elemet) example 
+// CHECK-LABEL: func.func @interleave
+func.func @interleave(%arg0: memref<8192xi8>) {  // two access interleave access (128-elemet) example 
   %c128 = arith.constant 128 : index
   %c640 = arith.constant 640 : index  // 128 + 128*4
   %c0 = arith.constant 0 : index
@@ -107,8 +107,8 @@ func @interleave(%arg0: memref<8192xi8>) {  // two access interleave access (128
   return
 }
 
-// CHECK-LABEL: func @many_contiguous
-func @many_contiguous(%arg0: memref<8192xi8>) {
+// CHECK-LABEL: func.func @many_contiguous
+func.func @many_contiguous(%arg0: memref<8192xi8>) {
   %c128 = arith.constant 128 : index
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
@@ -124,16 +124,16 @@ func @many_contiguous(%arg0: memref<8192xi8>) {
   return
 }
 
-// CHECK-LABEL: func @subview_of_subview_non_one_stride
-func @subview_of_subview_non_one_stride(%input: memref<4x1024xf32>) -> memref<1x128xf32, #map7> {
+// CHECK-LABEL: func.func @subview_of_subview_non_one_stride
+func.func @subview_of_subview_non_one_stride(%input: memref<4x1024xf32>) -> memref<1x128xf32, #map7> {
   %0 = memref.subview %input[2, 256] [2, 256] [1, 2] : memref<4x1024xf32> to memref<2x256xf32, #map6>
   %1 = memref.subview %0[1, 128] [1, 128] [2, 1] : memref<2x256xf32, #map6> to memref<1x128xf32, #map7>
 // CHECK:  memref.subview %arg0[3, 512] [1, 128] [2, 2]
   return %1 : memref<1x128xf32, #map7>
 }
 
-// CHECK-LABEL: func @subview_of_subview_non_one_stride_dynamic_offset
-func @subview_of_subview_non_one_stride_dynamic_offset(%input: memref<4x1024xf32>, %offset_0 : index, %offset_1 : index) -> memref<1x128xf32, #map9> {
+// CHECK-LABEL: func.func @subview_of_subview_non_one_stride_dynamic_offset
+func.func @subview_of_subview_non_one_stride_dynamic_offset(%input: memref<4x1024xf32>, %offset_0 : index, %offset_1 : index) -> memref<1x128xf32, #map9> {
   %0 = memref.subview %input[%offset_0, 256] [2, 256] [1, 2] : memref<4x1024xf32> to memref<2x256xf32, #map8>
   %1 = memref.subview %0[%offset_1, 128] [1, 128] [2, 1] : memref<2x256xf32, #map8> to memref<1x128xf32, #map9>
 // CHECK: %0 = affine.apply

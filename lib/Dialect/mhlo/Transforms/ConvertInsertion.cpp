@@ -90,12 +90,12 @@ void ConvertInsertionPass::runOnOperation() {
   }
 
   // iterte all func
-  for (auto func : m.getOps<FuncOp>()) {
+  for (auto func : m.getOps<func::FuncOp>()) {
     if (!collector->checkFunc(func)) {
       continue;
     }
 
-    FunctionType funcType = func.getType();
+    FunctionType funcType = func.getFunctionType();
     mlir::SmallVector<Type> argTypes;
     argTypes.reserve(funcType.getNumInputs());
     mlir::SmallVector<Type> retTypes;
@@ -159,7 +159,7 @@ mlir::ConvertOnlyCheckElementType::ConvertOnlyCheckElementType(
     mlir::StringRef strRrf)
     : anchorAttr(strRrf.str()) {}
 
-bool mlir::ConvertOnlyCheckElementType::checkFunc(FuncOp func) {
+bool mlir::ConvertOnlyCheckElementType::checkFunc(func::FuncOp func) {
   return func->hasAttr(anchorAttr);
 }
 

@@ -52,9 +52,9 @@ bool isEmptyStringAttr(Attribute attr) {
   return false;
 }
 
-bool isFuncCorrectSpace(FuncOp func, size_t offset, Attribute space,
+bool isFuncCorrectSpace(func::FuncOp func, size_t offset, Attribute space,
                         bool isArg) {
-  FunctionType funcType = func.getType();
+  FunctionType funcType = func.getFunctionType();
   Type argType;
   if (isArg) {
     argType = funcType.getInput(offset);
@@ -68,7 +68,7 @@ bool isFuncCorrectSpace(FuncOp func, size_t offset, Attribute space,
   return false;
 }
 
-bool isFuncNotCompatiableWithSpace(FuncOp func, Attribute space) {
+bool isFuncNotCompatiableWithSpace(func::FuncOp func, Attribute space) {
   if (auto funcSpaceAttr = func->getAttrOfType<StringAttr>(SPACE_ATTR_NAME)) {
     return funcSpaceAttr != space;
   }
@@ -168,11 +168,11 @@ Value createCopyArg(Operation *op, Value oldArg, MemRefType dstMemrefTy,
 }
 
 // update function types for args recursively
-void updateFuncArgTypes(FuncOp func, ModuleOp m,
-                        DenseMap<FuncOp, UpdateFuncType_t> &funcToUpdateTypes,
-                        DenseMap<CopyType_t, Value> &copyPairToCopyTargets,
-                        size_t offset, Attribute spaceAttr,
-                        ArgSideEffectAnalysis *analysis) {
+void updateFuncArgTypes(
+    func::FuncOp func, ModuleOp m,
+    DenseMap<func::FuncOp, UpdateFuncType_t> &funcToUpdateTypes,
+    DenseMap<CopyType_t, Value> &copyPairToCopyTargets, size_t offset,
+    Attribute spaceAttr, ArgSideEffectAnalysis *analysis) {
   // skip if suggest spaceAttr is empty
   // or already right space
   if (isEmptyStringAttr(spaceAttr) ||
@@ -182,7 +182,7 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
 
   // initialize funcToUpdateTypes
   if (funcToUpdateTypes.count(func) == 0) {
-    FunctionType funcType = func.getType();
+    FunctionType funcType = func.getFunctionType();
     funcToUpdateTypes.try_emplace(
         func,
         SmallVector<Type, 4>(funcType.getInputs().begin(),
@@ -203,7 +203,7 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
   // rewrite body if it's not empty
   if (!func.empty()) {
     Value arg = func.getArgument(offset);
-    DenseMap<Attribute, SmallVector<FuncOp, 4>> spaceToCalleeFuncs;
+    DenseMap<Attribute, SmallVector<func::FuncOp, 4>> spaceToCalleeFuncs;
     arg.setType(argType);
 
     // handle users
@@ -223,7 +223,7 @@ void updateFuncArgTypes(FuncOp func, ModuleOp m,
           if (privateSpaceAttr != spaceAttr) {
             // check this specific exist or not
             CopyType_t copyKey = {arg, privateSpaceAttr};
-            FunctionType privateFuncType = anotherFunc.getType();
+            FunctionType privateFuncType = anotherFunc.getFunctionType();
             for (unsigned i = 0; i < callOp.getNumOperands(); ++i) {
               if (arg != callOp.getOperand(i)) {
                 continue;
@@ -277,7 +277,7 @@ void updateFuncReturnTypes(
 
   // initialize funcToUpdateTypes
   if (funcToUpdateTypes.count(func) == 0) {
-    FunctionType funcType = func.getType();
+    FunctionType funcType = func.getFunctionType();
     funcToUpdateTypes.try_emplace(
         func,
         SmallVector<Type, 4>(funcType.getInputs().begin(),
@@ -305,7 +305,7 @@ void updateFuncReturnTypes(
 
         if (isFuncNotCompatiableWithSpace(anotherFunc, spaceAttr)) {
           // insert a CopyFrom after the CallOp
-          FunctionType privateFuncType = anotherFunc.getType();
+          FunctionType privateFuncType = anotherFunc.getFunctionType();
           auto retMemrefTy = retType.dyn_cast<MemRefType>();
           CopyType_t copyKey = {ret, retMemrefTy.getMemorySpace()};
 
@@ -487,7 +487,7 @@ struct SetAllSpacePass : public SetAllSpaceBase<SetAllSpacePass> {
 
     // rewrite FunctionType
     for (auto it : funcToArgTypes) {
-      FunctionType funcType = it.first.getType();
+      FunctionType funcType = it.first.getFunctionType();
       it.first.setType(
           FunctionType::get(ctx, it.second.first, it.second.second));
     }
@@ -665,7 +665,7 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
 
     // rewrite FunctionType
     for (auto it : funcToArgTypes) {
-      FunctionType funcType = it.first.getType();
+      FunctionType funcType = it.first.getFunctionType();
       it.first.setType(
           FunctionType::get(ctx, it.second.first, it.second.second));
 

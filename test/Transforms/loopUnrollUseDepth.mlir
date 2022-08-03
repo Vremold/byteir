@@ -1,6 +1,6 @@
 // RUN: byteir-opt %s -unroll="unroll-factor=2 depth=0" -cse | FileCheck %s 
 
-func @anchored(%arg0 : memref<?xf32>) {
+func.func @anchored(%arg0 : memref<?xf32>) {
   %0 = arith.constant 7.0 : f32
   %lb = arith.constant 0 : index
   %ub = arith.constant 4 : index
@@ -10,12 +10,12 @@ func @anchored(%arg0 : memref<?xf32>) {
   }
   return
 }
-// CHECK-LABEL: func @anchored
+// CHECK-LABEL: func.func @anchored
 // CHECK: scf.for
 // CHECK:   memref.store
 // CHECK:   memref.store
 
-func @anchored_2_loop(%arg0 : memref<?xf32>) {
+func.func @anchored_2_loop(%arg0 : memref<?xf32>) {
   %0 = arith.constant 7.0 : f32
   %lb = arith.constant 0 : index
   %ub = arith.constant 4 : index
@@ -27,7 +27,7 @@ func @anchored_2_loop(%arg0 : memref<?xf32>) {
   }
   return
 }
-// CHECK-LABEL: func @anchored_2_loop
+// CHECK-LABEL: func.func @anchored_2_loop
 // CHECK: scf.for
 // CHECK:   scf.for
 // CHECK:     memref.store

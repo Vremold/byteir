@@ -12,10 +12,13 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateSimplifyViewPattern(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createSimplifyViewPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createSimplifyViewPass();
 
 } // namespace mlir
 

@@ -1,7 +1,7 @@
 // RUN: byteir-opt -convert-scf-to-cf -convert-arith-to-llvm -gpu-to-nvvm-ext -cse  %s | FileCheck %s
 
 module attributes {gpu.container_module}  {
-  func @fusion_broadcast(%arg0: memref<6x12x96xf32>, %arg1: memref<6x12x96x96xf32>) -> memref<6x12x96x96xf32> {
+  func.func @fusion_broadcast(%arg0: memref<6x12x96xf32>, %arg1: memref<6x12x96x96xf32>) -> memref<6x12x96x96xf32> {
     %0 = memref.alloc() : memref<6x12x96x96xf32>
     %c0 = arith.constant 0 : index
     %c6 = arith.constant 6 : index

@@ -9,6 +9,7 @@
 #include "PassDetail.h"
 #include "byteir/Utils/MemUtils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 
@@ -115,7 +116,8 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
   op.erase();
 }
 
-static void collectAnchorOp(FuncOp func, SmallVectorImpl<LinalgOp> &collection,
+static void collectAnchorOp(func::FuncOp func,
+                            SmallVectorImpl<LinalgOp> &collection,
                             ArrayRef<int64_t> spaces) {
   auto ctx = func.getContext();
 
@@ -146,7 +148,7 @@ struct LinalgDataPlacePass : public LinalgDataPlaceBase<LinalgDataPlacePass> {
   LinalgDataPlacePass(ArrayRef<int64_t> spaces) { this->memSpaces = spaces; }
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
 
     SmallVector<LinalgOp> collection;
     collectAnchorOp(funcOp, collection, memSpaces);
@@ -161,7 +163,7 @@ struct LinalgDataPlacePass : public LinalgDataPlaceBase<LinalgDataPlacePass> {
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createLinalgDataPlacePass(ArrayRef<int64_t> spaces) {
   return std::make_unique<LinalgDataPlacePass>(spaces);
 }

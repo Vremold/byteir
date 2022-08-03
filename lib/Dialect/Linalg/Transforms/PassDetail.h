@@ -8,6 +8,7 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_PASSDETAIL_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_PASSDETAIL_H
 
+#include "mlir/IR/DialectRegistry.h"
 #include "mlir/Pass/Pass.h"
 
 // forward dialects for conversions
@@ -17,6 +18,10 @@ class AffineDialect;
 namespace arith {
 class ArithmeticDialect;
 } // namespace arith
+
+namespace func {
+class FuncOp;
+} // namespace func
 
 namespace linalg {
 class LinalgDialect;

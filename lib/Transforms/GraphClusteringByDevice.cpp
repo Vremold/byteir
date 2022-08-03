@@ -41,7 +41,7 @@ struct FunctionMetadata {
   // The operations to be included in the body of the function.
   llvm::SmallVector<Operation *, 8> ops;
 
-  FuncOp partitionOp;
+  func::FuncOp partitionOp;
 };
 
 void insertOpsRecursively(Operation *op, SmallDenseSet<Operation *> &opSet) {
@@ -56,8 +56,8 @@ void insertOpsRecursively(Operation *op, SmallDenseSet<Operation *> &opSet) {
 }
 
 Optional<SmallVector<FunctionMetadata, 4>>
-getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr,
-                     StringRef deviceAnchorName) {
+getFunctionMetadatas(func::FuncOp funcOp, StringRef attrName,
+                     StringRef deviceAttr, StringRef deviceAnchorName) {
   SmallVector<FunctionMetadata, 4> metadatas;
   SmallDenseSet<Operation *> hostOps;
   for (Operation &op : funcOp.front().without_terminator()) {
@@ -73,7 +73,7 @@ getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr,
     FunctionMetadata hostFuncMetadata;
     hostFuncMetadata.anchorName = getHostAnchorName();
     hostFuncMetadata.deviceAttr = DEVICE_ATTR_HOST;
-    hostFuncMetadata.originalName = funcOp.sym_name();
+    hostFuncMetadata.originalName = funcOp.getSymName();
     hostFuncMetadata.insertionPoint = ++Block::iterator(funcOp);
     for (Operation &op : funcOp.front().without_terminator()) {
       if (hostOps.count(&op)) {
@@ -88,7 +88,7 @@ getFunctionMetadatas(FuncOp funcOp, StringRef attrName, StringRef deviceAttr,
   FunctionMetadata deviceFuncMetadata;
   deviceFuncMetadata.anchorName = deviceAnchorName;
   deviceFuncMetadata.deviceAttr = deviceAttr;
-  deviceFuncMetadata.originalName = funcOp.sym_name();
+  deviceFuncMetadata.originalName = funcOp.getSymName();
   deviceFuncMetadata.insertionPoint = ++Block::iterator(funcOp);
   for (Operation &op : funcOp.front().without_terminator()) {
     if (!hostOps.count(&op)) {
@@ -121,8 +121,8 @@ void createFunctions(ModuleOp module_op,
     std::string funcName =
         (metadata.originalName + "_" + metadata.deviceAttr).str();
     FunctionType funcType = FunctionType::get(context, inputTypes, resultTypes);
-    FuncOp funcOp =
-        FuncOp::create(UnknownLoc::get(context), funcName, funcType);
+    func::FuncOp funcOp =
+        func::FuncOp::create(UnknownLoc::get(context), funcName, funcType);
     funcOp->setAttr(attrName, StringAttr::get(context, metadata.deviceAttr));
     funcOp->setAttr(metadata.anchorName, UnitAttr::get(context));
     funcOp.setPublic();
@@ -211,8 +211,8 @@ struct GraphClusteringByDevicePass
 void GraphClusteringByDevicePass::runOnOperation() {
   ModuleOp moduleOp = getOperation();
   MLIRContext *context = &getContext();
-  SmallVector<FuncOp, 4> originalFuncs;
-  for (auto funcOp : moduleOp.getOps<FuncOp>()) {
+  SmallVector<func::FuncOp, 4> originalFuncs;
+  for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
     for (auto &block : funcOp.getBlocks()) {
       if (dupNonSplat)
         ReplicateDefiningOp(&block, isMhloConstantLike);

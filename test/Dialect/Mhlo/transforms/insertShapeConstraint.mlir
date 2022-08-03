@@ -1,7 +1,7 @@
 // RUN: byteir-opt %s -insert-shape-constraint -canonicalize -cse | FileCheck %s
 
 // CHECK-LABEL: @DynamicPartition_constraint
-func @DynamicPartition_constraint(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
+func.func @DynamicPartition_constraint(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
   %c0 = arith.constant 0 : index
   %0 = mhlo.constant dense<[[-0.916170597, -0.884184718, 1.60242105, -1.19678485], [0.33643803, -0.431175768, 1.71861267, 0.126368985], [-1.07191086, -1.00517535, -0.666032254, 0.776807785], [1.53380013, 0.83925873, -0.24277249, 1.53341103]]> : tensor<4x4xf32>
   %1 = mhlo.constant dense<[2.63629675, 2.68127704, 2.14741468, -1.6519475]> : tensor<4xf32>
@@ -55,7 +55,7 @@ func @DynamicPartition_constraint(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) 
   return %25 : tensor<?x4xf32>
 }
 
-func @einsum_shape_constraint_1(%arg0: tensor<2x3x?x2xf32>, %arg1: tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32> {
+func.func @einsum_shape_constraint_1(%arg0: tensor<2x3x?x2xf32>, %arg1: tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32> {
   %0 = "mhlo.einsum"(%arg0, %arg1) {einsum_config = "dcbq,btd->bqtc"} : (tensor<2x3x?x2xf32>, tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32>
   return %0 : tensor<2x2x2x3xf32>
 }
@@ -64,7 +64,7 @@ func @einsum_shape_constraint_1(%arg0: tensor<2x3x?x2xf32>, %arg1: tensor<2x2x2x
 // CHECK-DAG: %[[V0:.+]] = tensor.dim %arg0, %[[C0]]
 // CHECK-DAG: "shape_ext.meet"(%[[C0]], %[[V0]]) : (index, index) -> ()
 
-func @dot_general(%arg0: tensor<?x?x4xf32>, %arg1: tensor<?x4x128xf32>) -> tensor<3xindex> {
+func.func @dot_general(%arg0: tensor<?x?x4xf32>, %arg1: tensor<?x4x128xf32>) -> tensor<3xindex> {
   %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<?x?x4xf32>, tensor<?x4x128xf32>) -> tensor<?x?x128xf32>
   %c0 = arith.constant 0 : index
   %1 = tensor.dim %0, %c0 : tensor<?x?x128xf32>
@@ -74,7 +74,7 @@ func @dot_general(%arg0: tensor<?x?x4xf32>, %arg1: tensor<?x4x128xf32>) -> tenso
   %3 = shape.shape_of %0 : tensor<?x?x128xf32> -> tensor<3xindex>
   return %3 : tensor<3xindex>
 }
-// CHECK-LABEL: func @dot_general
+// CHECK-LABEL: func.func @dot_general
 // CHECK-DAG:     %[[C0:.+]] = arith.constant 0 : index
 // CHECK-DAG:     %[[C1:.+]] = arith.constant 1 : index
 // CHECK-DAG:     %[[C2:.+]] = arith.constant 4 : index

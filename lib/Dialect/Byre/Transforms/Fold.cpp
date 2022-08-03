@@ -10,6 +10,7 @@
 #include "byteir/Analysis/Alias.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
 #include "llvm/ADT/EquivalenceClasses.h"
 #include <functional>
@@ -75,7 +76,7 @@ bool IsAliasOp(Operation &op) {
   return false;
 };
 
-void FoldAlias(FuncOp func) {
+void FoldAlias(func::FuncOp func) {
   auto ctx = func.getContext();
   // use all args as initial_copy for alias
   SmallVector<Value> initial_copy;
@@ -142,12 +143,12 @@ struct ByreHoldPass : public ByreFoldBase<ByreHoldPass> {
   ByreHoldPass() : ByreFoldBase() {}
 
   void runOnOperation() override {
-    FuncOp func = getOperation();
+    func::FuncOp func = getOperation();
     FoldAlias(func);
   }
 };
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createByreFoldPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createByreFoldPass() {
   return std::make_unique<ByreHoldPass>();
 }

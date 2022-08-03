@@ -29,7 +29,7 @@ class Byre_Op<string mnemonic, list<Trait> traits = []> :
     Op<Byre_Dialect, mnemonic, traits>;
 
 def Byre_ComputeOp : Byre_Op<"compute",
-    [HasParent<"FuncOp">, ByreInterface, MemRefsNormalizable]> {
+    [HasParent<"func::FuncOp">, ByreInterface, MemRefsNormalizable]> {
   let summary = "compute operation defines a kernel in runtime";
   let description = [{ 
     Example:
@@ -61,12 +61,12 @@ def Byre_ComputeOp : Byre_Op<"compute",
     $callee `(` $operands `)` attr-dict `:` type($operands)
   }];
 
-  let verifier = [{ return ::verify(*this); }];
+  let hasVerifier = 1;
   //let skipDefaultBuilders = 1;
 }
 
 def Byre_CopyOp : Byre_Op<"copy",
-    [HasParent<"FuncOp">, ByreInterface, CopyOpInterface]> {
+    [HasParent<"func::FuncOp">, ByreInterface, CopyOpInterface]> {
   let summary = "copy operation";
   let description = [{ 
     Copies the data to from the source memref to the target memref .
@@ -97,7 +97,7 @@ def Byre_CopyOp : Byre_Op<"copy",
 
   let hasCanonicalizer = 1;
   let hasFolder = 1;
-  let verifier = [{ return ::verify(*this); }];
+  let hasVerifier = 1;
 }
 
 #endif // BYRE_OPS

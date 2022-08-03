@@ -14,6 +14,7 @@
 #include <string>
 
 namespace mlir {
+class ModuleOp;
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createMatmulEpilogueGPUPipelinePass(const std::string &target = "");

@@ -15,7 +15,7 @@ include "mlir/Pass/PassBase.td"
 // LinalgDataPlace
 //===----------------------------------------------------------------------===//
 
-def LinalgDataPlace : Pass<"linalg-data-place", "mlir::FuncOp"> {
+def LinalgDataPlace : Pass<"linalg-data-place", "func::FuncOp"> {
   let summary = "Data-Place Linalg's buffer to a local buffer with space";
   let constructor = "mlir::createLinalgDataPlacePass()";
   let dependentDialects = [
@@ -25,7 +25,7 @@ def LinalgDataPlace : Pass<"linalg-data-place", "mlir::FuncOp"> {
   let options = [
     ListOption<"memSpaces", "mem-spaces", "int64_t",
                "data placement memory spaces",
-               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+               "llvm::cl::ZeroOrMore">,
   ];
 }
 
@@ -33,7 +33,7 @@ def LinalgDataPlace : Pass<"linalg-data-place", "mlir::FuncOp"> {
 // LinalgPrefetch
 //===----------------------------------------------------------------------===//
 
-def LinalgPrefetch : Pass<"linalg-prefetch", "mlir::FuncOp"> {
+def LinalgPrefetch : Pass<"linalg-prefetch", "func::FuncOp"> {
   let summary = "Prefetch Linalg's copies within loop";
   let constructor = "mlir::createLinalgPrefetchPass()";
   let options = [
@@ -48,7 +48,7 @@ def LinalgPrefetch : Pass<"linalg-prefetch", "mlir::FuncOp"> {
 // LinalgScopeTiling
 //===----------------------------------------------------------------------===//
 
-def LinalgScopeTiling : Pass<"linalg-scope-tile", "mlir::FuncOp"> {
+def LinalgScopeTiling : Pass<"linalg-scope-tile", "func::FuncOp"> {
   let summary = "Perform Tile linalg operations within a scope";
   let constructor = "mlir::createLinalgScopeTilingPass()";
   let dependentDialects = [
@@ -69,6 +69,15 @@ def LinalgScopeTiling : Pass<"linalg-scope-tile", "mlir::FuncOp"> {
     Option<"distributionType", "distribution-type", "std::string", /*default=*/"",
            "DistributionTypes (if loop-type=tiled_loop)">,
   ];
+}
+
+//===----------------------------------------------------------------------===//
+// LinalgFuseReshape
+//===----------------------------------------------------------------------===//
+
+def LinalgFuseReshape : Pass<"linalg-fuse-reshape", "func::FuncOp"> {
+  let summary = "Fuse Reshape by Collapsing and Expansion";
+  let constructor = "mlir::createLinalgFuseReshapePass()";
 }
 
 #endif // BYTEIR_LINALG_PASSES

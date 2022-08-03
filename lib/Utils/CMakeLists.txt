@@ -12,8 +12,8 @@ add_mlir_library(ByteIRUtils
 
   LINK_LIBS PUBLIC
   MLIRIR
-  MLIRAffine
-  MLIRArithmetic
-  MLIRMemRef
-  MLIRSCF
+  MLIRAffineDialect
+  MLIRArithmeticDialect
+  MLIRMemRefDialect
+  MLIRSCFDialect
 )

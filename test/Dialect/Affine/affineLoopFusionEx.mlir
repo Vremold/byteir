@@ -5,7 +5,7 @@
 #map2 = affine_map<(d0) -> ((d0 floordiv 128) floordiv 128)>
 
 // CHECK-LABEL: regular
-func @regular(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<128xi64>, %arg3: memref<128xf64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) {
+func.func @regular(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<128xi64>, %arg3: memref<128xf64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) {
   %0 = memref.collapse_shape %arg0 [[0, 1]] : memref<1x128xi64> into memref<128xi64>
   %1 = memref.alloc() : memref<128xui32>
   affine.for %arg4 = 0 to 128 {
@@ -39,7 +39,7 @@ func @regular(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<12
 }
 
 // CHECK-LABEL: withApply
-func @withApply(%arg0: memref<128x128xf32>, %arg1: memref<128xf32>, %arg2: memref<1x128x128xf32>, %arg3: memref<1x128x128xf32>, %arg4: memref<1x128x128xf32>, %arg5: memref<1x128x128xf32>, %arg6: memref<1x128x128xf32>, %arg7: memref<1x128x128xf32>, %arg8: memref<1x128x128xf32>, %arg9: memref<1x128x128xf32>, %arg10: memref<1x128x128xf32>, %arg11: memref<1x128x128xf32>, %arg12: memref<1x128x128xf32>, %arg13: memref<1x128x128xf32>, %arg14: memref<1x128x128xf32>, %arg15: memref<1x128x128xf32>, %arg16: memref<1x128x128xf32>, %arg17: memref<1x128x128xf32>, %arg18: memref<1x128x128xf32>, %arg19: memref<1x128x128xf32>, %arg20: memref<1x128x128xf32>, %arg21: memref<1x128x128xf32>) -> (memref<1x128x128xf32>, memref<1x128x128xf32>) attributes {__byteir_elementwise_fusion__} {
+func.func @withApply(%arg0: memref<128x128xf32>, %arg1: memref<128xf32>, %arg2: memref<1x128x128xf32>, %arg3: memref<1x128x128xf32>, %arg4: memref<1x128x128xf32>, %arg5: memref<1x128x128xf32>, %arg6: memref<1x128x128xf32>, %arg7: memref<1x128x128xf32>, %arg8: memref<1x128x128xf32>, %arg9: memref<1x128x128xf32>, %arg10: memref<1x128x128xf32>, %arg11: memref<1x128x128xf32>, %arg12: memref<1x128x128xf32>, %arg13: memref<1x128x128xf32>, %arg14: memref<1x128x128xf32>, %arg15: memref<1x128x128xf32>, %arg16: memref<1x128x128xf32>, %arg17: memref<1x128x128xf32>, %arg18: memref<1x128x128xf32>, %arg19: memref<1x128x128xf32>, %arg20: memref<1x128x128xf32>, %arg21: memref<1x128x128xf32>) -> (memref<1x128x128xf32>, memref<1x128x128xf32>) attributes {__byteir_elementwise_fusion__} {
   %0 = memref.expand_shape %arg0 [[0, 1], [2]] : memref<128x128xf32> into memref<1x128x128xf32>
   %1 = memref.alloc() : memref<1x128x128xf32>
   affine.for %arg22 = 0 to 16384 {

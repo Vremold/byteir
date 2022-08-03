@@ -16,8 +16,8 @@ add_mlir_dialect_library(ByteIRMemRefPasses
   LINK_LIBS PUBLIC
   ByteIRUtils
   MLIRIR
-  MLIRAffine
-  MLIRMemRef
+  MLIRAffineDialect
+  MLIRMemRefDialect
   MLIRMemRefTransforms
   MLIRSupport
   )

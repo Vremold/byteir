@@ -13,8 +13,8 @@
 #include "mlir/Dialect/Affine/LoopUtils.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/GPU/GPUDialect.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -181,7 +181,7 @@ struct CoalescedForToGPULaunchPass
   }
 
   void runOnOperation() final {
-    FuncOp f = getOperation();
+    func::FuncOp f = getOperation();
 
     for (Operation &op : llvm::make_early_inc_range(f.getOps())) {
       if (auto forOp = dyn_cast<AffineForOp>(&op)) {
@@ -195,7 +195,7 @@ struct CoalescedForToGPULaunchPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createCoalescedForToGPULaunchPass(int64_t bSize) {
   return std::make_unique<CoalescedForToGPULaunchPass>(bSize);
 }

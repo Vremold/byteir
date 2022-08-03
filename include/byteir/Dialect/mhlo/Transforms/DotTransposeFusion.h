@@ -12,10 +12,13 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateDotTransposeFusionPattern(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createDotTransposeFusionPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createDotTransposeFusionPass();
 
 } // namespace mlir
 

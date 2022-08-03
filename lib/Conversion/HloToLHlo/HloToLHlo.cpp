@@ -11,7 +11,9 @@
 #include "mlir-hlo/Dialect/lhlo/transforms/map_hlo_to_lhlo_op.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Bufferization/Transforms/Bufferize.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
 #include "mlir/Dialect/Func/Transforms/FuncConversions.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
@@ -34,8 +36,6 @@ namespace mhlo {
     using Type = lmhlo::OpName;                                                \
   }
 
-MAP_HLO_TO_LHLO(BatchNormGradOp);
-MAP_HLO_TO_LHLO(BatchNormTrainingOp);
 MAP_HLO_TO_LHLO(ReverseOp);
 
 MAP_HLO_TO_LHLO(AllReduceOp);
@@ -95,7 +95,7 @@ Value InsertDynamicAlloc(Location loc, Type result_type, Operation *def_op,
     Value alloc_operand =
         rewriter->create<tensor::ExtractOp>(loc, shape_operand, index);
     if (!alloc_operand.getType().isIndex()) {
-      alloc_operand = rewriter->create<IndexCastOp>(
+      alloc_operand = rewriter->create<arith::IndexCastOp>(
           loc, rewriter->getIndexType(), alloc_operand);
     }
     dynamic_operands.push_back(alloc_operand);
@@ -251,10 +251,11 @@ public:
         loc, llvm::None, buffer_args, op->getAttrs());
 
     // Copy over the operations inside the region.
-    rewriter.inlineRegionBefore(op.body(), new_op.body(), new_op.body().end());
+    rewriter.inlineRegionBefore(op.body(), new_op.getBody(),
+                                new_op.getBody().end());
 
     // Convert the region signature to memref and add extra result.
-    auto &entry_block = new_op.body().front();
+    auto &entry_block = new_op.getBody().front();
     TypeConverter::SignatureConversion sig_conversion(operands.size());
     for (auto arg : entry_block.getArguments()) {
       auto old_type = arg.getType().cast<TensorType>();
@@ -280,7 +281,7 @@ public:
       sig_conversion.addInputs({MemRefType::get(result_type.getShape(),
                                                 result_type.getElementType())});
     }
-    rewriter.applySignatureConversion(&new_op.body(), sig_conversion);
+    rewriter.applySignatureConversion(&new_op.getBody(), sig_conversion);
 
     rewriter.replaceOp(op, ArrayRef<Value>(buffer_args).slice(operands.size()));
 
@@ -389,8 +390,7 @@ public:
     // non-support op lowering here
     // They are typically mhlo op without lmhlo counterpart
     // Those ops should be hanndled in TrivialFusion by wrapping with calls
-    target.addLegalOp<mhlo::RngBitGeneratorOp, mhlo::RngNormalOp,
-                      mhlo::RngUniformOp>();
+    target.addLegalOp<mhlo::RngBitGeneratorOp, mhlo::RngOp>();
 
     // LWC: lmhlo::ScatterOp's body allow mhlo
     target.addDynamicallyLegalDialect<mhlo::MhloDialect>([&](Operation *op) {
@@ -411,8 +411,8 @@ public:
 
     bufferization::BufferizeTypeConverter converter;
     auto isMemRefType = [](Type type) { return type.isa<BaseMemRefType>(); };
-    target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
-      return converter.isSignatureLegal(op.getType()) &&
+    target.addDynamicallyLegalOp<func::FuncOp>([&](func::FuncOp op) {
+      return converter.isSignatureLegal(op.getFunctionType()) &&
              converter.isLegal(&op.getBody());
     });
     target.addDynamicallyLegalOp<func::CallOp>([&](func::CallOp op) {
@@ -426,13 +426,13 @@ public:
                          isMemRefType);
     });
 
-    populateHLOToLHLOConversionPattern(&context, &converter, &patterns);
+    populateHloToLhloConversionPattern(&context, &converter, &patterns);
 
     populateHLOToLHLOConversionPatternExtension(&context, &converter,
                                                 &patterns);
 
-    populateFunctionOpInterfaceTypeConversionPattern<FuncOp>(patterns,
-                                                             converter);
+    populateFunctionOpInterfaceTypeConversionPattern<func::FuncOp>(patterns,
+                                                                   converter);
     populateCallOpTypeConversionPattern(patterns, converter);
     populateBranchOpInterfaceTypeConversionPattern(patterns, converter);
     populateReturnOpTypeConversionPattern(patterns, converter);
@@ -456,9 +456,7 @@ void mlir::populateHLOToLHLOConversionPatternExtension(
     MLIRContext *context, bufferization::BufferizeTypeConverter *converter,
     RewritePatternSet *patterns) {
 
-  patterns->insert<HloToLhloOpConverterLocal<mhlo::BatchNormGradOp>,
-                   HloToLhloOpConverterLocal<mhlo::BatchNormTrainingOp>,
-                   HloToLhloOpConverterLocal<mhlo::ReverseOp>,
+  patterns->insert<HloToLhloOpConverterLocal<mhlo::ReverseOp>,
                    HloToLhloOpConverterLocal<mhlo::ClampOp>,
                    HloToLhloOpWithHloRegionsConverter<mhlo::AllReduceOp>,
                    HloToLhloOpWithHloRegionsConverter<mhlo::MapOp>,

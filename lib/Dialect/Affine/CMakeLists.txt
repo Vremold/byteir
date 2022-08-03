@@ -10,14 +10,14 @@ add_mlir_dialect_library(ByteIRAffinePasses
   DEPENDS
   ByteIRAffinePassIncGen
   ByteIRUtils
-  MLIRAffine
-  MLIRMemRef
+  MLIRAffineDialect
+  MLIRMemRefDialect
 
   LINK_LIBS PUBLIC
   ByteIRUtils
   MLIRIR
-  MLIRAffine
-  MLIRMemRef
+  MLIRAffineDialect
+  MLIRMemRefDialect
   MLIRSideEffectInterfaces
   MLIRSupport
   )

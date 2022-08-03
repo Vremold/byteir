@@ -13,8 +13,12 @@
 #include <string>
 
 namespace mlir {
+class ModuleOp;
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>> createGenPTXConfigPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createGenPTXConfigPass();
 
 // TODO move to general GPU
 std::unique_ptr<OperationPass<ModuleOp>>

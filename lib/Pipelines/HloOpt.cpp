@@ -10,6 +10,7 @@
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
@@ -37,13 +38,13 @@ struct HloOptPipelinePass : public HloOptPipelineBase<HloOptPipelinePass> {
     addCleanUpPassPipeline(pm);
 
     // generic folding
-    pm.addNestedPass<FuncOp>(createHloFolderPass());
-    pm.addNestedPass<FuncOp>(createHloFolderPass());
-    pm.addNestedPass<FuncOp>(createHloTransposeDotToDotGeneralPass());
-    pm.addNestedPass<FuncOp>(createReduceFusionPass());
+    pm.addNestedPass<func::FuncOp>(createHloFolderPass());
+    pm.addNestedPass<func::FuncOp>(createHloFolderPass());
+    pm.addNestedPass<func::FuncOp>(createHloTransposeDotToDotGeneralPass());
+    pm.addNestedPass<func::FuncOp>(createReduceFusionPass());
 
     // rewrite with constraint
-    pm.addNestedPass<FuncOp>(createRewriteWithConstraintPass());
+    pm.addNestedPass<func::FuncOp>(createRewriteWithConstraintPass());
 
     addCleanUpPassPipeline(pm);
 
@@ -63,24 +64,25 @@ void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
                                        bool outlineSingleElemwiseOp) {
 
   // cluster constraint
-  pm.addNestedPass<FuncOp>(createClusterConstraintPass());
+  pm.addNestedPass<func::FuncOp>(createClusterConstraintPass());
   pm.addPass(createFusionOutliningPass());
 
   // Fusion passes
-  pm.addNestedPass<FuncOp>(createConvBackwardFusionPass());
-  pm.addNestedPass<FuncOp>(createIOConvertFusionPass());
-  pm.addNestedPass<FuncOp>(createDotTransposeFusionPass());
+  pm.addNestedPass<func::FuncOp>(createConvBackwardFusionPass());
+  pm.addNestedPass<func::FuncOp>(createIOConvertFusionPass());
+  pm.addNestedPass<func::FuncOp>(createDotTransposeFusionPass());
 
   // expand tuple
-  pm.addPass(CreateExpandHloTuplesPass(entry));
+  pm.addPass(createExpandHloTuplesPass(entry));
   pm.addPass(createCSEPass());
-  pm.addNestedPass<FuncOp>(createFlattenTuplePass());
+  pm.addNestedPass<func::FuncOp>(createFlattenTuplePass());
 
   // Element fusion (always last?)
   // Note: if outlineSingleElemwiseOp is set, element fusion must be the last
   // pass, since it will cluster every elemenwise op which is not fused yet into
   // the mhlo.fusion and outline it as an independent function later
-  pm.addNestedPass<FuncOp>(createElementFusionPass(outlineSingleElemwiseOp));
+  pm.addNestedPass<func::FuncOp>(
+      createElementFusionPass(outlineSingleElemwiseOp));
   pm.addPass(createFusionOutliningPass());
   pm.addPass(createCSEPass());
 }

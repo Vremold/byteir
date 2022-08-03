@@ -12,8 +12,8 @@ add_mlir_dialect_library(ByteIRSCFPasses
   LINK_LIBS PUBLIC
   ByteIRUtils
   MLIRIR
-  MLIRMemRef
-  MLIRSCF
+  MLIRMemRefDialect
+  MLIRSCFDialect
   MLIRSideEffectInterfaces
   MLIRSupport
   )

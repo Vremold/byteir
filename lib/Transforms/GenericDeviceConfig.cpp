@@ -8,7 +8,9 @@
 #include "byteir/Transforms/GenericDeviceConfig.h"
 #include "./PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "llvm/ADT/SmallVector.h"
 
 using namespace mlir;
@@ -17,7 +19,8 @@ using namespace llvm;
 
 namespace {
 
-static void AddGenericFuncAttrs(FuncOp func, const std::string &computeName) {
+static void AddGenericFuncAttrs(func::FuncOp func,
+                                const std::string &computeName) {
   mlir::OpBuilder opBuilder(func);
 
   func->setAttr(getByrePrefix() + "kernel_name",
@@ -66,7 +69,7 @@ struct GenericDeviceConfigPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createGenericDeviceConfigPass(llvm::StringRef anchorTag,
                                     llvm::StringRef computeName) {
   return std::make_unique<GenericDeviceConfigPass>(anchorTag.str(),

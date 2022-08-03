@@ -12,10 +12,13 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateFuseConvBiasActPatterns(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createConvBiasActFusionPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createConvBiasActFusionPass();
 
 } // namespace mlir
 

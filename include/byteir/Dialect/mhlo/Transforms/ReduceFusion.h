@@ -14,6 +14,9 @@
 #include <string>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 constexpr StringRef getByteIRReduceFusionAttrName() {
   return "__byteir_reduce_fusion__";
@@ -22,7 +25,7 @@ constexpr StringRef getByteIRReduceFusionAttrName() {
 // fuse ReduceWindow with Pad and/or Constant
 void populateFuseReduceWindowPatterns(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createReduceFusionPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createReduceFusionPass();
 
 } // namespace mlir
 

@@ -16,10 +16,12 @@
 
 namespace byteir {
 struct ArgSideEffectAnalysis;
-}
+} // namespace byteir
 
 namespace mlir {
+namespace func {
 class FuncOp;
+} // namespace func
 class ModuleOp;
 
 // Set all memref to a space including intermediate and args
@@ -44,7 +46,7 @@ std::unique_ptr<OperationPass<ModuleOp>> createSetArgSpacePass(
     byteir::ArgSideEffectAnalysis *analysis = nullptr);
 
 // Set space for all ops
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createSetOpSpacePass(const std::string &entryFunc = "",
                      const std::string &Space = "");
 

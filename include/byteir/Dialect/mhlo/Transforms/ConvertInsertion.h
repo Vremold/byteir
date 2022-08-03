@@ -8,6 +8,7 @@
 #ifndef BYTEIR_DIALECT_MHLO_TRANSFORMS_CONVERTINSERTION_H
 #define BYTEIR_DIALECT_MHLO_TRANSFORMS_CONVERTINSERTION_H
 
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Pass/Pass.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/Optional.h"
@@ -20,6 +21,7 @@ namespace mlir {
 class Operation;
 class Value;
 class TensorType;
+class ModuleOp;
 
 // abstract struct for convert rule
 struct ConvertRuleBase {
@@ -28,7 +30,7 @@ struct ConvertRuleBase {
   virtual ~ConvertRuleBase() {}
 
   // default all function
-  virtual bool checkFunc(FuncOp) { return true; }
+  virtual bool checkFunc(func::FuncOp) { return true; }
 
   virtual llvm::Optional<mlir::TensorType> checkType(mlir::Type) = 0;
 };
@@ -42,7 +44,7 @@ struct ConvertOnlyCheckElementType : public ConvertRuleBase {
 
   virtual ~ConvertOnlyCheckElementType() {}
 
-  virtual bool checkFunc(FuncOp) override;
+  virtual bool checkFunc(func::FuncOp) override;
   llvm::Optional<mlir::TensorType> checkType(mlir::Type) override;
 
   // convert element type from first to second

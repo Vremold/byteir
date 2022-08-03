@@ -1,6 +1,6 @@
 // RUN: byteir-opt %s --mhlo-test-unfuse-batch-norm --hlo-fold | FileCheck %s
 
-func @conv_bn_inference(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
+func.func @conv_bn_inference(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
   %weight = mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]> : tensor<1x1x1x2xf32>
   %scale = mhlo.constant dense<[2.000000e+00, 1.000000e+00]> : tensor<2xf32>
   %offset = mhlo.constant dense<[1.000000e+00, 2.000000e+00]> : tensor<2xf32>
@@ -10,7 +10,7 @@ func @conv_bn_inference(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
   %bn = "mhlo.batch_norm_inference"(%conv, %scale, %offset, %mean, %variance) {epsilon = 1.001000e-05 : f32, feature_index = 1 : i64} : (tensor<1x2x2x2xf32>, tensor<2xf32>, tensor<2xf32>, tensor<2xf32>, tensor<2xf32>) -> tensor<1x2x2x2xf32>
   return %bn : tensor<1x2x2x2xf32>
 }
-// CHECK-LABEL: func @conv_bn_inference
+// CHECK-LABEL: func.func @conv_bn_inference
 // CHECK-DAG{LITERAL}:  mhlo.constant dense<[-2.999980e+00, 1.29289508]>
 // CHECK-DAG{LITERAL}:  mhlo.constant dense<[[[[1.999990e+00, 1.414210e+00]]]]>
 // CHECK-NEXT:  mhlo.convolution

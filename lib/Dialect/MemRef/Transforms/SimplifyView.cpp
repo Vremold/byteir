@@ -9,6 +9,7 @@
 #include "PassDetail.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/MemRef/Transforms/ComposeSubView.h"
 #include "mlir/IR/Builders.h"
@@ -253,7 +254,7 @@ struct SimplifyViewPass : public SimplifyViewBase<SimplifyViewPass> {
 public:
   SimplifyViewPass() = default;
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
     populateSimplifyViewPattern(patterns);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
@@ -272,6 +273,6 @@ void mlir::populateSimplifyViewPattern(RewritePatternSet &patterns) {
           patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createSimplifyViewPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createSimplifyViewPass() {
   return std::make_unique<SimplifyViewPass>();
 }

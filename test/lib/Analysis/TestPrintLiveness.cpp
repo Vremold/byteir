@@ -14,6 +14,7 @@ limitations under the License.
 ==============================================================================*/
 
 #include "byteir/Analysis/Liveness.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Pass/Pass.h"
 
 using namespace mlir;
@@ -22,7 +23,7 @@ using namespace byteir;
 namespace {
 
 struct TestPrintLivenessPass
-    : public PassWrapper<TestPrintLivenessPass, OperationPass<FuncOp>> {
+    : public PassWrapper<TestPrintLivenessPass, OperationPass<func::FuncOp>> {
   StringRef getArgument() const final { return "test-print-liveness"; }
   StringRef getDescription() const final {
     return "Print the contents of a constructed liveness information.";

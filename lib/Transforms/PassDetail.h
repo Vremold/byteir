@@ -8,10 +8,12 @@
 #ifndef BYTEIR_TRANSFORMS_PASSDETAIL_H
 #define BYTEIR_TRANSFORMS_PASSDETAIL_H
 
+#include "mlir/IR/DialectRegistry.h"
 #include "mlir/Pass/Pass.h"
 
 // forward dialects for conversions
 namespace mlir {
+class ModuleOp;
 class AffineDialect;
 
 namespace cf {
@@ -20,6 +22,7 @@ class ControlFlowDialect;
 
 namespace func {
 class FuncDialect;
+class FuncOp;
 } // namespace func
 
 namespace memref {

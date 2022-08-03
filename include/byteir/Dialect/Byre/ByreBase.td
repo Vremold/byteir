@@ -14,6 +14,7 @@
 #define BYRE_BASE
 
 include "mlir/IR/OpBase.td"
+include "mlir/IR/EnumAttr.td"
 
 //===----------------------------------------------------------------------===//
 // Byre Dialect.
@@ -23,6 +24,7 @@ def Byre_Dialect : Dialect {
   let name = "byre";
   let cppNamespace = "::mlir::byre";
   let hasOperationAttrVerify = 1;
+  let useDefaultTypePrinterParser = 0;
 
   let extraClassDeclaration = [{
     /// Get the name of the attribute used to annotate the modules that contain
@@ -50,6 +52,11 @@ def Byre_Dialect : Dialect {
     static StringRef getEntryPointFuncResultAttrsName() {
       return "byre.result_attrs";
     }
+
+    ::mlir::Type parseType(::mlir::DialectAsmParser &parser) const override;
+
+    void printType(::mlir::Type type,
+                    ::mlir::DialectAsmPrinter &printer) const override;
   }];
 }
 
@@ -125,12 +132,12 @@ def ByreInterface : OpInterface<"ByreOp"> {
 
 }
 
-def Byre_ArgType_None: BitEnumAttrCase<"None", 0x0000>;
-def Byre_ArgType_Input: BitEnumAttrCase<"Input", 0x0001>;
-def Byre_ArgType_Output: BitEnumAttrCase<"Output", 0x0002>;
-def Byre_ArgType_Weight: BitEnumAttrCase<"Weight", 0x0004>;
+def Byre_ArgType_None : I32BitEnumAttrCaseNone<"None">;            // 0
+def Byre_ArgType_Input : I32BitEnumAttrCaseBit<"Input", 0x0000>;   // 1
+def Byre_ArgType_Output : I32BitEnumAttrCaseBit<"Output", 0x0001>; // 2
+def Byre_ArgType_Weight : I32BitEnumAttrCaseBit<"Weight", 0x0002>; // 4
 
-def Byre_ArgTypeAttr: BitEnumAttr<
+def Byre_ArgTypeAttr : I32BitEnumAttr<
     "EntryFuncArgType",
     "entry function argument type", [
         Byre_ArgType_None,

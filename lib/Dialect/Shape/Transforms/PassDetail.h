@@ -8,6 +8,7 @@
 #ifndef BYTEIR_DIALECT_SHAPE_TRANSFORMS_PASSDETAIL_H
 #define BYTEIR_DIALECT_SHAPE_TRANSFORMS_PASSDETAIL_H
 
+#include "mlir/IR/DialectRegistry.h"
 #include "mlir/Pass/Pass.h"
 
 // forward dialects for conversions

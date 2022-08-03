@@ -15,10 +15,10 @@ add_byteir_conversion_library(ByteIRGPUToNVVM
   MLIRGPUToGPURuntimeTransforms
   MLIRGPUToNVVMTransforms
   MLIRLLVMCommonConversion
-  MLIRLLVMIR
-  MLIRMemRef
+  MLIRLLVMDialect
+  MLIRMemRefDialect
   MLIRMemRefToLLVM
-  MLIRNVVMIR
+  MLIRNVVMDialect
   MLIRPass
   MLIRTransformUtils
   )

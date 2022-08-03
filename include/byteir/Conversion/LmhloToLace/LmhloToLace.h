@@ -12,10 +12,13 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateLmhloToLacePattern(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createLmhloToLacePass();
+std::unique_ptr<OperationPass<func::FuncOp>> createLmhloToLacePass();
 
 } // namespace mlir
 

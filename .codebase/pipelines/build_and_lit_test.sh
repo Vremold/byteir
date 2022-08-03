@@ -8,7 +8,7 @@ export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
 git submodule update --init --recursive
 unset http_proxy; unset https_proxy
 
-LLVM_BUILD="llvm_install_8361c5da30588d3d4a48eae648f53be1feb5cfad.tar.gz"
+LLVM_BUILD="llvm_install_439668871ac992159f00309d3bd837db287bdea6.tar.gz"
 if [ ! -f "$LLVM_BUILD" ]; then
   rm -rf llvm_install*
   rm -rf llvm_build

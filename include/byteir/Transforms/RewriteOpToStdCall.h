@@ -14,6 +14,7 @@
 #include <unordered_map>
 
 namespace mlir {
+class ModuleOp;
 
 using CallTable = std::unordered_map<std::string, std::string>;
 

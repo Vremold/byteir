@@ -11,6 +11,7 @@
 #include "mlir/Dialect/Affine/Analysis/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/LoopFusionUtils.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Dominance.h"
 #include <utility>
@@ -43,7 +44,7 @@ bool IsHoistUpOp(Operation *op) {
              memref::ExpandShapeOp, memref::ReshapeOp>(op);
 }
 
-void collectAffineLopps(FuncOp funcOp,
+void collectAffineLopps(func::FuncOp funcOp,
                         SmallVector<AffineForOp> &loop_collector) {
 
   for (auto &block : funcOp.getBody()) {
@@ -69,7 +70,7 @@ void UpdateComputationSliceState(mlir::ComputationSliceState &sliceUnion,
   sliceUnion.ubs[0] = AffineMap::get(1, 0, result, ctx);
 }
 
-void fuseAffineLoopEx(FuncOp funcOp, ArrayRef<AffineForOp> loops) {
+void fuseAffineLoopEx(func::FuncOp funcOp, ArrayRef<AffineForOp> loops) {
   // early return if only 1 or 0 loop
   if (loops.size() <= 1)
     return;
@@ -98,7 +99,7 @@ struct AffineLoopFusionExPass
     anchorTag = anchor;
   }
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
 
     if (!anchorTag.empty() && !funcOp->hasAttrOfType<UnitAttr>(anchorTag))
       return;
@@ -119,7 +120,7 @@ struct AffineLoopFusionExPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createAffineLoopFusionExPass(const std::string &anchor) {
   return std::make_unique<AffineLoopFusionExPass>(anchor);
 }

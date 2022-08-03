@@ -26,12 +26,12 @@ struct ConvertReshape : public OpConversionPattern<lmhlo::ReshapeOp> {
   matchAndRewrite(lmhlo::ReshapeOp op, lmhlo::ReshapeOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     // handles static shape only
-    auto allocOp = adaptor.output().getDefiningOp<memref::AllocOp>();
+    auto allocOp = adaptor.getOutput().getDefiningOp<memref::AllocOp>();
     if (!allocOp)
       return failure();
 
     auto newReshapeOp = rewriter.create<lace::ReshapeOp>(
-        op.getLoc(), adaptor.output().getType(), adaptor.operand());
+        op.getLoc(), adaptor.getOutput().getType(), adaptor.getOperand());
     rewriter.replaceOp(allocOp, newReshapeOp.getResult());
     rewriter.eraseOp(op);
 
@@ -46,19 +46,19 @@ struct ConvertSlice : public OpConversionPattern<lmhlo::SliceOp> {
   LogicalResult
   matchAndRewrite(lmhlo::SliceOp op, lmhlo::SliceOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    auto allocOp = adaptor.output().getDefiningOp<memref::AllocOp>();
+    auto allocOp = adaptor.getOutput().getDefiningOp<memref::AllocOp>();
     if (!allocOp)
       return failure();
 
     SmallVector<int64_t> startIndices, limitIndices, strides;
-    getValuesFromDenseIntElementsAttr(op.start_indices(), startIndices);
-    getValuesFromDenseIntElementsAttr(op.limit_indices(), limitIndices);
-    getValuesFromDenseIntElementsAttr(op.strides(), strides);
+    getValuesFromDenseIntElementsAttr(op.getStartIndices(), startIndices);
+    getValuesFromDenseIntElementsAttr(op.getLimitIndices(), limitIndices);
+    getValuesFromDenseIntElementsAttr(op.getStrides(), strides);
 
     auto srcMemRefType =
-        adaptor.operand().getType().dyn_cast_or_null<MemRefType>();
+        adaptor.getOperand().getType().dyn_cast_or_null<MemRefType>();
     auto dstMemRefType =
-        adaptor.output().getType().dyn_cast_or_null<MemRefType>();
+        adaptor.getOutput().getType().dyn_cast_or_null<MemRefType>();
 
     if (!srcMemRefType || !dstMemRefType)
       return failure();
@@ -68,8 +68,8 @@ struct ConvertSlice : public OpConversionPattern<lmhlo::SliceOp> {
       return failure();
 
     auto newSliceOp = rewriter.create<lace::SliceOp>(
-        op.getLoc(), adaptor.output().getType(), adaptor.operand(),
-        op.start_indices(), op.limit_indices(), op.strides());
+        op.getLoc(), adaptor.getOutput().getType(), adaptor.getOperand(),
+        op.getStartIndices(), op.getLimitIndices(), op.getStrides());
     rewriter.replaceOp(allocOp, newSliceOp.getResult());
     rewriter.eraseOp(op);
 
@@ -102,6 +102,6 @@ void mlir::populateLmhloToLacePattern(RewritePatternSet &patterns) {
   patterns.add<ConvertReshape, ConvertSlice>(patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createLmhloToLacePass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createLmhloToLacePass() {
   return std::make_unique<LmhloToLacePass>();
 }

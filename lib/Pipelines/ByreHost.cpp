@@ -10,6 +10,8 @@
 #include "./PassDetail.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Transforms/Passes.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/PassManager.h"
 #include <string>
 
@@ -42,7 +44,7 @@ struct ByreHostPipelinePass
     // currently use SetOpSpace + SetArgSpace to specify space here
     // TODO: later move to GPUOpt after general copy finish
     if (!target.empty()) {
-      pm.addNestedPass<FuncOp>(createSetOpSpacePass(entryFunc, target));
+      pm.addNestedPass<func::FuncOp>(createSetOpSpacePass(entryFunc, target));
       pm.addPass(createSetArgSpacePass(entryFunc, target, true));
     }
 

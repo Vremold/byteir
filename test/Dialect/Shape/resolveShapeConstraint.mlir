@@ -1,6 +1,6 @@
 // RUN: byteir-opt %s -resolve-shape-constraint | FileCheck %s
 
-func @meet_const(%arg0 : tensor<?x4xf32>, %arg1 : tensor<?x4xf32>) -> tensor<?x4xf32> {
+func.func @meet_const(%arg0 : tensor<?x4xf32>, %arg1 : tensor<?x4xf32>) -> tensor<?x4xf32> {
   %0 = shape.shape_of %arg0 : tensor<?x4xf32> -> tensor<2xindex>
   %a = shape.value_as_shape %0 : tensor<2xindex> -> !shape.shape
   %1 = shape.shape_of %arg1 : tensor<?x4xf32> -> tensor<2xindex>
@@ -19,7 +19,7 @@ func @meet_const(%arg0 : tensor<?x4xf32>, %arg1 : tensor<?x4xf32>) -> tensor<?x4
 // CHECK-NEXT: %0 = "mhlo.concatenate"(%arg0, %arg1) {dimension = 0 : i64} : (tensor<?x4xf32>, tensor<?x4xf32>) -> tensor<1024x4xf32>
 // CHECK-NEXT: return %0 : tensor<1024x4xf32>
 
-func @einsum_shape_constraint(%arg0: tensor<?x2x2xf32>, %arg1: tensor<2x2x3xf32>, %arg2: tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32> {
+func.func @einsum_shape_constraint(%arg0: tensor<?x2x2xf32>, %arg1: tensor<2x2x3xf32>, %arg2: tensor<2x2x2xf32>) -> tensor<2x2x2x3xf32> {
     %c0 = arith.constant 0 : index
     %c2 = arith.constant 2 : index
     %c3 = arith.constant 3 : index

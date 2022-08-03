@@ -45,12 +45,12 @@ struct RemoveFuncBodyPass : public RemoveFuncBodyBase<RemoveFuncBodyPass> {
     }
 
     // remove body
-    f.body().getBlocks().clear();
+    f.getBody().getBlocks().clear();
   }
 };
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createRemoveFuncBodyPass(llvm::StringRef anchorTag,
                                bool disableForcePrivate) {
   return std::make_unique<RemoveFuncBodyPass>(anchorTag.str(),

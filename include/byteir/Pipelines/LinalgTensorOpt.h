@@ -14,6 +14,7 @@
 #include <string>
 
 namespace mlir {
+class ModuleOp;
 
 void addGenericLinalgElementwisePasses(OpPassManager &pm);
 

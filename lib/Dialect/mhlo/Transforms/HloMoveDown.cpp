@@ -15,6 +15,7 @@
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -117,9 +118,9 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       // create all const and put into bvm
       for (auto input : constInputs) {
         ElementsAttr oldConstAttr =
-            input.getDefiningOp<mhlo::ConstOp>().value();
+            input.getDefiningOp<mhlo::ConstantOp>().value();
         auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
-        auto newConstOp = rewriter.create<mhlo::ConstOp>(
+        auto newConstOp = rewriter.create<mhlo::ConstantOp>(
             op->getLoc(), newConstAttr.getValue());
         bvm.map(input, newConstOp.output());
       }
@@ -227,9 +228,9 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       // create all const and put into bvm
       for (auto input : constInputs) {
         ElementsAttr oldConstAttr =
-            input.getDefiningOp<mhlo::ConstOp>().value();
+            input.getDefiningOp<mhlo::ConstantOp>().value();
         auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
-        auto newConstOp = rewriter.create<mhlo::ConstOp>(
+        auto newConstOp = rewriter.create<mhlo::ConstantOp>(
             op->getLoc(), newConstAttr.getValue());
         bvm.map(input, newConstOp.output());
       }
@@ -338,9 +339,9 @@ struct BroadcastMoveDownPattern
       // create all const and put into bvm
       for (auto input : constInputs) {
         ElementsAttr oldConstAttr =
-            input.getDefiningOp<mhlo::ConstOp>().value();
+            input.getDefiningOp<mhlo::ConstantOp>().value();
         auto newConstAttr = cloneSplatElementsAttr(oldConstAttr, operandType);
-        auto newConstOp = rewriter.create<mhlo::ConstOp>(
+        auto newConstOp = rewriter.create<mhlo::ConstantOp>(
             op->getLoc(), newConstAttr.getValue());
         bvm.map(input, newConstOp.output());
       }
@@ -840,7 +841,7 @@ struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
   }
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
 
     // add pattern
@@ -868,7 +869,7 @@ void mlir::populateHloMoveDownPattern(RewritePatternSet &patterns,
       patterns.getContext(), blocker, allMultiUser, multiUser);
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createHloMoveDownPass(bool allMultiUser, bool multiUser) {
   return std::make_unique<HloMoveDownPass>(allMultiUser, multiUser);
 }

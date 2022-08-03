@@ -13,8 +13,12 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>> createConvertUnregisteredToAcePass();
+std::unique_ptr<OperationPass<func::FuncOp>>
+createConvertUnregisteredToAcePass();
 
 } // namespace mlir
 

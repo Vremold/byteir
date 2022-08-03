@@ -13,6 +13,7 @@
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
@@ -109,7 +110,7 @@ struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
   IOConvertFusionPass() : IOConvertFusionBase() {}
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
 
     RewritePatternSet patterns(context);
@@ -130,6 +131,6 @@ void mlir::populateIOConvertBatchNormPattern(RewritePatternSet &patterns) {
       patterns.getContext(), "BatchNormGradOp");
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createIOConvertFusionPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createIOConvertFusionPass() {
   return std::make_unique<IOConvertFusionPass>();
 }

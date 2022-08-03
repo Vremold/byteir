@@ -14,12 +14,15 @@
 #include <string>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createAnchoredFuncPipelinePass(llvm::StringRef anchorTag,
                                OpPassManager &otherPM);
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createAnchoredFuncPipelinePass(llvm::StringRef anchorTag = "");
 
 } // namespace mlir

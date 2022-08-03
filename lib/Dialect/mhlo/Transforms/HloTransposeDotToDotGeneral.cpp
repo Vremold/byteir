@@ -10,6 +10,7 @@
 #include "PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
@@ -59,7 +60,7 @@ struct HloTransposeDotToDotGeneralPass
     : public HloTransposeDotToDotGeneralBase<HloTransposeDotToDotGeneralPass> {
   HloTransposeDotToDotGeneralPass() = default;
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateHloTransposeDotToDotGeneralPattern(patterns);
@@ -79,7 +80,7 @@ void mlir::populateHloTransposeDotToDotGeneralPattern(
       patterns.getContext()));
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createHloTransposeDotToDotGeneralPass() {
   return std::make_unique<HloTransposeDotToDotGeneralPass>();
 }

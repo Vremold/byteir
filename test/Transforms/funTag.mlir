@@ -6,18 +6,18 @@
 // RUN: byteir-opt %s -func-tag="anchor-attr=testAnchor attach-attr=testAttr" | FileCheck %s -check-prefix=ANCHOR
 
 
-func @test() {
+func.func @test() {
     return
 }
-// DEFAULT: func @test() attributes {testAttr}
-// UNIT: func @test() attributes {testAttr}
-// STRING: func @test() attributes {testAttr = "test"}
-// I32: func @test() attributes {testAttr = 5 : i32}
-// F32: func @test() attributes {testAttr = 2.500000e+00 : f32}
-// ANCHOR: func @test()
+// DEFAULT: func.func @test() attributes {testAttr}
+// UNIT: func.func @test() attributes {testAttr}
+// STRING: func.func @test() attributes {testAttr = "test"}
+// I32: func.func @test() attributes {testAttr = 5 : i32}
+// F32: func.func @test() attributes {testAttr = 2.500000e+00 : f32}
+// ANCHOR: func.func @test()
 
-func @test2() attributes {testAnchor} {
+func.func @test2() attributes {testAnchor} {
     return
 }
-// ANCHOR: func @test2() attributes {testAnchor, testAttr}
+// ANCHOR: func.func @test2() attributes {testAnchor, testAttr}
 

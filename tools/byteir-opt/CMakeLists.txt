@@ -36,6 +36,8 @@ set(MHLO_LIBS
   AllMhloPasses
   LmhloPasses
   MLIRBufferTransforms
+  AllGmlStPasses
+  GmlStDialect
   MLIRHLOAnalysis
   MLIRHLOTestAnalysis
 )

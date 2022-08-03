@@ -14,7 +14,9 @@
 
 namespace mlir {
 class Block;
+namespace func {
 class FuncOp;
+}
 class LoopLikeOpInterface;
 class OpBuilder;
 class Operation;
@@ -74,12 +76,12 @@ llvm::Optional<uint64_t> getConstantTripCount(LoopLikeOpInterface looplike,
 llvm::Optional<uint64_t> getConstantTripCount(scf::ForOp forOp,
                                               int64_t stepMultiplier = 1);
 
-void gatherLoopsWithDepth(FuncOp func, unsigned depth,
+void gatherLoopsWithDepth(func::FuncOp func, unsigned depth,
                           SmallVectorImpl<Operation *> &collector);
 
 // create a scf::ForOp(0, 1, 1) if possible
 // if FuncOp is trivally empty return None.
-llvm::Optional<scf::ForOp> createTrivialSCFForIfHaveNone(FuncOp);
+llvm::Optional<scf::ForOp> createTrivialSCFForIfHaveNone(func::FuncOp);
 
 LogicalResult loopUnrollFull(scf::ForOp forOp);
 

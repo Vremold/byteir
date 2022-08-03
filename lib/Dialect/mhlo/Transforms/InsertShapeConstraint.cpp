@@ -11,6 +11,7 @@
 #include "byteir/Dialect/mhlo/ShapeConstraints/Register.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Pass/Pass.h"
@@ -30,7 +31,7 @@ struct InsertShapeConstraintPass
 
   void runOnOperation() override {
     std::vector<Operation *> ops;
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     funcOp.walk([&](Operation *op) { ops.push_back(op); });
 
     OpBuilder builder(funcOp->getContext());
@@ -55,6 +56,7 @@ struct InsertShapeConstraintPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createInsertShapeConstraintPass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createInsertShapeConstraintPass() {
   return std::make_unique<InsertShapeConstraintPass>();
 }

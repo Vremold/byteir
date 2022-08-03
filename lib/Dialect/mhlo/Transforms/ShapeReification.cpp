@@ -139,7 +139,7 @@ struct ShapeReificationPass
     // iteration.
     GreedyRewriteConfig cfg;
     cfg.useTopDownTraversal = false;
-    FuncOp f = getOperation();
+    func::FuncOp f = getOperation();
     if (failed(applyPatternsAndFoldGreedily(f, std::move(patterns), cfg))) {
       return signalPassFailure();
     }
@@ -148,6 +148,7 @@ struct ShapeReificationPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createShapeReificationPass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createByteIRShapeReificationPass() {
   return std::make_unique<ShapeReificationPass>();
 }

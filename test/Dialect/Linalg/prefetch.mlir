@@ -2,7 +2,7 @@
 // RUN: byteir-opt %s -linalg-prefetch="count=2 unroll" -cse -canonicalize | FileCheck %s -check-prefix=UNROLL
 
 #map = affine_map<(d0, d1)[s0] -> (d0 * 64 + s0 + d1)>
-func @matmul_tiled(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) {
+func.func @matmul_tiled(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) {
   %c0 = arith.constant 0 : index
   %c8 = arith.constant 8 : index
   %c128 = arith.constant 128 : index
@@ -19,7 +19,7 @@ func @matmul_tiled(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: m
   }
   return
 }
-// NOUNROLL-LABEL: func @matmul_tiled
+// NOUNROLL-LABEL: func.func @matmul_tiled
 // NOUNROLL: %[[V0:.*]] = memref.alloc() : memref<8x64xf32, 1>
 // NOUNROLL: %[[V1:.*]] = memref.alloc() : memref<64x64xf32, 2>
 // NOUNROLL: %[[V2:.*]] = memref.alloc() : memref<8x64xf32, 3>
@@ -42,7 +42,7 @@ func @matmul_tiled(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: m
 // NOUNROLL:   linalg.copy ins(%[[V5]] : {{.*}}) outs(%[[V0]] : {{.*}})
 // NOUNROLL:   linalg.copy ins(%[[V6]] : {{.*}}) outs(%[[V5]] : {{.*}})
 
-// UNROLL-LABEL: func @matmul_tiled
+// UNROLL-LABEL: func.func @matmul_tiled
 // UNROLL: %[[V0:.*]] = memref.alloc() : memref<8x64xf32, 1>
 // UNROLL: %[[V1:.*]] = memref.alloc() : memref<64x64xf32, 2>
 // UNROLL: %[[V2:.*]] = memref.alloc() : memref<8x64xf32, 3>

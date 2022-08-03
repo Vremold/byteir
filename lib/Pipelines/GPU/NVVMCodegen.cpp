@@ -14,11 +14,13 @@
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/GPU/GPUDialect.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/LLVMIR/NVVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
@@ -39,7 +41,7 @@ struct NVVMCodegenPipelinePass
 
     pm.addPass(createCollectGPUKernelPass());
     pm.addPass(createConvertSCFToCFPass());
-    pm.addPass(createGPUToNVVMExtPass());
+    pm.addNestedPass<gpu::GPUModuleOp>(createGPUToNVVMExtPass());
     pm.addPass(createCSEPass());
     pm.addPass(createReconcileUnrealizedCastsPass());
     addMultiCSEPipeline(pm, 3);

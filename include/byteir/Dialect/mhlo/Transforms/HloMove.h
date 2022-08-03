@@ -15,6 +15,9 @@
 
 namespace mlir {
 class RewritePatternSet;
+namespace func {
+class FuncOp;
+} // namespace func
 
 // Note MoveDown and MoveUp are mutual exclusive
 // in an applyPatternsAndFoldGreedily pass.
@@ -31,10 +34,10 @@ void populateHloMoveUpPattern(
     bool multiInput = false);
 
 // TODO add more target or list of op in arg
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createHloMoveDownPass(bool allMultiUser = false, bool multiUser = false);
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createHloMoveUpPass(bool multiInput = false);
 
 } // namespace mlir

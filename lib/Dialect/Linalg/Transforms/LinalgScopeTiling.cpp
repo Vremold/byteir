@@ -13,13 +13,15 @@
 #include "byteir/Utils/Hoist.h"
 #include "byteir/Utils/MemUtils.h"
 #include "byteir/Utils/Utils.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Dialect/Linalg/Transforms/Transforms.h"
 #include "mlir/Dialect/Linalg/Utils/Utils.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/Transforms.h"
+#include "mlir/Dialect/SCF/Transforms/Transforms.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/AffineMap.h"
@@ -178,9 +180,9 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
       SmallVector<Value, 4> tileSizes =
           createTileSize(b, loc, axis, rank, tileSize);
 
-      SmallVector<Value, 4> localTiledOperands =
-          makeTiledShapes(b, loc, linalgOp, valuesToTile, interchangedIvs,
-                          tileSizes, localSizeBounds);
+      SmallVector<Value, 4> localTiledOperands = makeTiledShapes(
+          b, loc, linalgOp, valuesToTile, interchangedIvs, tileSizes,
+          localSizeBounds, /*omitPartialTileCheck=*/false);
 
       SmallVector<Type, 4> resultTensorTypes;
       for (OpOperand *opOperand : linalgOp.getOutputTensorOperands()) {
@@ -264,7 +266,7 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
  */
 static Optional<unsigned> getIterAxis(AffineMap affineMap, unsigned dimIndex) {
   // AffineMap invMap = inversePermutation(affineMap);
-  AffineMap invMap = inverseAndBroadcastProjectedPermuation(affineMap);
+  AffineMap invMap = inverseAndBroadcastProjectedPermutation(affineMap);
   if (invMap.isEmpty())
     return llvm::None;
   auto invComposed =
@@ -316,7 +318,7 @@ static bool isProducerValidforTileScope(
   int64_t numInputs = producer.getNumInputs();
 
   SmallVector<AffineMap> affineMaps = llvm::to_vector<4>(
-      producer.indexing_maps().getAsValueRange<AffineMapAttr>());
+      producer.getIndexingMaps().getAsValueRange<AffineMapAttr>());
 
   if (opToIterAxisAndRank.count(op) == 0) {
     auto producerOutView = producer.outputs()[0];
@@ -370,7 +372,7 @@ static bool isConsumerValidforTileScope(
   }
 
   SmallVector<AffineMap> affineMaps = llvm::to_vector<4>(
-      consumer.indexing_maps().getAsValueRange<AffineMapAttr>());
+      consumer.getIndexingMaps().getAsValueRange<AffineMapAttr>());
   int64_t numInputs = consumer.getNumInputs();
 
   Optional<unsigned> maybeIterAxis = None;
@@ -448,7 +450,7 @@ static void greedilyCreateTilingScopeFromAnchor(TileScope &ts,
   }
 
   SmallVector<AffineMap> affineMaps = llvm::to_vector<4>(
-      anchorOp.indexing_maps().getAsValueRange<AffineMapAttr>());
+      anchorOp.getIndexingMaps().getAsValueRange<AffineMapAttr>());
 
   SmallVector<StringAttr> iterTypes =
       llvm::to_vector<4>(anchorOp.iterator_types().getAsRange<StringAttr>());
@@ -533,7 +535,7 @@ static void greedilyCreateTilingScopeFromAnchor(TileScope &ts,
   }
 }
 
-static void collectTilingScope(FuncOp func, unsigned iterAxis,
+static void collectTilingScope(func::FuncOp func, unsigned iterAxis,
                                SmallVectorImpl<TileScope> &collection) {
 
   SmallSet<Block *, 4> visitedBlocks;
@@ -617,7 +619,7 @@ struct LinalgScopeTilingPass
             .Case("tiled_loop", LinalgScopeTilingLoopType::TiledLoops)
             .Default(loopTypeEnum);
 
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
 
     auto &domInfo = getAnalysis<DominanceInfo>();
     auto &postDomInfo = getAnalysis<PostDominanceInfo>();
@@ -642,7 +644,7 @@ struct LinalgScopeTilingPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createLinalgScopeTilingPass(
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createLinalgScopeTilingPass(
     int64_t tileAxis, int64_t tileSize, bool parallelizeReduction,
     mlir::LinalgScopeTilingLoopType loopType, StringRef distributionType) {
   return std::make_unique<LinalgScopeTilingPass>(

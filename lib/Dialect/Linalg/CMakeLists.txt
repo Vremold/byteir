@@ -1,5 +1,6 @@
 add_mlir_dialect_library(ByteIRLinalgPasses
   Transforms/LinalgDataPlace.cpp
+  Transforms/LinalgFuseReshape.cpp
   Transforms/LinalgPrefetch.cpp
   Transforms/LinalgScopeTiling.cpp
   Transforms/TilingUtils.cpp
@@ -11,15 +12,16 @@ add_mlir_dialect_library(ByteIRLinalgPasses
   DEPENDS
   ByteIRLinalgPassIncGen
   ByteIRUtils
-  MLIRLinalg
+  MLIRLinalgDialect
 
   LINK_LIBS PUBLIC
   ByteIRUtils
   MLIRIR
-  MLIRAffine
-  MLIRTensor
-  MLIRSCF
-  MLIRLinalg
-  MLIRMemRef
+  MLIRAffineDialect
+  MLIRTensorDialect
+  MLIRSCFDialect
+  MLIRLinalgDialect
+  MLIRLinalgTransforms
+  MLIRMemRefDialect
   MLIRSupport
   )

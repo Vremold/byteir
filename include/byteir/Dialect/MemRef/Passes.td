@@ -15,7 +15,7 @@ include "mlir/Pass/PassBase.td"
 // Apply MemRef Affine Layout
 //===----------------------------------------------------------------------===//
 
-def ApplyMemRefAffineLayout : Pass<"apply-memref-affine-layout", "mlir::FuncOp"> {
+def ApplyMemRefAffineLayout : Pass<"apply-memref-affine-layout", "func::FuncOp"> {
   let summary = "Apply applicable MemRef layout to affineMap";
   let constructor = "mlir::createApplyMemRefAffineLayoutPass()";
 }
@@ -25,7 +25,7 @@ def ApplyMemRefAffineLayout : Pass<"apply-memref-affine-layout", "mlir::FuncOp">
 // Reify Alloc (deprecated, using canonicalize instead) 
 //===----------------------------------------------------------------------===//
 
-def ReifyAlloc : Pass<"reify-alloc", "mlir::FuncOp"> {
+def ReifyAlloc : Pass<"reify-alloc", "func::FuncOp"> {
   let summary = "Reify Alloc after constant folding (deprecated using canonicalize instead)";
   let constructor = "mlir::createReifyAllocPass()";
 }
@@ -34,7 +34,7 @@ def ReifyAlloc : Pass<"reify-alloc", "mlir::FuncOp"> {
 // Simplify View
 //===----------------------------------------------------------------------===//
 
-def SimplifyView : Pass<"simplify-view", "mlir::FuncOp"> {
+def SimplifyView : Pass<"simplify-view", "func::FuncOp"> {
   let summary = "Simplify subview and view. Note it might create new affine.apply op if the "
                 "offset of subview is dynamic.";
   let constructor = "mlir::createSimplifyViewPass()";

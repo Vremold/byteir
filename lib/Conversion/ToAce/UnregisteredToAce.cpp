@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/ToAce/UnregisteredToAce.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
 
 #include "../PassDetail.h"
@@ -43,7 +44,7 @@ struct ConvertUnregisteredToAcePass
   ConvertUnregisteredToAcePass() : ConvertUnregisteredToAceBase() {}
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     funcOp.walk([&](mlir::Operation *op) {
       if (!op->getDialect()) {
         WrapUnregisteredOpWithOpaque(op);
@@ -54,7 +55,7 @@ struct ConvertUnregisteredToAcePass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createConvertUnregisteredToAcePass() {
   return std::make_unique<ConvertUnregisteredToAcePass>();
 }

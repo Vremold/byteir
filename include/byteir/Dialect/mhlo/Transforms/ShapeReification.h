@@ -12,8 +12,11 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>> createShapeReificationPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createByteIRShapeReificationPass();
 
 } // namespace mlir
 

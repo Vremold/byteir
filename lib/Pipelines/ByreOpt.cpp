@@ -25,7 +25,7 @@ using namespace mlir::byre;
 namespace {
 bool isLmhloConstant(mlir::Value value) {
   return llvm::any_of(value.getUses(), [&](OpOperand &use) {
-    return llvm::isa<lmhlo::ConstOp>(use.getOwner());
+    return llvm::isa<lmhlo::ConstantOp>(use.getOwner());
   });
 }
 
@@ -51,7 +51,7 @@ struct ByreOptPipelinePass : public ByreOptPipelineBase<ByreOptPipelinePass> {
     pm.addPass(createConvertFuncAndCallToByrePass(appendArgTypes));
 
     // only applied on entry point function
-    OpPassManager anchoredPM(FuncOp::getOperationName());
+    OpPassManager anchoredPM(func::FuncOp::getOperationName());
     anchoredPM.addPass(createLmhloToLacePass());
     anchoredPM.addPass(createCanonicalizerPass());
     if (!disableMemoryPlanning) {
@@ -63,7 +63,7 @@ struct ByreOptPipelinePass : public ByreOptPipelineBase<ByreOptPipelinePass> {
     anchoredPM.addPass(createConvertLmhloToByrePass(appendArgTypes));
     anchoredPM.addPass(createByreFoldPass());
 
-    pm.addNestedPass<FuncOp>(createAnchoredFuncPipelinePass(
+    pm.addNestedPass<func::FuncOp>(createAnchoredFuncPipelinePass(
         ByreDialect::getEntryPointFunctionAttrName(), anchoredPM));
 
     pm.addPass(createCSEPass());

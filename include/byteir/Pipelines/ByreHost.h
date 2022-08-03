@@ -13,6 +13,7 @@
 #include <string>
 
 namespace mlir {
+class ModuleOp;
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createByreHostPipelinePass(const std::string &entry = "main",

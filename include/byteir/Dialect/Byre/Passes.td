@@ -15,7 +15,7 @@ include "mlir/Pass/PassBase.td"
 // ByreFold
 //===----------------------------------------------------------------------===//
 
-def ByreFold : Pass<"byre-fold", "mlir::FuncOp"> {
+def ByreFold : Pass<"byre-fold", "func::FuncOp"> {
   let summary = "Fold Byre Ops";
   let constructor = "mlir::createByreFoldPass()";
 }

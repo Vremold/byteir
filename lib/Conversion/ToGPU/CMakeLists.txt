@@ -13,10 +13,10 @@ add_byteir_conversion_library(ByteIRToGPU
 
   LINK_LIBS PUBLIC
   MLIRIR
-  MLIRAffine
+  MLIRAffineDialect
   MLIRGPUOps
-  MLIRMemRef
-  MLIRSCF
+  MLIRMemRefDialect
+  MLIRSCFDialect
   MLIRTransforms
   ByteIRConversionCommon
   ByteIRUtils

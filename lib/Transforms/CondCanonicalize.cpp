@@ -11,8 +11,8 @@
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/SCF/SCF.h"
-#include "mlir/Dialect/SCF/Transforms.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/Dialect/SCF/Transforms/Transforms.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -84,7 +84,7 @@ struct CondCanonicalizePass
   CondCanonicalizePass() : CondCanonicalizeBase() {}
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     MLIRContext *ctx = funcOp.getContext();
     RewritePatternSet patterns(ctx);
 
@@ -111,6 +111,7 @@ void mlir::populateCondCanonicalizePatterns(RewritePatternSet &patterns) {
   scf::populateSCFForLoopCanonicalizationPatterns(patterns);
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createCondCanonicalizePass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createCondCanonicalizePass() {
   return std::make_unique<CondCanonicalizePass>();
 }

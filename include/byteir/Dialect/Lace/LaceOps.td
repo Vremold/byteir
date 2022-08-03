@@ -18,7 +18,6 @@ include "mlir/Interfaces/ViewLikeInterface.td"
 
 class Lace_Op<string mnemonic, list<Trait> traits = []> :
     Op<Lace_Dialect, mnemonic, traits> {
-  let verifier = [{ return Verify(*this); }];
 }
 
 def Lace_ReshapeOp: Lace_Op<"reshape", [ViewLikeOpInterface, Lace_AliasLikeOpInterface]> {
@@ -30,6 +29,8 @@ def Lace_ReshapeOp: Lace_Op<"reshape", [ViewLikeOpInterface, Lace_AliasLikeOpInt
     Value getViewSource() { return source(); }
     int64_t getOffsetElem() { return 0; }
   }];
+
+  let hasVerifier = 1;
 }
 
 def Lace_SliceOp: Lace_Op<"slice", [ViewLikeOpInterface, Lace_AliasLikeOpInterface]> {
@@ -52,6 +53,8 @@ def Lace_SliceOp: Lace_Op<"slice", [ViewLikeOpInterface, Lace_AliasLikeOpInterfa
                         ArrayRef<int64_t> limitIndices,
                         ArrayRef<int64_t> strides);
   }];
+
+  let hasVerifier = 1;
 }
 
 #endif // LACE_OPS

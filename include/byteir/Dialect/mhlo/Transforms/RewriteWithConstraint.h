@@ -11,10 +11,13 @@
 #include "mlir/Pass/Pass.h"
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateRewriteWithConstraintConstraintPattern(
     RewritePatternSet &patterns);
-std::unique_ptr<OperationPass<FuncOp>> createRewriteWithConstraintPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createRewriteWithConstraintPass();
 
 } // namespace mlir
 

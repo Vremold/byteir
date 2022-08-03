@@ -9,7 +9,8 @@
 #include "./PassDetail.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "byteir/Utils/LoopUtils.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/IR/MLIRContext.h"
 #include <iostream>
 
@@ -64,7 +65,7 @@ struct LoopTagPass : public LoopTagBase<LoopTagPass> {
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createLoopTagPass(llvm::StringRef anchorTag, const std::string &attachTag,
                         unsigned depth, const std::string &loopType) {
   return std::make_unique<LoopTagPass>(anchorTag.str(), attachTag, depth,

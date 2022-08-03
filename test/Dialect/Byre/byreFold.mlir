@@ -1,8 +1,8 @@
 // RUN: byteir-opt -byre-fold %s | FileCheck %s
 
 module attributes {byre.container_module} {
-  func @fold_alias(%arg0: memref<512xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<512xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
-// CHECK-LABEL: func @fold_alias
+  func.func @fold_alias(%arg0: memref<512xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<512xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+// CHECK-LABEL: func.func @fold_alias
     %0 = memref.alloc() : memref<256xf32>
     %1 = memref.alloc() : memref<128xf32>
     %2 = memref.alloc() : memref<256xf32>
@@ -24,8 +24,8 @@ module attributes {byre.container_module} {
     return
   }
 
-  func @fold_identity_alias(%arg0: memref<256xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<256xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
-// CHECK-LBAEL: func @fold_identity_alias
+  func.func @fold_identity_alias(%arg0: memref<256xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<256xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+// CHECK-LBAEL: func.func @fold_identity_alias
     %0 = memref.alloc() : memref<256xf32>
     byre.compute @AliasOp(%arg0, %0) {arg_alias, offset = 0 : i32} : memref<256xf32>, memref<256xf32>
     byre.compute @SomeOp(%0, %arg1) : memref<256xf32>, memref<256xf32>
@@ -33,8 +33,8 @@ module attributes {byre.container_module} {
     return
   }
 
-  func @remove_unused_alias(%arg0: memref<256xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<256xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
-// CHECK-LABEL: func @remove_unused_alias
+  func.func @remove_unused_alias(%arg0: memref<256xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<256xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+// CHECK-LABEL: func.func @remove_unused_alias
     %0 = memref.alloc() : memref<128xf32>
     byre.compute @AliasOp(%arg0, %0) {arg_alias, offset = 128 : i32} : memref<256xf32>, memref<128xf32>
     byre.compute @SomeOp(%arg0, %arg1) : memref<256xf32>, memref<256xf32>

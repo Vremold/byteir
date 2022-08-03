@@ -14,10 +14,14 @@ include "mlir/Pass/PassBase.td"
 // GPUToNVVM
 //===----------------------------------------------------------------------===//
 
-def GPUToNVVMExt : Pass<"gpu-to-nvvm-ext", "ModuleOp"> {
+def GPUToNVVMExt : Pass<"gpu-to-nvvm-ext", "gpu::GPUModuleOp"> {
   let summary = "Generate NVVM operations for gpu operations";
   let constructor = "mlir::createGPUToNVVMExtPass()";
-  let dependentDialects = ["NVVM::NVVMDialect", "memref::MemRefDialect"];
+  let dependentDialects = [
+    "NVVM::NVVMDialect",
+    "memref::MemRefDialect",
+    "cf::ControlFlowDialect"
+  ];
   let options = [
     Option<"indexBitwidth", "index-bitwidth", "unsigned",
            /*default=kDeriveIndexBitwidthFromDataLayout*/"0",
@@ -44,7 +48,7 @@ def ConvertHloToLHlo : Pass<"convert-hlo-to-lhlo", "ModuleOp"> {
 // HloToLinalg
 //===----------------------------------------------------------------------===//
 
-def HloFusionToLinalg : Pass<"hlo-fusion-to-linalg", "mlir::FuncOp"> {
+def HloFusionToLinalg : Pass<"hlo-fusion-to-linalg", "func::FuncOp"> {
   let summary = "Convert from HLO fusion to Linalg dialect.";
   let constructor = "mlir::createHloFusionToLinalgPass()";
   let dependentDialects = [
@@ -57,7 +61,7 @@ def HloFusionToLinalg : Pass<"hlo-fusion-to-linalg", "mlir::FuncOp"> {
   ];
 }
 
-def UnrealizedCastToLinalg : Pass<"unrealized-cast-to-linalg", "mlir::FuncOp"> {
+def UnrealizedCastToLinalg : Pass<"unrealized-cast-to-linalg", "func::FuncOp"> {
   let summary = "Convert UnrealizedCast op generated from hlo lowering to Linalg";
   let constructor = "mlir::createUnrealizedCastToLinalgPass()";
   let dependentDialects = [
@@ -69,7 +73,7 @@ def UnrealizedCastToLinalg : Pass<"unrealized-cast-to-linalg", "mlir::FuncOp"> {
 // LmhloToLace
 //===----------------------------------------------------------------------===//
 
-def LmhloToLace : Pass<"lmhlo-to-lace", "mlir::FuncOp"> {
+def LmhloToLace : Pass<"lmhlo-to-lace", "func::FuncOp"> {
   let summary = "Convert from Lmhlo Dialect to Lace Dialect.";
   let constructor = "mlir::createLmhloToLacePass()";
   let dependentDialects = [
@@ -81,7 +85,7 @@ def LmhloToLace : Pass<"lmhlo-to-lace", "mlir::FuncOp"> {
 // LmhloToMemref
 //===----------------------------------------------------------------------===//
 
-def LmhloToMemref : Pass<"lmhlo-to-memref", "mlir::FuncOp"> {
+def LmhloToMemref : Pass<"lmhlo-to-memref", "func::FuncOp"> {
   let summary = "Convert from Lmhlo Dialect to MemRef Dialect.";
   let constructor = "mlir::createLmhloToMemrefPass()";
 }
@@ -90,7 +94,7 @@ def LmhloToMemref : Pass<"lmhlo-to-memref", "mlir::FuncOp"> {
 // ToGPU
 //===----------------------------------------------------------------------===//
 
-def CoalescedForToGPULaunch : Pass<"coalesced-for-to-gpu", "mlir::FuncOp"> {
+def CoalescedForToGPULaunch : Pass<"coalesced-for-to-gpu", "func::FuncOp"> {
   let summary = "Convert from a coalesced affine loop to gpu launch";
   let constructor = "mlir::createCoalescedForToGPULaunchPass()";
   let dependentDialects = [
@@ -112,10 +116,10 @@ def ConvertFuncToGPU : Pass<"convert-func-to-gpu", "ModuleOp"> {
   let options = [
     ListOption<"blockSizes", "bsizes", "int64_t",
                "block sizes (up to 3 numbers) for GPU",
-               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+               "llvm::cl::ZeroOrMore">,
     ListOption<"gridSizes", "gsizes", "int64_t",
                "grid sizes (up to 3 numbers) for GPU",
-               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">,
+               "llvm::cl::ZeroOrMore">,
     Option<"moduleName", "module-name", "std::string",
             /*default=*/"\"unified\"",
             "Optional name for GPUModule to put all gpu kernels">,
@@ -126,7 +130,7 @@ def ConvertFuncToGPU : Pass<"convert-func-to-gpu", "ModuleOp"> {
 // ToAce
 //===----------------------------------------------------------------------===//
 
-def ConvertUnregisteredToAce : Pass<"convert-unregistered-to-ace", "FuncOp"> {
+def ConvertUnregisteredToAce : Pass<"convert-unregistered-to-ace", "func::FuncOp"> {
   let summary = "Convert unregistered op to Ace Op.";
   let constructor = "mlir::createConvertUnregisteredToAcePass()";
   let dependentDialects = [
@@ -134,7 +138,7 @@ def ConvertUnregisteredToAce : Pass<"convert-unregistered-to-ace", "FuncOp"> {
   ];
 }
 
-def ConvertMhloToAce : Pass<"convert-mhlo-to-ace", "FuncOp"> {
+def ConvertMhloToAce : Pass<"convert-mhlo-to-ace", "func::FuncOp"> {
   let summary = "Fuse mhlo ops to coarse ace ops.";
   let constructor = "mlir::createConvertMhloToAcePass()";
   let dependentDialects = [
@@ -171,7 +175,7 @@ def ConvertFuncAndCallToByre : Pass<"convert-func-and-call-to-byre", "ModuleOp">
   ];
 }
 
-def ConvertLmhloToByre : Pass<"convert-lmhlo-to-byre", "FuncOp"> {
+def ConvertLmhloToByre : Pass<"convert-lmhlo-to-byre", "func::FuncOp"> {
   let summary = "Convert lmhlo to Byre";
   let constructor = "mlir::createConvertLmhloToByrePass()";
   let dependentDialects = [
@@ -189,7 +193,7 @@ def ConvertLmhloToByre : Pass<"convert-lmhlo-to-byre", "FuncOp"> {
 // ToPTX or CUDA
 //===----------------------------------------------------------------------===//
 
-def GenPTXConfig : Pass<"gen-ptx-config", "mlir::FuncOp"> {
+def GenPTXConfig : Pass<"gen-ptx-config", "func::FuncOp"> {
   let summary = "Generate PTX configuration";
   let constructor = "mlir::createGenPTXConfigPass()";
 }
@@ -208,7 +212,7 @@ def CollectGPUKernel : Pass<"collect-gpu-kernel", "ModuleOp"> {
 // ToMhlo
 //===----------------------------------------------------------------------===//
 
-def ConvertArithToMhlo : Pass<"convert-arith-to-mhlo", "FuncOp"> {
+def ConvertArithToMhlo : Pass<"convert-arith-to-mhlo", "func::FuncOp"> {
   let summary = "Convert Arith op to Mhlo op";
   let constructor = "mlir::createConvertArithToMhloPass()";
   let dependentDialects = ["mlir::mhlo::MhloDialect"];

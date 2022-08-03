@@ -88,7 +88,7 @@ mlir::mhlo::EliminateSplatConstantTranspose(mhlo::TransposeOp op,
     return failure();
   }
 
-  auto const_op = op.operand().getDefiningOp<mhlo::ConstOp>();
+  auto const_op = op.operand().getDefiningOp<mhlo::ConstantOp>();
   if (!const_op) {
     return failure();
   }
@@ -98,7 +98,7 @@ mlir::mhlo::EliminateSplatConstantTranspose(mhlo::TransposeOp op,
   if (!maybe_new_attr.hasValue())
     return failure();
 
-  rewriter.replaceOpWithNewOp<mhlo::ConstOp>(op, maybe_new_attr.getValue());
+  rewriter.replaceOpWithNewOp<mhlo::ConstantOp>(op, maybe_new_attr.getValue());
   return success();
 }
 
@@ -110,7 +110,7 @@ LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
   Operation *broadUser = *op->getResult(0).user_begin();
   // These op types have const folding implementation,
   // in file: mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
-  if (!isa<AddOp, DivOp, MaxOp, MinOp, MulOp, SubOp, RemOp>(broadUser))
+  if (!isa<AddOp, DivOp, MaxOp, MinOp, MulOp, SubtractOp, RemOp>(broadUser))
     return failure();
 
   unsigned broadOperandNumber =
@@ -127,13 +127,13 @@ LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
     ///            mul          other ops
     ///
     /// Don't fold broadcast_in_dim if const_1 has other users
-    if (!otherOp || !isa<ConstOp>(otherOp) ||
+    if (!otherOp || !isa<ConstantOp>(otherOp) ||
         !otherOp->getResult(0).hasOneUse())
       return failure();
   }
 
   auto broadConstOp =
-      llvm::dyn_cast_or_null<ConstOp>(op.operand().getDefiningOp());
+      llvm::dyn_cast_or_null<ConstantOp>(op.operand().getDefiningOp());
   if (!broadConstOp)
     return failure();
   auto originAttr = broadConstOp.value().dyn_cast<DenseElementsAttr>();
@@ -153,7 +153,7 @@ LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
   if (!newAttr.hasValue())
     return failure();
 
-  rewriter.replaceOpWithNewOp<ConstOp>(op, newAttr.getValue());
+  rewriter.replaceOpWithNewOp<ConstantOp>(op, newAttr.getValue());
   return success();
 }
 

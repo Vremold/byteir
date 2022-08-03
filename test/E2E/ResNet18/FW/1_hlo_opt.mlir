@@ -1,11 +1,11 @@
 // RUN: byteir-opt %s -hlo-opt="outline-single-elemwise-op" | FileCheck %s
 
-// CHECK-LABEL: func @main
-!tuple = type tuple<tensor<1x1000xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<64x3x7x7xf16>, tensor<1x3x224x224xf16>, tensor<1x64x112x112xf16>, tensor<1x64x112x112xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<128x64x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<128x64x1x1xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<256x128x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<256x128x1x1xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<512x256x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<512x256x1x1xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<1x512xf16>, tensor<512x1000xf16>>
-module  {
-  func @main(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>, %arg2: tensor<64x3x7x7xf32>, %arg3: tensor<1000xf32>, %arg4: tensor<1000x512xf32>, %arg5: tensor<64xf32>, %arg6: tensor<64xf32>, %arg7: tensor<64xf32>, %arg8: tensor<64xf32>, %arg9: tensor<64x64x3x3xf32>, %arg10: tensor<64x64x3x3xf32>, %arg11: tensor<64xf32>, %arg12: tensor<64xf32>, %arg13: tensor<64xf32>, %arg14: tensor<64xf32>, %arg15: tensor<64x64x3x3xf32>, %arg16: tensor<64x64x3x3xf32>, %arg17: tensor<128xf32>, %arg18: tensor<128xf32>, %arg19: tensor<128xf32>, %arg20: tensor<128xf32>, %arg21: tensor<128x64x3x3xf32>, %arg22: tensor<128x128x3x3xf32>, %arg23: tensor<128x64x1x1xf32>, %arg24: tensor<128xf32>, %arg25: tensor<128xf32>, %arg26: tensor<128xf32>, %arg27: tensor<128xf32>, %arg28: tensor<128xf32>, %arg29: tensor<128xf32>, %arg30: tensor<128x128x3x3xf32>, %arg31: tensor<128x128x3x3xf32>, %arg32: tensor<256xf32>, %arg33: tensor<256xf32>, %arg34: tensor<256xf32>, %arg35: tensor<256xf32>, %arg36: tensor<256x128x3x3xf32>, %arg37: tensor<256x256x3x3xf32>, %arg38: tensor<256x128x1x1xf32>, %arg39: tensor<256xf32>, %arg40: tensor<256xf32>, %arg41: tensor<256xf32>, %arg42: tensor<256xf32>, %arg43: tensor<256xf32>, %arg44: tensor<256xf32>, %arg45: tensor<256x256x3x3xf32>, %arg46: tensor<256x256x3x3xf32>, %arg47: tensor<512xf32>, %arg48: tensor<512xf32>, %arg49: tensor<512xf32>, %arg50: tensor<512xf32>, %arg51: tensor<512x256x3x3xf32>, %arg52: tensor<512x512x3x3xf32>, %arg53: tensor<512x256x1x1xf32>, %arg54: tensor<512xf32>, %arg55: tensor<512xf32>, %arg56: tensor<512xf32>, %arg57: tensor<512xf32>, %arg58: tensor<512xf32>, %arg59: tensor<512xf32>, %arg60: tensor<512x512x3x3xf32>, %arg61: tensor<512x512x3x3xf32>, %arg62: tensor<i64>, %arg63: tensor<64xf32>, %arg64: tensor<64xf32>, %arg65: tensor<i64>, %arg66: tensor<64xf32>, %arg67: tensor<64xf32>, %arg68: tensor<i64>, %arg69: tensor<64xf32>, %arg70: tensor<64xf32>, %arg71: tensor<i64>, %arg72: tensor<64xf32>, %arg73: tensor<64xf32>, %arg74: tensor<i64>, %arg75: tensor<64xf32>, %arg76: tensor<64xf32>, %arg77: tensor<i64>, %arg78: tensor<128xf32>, %arg79: tensor<128xf32>, %arg80: tensor<i64>, %arg81: tensor<128xf32>, %arg82: tensor<128xf32>, %arg83: tensor<i64>, %arg84: tensor<128xf32>, %arg85: tensor<128xf32>, %arg86: tensor<i64>, %arg87: tensor<128xf32>, %arg88: tensor<128xf32>, %arg89: tensor<i64>, %arg90: tensor<128xf32>, %arg91: tensor<128xf32>, %arg92: tensor<i64>, %arg93: tensor<256xf32>, %arg94: tensor<256xf32>, %arg95: tensor<i64>, %arg96: tensor<256xf32>, %arg97: tensor<256xf32>, %arg98: tensor<i64>, %arg99: tensor<256xf32>, %arg100: tensor<256xf32>, %arg101: tensor<i64>, %arg102: tensor<256xf32>, %arg103: tensor<256xf32>, %arg104: tensor<i64>, %arg105: tensor<256xf32>, %arg106: tensor<256xf32>, %arg107: tensor<i64>, %arg108: tensor<512xf32>, %arg109: tensor<512xf32>, %arg110: tensor<i64>, %arg111: tensor<512xf32>, %arg112: tensor<512xf32>, %arg113: tensor<i64>, %arg114: tensor<512xf32>, %arg115: tensor<512xf32>, %arg116: tensor<i64>, %arg117: tensor<512xf32>, %arg118: tensor<512xf32>, %arg119: tensor<i64>, %arg120: tensor<512xf32>, %arg121: tensor<512xf32>, %arg122: tensor<1x3x224x224xf32>) -> !tuple {
-    %0 = "mhlo.convert"(%arg122) : (tensor<1x3x224x224xf32>) -> tensor<1x3x224x224xf16>
-    %1 = "mhlo.convert"(%arg2) : (tensor<64x3x7x7xf32>) -> tensor<64x3x7x7xf16>
+// CHECK-LABEL: func.func @main
+!tuple = tuple<tensor<1x1000xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<64x3x7x7xf16>, tensor<1x3x224x224xf16>, tensor<1x64x112x112xf16>, tensor<1x64x112x112xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<128x64x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<128x64x1x1xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<256x128x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<256x128x1x1xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<512x256x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<512x256x1x1xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<1x512xf16>, tensor<512x1000xf16>>
+module {
+  func.func @main(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>, %arg2: tensor<64x3x7x7xf32>, %arg3: tensor<1000xf32>, %arg4: tensor<1000x512xf32>, %arg5: tensor<64xf32>, %arg6: tensor<64xf32>, %arg7: tensor<64xf32>, %arg8: tensor<64xf32>, %arg9: tensor<64x64x3x3xf32>, %arg10: tensor<64x64x3x3xf32>, %arg11: tensor<64xf32>, %arg12: tensor<64xf32>, %arg13: tensor<64xf32>, %arg14: tensor<64xf32>, %arg15: tensor<64x64x3x3xf32>, %arg16: tensor<64x64x3x3xf32>, %arg17: tensor<128xf32>, %arg18: tensor<128xf32>, %arg19: tensor<128xf32>, %arg20: tensor<128xf32>, %arg21: tensor<128x64x3x3xf32>, %arg22: tensor<128x128x3x3xf32>, %arg23: tensor<128x64x1x1xf32>, %arg24: tensor<128xf32>, %arg25: tensor<128xf32>, %arg26: tensor<128xf32>, %arg27: tensor<128xf32>, %arg28: tensor<128xf32>, %arg29: tensor<128xf32>, %arg30: tensor<128x128x3x3xf32>, %arg31: tensor<128x128x3x3xf32>, %arg32: tensor<256xf32>, %arg33: tensor<256xf32>, %arg34: tensor<256xf32>, %arg35: tensor<256xf32>, %arg36: tensor<256x128x3x3xf32>, %arg37: tensor<256x256x3x3xf32>, %arg38: tensor<256x128x1x1xf32>, %arg39: tensor<256xf32>, %arg40: tensor<256xf32>, %arg41: tensor<256xf32>, %arg42: tensor<256xf32>, %arg43: tensor<256xf32>, %arg44: tensor<256xf32>, %arg45: tensor<256x256x3x3xf32>, %arg46: tensor<256x256x3x3xf32>, %arg47: tensor<512xf32>, %arg48: tensor<512xf32>, %arg49: tensor<512xf32>, %arg50: tensor<512xf32>, %arg51: tensor<512x256x3x3xf32>, %arg52: tensor<512x512x3x3xf32>, %arg53: tensor<512x256x1x1xf32>, %arg54: tensor<512xf32>, %arg55: tensor<512xf32>, %arg56: tensor<512xf32>, %arg57: tensor<512xf32>, %arg58: tensor<512xf32>, %arg59: tensor<512xf32>, %arg60: tensor<512x512x3x3xf32>, %arg61: tensor<512x512x3x3xf32>, %arg62: tensor<i64>, %arg63: tensor<64xf32>, %arg64: tensor<64xf32>, %arg65: tensor<i64>, %arg66: tensor<64xf32>, %arg67: tensor<64xf32>, %arg68: tensor<i64>, %arg69: tensor<64xf32>, %arg70: tensor<64xf32>, %arg71: tensor<i64>, %arg72: tensor<64xf32>, %arg73: tensor<64xf32>, %arg74: tensor<i64>, %arg75: tensor<64xf32>, %arg76: tensor<64xf32>, %arg77: tensor<i64>, %arg78: tensor<128xf32>, %arg79: tensor<128xf32>, %arg80: tensor<i64>, %arg81: tensor<128xf32>, %arg82: tensor<128xf32>, %arg83: tensor<i64>, %arg84: tensor<128xf32>, %arg85: tensor<128xf32>, %arg86: tensor<i64>, %arg87: tensor<128xf32>, %arg88: tensor<128xf32>, %arg89: tensor<i64>, %arg90: tensor<128xf32>, %arg91: tensor<128xf32>, %arg92: tensor<i64>, %arg93: tensor<256xf32>, %arg94: tensor<256xf32>, %arg95: tensor<i64>, %arg96: tensor<256xf32>, %arg97: tensor<256xf32>, %arg98: tensor<i64>, %arg99: tensor<256xf32>, %arg100: tensor<256xf32>, %arg101: tensor<i64>, %arg102: tensor<256xf32>, %arg103: tensor<256xf32>, %arg104: tensor<i64>, %arg105: tensor<256xf32>, %arg106: tensor<256xf32>, %arg107: tensor<i64>, %arg108: tensor<512xf32>, %arg109: tensor<512xf32>, %arg110: tensor<i64>, %arg111: tensor<512xf32>, %arg112: tensor<512xf32>, %arg113: tensor<i64>, %arg114: tensor<512xf32>, %arg115: tensor<512xf32>, %arg116: tensor<i64>, %arg117: tensor<512xf32>, %arg118: tensor<512xf32>, %arg119: tensor<i64>, %arg120: tensor<512xf32>, %arg121: tensor<512xf32>, %arg122: tensor<1x3x224x224xf32>) -> !tuple {
+    %0 = mhlo.convert(%arg122) : (tensor<1x3x224x224xf32>) -> tensor<1x3x224x224xf16>
+    %1 = mhlo.convert(%arg2) : (tensor<64x3x7x7xf32>) -> tensor<64x3x7x7xf16>
     %2 = call @aten.convolution_overrideable.175(%0, %1) : (tensor<1x3x224x224xf16>, tensor<64x3x7x7xf16>) -> tensor<1x64x112x112xf16>
     %3 = call @aten.native_batch_norm.180(%2, %arg1, %arg0, %arg63, %arg64) : (tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
     %4 = "mhlo.get_tuple_element"(%3) {index = 3 : i32} : (tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>) -> tensor<64xf32>
@@ -14,13 +14,13 @@ module  {
     %7 = call @aten.max_pool2d.277(%6) : (tensor<1x64x112x112xf16>) -> tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>>
     %8 = "mhlo.get_tuple_element"(%7) {index = 1 : i32} : (tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>>) -> tensor<1x64x56x56xui32>
     %9 = "mhlo.get_tuple_element"(%7) {index = 0 : i32} : (tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>>) -> tensor<1x64x56x56xf16>
-    %10 = "mhlo.convert"(%arg9) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
+    %10 = mhlo.convert(%arg9) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
     %11 = call @aten.convolution_overrideable.312(%9, %10) : (tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<1x64x56x56xf16>
     %12 = call @aten.native_batch_norm.317(%11, %arg6, %arg5, %arg66, %arg67) : (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
     %13 = "mhlo.get_tuple_element"(%12) {index = 3 : i32} : (tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>) -> tensor<64xf32>
     %14 = "mhlo.get_tuple_element"(%12) {index = 0 : i32} : (tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>) -> tensor<1x64x56x56xf16>
     %15 = call @aten.relu.339(%14) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16>
-    %16 = "mhlo.convert"(%arg10) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
+    %16 = mhlo.convert(%arg10) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
     %17 = call @aten.convolution_overrideable.312(%15, %16) : (tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<1x64x56x56xf16>
     %18 = call @aten.native_batch_norm.317(%17, %arg8, %arg7, %arg69, %arg70) : (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
     %19 = "mhlo.get_tuple_element"(%18) {index = 3 : i32} : (tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>) -> tensor<64xf32>
@@ -30,13 +30,13 @@ module  {
     %23 = call @aten.mul.305(%9, %22) : (tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16>
     %24 = call @aten.add.351(%20, %23) : (tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16>
     %25 = call @aten.relu.339(%24) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16>
-    %26 = "mhlo.convert"(%arg15) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
+    %26 = mhlo.convert(%arg15) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
     %27 = call @aten.convolution_overrideable.312(%25, %26) : (tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<1x64x56x56xf16>
     %28 = call @aten.native_batch_norm.317(%27, %arg12, %arg11, %arg72, %arg73) : (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
     %29 = "mhlo.get_tuple_element"(%28) {index = 3 : i32} : (tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>) -> tensor<64xf32>
     %30 = "mhlo.get_tuple_element"(%28) {index = 0 : i32} : (tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>) -> tensor<1x64x56x56xf16>
     %31 = call @aten.relu.339(%30) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16>
-    %32 = "mhlo.convert"(%arg16) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
+    %32 = mhlo.convert(%arg16) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
     %33 = call @aten.convolution_overrideable.312(%31, %32) : (tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<1x64x56x56xf16>
     %34 = call @aten.native_batch_norm.317(%33, %arg14, %arg13, %arg75, %arg76) : (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
     %35 = "mhlo.get_tuple_element"(%34) {index = 3 : i32} : (tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>) -> tensor<64xf32>
@@ -46,17 +46,17 @@ module  {
     %39 = call @aten.mul.305(%25, %38) : (tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16>
     %40 = call @aten.add.351(%36, %39) : (tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16>
     %41 = call @aten.relu.339(%40) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16>
-    %42 = "mhlo.convert"(%arg23) : (tensor<128x64x1x1xf32>) -> tensor<128x64x1x1xf16>
+    %42 = mhlo.convert(%arg23) : (tensor<128x64x1x1xf32>) -> tensor<128x64x1x1xf16>
     %43 = call @aten.convolution_overrideable.375(%41, %42) : (tensor<1x64x56x56xf16>, tensor<128x64x1x1xf16>) -> tensor<1x128x28x28xf16>
     %44 = call @aten.native_batch_norm.380(%43, %arg25, %arg24, %arg84, %arg85) : (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
     %45 = "mhlo.get_tuple_element"(%44) {index = 3 : i32} : (tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
-    %46 = "mhlo.convert"(%arg21) : (tensor<128x64x3x3xf32>) -> tensor<128x64x3x3xf16>
+    %46 = mhlo.convert(%arg21) : (tensor<128x64x3x3xf32>) -> tensor<128x64x3x3xf16>
     %47 = call @aten.convolution_overrideable.409(%41, %46) : (tensor<1x64x56x56xf16>, tensor<128x64x3x3xf16>) -> tensor<1x128x28x28xf16>
     %48 = call @aten.native_batch_norm.380(%47, %arg18, %arg17, %arg78, %arg79) : (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
     %49 = "mhlo.get_tuple_element"(%48) {index = 3 : i32} : (tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
     %50 = "mhlo.get_tuple_element"(%48) {index = 0 : i32} : (tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<1x128x28x28xf16>
     %51 = call @aten.relu.419(%50) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16>
-    %52 = "mhlo.convert"(%arg22) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
+    %52 = mhlo.convert(%arg22) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
     %53 = call @aten.convolution_overrideable.425(%51, %52) : (tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<1x128x28x28xf16>
     %54 = call @aten.native_batch_norm.380(%53, %arg20, %arg19, %arg81, %arg82) : (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
     %55 = "mhlo.get_tuple_element"(%54) {index = 3 : i32} : (tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
@@ -67,13 +67,13 @@ module  {
     %60 = call @aten.mul.402(%57, %59) : (tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16>
     %61 = call @aten.add.435(%56, %60) : (tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16>
     %62 = call @aten.relu.419(%61) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16>
-    %63 = "mhlo.convert"(%arg30) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
+    %63 = mhlo.convert(%arg30) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
     %64 = call @aten.convolution_overrideable.425(%62, %63) : (tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<1x128x28x28xf16>
     %65 = call @aten.native_batch_norm.380(%64, %arg27, %arg26, %arg87, %arg88) : (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
     %66 = "mhlo.get_tuple_element"(%65) {index = 3 : i32} : (tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
     %67 = "mhlo.get_tuple_element"(%65) {index = 0 : i32} : (tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<1x128x28x28xf16>
     %68 = call @aten.relu.419(%67) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16>
-    %69 = "mhlo.convert"(%arg31) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
+    %69 = mhlo.convert(%arg31) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
     %70 = call @aten.convolution_overrideable.425(%68, %69) : (tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<1x128x28x28xf16>
     %71 = call @aten.native_batch_norm.380(%70, %arg29, %arg28, %arg90, %arg91) : (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
     %72 = "mhlo.get_tuple_element"(%71) {index = 3 : i32} : (tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>) -> tensor<128xf32>
@@ -83,17 +83,17 @@ module  {
     %76 = call @aten.mul.402(%62, %75) : (tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16>
     %77 = call @aten.add.435(%73, %76) : (tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16>
     %78 = call @aten.relu.419(%77) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16>
-    %79 = "mhlo.convert"(%arg38) : (tensor<256x128x1x1xf32>) -> tensor<256x128x1x1xf16>
+    %79 = mhlo.convert(%arg38) : (tensor<256x128x1x1xf32>) -> tensor<256x128x1x1xf16>
     %80 = call @aten.convolution_overrideable.459(%78, %79) : (tensor<1x128x28x28xf16>, tensor<256x128x1x1xf16>) -> tensor<1x256x14x14xf16>
     %81 = call @aten.native_batch_norm.464(%80, %arg40, %arg39, %arg99, %arg100) : (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
     %82 = "mhlo.get_tuple_element"(%81) {index = 3 : i32} : (tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>) -> tensor<256xf32>
-    %83 = "mhlo.convert"(%arg36) : (tensor<256x128x3x3xf32>) -> tensor<256x128x3x3xf16>
+    %83 = mhlo.convert(%arg36) : (tensor<256x128x3x3xf32>) -> tensor<256x128x3x3xf16>
     %84 = call @aten.convolution_overrideable.493(%78, %83) : (tensor<1x128x28x28xf16>, tensor<256x128x3x3xf16>) -> tensor<1x256x14x14xf16>
     %85 = call @aten.native_batch_norm.464(%84, %arg33, %arg32, %arg93, %arg94) : (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
     %86 = "mhlo.get_tuple_element"(%85) {index = 3 : i32} : (tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>) -> tensor<256xf32>
     %87 = "mhlo.get_tuple_element"(%85) {index = 0 : i32} : (tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>) -> tensor<1x256x14x14xf16>
     %88 = call @aten.relu.503(%87) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16>
-    %89 = "mhlo.convert"(%arg37) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
+    %89 = mhlo.convert(%arg37) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
     %90 = call @aten.convolution_overrideable.509(%88, %89) : (tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<1x256x14x14xf16>
     %91 = call @aten.native_batch_norm.464(%90, %arg35, %arg34, %arg96, %arg97) : (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
     %92 = "mhlo.get_tuple_element"(%91) {index = 3 : i32} : (tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>) -> tensor<256xf32>
@@ -104,13 +104,13 @@ module  {
     %97 = call @aten.mul.486(%94, %96) : (tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16>
     %98 = call @aten.add.519(%93, %97) : (tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16>
     %99 = call @aten.relu.503(%98) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16>
-    %100 = "mhlo.convert"(%arg45) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
+    %100 = mhlo.convert(%arg45) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
     %101 = call @aten.convolution_overrideable.509(%99, %100) : (tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<1x256x14x14xf16>
     %102 = call @aten.native_batch_norm.464(%101, %arg42, %arg41, %arg102, %arg103) : (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
     %103 = "mhlo.get_tuple_element"(%102) {index = 3 : i32} : (tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>) -> tensor<256xf32>
     %104 = "mhlo.get_tuple_element"(%102) {index = 0 : i32} : (tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>) -> tensor<1x256x14x14xf16>
     %105 = call @aten.relu.503(%104) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16>
-    %106 = "mhlo.convert"(%arg46) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
+    %106 = mhlo.convert(%arg46) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
     %107 = call @aten.convolution_overrideable.509(%105, %106) : (tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<1x256x14x14xf16>
     %108 = call @aten.native_batch_norm.464(%107, %arg44, %arg43, %arg105, %arg106) : (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
     %109 = "mhlo.get_tuple_element"(%108) {index = 3 : i32} : (tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>) -> tensor<256xf32>
@@ -120,17 +120,17 @@ module  {
     %113 = call @aten.mul.486(%99, %112) : (tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16>
     %114 = call @aten.add.519(%110, %113) : (tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16>
     %115 = call @aten.relu.503(%114) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16>
-    %116 = "mhlo.convert"(%arg53) : (tensor<512x256x1x1xf32>) -> tensor<512x256x1x1xf16>
+    %116 = mhlo.convert(%arg53) : (tensor<512x256x1x1xf32>) -> tensor<512x256x1x1xf16>
     %117 = call @aten.convolution_overrideable.543(%115, %116) : (tensor<1x256x14x14xf16>, tensor<512x256x1x1xf16>) -> tensor<1x512x7x7xf16>
     %118 = call @aten.native_batch_norm.548(%117, %arg55, %arg54, %arg114, %arg115) : (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
     %119 = "mhlo.get_tuple_element"(%118) {index = 3 : i32} : (tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>) -> tensor<512xf32>
-    %120 = "mhlo.convert"(%arg51) : (tensor<512x256x3x3xf32>) -> tensor<512x256x3x3xf16>
+    %120 = mhlo.convert(%arg51) : (tensor<512x256x3x3xf32>) -> tensor<512x256x3x3xf16>
     %121 = call @aten.convolution_overrideable.577(%115, %120) : (tensor<1x256x14x14xf16>, tensor<512x256x3x3xf16>) -> tensor<1x512x7x7xf16>
     %122 = call @aten.native_batch_norm.548(%121, %arg48, %arg47, %arg108, %arg109) : (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
     %123 = "mhlo.get_tuple_element"(%122) {index = 3 : i32} : (tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>) -> tensor<512xf32>
     %124 = "mhlo.get_tuple_element"(%122) {index = 0 : i32} : (tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>) -> tensor<1x512x7x7xf16>
     %125 = call @aten.relu.587(%124) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16>
-    %126 = "mhlo.convert"(%arg52) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
+    %126 = mhlo.convert(%arg52) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
     %127 = call @aten.convolution_overrideable.593(%125, %126) : (tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<1x512x7x7xf16>
     %128 = call @aten.native_batch_norm.548(%127, %arg50, %arg49, %arg111, %arg112) : (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
     %129 = "mhlo.get_tuple_element"(%128) {index = 3 : i32} : (tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>) -> tensor<512xf32>
@@ -141,13 +141,13 @@ module  {
     %134 = call @aten.mul.570(%131, %133) : (tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16>
     %135 = call @aten.add.603(%130, %134) : (tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16>
     %136 = call @aten.relu.587(%135) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16>
-    %137 = "mhlo.convert"(%arg60) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
+    %137 = mhlo.convert(%arg60) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
     %138 = call @aten.convolution_overrideable.593(%136, %137) : (tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<1x512x7x7xf16>
     %139 = call @aten.native_batch_norm.548(%138, %arg57, %arg56, %arg117, %arg118) : (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
     %140 = "mhlo.get_tuple_element"(%139) {index = 3 : i32} : (tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>) -> tensor<512xf32>
     %141 = "mhlo.get_tuple_element"(%139) {index = 0 : i32} : (tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>) -> tensor<1x512x7x7xf16>
     %142 = call @aten.relu.587(%141) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16>
-    %143 = "mhlo.convert"(%arg61) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
+    %143 = mhlo.convert(%arg61) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
     %144 = call @aten.convolution_overrideable.593(%142, %143) : (tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<1x512x7x7xf16>
     %145 = call @aten.native_batch_norm.548(%144, %arg59, %arg58, %arg120, %arg121) : (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
     %146 = "mhlo.get_tuple_element"(%145) {index = 3 : i32} : (tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>) -> tensor<512xf32>
@@ -159,9 +159,9 @@ module  {
     %152 = call @aten.relu.587(%151) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16>
     %153 = call @aten.mean.631(%152) : (tensor<1x512x7x7xf16>) -> tensor<1x512x1x1xf16>
     %154 = call @aten.view.648(%153) : (tensor<1x512x1x1xf16>) -> tensor<1x512xf16>
-    %155 = "mhlo.convert"(%arg4) : (tensor<1000x512xf32>) -> tensor<1000x512xf16>
+    %155 = mhlo.convert(%arg4) : (tensor<1000x512xf32>) -> tensor<1000x512xf16>
     %156 = call @aten.permute.126(%155) {minor_to_major = dense<[0, 1]> : tensor<2xindex>} : (tensor<1000x512xf16>) -> tensor<512x1000xf16>
-    %157 = "mhlo.convert"(%arg3) : (tensor<1000xf32>) -> tensor<1000xf16>
+    %157 = mhlo.convert(%arg3) : (tensor<1000xf32>) -> tensor<1000xf16>
     %158 = call @aten.addmm.652(%154, %156, %157) : (tensor<1x512xf16>, tensor<512x1000xf16>, tensor<1000xf16>) -> tensor<1x1000xf16>
     %159 = "mhlo.get_tuple_element"(%3) {index = 1 : i32} : (tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>) -> tensor<64xf32>
     %160 = mhlo.constant dense<1.000000e-01> : tensor<f32>
@@ -526,37 +526,37 @@ module  {
     %519 = "mhlo.tuple"(%158, %arg0, %arg1, %arg5, %arg6, %arg7, %arg8, %arg11, %arg12, %arg13, %arg14, %arg17, %arg18, %arg19, %arg20, %arg24, %arg25, %arg26, %arg27, %arg28, %arg29, %arg32, %arg33, %arg34, %arg35, %arg39, %arg40, %arg41, %arg42, %arg43, %arg44, %arg47, %arg48, %arg49, %arg50, %arg54, %arg55, %arg56, %arg57, %arg58, %arg59, %167, %176, %185, %194, %203, %212, %221, %230, %239, %248, %257, %266, %275, %284, %293, %302, %311, %320, %329, %338, %347, %356, %365, %374, %383, %392, %401, %410, %419, %428, %437, %446, %455, %464, %473, %482, %491, %500, %509, %518, %1, %0, %2, %6, %9, %10, %11, %15, %16, %17, %25, %26, %27, %31, %32, %33, %41, %46, %47, %51, %52, %53, %42, %43, %62, %63, %64, %68, %69, %70, %78, %83, %84, %88, %89, %90, %79, %80, %99, %100, %101, %105, %106, %107, %115, %120, %121, %125, %126, %127, %116, %117, %136, %137, %138, %142, %143, %144, %152, %154, %156) : (tensor<1x1000xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<64x3x7x7xf16>, tensor<1x3x224x224xf16>, tensor<1x64x112x112xf16>, tensor<1x64x112x112xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>, tensor<1x64x56x56xf16>, tensor<1x64x56x56xf16>, tensor<128x64x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<128x64x1x1xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>, tensor<1x128x28x28xf16>, tensor<1x128x28x28xf16>, tensor<256x128x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<256x128x1x1xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>, tensor<1x256x14x14xf16>, tensor<1x256x14x14xf16>, tensor<512x256x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<512x256x1x1xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>, tensor<1x512x7x7xf16>, tensor<1x512x7x7xf16>, tensor<1x512xf16>, tensor<512x1000xf16>) -> !tuple
     return %519 : !tuple
   }
-  func private @aten.convolution_overrideable.175(%arg0: tensor<1x3x224x224xf16>, %arg1: tensor<64x3x7x7xf16>) -> tensor<1x64x112x112xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[3, 3], [3, 3]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x3x224x224xf16>, tensor<64x3x7x7xf16>) -> tensor<1x64x112x112xf16>
+  func.func private @aten.convolution_overrideable.175(%arg0: tensor<1x3x224x224xf16>, %arg1: tensor<64x3x7x7xf16>) -> tensor<1x64x112x112xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[3, 3], [3, 3]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x3x224x224xf16>, tensor<64x3x7x7xf16>) -> tensor<1x64x112x112xf16>
     return %0 : tensor<1x64x112x112xf16>
   }
-  func private @aten.native_batch_norm.180(%arg0: tensor<1x64x112x112xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<64xf32>) -> tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>> {
-    %0 = "mhlo.convert"(%arg0) : (tensor<1x64x112x112xf16>) -> tensor<1x64x112x112xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = "mhlo.convert"(%1#0) : (tensor<1x64x112x112xf32>) -> tensor<1x64x112x112xf16>
-    %6 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
-    %7 = "mhlo.broadcast_in_dim"(%6) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<64xf32>
-    %8 = mhlo.add %1#2, %7 : tensor<64xf32>
-    %9 = "mhlo.rsqrt"(%8) : (tensor<64xf32>) -> tensor<64xf32>
-    %10 = "mhlo.tuple"(%3, %1#1, %1#2, %9) : (tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
-    return %10 : tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
+  func.func private @aten.native_batch_norm.180(%arg0: tensor<1x64x112x112xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<64xf32>) -> tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>> {
+    %0 = mhlo.convert(%arg0) : (tensor<1x64x112x112xf16>) -> tensor<1x64x112x112xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>)
+    %1 = mhlo.convert(%output) : (tensor<1x64x112x112xf32>) -> tensor<1x64x112x112xf16>
+    %2 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
+    %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<64xf32>
+    %4 = mhlo.add %batch_var, %3 : tensor<64xf32>
+    %5 = mhlo.rsqrt %4 : tensor<64xf32>
+    %6 = "mhlo.tuple"(%1, %batch_mean, %batch_var, %5) : (tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
+    return %6 : tuple<tensor<1x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
   }
-  func private @aten.relu.202(%arg0: tensor<1x64x112x112xf16>) -> tensor<1x64x112x112xf16> {
+  func.func private @aten.relu.202(%arg0: tensor<1x64x112x112xf16>) -> tensor<1x64x112x112xf16> {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<f16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f16>) -> tensor<1x64x112x112xf16>
     %2 = mhlo.maximum %arg0, %1 : tensor<1x64x112x112xf16>
     return %2 : tensor<1x64x112x112xf16>
   }
-  func private @aten.max_pool2d.277(%arg0: tensor<1x64x112x112xf16>) -> tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>> {
+  func.func private @aten.max_pool2d.277(%arg0: tensor<1x64x112x112xf16>) -> tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>> {
     %0 = mhlo.constant dense<0> : tensor<ui32>
     %1 = mhlo.constant dense<200704> : tensor<ui32>
     %2 = mhlo.constant dense<0xFC00> : tensor<f16>
     %3 = "mhlo.pad"(%arg0, %2) {edge_padding_high = dense<[0, 0, 1, 1]> : tensor<4xi64>, edge_padding_low = dense<[0, 0, 1, 1]> : tensor<4xi64>, interior_padding = dense<0> : tensor<4xi64>} : (tensor<1x64x112x112xf16>, tensor<f16>) -> tensor<1x64x114x114xf16>
     %4 = mhlo.constant dense<0xFC00> : tensor<f16>
-    %5 = "mhlo.reduce_window"(%3, %4) ( {
-    ^bb0(%arg1: tensor<f16>, %arg2: tensor<f16>):  // no predecessors
-      %23 = mhlo.maximum %arg1, %arg2 : tensor<f16>
-      "mhlo.return"(%23) : (tensor<f16>) -> ()
+    %5 = "mhlo.reduce_window"(%3, %4) ({
+    ^bb0(%arg1: tensor<f16>, %arg2: tensor<f16>):
+      %17 = mhlo.maximum %arg1, %arg2 : tensor<f16>
+      "mhlo.return"(%17) : (tensor<f16>) -> ()
     }) {base_dilations = dense<1> : tensor<4xi64>, padding = dense<0> : tensor<4x2xi64>, window_dilations = dense<1> : tensor<4xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (tensor<1x64x114x114xf16>, tensor<f16>) -> tensor<1x64x56x56xf16>
     %6 = "mhlo.iota"() {iota_dimension = 0 : i64} : () -> tensor<12544xui32>
     %7 = "mhlo.reshape"(%6) : (tensor<12544xui32>) -> tensor<112x112xui32>
@@ -566,264 +566,263 @@ module  {
     %11 = mhlo.constant dense<0> : tensor<ui32>
     %12 = "mhlo.broadcast_in_dim"(%11) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<ui32>) -> tensor<200704xui32>
     %13 = "mhlo.tuple"(%0, %1, %3, %5, %10, %12) : (tensor<ui32>, tensor<ui32>, tensor<1x64x114x114xf16>, tensor<1x64x56x56xf16>, tensor<1x64x114x114xui32>, tensor<200704xui32>) -> tuple<tensor<ui32>, tensor<ui32>, tensor<1x64x114x114xf16>, tensor<1x64x56x56xf16>, tensor<1x64x114x114xui32>, tensor<200704xui32>>
-    %14:6 = "mhlo.while"(%0, %1, %3, %5, %10, %12) ( {
-    ^bb0(%arg1: tensor<ui32>, %arg2: tensor<ui32>, %arg3: tensor<1x64x114x114xf16>, %arg4: tensor<1x64x56x56xf16>, %arg5: tensor<1x64x114x114xui32>, %arg6: tensor<200704xui32>):  // no predecessors
-      %29 = "mhlo.compare"(%arg1, %arg2) {comparison_direction = "LT"} : (tensor<ui32>, tensor<ui32>) -> tensor<i1>
-      "mhlo.return"(%29) : (tensor<i1>) -> ()
-    },  {
-    ^bb0(%arg1: tensor<ui32>, %arg2: tensor<ui32>, %arg3: tensor<1x64x114x114xf16>, %arg4: tensor<1x64x56x56xf16>, %arg5: tensor<1x64x114x114xui32>, %arg6: tensor<200704xui32>):  // no predecessors
-      %24 = mhlo.constant dense<200704> : tensor<ui32>
-      %25 = mhlo.remainder %arg1, %24 : tensor<ui32>
-      %26 = mhlo.constant dense<3136> : tensor<ui32>
-      %27 = mhlo.remainder %25, %26 : tensor<ui32>
-      %28 = mhlo.constant dense<56> : tensor<ui32>
-      %29 = mhlo.remainder %27, %28 : tensor<ui32>
+    %14:6 = mhlo.while(%iterArg = %0, %iterArg_0 = %1, %iterArg_1 = %3, %iterArg_2 = %5, %iterArg_3 = %10, %iterArg_4 = %12) : tensor<ui32>, tensor<ui32>, tensor<1x64x114x114xf16>, tensor<1x64x56x56xf16>, tensor<1x64x114x114xui32>, tensor<200704xui32>
+     cond {
+      %17 = "mhlo.compare"(%iterArg, %iterArg_0) {comparison_direction = #mhlo<comparison_direction LT>} : (tensor<ui32>, tensor<ui32>) -> tensor<i1>
+      "mhlo.return"(%17) : (tensor<i1>) -> ()
+    } do {
+      %17 = mhlo.constant dense<200704> : tensor<ui32>
+      %18 = mhlo.remainder %iterArg, %17 : tensor<ui32>
+      %19 = mhlo.constant dense<3136> : tensor<ui32>
+      %20 = mhlo.remainder %18, %19 : tensor<ui32>
+      %21 = mhlo.constant dense<56> : tensor<ui32>
+      %22 = mhlo.remainder %20, %21 : tensor<ui32>
+      %23 = mhlo.constant dense<1> : tensor<ui32>
+      %24 = mhlo.remainder %22, %23 : tensor<ui32>
+      %25 = mhlo.constant dense<1> : tensor<ui32>
+      %26 = mhlo.add %iterArg, %25 : tensor<ui32>
+      %27 = mhlo.constant dense<1> : tensor<ui32>
+      %28 = mhlo.divide %iterArg, %17 : tensor<ui32>
+      %29 = mhlo.multiply %27, %28 : tensor<ui32>
       %30 = mhlo.constant dense<1> : tensor<ui32>
-      %31 = mhlo.remainder %29, %30 : tensor<ui32>
-      %32 = mhlo.constant dense<1> : tensor<ui32>
-      %33 = mhlo.add %arg1, %32 : tensor<ui32>
-      %39 = mhlo.constant dense<1> : tensor<ui32>
-      %40 = mhlo.divide %arg1, %24 : tensor<ui32>
-      %41 = mhlo.multiply %39, %40 : tensor<ui32>
-      %42 = mhlo.constant dense<1> : tensor<ui32>
-      %43 = mhlo.divide %25, %26 : tensor<ui32>
-      %44 = mhlo.multiply %42, %43 : tensor<ui32>
-      %45 = mhlo.constant dense<2> : tensor<ui32>
-      %46 = mhlo.divide %27, %28 : tensor<ui32>
-      %47 = mhlo.multiply %45, %46 : tensor<ui32>
-      %48 = mhlo.constant dense<2> : tensor<ui32>
-      %49 = mhlo.divide %29, %30 : tensor<ui32>
-      %50 = mhlo.multiply %48, %49 : tensor<ui32>
-      %51 = "mhlo.dynamic-slice"(%arg3, %41, %44, %47, %50) {slice_sizes = dense<[1, 1, 3, 3]> : tensor<4xi64>} : (tensor<1x64x114x114xf16>, tensor<ui32>, tensor<ui32>, tensor<ui32>, tensor<ui32>) -> tensor<1x1x3x3xf16>
-      %52 = "mhlo.dynamic-slice"(%arg4, %40, %43, %46, %49) {slice_sizes = dense<1> : tensor<4xi64>} : (tensor<1x64x56x56xf16>, tensor<ui32>, tensor<ui32>, tensor<ui32>, tensor<ui32>) -> tensor<1x1x1x1xf16>
-      %53 = mhlo.constant dense<0xFC00> : tensor<f16>
-      %54 = "mhlo.select_and_scatter"(%51, %52, %53) ( {
-      ^bb0(%arg7: tensor<f16>, %arg8: tensor<f16>):  // no predecessors
-        %65 = "mhlo.compare"(%arg7, %arg8) {comparison_direction = "GE"} : (tensor<f16>, tensor<f16>) -> tensor<i1>
-        "mhlo.return"(%65) : (tensor<i1>) -> ()
-      },  {
-      ^bb0(%arg7: tensor<f16>, %arg8: tensor<f16>):  // no predecessors
-        %65 = mhlo.maximum %arg7, %arg8 : tensor<f16>
-        "mhlo.return"(%65) : (tensor<f16>) -> ()
+      %31 = mhlo.divide %18, %19 : tensor<ui32>
+      %32 = mhlo.multiply %30, %31 : tensor<ui32>
+      %33 = mhlo.constant dense<2> : tensor<ui32>
+      %34 = mhlo.divide %20, %21 : tensor<ui32>
+      %35 = mhlo.multiply %33, %34 : tensor<ui32>
+      %36 = mhlo.constant dense<2> : tensor<ui32>
+      %37 = mhlo.divide %22, %23 : tensor<ui32>
+      %38 = mhlo.multiply %36, %37 : tensor<ui32>
+      %39 = "mhlo.dynamic_slice"(%iterArg_1, %29, %32, %35, %38) {slice_sizes = dense<[1, 1, 3, 3]> : tensor<4xi64>} : (tensor<1x64x114x114xf16>, tensor<ui32>, tensor<ui32>, tensor<ui32>, tensor<ui32>) -> tensor<1x1x3x3xf16>
+      %40 = "mhlo.dynamic_slice"(%iterArg_2, %28, %31, %34, %37) {slice_sizes = dense<1> : tensor<4xi64>} : (tensor<1x64x56x56xf16>, tensor<ui32>, tensor<ui32>, tensor<ui32>, tensor<ui32>) -> tensor<1x1x1x1xf16>
+      %41 = mhlo.constant dense<0xFC00> : tensor<f16>
+      %42 = "mhlo.select_and_scatter"(%39, %40, %41) ({
+      ^bb0(%arg1: tensor<f16>, %arg2: tensor<f16>):
+        %52 = "mhlo.compare"(%arg1, %arg2) {comparison_direction = #mhlo<comparison_direction GE>} : (tensor<f16>, tensor<f16>) -> tensor<i1>
+        "mhlo.return"(%52) : (tensor<i1>) -> ()
+      }, {
+      ^bb0(%arg1: tensor<f16>, %arg2: tensor<f16>):
+        %52 = mhlo.maximum %arg1, %arg2 : tensor<f16>
+        "mhlo.return"(%52) : (tensor<f16>) -> ()
       }) {padding = dense<0> : tensor<4x2xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (tensor<1x1x3x3xf16>, tensor<1x1x1x1xf16>, tensor<f16>) -> tensor<1x1x3x3xf16>
-      %55 = "mhlo.broadcast_in_dim"(%53) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f16>) -> tensor<1x1x3x3xf16>
-      %56 = "mhlo.compare"(%54, %55) {comparison_direction = "NE"} : (tensor<1x1x3x3xf16>, tensor<1x1x3x3xf16>) -> tensor<1x1x3x3xi1>
-      %57 = "mhlo.dynamic-slice"(%arg5, %41, %44, %47, %50) {slice_sizes = dense<[1, 1, 3, 3]> : tensor<4xi64>} : (tensor<1x64x114x114xui32>, tensor<ui32>, tensor<ui32>, tensor<ui32>, tensor<ui32>) -> tensor<1x1x3x3xui32>
-      %58 = mhlo.constant dense<4294967295> : tensor<ui32>
-      %59 = "mhlo.broadcast_in_dim"(%58) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<ui32>) -> tensor<1x1x3x3xui32>
-      %60 = "mhlo.select"(%56, %57, %59) : (tensor<1x1x3x3xi1>, tensor<1x1x3x3xui32>, tensor<1x1x3x3xui32>) -> tensor<1x1x3x3xui32>
-      %61 = "mhlo.reduce_window"(%60, %58) ( {
-      ^bb0(%arg7: tensor<ui32>, %arg8: tensor<ui32>):  // no predecessors
-        %65 = mhlo.minimum %arg7, %arg8 : tensor<ui32>
-        "mhlo.return"(%65) : (tensor<ui32>) -> ()
+      %43 = "mhlo.broadcast_in_dim"(%41) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f16>) -> tensor<1x1x3x3xf16>
+      %44 = "mhlo.compare"(%42, %43) {comparison_direction = #mhlo<comparison_direction NE>} : (tensor<1x1x3x3xf16>, tensor<1x1x3x3xf16>) -> tensor<1x1x3x3xi1>
+      %45 = "mhlo.dynamic_slice"(%iterArg_3, %29, %32, %35, %38) {slice_sizes = dense<[1, 1, 3, 3]> : tensor<4xi64>} : (tensor<1x64x114x114xui32>, tensor<ui32>, tensor<ui32>, tensor<ui32>, tensor<ui32>) -> tensor<1x1x3x3xui32>
+      %46 = mhlo.constant dense<4294967295> : tensor<ui32>
+      %47 = "mhlo.broadcast_in_dim"(%46) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<ui32>) -> tensor<1x1x3x3xui32>
+      %48 = "mhlo.select"(%44, %45, %47) : (tensor<1x1x3x3xi1>, tensor<1x1x3x3xui32>, tensor<1x1x3x3xui32>) -> tensor<1x1x3x3xui32>
+      %49 = "mhlo.reduce_window"(%48, %46) ({
+      ^bb0(%arg1: tensor<ui32>, %arg2: tensor<ui32>):
+        %52 = mhlo.minimum %arg1, %arg2 : tensor<ui32>
+        "mhlo.return"(%52) : (tensor<ui32>) -> ()
       }) {base_dilations = dense<1> : tensor<4xi64>, padding = dense<0> : tensor<4x2xi64>, window_dilations = dense<1> : tensor<4xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (tensor<1x1x3x3xui32>, tensor<ui32>) -> tensor<1x1x1x1xui32>
-      %62 = "mhlo.reshape"(%61) : (tensor<1x1x1x1xui32>) -> tensor<1xui32>
-      %63 = "mhlo.dynamic-update-slice"(%arg6, %62, %arg1) : (tensor<200704xui32>, tensor<1xui32>, tensor<ui32>) -> tensor<200704xui32>
-      "mhlo.return"(%33, %arg2, %arg3, %arg4, %arg5, %63) : (tensor<ui32>, tensor<ui32>, tensor<1x64x114x114xf16>, tensor<1x64x56x56xf16>, tensor<1x64x114x114xui32>, tensor<200704xui32>) -> ()
-    }) : (tensor<ui32>, tensor<ui32>, tensor<1x64x114x114xf16>, tensor<1x64x56x56xf16>, tensor<1x64x114x114xui32>, tensor<200704xui32>) -> (tensor<ui32>, tensor<ui32>, tensor<1x64x114x114xf16>, tensor<1x64x56x56xf16>, tensor<1x64x114x114xui32>, tensor<200704xui32>)
-    %21 = "mhlo.reshape"(%14#5) : (tensor<200704xui32>) -> tensor<1x64x56x56xui32>
-    %22 = "mhlo.tuple"(%5, %21) : (tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>) -> tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>>
-    return %22 : tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>>
+      %50 = "mhlo.reshape"(%49) : (tensor<1x1x1x1xui32>) -> tensor<1xui32>
+      %51 = "mhlo.dynamic_update_slice"(%iterArg_4, %50, %iterArg) : (tensor<200704xui32>, tensor<1xui32>, tensor<ui32>) -> tensor<200704xui32>
+      "mhlo.return"(%26, %iterArg_0, %iterArg_1, %iterArg_2, %iterArg_3, %51) : (tensor<ui32>, tensor<ui32>, tensor<1x64x114x114xf16>, tensor<1x64x56x56xf16>, tensor<1x64x114x114xui32>, tensor<200704xui32>) -> ()
+    }
+    %15 = "mhlo.reshape"(%14#5) : (tensor<200704xui32>) -> tensor<1x64x56x56xui32>
+    %16 = "mhlo.tuple"(%5, %15) : (tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>) -> tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>>
+    return %16 : tuple<tensor<1x64x56x56xf16>, tensor<1x64x56x56xui32>>
   }
-  func private @aten.convolution_overrideable.312(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<1x64x56x56xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<1x64x56x56xf16>
+  func.func private @aten.convolution_overrideable.312(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<1x64x56x56xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<1x64x56x56xf16>
     return %0 : tensor<1x64x56x56xf16>
   }
-  func private @aten.native_batch_norm.317(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<64xf32>) -> tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>> {
-    %0 = "mhlo.convert"(%arg0) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = "mhlo.convert"(%1#0) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
-    %6 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
-    %7 = "mhlo.broadcast_in_dim"(%6) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<64xf32>
-    %8 = mhlo.add %1#2, %7 : tensor<64xf32>
-    %9 = "mhlo.rsqrt"(%8) : (tensor<64xf32>) -> tensor<64xf32>
-    %10 = "mhlo.tuple"(%3, %1#1, %1#2, %9) : (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
-    return %10 : tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
+  func.func private @aten.native_batch_norm.317(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>, %arg3: tensor<64xf32>, %arg4: tensor<64xf32>) -> tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>> {
+    %0 = mhlo.convert(%arg0) : (tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<1x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
+    %1 = mhlo.convert(%output) : (tensor<1x64x56x56xf32>) -> tensor<1x64x56x56xf16>
+    %2 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
+    %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<64xf32>
+    %4 = mhlo.add %batch_var, %3 : tensor<64xf32>
+    %5 = mhlo.rsqrt %4 : tensor<64xf32>
+    %6 = "mhlo.tuple"(%1, %batch_mean, %batch_var, %5) : (tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) -> tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
+    return %6 : tuple<tensor<1x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>>
   }
-  func private @aten.relu.339(%arg0: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> {
+  func.func private @aten.relu.339(%arg0: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<f16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f16>) -> tensor<1x64x56x56xf16>
     %2 = mhlo.maximum %arg0, %1 : tensor<1x64x56x56xf16>
     return %2 : tensor<1x64x56x56xf16>
   }
-  func private @aten.expand.164(%arg0: tensor<f16>) -> tensor<1x64x56x56xf16> {
+  func.func private @aten.expand.164(%arg0: tensor<f16>) -> tensor<1x64x56x56xf16> {
     %0 = "mhlo.reshape"(%arg0) : (tensor<f16>) -> tensor<1x1x1x1xf16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>} : (tensor<1x1x1x1xf16>) -> tensor<1x1x1x1xf16>
     %2 = "mhlo.reshape"(%1) : (tensor<1x1x1x1xf16>) -> tensor<1xf16>
     %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<0> : tensor<1xi64>} : (tensor<1xf16>) -> tensor<1x64x56x56xf16>
     return %3 : tensor<1x64x56x56xf16>
   }
-  func private @aten.mul.305(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> {
+  func.func private @aten.mul.305(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> {
     %0 = mhlo.multiply %arg0, %arg1 : tensor<1x64x56x56xf16>
     return %0 : tensor<1x64x56x56xf16>
   }
-  func private @aten.add.351(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> {
+  func.func private @aten.add.351(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<1x64x56x56xf16>) -> tensor<1x64x56x56xf16> {
     %0 = mhlo.add %arg0, %arg1 : tensor<1x64x56x56xf16>
     return %0 : tensor<1x64x56x56xf16>
   }
-  func private @aten.convolution_overrideable.375(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<128x64x1x1xf16>) -> tensor<1x128x28x28xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[0, 0], [0, 0]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x64x56x56xf16>, tensor<128x64x1x1xf16>) -> tensor<1x128x28x28xf16>
+  func.func private @aten.convolution_overrideable.375(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<128x64x1x1xf16>) -> tensor<1x128x28x28xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[0, 0], [0, 0]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x64x56x56xf16>, tensor<128x64x1x1xf16>) -> tensor<1x128x28x28xf16>
     return %0 : tensor<1x128x28x28xf16>
   }
-  func private @aten.native_batch_norm.380(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>, %arg3: tensor<128xf32>, %arg4: tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>> {
-    %0 = "mhlo.convert"(%arg0) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = "mhlo.convert"(%1#0) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
-    %6 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
-    %7 = "mhlo.broadcast_in_dim"(%6) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<128xf32>
-    %8 = mhlo.add %1#2, %7 : tensor<128xf32>
-    %9 = "mhlo.rsqrt"(%8) : (tensor<128xf32>) -> tensor<128xf32>
-    %10 = "mhlo.tuple"(%3, %1#1, %1#2, %9) : (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
-    return %10 : tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
+  func.func private @aten.native_batch_norm.380(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>, %arg3: tensor<128xf32>, %arg4: tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>> {
+    %0 = mhlo.convert(%arg0) : (tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<1x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
+    %1 = mhlo.convert(%output) : (tensor<1x128x28x28xf32>) -> tensor<1x128x28x28xf16>
+    %2 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
+    %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<128xf32>
+    %4 = mhlo.add %batch_var, %3 : tensor<128xf32>
+    %5 = mhlo.rsqrt %4 : tensor<128xf32>
+    %6 = "mhlo.tuple"(%1, %batch_mean, %batch_var, %5) : (tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>) -> tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
+    return %6 : tuple<tensor<1x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>>
   }
-  func private @aten.convolution_overrideable.409(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<128x64x3x3xf16>) -> tensor<1x128x28x28xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x64x56x56xf16>, tensor<128x64x3x3xf16>) -> tensor<1x128x28x28xf16>
+  func.func private @aten.convolution_overrideable.409(%arg0: tensor<1x64x56x56xf16>, %arg1: tensor<128x64x3x3xf16>) -> tensor<1x128x28x28xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x64x56x56xf16>, tensor<128x64x3x3xf16>) -> tensor<1x128x28x28xf16>
     return %0 : tensor<1x128x28x28xf16>
   }
-  func private @aten.relu.419(%arg0: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> {
+  func.func private @aten.relu.419(%arg0: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<f16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f16>) -> tensor<1x128x28x28xf16>
     %2 = mhlo.maximum %arg0, %1 : tensor<1x128x28x28xf16>
     return %2 : tensor<1x128x28x28xf16>
   }
-  func private @aten.convolution_overrideable.425(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<1x128x28x28xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<1x128x28x28xf16>
+  func.func private @aten.convolution_overrideable.425(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<1x128x28x28xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x128x28x28xf16>, tensor<128x128x3x3xf16>) -> tensor<1x128x28x28xf16>
     return %0 : tensor<1x128x28x28xf16>
   }
-  func private @aten.expand.153(%arg0: tensor<f16>) -> tensor<1x128x28x28xf16> {
+  func.func private @aten.expand.153(%arg0: tensor<f16>) -> tensor<1x128x28x28xf16> {
     %0 = "mhlo.reshape"(%arg0) : (tensor<f16>) -> tensor<1x1x1x1xf16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>} : (tensor<1x1x1x1xf16>) -> tensor<1x1x1x1xf16>
     %2 = "mhlo.reshape"(%1) : (tensor<1x1x1x1xf16>) -> tensor<1xf16>
     %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<0> : tensor<1xi64>} : (tensor<1xf16>) -> tensor<1x128x28x28xf16>
     return %3 : tensor<1x128x28x28xf16>
   }
-  func private @aten.mul.402(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> {
+  func.func private @aten.mul.402(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> {
     %0 = mhlo.multiply %arg0, %arg1 : tensor<1x128x28x28xf16>
     return %0 : tensor<1x128x28x28xf16>
   }
-  func private @aten.add.435(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> {
+  func.func private @aten.add.435(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<1x128x28x28xf16>) -> tensor<1x128x28x28xf16> {
     %0 = mhlo.add %arg0, %arg1 : tensor<1x128x28x28xf16>
     return %0 : tensor<1x128x28x28xf16>
   }
-  func private @aten.convolution_overrideable.459(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<256x128x1x1xf16>) -> tensor<1x256x14x14xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[0, 0], [0, 0]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x128x28x28xf16>, tensor<256x128x1x1xf16>) -> tensor<1x256x14x14xf16>
+  func.func private @aten.convolution_overrideable.459(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<256x128x1x1xf16>) -> tensor<1x256x14x14xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[0, 0], [0, 0]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x128x28x28xf16>, tensor<256x128x1x1xf16>) -> tensor<1x256x14x14xf16>
     return %0 : tensor<1x256x14x14xf16>
   }
-  func private @aten.native_batch_norm.464(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>, %arg3: tensor<256xf32>, %arg4: tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>> {
-    %0 = "mhlo.convert"(%arg0) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = "mhlo.convert"(%1#0) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
-    %6 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
-    %7 = "mhlo.broadcast_in_dim"(%6) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<256xf32>
-    %8 = mhlo.add %1#2, %7 : tensor<256xf32>
-    %9 = "mhlo.rsqrt"(%8) : (tensor<256xf32>) -> tensor<256xf32>
-    %10 = "mhlo.tuple"(%3, %1#1, %1#2, %9) : (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
-    return %10 : tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
+  func.func private @aten.native_batch_norm.464(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>, %arg3: tensor<256xf32>, %arg4: tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>> {
+    %0 = mhlo.convert(%arg0) : (tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<1x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
+    %1 = mhlo.convert(%output) : (tensor<1x256x14x14xf32>) -> tensor<1x256x14x14xf16>
+    %2 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
+    %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<256xf32>
+    %4 = mhlo.add %batch_var, %3 : tensor<256xf32>
+    %5 = mhlo.rsqrt %4 : tensor<256xf32>
+    %6 = "mhlo.tuple"(%1, %batch_mean, %batch_var, %5) : (tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>) -> tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
+    return %6 : tuple<tensor<1x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>>
   }
-  func private @aten.convolution_overrideable.493(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<256x128x3x3xf16>) -> tensor<1x256x14x14xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x128x28x28xf16>, tensor<256x128x3x3xf16>) -> tensor<1x256x14x14xf16>
+  func.func private @aten.convolution_overrideable.493(%arg0: tensor<1x128x28x28xf16>, %arg1: tensor<256x128x3x3xf16>) -> tensor<1x256x14x14xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x128x28x28xf16>, tensor<256x128x3x3xf16>) -> tensor<1x256x14x14xf16>
     return %0 : tensor<1x256x14x14xf16>
   }
-  func private @aten.relu.503(%arg0: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> {
+  func.func private @aten.relu.503(%arg0: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<f16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f16>) -> tensor<1x256x14x14xf16>
     %2 = mhlo.maximum %arg0, %1 : tensor<1x256x14x14xf16>
     return %2 : tensor<1x256x14x14xf16>
   }
-  func private @aten.convolution_overrideable.509(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<1x256x14x14xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<1x256x14x14xf16>
+  func.func private @aten.convolution_overrideable.509(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<1x256x14x14xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x256x14x14xf16>, tensor<256x256x3x3xf16>) -> tensor<1x256x14x14xf16>
     return %0 : tensor<1x256x14x14xf16>
   }
-  func private @aten.expand.142(%arg0: tensor<f16>) -> tensor<1x256x14x14xf16> {
+  func.func private @aten.expand.142(%arg0: tensor<f16>) -> tensor<1x256x14x14xf16> {
     %0 = "mhlo.reshape"(%arg0) : (tensor<f16>) -> tensor<1x1x1x1xf16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>} : (tensor<1x1x1x1xf16>) -> tensor<1x1x1x1xf16>
     %2 = "mhlo.reshape"(%1) : (tensor<1x1x1x1xf16>) -> tensor<1xf16>
     %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<0> : tensor<1xi64>} : (tensor<1xf16>) -> tensor<1x256x14x14xf16>
     return %3 : tensor<1x256x14x14xf16>
   }
-  func private @aten.mul.486(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> {
+  func.func private @aten.mul.486(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> {
     %0 = mhlo.multiply %arg0, %arg1 : tensor<1x256x14x14xf16>
     return %0 : tensor<1x256x14x14xf16>
   }
-  func private @aten.add.519(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> {
+  func.func private @aten.add.519(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<1x256x14x14xf16>) -> tensor<1x256x14x14xf16> {
     %0 = mhlo.add %arg0, %arg1 : tensor<1x256x14x14xf16>
     return %0 : tensor<1x256x14x14xf16>
   }
-  func private @aten.convolution_overrideable.543(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<512x256x1x1xf16>) -> tensor<1x512x7x7xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[0, 0], [0, 0]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x256x14x14xf16>, tensor<512x256x1x1xf16>) -> tensor<1x512x7x7xf16>
+  func.func private @aten.convolution_overrideable.543(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<512x256x1x1xf16>) -> tensor<1x512x7x7xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[0, 0], [0, 0]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x256x14x14xf16>, tensor<512x256x1x1xf16>) -> tensor<1x512x7x7xf16>
     return %0 : tensor<1x512x7x7xf16>
   }
-  func private @aten.native_batch_norm.548(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>, %arg3: tensor<512xf32>, %arg4: tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>> {
-    %0 = "mhlo.convert"(%arg0) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf32>
-    %1:3 = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = "mhlo.convert"(%1#0) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
-    %6 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
-    %7 = "mhlo.broadcast_in_dim"(%6) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<512xf32>
-    %8 = mhlo.add %1#2, %7 : tensor<512xf32>
-    %9 = "mhlo.rsqrt"(%8) : (tensor<512xf32>) -> tensor<512xf32>
-    %10 = "mhlo.tuple"(%3, %1#1, %1#2, %9) : (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
-    return %10 : tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
+  func.func private @aten.native_batch_norm.548(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>, %arg3: tensor<512xf32>, %arg4: tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>> {
+    %0 = mhlo.convert(%arg0) : (tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf32>
+    %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<1x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
+    %1 = mhlo.convert(%output) : (tensor<1x512x7x7xf32>) -> tensor<1x512x7x7xf16>
+    %2 = mhlo.constant dense<9.99999974E-6> : tensor<f32>
+    %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f32>) -> tensor<512xf32>
+    %4 = mhlo.add %batch_var, %3 : tensor<512xf32>
+    %5 = mhlo.rsqrt %4 : tensor<512xf32>
+    %6 = "mhlo.tuple"(%1, %batch_mean, %batch_var, %5) : (tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>) -> tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
+    return %6 : tuple<tensor<1x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>>
   }
-  func private @aten.convolution_overrideable.577(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<512x256x3x3xf16>) -> tensor<1x512x7x7xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x256x14x14xf16>, tensor<512x256x3x3xf16>) -> tensor<1x512x7x7xf16>
+  func.func private @aten.convolution_overrideable.577(%arg0: tensor<1x256x14x14xf16>, %arg1: tensor<512x256x3x3xf16>) -> tensor<1x512x7x7xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [2, 2], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x256x14x14xf16>, tensor<512x256x3x3xf16>) -> tensor<1x512x7x7xf16>
     return %0 : tensor<1x512x7x7xf16>
   }
-  func private @aten.relu.587(%arg0: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> {
+  func.func private @aten.relu.587(%arg0: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<f16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f16>) -> tensor<1x512x7x7xf16>
     %2 = mhlo.maximum %arg0, %1 : tensor<1x512x7x7xf16>
     return %2 : tensor<1x512x7x7xf16>
   }
-  func private @aten.convolution_overrideable.593(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<1x512x7x7xf16> {
-    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<1x512x7x7xf16>
+  func.func private @aten.convolution_overrideable.593(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<1x512x7x7xf16> {
+    %0 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x512x7x7xf16>, tensor<512x512x3x3xf16>) -> tensor<1x512x7x7xf16>
     return %0 : tensor<1x512x7x7xf16>
   }
-  func private @aten.expand.131(%arg0: tensor<f16>) -> tensor<1x512x7x7xf16> {
+  func.func private @aten.expand.131(%arg0: tensor<f16>) -> tensor<1x512x7x7xf16> {
     %0 = "mhlo.reshape"(%arg0) : (tensor<f16>) -> tensor<1x1x1x1xf16>
     %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>} : (tensor<1x1x1x1xf16>) -> tensor<1x1x1x1xf16>
     %2 = "mhlo.reshape"(%1) : (tensor<1x1x1x1xf16>) -> tensor<1xf16>
     %3 = "mhlo.broadcast_in_dim"(%2) {broadcast_dimensions = dense<0> : tensor<1xi64>} : (tensor<1xf16>) -> tensor<1x512x7x7xf16>
     return %3 : tensor<1x512x7x7xf16>
   }
-  func private @aten.mul.570(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> {
+  func.func private @aten.mul.570(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> {
     %0 = mhlo.multiply %arg0, %arg1 : tensor<1x512x7x7xf16>
     return %0 : tensor<1x512x7x7xf16>
   }
-  func private @aten.add.603(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> {
+  func.func private @aten.add.603(%arg0: tensor<1x512x7x7xf16>, %arg1: tensor<1x512x7x7xf16>) -> tensor<1x512x7x7xf16> {
     %0 = mhlo.add %arg0, %arg1 : tensor<1x512x7x7xf16>
     return %0 : tensor<1x512x7x7xf16>
   }
-  func private @aten.mean.631(%arg0: tensor<1x512x7x7xf16>) -> tensor<1x512x1x1xf16> {
+  func.func private @aten.mean.631(%arg0: tensor<1x512x7x7xf16>) -> tensor<1x512x1x1xf16> {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<f16>
-    %1 = "mhlo.reduce"(%arg0, %0) ( {
-    ^bb0(%arg1: tensor<f16>, %arg2: tensor<f16>):  // no predecessors
+    %1 = mhlo.reduce(%arg0 init: %0) across dimensions = [3, 2] : (tensor<1x512x7x7xf16>, tensor<f16>) -> tensor<1x512xf16>
+     reducer(%arg1: tensor<f16>, %arg2: tensor<f16>)  {
       %14 = mhlo.add %arg1, %arg2 : tensor<f16>
       "mhlo.return"(%14) : (tensor<f16>) -> ()
-    }) {dimensions = dense<[3, 2]> : tensor<2xi64>} : (tensor<1x512x7x7xf16>, tensor<f16>) -> tensor<1x512xf16>
+    }
     %2 = mhlo.constant dense<49> : tensor<i64>
     %3 = mhlo.constant dense<0> : tensor<i64>
-    %4 = "mhlo.compare"(%2, %3) {comparison_direction = "NE"} : (tensor<i64>, tensor<i64>) -> tensor<i1>
+    %4 = "mhlo.compare"(%2, %3) {comparison_direction = #mhlo<comparison_direction NE>} : (tensor<i64>, tensor<i64>) -> tensor<i1>
     %5 = mhlo.constant dense<1.000000e+00> : tensor<f16>
-    %6 = "mhlo.convert"(%2) : (tensor<i64>) -> tensor<f16>
+    %6 = mhlo.convert(%2) : (tensor<i64>) -> tensor<f16>
     %7 = mhlo.divide %5, %6 : tensor<f16>
     %8 = mhlo.constant dense<0x7E00> : tensor<f16>
     %9 = "mhlo.select"(%4, %7, %8) : (tensor<i1>, tensor<f16>, tensor<f16>) -> tensor<f16>
     %10 = "mhlo.broadcast_in_dim"(%9) {broadcast_dimensions = dense<> : tensor<0xi64>} : (tensor<f16>) -> tensor<1x512xf16>
     %11 = mhlo.multiply %1, %10 : tensor<1x512xf16>
     %12 = "mhlo.reshape"(%11) : (tensor<1x512xf16>) -> tensor<1x512x1x1xf16>
-    %13 = "mhlo.convert"(%12) : (tensor<1x512x1x1xf16>) -> tensor<1x512x1x1xf16>
+    %13 = mhlo.convert %12 : tensor<1x512x1x1xf16>
     return %13 : tensor<1x512x1x1xf16>
   }
-  func private @aten.view.648(%arg0: tensor<1x512x1x1xf16>) -> tensor<1x512xf16> {
+  func.func private @aten.view.648(%arg0: tensor<1x512x1x1xf16>) -> tensor<1x512xf16> {
     %0 = "mhlo.reshape"(%arg0) : (tensor<1x512x1x1xf16>) -> tensor<1x512xf16>
     return %0 : tensor<1x512xf16>
   }
-  func private @aten.permute.126(%arg0: tensor<1000x512xf16>) -> tensor<512x1000xf16> {
+  func.func private @aten.permute.126(%arg0: tensor<1000x512xf16>) -> tensor<512x1000xf16> {
     %0 = "mhlo.transpose"(%arg0) {minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<1000x512xf16>) -> tensor<512x1000xf16>
     return %0 : tensor<512x1000xf16>
   }
-  func private @aten.addmm.652(%arg0: tensor<1x512xf16>, %arg1: tensor<512x1000xf16>, %arg2: tensor<1000xf16>) -> tensor<1x1000xf16> {
-    %0 = "mhlo.dot"(%arg0, %arg1) {precision_config = ["DEFAULT", "DEFAULT"]} : (tensor<1x512xf16>, tensor<512x1000xf16>) -> tensor<1x1000xf16>
+  func.func private @aten.addmm.652(%arg0: tensor<1x512xf16>, %arg1: tensor<512x1000xf16>, %arg2: tensor<1000xf16>) -> tensor<1x1000xf16> {
+    %0 = "mhlo.dot"(%arg0, %arg1) {precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x512xf16>, tensor<512x1000xf16>) -> tensor<1x1000xf16>
     %1 = "mhlo.reshape"(%arg2) : (tensor<1000xf16>) -> tensor<1x1000xf16>
     %2 = "mhlo.broadcast_in_dim"(%1) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<1x1000xf16>) -> tensor<1x1000xf16>
     %3 = mhlo.add %0, %2 : tensor<1x1000xf16>

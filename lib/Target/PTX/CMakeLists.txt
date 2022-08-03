@@ -12,12 +12,18 @@ add_byteir_translation_library(ByteIRTargetPTX
 
   LINK_LIBS PUBLIC
   MLIRIR
-  MLIRLLVMIR
+  MLIRLLVMDialect
+  MLIRAMDGPUDialect
+  MLIRMLProgramDialect
   MLIRPass
   MLIRLLVMToLLVMIRTranslation
   MLIRNVVMToLLVMIRTranslation
   MLIRTensorInferTypeOpInterfaceImpl
   MLIRTransforms
   MLIRTransformUtils
-  # MLIRTranslation
+  MLIRTranslateLib
+  MLIRLinalgTransformOps
+  MLIRSCFTransformOps
+  MLIRBufferizationTransformOps
+  MLIRShapeOpsTransforms
   )

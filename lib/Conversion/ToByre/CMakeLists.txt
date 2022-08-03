@@ -16,7 +16,7 @@ add_byteir_conversion_library(ByteIRToByre
   MLIRByre
   MLIRIR
   MLIRLace
-  MLIRMemRef
+  MLIRMemRefDialect
   MLIRTransforms
   ByteIRConversionCommon
   ByteIRMhloUtils

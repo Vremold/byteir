@@ -11,6 +11,7 @@
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/Pass.h"
 #include <functional>
@@ -19,6 +20,9 @@
 
 namespace mlir {
 class Operation;
+namespace func {
+class FuncOp;
+} // namespace func
 
 struct GenericFuserConfig {
   StringRef fuse_attr;
@@ -34,15 +38,16 @@ struct GenericFuserConfig {
 //===----------------------------------------------------------------------===//
 
 template <typename DerivedT>
-class GenericFusionBase : public ::mlir::OperationPass<mlir::FuncOp> {
+class GenericFusionBase : public ::mlir::OperationPass<mlir::func::FuncOp> {
 public:
   using Base = GenericFusionBase;
 
   GenericFusionBase()
-      : ::mlir::OperationPass<mlir::FuncOp>(::mlir::TypeID::get<DerivedT>()) {}
+      : ::mlir::OperationPass<mlir::func::FuncOp>(
+            ::mlir::TypeID::get<DerivedT>()) {}
 
   GenericFusionBase(const GenericFusionBase &other)
-      : ::mlir::OperationPass<mlir::FuncOp>(other) {}
+      : ::mlir::OperationPass<mlir::func::FuncOp>(other) {}
 
   /// Support isa/dyn_cast functionality for the derived pass class.
   static bool classof(const ::mlir::Pass *pass) {
@@ -81,7 +86,7 @@ public:
   }
 
   void runOnOperation() override {
-    FuncOp funcOp = this->getOperation();
+    func::FuncOp funcOp = this->getOperation();
     // skip private
     if (funcOp.isPrivate())
       return;

@@ -181,7 +181,8 @@ struct ptxGenerator {
     LLVMInitializeNVPTXTargetMC();
     LLVMInitializeNVPTXAsmPrinter();
 
-    mlir::initializeLLVMPasses();
+    // FIXME: this seems removed from upstream.
+    // mlir::initializeLLVMPasses();
   }
 
   LogicalResult generatePtx(ModuleOp moduleOp, const std::string &prefixName,

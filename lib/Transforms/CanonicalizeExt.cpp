@@ -54,11 +54,13 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
       Operation *op = *it;
       if (!op->use_empty())
         continue;
-      if (wouldOpBeTriviallyDead(op))
+      if (wouldOpBeTriviallyDead(op)) {
         op->erase();
-      auto customOp = llvm::dyn_cast<mhlo::CustomCallOp>(op);
-      if (customOp && !customOp.has_side_effect())
-        op->erase();
+      } else {
+        auto customOp = llvm::dyn_cast<mhlo::CustomCallOp>(op);
+        if (customOp && !customOp.has_side_effect())
+          op->erase();
+      }
     }
 
     GreedyRewriteConfig config;

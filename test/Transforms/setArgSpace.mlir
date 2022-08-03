@@ -1,9 +1,9 @@
 // RUN: byteir-opt %s -set-arg-space="entry-func=main all-space=cpu" | FileCheck %s
 
-func private @nested(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref<2x4xf32>) attributes {device = "gpu"}
-// CHECK-LABEL: func private @nested(memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu"> attributes {device = "gpu"}
+func.func private @nested(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref<2x4xf32>) attributes {device = "gpu"}
+// CHECK-LABEL: func.func private @nested(memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu"> attributes {device = "gpu"}
 
-func private @local(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref<2x4xf32>) attributes {device = "gpu"}  {
+func.func private @local(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref<2x4xf32>) attributes {device = "gpu"}  {
   %0 = call @nested(%arg0, %arg1) : (memref<2x4xf32>, memref<2x4xf32>) -> (memref<2x4xf32>)
   %1 = memref.alloc() : memref<2x4xf32>
   %2 = memref.alloc() : memref<2x4xf32>
@@ -12,7 +12,7 @@ func private @local(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref
   "lmhlo.abs"(%1, %2) : (memref<2x4xf32>, memref<2x4xf32>) -> ()
   return %2: memref<2x4xf32> 
 }
-// CHECK-LABEL: func private @local(%arg0: memref<2x4xf32, "gpu">, %arg1: memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu"> attributes {device = "gpu"}
+// CHECK-LABEL: func.func private @local(%arg0: memref<2x4xf32, "gpu">, %arg1: memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu"> attributes {device = "gpu"}
 // CHECK-NEXT:    %0 = call @nested(%arg0, %arg1) : (memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu">
 // CHECK-NEXT:    %1 = memref.alloc() : memref<2x4xf32, "gpu">
 // CHECK-NEXT:    %2 = memref.alloc() : memref<2x4xf32, "gpu">
@@ -22,12 +22,12 @@ func private @local(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>) -> (memref
 // CHECK-NEXT:    return %2 : memref<2x4xf32, "gpu">
 
 
-func @main(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>, %arg2 : memref<2x4xf32>) -> (memref<2x4xf32>, memref<2x4xf32>) {
+func.func @main(%arg0 : memref<2x4xf32>, %arg1 : memref<2x4xf32>, %arg2 : memref<2x4xf32>) -> (memref<2x4xf32>, memref<2x4xf32>) {
   %0 = call @local(%arg0, %arg0) : (memref<2x4xf32>, memref<2x4xf32>) -> (memref<2x4xf32>)
   "lmhlo.add"(%arg0, %arg1, %arg2) : (memref<2x4xf32>, memref<2x4xf32>, memref<2x4xf32>) -> ()
   return %0, %0: memref<2x4xf32>, memref<2x4xf32> 
 }
-// CHECK-LABEL: func @main(%arg0: memref<2x4xf32, "cpu">, %arg1: memref<2x4xf32, "cpu">, %arg2: memref<2x4xf32, "cpu">) -> (memref<2x4xf32, "cpu">, memref<2x4xf32, "cpu">)
+// CHECK-LABEL: func.func @main(%arg0: memref<2x4xf32, "cpu">, %arg1: memref<2x4xf32, "cpu">, %arg2: memref<2x4xf32, "cpu">) -> (memref<2x4xf32, "cpu">, memref<2x4xf32, "cpu">)
 // CHECK-NEXT:    %0 = memref.alloc() : memref<2x4xf32, "gpu">
 // CHECK-NEXT:    memref.copy %arg0, %0 : memref<2x4xf32, "cpu"> to memref<2x4xf32, "gpu">
 // CHECK-NEXT:    %1 = call @local(%0, %0) : (memref<2x4xf32, "gpu">, memref<2x4xf32, "gpu">) -> memref<2x4xf32, "gpu">

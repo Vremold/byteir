@@ -1,7 +1,7 @@
 // RUN: byteir-opt -gen-ptx-config -convert-to-byre %s | FileCheck %s
 
 module attributes {gpu.container_module}  {
-  func private @Unknown0(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<128xi64>, %arg3: memref<128xf64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {byre_compute_name = "Unknown0", __byteir_elementwise_fusion__} {
+  func.func private @Unknown0(%arg0: memref<1x128xi64>, %arg1: memref<128xi64>, %arg2: memref<128xi64>, %arg3: memref<128xf64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {byre_compute_name = "Unknown0", __byteir_elementwise_fusion__} {
     %c4 = arith.constant 4 : index
     %c1 = arith.constant 1 : index
     %c32 = arith.constant 32 : index
@@ -45,7 +45,7 @@ module attributes {gpu.container_module}  {
       gpu.return
     }
   }
-  func @main(%arg0: memref<1x128xi64> {__placeholder__byre.argname = "A"}) -> (memref<128xui32> {__placeholder__byre.argname = "B"}, memref<128x1xi64> {__placeholder__byre.argname = "C"}, memref<128xi1> {__placeholder__byre.argname = "D"}) attributes {__placeholder__byre.entry_point} {
+  func.func @main(%arg0: memref<1x128xi64> {__placeholder__byre.argname = "A"}) -> (memref<128xui32> {__placeholder__byre.argname = "B"}, memref<128x1xi64> {__placeholder__byre.argname = "C"}, memref<128xi1> {__placeholder__byre.argname = "D"}) attributes {__placeholder__byre.entry_point} {
     %0 = memref.alloc() : memref<128xi64>
     "lmhlo.constant"(%0) {value = dense<0> : tensor<128xi64>} : (memref<128xi64>) -> ()
     %1 = memref.alloc() : memref<128xf64>
@@ -56,7 +56,7 @@ module attributes {gpu.container_module}  {
     return %3#0, %3#1, %3#2 : memref<128xui32>, memref<128x1xi64>, memref<128xi1>
   }
 
-  // CHECK-NOT: func private @Unknown0
+  // CHECK-NOT: func.func private @Unknown0
   // CHECK: byre.compute @PTXOp
   // CHEKC-SAME: {BlockSize.x = 32 : i32, GridSize.x = 4 : i32, kernel_name = "Unknown0_kernel"}
 }

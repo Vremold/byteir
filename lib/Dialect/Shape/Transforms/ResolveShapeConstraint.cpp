@@ -27,7 +27,7 @@ struct ResolveShapeConstraintPass
   };
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
 
     llvm::EquivalenceClasses<Value, ValueComparator> eqs;
     llvm::SmallVector<Value> constValues;
@@ -123,7 +123,7 @@ struct ResolveShapeConstraintPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createResolveShapeConstraintPass() {
   return std::make_unique<ResolveShapeConstraintPass>();
 }

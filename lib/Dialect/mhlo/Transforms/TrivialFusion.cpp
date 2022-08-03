@@ -10,6 +10,7 @@
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/DenseMap.h"
@@ -61,13 +62,13 @@ struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
 
   TrivialFusionPass() : TrivialFusionBase() {
     // TODO: change to loading from outside
-    mhloNameMap.insert({"mhlo.rng_bit_generator", "RngBitGeneratorOp"});
-    mhloNameMap.insert({"mhlo.rng_normal", "RngNormalOp"});
-    mhloNameMap.insert({"mhlo.rng_uniform", "RngUniform"});
+    // mhloNameMap.insert({"mhlo.rng_bit_generator", "RngBitGeneratorOp"});
+    // mhloNameMap.insert({"mhlo.rng_normal", "RngNormalOp"});
+    // mhloNameMap.insert({"mhlo.rng_uniform", "RngUniform"});
   }
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
     populateTrivialFusionPattern(patterns, mhloNameMap);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
@@ -83,11 +84,13 @@ struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
 
 void mlir::populateTrivialFusionPattern(
     RewritePatternSet &patterns, llvm::DenseMap<StringRef, StringRef> &lut) {
-  patterns.add<SingleOpPattern<mhlo::RngBitGeneratorOp>,
-               SingleOpPattern<mhlo::RngNormalOp>,
-               SingleOpPattern<mhlo::RngUniformOp>>(patterns.getContext(), lut);
+  // FIXME: mhlo::RngNormalOp and RngUninformOp has been merged into RngOp.
+  // patterns.add<SingleOpPattern<mhlo::RngBitGeneratorOp>,
+  //              SingleOpPattern<mhlo::RngNormalOp>,
+  //              SingleOpPattern<mhlo::RngUniformOp>>(patterns.getContext(),
+  //              lut);
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createTrivialFusionPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createTrivialFusionPass() {
   return std::make_unique<TrivialFusionPass>();
 }

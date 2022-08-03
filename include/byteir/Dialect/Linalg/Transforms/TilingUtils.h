@@ -8,6 +8,7 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
 
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Location.h"

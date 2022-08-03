@@ -29,14 +29,15 @@ void LaceDialect::initialize() {
 //===----------------------------------------------------------------------===//
 //  ReshapeOp
 //===----------------------------------------------------------------------===//
-static LogicalResult Verify(lace::ReshapeOp op) {
+LogicalResult ReshapeOp::verify() {
   // FIXME: only identify layout is supported now
-  auto sourceMemRef = op.source().getType().cast<MemRefType>();
-  auto targetMemRef = op.target().getType().cast<MemRefType>();
+  auto sourceMemRef = source().getType().cast<MemRefType>();
+  auto targetMemRef = target().getType().cast<MemRefType>();
 
   if (!sourceMemRef.getLayout().isIdentity() ||
       !targetMemRef.getLayout().isIdentity())
-    return op->emitError() << "lace.reshape only supports identity layout";
+    return getOperation()->emitError()
+           << "lace.reshape only supports identity layout";
 
   return success();
 }
@@ -67,25 +68,27 @@ Wrapper operator*(Wrapper a, int64_t b) {
 } // namespace saturated_arith
 } // namespace
 
-static LogicalResult Verify(lace::SliceOp op) {
+LogicalResult SliceOp::verify() {
   // FIXME: only identify layout is supported now
-  auto sourceMemRef = op.source().getType().cast<MemRefType>();
-  auto targetMemRef = op.target().getType().cast<MemRefType>();
+  auto sourceMemRef = source().getType().cast<MemRefType>();
+  auto targetMemRef = target().getType().cast<MemRefType>();
 
   if (!sourceMemRef.getLayout().isIdentity() ||
       !targetMemRef.getLayout().isIdentity())
-    return op->emitError() << "lace.slice only supports identity layout";
+    return getOperation()->emitError()
+           << "lace.slice only supports identity layout";
 
   // check whether target memref could be treated as a sub-memref on the source
   // memref
-  SmallVector<int64_t> startIndices, limitIndices, strides;
-  getValuesFromDenseIntElementsAttr(op.start_indices(), startIndices);
-  getValuesFromDenseIntElementsAttr(op.limit_indices(), limitIndices);
-  getValuesFromDenseIntElementsAttr(op.strides(), strides);
+  SmallVector<int64_t> startIndices, limitIndices, strides_;
+  getValuesFromDenseIntElementsAttr(start_indices(), startIndices);
+  getValuesFromDenseIntElementsAttr(limit_indices(), limitIndices);
+  getValuesFromDenseIntElementsAttr(strides(), strides_);
 
   if (!SliceOp::isValid(sourceMemRef, targetMemRef, startIndices, limitIndices,
-                        strides))
-    return op->emitError() << "Invalid memref type of lace.slice op";
+                        strides_))
+    return getOperation()->emitError()
+           << "Invalid memref type of lace.slice op";
 
   return success();
 }

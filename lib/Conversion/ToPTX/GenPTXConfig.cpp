@@ -13,9 +13,10 @@
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Transforms/GenericFusion.h"
 #include "byteir/Utils/Utils.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/GPU/GPUDialect.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionInterfaces.h"
@@ -43,7 +44,7 @@ bool IsAliasOp(Operation &op) {
 // support static for now
 // TODO extend it to support dynamic block/grid sizes
 // TODO unify CUDA/PTX into the same pass with compilation option
-static void AddFuncAttrs(FuncOp func) {
+static void AddFuncAttrs(func::FuncOp func) {
   // handle elementwise fusion
   if (func->hasAttr(getByteIRElementwiseFusionAttrName())) {
     mlir::OpBuilder opBuilder(func);
@@ -135,13 +136,13 @@ struct GenPTXConfigPass : public GenPTXConfigBase<GenPTXConfigPass> {
   GenPTXConfigPass() : GenPTXConfigBase() {}
 
   void runOnOperation() override {
-    FuncOp func = getOperation();
+    func::FuncOp func = getOperation();
     AddFuncAttrs(func);
   }
 };
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createGenPTXConfigPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createGenPTXConfigPass() {
   return std::make_unique<GenPTXConfigPass>();
 }

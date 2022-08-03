@@ -13,9 +13,12 @@
 #include <string>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 // CMAE pass
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createCMAEPass(const std::string &skip = "");
 
 } // namespace mlir

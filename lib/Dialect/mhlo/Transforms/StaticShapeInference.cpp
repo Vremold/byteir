@@ -8,6 +8,8 @@
 #include "byteir/Dialect/mhlo/Transforms/StaticShapeInference.h"
 #include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/Pass.h"
 
 using namespace mlir;
@@ -18,13 +20,14 @@ struct StaticShapeInferencePass
     : public StaticShapeInferenceBase<StaticShapeInferencePass> {
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     (void)runShapeInference(funcOp, /*isStaticShapeInfer=*/false);
   };
 };
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createStaticShapeInferencePass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createStaticShapeInferencePass() {
   return std::make_unique<StaticShapeInferencePass>();
 }

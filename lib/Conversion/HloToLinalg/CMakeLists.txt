@@ -14,9 +14,9 @@ add_byteir_conversion_library(ByteIRHloToLinalg
   MhloDialect
   MhloToLinalg
   MLIRRewrite
-  MLIRLinalg
-  MLIRMath
-  MLIRMemRef
+  MLIRLinalgDialect
+  MLIRMathDialect
+  MLIRMemRefDialect
   MLIRTransforms
   ByteIRConversionCommon
   )

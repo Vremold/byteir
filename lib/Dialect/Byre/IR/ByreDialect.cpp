@@ -58,13 +58,13 @@ static LogicalResult foldMemRefCast(Operation *op) {
 }
 
 static LogicalResult verifyOpInEntryPointFunc(Operation *op) {
-  auto func = op->getParentOfType<FuncOp>();
+  auto func = op->getParentOfType<func::FuncOp>();
   if (!func->hasAttrOfType<UnitAttr>(
           ByreDialect::getEntryPointFunctionAttrName())) {
     return op->emitError("expected '")
            << ByreDialect::getEntryPointFunctionAttrName()
-           << "' attribute to be attached to '" << FuncOp::getOperationName()
-           << "' " << func.getName();
+           << "' attribute to be attached to '"
+           << func::FuncOp::getOperationName() << "' " << func.getName();
   }
   return success();
 }
@@ -161,20 +161,22 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
   // which under ModuleOp with ContainerModuleAttrName
   if (attr.getValue().isa<UnitAttr>() &&
       attr.getName().getValue() == getEntryPointFunctionAttrName()) {
-    if (!isa<FuncOp>(op)) {
-      return op->emitError("expected '") << getEntryPointFunctionAttrName()
-                                         << "' attribute to be attached to '"
-                                         << FuncOp::getOperationName() << '\'';
+    if (!isa<func::FuncOp>(op)) {
+      return op->emitError("expected '")
+             << getEntryPointFunctionAttrName()
+             << "' attribute to be attached to '"
+             << func::FuncOp::getOperationName() << '\'';
     }
-    auto funcOp = llvm::cast<FuncOp>(op);
+    auto funcOp = llvm::cast<func::FuncOp>(op);
 
     // FuncOp's parent must be ModuleOp with ContainerModuleAttr
     auto parentOp = op->getParentOp();
     if (parentOp == nullptr || !isa<ModuleOp>(parentOp)) {
       return op->emitError("expected '")
              << getEntryPointFunctionAttrName()
-             << "' attribute to be attached to '" << FuncOp::getOperationName()
-             << "' under '" << ModuleOp::getOperationName() << '\'';
+             << "' attribute to be attached to '"
+             << func::FuncOp::getOperationName() << "' under '"
+             << ModuleOp::getOperationName() << '\'';
     }
 
     // FIXME
@@ -183,8 +185,9 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
     if (!parentOp->hasAttrOfType<UnitAttr>(getContainerModuleAttrName())) {
       return op->emitError("expected '")
              << getEntryPointFunctionAttrName()
-             << "' attribute to be attached to '" << FuncOp::getOperationName()
-             << "' under '" << ModuleOp::getOperationName() << "' with '"
+             << "' attribute to be attached to '"
+             << func::FuncOp::getOperationName() << "' under '"
+             << ModuleOp::getOperationName() << "' with '"
              << getContainerModuleAttrName() << '\'';
     }
 
@@ -199,7 +202,7 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
         if (!validEntryFuncArgType(argType)) {
           return op->emitError("invalid argtype '")
                  << stringifyEnum(argType) << "' attached to the argument of '"
-                 << FuncOp::getOperationName() << "' under '"
+                 << func::FuncOp::getOperationName() << "' under '"
                  << ModuleOp::getOperationName() << '\'';
         }
         if (bitEnumContains(argType, ArgType::Input)) {
@@ -215,7 +218,7 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
         return op->emitError("expected attribute '")
                << getEntryPointFuncArgTypeAttrName()
                << "' to be attached to the argument of '"
-               << FuncOp::getOperationName() << "' under '"
+               << func::FuncOp::getOperationName() << "' under '"
                << ModuleOp::getOperationName() << '\'';
       }
 
@@ -230,7 +233,7 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
         return op->emitError("expected attribute '")
                << getEntryPointFuncArgNameAttrName()
                << "' to be attached to the argument of '"
-               << FuncOp::getOperationName() << "' under '"
+               << func::FuncOp::getOperationName() << "' under '"
                << ModuleOp::getOperationName() << '\'';
       }
     }
@@ -257,8 +260,8 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
 //===----------------------------------------------------------------------===/
 
 // verify ComputeOp
-static LogicalResult verify(ComputeOp op) {
-  return verifyOpInEntryPointFunc(op);
+LogicalResult ComputeOp::verify() {
+  return verifyOpInEntryPointFunc(this->getOperation());
 }
 
 FunctionType mlir::byre::ComputeOp::getType() {
@@ -295,7 +298,9 @@ LogicalResult CopyOp::fold(ArrayRef<Attribute>,
   return foldMemRefCast(*this);
 }
 
-static LogicalResult verify(CopyOp op) { return verifyOpInEntryPointFunc(op); }
+LogicalResult CopyOp::verify() {
+  return verifyOpInEntryPointFunc(this->getOperation());
+}
 
 // LWC: ignore Async for now
 //

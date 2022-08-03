@@ -14,7 +14,7 @@ set(LIBS
   MLIRIR
   MLIRParser
   MLIRPass
-  MLIRSPIRV
+  MLIRSPIRVDialect
   # MLIRTranslation
   MLIRSupport
   MLIRExecutionEngine

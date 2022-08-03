@@ -14,11 +14,14 @@
 
 namespace mlir {
 class RewritePatternSet;
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateLayoutTransformationPattern(RewritePatternSet &patterns,
                                          std::string targetLayout);
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createLayoutTransformationPass(std::string target_layout = "");
 
 } // namespace mlir

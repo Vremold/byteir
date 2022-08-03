@@ -14,6 +14,9 @@
 #include <string>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 constexpr StringRef getByteIRElementwiseFusionAttrName() {
   return "__byteir_elementwise_fusion__";
@@ -23,10 +26,10 @@ constexpr StringRef getByteIRMatmulEpilogueFusionAttrName() {
   return "__byteir_matmul_epilogue_fusion__";
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createElementFusionPass(bool clusterSingleElemwiseOp = false);
 
-std::unique_ptr<OperationPass<FuncOp>> createMatmulEpilogueFusionPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createMatmulEpilogueFusionPass();
 
 } // namespace mlir
 

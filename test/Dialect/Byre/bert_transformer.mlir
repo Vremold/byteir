@@ -2,7 +2,7 @@
 
 // batch = 8, seq = 128, hidden = 512
 module attributes {byre.container_module} {
-  func @bert_trasnformer_test(
+  func.func @bert_trasnformer_test(
     %attr_kernel_q : memref<512x512xf16> {byre.argname = "attr_kernel_q", byre.argtype = 4 : i32},
 	%attr_kernel_k : memref<512x512xf16> {byre.argname = "attr_kernel_k", byre.argtype = 4 : i32}, 
 	%attr_kernel_v : memref<512x512xf16> {byre.argname = "attr_kernel_v", byre.argtype = 4 : i32}, 
@@ -43,5 +43,5 @@ module attributes {byre.container_module} {
     return
   }
   
-  // CHECK-LABEL: func @bert_trasnformer_test
+  // CHECK-LABEL: func.func @bert_trasnformer_test
 }

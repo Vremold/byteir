@@ -2,7 +2,7 @@
 
 // CHECK-LABEL: test_cast
 // CHECK-SAME: (int32_t [[V1:[^ ]*]], uint32_t [[V2:[^ ]*]], size_t [[V3:[^ ]*]])
-func @test_cast(%arg0 : i32, %arg1 : ui32, %arg2: index) -> i32 {
+func.func @test_cast(%arg0 : i32, %arg1 : ui32, %arg2: index) -> i32 {
   // CHECK-NEXT: float [[V4:[^ ]*]] = (float)([[V1]]);
   %0 = arith.sitofp %arg0: i32 to f32
   // CHECK-NEXT: int32_t [[V5:[^ ]*]] = (int32_t)([[V3]]);

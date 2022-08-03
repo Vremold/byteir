@@ -6,6 +6,8 @@
 //===----------------------------------------------------------------------===//
 #include "byteir/Conversion/ToHlo/ArithToMhlo.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 #include "../PassDetail.h"
@@ -19,7 +21,7 @@ namespace {
 struct ConvertArithToMhloPass
     : public ConvertArithToMhloBase<ConvertArithToMhloPass> {
   void runOnOperation() override {
-    FuncOp op = getOperation();
+    func::FuncOp op = getOperation();
     MLIRContext *context = op.getContext();
     RewritePatternSet patterns(context);
     populateWithGenerated(patterns);
@@ -31,6 +33,7 @@ struct ConvertArithToMhloPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createConvertArithToMhloPass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createConvertArithToMhloPass() {
   return std::make_unique<ConvertArithToMhloPass>();
 }

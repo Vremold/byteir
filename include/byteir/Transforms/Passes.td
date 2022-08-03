@@ -16,7 +16,7 @@ include "mlir/Rewrite/PassUtil.td"
 // Anchored Func Pipeline
 //===----------------------------------------------------------------------===//
 
-def AnchoredFuncPipeline : Pass<"anchored-func-pipeline", "FuncOp"> {
+def AnchoredFuncPipeline : Pass<"anchored-func-pipeline", "func::FuncOp"> {
   let summary = "Apply a given pipeline when a func having anchorAttr";
   let constructor = "mlir::createAnchoredFuncPipelinePass()";
   let options = [
@@ -54,7 +54,7 @@ def CanonicalizeExt : Pass<"canonicalize-ext"> {
 // CMAE (Common Memory Access Elimination)
 //===----------------------------------------------------------------------===//
 
-def CMAE : Pass<"cmae", "FuncOp"> {
+def CMAE : Pass<"cmae", "func::FuncOp"> {
   let summary = "Eliminate common memory access within a block";
   let constructor = "mlir::createCMAEPass()";
   let options = [
@@ -69,7 +69,7 @@ def CMAE : Pass<"cmae", "FuncOp"> {
 // Condition Canonicalization
 //===----------------------------------------------------------------------===//
 
-def CondCanonicalize : Pass<"cond-canonicalize", "FuncOp"> {
+def CondCanonicalize : Pass<"cond-canonicalize", "func::FuncOp"> {
   let summary = "canonicalization based on condition";
   let constructor = "mlir::createCondCanonicalizePass()";
 }
@@ -92,7 +92,7 @@ def CollectFunc : Pass<"collect-func", "ModuleOp"> {
 // GenericDeviceConfig
 //===----------------------------------------------------------------------===//
 
-def GenericDeviceConfig : Pass<"generic-device-config", "mlir::FuncOp"> {
+def GenericDeviceConfig : Pass<"generic-device-config", "mlir::func::FuncOp"> {
   let summary = "Generate Generic Device configuration";
   let constructor = "mlir::createGenericDeviceConfigPass()";
   let options = [
@@ -148,7 +148,7 @@ def GraphClusteringByDevice : Pass<"graph-clustering-by-device", "ModuleOp"> {
 // LoopTag
 //===----------------------------------------------------------------------===//
 
-def LoopTag : Pass<"loop-tag", "FuncOp"> {
+def LoopTag : Pass<"loop-tag", "func::FuncOp"> {
   let summary = "Attach Tag based on func name";
   let constructor = "mlir::createLoopTagPass()";
   let options = [
@@ -169,7 +169,7 @@ def LoopTag : Pass<"loop-tag", "FuncOp"> {
 //===----------------------------------------------------------------------===//
 // Memory planning
 //===----------------------------------------------------------------------===//
-def MemoryPlanning: Pass<"memory-planning", "mlir::FuncOp"> {
+def MemoryPlanning: Pass<"memory-planning", "mlir::func::FuncOp"> {
   let summary = "Pass to perform static memory planning";
   let constructor = "mlir::createMemoryPlanningPass()";
   let dependentDialects = [
@@ -195,7 +195,7 @@ def RewriteOpToStdCall : Pass<"rewrite-op-to-std-call", "ModuleOp"> {
   let options = [
     ListOption<"callTable", "call-table", "std::string",
                "Replace op with call function name: call-table=<op name>:<call name>,...",
-               "llvm::cl::ZeroOrMore, llvm::cl::MiscFlags::CommaSeparated">
+               "llvm::cl::ZeroOrMore">
   ];
 }
 
@@ -203,7 +203,7 @@ def RewriteOpToStdCall : Pass<"rewrite-op-to-std-call", "ModuleOp"> {
 // LoopUnroll
 //===----------------------------------------------------------------------===//
 
-def LoopUnroll : Pass<"unroll", "mlir::FuncOp"> {
+def LoopUnroll : Pass<"unroll", "mlir::func::FuncOp"> {
   let summary = "Unroll scf/affine loops for anchored loop or satisfying depth";
   let constructor = "mlir::createByteIRLoopUnrollPass()";
   let options = [
@@ -221,7 +221,7 @@ def LoopUnroll : Pass<"unroll", "mlir::FuncOp"> {
 //===----------------------------------------------------------------------===//
 // Remove func body
 //===----------------------------------------------------------------------===//
-def RemoveFuncBody: Pass<"remove-func-body", "mlir::FuncOp"> {
+def RemoveFuncBody: Pass<"remove-func-body", "mlir::func::FuncOp"> {
   let summary = "Remove func body for func having specific attr";
   let constructor = "mlir::createRemoveFuncBodyPass()";
   let options = [
@@ -307,7 +307,7 @@ def SetArgSpace: Pass<"set-arg-space", "ModuleOp"> {
 // SetOpSpace: Set Op Space, only attach attribute
 //===----------------------------------------------------------------------===//
 
-def SetOpSpace: Pass<"set-op-space", "FuncOp"> {
+def SetOpSpace: Pass<"set-op-space", "func::FuncOp"> {
   let summary = "Set op device attribute for the entry function specified.";
   let constructor = "mlir::createSetOpSpacePass()";
   let options = [

@@ -13,6 +13,9 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 constexpr StringRef getByteIRTrivialFusionAttrName() {
   return "__byteir_trivial_fusion__";
@@ -23,7 +26,7 @@ void populateTrivialFusionPattern(
     llvm::DenseMap<StringRef, StringRef> &lut_name);
 
 // TODO add more target or list of op in arg
-std::unique_ptr<OperationPass<FuncOp>> createTrivialFusionPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createTrivialFusionPass();
 
 } // namespace mlir
 

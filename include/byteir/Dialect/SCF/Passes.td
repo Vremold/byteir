@@ -15,7 +15,7 @@ include "mlir/Pass/PassBase.td"
 // InsertTrivialSCFLoop
 //===----------------------------------------------------------------------===//
 
-def InsertTrivialSCFLoop : Pass<"insert-trivial-scf-loop", "mlir::FuncOp"> {
+def InsertTrivialSCFLoop : Pass<"insert-trivial-scf-loop", "mlir::func::FuncOp"> {
   let summary = "Insert trivial scf Loop for scalar computation";
   let constructor = "mlir::createInsertTrivialSCFLoopPass()";
   let dependentDialects = [

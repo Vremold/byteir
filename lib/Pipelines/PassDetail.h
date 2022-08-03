@@ -8,10 +8,12 @@
 #ifndef BYTEIR_PIPELINES_PASSDETAIL_H
 #define BYTEIR_PIPELINES_PASSDETAIL_H
 
+#include "mlir/IR/DialectRegistry.h"
 #include "mlir/Pass/Pass.h"
 
 namespace mlir {
 class AffineDialect;
+class ModuleOp;
 
 namespace arith {
 class ArithmeticDialect;
@@ -31,6 +33,7 @@ class ControlFlowDialect;
 
 namespace func {
 class FuncDialect;
+class FuncOp;
 } // namespace func
 
 namespace gpu {

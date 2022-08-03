@@ -15,6 +15,7 @@
 #include <string>
 
 namespace mlir {
+class ModuleOp;
 
 void addByteIRTotalBufferizePatterns(OpPassManager &pm);
 

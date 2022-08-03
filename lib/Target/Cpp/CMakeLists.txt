@@ -6,11 +6,11 @@ add_byteir_translation_library(ByteIRTargetCpp
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Target/Cpp
 
   LINK_LIBS PUBLIC
-  MLIREmitC
+  MLIREmitCDialect
   MLIRIR
-  MLIRSCF
-  MLIRControlFlow
-  MLIRMemRef
+  MLIRSCFDialect
+  MLIRControlFlowDialect
+  MLIRMemRefDialect
   MLIRSupport
   # MLIRTranslation
   )

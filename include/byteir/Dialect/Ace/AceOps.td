@@ -19,7 +19,6 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 
 class Ace_Op<string mnemonic, list<Trait> traits = []> :
     Op<Ace_Dialect, mnemonic, traits> {
-  let verifier = [{ return Verify(*this); }];
 }
 
 def Ace_ConstOp : Ace_Op<"constant", [
@@ -41,6 +40,7 @@ def Ace_ConstOp : Ace_Op<"constant", [
 
   let assemblyFormat = "attr-dict $value";
   let hasFolder = 1;
+  let hasVerifier = 0;
 }
 
 

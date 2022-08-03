@@ -14,6 +14,7 @@
 #define ACE_BASE
 
 include "mlir/IR/OpBase.td"
+include "mlir/IR/AttrTypeBase.td"
 
 //===----------------------------------------------------------------------===//
 // Ace Dialect.
@@ -24,6 +25,9 @@ include "mlir/IR/OpBase.td"
 def Ace_Dialect : Dialect {
   let name = "ace";
   let cppNamespace = "::mlir::ace";
+
+  let useDefaultTypePrinterParser = 1;
+  let useDefaultAttributePrinterParser = 1;
 }
 
 //===----------------------------------------------------------------------===//

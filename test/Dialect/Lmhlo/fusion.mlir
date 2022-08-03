@@ -1,6 +1,6 @@
 // RUN: byteir-opt %s | FileCheck %s
 
-func @lmhlo_add(%arg0: memref<4xf32>, %arg1: memref<4xf32>) -> memref<4xf32> {
+func.func @lmhlo_add(%arg0: memref<4xf32>, %arg1: memref<4xf32>) -> memref<4xf32> {
   %0 = memref.alloc() : memref<4xf32>
   %1 = memref.alloc() : memref<4xf32>
   "lmhlo.fusion"() ( {
@@ -10,4 +10,4 @@ func @lmhlo_add(%arg0: memref<4xf32>, %arg1: memref<4xf32>) -> memref<4xf32> {
   }) : () -> ()
   return %1 : memref<4xf32>
 }
-// CHECK-LABEL: func @lmhlo_add
+// CHECK-LABEL: func.func @lmhlo_add

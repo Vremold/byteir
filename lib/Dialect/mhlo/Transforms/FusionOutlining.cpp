@@ -40,8 +40,8 @@ static std::string GetOutlineFuncitonName(mhlo::FusionOp fusionOp,
   return funcName;
 }
 
-static FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
-                                   StringRef funcName) {
+static func::FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
+                                         StringRef funcName) {
 
   // creat outline function
   auto ctx = fusionOp->getContext();
@@ -51,7 +51,8 @@ static FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
   OpBuilder opBuilder(fusionOp.getContext());
 
   FunctionType funcType = FunctionType::get(ctx, inputTypes, retTypes);
-  FuncOp funcOp = FuncOp::create(fusionOp.getLoc(), funcName, funcType);
+  func::FuncOp funcOp =
+      func::FuncOp::create(fusionOp.getLoc(), funcName, funcType);
   funcOp.setPrivate();
 
   // create entry block
@@ -120,7 +121,8 @@ static FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
   return funcOp;
 }
 
-static void RewriteFusionOpToCall(mhlo::FusionOp fusionOp, FuncOp funcOp) {
+static void RewriteFusionOpToCall(mhlo::FusionOp fusionOp,
+                                  func::FuncOp funcOp) {
   // create a call
   OpBuilder opBuilder(fusionOp);
   auto callOp = opBuilder.create<func::CallOp>(fusionOp.getLoc(), funcOp,
@@ -150,10 +152,10 @@ void FusionOutliningPass::runOnOperation() {
 
   unsigned cnt = 0;
 
-  for (auto funcOp : moduleOp.getOps<FuncOp>()) {
+  for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
     funcOp.walk([&](mhlo::FusionOp fusionOp) {
       auto funcName = GetOutlineFuncitonName(fusionOp, cnt);
-      auto outlinedFuncOp = moduleOp.lookupSymbol<FuncOp>(funcName);
+      auto outlinedFuncOp = moduleOp.lookupSymbol<func::FuncOp>(funcName);
 
       if (outlinedFuncOp == nullptr) {
         outlinedFuncOp = CreateOutlinedFuncOp(fusionOp, funcName);

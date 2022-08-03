@@ -7,6 +7,8 @@
 
 #include "byteir/Transforms/SetArgShape.h"
 #include "./PassDetail.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include <vector>
@@ -41,7 +43,8 @@ struct SetArgShapePass : public SetArgShapeBase<SetArgShapePass> {
 
   void runOnOperation() override {
     ModuleOp module = getOperation();
-    FuncOp funcOp = module.lookupSymbol<FuncOp>(this->entryFuncName);
+    func::FuncOp funcOp =
+        module.lookupSymbol<func::FuncOp>(this->entryFuncName);
     if (!funcOp) {
       LLVM_DEBUG(llvm::dbgs() << "Cannot find the speficied function. This "
                                  "pass will be ignored.\n");
@@ -53,7 +56,7 @@ struct SetArgShapePass : public SetArgShapeBase<SetArgShapePass> {
       return;
     }
 
-    FunctionType funcType = funcOp.getType();
+    FunctionType funcType = funcOp.getFunctionType();
     SmallVector<Type, 4> newArgTypes;
     newArgTypes.reserve(funcOp.getNumArguments());
     for (unsigned i = 0, e = funcOp.getNumArguments(); i < e; ++i) {

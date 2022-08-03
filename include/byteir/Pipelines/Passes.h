@@ -19,6 +19,7 @@
 #include "byteir/Pipelines/TotalBufferize.h"
 
 namespace mlir {
+class ModuleOp;
 
 /// Generate the code for registering transforms passes.
 #define GEN_PASS_REGISTRATION

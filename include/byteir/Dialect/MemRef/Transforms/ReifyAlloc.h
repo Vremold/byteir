@@ -15,6 +15,9 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 class RewritePatternSet;
 
@@ -26,7 +29,7 @@ void reifyAllocLikeShapeAndOperands(ArrayRef<int64_t> oldShape,
 
 void populateReifyAllocLikePatterns(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createReifyAllocPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createReifyAllocPass();
 
 } // namespace mlir
 

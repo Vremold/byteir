@@ -812,24 +812,22 @@ module attributes {byre.container_module, gpu.container_module} {
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.alloca() : memref<1000xf16>
+      %5 = memref.expand_shape %arg0 [[0, 1]] : memref<1000xf32> into memref<1x1000xf32>
       %6 = arith.cmpi slt, %4, %c1000 : index
       scf.if %6 {
-        %7 = memref.load %arg0[%4] : memref<1000xf32>
-        %8 = arith.truncf %7 : f32 to f16
-        memref.store %8, %5[%4] : memref<1000xf16>
-        %9 = arith.cmpi slt, %4, %c0 : index
-        %10 = arith.addi %4, %c1000 : index
-        %11 = arith.select %9, %10, %4 : index
-        %12 = arith.subi %c-1, %4 : index
-        %13 = arith.select %9, %12, %4 : index
-        %14 = arith.divsi %13, %c1000 : index
-        %15 = arith.subi %c-1, %14 : index
-        %16 = arith.select %9, %15, %14 : index
-        %17 = memref.load %arg1[%16, %11] : memref<1x1000xf16>
-        %18 = memref.load %5[%11] : memref<1000xf16>
-        %19 = arith.addf %17, %18 : f16
-        memref.store %19, %arg2[%16, %11] : memref<1x1000xf16>
+        %7 = arith.cmpi slt, %4, %c0 : index
+        %8 = arith.addi %4, %c1000 : index
+        %9 = arith.select %7, %8, %4 : index
+        %10 = arith.subi %c-1, %4 : index
+        %11 = arith.select %7, %10, %4 : index
+        %12 = arith.divsi %11, %c1000 : index
+        %13 = arith.subi %c-1, %12 : index
+        %14 = arith.select %7, %13, %12 : index
+        %15 = memref.load %arg1[%14, %9] : memref<1x1000xf16>
+        %16 = memref.load %5[%14, %9] : memref<1x1000xf32>
+        %17 = arith.truncf %16 : f32 to f16
+        %18 = arith.addf %15, %17 : f16
+        memref.store %18, %arg2[%14, %9] : memref<1x1000xf16>
       }
       gpu.return
     }
@@ -892,8 +890,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c25088 = arith.constant 25088 : index
       %c7 = arith.constant 7 : index
-      %c512 = arith.constant 512 : index
       %c-1 = arith.constant -1 : index
+      %c512 = arith.constant 512 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -943,8 +941,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c2359296 = arith.constant 2359296 : index
       %c3 = arith.constant 3 : index
-      %c512 = arith.constant 512 : index
       %c-1 = arith.constant -1 : index
+      %c512 = arith.constant 512 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -993,8 +991,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c25088 = arith.constant 25088 : index
       %c7 = arith.constant 7 : index
-      %c512 = arith.constant 512 : index
       %c-1 = arith.constant -1 : index
+      %c512 = arith.constant 512 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1042,8 +1040,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c2359296 = arith.constant 2359296 : index
       %c3 = arith.constant 3 : index
-      %c512 = arith.constant 512 : index
       %c-1 = arith.constant -1 : index
+      %c512 = arith.constant 512 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1092,8 +1090,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c25088 = arith.constant 25088 : index
       %c7 = arith.constant 7 : index
-      %c512 = arith.constant 512 : index
       %c-1 = arith.constant -1 : index
+      %c512 = arith.constant 512 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1143,8 +1141,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c2359296 = arith.constant 2359296 : index
       %c3 = arith.constant 3 : index
-      %c512 = arith.constant 512 : index
       %c-1 = arith.constant -1 : index
+      %c512 = arith.constant 512 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1193,8 +1191,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c25088 = arith.constant 25088 : index
       %c7 = arith.constant 7 : index
-      %c512 = arith.constant 512 : index
       %c-1 = arith.constant -1 : index
+      %c512 = arith.constant 512 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1242,8 +1240,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c1179648 = arith.constant 1179648 : index
       %c3 = arith.constant 3 : index
-      %c256 = arith.constant 256 : index
       %c-1 = arith.constant -1 : index
+      %c256 = arith.constant 256 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1320,8 +1318,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c50176 = arith.constant 50176 : index
       %c14 = arith.constant 14 : index
-      %c256 = arith.constant 256 : index
       %c-1 = arith.constant -1 : index
+      %c256 = arith.constant 256 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1371,8 +1369,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c589824 = arith.constant 589824 : index
       %c3 = arith.constant 3 : index
-      %c256 = arith.constant 256 : index
       %c-1 = arith.constant -1 : index
+      %c256 = arith.constant 256 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1421,8 +1419,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c50176 = arith.constant 50176 : index
       %c14 = arith.constant 14 : index
-      %c256 = arith.constant 256 : index
       %c-1 = arith.constant -1 : index
+      %c256 = arith.constant 256 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1470,8 +1468,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c589824 = arith.constant 589824 : index
       %c3 = arith.constant 3 : index
-      %c256 = arith.constant 256 : index
       %c-1 = arith.constant -1 : index
+      %c256 = arith.constant 256 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1520,8 +1518,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c50176 = arith.constant 50176 : index
       %c14 = arith.constant 14 : index
-      %c256 = arith.constant 256 : index
       %c-1 = arith.constant -1 : index
+      %c256 = arith.constant 256 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1571,8 +1569,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c589824 = arith.constant 589824 : index
       %c3 = arith.constant 3 : index
-      %c256 = arith.constant 256 : index
       %c-1 = arith.constant -1 : index
+      %c256 = arith.constant 256 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1621,8 +1619,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c50176 = arith.constant 50176 : index
       %c14 = arith.constant 14 : index
-      %c256 = arith.constant 256 : index
       %c-1 = arith.constant -1 : index
+      %c256 = arith.constant 256 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1670,8 +1668,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c294912 = arith.constant 294912 : index
       %c3 = arith.constant 3 : index
-      %c128 = arith.constant 128 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1748,8 +1746,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c100352 = arith.constant 100352 : index
       %c28 = arith.constant 28 : index
-      %c128 = arith.constant 128 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1799,8 +1797,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c147456 = arith.constant 147456 : index
       %c3 = arith.constant 3 : index
-      %c128 = arith.constant 128 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1849,8 +1847,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c100352 = arith.constant 100352 : index
       %c28 = arith.constant 28 : index
-      %c128 = arith.constant 128 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1898,8 +1896,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c147456 = arith.constant 147456 : index
       %c3 = arith.constant 3 : index
-      %c128 = arith.constant 128 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1948,8 +1946,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c100352 = arith.constant 100352 : index
       %c28 = arith.constant 28 : index
-      %c128 = arith.constant 128 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -1999,8 +1997,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c147456 = arith.constant 147456 : index
       %c3 = arith.constant 3 : index
-      %c128 = arith.constant 128 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2049,8 +2047,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c100352 = arith.constant 100352 : index
       %c28 = arith.constant 28 : index
-      %c128 = arith.constant 128 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2098,8 +2096,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c73728 = arith.constant 73728 : index
       %c3 = arith.constant 3 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2176,8 +2174,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c200704 = arith.constant 200704 : index
       %c56 = arith.constant 56 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2227,8 +2225,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c36864 = arith.constant 36864 : index
       %c3 = arith.constant 3 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2277,8 +2275,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c200704 = arith.constant 200704 : index
       %c56 = arith.constant 56 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2326,8 +2324,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c36864 = arith.constant 36864 : index
       %c3 = arith.constant 3 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2376,8 +2374,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c200704 = arith.constant 200704 : index
       %c56 = arith.constant 56 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2427,8 +2425,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c36864 = arith.constant 36864 : index
       %c3 = arith.constant 3 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2477,8 +2475,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c200704 = arith.constant 200704 : index
       %c56 = arith.constant 56 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2526,8 +2524,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c36864 = arith.constant 36864 : index
       %c3 = arith.constant 3 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2576,8 +2574,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c802816 = arith.constant 802816 : index
       %c112 = arith.constant 112 : index
-      %c64 = arith.constant 64 : index
       %c-1 = arith.constant -1 : index
+      %c64 = arith.constant 64 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2625,8 +2623,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c9408 = arith.constant 9408 : index
       %c7 = arith.constant 7 : index
-      %c3 = arith.constant 3 : index
       %c-1 = arith.constant -1 : index
+      %c3 = arith.constant 3 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2674,8 +2672,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %c0 = arith.constant 0 : index
       %c150528 = arith.constant 150528 : index
       %c224 = arith.constant 224 : index
-      %c3 = arith.constant 3 : index
       %c-1 = arith.constant -1 : index
+      %c3 = arith.constant 3 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -2720,7 +2718,7 @@ module attributes {byre.container_module, gpu.container_module} {
       gpu.return
     }
   }
-  func @main(%arg0: memref<64xf32> {byre.argname = "Input0", byre.argtype = 1 : i32}, %arg1: memref<64xf32> {byre.argname = "Input1", byre.argtype = 1 : i32}, %arg2: memref<64x3x7x7xf32> {byre.argname = "Input2", byre.argtype = 1 : i32}, %arg3: memref<1000xf32> {byre.argname = "Input3", byre.argtype = 1 : i32}, %arg4: memref<1000x512xf32> {byre.argname = "Input4", byre.argtype = 1 : i32}, %arg5: memref<64xf32> {byre.argname = "Input5", byre.argtype = 1 : i32}, %arg6: memref<64xf32> {byre.argname = "Input6", byre.argtype = 1 : i32}, %arg7: memref<64xf32> {byre.argname = "Input7", byre.argtype = 1 : i32}, %arg8: memref<64xf32> {byre.argname = "Input8", byre.argtype = 1 : i32}, %arg9: memref<64x64x3x3xf32> {byre.argname = "Input9", byre.argtype = 1 : i32}, %arg10: memref<64x64x3x3xf32> {byre.argname = "Input10", byre.argtype = 1 : i32}, %arg11: memref<64xf32> {byre.argname = "Input11", byre.argtype = 1 : i32}, %arg12: memref<64xf32> {byre.argname = "Input12", byre.argtype = 1 : i32}, %arg13: memref<64xf32> {byre.argname = "Input13", byre.argtype = 1 : i32}, %arg14: memref<64xf32> {byre.argname = "Input14", byre.argtype = 1 : i32}, %arg15: memref<64x64x3x3xf32> {byre.argname = "Input15", byre.argtype = 1 : i32}, %arg16: memref<64x64x3x3xf32> {byre.argname = "Input16", byre.argtype = 1 : i32}, %arg17: memref<128xf32> {byre.argname = "Input17", byre.argtype = 1 : i32}, %arg18: memref<128xf32> {byre.argname = "Input18", byre.argtype = 1 : i32}, %arg19: memref<128xf32> {byre.argname = "Input19", byre.argtype = 1 : i32}, %arg20: memref<128xf32> {byre.argname = "Input20", byre.argtype = 1 : i32}, %arg21: memref<128x64x3x3xf32> {byre.argname = "Input21", byre.argtype = 1 : i32}, %arg22: memref<128x128x3x3xf32> {byre.argname = "Input22", byre.argtype = 1 : i32}, %arg23: memref<128x64x1x1xf32> {byre.argname = "Input23", byre.argtype = 1 : i32}, %arg24: memref<128xf32> {byre.argname = "Input24", byre.argtype = 1 : i32}, %arg25: memref<128xf32> {byre.argname = "Input25", byre.argtype = 1 : i32}, %arg26: memref<128xf32> {byre.argname = "Input26", byre.argtype = 1 : i32}, %arg27: memref<128xf32> {byre.argname = "Input27", byre.argtype = 1 : i32}, %arg28: memref<128xf32> {byre.argname = "Input28", byre.argtype = 1 : i32}, %arg29: memref<128xf32> {byre.argname = "Input29", byre.argtype = 1 : i32}, %arg30: memref<128x128x3x3xf32> {byre.argname = "Input30", byre.argtype = 1 : i32}, %arg31: memref<128x128x3x3xf32> {byre.argname = "Input31", byre.argtype = 1 : i32}, %arg32: memref<256xf32> {byre.argname = "Input32", byre.argtype = 1 : i32}, %arg33: memref<256xf32> {byre.argname = "Input33", byre.argtype = 1 : i32}, %arg34: memref<256xf32> {byre.argname = "Input34", byre.argtype = 1 : i32}, %arg35: memref<256xf32> {byre.argname = "Input35", byre.argtype = 1 : i32}, %arg36: memref<256x128x3x3xf32> {byre.argname = "Input36", byre.argtype = 1 : i32}, %arg37: memref<256x256x3x3xf32> {byre.argname = "Input37", byre.argtype = 1 : i32}, %arg38: memref<256x128x1x1xf32> {byre.argname = "Input38", byre.argtype = 1 : i32}, %arg39: memref<256xf32> {byre.argname = "Input39", byre.argtype = 1 : i32}, %arg40: memref<256xf32> {byre.argname = "Input40", byre.argtype = 1 : i32}, %arg41: memref<256xf32> {byre.argname = "Input41", byre.argtype = 1 : i32}, %arg42: memref<256xf32> {byre.argname = "Input42", byre.argtype = 1 : i32}, %arg43: memref<256xf32> {byre.argname = "Input43", byre.argtype = 1 : i32}, %arg44: memref<256xf32> {byre.argname = "Input44", byre.argtype = 1 : i32}, %arg45: memref<256x256x3x3xf32> {byre.argname = "Input45", byre.argtype = 1 : i32}, %arg46: memref<256x256x3x3xf32> {byre.argname = "Input46", byre.argtype = 1 : i32}, %arg47: memref<512xf32> {byre.argname = "Input47", byre.argtype = 1 : i32}, %arg48: memref<512xf32> {byre.argname = "Input48", byre.argtype = 1 : i32}, %arg49: memref<512xf32> {byre.argname = "Input49", byre.argtype = 1 : i32}, %arg50: memref<512xf32> {byre.argname = "Input50", byre.argtype = 1 : i32}, %arg51: memref<512x256x3x3xf32> {byre.argname = "Input51", byre.argtype = 1 : i32}, %arg52: memref<512x512x3x3xf32> {byre.argname = "Input52", byre.argtype = 1 : i32}, %arg53: memref<512x256x1x1xf32> {byre.argname = "Input53", byre.argtype = 1 : i32}, %arg54: memref<512xf32> {byre.argname = "Input54", byre.argtype = 1 : i32}, %arg55: memref<512xf32> {byre.argname = "Input55", byre.argtype = 1 : i32}, %arg56: memref<512xf32> {byre.argname = "Input56", byre.argtype = 1 : i32}, %arg57: memref<512xf32> {byre.argname = "Input57", byre.argtype = 1 : i32}, %arg58: memref<512xf32> {byre.argname = "Input58", byre.argtype = 1 : i32}, %arg59: memref<512xf32> {byre.argname = "Input59", byre.argtype = 1 : i32}, %arg60: memref<512x512x3x3xf32> {byre.argname = "Input60", byre.argtype = 1 : i32}, %arg61: memref<512x512x3x3xf32> {byre.argname = "Input61", byre.argtype = 1 : i32}, %arg62: memref<i64> {byre.argname = "Input62", byre.argtype = 1 : i32}, %arg63: memref<64xf32> {byre.argname = "Input63", byre.argtype = 1 : i32}, %arg64: memref<64xf32> {byre.argname = "Input64", byre.argtype = 1 : i32}, %arg65: memref<i64> {byre.argname = "Input65", byre.argtype = 1 : i32}, %arg66: memref<64xf32> {byre.argname = "Input66", byre.argtype = 1 : i32}, %arg67: memref<64xf32> {byre.argname = "Input67", byre.argtype = 1 : i32}, %arg68: memref<i64> {byre.argname = "Input68", byre.argtype = 1 : i32}, %arg69: memref<64xf32> {byre.argname = "Input69", byre.argtype = 1 : i32}, %arg70: memref<64xf32> {byre.argname = "Input70", byre.argtype = 1 : i32}, %arg71: memref<i64> {byre.argname = "Input71", byre.argtype = 1 : i32}, %arg72: memref<64xf32> {byre.argname = "Input72", byre.argtype = 1 : i32}, %arg73: memref<64xf32> {byre.argname = "Input73", byre.argtype = 1 : i32}, %arg74: memref<i64> {byre.argname = "Input74", byre.argtype = 1 : i32}, %arg75: memref<64xf32> {byre.argname = "Input75", byre.argtype = 1 : i32}, %arg76: memref<64xf32> {byre.argname = "Input76", byre.argtype = 1 : i32}, %arg77: memref<i64> {byre.argname = "Input77", byre.argtype = 1 : i32}, %arg78: memref<128xf32> {byre.argname = "Input78", byre.argtype = 1 : i32}, %arg79: memref<128xf32> {byre.argname = "Input79", byre.argtype = 1 : i32}, %arg80: memref<i64> {byre.argname = "Input80", byre.argtype = 1 : i32}, %arg81: memref<128xf32> {byre.argname = "Input81", byre.argtype = 1 : i32}, %arg82: memref<128xf32> {byre.argname = "Input82", byre.argtype = 1 : i32}, %arg83: memref<i64> {byre.argname = "Input83", byre.argtype = 1 : i32}, %arg84: memref<128xf32> {byre.argname = "Input84", byre.argtype = 1 : i32}, %arg85: memref<128xf32> {byre.argname = "Input85", byre.argtype = 1 : i32}, %arg86: memref<i64> {byre.argname = "Input86", byre.argtype = 1 : i32}, %arg87: memref<128xf32> {byre.argname = "Input87", byre.argtype = 1 : i32}, %arg88: memref<128xf32> {byre.argname = "Input88", byre.argtype = 1 : i32}, %arg89: memref<i64> {byre.argname = "Input89", byre.argtype = 1 : i32}, %arg90: memref<128xf32> {byre.argname = "Input90", byre.argtype = 1 : i32}, %arg91: memref<128xf32> {byre.argname = "Input91", byre.argtype = 1 : i32}, %arg92: memref<i64> {byre.argname = "Input92", byre.argtype = 1 : i32}, %arg93: memref<256xf32> {byre.argname = "Input93", byre.argtype = 1 : i32}, %arg94: memref<256xf32> {byre.argname = "Input94", byre.argtype = 1 : i32}, %arg95: memref<i64> {byre.argname = "Input95", byre.argtype = 1 : i32}, %arg96: memref<256xf32> {byre.argname = "Input96", byre.argtype = 1 : i32}, %arg97: memref<256xf32> {byre.argname = "Input97", byre.argtype = 1 : i32}, %arg98: memref<i64> {byre.argname = "Input98", byre.argtype = 1 : i32}, %arg99: memref<256xf32> {byre.argname = "Input99", byre.argtype = 1 : i32}, %arg100: memref<256xf32> {byre.argname = "Input100", byre.argtype = 1 : i32}, %arg101: memref<i64> {byre.argname = "Input101", byre.argtype = 1 : i32}, %arg102: memref<256xf32> {byre.argname = "Input102", byre.argtype = 1 : i32}, %arg103: memref<256xf32> {byre.argname = "Input103", byre.argtype = 1 : i32}, %arg104: memref<i64> {byre.argname = "Input104", byre.argtype = 1 : i32}, %arg105: memref<256xf32> {byre.argname = "Input105", byre.argtype = 1 : i32}, %arg106: memref<256xf32> {byre.argname = "Input106", byre.argtype = 1 : i32}, %arg107: memref<i64> {byre.argname = "Input107", byre.argtype = 1 : i32}, %arg108: memref<512xf32> {byre.argname = "Input108", byre.argtype = 1 : i32}, %arg109: memref<512xf32> {byre.argname = "Input109", byre.argtype = 1 : i32}, %arg110: memref<i64> {byre.argname = "Input110", byre.argtype = 1 : i32}, %arg111: memref<512xf32> {byre.argname = "Input111", byre.argtype = 1 : i32}, %arg112: memref<512xf32> {byre.argname = "Input112", byre.argtype = 1 : i32}, %arg113: memref<i64> {byre.argname = "Input113", byre.argtype = 1 : i32}, %arg114: memref<512xf32> {byre.argname = "Input114", byre.argtype = 1 : i32}, %arg115: memref<512xf32> {byre.argname = "Input115", byre.argtype = 1 : i32}, %arg116: memref<i64> {byre.argname = "Input116", byre.argtype = 1 : i32}, %arg117: memref<512xf32> {byre.argname = "Input117", byre.argtype = 1 : i32}, %arg118: memref<512xf32> {byre.argname = "Input118", byre.argtype = 1 : i32}, %arg119: memref<i64> {byre.argname = "Input119", byre.argtype = 1 : i32}, %arg120: memref<512xf32> {byre.argname = "Input120", byre.argtype = 1 : i32}, %arg121: memref<512xf32> {byre.argname = "Input121", byre.argtype = 1 : i32}, %arg122: memref<1x3x224x224xf32> {byre.argname = "Input122", byre.argtype = 1 : i32}, %arg123: memref<1x1000xf16> {byre.argname = "Output0", byre.argtype = 2 : i32}, %arg124: memref<64xf32> {byre.argname = "Output1", byre.argtype = 2 : i32}, %arg125: memref<64xf32> {byre.argname = "Output2", byre.argtype = 2 : i32}, %arg126: memref<64xf32> {byre.argname = "Output3", byre.argtype = 2 : i32}, %arg127: memref<64xf32> {byre.argname = "Output4", byre.argtype = 2 : i32}, %arg128: memref<64xf32> {byre.argname = "Output5", byre.argtype = 2 : i32}, %arg129: memref<64xf32> {byre.argname = "Output6", byre.argtype = 2 : i32}, %arg130: memref<64xf32> {byre.argname = "Output7", byre.argtype = 2 : i32}, %arg131: memref<64xf32> {byre.argname = "Output8", byre.argtype = 2 : i32}, %arg132: memref<64xf32> {byre.argname = "Output9", byre.argtype = 2 : i32}, %arg133: memref<64xf32> {byre.argname = "Output10", byre.argtype = 2 : i32}, %arg134: memref<128xf32> {byre.argname = "Output11", byre.argtype = 2 : i32}, %arg135: memref<128xf32> {byre.argname = "Output12", byre.argtype = 2 : i32}, %arg136: memref<128xf32> {byre.argname = "Output13", byre.argtype = 2 : i32}, %arg137: memref<128xf32> {byre.argname = "Output14", byre.argtype = 2 : i32}, %arg138: memref<128xf32> {byre.argname = "Output15", byre.argtype = 2 : i32}, %arg139: memref<128xf32> {byre.argname = "Output16", byre.argtype = 2 : i32}, %arg140: memref<128xf32> {byre.argname = "Output17", byre.argtype = 2 : i32}, %arg141: memref<128xf32> {byre.argname = "Output18", byre.argtype = 2 : i32}, %arg142: memref<128xf32> {byre.argname = "Output19", byre.argtype = 2 : i32}, %arg143: memref<128xf32> {byre.argname = "Output20", byre.argtype = 2 : i32}, %arg144: memref<256xf32> {byre.argname = "Output21", byre.argtype = 2 : i32}, %arg145: memref<256xf32> {byre.argname = "Output22", byre.argtype = 2 : i32}, %arg146: memref<256xf32> {byre.argname = "Output23", byre.argtype = 2 : i32}, %arg147: memref<256xf32> {byre.argname = "Output24", byre.argtype = 2 : i32}, %arg148: memref<256xf32> {byre.argname = "Output25", byre.argtype = 2 : i32}, %arg149: memref<256xf32> {byre.argname = "Output26", byre.argtype = 2 : i32}, %arg150: memref<256xf32> {byre.argname = "Output27", byre.argtype = 2 : i32}, %arg151: memref<256xf32> {byre.argname = "Output28", byre.argtype = 2 : i32}, %arg152: memref<256xf32> {byre.argname = "Output29", byre.argtype = 2 : i32}, %arg153: memref<256xf32> {byre.argname = "Output30", byre.argtype = 2 : i32}, %arg154: memref<512xf32> {byre.argname = "Output31", byre.argtype = 2 : i32}, %arg155: memref<512xf32> {byre.argname = "Output32", byre.argtype = 2 : i32}, %arg156: memref<512xf32> {byre.argname = "Output33", byre.argtype = 2 : i32}, %arg157: memref<512xf32> {byre.argname = "Output34", byre.argtype = 2 : i32}, %arg158: memref<512xf32> {byre.argname = "Output35", byre.argtype = 2 : i32}, %arg159: memref<512xf32> {byre.argname = "Output36", byre.argtype = 2 : i32}, %arg160: memref<512xf32> {byre.argname = "Output37", byre.argtype = 2 : i32}, %arg161: memref<512xf32> {byre.argname = "Output38", byre.argtype = 2 : i32}, %arg162: memref<512xf32> {byre.argname = "Output39", byre.argtype = 2 : i32}, %arg163: memref<512xf32> {byre.argname = "Output40", byre.argtype = 2 : i32}, %arg164: memref<64xf32> {byre.argname = "Output41", byre.argtype = 2 : i32}, %arg165: memref<64xf32> {byre.argname = "Output42", byre.argtype = 2 : i32}, %arg166: memref<64xf32> {byre.argname = "Output43", byre.argtype = 2 : i32}, %arg167: memref<64xf32> {byre.argname = "Output44", byre.argtype = 2 : i32}, %arg168: memref<64xf32> {byre.argname = "Output45", byre.argtype = 2 : i32}, %arg169: memref<64xf32> {byre.argname = "Output46", byre.argtype = 2 : i32}, %arg170: memref<64xf32> {byre.argname = "Output47", byre.argtype = 2 : i32}, %arg171: memref<64xf32> {byre.argname = "Output48", byre.argtype = 2 : i32}, %arg172: memref<64xf32> {byre.argname = "Output49", byre.argtype = 2 : i32}, %arg173: memref<64xf32> {byre.argname = "Output50", byre.argtype = 2 : i32}, %arg174: memref<128xf32> {byre.argname = "Output51", byre.argtype = 2 : i32}, %arg175: memref<128xf32> {byre.argname = "Output52", byre.argtype = 2 : i32}, %arg176: memref<128xf32> {byre.argname = "Output53", byre.argtype = 2 : i32}, %arg177: memref<128xf32> {byre.argname = "Output54", byre.argtype = 2 : i32}, %arg178: memref<128xf32> {byre.argname = "Output55", byre.argtype = 2 : i32}, %arg179: memref<128xf32> {byre.argname = "Output56", byre.argtype = 2 : i32}, %arg180: memref<128xf32> {byre.argname = "Output57", byre.argtype = 2 : i32}, %arg181: memref<128xf32> {byre.argname = "Output58", byre.argtype = 2 : i32}, %arg182: memref<128xf32> {byre.argname = "Output59", byre.argtype = 2 : i32}, %arg183: memref<128xf32> {byre.argname = "Output60", byre.argtype = 2 : i32}, %arg184: memref<256xf32> {byre.argname = "Output61", byre.argtype = 2 : i32}, %arg185: memref<256xf32> {byre.argname = "Output62", byre.argtype = 2 : i32}, %arg186: memref<256xf32> {byre.argname = "Output63", byre.argtype = 2 : i32}, %arg187: memref<256xf32> {byre.argname = "Output64", byre.argtype = 2 : i32}, %arg188: memref<256xf32> {byre.argname = "Output65", byre.argtype = 2 : i32}, %arg189: memref<256xf32> {byre.argname = "Output66", byre.argtype = 2 : i32}, %arg190: memref<256xf32> {byre.argname = "Output67", byre.argtype = 2 : i32}, %arg191: memref<256xf32> {byre.argname = "Output68", byre.argtype = 2 : i32}, %arg192: memref<256xf32> {byre.argname = "Output69", byre.argtype = 2 : i32}, %arg193: memref<256xf32> {byre.argname = "Output70", byre.argtype = 2 : i32}, %arg194: memref<512xf32> {byre.argname = "Output71", byre.argtype = 2 : i32}, %arg195: memref<512xf32> {byre.argname = "Output72", byre.argtype = 2 : i32}, %arg196: memref<512xf32> {byre.argname = "Output73", byre.argtype = 2 : i32}, %arg197: memref<512xf32> {byre.argname = "Output74", byre.argtype = 2 : i32}, %arg198: memref<512xf32> {byre.argname = "Output75", byre.argtype = 2 : i32}, %arg199: memref<512xf32> {byre.argname = "Output76", byre.argtype = 2 : i32}, %arg200: memref<512xf32> {byre.argname = "Output77", byre.argtype = 2 : i32}, %arg201: memref<512xf32> {byre.argname = "Output78", byre.argtype = 2 : i32}, %arg202: memref<512xf32> {byre.argname = "Output79", byre.argtype = 2 : i32}, %arg203: memref<512xf32> {byre.argname = "Output80", byre.argtype = 2 : i32}, %arg204: memref<64x3x7x7xf16> {byre.argname = "Output81", byre.argtype = 2 : i32}, %arg205: memref<1x3x224x224xf16> {byre.argname = "Output82", byre.argtype = 2 : i32}, %arg206: memref<1x64x112x112xf16> {byre.argname = "Output83", byre.argtype = 2 : i32}, %arg207: memref<1x64x112x112xf16> {byre.argname = "Output84", byre.argtype = 2 : i32}, %arg208: memref<1x64x56x56xf16> {byre.argname = "Output85", byre.argtype = 2 : i32}, %arg209: memref<64x64x3x3xf16> {byre.argname = "Output86", byre.argtype = 2 : i32}, %arg210: memref<1x64x56x56xf16> {byre.argname = "Output87", byre.argtype = 2 : i32}, %arg211: memref<1x64x56x56xf16> {byre.argname = "Output88", byre.argtype = 2 : i32}, %arg212: memref<64x64x3x3xf16> {byre.argname = "Output89", byre.argtype = 2 : i32}, %arg213: memref<1x64x56x56xf16> {byre.argname = "Output90", byre.argtype = 2 : i32}, %arg214: memref<1x64x56x56xf16> {byre.argname = "Output91", byre.argtype = 2 : i32}, %arg215: memref<64x64x3x3xf16> {byre.argname = "Output92", byre.argtype = 2 : i32}, %arg216: memref<1x64x56x56xf16> {byre.argname = "Output93", byre.argtype = 2 : i32}, %arg217: memref<1x64x56x56xf16> {byre.argname = "Output94", byre.argtype = 2 : i32}, %arg218: memref<64x64x3x3xf16> {byre.argname = "Output95", byre.argtype = 2 : i32}, %arg219: memref<1x64x56x56xf16> {byre.argname = "Output96", byre.argtype = 2 : i32}, %arg220: memref<1x64x56x56xf16> {byre.argname = "Output97", byre.argtype = 2 : i32}, %arg221: memref<128x64x3x3xf16> {byre.argname = "Output98", byre.argtype = 2 : i32}, %arg222: memref<1x128x28x28xf16> {byre.argname = "Output99", byre.argtype = 2 : i32}, %arg223: memref<1x128x28x28xf16> {byre.argname = "Output100", byre.argtype = 2 : i32}, %arg224: memref<128x128x3x3xf16> {byre.argname = "Output101", byre.argtype = 2 : i32}, %arg225: memref<1x128x28x28xf16> {byre.argname = "Output102", byre.argtype = 2 : i32}, %arg226: memref<128x64x1x1xf16> {byre.argname = "Output103", byre.argtype = 2 : i32}, %arg227: memref<1x128x28x28xf16> {byre.argname = "Output104", byre.argtype = 2 : i32}, %arg228: memref<1x128x28x28xf16> {byre.argname = "Output105", byre.argtype = 2 : i32}, %arg229: memref<128x128x3x3xf16> {byre.argname = "Output106", byre.argtype = 2 : i32}, %arg230: memref<1x128x28x28xf16> {byre.argname = "Output107", byre.argtype = 2 : i32}, %arg231: memref<1x128x28x28xf16> {byre.argname = "Output108", byre.argtype = 2 : i32}, %arg232: memref<128x128x3x3xf16> {byre.argname = "Output109", byre.argtype = 2 : i32}, %arg233: memref<1x128x28x28xf16> {byre.argname = "Output110", byre.argtype = 2 : i32}, %arg234: memref<1x128x28x28xf16> {byre.argname = "Output111", byre.argtype = 2 : i32}, %arg235: memref<256x128x3x3xf16> {byre.argname = "Output112", byre.argtype = 2 : i32}, %arg236: memref<1x256x14x14xf16> {byre.argname = "Output113", byre.argtype = 2 : i32}, %arg237: memref<1x256x14x14xf16> {byre.argname = "Output114", byre.argtype = 2 : i32}, %arg238: memref<256x256x3x3xf16> {byre.argname = "Output115", byre.argtype = 2 : i32}, %arg239: memref<1x256x14x14xf16> {byre.argname = "Output116", byre.argtype = 2 : i32}, %arg240: memref<256x128x1x1xf16> {byre.argname = "Output117", byre.argtype = 2 : i32}, %arg241: memref<1x256x14x14xf16> {byre.argname = "Output118", byre.argtype = 2 : i32}, %arg242: memref<1x256x14x14xf16> {byre.argname = "Output119", byre.argtype = 2 : i32}, %arg243: memref<256x256x3x3xf16> {byre.argname = "Output120", byre.argtype = 2 : i32}, %arg244: memref<1x256x14x14xf16> {byre.argname = "Output121", byre.argtype = 2 : i32}, %arg245: memref<1x256x14x14xf16> {byre.argname = "Output122", byre.argtype = 2 : i32}, %arg246: memref<256x256x3x3xf16> {byre.argname = "Output123", byre.argtype = 2 : i32}, %arg247: memref<1x256x14x14xf16> {byre.argname = "Output124", byre.argtype = 2 : i32}, %arg248: memref<1x256x14x14xf16> {byre.argname = "Output125", byre.argtype = 2 : i32}, %arg249: memref<512x256x3x3xf16> {byre.argname = "Output126", byre.argtype = 2 : i32}, %arg250: memref<1x512x7x7xf16> {byre.argname = "Output127", byre.argtype = 2 : i32}, %arg251: memref<1x512x7x7xf16> {byre.argname = "Output128", byre.argtype = 2 : i32}, %arg252: memref<512x512x3x3xf16> {byre.argname = "Output129", byre.argtype = 2 : i32}, %arg253: memref<1x512x7x7xf16> {byre.argname = "Output130", byre.argtype = 2 : i32}, %arg254: memref<512x256x1x1xf16> {byre.argname = "Output131", byre.argtype = 2 : i32}, %arg255: memref<1x512x7x7xf16> {byre.argname = "Output132", byre.argtype = 2 : i32}, %arg256: memref<1x512x7x7xf16> {byre.argname = "Output133", byre.argtype = 2 : i32}, %arg257: memref<512x512x3x3xf16> {byre.argname = "Output134", byre.argtype = 2 : i32}, %arg258: memref<1x512x7x7xf16> {byre.argname = "Output135", byre.argtype = 2 : i32}, %arg259: memref<1x512x7x7xf16> {byre.argname = "Output136", byre.argtype = 2 : i32}, %arg260: memref<512x512x3x3xf16> {byre.argname = "Output137", byre.argtype = 2 : i32}, %arg261: memref<1x512x7x7xf16> {byre.argname = "Output138", byre.argtype = 2 : i32}, %arg262: memref<1x512x7x7xf16> {byre.argname = "Output139", byre.argtype = 2 : i32}, %arg263: memref<1x512xf16> {byre.argname = "Output140", byre.argtype = 2 : i32}, %arg264: memref<512x1000xf16> {byre.argname = "Output141", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
+  func.func @main(%arg0: memref<64xf32> {byre.argname = "Input0", byre.argtype = 1 : i32}, %arg1: memref<64xf32> {byre.argname = "Input1", byre.argtype = 1 : i32}, %arg2: memref<64x3x7x7xf32> {byre.argname = "Input2", byre.argtype = 1 : i32}, %arg3: memref<1000xf32> {byre.argname = "Input3", byre.argtype = 1 : i32}, %arg4: memref<1000x512xf32> {byre.argname = "Input4", byre.argtype = 1 : i32}, %arg5: memref<64xf32> {byre.argname = "Input5", byre.argtype = 1 : i32}, %arg6: memref<64xf32> {byre.argname = "Input6", byre.argtype = 1 : i32}, %arg7: memref<64xf32> {byre.argname = "Input7", byre.argtype = 1 : i32}, %arg8: memref<64xf32> {byre.argname = "Input8", byre.argtype = 1 : i32}, %arg9: memref<64x64x3x3xf32> {byre.argname = "Input9", byre.argtype = 1 : i32}, %arg10: memref<64x64x3x3xf32> {byre.argname = "Input10", byre.argtype = 1 : i32}, %arg11: memref<64xf32> {byre.argname = "Input11", byre.argtype = 1 : i32}, %arg12: memref<64xf32> {byre.argname = "Input12", byre.argtype = 1 : i32}, %arg13: memref<64xf32> {byre.argname = "Input13", byre.argtype = 1 : i32}, %arg14: memref<64xf32> {byre.argname = "Input14", byre.argtype = 1 : i32}, %arg15: memref<64x64x3x3xf32> {byre.argname = "Input15", byre.argtype = 1 : i32}, %arg16: memref<64x64x3x3xf32> {byre.argname = "Input16", byre.argtype = 1 : i32}, %arg17: memref<128xf32> {byre.argname = "Input17", byre.argtype = 1 : i32}, %arg18: memref<128xf32> {byre.argname = "Input18", byre.argtype = 1 : i32}, %arg19: memref<128xf32> {byre.argname = "Input19", byre.argtype = 1 : i32}, %arg20: memref<128xf32> {byre.argname = "Input20", byre.argtype = 1 : i32}, %arg21: memref<128x64x3x3xf32> {byre.argname = "Input21", byre.argtype = 1 : i32}, %arg22: memref<128x128x3x3xf32> {byre.argname = "Input22", byre.argtype = 1 : i32}, %arg23: memref<128x64x1x1xf32> {byre.argname = "Input23", byre.argtype = 1 : i32}, %arg24: memref<128xf32> {byre.argname = "Input24", byre.argtype = 1 : i32}, %arg25: memref<128xf32> {byre.argname = "Input25", byre.argtype = 1 : i32}, %arg26: memref<128xf32> {byre.argname = "Input26", byre.argtype = 1 : i32}, %arg27: memref<128xf32> {byre.argname = "Input27", byre.argtype = 1 : i32}, %arg28: memref<128xf32> {byre.argname = "Input28", byre.argtype = 1 : i32}, %arg29: memref<128xf32> {byre.argname = "Input29", byre.argtype = 1 : i32}, %arg30: memref<128x128x3x3xf32> {byre.argname = "Input30", byre.argtype = 1 : i32}, %arg31: memref<128x128x3x3xf32> {byre.argname = "Input31", byre.argtype = 1 : i32}, %arg32: memref<256xf32> {byre.argname = "Input32", byre.argtype = 1 : i32}, %arg33: memref<256xf32> {byre.argname = "Input33", byre.argtype = 1 : i32}, %arg34: memref<256xf32> {byre.argname = "Input34", byre.argtype = 1 : i32}, %arg35: memref<256xf32> {byre.argname = "Input35", byre.argtype = 1 : i32}, %arg36: memref<256x128x3x3xf32> {byre.argname = "Input36", byre.argtype = 1 : i32}, %arg37: memref<256x256x3x3xf32> {byre.argname = "Input37", byre.argtype = 1 : i32}, %arg38: memref<256x128x1x1xf32> {byre.argname = "Input38", byre.argtype = 1 : i32}, %arg39: memref<256xf32> {byre.argname = "Input39", byre.argtype = 1 : i32}, %arg40: memref<256xf32> {byre.argname = "Input40", byre.argtype = 1 : i32}, %arg41: memref<256xf32> {byre.argname = "Input41", byre.argtype = 1 : i32}, %arg42: memref<256xf32> {byre.argname = "Input42", byre.argtype = 1 : i32}, %arg43: memref<256xf32> {byre.argname = "Input43", byre.argtype = 1 : i32}, %arg44: memref<256xf32> {byre.argname = "Input44", byre.argtype = 1 : i32}, %arg45: memref<256x256x3x3xf32> {byre.argname = "Input45", byre.argtype = 1 : i32}, %arg46: memref<256x256x3x3xf32> {byre.argname = "Input46", byre.argtype = 1 : i32}, %arg47: memref<512xf32> {byre.argname = "Input47", byre.argtype = 1 : i32}, %arg48: memref<512xf32> {byre.argname = "Input48", byre.argtype = 1 : i32}, %arg49: memref<512xf32> {byre.argname = "Input49", byre.argtype = 1 : i32}, %arg50: memref<512xf32> {byre.argname = "Input50", byre.argtype = 1 : i32}, %arg51: memref<512x256x3x3xf32> {byre.argname = "Input51", byre.argtype = 1 : i32}, %arg52: memref<512x512x3x3xf32> {byre.argname = "Input52", byre.argtype = 1 : i32}, %arg53: memref<512x256x1x1xf32> {byre.argname = "Input53", byre.argtype = 1 : i32}, %arg54: memref<512xf32> {byre.argname = "Input54", byre.argtype = 1 : i32}, %arg55: memref<512xf32> {byre.argname = "Input55", byre.argtype = 1 : i32}, %arg56: memref<512xf32> {byre.argname = "Input56", byre.argtype = 1 : i32}, %arg57: memref<512xf32> {byre.argname = "Input57", byre.argtype = 1 : i32}, %arg58: memref<512xf32> {byre.argname = "Input58", byre.argtype = 1 : i32}, %arg59: memref<512xf32> {byre.argname = "Input59", byre.argtype = 1 : i32}, %arg60: memref<512x512x3x3xf32> {byre.argname = "Input60", byre.argtype = 1 : i32}, %arg61: memref<512x512x3x3xf32> {byre.argname = "Input61", byre.argtype = 1 : i32}, %arg62: memref<i64> {byre.argname = "Input62", byre.argtype = 1 : i32}, %arg63: memref<64xf32> {byre.argname = "Input63", byre.argtype = 1 : i32}, %arg64: memref<64xf32> {byre.argname = "Input64", byre.argtype = 1 : i32}, %arg65: memref<i64> {byre.argname = "Input65", byre.argtype = 1 : i32}, %arg66: memref<64xf32> {byre.argname = "Input66", byre.argtype = 1 : i32}, %arg67: memref<64xf32> {byre.argname = "Input67", byre.argtype = 1 : i32}, %arg68: memref<i64> {byre.argname = "Input68", byre.argtype = 1 : i32}, %arg69: memref<64xf32> {byre.argname = "Input69", byre.argtype = 1 : i32}, %arg70: memref<64xf32> {byre.argname = "Input70", byre.argtype = 1 : i32}, %arg71: memref<i64> {byre.argname = "Input71", byre.argtype = 1 : i32}, %arg72: memref<64xf32> {byre.argname = "Input72", byre.argtype = 1 : i32}, %arg73: memref<64xf32> {byre.argname = "Input73", byre.argtype = 1 : i32}, %arg74: memref<i64> {byre.argname = "Input74", byre.argtype = 1 : i32}, %arg75: memref<64xf32> {byre.argname = "Input75", byre.argtype = 1 : i32}, %arg76: memref<64xf32> {byre.argname = "Input76", byre.argtype = 1 : i32}, %arg77: memref<i64> {byre.argname = "Input77", byre.argtype = 1 : i32}, %arg78: memref<128xf32> {byre.argname = "Input78", byre.argtype = 1 : i32}, %arg79: memref<128xf32> {byre.argname = "Input79", byre.argtype = 1 : i32}, %arg80: memref<i64> {byre.argname = "Input80", byre.argtype = 1 : i32}, %arg81: memref<128xf32> {byre.argname = "Input81", byre.argtype = 1 : i32}, %arg82: memref<128xf32> {byre.argname = "Input82", byre.argtype = 1 : i32}, %arg83: memref<i64> {byre.argname = "Input83", byre.argtype = 1 : i32}, %arg84: memref<128xf32> {byre.argname = "Input84", byre.argtype = 1 : i32}, %arg85: memref<128xf32> {byre.argname = "Input85", byre.argtype = 1 : i32}, %arg86: memref<i64> {byre.argname = "Input86", byre.argtype = 1 : i32}, %arg87: memref<128xf32> {byre.argname = "Input87", byre.argtype = 1 : i32}, %arg88: memref<128xf32> {byre.argname = "Input88", byre.argtype = 1 : i32}, %arg89: memref<i64> {byre.argname = "Input89", byre.argtype = 1 : i32}, %arg90: memref<128xf32> {byre.argname = "Input90", byre.argtype = 1 : i32}, %arg91: memref<128xf32> {byre.argname = "Input91", byre.argtype = 1 : i32}, %arg92: memref<i64> {byre.argname = "Input92", byre.argtype = 1 : i32}, %arg93: memref<256xf32> {byre.argname = "Input93", byre.argtype = 1 : i32}, %arg94: memref<256xf32> {byre.argname = "Input94", byre.argtype = 1 : i32}, %arg95: memref<i64> {byre.argname = "Input95", byre.argtype = 1 : i32}, %arg96: memref<256xf32> {byre.argname = "Input96", byre.argtype = 1 : i32}, %arg97: memref<256xf32> {byre.argname = "Input97", byre.argtype = 1 : i32}, %arg98: memref<i64> {byre.argname = "Input98", byre.argtype = 1 : i32}, %arg99: memref<256xf32> {byre.argname = "Input99", byre.argtype = 1 : i32}, %arg100: memref<256xf32> {byre.argname = "Input100", byre.argtype = 1 : i32}, %arg101: memref<i64> {byre.argname = "Input101", byre.argtype = 1 : i32}, %arg102: memref<256xf32> {byre.argname = "Input102", byre.argtype = 1 : i32}, %arg103: memref<256xf32> {byre.argname = "Input103", byre.argtype = 1 : i32}, %arg104: memref<i64> {byre.argname = "Input104", byre.argtype = 1 : i32}, %arg105: memref<256xf32> {byre.argname = "Input105", byre.argtype = 1 : i32}, %arg106: memref<256xf32> {byre.argname = "Input106", byre.argtype = 1 : i32}, %arg107: memref<i64> {byre.argname = "Input107", byre.argtype = 1 : i32}, %arg108: memref<512xf32> {byre.argname = "Input108", byre.argtype = 1 : i32}, %arg109: memref<512xf32> {byre.argname = "Input109", byre.argtype = 1 : i32}, %arg110: memref<i64> {byre.argname = "Input110", byre.argtype = 1 : i32}, %arg111: memref<512xf32> {byre.argname = "Input111", byre.argtype = 1 : i32}, %arg112: memref<512xf32> {byre.argname = "Input112", byre.argtype = 1 : i32}, %arg113: memref<i64> {byre.argname = "Input113", byre.argtype = 1 : i32}, %arg114: memref<512xf32> {byre.argname = "Input114", byre.argtype = 1 : i32}, %arg115: memref<512xf32> {byre.argname = "Input115", byre.argtype = 1 : i32}, %arg116: memref<i64> {byre.argname = "Input116", byre.argtype = 1 : i32}, %arg117: memref<512xf32> {byre.argname = "Input117", byre.argtype = 1 : i32}, %arg118: memref<512xf32> {byre.argname = "Input118", byre.argtype = 1 : i32}, %arg119: memref<i64> {byre.argname = "Input119", byre.argtype = 1 : i32}, %arg120: memref<512xf32> {byre.argname = "Input120", byre.argtype = 1 : i32}, %arg121: memref<512xf32> {byre.argname = "Input121", byre.argtype = 1 : i32}, %arg122: memref<1x3x224x224xf32> {byre.argname = "Input122", byre.argtype = 1 : i32}, %arg123: memref<1x1000xf16> {byre.argname = "Output0", byre.argtype = 2 : i32}, %arg124: memref<64xf32> {byre.argname = "Output1", byre.argtype = 2 : i32}, %arg125: memref<64xf32> {byre.argname = "Output2", byre.argtype = 2 : i32}, %arg126: memref<64xf32> {byre.argname = "Output3", byre.argtype = 2 : i32}, %arg127: memref<64xf32> {byre.argname = "Output4", byre.argtype = 2 : i32}, %arg128: memref<64xf32> {byre.argname = "Output5", byre.argtype = 2 : i32}, %arg129: memref<64xf32> {byre.argname = "Output6", byre.argtype = 2 : i32}, %arg130: memref<64xf32> {byre.argname = "Output7", byre.argtype = 2 : i32}, %arg131: memref<64xf32> {byre.argname = "Output8", byre.argtype = 2 : i32}, %arg132: memref<64xf32> {byre.argname = "Output9", byre.argtype = 2 : i32}, %arg133: memref<64xf32> {byre.argname = "Output10", byre.argtype = 2 : i32}, %arg134: memref<128xf32> {byre.argname = "Output11", byre.argtype = 2 : i32}, %arg135: memref<128xf32> {byre.argname = "Output12", byre.argtype = 2 : i32}, %arg136: memref<128xf32> {byre.argname = "Output13", byre.argtype = 2 : i32}, %arg137: memref<128xf32> {byre.argname = "Output14", byre.argtype = 2 : i32}, %arg138: memref<128xf32> {byre.argname = "Output15", byre.argtype = 2 : i32}, %arg139: memref<128xf32> {byre.argname = "Output16", byre.argtype = 2 : i32}, %arg140: memref<128xf32> {byre.argname = "Output17", byre.argtype = 2 : i32}, %arg141: memref<128xf32> {byre.argname = "Output18", byre.argtype = 2 : i32}, %arg142: memref<128xf32> {byre.argname = "Output19", byre.argtype = 2 : i32}, %arg143: memref<128xf32> {byre.argname = "Output20", byre.argtype = 2 : i32}, %arg144: memref<256xf32> {byre.argname = "Output21", byre.argtype = 2 : i32}, %arg145: memref<256xf32> {byre.argname = "Output22", byre.argtype = 2 : i32}, %arg146: memref<256xf32> {byre.argname = "Output23", byre.argtype = 2 : i32}, %arg147: memref<256xf32> {byre.argname = "Output24", byre.argtype = 2 : i32}, %arg148: memref<256xf32> {byre.argname = "Output25", byre.argtype = 2 : i32}, %arg149: memref<256xf32> {byre.argname = "Output26", byre.argtype = 2 : i32}, %arg150: memref<256xf32> {byre.argname = "Output27", byre.argtype = 2 : i32}, %arg151: memref<256xf32> {byre.argname = "Output28", byre.argtype = 2 : i32}, %arg152: memref<256xf32> {byre.argname = "Output29", byre.argtype = 2 : i32}, %arg153: memref<256xf32> {byre.argname = "Output30", byre.argtype = 2 : i32}, %arg154: memref<512xf32> {byre.argname = "Output31", byre.argtype = 2 : i32}, %arg155: memref<512xf32> {byre.argname = "Output32", byre.argtype = 2 : i32}, %arg156: memref<512xf32> {byre.argname = "Output33", byre.argtype = 2 : i32}, %arg157: memref<512xf32> {byre.argname = "Output34", byre.argtype = 2 : i32}, %arg158: memref<512xf32> {byre.argname = "Output35", byre.argtype = 2 : i32}, %arg159: memref<512xf32> {byre.argname = "Output36", byre.argtype = 2 : i32}, %arg160: memref<512xf32> {byre.argname = "Output37", byre.argtype = 2 : i32}, %arg161: memref<512xf32> {byre.argname = "Output38", byre.argtype = 2 : i32}, %arg162: memref<512xf32> {byre.argname = "Output39", byre.argtype = 2 : i32}, %arg163: memref<512xf32> {byre.argname = "Output40", byre.argtype = 2 : i32}, %arg164: memref<64xf32> {byre.argname = "Output41", byre.argtype = 2 : i32}, %arg165: memref<64xf32> {byre.argname = "Output42", byre.argtype = 2 : i32}, %arg166: memref<64xf32> {byre.argname = "Output43", byre.argtype = 2 : i32}, %arg167: memref<64xf32> {byre.argname = "Output44", byre.argtype = 2 : i32}, %arg168: memref<64xf32> {byre.argname = "Output45", byre.argtype = 2 : i32}, %arg169: memref<64xf32> {byre.argname = "Output46", byre.argtype = 2 : i32}, %arg170: memref<64xf32> {byre.argname = "Output47", byre.argtype = 2 : i32}, %arg171: memref<64xf32> {byre.argname = "Output48", byre.argtype = 2 : i32}, %arg172: memref<64xf32> {byre.argname = "Output49", byre.argtype = 2 : i32}, %arg173: memref<64xf32> {byre.argname = "Output50", byre.argtype = 2 : i32}, %arg174: memref<128xf32> {byre.argname = "Output51", byre.argtype = 2 : i32}, %arg175: memref<128xf32> {byre.argname = "Output52", byre.argtype = 2 : i32}, %arg176: memref<128xf32> {byre.argname = "Output53", byre.argtype = 2 : i32}, %arg177: memref<128xf32> {byre.argname = "Output54", byre.argtype = 2 : i32}, %arg178: memref<128xf32> {byre.argname = "Output55", byre.argtype = 2 : i32}, %arg179: memref<128xf32> {byre.argname = "Output56", byre.argtype = 2 : i32}, %arg180: memref<128xf32> {byre.argname = "Output57", byre.argtype = 2 : i32}, %arg181: memref<128xf32> {byre.argname = "Output58", byre.argtype = 2 : i32}, %arg182: memref<128xf32> {byre.argname = "Output59", byre.argtype = 2 : i32}, %arg183: memref<128xf32> {byre.argname = "Output60", byre.argtype = 2 : i32}, %arg184: memref<256xf32> {byre.argname = "Output61", byre.argtype = 2 : i32}, %arg185: memref<256xf32> {byre.argname = "Output62", byre.argtype = 2 : i32}, %arg186: memref<256xf32> {byre.argname = "Output63", byre.argtype = 2 : i32}, %arg187: memref<256xf32> {byre.argname = "Output64", byre.argtype = 2 : i32}, %arg188: memref<256xf32> {byre.argname = "Output65", byre.argtype = 2 : i32}, %arg189: memref<256xf32> {byre.argname = "Output66", byre.argtype = 2 : i32}, %arg190: memref<256xf32> {byre.argname = "Output67", byre.argtype = 2 : i32}, %arg191: memref<256xf32> {byre.argname = "Output68", byre.argtype = 2 : i32}, %arg192: memref<256xf32> {byre.argname = "Output69", byre.argtype = 2 : i32}, %arg193: memref<256xf32> {byre.argname = "Output70", byre.argtype = 2 : i32}, %arg194: memref<512xf32> {byre.argname = "Output71", byre.argtype = 2 : i32}, %arg195: memref<512xf32> {byre.argname = "Output72", byre.argtype = 2 : i32}, %arg196: memref<512xf32> {byre.argname = "Output73", byre.argtype = 2 : i32}, %arg197: memref<512xf32> {byre.argname = "Output74", byre.argtype = 2 : i32}, %arg198: memref<512xf32> {byre.argname = "Output75", byre.argtype = 2 : i32}, %arg199: memref<512xf32> {byre.argname = "Output76", byre.argtype = 2 : i32}, %arg200: memref<512xf32> {byre.argname = "Output77", byre.argtype = 2 : i32}, %arg201: memref<512xf32> {byre.argname = "Output78", byre.argtype = 2 : i32}, %arg202: memref<512xf32> {byre.argname = "Output79", byre.argtype = 2 : i32}, %arg203: memref<512xf32> {byre.argname = "Output80", byre.argtype = 2 : i32}, %arg204: memref<64x3x7x7xf16> {byre.argname = "Output81", byre.argtype = 2 : i32}, %arg205: memref<1x3x224x224xf16> {byre.argname = "Output82", byre.argtype = 2 : i32}, %arg206: memref<1x64x112x112xf16> {byre.argname = "Output83", byre.argtype = 2 : i32}, %arg207: memref<1x64x112x112xf16> {byre.argname = "Output84", byre.argtype = 2 : i32}, %arg208: memref<1x64x56x56xf16> {byre.argname = "Output85", byre.argtype = 2 : i32}, %arg209: memref<64x64x3x3xf16> {byre.argname = "Output86", byre.argtype = 2 : i32}, %arg210: memref<1x64x56x56xf16> {byre.argname = "Output87", byre.argtype = 2 : i32}, %arg211: memref<1x64x56x56xf16> {byre.argname = "Output88", byre.argtype = 2 : i32}, %arg212: memref<64x64x3x3xf16> {byre.argname = "Output89", byre.argtype = 2 : i32}, %arg213: memref<1x64x56x56xf16> {byre.argname = "Output90", byre.argtype = 2 : i32}, %arg214: memref<1x64x56x56xf16> {byre.argname = "Output91", byre.argtype = 2 : i32}, %arg215: memref<64x64x3x3xf16> {byre.argname = "Output92", byre.argtype = 2 : i32}, %arg216: memref<1x64x56x56xf16> {byre.argname = "Output93", byre.argtype = 2 : i32}, %arg217: memref<1x64x56x56xf16> {byre.argname = "Output94", byre.argtype = 2 : i32}, %arg218: memref<64x64x3x3xf16> {byre.argname = "Output95", byre.argtype = 2 : i32}, %arg219: memref<1x64x56x56xf16> {byre.argname = "Output96", byre.argtype = 2 : i32}, %arg220: memref<1x64x56x56xf16> {byre.argname = "Output97", byre.argtype = 2 : i32}, %arg221: memref<128x64x3x3xf16> {byre.argname = "Output98", byre.argtype = 2 : i32}, %arg222: memref<1x128x28x28xf16> {byre.argname = "Output99", byre.argtype = 2 : i32}, %arg223: memref<1x128x28x28xf16> {byre.argname = "Output100", byre.argtype = 2 : i32}, %arg224: memref<128x128x3x3xf16> {byre.argname = "Output101", byre.argtype = 2 : i32}, %arg225: memref<1x128x28x28xf16> {byre.argname = "Output102", byre.argtype = 2 : i32}, %arg226: memref<128x64x1x1xf16> {byre.argname = "Output103", byre.argtype = 2 : i32}, %arg227: memref<1x128x28x28xf16> {byre.argname = "Output104", byre.argtype = 2 : i32}, %arg228: memref<1x128x28x28xf16> {byre.argname = "Output105", byre.argtype = 2 : i32}, %arg229: memref<128x128x3x3xf16> {byre.argname = "Output106", byre.argtype = 2 : i32}, %arg230: memref<1x128x28x28xf16> {byre.argname = "Output107", byre.argtype = 2 : i32}, %arg231: memref<1x128x28x28xf16> {byre.argname = "Output108", byre.argtype = 2 : i32}, %arg232: memref<128x128x3x3xf16> {byre.argname = "Output109", byre.argtype = 2 : i32}, %arg233: memref<1x128x28x28xf16> {byre.argname = "Output110", byre.argtype = 2 : i32}, %arg234: memref<1x128x28x28xf16> {byre.argname = "Output111", byre.argtype = 2 : i32}, %arg235: memref<256x128x3x3xf16> {byre.argname = "Output112", byre.argtype = 2 : i32}, %arg236: memref<1x256x14x14xf16> {byre.argname = "Output113", byre.argtype = 2 : i32}, %arg237: memref<1x256x14x14xf16> {byre.argname = "Output114", byre.argtype = 2 : i32}, %arg238: memref<256x256x3x3xf16> {byre.argname = "Output115", byre.argtype = 2 : i32}, %arg239: memref<1x256x14x14xf16> {byre.argname = "Output116", byre.argtype = 2 : i32}, %arg240: memref<256x128x1x1xf16> {byre.argname = "Output117", byre.argtype = 2 : i32}, %arg241: memref<1x256x14x14xf16> {byre.argname = "Output118", byre.argtype = 2 : i32}, %arg242: memref<1x256x14x14xf16> {byre.argname = "Output119", byre.argtype = 2 : i32}, %arg243: memref<256x256x3x3xf16> {byre.argname = "Output120", byre.argtype = 2 : i32}, %arg244: memref<1x256x14x14xf16> {byre.argname = "Output121", byre.argtype = 2 : i32}, %arg245: memref<1x256x14x14xf16> {byre.argname = "Output122", byre.argtype = 2 : i32}, %arg246: memref<256x256x3x3xf16> {byre.argname = "Output123", byre.argtype = 2 : i32}, %arg247: memref<1x256x14x14xf16> {byre.argname = "Output124", byre.argtype = 2 : i32}, %arg248: memref<1x256x14x14xf16> {byre.argname = "Output125", byre.argtype = 2 : i32}, %arg249: memref<512x256x3x3xf16> {byre.argname = "Output126", byre.argtype = 2 : i32}, %arg250: memref<1x512x7x7xf16> {byre.argname = "Output127", byre.argtype = 2 : i32}, %arg251: memref<1x512x7x7xf16> {byre.argname = "Output128", byre.argtype = 2 : i32}, %arg252: memref<512x512x3x3xf16> {byre.argname = "Output129", byre.argtype = 2 : i32}, %arg253: memref<1x512x7x7xf16> {byre.argname = "Output130", byre.argtype = 2 : i32}, %arg254: memref<512x256x1x1xf16> {byre.argname = "Output131", byre.argtype = 2 : i32}, %arg255: memref<1x512x7x7xf16> {byre.argname = "Output132", byre.argtype = 2 : i32}, %arg256: memref<1x512x7x7xf16> {byre.argname = "Output133", byre.argtype = 2 : i32}, %arg257: memref<512x512x3x3xf16> {byre.argname = "Output134", byre.argtype = 2 : i32}, %arg258: memref<1x512x7x7xf16> {byre.argname = "Output135", byre.argtype = 2 : i32}, %arg259: memref<1x512x7x7xf16> {byre.argname = "Output136", byre.argtype = 2 : i32}, %arg260: memref<512x512x3x3xf16> {byre.argname = "Output137", byre.argtype = 2 : i32}, %arg261: memref<1x512x7x7xf16> {byre.argname = "Output138", byre.argtype = 2 : i32}, %arg262: memref<1x512x7x7xf16> {byre.argname = "Output139", byre.argtype = 2 : i32}, %arg263: memref<1x512xf16> {byre.argname = "Output140", byre.argtype = 2 : i32}, %arg264: memref<512x1000xf16> {byre.argname = "Output141", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
     %0 = memref.alloc() : memref<256xi8>
     %1 = memref.alloc() : memref<256xi8>
     %2 = memref.alloc() : memref<256xi8>

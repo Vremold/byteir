@@ -12,6 +12,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
@@ -48,9 +49,10 @@ GetConvDimensionNumbers(mhlo::ConvDimensionNumbersAttr dimension_numbers,
   }
 }
 
-struct FuseConvBackwardDataPattern : public OpRewritePattern<mhlo::ConvOp> {
-  using OpRewritePattern<mhlo::ConvOp>::OpRewritePattern;
-  LogicalResult matchAndRewrite(mhlo::ConvOp op,
+struct FuseConvBackwardDataPattern
+    : public OpRewritePattern<mhlo::ConvolutionOp> {
+  using OpRewritePattern<mhlo::ConvolutionOp>::OpRewritePattern;
+  LogicalResult matchAndRewrite(mhlo::ConvolutionOp op,
                                 PatternRewriter &rewriter) const override {
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
@@ -179,7 +181,7 @@ struct FuseConvBackwardFilterPattern
       return failure();
     }
 
-    auto op = transposeOp.operand().getDefiningOp<mhlo::ConvOp>();
+    auto op = transposeOp.operand().getDefiningOp<mhlo::ConvolutionOp>();
     if (!op) {
       return failure();
     }
@@ -270,7 +272,7 @@ struct FuseConvBackwardFilterPattern
 struct ConvBackwardFusionPass
     : public ConvBackwardFusionBase<ConvBackwardFusionPass> {
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateFuseConvBackwardPatterns(patterns);
@@ -291,6 +293,7 @@ void mlir::populateFuseConvBackwardPatterns(RewritePatternSet &patterns) {
       std::make_unique<FuseConvBackwardFilterPattern>(patterns.getContext()));
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createConvBackwardFusionPass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createConvBackwardFusionPass() {
   return std::make_unique<ConvBackwardFusionPass>();
 }

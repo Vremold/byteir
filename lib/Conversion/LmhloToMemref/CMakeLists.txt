@@ -8,12 +8,12 @@ add_byteir_conversion_library(ByteIRLmhloToMemref
   ByteIRConversionPassIncGen
   ByteIRUtils
   LmhloDialect
-  MLIRMemRef
+  MLIRMemRefDialect
 
   LINK_LIBS PUBLIC
   ByteIRUtils
   LmhloDialect
   MLIRIR
-  MLIRMemRef
+  MLIRMemRefDialect
 )
 

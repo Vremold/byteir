@@ -27,7 +27,7 @@ using namespace mlir;
 namespace {
 
 LogicalResult
-constructNewArgumentTypes(FuncOp funcOp,
+constructNewArgumentTypes(func::FuncOp funcOp,
                           SmallVectorImpl<Type> &newArgumentTypes) {
   for (unsigned i = 0; i < funcOp.getNumArguments(); ++i) {
     Type origType = funcOp.getArgumentTypes()[i];
@@ -81,7 +81,7 @@ struct BoundedShapeInferencePass
   }
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
 
     SmallVector<Type> newArgumentTypes;
     if (failed(constructNewArgumentTypes(funcOp, newArgumentTypes))) {
@@ -94,11 +94,11 @@ struct BoundedShapeInferencePass
     std::string newFuncSymName = "_bounded_shape_infer_" + funcSymName.str();
     auto newFnType =
         builder.getFunctionType(newArgumentTypes, funcOp.getResultTypes());
-    auto newFuncOp =
-        builder.create<FuncOp>(funcOp->getLoc(), newFuncSymName, newFnType);
+    auto newFuncOp = builder.create<func::FuncOp>(funcOp->getLoc(),
+                                                  newFuncSymName, newFnType);
 
     BlockAndValueMapping emptyBvm;
-    funcOp.body().cloneInto(&newFuncOp.body(), emptyBvm);
+    funcOp.getBody().cloneInto(&newFuncOp.getBody(), emptyBvm);
     for (auto it : zip(newArgumentTypes, newFuncOp.getArguments())) {
       std::get<1>(it).setType(std::get<0>(it));
     }
@@ -140,6 +140,7 @@ struct BoundedShapeInferencePass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createBoundedShapeInferencePass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createBoundedShapeInferencePass() {
   return std::make_unique<BoundedShapeInferencePass>();
 }

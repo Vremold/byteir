@@ -8,6 +8,7 @@
 #include "byteir/Pipelines/LinalgTensorOpt.h"
 #include "./PassDetail.h"
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
+#include "byteir/Dialect/Linalg/Transforms/LinalgFuseReshape.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Dialect/mhlo/Transforms/GenericFusion.h"
 #include "mlir/Dialect/Linalg/Passes.h"
@@ -40,11 +41,11 @@ struct LinalgTensorOptPipelinePass
 } // namespace
 
 void mlir::addGenericLinalgElementwisePasses(OpPassManager &pm) {
-  pm.addNestedPass<FuncOp>(
+  pm.addNestedPass<func::FuncOp>(
       createHloFusionToLinalgPass(getByteIRElementwiseFusionAttrName()));
-  pm.addNestedPass<FuncOp>(createUnrealizedCastToLinalgPass());
+  pm.addNestedPass<func::FuncOp>(createUnrealizedCastToLinalgPass());
   pm.addPass(createLinalgElementwiseOpFusionPass());
-  pm.addPass(createFoldReshapeOpsByLinearizationPass());
+  pm.addNestedPass<func::FuncOp>(createLinalgFuseReshapePass());
   pm.addPass(createCSEPass());
 }
 

@@ -4,14 +4,14 @@
 // RUN: byteir-stat -op-cnt -func-name="tf_add" -top-only %s | FileCheck %s -check-prefix=FUNCNAMETOPONLY
 
 module {
-  func private @some_callee(%arg0 : tensor<2x4xf32>, %arg1 : tensor<2x4xf32>) -> (tensor<2x4xf32>) {
+  func.func private @some_callee(%arg0 : tensor<2x4xf32>, %arg1 : tensor<2x4xf32>) -> (tensor<2x4xf32>) {
     %0 = "tf.Add"(%arg0, %arg1) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
     %1 = "tf.Mul"(%0, %arg0) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
     %2 = "mhlo.add"(%1, %arg0) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
     %3 = "mhlo.add"(%1, %2) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32> 
     return %3 : tensor<2x4xf32>
   }
-  func @tf_add(%arg0 : tensor<2x4xf32>, %arg1 : tensor<2x4xf32>) -> (tensor<2x4xf32>) {
+  func.func @tf_add(%arg0 : tensor<2x4xf32>, %arg1 : tensor<2x4xf32>) -> (tensor<2x4xf32>) {
     %0 = "tf.Add"(%arg0, %arg1) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
     %1 = "tf.Mul"(%0, %arg0) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
     %2 = "mhlo.add"(%1, %arg0) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
@@ -25,17 +25,17 @@ module {
     return %5 : tensor<2x4xf32>
   }
 }
-// DEFAULT: builtin.func 2
 // DEFAULT: func.call 1
+// DEFAULT: func.func 2
 // DEFAULT: func.return 2
 // DEFAULT: mhlo.add 6
 // DEFAULT: mhlo.fusion 1
 // DEFAULT: mhlo.return 1
 // DEFAULT: tf.Add 2
-// DEFAULT: tf.Mul 2  
+// DEFAULT: tf.Mul 2
 
-// FUNCNAME: builtin.func 1
 // FUNCNAME: func.call 1
+// FUNCNAME: func.func 1
 // FUNCNAME: func.return 1
 // FUNCNAME: mhlo.add 4
 // FUNCNAME: mhlo.fusion 1

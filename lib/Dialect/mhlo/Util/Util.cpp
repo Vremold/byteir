@@ -9,7 +9,6 @@
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops_base_attrs.h"
 #include "mlir/IR/Operation.h"
 
 using namespace llvm;
@@ -22,7 +21,7 @@ bool mlir::isMhlo(Operation *op) {
 }
 
 bool mlir::isSplatMhloConstant(Operation *op) {
-  if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
+  if (auto constOp = dyn_cast_or_null<mhlo::ConstantOp>(op)) {
     return constOp.value().isSplat();
   }
   return false;
@@ -35,7 +34,7 @@ bool mlir::isSplatMhloConstantLike(Operation *op) {
 bool mlir::isMhloConstantLike(Operation *op) {
   if (!op)
     return false;
-  return isa<mhlo::ConstOp>(op) || isa<mhlo::IotaOp>(op);
+  return isa<mhlo::ConstantOp>(op) || isa<mhlo::IotaOp>(op);
 }
 
 bool mlir::isSplatMhloConstantValue(Value val) {
@@ -43,7 +42,7 @@ bool mlir::isSplatMhloConstantValue(Value val) {
 }
 
 bool mlir::isSplatMhloConstantValue(Operation *op, int64_t splat_val) {
-  if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
+  if (auto constOp = dyn_cast_or_null<mhlo::ConstantOp>(op)) {
     // only handle DenseFPElementsAttr for now
     // TODO extend it
     if (auto denseIntE = constOp.value().dyn_cast<DenseIntElementsAttr>()) {
@@ -54,7 +53,7 @@ bool mlir::isSplatMhloConstantValue(Operation *op, int64_t splat_val) {
 }
 
 bool mlir::isSplatMhloConstantValue(Operation *op, double splat_val) {
-  if (auto constOp = dyn_cast_or_null<mhlo::ConstOp>(op)) {
+  if (auto constOp = dyn_cast_or_null<mhlo::ConstantOp>(op)) {
     // only handle DenseFPElementsAttr for now
     // TODO extend it
     if (auto denseFPE = constOp.value().dyn_cast<DenseFPElementsAttr>()) {
@@ -276,7 +275,9 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
 template <typename T>
 void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
                                OpBuilder &rewriter) {
-  auto dimension_numbers = conv_op.dimension_numbersAttr();
+  auto dimension_numbers =
+      conv_op->template getAttrOfType<mhlo::ConvDimensionNumbersAttr>(
+          "dimension_numbers");
   auto conv_layout = mlir::getConvLayout(dimension_numbers);
 
   auto input_layout = std::get<0>(conv_layout);
@@ -290,29 +291,28 @@ void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
   attrs.append("output_layout", rewriter.getStringAttr(output_layout));
   attrs.append("kernel_layout", rewriter.getStringAttr(kernel_layout));
 
-  if (conv_op.window_strides()) {
-    attrs.append("window_strides", conv_op.window_stridesAttr());
+  if (conv_op->hasAttr("window_strides")) {
+    attrs.append("window_strides", conv_op->getAttr("window_strides"));
   }
-  if (conv_op.padding()) {
-    attrs.append("padding", conv_op.paddingAttr());
+  if (conv_op->hasAttr("padding")) {
+    attrs.append("padding", conv_op->getAttr("padding"));
   }
-  if (conv_op.lhs_dilation()) {
-    attrs.append("lhs_dilation", conv_op.lhs_dilationAttr());
+  if (conv_op->hasAttr("lhs_dilation")) {
+    attrs.append("lhs_dilation", conv_op->getAttr("lhs_dilation"));
   }
-  if (conv_op.rhs_dilation()) {
-    attrs.append("rhs_dilation", conv_op.rhs_dilationAttr());
+  if (conv_op->hasAttr("rhs_dilation")) {
+    attrs.append("rhs_dilation", conv_op->getAttr("rhs_dilation"));
   }
-  attrs.append("feature_group_count", conv_op.feature_group_countAttr());
-  attrs.append("batch_group_count", conv_op.batch_group_countAttr());
-  if (conv_op.window_reversal()) {
-    attrs.append("window_reversal", conv_op.window_reversalAttr());
+  attrs.append("feature_group_count", conv_op->getAttr("feature_group_count"));
+  attrs.append("batch_group_count", conv_op->getAttr("batch_group_count"));
+  if (conv_op->hasAttr("window_reversal")) {
+    attrs.append("window_reversal", conv_op->getAttr("window_reversal"));
   }
 }
 
-template void mlir::handleConvAttribute<mlir::mhlo::ConvOp>(NamedAttrList &,
-                                                            mlir::mhlo::ConvOp,
-                                                            OpBuilder &);
-template void mlir::handleConvAttribute<mlir::lmhlo::ConvOp>(
-    NamedAttrList &, mlir::lmhlo::ConvOp, OpBuilder &);
+template void mlir::handleConvAttribute<mhlo::ConvolutionOp>(
+    NamedAttrList &, mhlo::ConvolutionOp, OpBuilder &);
+template void mlir::handleConvAttribute<lmhlo::ConvolutionOp>(
+    NamedAttrList &, lmhlo::ConvolutionOp, OpBuilder &);
 
 #undef UNKNOWN_LAYOUT

@@ -11,7 +11,8 @@
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/LoopUtils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Utils/Utils.h"
 
 using namespace llvm;
@@ -31,7 +32,7 @@ static unsigned getNestingDepth(Operation *op) {
   return depth;
 }
 
-void collectCandidateLoops(FuncOp func,
+void collectCandidateLoops(func::FuncOp func,
                            SmallVectorImpl<LoopLikeOpInterface> &loops,
                            int depth) {
 
@@ -92,7 +93,7 @@ struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
     if (unrollFactor < 2)
       return;
 
-    FuncOp func = getOperation();
+    func::FuncOp func = getOperation();
     SmallVector<LoopLikeOpInterface, 4> loops;
 
     collectCandidateLoops(func, loops, depth);
@@ -104,7 +105,7 @@ struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
 };
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createByteIRLoopUnrollPass(unsigned factor, bool upTo, bool full,
                                  int depth) {
   return std::make_unique<LoopUnrollPass>(factor, upTo, full, depth);

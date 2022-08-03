@@ -77,8 +77,8 @@ insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
 //
 namespace {
 
-static inline void replicateFuncOpResultSigature(FuncOp funcOp) {
-  mlir::FunctionType oldFuncType = funcOp.getType();
+static inline void replicateFuncOpResultSigature(func::FuncOp funcOp) {
+  mlir::FunctionType oldFuncType = funcOp.getFunctionType();
 
   llvm::SmallVector<Type, 16> newInputTypes(oldFuncType.getInputs().begin(),
                                             oldFuncType.getInputs().end());
@@ -114,7 +114,7 @@ static inline void replicateFuncOpResultSigature(FuncOp funcOp) {
 }
 } // namespace
 
-void mlir::replicateFuncOpResults(FuncOp funcOp) {
+void mlir::replicateFuncOpResults(func::FuncOp funcOp) {
   unsigned idx = funcOp.getNumArguments();
 
   replicateFuncOpResultSigature(funcOp);
@@ -146,7 +146,7 @@ void mlir::replicateFuncOpResults(FuncOp funcOp) {
 }
 
 void mlir::replicateFuncOpResults(
-    FuncOp funcOp, std::function<void(func::ReturnOp)> retOpHandling) {
+    func::FuncOp funcOp, std::function<void(func::ReturnOp)> retOpHandling) {
   replicateFuncOpResultSigature(funcOp);
 
   if (funcOp.empty()) {
@@ -159,14 +159,14 @@ void mlir::replicateFuncOpResults(
 }
 
 void mlir::relocateFuncOpConstantLike(
-    FuncOp funcOp, std::function<bool(mlir::Operation *)> checkOp,
+    func::FuncOp funcOp, std::function<bool(mlir::Operation *)> checkOp,
     std::function<std::tuple<mlir::Value, NamedAttrList>(mlir::Operation *)>
         getValue) {
   // skip empty func
   if (funcOp.empty())
     return;
 
-  mlir::FunctionType oldFuncType = funcOp.getType();
+  mlir::FunctionType oldFuncType = funcOp.getFunctionType();
 
   llvm::SmallVector<Type, 16> relocatedTypes;
 

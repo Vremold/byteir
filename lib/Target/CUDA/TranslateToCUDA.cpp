@@ -12,8 +12,8 @@
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/GPU/GPUDialect.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Dialect.h"
@@ -60,14 +60,14 @@ static LogicalResult printOperation(CUDAEmitter &emitter,
     os << "__global__ ";
 
   if (failed(emitter.emitTypes(functionOp.getLoc(),
-                               functionOp.getType().getResults())))
+                               functionOp.function_type().getResults())))
     return failure();
   os << " " << functionOp.getName();
 
   if (functionOp.empty()) {
     os << "(";
-    if (failed(interleaveCommaWithError(functionOp.getType().getInputs(), os,
-                                        [&](Type type) -> LogicalResult {
+    if (failed(interleaveCommaWithError(functionOp.function_type().getInputs(),
+                                        os, [&](Type type) -> LogicalResult {
                                           if (failed(emitter.emitType(
                                                   functionOp.getLoc(), type)))
                                             return failure();

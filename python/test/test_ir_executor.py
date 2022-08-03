@@ -8,19 +8,19 @@ from helpers.registry import *
 
 MODULE_STR = {
     "ADD": """
-func @main(%arg0: tensor<4xf32>, %arg1: tensor<4xf32>) -> tensor<4xf32> {
+func.func @main(%arg0: tensor<4xf32>, %arg1: tensor<4xf32>) -> tensor<4xf32> {
     %0 = mhlo.add %arg0, %arg1 : tensor<4xf32>
     return %0: tensor<4xf32>
 }""",
 
     "CUSTOM-CALL": """
-func @main(%arg0: tensor<4xf32>) -> tensor<4xf32> {
+func.func @main(%arg0: tensor<4xf32>) -> tensor<4xf32> {
     %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "{value = 1.000000e+00 : f32}", call_target_name = "test_add", has_side_effect = false} : (tensor<4xf32>) -> tensor<4xf32>
     return %0: tensor<4xf32>
 }""",
 
     "GET-TUPLE-ELEMENT": """
-func @main(%arg0: tuple<tensor<4xf32>, tensor<4xf32>>) -> tensor<4xf32> {
+func.func @main(%arg0: tuple<tensor<4xf32>, tensor<4xf32>>) -> tensor<4xf32> {
     %0 = "mhlo.get_tuple_element"(%arg0) {index = 0 : i32} : (tuple<tensor<4xf32>, tensor<4xf32>>) -> tensor<4xf32>
     return %0: tensor<4xf32>
 }""",

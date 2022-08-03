@@ -1,21 +1,21 @@
 // RUN: byteir-opt %s -bounded-shape-infer | FileCheck %s
 
 // CHECK-LABEL: @SameOperandsAndResultShape
-func @SameOperandsAndResultShape(%arg0: tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}, %arg1: tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}) -> tensor<?x4xf32> {
+func.func @SameOperandsAndResultShape(%arg0: tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}, %arg1: tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}) -> tensor<?x4xf32> {
   // CHECK-NEXT: byteir.bounded_shape0 = [8, 4]
   %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
   return %0 : tensor<?x4xf32>
 }
 
 // CHECK-LABEL: @InferShapedTypeOpInterface
-func @InferShapedTypeOpInterface(%arg0 : tensor<8x4xi32>, %arg1 : tensor<8x4xi32>) -> tensor<?x4xi1> {
+func.func @InferShapedTypeOpInterface(%arg0 : tensor<8x4xi32>, %arg1 : tensor<8x4xi32>) -> tensor<?x4xi1> {
   // CHECK-NEXT: byteir.bounded_shape0 = [8, 4]
-  %0 = "mhlo.compare"(%arg0, %arg1) {comparison_direction = "LT"} : (tensor<8x4xi32>, tensor<8x4xi32>) -> tensor<?x4xi1>
+  %0 = "mhlo.compare"(%arg0, %arg1) {comparison_direction = #mhlo<comparison_direction LT>} : (tensor<8x4xi32>, tensor<8x4xi32>) -> tensor<?x4xi1>
   return %0 : tensor<?x4xi1>
 }
 
 // CHECK-LABEL: @several_ops
-func @several_ops(%arg0: tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}, %arg1: tensor<4x4xf32>, %arg2: tensor<4xf32>) -> tensor<?x4xf32> {
+func.func @several_ops(%arg0: tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}, %arg1: tensor<4x4xf32>, %arg2: tensor<4xf32>) -> tensor<?x4xf32> {
   // CHECK-NEXT: byteir.bounded_shape0 = [8, 4]
   %0 = "mhlo.dot"(%arg0, %arg1) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
   %1 = shape.shape_of %0 : tensor<?x4xf32> -> tensor<2xindex>
@@ -27,7 +27,7 @@ func @several_ops(%arg0: tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}, %arg1:
 }
 
 // CHECK-LABEL: @registered_shape_infer
-func @registered_shape_infer(%arg0 : tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}) -> tensor<?xi64> {
+func.func @registered_shape_infer(%arg0 : tensor<?x4xf32> {byteir.bounded_shape = [8, 4]}) -> tensor<?xi64> {
   // CHECK-NEXT: byteir.bounded_shape0 = [32]
   %0 = "mhlo.custom_call"(%arg0) {call_target_name = "byteir.non_zero"} : (tensor<?x4xf32>) -> tensor<?xi64>
   return %0 : tensor<?xi64>

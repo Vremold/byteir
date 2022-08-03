@@ -26,7 +26,7 @@ using namespace byteir;
 namespace {
 
 struct TestPrintUseRangePass
-    : public PassWrapper<TestPrintUseRangePass, OperationPass<FuncOp>> {
+    : public PassWrapper<TestPrintUseRangePass, OperationPass<func::FuncOp>> {
   StringRef getArgument() const final { return "test-print-use-range"; }
 
   StringRef getDescription() const final {

@@ -8,6 +8,7 @@
 
 #include "byteir/Dialect/MemRef/Utils/Layout.h"
 #include "byteir/Utils/Utils.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/FunctionInterfaces.h"
@@ -59,7 +60,7 @@ llvm::Optional<llvm::StringRef> mlir::getLayoutName(mlir::Value val) {
     if (region == nullptr)
       return llvm::None;
 
-    if (auto funcOp = region->getParentOfType<FuncOp>()) {
+    if (auto funcOp = region->getParentOfType<func::FuncOp>()) {
       if (auto argAttr = funcOp.getArgAttrOfType<StringAttr>(
               arg.getArgNumber(), getFuncArgLayoutAttrName())) {
         return argAttr.getValue();

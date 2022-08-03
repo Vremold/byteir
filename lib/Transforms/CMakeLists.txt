@@ -29,8 +29,8 @@ add_mlir_library(ByteIRTransforms
   ByteIRMhloPasses
   ByteIRUtils
   MLIRIR
-  MLIRAffine
-  MLIRMemRef
-  MLIRSCF
+  MLIRAffineDialect
+  MLIRMemRefDialect
+  MLIRSCFDialect
   MLIRTransforms
 )

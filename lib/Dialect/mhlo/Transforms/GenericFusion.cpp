@@ -12,6 +12,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/Pass/Pass.h"
 
@@ -152,11 +153,12 @@ struct MatmulEpilogueFusionPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createElementFusionPass(bool clusterSingleElemwiseOp) {
   return std::make_unique<ElementwiseFusionPass>(clusterSingleElemwiseOp);
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createMatmulEpilogueFusionPass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createMatmulEpilogueFusionPass() {
   return std::make_unique<MatmulEpilogueFusionPass>();
 }

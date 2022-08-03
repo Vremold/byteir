@@ -34,7 +34,7 @@ static OwningOpRef<ModuleOp> parseMLIRInput(StringRef inputFilename,
 // a mlir module traverser example
 static void TraverseAllEntries(OwningOpRef<ModuleOp> &m) {
   // iterate all entry function ops in this module.
-  for (FuncOp entry : m->getOps<FuncOp>()) {
+  for (func::FuncOp entry : m->getOps<func::FuncOp>()) {
     if (!entry->hasAttr(ByreDialect::getEntryPointFunctionAttrName())) {
       std::cout << "skip function " << entry.getName().str() << std::endl;
       continue;

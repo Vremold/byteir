@@ -18,9 +18,9 @@
 #include "mlir/Dialect/Affine/LoopUtils.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/GPU/GPUDialect.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/Pass/Pass.h"
@@ -77,7 +77,7 @@ static void creaetGuardedSIMT(OpBuilder &b, Value id, Value bound,
   looplike.erase();
 }
 
-static void creaetGuardedSIMT(OpBuilder &b, FuncOp func,
+static void creaetGuardedSIMT(OpBuilder &b, func::FuncOp func,
                               LoopLikeOpInterface looplike,
                               GPUIndexType indexType, gpu::Dimension dim,
                               bool coarsen) {
@@ -107,7 +107,7 @@ static void creaetGuardedSIMT(OpBuilder &b, FuncOp func,
   creaetGuardedSIMT(b, idx, bound, looplike, coarsen);
 }
 
-static void convertLoopToSIMT(OpBuilder &b, FuncOp func,
+static void convertLoopToSIMT(OpBuilder &b, func::FuncOp func,
                               LoopLikeOpInterface looplike) {
   auto strAttr = looplike->getAttrOfType<StringAttr>(getLoopToSIMTAttrName());
   auto coarsen = looplike->hasAttrOfType<UnitAttr>(getCoarsenSIMTAttrName());
@@ -149,7 +149,7 @@ static void convertLoopToSIMT(OpBuilder &b, FuncOp func,
   creaetGuardedSIMT(b, func, looplike, gpuIdxT, dim, coarsen);
 }
 
-static void rewriteFuncImpl(OpBuilder &builder, FuncOp func) {
+static void rewriteFuncImpl(OpBuilder &builder, func::FuncOp func) {
   SmallVector<LoopLikeOpInterface> loops;
 
   // collect loops from inner to outer
@@ -165,7 +165,7 @@ static void rewriteFuncImpl(OpBuilder &builder, FuncOp func) {
 }
 
 static std::pair<KernelDim3, KernelDim3> createBlockAndGrid(OpBuilder &b,
-                                                            FuncOp func) {
+                                                            func::FuncOp func) {
 
   auto arrayAttr = func->getAttrOfType<ArrayAttr>(getToGPUAttrName());
   auto loc = func.getLoc();
@@ -206,11 +206,11 @@ static bool isHoistUpOp(Operation *op) {
              memref::ExpandShapeOp, memref::ReshapeOp>(op);
 }
 
-static void rewriteToGPULaunchFuncImpl(OpBuilder &builder, FuncOp func,
+static void rewriteToGPULaunchFuncImpl(OpBuilder &builder, func::FuncOp func,
                                        ArrayRef<Value> args,
                                        gpu::GPUFuncOp gpuFunc) {
   // Rewrite Orignal function
-  Region &funcBody = func.body();
+  Region &funcBody = func.getBody();
   Block &funcEntryBlock = funcBody.front();
   SmallVector<Operation *> eraseOps;
   for (auto &op : funcEntryBlock.without_terminator()) {
@@ -244,7 +244,7 @@ int64_t estimateGridSize(LoopLikeOpInterface loopLike, int64_t currGs,
   return currGs;
 }
 
-void setValidStaticGPUConfigAttr(FuncOp func, ArrayRef<int64_t> bs,
+void setValidStaticGPUConfigAttr(func::FuncOp func, ArrayRef<int64_t> bs,
                                  ArrayRef<int64_t> gs) {
 
   // handle block and grid sizes
@@ -348,10 +348,10 @@ struct ConvertFuncToGPUPass
     }
 
     ModuleOp m = getOperation();
-    SmallVector<FuncOp> funcCollector;
+    SmallVector<func::FuncOp> funcCollector;
 
     // collect all anchored function
-    for (auto func : m.getOps<FuncOp>()) {
+    for (auto func : m.getOps<func::FuncOp>()) {
       if (func->hasAttr(getToGPUAttrName())) {
         setValidStaticGPUConfigAttr(func, blockSizes, gridSizes);
         funcCollector.push_back(func);

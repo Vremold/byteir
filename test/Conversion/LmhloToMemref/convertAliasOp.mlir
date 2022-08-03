@@ -1,6 +1,6 @@
 // RUN: byteir-opt %s --lmhlo-to-memref | FileCheck %s
 
-func @convert_reshape_static() {
+func.func @convert_reshape_static() {
   %c8 = arith.constant 8 : index
   %0 = memref.alloc() : memref<1024xf32>
   %1 = memref.alloc() : memref<16x64xf32>
@@ -15,7 +15,7 @@ func @convert_reshape_static() {
   return
 }
 
-func @convert_slice_static() {
+func.func @convert_slice_static() {
   %c4 = arith.constant 4 : index
   %0 = memref.alloc() : memref<128x100x32xf32>
   %1 = memref.alloc() : memref<64x30x8xf32>

@@ -8,6 +8,7 @@
 #include "byteir/Transforms/CMAE.h"
 #include "PassDetail.h"
 #include "byteir/Utils/IRRewrite.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -52,7 +53,7 @@ struct CMAEPass : public CMAEBase<CMAEPass> {
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createCMAEPass(const std::string &skip) {
   return std::make_unique<CMAEPass>(skip);
 };

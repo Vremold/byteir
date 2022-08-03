@@ -3,7 +3,7 @@
 #map = affine_map<(d0, d1)[s0] -> (d0 * 64 + s0 + d1)>
 
 
-func private @matmul_tiled_1(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) attributes {__byteir_to_gpu__} {
+func.func private @matmul_tiled_1(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) attributes {__byteir_to_gpu__} {
   %c0 = arith.constant 0 : index
   %c8 = arith.constant 8 : index
   %c128 = arith.constant 128 : index
@@ -21,7 +21,7 @@ func private @matmul_tiled_1(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>
   return
 }
 
-func @matmul_tiled_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) attributes {__byteir_to_gpu__} {
+func.func @matmul_tiled_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) attributes {__byteir_to_gpu__} {
   %c0 = arith.constant 0 : index
   %c8 = arith.constant 8 : index
   %c128 = arith.constant 128 : index
@@ -48,17 +48,17 @@ func @matmul_tiled_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2:
 // CHECK{Matmul2}:    gpu.block_id  y
 // CHECK{Matmul2}:    scf.for
 
-// CHECK-LABEL:  func private @matmul_tiled_1
+// CHECK-LABEL:  func.func private @matmul_tiled_1
 // CHECK:    gpu.launch_func  @unified::@matmul_tiled_1
 
-// CHECK-LABEL:  func @matmul_tiled_2
+// CHECK-LABEL:  func.func @matmul_tiled_2
 // CHECK:    gpu.launch_func  @unified::@matmul_tiled_2
 
-func @test_call_unchanged(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) {
+func.func @test_call_unchanged(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) {
   call @matmul_tiled_1(%arg0, %arg1, %arg2) : (memref<128x64xf32>, memref<64x64xf32>, memref<128x64xf32>) -> ()
   return
 }
-// CHECK-LABEL:  func @test_call_unchanged
+// CHECK-LABEL:  func.func @test_call_unchanged
 // CHECK:    call @matmul_tiled_1
 
 

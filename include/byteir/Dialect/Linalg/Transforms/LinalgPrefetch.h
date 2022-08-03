@@ -14,11 +14,14 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 // TODO add a namespace if conflict
 constexpr StringRef getPrefetchAttrName() { return "__byteir_prefetch__"; }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createLinalgPrefetchPass(int64_t prefetchCnt = 1, bool unroll = false);
 
 } // namespace mlir

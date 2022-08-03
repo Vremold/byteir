@@ -12,8 +12,11 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createRemoveFuncBodyPass(llvm::StringRef anchorTag = "",
                          bool disableForcePrivate = false);
 

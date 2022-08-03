@@ -7,13 +7,13 @@
 
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Matchers.h"
 #include <algorithm>
 
 using namespace mlir;
-using namespace shape;
-using namespace mlir::shape_ext;
 
 #include "byteir/Dialect/Shape/ShapeExtOpsDialect.cpp.inc"
 
@@ -21,7 +21,7 @@ using namespace mlir::shape_ext;
 // ace dialect.
 //===----------------------------------------------------------------------===//
 
-void ShapeExtDialect::initialize() {
+void shape_ext::ShapeExtDialect::initialize() {
   addOperations<
 #define GET_OP_LIST
 #include "byteir/Dialect/Shape/ShapeExtOps.cpp.inc"
@@ -67,7 +67,7 @@ struct TieWithConst : public OpRewritePattern<shape_ext::TieOp> {
     if (keepedDims.size() == dims.size())
       return failure();
     value.setType(shapeType.clone(shape));
-    FuncOp funcOp = op->getParentOfType<FuncOp>();
+    func::FuncOp funcOp = op->getParentOfType<func::FuncOp>();
     if (keepedDims.size() == 0) {
       op->erase();
     } else {
@@ -84,12 +84,12 @@ struct TieWithConst : public OpRewritePattern<shape_ext::TieOp> {
 
 } // namespace
 
-void TieOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
-                                        MLIRContext *context) {
+void shape_ext::TieOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
+                                                   MLIRContext *context) {
   patterns.add<TieWithConst>(context);
 }
 
-LogicalResult TieOp::verify() {
+LogicalResult shape_ext::TieOp::verify() {
   auto rankedTensorType = getValue().getType().dyn_cast<RankedTensorType>();
   if (!rankedTensorType)
     return emitError() << "The value's type should be RankedTensorType";

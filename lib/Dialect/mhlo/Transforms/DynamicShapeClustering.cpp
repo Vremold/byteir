@@ -12,6 +12,8 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "llvm/ADT/SetOperations.h"
 #include "llvm/Support/Debug.h"
 #include <string>
@@ -150,8 +152,8 @@ struct DynamicShapeClusteringPass
   void runOnOperation() override {
     ModuleOp moduleOp = getOperation();
     SymbolTable symTable(moduleOp);
-    SmallVector<FuncOp> funcOps;
-    for (auto funcOp : moduleOp.getOps<FuncOp>()) {
+    SmallVector<func::FuncOp> funcOps;
+    for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
       funcOps.push_back(funcOp);
     }
 
@@ -240,7 +242,7 @@ struct DynamicShapeClusteringPass
           continue;
         OpBuilder b(pattern.back());
         std::string name = namePrefix + std::to_string(idx++);
-        FuncOp subFnOp = createFuncOpFromPattern(b, name, pattern);
+        func::FuncOp subFnOp = createFuncOpFromPattern(b, name, pattern);
         symTable.insert(subFnOp);
       }
     }

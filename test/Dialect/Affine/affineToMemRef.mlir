@@ -1,7 +1,7 @@
 // RUN: byteir-opt %s -rewrite-affine-to-memref | FileCheck %s
 
 // CHECK-LABEL: fusion_broadcast
-func @fusion_broadcast(%arg0: memref<6x12x96xf32>, %arg1: memref<6x12x96x96xf32>) -> memref<6x12x96x96xf32> {
+func.func @fusion_broadcast(%arg0: memref<6x12x96xf32>, %arg1: memref<6x12x96x96xf32>) -> memref<6x12x96x96xf32> {
   %0 = memref.alloc() : memref<6x12x96x96xf32>
   affine.for %arg2 = 0 to 6 {
     affine.for %arg3 = 0 to 12 {

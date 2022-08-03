@@ -8,6 +8,7 @@
 #ifndef BYTEIR_PIPELINES_GPU_PASSDETAIL_H
 #define BYTEIR_PIPELINES_GPU_PASSDETAIL_H
 
+#include "mlir/IR/DialectRegistry.h"
 #include "mlir/Pass/Pass.h"
 
 namespace mlir {

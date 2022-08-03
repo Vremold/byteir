@@ -66,7 +66,7 @@ bool mlir::isGPUGlobalAlloc(Operation *op) {
   return isGPUGlobalAlloc(*op);
 }
 
-gpu::GPUFuncOp mlir::cloneFuncToGPUFunc(OpBuilder &builder, FuncOp func,
+gpu::GPUFuncOp mlir::cloneFuncToGPUFunc(OpBuilder &builder, func::FuncOp func,
                                         gpu::GPUModuleOp gm,
                                         SmallVectorImpl<Value> &args) {
 
@@ -84,7 +84,7 @@ gpu::GPUFuncOp mlir::cloneFuncToGPUFunc(OpBuilder &builder, FuncOp func,
     }
   }
 
-  Region &funcBody = func.body();
+  Region &funcBody = func.getBody();
   Block &funcEntryBlock = funcBody.front();
   // perform AliasAnalysis
   AliasAnalysis aliasAnalysis(&funcEntryBlock, initialVals, isAliasOp);
@@ -94,8 +94,8 @@ gpu::GPUFuncOp mlir::cloneFuncToGPUFunc(OpBuilder &builder, FuncOp func,
               func.getArguments().end());
   // create a new input Types
   // clone old inputTypes first
-  SmallVector<Type> inputTypes(func.getType().getInputs().begin(),
-                               func.getType().getInputs().end());
+  SmallVector<Type> inputTypes(func.getFunctionType().getInputs().begin(),
+                               func.getFunctionType().getInputs().end());
 
   // append return types if not alias
   auto ret = funcEntryBlock.getTerminator();

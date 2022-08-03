@@ -10,5 +10,5 @@ add_byteir_stat_library(ByteIRAllocCntStat
   ByteIRStatCommon
   ByteIRUtils
   MLIRIR
-  MLIRMemRef
+  MLIRMemRefDialect
 )

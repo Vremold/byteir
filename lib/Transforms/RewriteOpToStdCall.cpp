@@ -40,8 +40,8 @@ getLibraryCallSymbolRef(Operation *op, PatternRewriter &rewriter,
   // Insert before module terminator.
   rewriter.setInsertionPoint(module.getBody(),
                              std::prev(module.getBody()->end()));
-  FuncOp funcOp =
-      rewriter.create<FuncOp>(op->getLoc(), fnNameAttr.getValue(), libFnType);
+  func::FuncOp funcOp = rewriter.create<func::FuncOp>(
+      op->getLoc(), fnNameAttr.getValue(), libFnType);
   funcOp.setPrivate();
   return fnNameAttr;
 }
@@ -88,7 +88,7 @@ struct RewriteOpToStdCallPass
     ModuleOp module = getOperation();
     ConversionTarget target(getContext());
     target.addLegalDialect<func::FuncDialect, memref::MemRefDialect>();
-    target.addLegalOp<ModuleOp, FuncOp, func::ReturnOp>();
+    target.addLegalOp<ModuleOp, func::FuncOp, func::ReturnOp>();
     RewritePatternSet patterns(&getContext());
     patterns.add<RewriteOpToStdCallPattern>(patterns.getContext(),
                                             this->_callTable);

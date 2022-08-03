@@ -191,7 +191,8 @@ LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer) {
 //===----------------------------------------------------------------------===//
 
 // TODO: supported nested function call
-LogicalResult mlir::runShapeInference(FuncOp funcOp, bool isBoundedShapeInfer) {
+LogicalResult mlir::runShapeInference(func::FuncOp funcOp,
+                                      bool isBoundedShapeInfer) {
   bool interrupted =
       funcOp
           ->walk([&](Operation *op) {

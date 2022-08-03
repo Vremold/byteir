@@ -9,6 +9,8 @@
 #include "byteir/Dialect/MemRef/Transforms/ReifyAlloc.h"
 #include "PassDetail.h"
 #include "byteir/Utils/Utils.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -108,6 +110,6 @@ void ReifyAllocPass::runOnOperation() {
   }
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createReifyAllocPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createReifyAllocPass() {
   return std::make_unique<ReifyAllocPass>();
 }

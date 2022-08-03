@@ -15,6 +15,7 @@
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -81,10 +82,11 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
     BlockAndValueMapping bvm;
     // create all const and put into bvm
     for (auto input : constInputs) {
-      ElementsAttr oldConstAttr = input.getDefiningOp<mhlo::ConstOp>().value();
+      ElementsAttr oldConstAttr =
+          input.getDefiningOp<mhlo::ConstantOp>().value();
       auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, resultType);
-      auto newConstOp =
-          rewriter.create<mhlo::ConstOp>(op->getLoc(), newConstAttr.getValue());
+      auto newConstOp = rewriter.create<mhlo::ConstantOp>(
+          op->getLoc(), newConstAttr.getValue());
       bvm.map(input, newConstOp.output());
     }
 
@@ -161,10 +163,11 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
     BlockAndValueMapping bvm;
     // create all const and put into bvm
     for (auto input : constInputs) {
-      ElementsAttr oldConstAttr = input.getDefiningOp<mhlo::ConstOp>().value();
+      ElementsAttr oldConstAttr =
+          input.getDefiningOp<mhlo::ConstantOp>().value();
       auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, resultType);
-      auto newConstOp =
-          rewriter.create<mhlo::ConstOp>(op->getLoc(), newConstAttr.getValue());
+      auto newConstOp = rewriter.create<mhlo::ConstantOp>(
+          op->getLoc(), newConstAttr.getValue());
       bvm.map(input, newConstOp.output());
     }
 
@@ -204,7 +207,7 @@ struct HloMoveUpPass : public HloMoveUpBase<HloMoveUpPass> {
   }
 
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
 
     // add pattern
@@ -229,7 +232,7 @@ void mlir::populateHloMoveUpPattern(RewritePatternSet &patterns,
       patterns.getContext(), blocker, multiInput);
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createHloMoveUpPass(bool multiInput) {
   return std::make_unique<HloMoveUpPass>(multiInput);
 }

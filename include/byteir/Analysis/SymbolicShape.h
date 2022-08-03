@@ -58,15 +58,15 @@ public:
   void dump(raw_ostream &os);
 
 private:
-  void constructSymbolicShapeTable(FuncOp originalFunc,
-                                   FuncOp symbolicShapeInferFunc);
+  void constructSymbolicShapeTable(func::FuncOp originalFunc,
+                                   func::FuncOp symbolicShapeInferFunc);
   DenseSet<Value> findSymbolicExprSourcesRecursively(
       Value symbolicShape,
       DenseMap<Value, DenseSet<Value>> &symbolicShapeFnCache,
       const DenseMap<Value, Value> &auxiValToOrigin);
 
   ModuleOp moduleOp_;
-  DenseMap<FuncOp, FuncOp> originalFuncToAuxiliary_;
+  DenseMap<func::FuncOp, func::FuncOp> originalFuncToAuxiliary_;
 
   // A table mapping value in original function to symbolic shape in
   // corresponding auxiliary shape infer function. The symbolic shape is stored

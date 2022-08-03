@@ -10,6 +10,7 @@
 #include "./PassDetail.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 
 using namespace mlir;
@@ -29,13 +30,13 @@ struct CollectFuncPass : public CollectFuncBase<CollectFuncPass> {
 
     SmallVector<Operation *> removeOps;
     for (auto &op : m.getBody()->without_terminator()) {
-      if (!isa<FuncOp>(op)) {
+      if (!isa<func::FuncOp>(op)) {
         removeOps.push_back(&op);
       }
     }
 
     // funcOp not in m.getBody()->without_terminator()
-    for (auto funcOp : m.getOps<FuncOp>()) {
+    for (auto funcOp : m.getOps<func::FuncOp>()) {
       // only consider public
       if (funcOp.isPublic() && !funcOp->hasAttr(anchorAttr)) {
         removeOps.push_back(funcOp);

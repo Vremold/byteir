@@ -10,7 +10,7 @@
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/GPU/GPUDialect.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/SymbolTable.h"
 #include "llvm/ADT/SmallVector.h"
@@ -51,7 +51,7 @@ struct CollectGPUKernelPass
     }
 
     // Note FuncOps not in m.getBody()->without_terminator()
-    for (auto func : m.getOps<FuncOp>()) {
+    for (auto func : m.getOps<func::FuncOp>()) {
       removeOps.push_back(func);
     }
 

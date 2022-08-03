@@ -2,7 +2,7 @@
 
 // CHECK-LABEL: binary_int
 // CHECK-SAME: (int32_t [[V1:[^ ]*]], int32_t [[V2:[^ ]*]])
-func @binary_int(%arg0 : i32, %arg1 : i32) -> i32 {
+func.func @binary_int(%arg0 : i32, %arg1 : i32) -> i32 {
   // CHECK-NEXT: int32_t [[V3:[^ ]*]] = [[V1]] + [[V2]];
   %0 = arith.addi %arg0, %arg1: i32
   // CHECK-NEXT: int32_t [[V4:[^ ]*]] = [[V1]] - [[V3]];
@@ -32,7 +32,7 @@ func @binary_int(%arg0 : i32, %arg1 : i32) -> i32 {
 
 // CHECK-LABEL: binary_float
 // CHECK-SAME: (float [[V1:[^ ]*]], float [[V2:[^ ]*]])
-func @binary_float(%arg0 : f32, %arg1 : f32) -> f32 {
+func.func @binary_float(%arg0 : f32, %arg1 : f32) -> f32 {
   // CHECK-NEXT: float [[V3:[^ ]*]] = [[V1]] + [[V2]];
   %0 = arith.addf %arg0, %arg1: f32
   // CHECK-NEXT: float [[V4:[^ ]*]] = [[V1]] - [[V3]];
@@ -54,7 +54,7 @@ func @binary_float(%arg0 : f32, %arg1 : f32) -> f32 {
 
 // CHECK-LABEL: binary_bool
 // CHECK-SAME: (bool [[V1:[^ ]*]], bool [[V2:[^ ]*]])
-func @binary_bool(%arg0 : i1, %arg1 : i1) -> i1 {
+func.func @binary_bool(%arg0 : i1, %arg1 : i1) -> i1 {
   // CHECK-NEXT: bool [[V3:[^ ]*]] = [[V1]] & [[V2]];
   %0 = arith.andi %arg0, %arg1: i1
   // CHECK-NEXT: bool [[V4:[^ ]*]] = [[V1]] | [[V3]];

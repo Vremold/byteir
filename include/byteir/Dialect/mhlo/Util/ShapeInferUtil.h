@@ -8,6 +8,7 @@
 #ifndef BYTEIR_DIALECT_MHLO_UTIL_SHAPEINFERUTIL_H
 #define BYTEIR_DIALECT_MHLO_UTIL_SHAPEINFERUTIL_H
 
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Operation.h"
@@ -21,7 +22,7 @@ namespace mlir {
 
 // This could be used for both bounded shape inference and static shape
 // inference. Return failure if a shape mismatch occurs.
-LogicalResult runShapeInference(FuncOp funcOp,
+LogicalResult runShapeInference(func::FuncOp funcOp,
                                 bool isBoundedShapeInfer = false);
 
 //===----------------------------------------------------------------------===//

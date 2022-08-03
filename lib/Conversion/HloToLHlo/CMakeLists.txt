@@ -9,7 +9,7 @@ add_byteir_conversion_library(ByteIRHloToLhlo
 
   LINK_LIBS PUBLIC
   MLIRIR
-  MLIRMemRef
+  MLIRMemRefDialect
   MLIRTransforms
   ByteIRConversionCommon
   )

@@ -12,10 +12,13 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 constexpr StringRef getBoundedShapeAttrName() { return "byteir.bounded_shape"; }
 
-std::unique_ptr<OperationPass<FuncOp>> createBoundedShapeInferencePass();
+std::unique_ptr<OperationPass<func::FuncOp>> createBoundedShapeInferencePass();
 
 } // namespace mlir
 

@@ -161,15 +161,15 @@ void mlir::removeAttrPlaceholders(mlir::Operation *op,
   }
 }
 
-mlir::FuncOp mlir::GetFuncOp(func::CallOp callOp) {
+mlir::func::FuncOp mlir::GetFuncOp(func::CallOp callOp) {
   Operation *op = callOp.getOperation();
   CallOpInterface call = dyn_cast<CallOpInterface>(op);
   Operation *defOp = call.resolveCallable();
-  if (auto funcOp = dyn_cast<mlir::FuncOp>(defOp)) {
+  if (auto funcOp = dyn_cast<mlir::func::FuncOp>(defOp)) {
     return funcOp;
   }
   // if not a FuncOp, return a null
-  return FuncOp();
+  return func::FuncOp();
 }
 
 bool mlir::HasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,

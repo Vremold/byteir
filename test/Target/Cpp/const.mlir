@@ -2,14 +2,14 @@
 // RUN: byteir-translate -emit-cpp -declare-var-at-top-cpp %s | FileCheck %s -check-prefix=CPP-DECLTOP
 
 
-func @emitc_constant() {
+func.func @emitc_constant() {
   %c0 = "emitc.constant"(){value = #emitc.opaque<""> : i32} : () -> i32
   %c1 = "emitc.constant"(){value = 42 : i32} : () -> i32
   %c2 = "emitc.constant"(){value = -1 : i32} : () -> i32
   %c3 = "emitc.constant"(){value = -1 : si8} : () -> si8
   %c4 = "emitc.constant"(){value = 255 : ui8} : () -> ui8
-  %c5 = "emitc.constant"(){value = #emitc.opaque<""> : !emitc.opaque<"int32_t*">} : () -> !emitc.opaque<"int32_t*">
-  %c6 = "emitc.constant"(){value = #emitc.opaque<"NULL"> : !emitc.opaque<"int32_t*">} : () -> !emitc.opaque<"int32_t*">
+  %c5 = "emitc.constant"(){value = #emitc.opaque<""> : !emitc.ptr<!emitc.opaque<"int32_t">>} : () -> !emitc.ptr<!emitc.opaque<"int32_t">>
+  %c6 = "emitc.constant"(){value = #emitc.opaque<"NULL"> : !emitc.ptr<!emitc.opaque<"int32_t">>} : () -> !emitc.ptr<!emitc.opaque<"int32_t">>
   return
 }
 // CPP-DEFAULT: void emitc_constant() {

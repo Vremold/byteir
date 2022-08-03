@@ -28,12 +28,12 @@ struct ShapeOptPipelinePass
     auto m = getOperation();
     OpPassManager pm(m.getOperationName());
 
-    pm.addNestedPass<FuncOp>(createInsertTieShapePass());
-    pm.addNestedPass<FuncOp>(createInsertShapeConstraintPass());
-    pm.addNestedPass<FuncOp>(createShapeReificationPass());
+    pm.addNestedPass<func::FuncOp>(createInsertTieShapePass());
+    pm.addNestedPass<func::FuncOp>(createInsertShapeConstraintPass());
+    pm.addNestedPass<func::FuncOp>(createByteIRShapeReificationPass());
     addCleanUpPassPipeline(pm);
-    pm.addNestedPass<FuncOp>(createResolveShapeConstraintPass());
-    pm.addNestedPass<FuncOp>(createBoundedShapeInferencePass());
+    pm.addNestedPass<func::FuncOp>(createResolveShapeConstraintPass());
+    pm.addNestedPass<func::FuncOp>(createBoundedShapeInferencePass());
     pm.addPass(createCanonicalizerPass());
     pm.addPass(createDynamicShapeClusteringPass());
 

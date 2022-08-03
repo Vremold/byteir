@@ -13,8 +13,11 @@
 #include <string>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createLoopTagPass(llvm::StringRef anchorTag = "",
                   const std::string &attachTag = "", unsigned depth = 1,
                   const std::string &loopType = "scf.for");

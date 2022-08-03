@@ -13,8 +13,11 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>> createInsertShapeConstraintPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createInsertShapeConstraintPass();
 
 } // namespace mlir
 

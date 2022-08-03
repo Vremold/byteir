@@ -10,6 +10,7 @@
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 
 using namespace mlir;
 
@@ -17,7 +18,7 @@ namespace {
 
 struct InsertTieShapePass : public InsertTieShapeBase<InsertTieShapePass> {
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     OpBuilder builder(funcOp);
     funcOp.walk([&](Operation *op) {
       for (Value result : op->getResults()) {
@@ -42,6 +43,6 @@ struct InsertTieShapePass : public InsertTieShapeBase<InsertTieShapePass> {
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createInsertTieShapePass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createInsertTieShapePass() {
   return std::make_unique<InsertTieShapePass>();
 }

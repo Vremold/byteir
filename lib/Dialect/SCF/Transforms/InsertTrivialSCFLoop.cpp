@@ -9,9 +9,10 @@
 #include "PassDetail.h"
 #include "byteir/Utils/LoopUtils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include <utility>
 
 using namespace llvm;
@@ -27,7 +28,7 @@ struct InsertTrivialSCFLoopPass
     anchorTag = anchor.str();
   }
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
 
     // skip non-anchored
     if (!anchorTag.empty() && !funcOp->hasAttr(anchorTag)) {
@@ -40,7 +41,7 @@ struct InsertTrivialSCFLoopPass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createInsertTrivialSCFLoopPass(llvm::StringRef anchor) {
   return std::make_unique<InsertTrivialSCFLoopPass>(anchor);
 }

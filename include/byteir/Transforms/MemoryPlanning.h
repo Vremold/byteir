@@ -12,13 +12,16 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<FuncOp>> createMemoryPlanningPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createMemoryPlanningPass();
 
 /// couldReuseBuffer is a user provided callback which receives a Value as
 /// parameter and returns whether the allocation corresponding to the Value can
 /// be reused
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createMemoryPlanningPass(std::function<bool(Value)> couldReuseAllocation);
 
 } // namespace mlir

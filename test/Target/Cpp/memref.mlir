@@ -2,7 +2,7 @@
 
 // CHECK-LABEL: func_memref
 // CHECK-SAME: (float* [[V1:[^ ]*]], float* [[V2:[^ ]*]])
-func @func_memref(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>) {
+func.func @func_memref(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>) {
 // CHECK-NEXT: size_t [[V3:[^ ]*]] = 1;
   %c1= arith.constant 1 : index
 // CHECK-NEXT: size_t [[V4:[^ ]*]] = 2;

@@ -13,7 +13,7 @@ include "mlir/Dialect/Arithmetic/IR/ArithmeticOps.td"
 
 def ArithToMhloConstOpPattern : Pat<
   (Arith_ConstantOp:$output $value),
-  (HLO_ConstOp $value),
+  (HLO_ConstantOp $value),
   [(HLO_Tensor $output)]>;
 
 

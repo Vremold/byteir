@@ -13,10 +13,14 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateHloTransposeDotToDotGeneralPattern(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createHloTransposeDotToDotGeneralPass();
+std::unique_ptr<OperationPass<func::FuncOp>>
+createHloTransposeDotToDotGeneralPass();
 
 } // namespace mlir
 

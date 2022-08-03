@@ -15,7 +15,7 @@ include "mlir/Pass/PassBase.td"
 // RewriteAffineToMemref
 //===----------------------------------------------------------------------===//
 
-def RewriteAffineToMemref : Pass<"rewrite-affine-to-memref", "mlir::FuncOp"> {
+def RewriteAffineToMemref : Pass<"rewrite-affine-to-memref", "func::FuncOp"> {
   let summary = "Rewrite Affine Load/Store to Memref Load/Store";
   let constructor = "mlir::createRewriteAffineToMemrefPass()";
   let dependentDialects = [
@@ -27,7 +27,7 @@ def RewriteAffineToMemref : Pass<"rewrite-affine-to-memref", "mlir::FuncOp"> {
 // InsertTrivialAffineLoop
 //===----------------------------------------------------------------------===//
 
-def InsertTrivialAffineLoop : Pass<"insert-trivial-affine-loop", "mlir::FuncOp"> {
+def InsertTrivialAffineLoop : Pass<"insert-trivial-affine-loop", "func::FuncOp"> {
   let summary = "Insert trivial affine Loop for scalar computation";
   let constructor = "mlir::createInsertTrivialAffineLoopPass()";
   let options = [
@@ -41,7 +41,7 @@ def InsertTrivialAffineLoop : Pass<"insert-trivial-affine-loop", "mlir::FuncOp">
 // AffineLoopFusionEx
 //===----------------------------------------------------------------------===//
 
-def AffineLoopFusionEx : Pass<"affine-loop-fusion-ex", "mlir::FuncOp"> {
+def AffineLoopFusionEx : Pass<"affine-loop-fusion-ex", "func::FuncOp"> {
   let summary = "Affine Loop Fusion Extension";
   let constructor = "mlir::createAffineLoopFusionExPass()";
   let options = [

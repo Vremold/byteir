@@ -1,7 +1,7 @@
 // RUN: byteir-opt %s -set-op-space="entry-func=main space=cpu" -set-arg-space="entry-func=main all-space=cpu" | FileCheck %s
 
 module {
-  func @main(%arg0: memref<128x64xf32>, %arg1: memref<64x32xf32>, %arg2: memref<32xf32>) -> memref<128x32xf32> {
+  func.func @main(%arg0: memref<128x64xf32>, %arg1: memref<64x32xf32>, %arg2: memref<32xf32>) -> memref<128x32xf32> {
     %0 = memref.alloc() : memref<128x64xf16>
     "lmhlo.convert"(%arg0, %0) : (memref<128x64xf32>, memref<128x64xf16>) -> ()
     %1 = memref.alloc() : memref<64x32xf16>
@@ -13,9 +13,9 @@ module {
     "lmhlo.convert"(%3, %4) : (memref<128x32xf16>, memref<128x32xf32>) -> ()
     return %4 : memref<128x32xf32>
   }
-  func private @mlp_device(memref<128x64xf16>, memref<64x32xf16>, memref<32xf16>) -> memref<128x32xf16> attributes {device = "test"}
+  func.func private @mlp_device(memref<128x64xf16>, memref<64x32xf16>, memref<32xf16>) -> memref<128x32xf16> attributes {device = "test"}
 }
-// CHECK-LABEL: func @main(%arg0: memref<128x64xf32, "cpu">, %arg1: memref<64x32xf32, "cpu">, %arg2: memref<32xf32, "cpu">) -> memref<128x32xf32, "cpu"> {
+// CHECK-LABEL: func.func @main(%arg0: memref<128x64xf32, "cpu">, %arg1: memref<64x32xf32, "cpu">, %arg2: memref<32xf32, "cpu">) -> memref<128x32xf32, "cpu"> {
 // CHECK-NEXT:    %0 = memref.alloc() : memref<128x64xf16, "test">
 // CHECK-NEXT:    %1 = memref.alloc() : memref<128x64xf16, "cpu">
 // CHECK-NEXT:    "lmhlo.convert"(%arg0, %1) {device = "cpu"} : (memref<128x64xf32, "cpu">, memref<128x64xf16, "cpu">) -> ()

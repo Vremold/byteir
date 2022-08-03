@@ -13,10 +13,13 @@
 
 namespace mlir {
 class RewritePatternSet;
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateCondCanonicalizePatterns(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createCondCanonicalizePass();
+std::unique_ptr<OperationPass<func::FuncOp>> createCondCanonicalizePass();
 
 } // namespace mlir
 

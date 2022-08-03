@@ -12,6 +12,7 @@
 #include <memory>
 
 namespace mlir {
+class ModuleOp;
 
 constexpr StringRef getHostAnchorName() { return "__byteir_host_device__"; }
 

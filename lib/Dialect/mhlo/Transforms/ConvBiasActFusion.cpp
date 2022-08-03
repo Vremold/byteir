@@ -12,6 +12,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
@@ -44,8 +45,8 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
     }
     int64_t broadcast_dim =
         (*broadcastOp.broadcast_dimensions().begin()).getSExtValue();
-    mhlo::ConvOp convOp =
-        dyn_cast_or_null<mhlo::ConvOp>(addOp.lhs().getDefiningOp());
+    mhlo::ConvolutionOp convOp =
+        dyn_cast_or_null<mhlo::ConvolutionOp>(addOp.lhs().getDefiningOp());
     if (!convOp) {
       return failure();
     }
@@ -88,7 +89,7 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
 struct ConvBiasActFusionPass
     : public ConvBiasActFusionBase<ConvBiasActFusionPass> {
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateFuseConvBiasActPatterns(patterns);
@@ -106,6 +107,7 @@ void mlir::populateFuseConvBiasActPatterns(RewritePatternSet &patterns) {
   patterns.add(std::make_unique<FuseConvBiasActPattern>(patterns.getContext()));
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createConvBiasActFusionPass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createConvBiasActFusionPass() {
   return std::make_unique<ConvBiasActFusionPass>();
 }

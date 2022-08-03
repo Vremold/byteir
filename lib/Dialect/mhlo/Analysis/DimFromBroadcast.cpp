@@ -103,19 +103,19 @@ SmallVector<bool> DimFromBroadcast::Compute(Value v) {
             return ReshapeHandleFlag(op, cur_rank, cur_shape, analysis_);
           })
           .Case<mhlo::AbsOp, mhlo::CbrtOp, mhlo::CeilOp, mhlo::ConvertOp,
-                mhlo::ClzOp, mhlo::CosOp, mhlo::ExpOp, mhlo::Expm1Op,
+                mhlo::ClzOp, mhlo::CosineOp, mhlo::ExpOp, mhlo::Expm1Op,
                 mhlo::FloorOp, mhlo::ImagOp, mhlo::IsFiniteOp, mhlo::LogOp,
                 mhlo::Log1pOp, mhlo::LogisticOp, mhlo::NotOp, mhlo::NegOp,
                 mhlo::PopulationCountOp, mhlo::RealOp, mhlo::RoundOp,
-                mhlo::RsqrtOp, mhlo::SignOp, mhlo::SinOp, mhlo::SqrtOp,
+                mhlo::RsqrtOp, mhlo::SignOp, mhlo::SineOp, mhlo::SqrtOp,
                 mhlo::TanhOp>([&](auto op) {
             return UnaryElementwiseHandleFlag(op, analysis_);
           })
           .Case<mhlo::AddOp, mhlo::Atan2Op, mhlo::ComplexOp, mhlo::DivOp,
                 mhlo::MaxOp, mhlo::MinOp, mhlo::MulOp, mhlo::PowOp, mhlo::RemOp,
                 mhlo::ShiftLeftOp, mhlo::ShiftRightArithmeticOp,
-                mhlo::ShiftRightLogicalOp, mhlo::SubOp, mhlo::AndOp, mhlo::OrOp,
-                mhlo::XorOp>([&](auto op) {
+                mhlo::ShiftRightLogicalOp, mhlo::SubtractOp, mhlo::AndOp,
+                mhlo::OrOp, mhlo::XorOp>([&](auto op) {
             return BinaryElementwiseHandleFlag(op, analysis_);
           })
           // TODO: Handle more operation types here.

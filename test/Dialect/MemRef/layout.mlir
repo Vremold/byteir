@@ -5,8 +5,8 @@
 
 #map0 = affine_map<(d0, d1) -> (d1, d0)>
 
-// CHECK-LABEL: func @test_map_attr
-func @test_map_attr(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>) {
+// CHECK-LABEL: func.func @test_map_attr
+func.func @test_map_attr(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>) {
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
   %0 = memref.dim %arg0, %c1 : memref<100x?xf32>
@@ -20,8 +20,8 @@ func @test_map_attr(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>) {
   return
 }
 
-// CHECK-LABEL: func @test_registered_affine_str_attr
-func @test_registered_affine_str_attr(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>) {
+// CHECK-LABEL: func.func @test_registered_affine_str_attr
+func.func @test_registered_affine_str_attr(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>) {
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
   %0 = memref.dim %arg0, %c1 : memref<100x?xf32>
@@ -35,8 +35,8 @@ func @test_registered_affine_str_attr(%arg0: memref<100x?xf32>, %arg1: memref<10
   return
 }
 
-// CHECK-LABEL: func @test_non_registered_str_attr
-func @test_non_registered_str_attr(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>) {
+// CHECK-LABEL: func.func @test_non_registered_str_attr
+func.func @test_non_registered_str_attr(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>) {
   %c0 = arith.constant 0 : index
   %c1 = arith.constant 1 : index
   %0 = memref.dim %arg0, %c1 : memref<100x?xf32>

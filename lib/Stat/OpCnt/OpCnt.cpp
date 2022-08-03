@@ -7,6 +7,7 @@
 
 #include "byteir/Stat/OpCnt/OpCnt.h"
 #include "byteir/Stat/Common/Reg.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "llvm/Support/CommandLine.h"
 
 using namespace byteir;
@@ -32,7 +33,7 @@ mlir::LogicalResult byteir::opCntStatistics(ModuleOp moduleOp,
   llvm::StringMap<unsigned> opCnt;
 
   if (funcNmae.empty()) {
-    for (FuncOp func : moduleOp.getOps<FuncOp>()) {
+    for (func::FuncOp func : moduleOp.getOps<func::FuncOp>()) {
       if (topOnly) {
         for (auto &op : func.getOps()) {
           opCnt[op.getName().getStringRef()] += 1;
@@ -44,7 +45,7 @@ mlir::LogicalResult byteir::opCntStatistics(ModuleOp moduleOp,
     }
   } else {
     SymbolTable symbolTable(moduleOp);
-    auto func = symbolTable.lookup<FuncOp>(funcNmae);
+    auto func = symbolTable.lookup<func::FuncOp>(funcNmae);
 
     // early return
     if (func == nullptr)

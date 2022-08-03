@@ -8,8 +8,9 @@
 #include "byteir/Utils/LoopUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Utils/Utils.h"
 #include "mlir/IR/Builders.h"
 
@@ -221,7 +222,7 @@ gatherLoopsWithDepthInBlock(Block *block, unsigned currLoopDepth,
 }
 } // namespace
 
-void mlir::gatherLoopsWithDepth(FuncOp func, unsigned targetDepth,
+void mlir::gatherLoopsWithDepth(func::FuncOp func, unsigned targetDepth,
                                 SmallVectorImpl<Operation *> &collector) {
   for (auto &block : func) {
     gatherLoopsWithDepthInBlock(&block, /*currLoopDepth=*/0, targetDepth,
@@ -237,7 +238,8 @@ static bool isHoistableOp(Operation *op) {
 
 } // namespace
 
-llvm::Optional<scf::ForOp> mlir::createTrivialSCFForIfHaveNone(FuncOp funcOp) {
+llvm::Optional<scf::ForOp>
+mlir::createTrivialSCFForIfHaveNone(func::FuncOp funcOp) {
 
   // if having scf::ForOp return None
   if (!funcOp.getOps<scf::ForOp>().empty()) {

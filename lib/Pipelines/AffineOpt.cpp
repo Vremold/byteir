@@ -13,6 +13,7 @@
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Pass/PassManager.h"
@@ -31,23 +32,23 @@ struct AffineOptPipelinePass
     auto m = getOperation();
     OpPassManager pm(m.getOperationName());
 
-    pm.addNestedPass<FuncOp>(createConvertLinalgToAffineLoopsPass());
-    pm.addNestedPass<FuncOp>(createLoopCoalescingPass());
-    pm.addNestedPass<FuncOp>(createSimplifyAffineStructuresPass());
+    pm.addNestedPass<func::FuncOp>(createConvertLinalgToAffineLoopsPass());
+    pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
+    pm.addNestedPass<func::FuncOp>(createSimplifyAffineStructuresPass());
     pm.addPass(createLowerAffinePass());
-    pm.addNestedPass<FuncOp>(createCondCanonicalizePass());
+    pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
     addCleanUpPassPipeline(pm);
 
     // soft-deprecated the following, since LoopFusionPass is buggy
     /*
-    pm.addNestedPass<FuncOp>(createConvertLinalgToAffineLoopsPass());
-    pm.addNestedPass<FuncOp>(createLoopCoalescingPass());
-    pm.addNestedPass<FuncOp>(createSimplifyAffineStructuresPass());
-    pm.addNestedPass<FuncOp>(createAffineLoopFusionExPass());
-    pm.addNestedPass<FuncOp>(createInsertTrivialAffineLoopPass(
+    pm.addNestedPass<func::FuncOp>(createConvertLinalgToAffineLoopsPass());
+    pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
+    pm.addNestedPass<func::FuncOp>(createSimplifyAffineStructuresPass());
+    pm.addNestedPass<func::FuncOp>(createAffineLoopFusionExPass());
+    pm.addNestedPass<func::FuncOp>(createInsertTrivialAffineLoopPass(
         getByteIRElementwiseFusionAttrName()));
     pm.addPass(createCSEPass());
-    pm.addNestedPass<FuncOp>(createCMAEPass());
+    pm.addNestedPass<func::FuncOp>(createCMAEPass());
     */
 
     if (mlir::failed(runPipeline(pm, m))) {

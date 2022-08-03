@@ -12,10 +12,13 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 constexpr StringRef getByteIRUnorllAttrName() { return "__byteir_unroll__"; }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createByteIRLoopUnrollPass(unsigned factor = 2, bool upTo = false,
                            bool full = false, int depth = -1);
 

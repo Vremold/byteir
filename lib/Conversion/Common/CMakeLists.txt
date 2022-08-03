@@ -6,6 +6,6 @@ add_byteir_conversion_library(ByteIRConversionCommon
 
   LINK_LIBS PUBLIC
   MLIRIR
-  MLIRMemRef
+  MLIRMemRefDialect
   MLIRTransforms
   )

@@ -17,6 +17,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 
 namespace mlir {
+class ModuleOp;
 
 // Collection of rewrite patterns for lowering of HLO to LHLO dialect.
 void populateHLOToLHLOConversionPatternExtension(

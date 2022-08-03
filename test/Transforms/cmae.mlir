@@ -1,6 +1,6 @@
 // RUN: byteir-opt %s -cmae -cse -cse -split-input-file | FileCheck %s
 
-func @common_arg(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4xf32>) {
+func.func @common_arg(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4xf32>) {
   %c1= arith.constant 1 : index
   %0 = memref.load %arg0[%c1] : memref<4xf32>
   %1 = memref.load %arg1[%c1] : memref<4xf32>
@@ -12,7 +12,7 @@ func @common_arg(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4x
   memref.store %5, %arg2[%c1] : memref<4xf32>
   return 
 }
-// CHECK-LABEL: func @common_arg
+// CHECK-LABEL: func.func @common_arg
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: memref.load
 // CHECK-NEXT: memref.load
@@ -22,7 +22,7 @@ func @common_arg(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4x
 
 // -----
 
-func @common_local(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>) {
+func.func @common_local(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>) {
   %c1= arith.constant 1 : index
   %0 = memref.alloc() : memref<4xf32>
   %1 = memref.alloc() : memref<4xf32>
@@ -38,7 +38,7 @@ func @common_local(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>) {
   memref.store %7, %1[%c1] : memref<4xf32>
   return 
 }
-// CHECK-LABEL: func @common_local
+// CHECK-LABEL: func.func @common_local
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: memref.alloc()
 // CHECK-NEXT: memref.alloc()
@@ -51,8 +51,8 @@ func @common_local(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>) {
 
 // -----
 
-func private @external_func1(%arg0 : memref<4xf32>)
-func @common_with_call_before(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4xf32>) {
+func.func private @external_func1(%arg0 : memref<4xf32>)
+func.func @common_with_call_before(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4xf32>) {
   %c1= arith.constant 1 : index
   call @external_func1(%arg0) : (memref<4xf32>)->()
   %0 = memref.load %arg0[%c1] : memref<4xf32>
@@ -65,7 +65,7 @@ func @common_with_call_before(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg
   memref.store %5, %arg2[%c1] : memref<4xf32>
   return 
 }
-// CHECK-LABEL: func @common_with_call_before
+// CHECK-LABEL: func.func @common_with_call_before
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: call
 // CHECK-NEXT: memref.load
@@ -76,8 +76,8 @@ func @common_with_call_before(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg
 
 // -----
 
-func private @external_func2(%arg0 : memref<4xf32>)
-func @common_with_call_mid(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4xf32>) {
+func.func private @external_func2(%arg0 : memref<4xf32>)
+func.func @common_with_call_mid(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4xf32>) {
   %c1= arith.constant 1 : index
   %0 = memref.load %arg0[%c1] : memref<4xf32>
   %1 = memref.load %arg1[%c1] : memref<4xf32>
@@ -90,7 +90,7 @@ func @common_with_call_mid(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 :
   memref.store %5, %arg2[%c1] : memref<4xf32>
   return 
 }
-// CHECK-LABEL: func @common_with_call_mid
+// CHECK-LABEL: func.func @common_with_call_mid
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: memref.load
 // CHECK-NEXT: call
@@ -101,7 +101,7 @@ func @common_with_call_mid(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 :
 
 // -----
 
-func @common_scope(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4xf32>, %cond : i1) {
+func.func @common_scope(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<4xf32>, %cond : i1) {
   %c1= arith.constant 1 : index
   %0 = memref.load %arg0[%c1] : memref<4xf32>
   %1 = memref.load %arg1[%c1] : memref<4xf32>
@@ -119,7 +119,7 @@ func @common_scope(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<
   memref.store %8, %arg2[%c1] : memref<4xf32>
   return 
 }
-// CHECK-LABEL: func @common_scope
+// CHECK-LABEL: func.func @common_scope
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: memref.load
 // CHECK-NEXT: memref.load
@@ -134,7 +134,7 @@ func @common_scope(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %arg2 : memref<
 
 // -----
 
-func @common_scope_raw(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %cond : i1) {
+func.func @common_scope_raw(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %cond : i1) {
   %c1= arith.constant 1 : index
   %c2= arith.constant 2 : index
   %0 = memref.load %arg0[%c1] : memref<4xf32>
@@ -153,7 +153,7 @@ func @common_scope_raw(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %cond : i1)
   memref.store %5, %arg0[%c1] : memref<4xf32>
   return 
 }
-// CHECK-LABEL: func @common_scope_raw
+// CHECK-LABEL: func.func @common_scope_raw
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: memref.load
@@ -172,7 +172,7 @@ func @common_scope_raw(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %cond : i1)
 
 // -----
 
-func @common_2_scope_raw(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %cond : i1) {
+func.func @common_2_scope_raw(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %cond : i1) {
   %c1= arith.constant 1 : index
   %c2= arith.constant 2 : index
   %0 = memref.load %arg0[%c1] : memref<4xf32>
@@ -197,7 +197,7 @@ func @common_2_scope_raw(%arg0 : memref<4xf32>, %arg1 : memref<4xf32>, %cond : i
   memref.store %11, %arg0[%c1] : memref<4xf32>
   return 
 }
-// CHECK-LABEL: func @common_2_scope_raw
+// CHECK-LABEL: func.func @common_2_scope_raw
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: arith.constant
 // CHECK-NEXT: memref.load

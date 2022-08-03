@@ -2,7 +2,7 @@
 // RUN: byteir-opt -affine-loop-coalescing -affine-simplify-structures -coalesced-for-to-gpu %s | FileCheck %s
 
 // CHECK-LABEL: loop1
-func @loop1(%arg0: memref<16xf32>, %arg1: memref<16xf32>, %arg2: memref<f32>, %arg3: memref<16xf32>) -> memref<16xui32> attributes {__byteir_elementwise_fusion__} {
+func.func @loop1(%arg0: memref<16xf32>, %arg1: memref<16xf32>, %arg2: memref<f32>, %arg3: memref<16xf32>) -> memref<16xui32> attributes {__byteir_elementwise_fusion__} {
   %0 = memref.alloc() : memref<16xi32>
   affine.for %arg4 = 0 to 16 {
     %4 = memref.load %arg0[%arg4] : memref<16xf32>
@@ -25,7 +25,7 @@ func @loop1(%arg0: memref<16xf32>, %arg1: memref<16xf32>, %arg2: memref<f32>, %a
 // CHECK-NOT: affine.for
 
 // CHECK-LABEL: loop4
-func @loop4(%arg0: memref<16x31x128xf32>, %arg1: memref<16x31x127x128xf32>) -> memref<16x31x127x128xi1> attributes {__byteir_elementwise_fusion__} {
+func.func @loop4(%arg0: memref<16x31x128xf32>, %arg1: memref<16x31x127x128xf32>) -> memref<16x31x127x128xi1> attributes {__byteir_elementwise_fusion__} {
   %0 = memref.alloc() : memref<16x31x127x128xi1>
   affine.for %arg2 = 0 to 16 {
     affine.for %arg3 = 0 to 31 {

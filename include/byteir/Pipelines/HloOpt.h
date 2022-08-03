@@ -14,6 +14,7 @@
 #include <string>
 
 namespace mlir {
+class ModuleOp;
 
 void addGenericHloFusionPatterns(OpPassManager &pm,
                                  const std::string &entry = "main",

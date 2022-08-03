@@ -12,6 +12,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
@@ -47,13 +48,18 @@ AddScatterAddMatchAndRewriteHelper(mhlo::AddOp add_op, int idx,
   if (region.getBlocks().size() != 1) {
     return failure();
   }
+  // only support one operand one update
+  if (scatter_op.operands().size() != 1 || scatter_op.updates().size() != 1 ||
+      scatter_op->getNumResults() != 1) {
+    return failure();
+  }
 
   auto &block = region.front();
   if (!isBlockSingleOp<mhlo::AddOp>(&block)) {
     return failure();
   }
 
-  Value initial_val = scatter_op.operand();
+  Value initial_val = scatter_op.operands()[0];
   if (!isSplatMhloConstantValue(initial_val, (int64_t)0) &&
       !isSplatMhloConstantValue(initial_val, 0.0)) {
     return failure();
@@ -100,7 +106,7 @@ struct RemoveTrivialTorchIndexSelect
     uint64_t dim = op.dim();
     uint64_t batch_dims = op.batch_dims();
     Value index = op.index();
-    Value input = op.input();
+    Value input = op.operand();
 
     auto index_shaped_type = index.getType().dyn_cast<ShapedType>();
     auto input_shaped_type = input.getType().dyn_cast<ShapedType>();
@@ -127,16 +133,16 @@ struct RemoveTrivialTorchIndexSelect
 // PadConvolution Pattern
 //===----------------------------------------------------------------------===//
 
-struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvOp> {
-  using OpRewritePattern<mhlo::ConvOp>::OpRewritePattern;
+struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvolutionOp> {
+  using OpRewritePattern<mhlo::ConvolutionOp>::OpRewritePattern;
 
-  LogicalResult matchAndRewrite(mhlo::ConvOp op,
+  LogicalResult matchAndRewrite(mhlo::ConvolutionOp op,
                                 PatternRewriter &rewriter) const override {
     auto padOp = op.lhs().getDefiningOp<mhlo::PadOp>();
     if (!padOp || !isZeroAttribute(padOp.interior_padding())) {
       return failure();
     }
-    auto constOp = padOp.padding_value().getDefiningOp<mhlo::ConstOp>();
+    auto constOp = padOp.padding_value().getDefiningOp<mhlo::ConstantOp>();
     if (!constOp || !isZeroAttribute(constOp.value())) {
       return failure();
     }
@@ -175,7 +181,7 @@ struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvOp> {
             rewriter.getI64Type()),
         newPadding);
 
-    auto newOp = cast<mhlo::ConvOp>(rewriter.clone(*op));
+    auto newOp = cast<mhlo::ConvolutionOp>(rewriter.clone(*op));
     newOp.setOperand(0, padOp.operand());
     newOp.paddingAttr(newPaddingAttr);
     rewriter.replaceOp(op, newOp->getResult(0));
@@ -194,10 +200,10 @@ struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvOp> {
 // 2. op's input rank equals 1, or it is equal to output rank
 // 3. there's at most one dim in input shape whose size is not equal to 1, and
 //     it should be euqal to featureDim
-// 4. the input's DefiningOp is of type mhlo::ConstOp
+// 4. the input's DefiningOp is of type mhlo::ConstantOp
 // 5. the const op's attr is of type DenseElementsAttr
-Optional<ConstOp> getBroadcastedConstOp(BroadcastInDimOp op,
-                                        int64_t featureDim) {
+Optional<ConstantOp> getBroadcastedConstOp(BroadcastInDimOp op,
+                                           int64_t featureDim) {
   Value broadInDimInput = op.operand();
   ShapedType broadInDimInpShape = broadInDimInput.getType().cast<ShapedType>();
   Value broadInDimOutput = op->getResult(0);
@@ -234,7 +240,7 @@ Optional<ConstOp> getBroadcastedConstOp(BroadcastInDimOp op,
     return None;
   }
 
-  auto constOp = dyn_cast_or_null<ConstOp>(broadInDimInput.getDefiningOp());
+  auto constOp = dyn_cast_or_null<ConstantOp>(broadInDimInput.getDefiningOp());
   if (!constOp)
     return None;
 
@@ -245,10 +251,10 @@ Optional<ConstOp> getBroadcastedConstOp(BroadcastInDimOp op,
 }
 
 struct ConvOrConvBiasFollowedByBroadcastOp
-    : public OpRewritePattern<mhlo::ConvOp> {
-  using OpRewritePattern<mhlo::ConvOp>::OpRewritePattern;
+    : public OpRewritePattern<mhlo::ConvolutionOp> {
+  using OpRewritePattern<mhlo::ConvolutionOp>::OpRewritePattern;
 
-  LogicalResult matchAndRewrite(mhlo::ConvOp convOp,
+  LogicalResult matchAndRewrite(mhlo::ConvolutionOp convOp,
                                 PatternRewriter &rewriter) const override {
     Value convOrBiasOut = convOp->getResult(0);
     if (!convOrBiasOut.hasOneUse())
@@ -259,7 +265,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
     Value convWeight = convOp.rhs();
 
     if (!convWeight.getDefiningOp() ||
-        !isa<ConstOp>(convWeight.getDefiningOp()))
+        !isa<ConstantOp>(convWeight.getDefiningOp()))
       return failure();
     if (!convWeight.hasOneUse())
       return failure();
@@ -270,7 +276,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
 
     // handle the conv + bias scenario
     auto biasAddOp = dyn_cast_or_null<mhlo::AddOp>(convOrBiasUser);
-    ConstOp biasConst = nullptr;
+    ConstantOp biasConst = nullptr;
     BroadcastInDimOp biasBroadcastInDimOp = nullptr;
     if (biasAddOp) {
       // Here we update `convOrBiasOut` and `convOrBiasUser`
@@ -307,7 +313,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
       if (!maybeConstOp.hasValue())
         return failure();
-      ConstOp constOp = maybeConstOp.getValue();
+      ConstantOp constOp = maybeConstOp.getValue();
 
       // Start to construct a new subgraph which could be const folded.
       if (!constOp->isBeforeInBlock(convOp))
@@ -352,7 +358,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
       if (!maybeConstOp.hasValue())
         return failure();
-      ConstOp constOp = maybeConstOp.getValue();
+      ConstantOp constOp = maybeConstOp.getValue();
 
       // Start to construct a new subgraph which could be const folded.
       if (!constOp->isBeforeInBlock(convOp))
@@ -370,7 +376,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       // update conv's uses
       offsetOp->getResult(0).replaceAllUsesWith(convOrBiasOut);
 
-    } else if (auto subOp = dyn_cast_or_null<SubOp>(convOrBiasUser)) {
+    } else if (auto subOp = dyn_cast_or_null<SubtractOp>(convOrBiasUser)) {
       // conv_or_bias - a => conv_or_bias + (- a)
 
       // b_const should be rhs
@@ -381,7 +387,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
       if (!maybeConstOp.hasValue())
         return failure();
-      ConstOp constOp = maybeConstOp.getValue();
+      ConstantOp constOp = maybeConstOp.getValue();
 
       OpBuilder builder(subOp);
       // replace b_const with (- b_const)
@@ -406,7 +412,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
       if (!maybeConstOp.hasValue())
         return failure();
-      ConstOp constOp = maybeConstOp.getValue();
+      ConstantOp constOp = maybeConstOp.getValue();
 
       OpBuilder builder(divOp);
       // replace b_const with 1 / b_const
@@ -419,7 +425,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       bool losesInfo; // didn't check this
       one.convert(fpType.getFloatSemantics(), APFloat::rmNearestTiesToEven,
                   &losesInfo);
-      ConstOp constOne = builder.create<mhlo::ConstOp>(
+      ConstantOp constOne = builder.create<mhlo::ConstantOp>(
           constOp->getLoc(), DenseFPElementsAttr::get(constType, one));
       constOne->moveBefore(broadInDimOp);
       DivOp oneDiv = builder.create<mhlo::DivOp>(
@@ -449,14 +455,14 @@ struct PadReduceWindowToReduceWindowPattern
   using OpRewritePattern<mhlo::ReduceWindowOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(mhlo::ReduceWindowOp op,
                                 PatternRewriter &rewriter) const override {
-    if (op.inputs().size() != 1 || op.init_values().size() != 1 ||
+    if (op.operands().size() != 1 || op.init_values().size() != 1 ||
         op.getResults().size() != 1) {
       return failure();
     }
     // handle a common, special case of ReduceWindow for 1 input, 1 init_values,
     // and 1 result
     if (auto pad = dyn_cast_or_null<mhlo::PadOp>(
-            op.inputs().front().getDefiningOp())) {
+            op.operands().front().getDefiningOp())) {
       if (pad.padding_value() == op.init_values().front() &&
           isZeroAttribute(pad.interior_padding())) {
         // create a padding
@@ -498,7 +504,7 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
   void runOnOperation() override {
     DimFromBroadcast dim_from_broadcast;
     DimFlagAnalysis dim_from_broadcast_analysis(&dim_from_broadcast);
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateHloFoldPatterns(patterns);
@@ -524,6 +530,6 @@ void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
   patterns.add<PadReduceWindowToReduceWindowPattern>(patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createHloFolderPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createHloFolderPass() {
   return std::make_unique<HloFolderPass>();
 }

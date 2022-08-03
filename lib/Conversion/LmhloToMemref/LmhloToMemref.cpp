@@ -34,11 +34,11 @@ struct ConvertReshape : public OpRewritePattern<lmhlo::ReshapeOp> {
   LogicalResult matchAndRewrite(lmhlo::ReshapeOp op,
                                 PatternRewriter &rewriter) const override {
     // handles static shape only
-    auto allocOp = op.output().getDefiningOp<memref::AllocOp>();
+    auto allocOp = op.getOutput().getDefiningOp<memref::AllocOp>();
     if (!allocOp)
       return failure();
-    auto inMemRefType = op.operand().getType().cast<MemRefType>();
-    auto outMemRefType = op.output().getType().cast<MemRefType>();
+    auto inMemRefType = op.getOperand().getType().cast<MemRefType>();
+    auto outMemRefType = op.getOutput().getType().cast<MemRefType>();
     auto input_shape = inMemRefType.getShape();
     auto output_shape = outMemRefType.getShape();
 
@@ -52,7 +52,7 @@ struct ConvertReshape : public OpRewritePattern<lmhlo::ReshapeOp> {
     auto shapeMetaMemRefType = MemRefType::get(shape, rewriter.getI64Type());
     auto shape_allocOp =
         rewriter.create<memref::AllocOp>(op.getLoc(), shapeMetaMemRefType);
-    auto const_op = rewriter.create<lmhlo::ConstOp>(
+    auto const_op = rewriter.create<lmhlo::ConstantOp>(
         op.getLoc(),
         GetI64ElementsAttr(output_shape, output_shape.size(), &rewriter),
         shape_allocOp.getResult());
@@ -61,7 +61,7 @@ struct ConvertReshape : public OpRewritePattern<lmhlo::ReshapeOp> {
         outMemRefType.getShape(), outMemRefType.getElementType(),
         outMemRefType.getLayout(), inMemRefType.getMemorySpace());
     auto newReshapeOp = rewriter.create<memref::ReshapeOp>(
-        op.getLoc(), newMemRefType, op.operand(), const_op.output());
+        op.getLoc(), newMemRefType, op.getOperand(), const_op.getOutput());
     rewriter.replaceOp(allocOp, newReshapeOp.getResult());
     rewriter.eraseOp(op);
 
@@ -74,16 +74,16 @@ struct SliceToSubview : public OpRewritePattern<lmhlo::SliceOp> {
 
   LogicalResult matchAndRewrite(lmhlo::SliceOp op,
                                 PatternRewriter &rewriter) const override {
-    auto allocOp = op.output().getDefiningOp<memref::AllocOp>();
+    auto allocOp = op.getOutput().getDefiningOp<memref::AllocOp>();
     if (!allocOp)
       return failure();
-    auto inMemRefType = op.operand().getType().cast<MemRefType>();
+    auto inMemRefType = op.getOperand().getType().cast<MemRefType>();
     auto start_indices = SmallVector<int64_t>();
     auto limit_indices = SmallVector<int64_t>();
     auto strides = SmallVector<int64_t>();
-    getValuesFromDenseIntElementsAttr(op.start_indices(), start_indices);
-    getValuesFromDenseIntElementsAttr(op.limit_indices(), limit_indices);
-    getValuesFromDenseIntElementsAttr(op.strides(), strides);
+    getValuesFromDenseIntElementsAttr(op.getStartIndices(), start_indices);
+    getValuesFromDenseIntElementsAttr(op.getLimitIndices(), limit_indices);
+    getValuesFromDenseIntElementsAttr(op.getStrides(), strides);
     auto input_shape = inMemRefType.getShape();
 
     if (start_indices.size() != limit_indices.size() ||
@@ -104,7 +104,7 @@ struct SliceToSubview : public OpRewritePattern<lmhlo::SliceOp> {
       sizes.push_back((limit_indices[i] - start_indices[i]) / strides[i]);
 
     auto newSubViewOp = rewriter.create<memref::SubViewOp>(
-        op.getLoc(), op.operand(), ArrayRef<int64_t>(start_indices),
+        op.getLoc(), op.getOperand(), ArrayRef<int64_t>(start_indices),
         ArrayRef<int64_t>(sizes), ArrayRef<int64_t>(strides));
     rewriter.replaceOp(allocOp, newSubViewOp.getResult());
     rewriter.eraseOp(op);
@@ -139,6 +139,6 @@ void mlir::populateLmhloToMemrefPattern(RewritePatternSet &patterns) {
   patterns.add<ConvertReshape, SliceToSubview>(patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createLmhloToMemrefPass() {
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createLmhloToMemrefPass() {
   return std::make_unique<LmhloToMemrefPass>();
 }

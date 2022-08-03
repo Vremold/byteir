@@ -9,6 +9,7 @@
 #include "./PassDetail.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 
 using namespace mlir;
@@ -54,7 +55,7 @@ struct FuncTagPass : public FuncTagBase<FuncTagPass> {
 
     auto m = getOperation();
 
-    for (auto funcOp : m.getOps<FuncOp>()) {
+    for (auto funcOp : m.getOps<func::FuncOp>()) {
       if (funcOp.getName() == funcName || funcOp->hasAttr(anchorAttr)) {
         setParsedConcatAttr(funcOp, attrName, attrType, attrValue);
       }

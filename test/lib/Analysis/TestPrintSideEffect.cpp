@@ -31,7 +31,7 @@ struct TestPrintArgSideEffectPass
     analysis.dump(llvm::outs());
     os << "============= Test Module"
        << " =============\n";
-    for (auto f : m.getOps<FuncOp>()) {
+    for (auto f : m.getOps<func::FuncOp>()) {
       for (auto &block : f.getBlocks()) {
         for (auto &op : block.without_terminator()) {
           os << "Testing " << op.getName() << ":\n";

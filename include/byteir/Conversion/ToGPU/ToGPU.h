@@ -13,10 +13,14 @@
 #include <string>
 
 namespace mlir {
+class ModuleOp;
+namespace func {
+class FuncOp;
+} // namespace func
 
 // Note: this pass is soft-deprecated
 // Please use FuncTag, LoopTag and ConvertFuncToGPUPass instead
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createCoalescedForToGPULaunchPass(int64_t bSize = 32);
 
 // some constexpr attr name

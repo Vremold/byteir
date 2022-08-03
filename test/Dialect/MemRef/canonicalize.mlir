@@ -4,8 +4,8 @@
 #map0 = affine_map<(d0, d1) -> (d0 * 32 + d1)>
 #map1 = affine_map<(d0, d1)[s0] -> (d0 * 64 + s0 + d1)>
 
-// CHECK-LABEL: func @test_map
-func @test_map(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>, %arg2: index) {
+// CHECK-LABEL: func.func @test_map
+func.func @test_map(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>, %arg2: index) {
   %c32 = arith.constant 32 : index
   %0 = memref.alloc(%c32) : memref<100x?xf32, #map0, 1>
 // CHECK: memref.alloc() : memref<100x32xf32, #map0, 1>
@@ -16,8 +16,8 @@ func @test_map(%arg0: memref<100x?xf32>, %arg1: memref<100x?xf32>, %arg2: index)
   return
 }
 
-// CHECK-LABEL: func @matmul_tiled_hoist
-func @matmul_tiled_hoist(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) {
+// CHECK-LABEL: func.func @matmul_tiled_hoist
+func.func @matmul_tiled_hoist(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) {
   %c0 = arith.constant 0 : index
   %c8 = arith.constant 8 : index
   %c128 = arith.constant 128 : index
@@ -37,8 +37,8 @@ func @matmul_tiled_hoist(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %a
   return
 }
 
-// CHECK-LABEL: func @matmul_tiled_non_hoist
-func @matmul_tiled_non_hoist(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) {
+// CHECK-LABEL: func.func @matmul_tiled_non_hoist
+func.func @matmul_tiled_non_hoist(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) {
   %c0 = arith.constant 0 : index
   %c8 = arith.constant 8 : index
   %c128 = arith.constant 128 : index

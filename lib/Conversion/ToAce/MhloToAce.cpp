@@ -7,6 +7,7 @@
 #include "byteir/Conversion/ToAce/MhloToAce.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 #include "../PassDetail.h"
@@ -26,7 +27,7 @@ void populateFuseMhloToAceActivationPatterns(MLIRContext *context,
 struct ConvertMhloToAcePass
     : public ConvertMhloToAceBase<ConvertMhloToAcePass> {
   void runOnOperation() override {
-    FuncOp op = getOperation();
+    func::FuncOp op = getOperation();
     MLIRContext *context = op.getContext();
     RewritePatternSet patterns(context);
     populateFuseMhloToAceActivationPatterns(context, &patterns);
@@ -38,6 +39,7 @@ struct ConvertMhloToAcePass
 
 } // namespace
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createConvertMhloToAcePass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createConvertMhloToAcePass() {
   return std::make_unique<ConvertMhloToAcePass>();
 }

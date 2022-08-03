@@ -8,13 +8,16 @@
 #ifndef BYTEIR_DIALECT_MHLO_TRANSFORMS_PASSDETAIL_H
 #define BYTEIR_DIALECT_MHLO_TRANSFORMS_PASSDETAIL_H
 
+#include "mlir/IR/DialectRegistry.h"
 #include "mlir/Pass/Pass.h"
 
 // forward dialects for conversions
 namespace mlir {
+class ModuleOp;
 
 namespace func {
 class FuncDialect;
+class FuncOp;
 } // namespace func
 
 namespace mhlo {

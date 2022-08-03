@@ -53,9 +53,10 @@ void moveConsumer(const MhloFusionPattern &pattern) {
 }
 } // namespace
 
-FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
-                                     ValueRange inputs, ValueRange outputs,
-                                     const MhloFusionPattern &pattern) {
+func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
+                                           ValueRange inputs,
+                                           ValueRange outputs,
+                                           const MhloFusionPattern &pattern) {
   SmallVector<Location, 4> locations;
   locations.reserve(pattern.size());
   for (Operation *op : pattern) {
@@ -78,7 +79,8 @@ FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
 
   auto sub_fn_type = b.getFunctionType(input_types, output_types);
   b.setInsertionPointAfter(pattern[0]->getParentOp());
-  FuncOp sub_fn_op = b.create<FuncOp>(fused_loc, sub_fn_name, sub_fn_type);
+  func::FuncOp sub_fn_op =
+      b.create<func::FuncOp>(fused_loc, sub_fn_name, sub_fn_type);
   b.setInsertionPoint(pattern.back());
   auto call_op = b.create<func::CallOp>(fused_loc, sub_fn_op, inputs);
 
@@ -111,8 +113,8 @@ FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
   return sub_fn_op;
 }
 
-FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
-                                     const MhloFusionPattern &pattern) {
+func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
+                                           const MhloFusionPattern &pattern) {
   SmallVector<Value, 4> inputs = GetInputsOfCluster(pattern);
   SmallVector<Value, 4> outputs = GetOutputsOfCluster(pattern);
   return createFuncOpFromPattern(b, sub_fn_name, inputs, outputs, pattern);
@@ -209,7 +211,7 @@ llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
 } // namespace
 
 mlir::ProducerFusionPlanner::ProducerFusionPlanner(
-    FuncOp funcOp, std::function<bool(Operation *)> is_fusible,
+    func::FuncOp funcOp, std::function<bool(Operation *)> is_fusible,
     std::function<bool(Operation *)> fuse_start,
     std::function<bool(Operation *)> fuse_trigger,
     std::function<bool(Operation *, Operation *)> fuse_with)

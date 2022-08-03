@@ -21,7 +21,7 @@ def FPDenseSplatValue : Constraint<CPred<"$_self.dyn_cast<DenseFPElementsAttr>()
 def MhloToAceReluPattern : Pat<
   (HLO_MaxOp
     $input,
-    (HLO_ConstOp
+    (HLO_ConstantOp
       $value
     )
   ),
@@ -30,11 +30,11 @@ def MhloToAceReluPattern : Pat<
 
 def MhloToAceRelu6Pattern : Pat<
   (HLO_ClampOp
-    (HLO_ConstOp
+    (HLO_ConstantOp
       $value1
     ),
     $input,
-    (HLO_ConstOp
+    (HLO_ConstantOp
       $value2
     )
   ),
@@ -45,14 +45,15 @@ def MhloToAceLeakyReluPattern : Pat<
   (HLO_SelectOp:$output
     (HLO_CompareOp
       $input,
-      (HLO_ConstOp $value1),
-      HLO_COMPARISON_DIRECTION_GT,
+      (HLO_ConstantOp $value1),
+      // HLO_COMPARISON_DIRECTION_GT, TODO: fix this at mlir-tblgen
+      ConstantAttr<HLO_ComparisonDirectionAttr, "mhlo::ComparisonDirection::GT">:$comparion_direction,
       $_
     ),
     $input,
     (HLO_MulOp
       $input,
-      (HLO_ConstOp $value2)
+      (HLO_ConstantOp $value2)
     )
   ),
   (CreateAceActivateOp $output, $input, (NativeCodeCall<"$_builder.getStringAttr(\"leaky_relu\")">),

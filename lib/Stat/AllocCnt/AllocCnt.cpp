@@ -11,6 +11,7 @@
 #include "byteir/Stat/Common/Reg.h"
 #include "byteir/Utils/MemUtils.h"
 #include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "llvm/Support/CommandLine.h"
 
@@ -47,7 +48,7 @@ struct Event {
   }
 };
 
-std::string allocCntStatisticsSingle(FuncOp func) {
+std::string allocCntStatisticsSingle(func::FuncOp func) {
   size_t staticAlloc = 0, dynamicAlloc = 0;
   size_t totalMemory = 0, peakMemory = 0;
   int currentMemory = 0;
@@ -106,7 +107,7 @@ void byteir::registerAllocCntStatistics() {
 
 mlir::LogicalResult byteir::allocCntStatistics(ModuleOp moduleOp,
                                                llvm::raw_ostream &os) {
-  for (FuncOp func : moduleOp.getOps<FuncOp>()) {
+  for (func::FuncOp func : moduleOp.getOps<func::FuncOp>()) {
     os << allocCntStatisticsSingle(func) << "\n";
   }
 

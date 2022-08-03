@@ -14,6 +14,9 @@
 #include <memory>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 constexpr StringRef getScopeTilingAnchorAttrName() {
   return "__byteir_scope_tile_anchor__";
@@ -28,7 +31,7 @@ constexpr StringRef getScopeTilingRankAttrName() {
   return "__byteir_scope_tile_rank__";
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 createLinalgScopeTilingPass(int64_t tileAxis = 0, int64_t tileSize = 0,
                             bool parallelizeReduction = false,
                             mlir::LinalgScopeTilingLoopType loopType =

@@ -9,6 +9,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -36,7 +37,7 @@ struct BatchNormGradDropMeanAndVarPattern
       auto type = op.mean().getType().template cast<RankedTensorType>();
       auto fp_type = type.getElementType().template dyn_cast<FloatType>();
       assert(fp_type);
-      Value zero = rewriter.create<mhlo::ConstOp>(
+      Value zero = rewriter.create<mhlo::ConstantOp>(
           rewriter.getUnknownLoc(),
           DenseFPElementsAttr::get(
               type, APFloat::getZero(fp_type.getFloatSemantics())));
@@ -46,7 +47,7 @@ struct BatchNormGradDropMeanAndVarPattern
       auto type = op.variance().getType().template cast<RankedTensorType>();
       auto fp_type = type.getElementType().template dyn_cast<FloatType>();
       assert(fp_type);
-      Value zero = rewriter.create<mhlo::ConstOp>(
+      Value zero = rewriter.create<mhlo::ConstantOp>(
           rewriter.getUnknownLoc(),
           DenseFPElementsAttr::get(
               type, APFloat::getZero(fp_type.getFloatSemantics())));
@@ -60,7 +61,7 @@ struct RewriteWithConstraintPass
     : RewriteWithConstraintBase<RewriteWithConstraintPass> {
   RewriteWithConstraintPass() = default;
   void runOnOperation() override {
-    FuncOp funcOp = getOperation();
+    func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
     populateRewriteWithConstraintConstraintPattern(patterns);
     if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
@@ -77,6 +78,7 @@ void mlir::populateRewriteWithConstraintConstraintPattern(
   patterns.add<BatchNormGradDropMeanAndVarPattern>(patterns.getContext());
 }
 
-std::unique_ptr<OperationPass<FuncOp>> mlir::createRewriteWithConstraintPass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createRewriteWithConstraintPass() {
   return std::make_unique<RewriteWithConstraintPass>();
 }

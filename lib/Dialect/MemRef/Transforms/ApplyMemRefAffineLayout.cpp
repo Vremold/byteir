@@ -10,6 +10,7 @@
 #include "PassDetail.h"
 #include "byteir/Dialect/MemRef/Utils/Layout.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Builders.h"
 
@@ -81,7 +82,8 @@ void applyAffineLayout(OpBuilder &b, ArrayRef<Operation *> collector) {
   }
 }
 
-void collectLayoutOps(FuncOp funcOp, SmallVectorImpl<Operation *> &collector) {
+void collectLayoutOps(func::FuncOp funcOp,
+                      SmallVectorImpl<Operation *> &collector) {
   for (auto &block : funcOp.getBody()) {
     for (auto &op : block.without_terminator()) {
       if (op.hasAttr(getLayoutAttributeName())) {
@@ -112,7 +114,7 @@ void ApplyMemRefAffineLayoutPass::runOnOperation() {
   applyAffineLayout(builder, collector);
 }
 
-std::unique_ptr<OperationPass<FuncOp>>
+std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createApplyMemRefAffineLayoutPass() {
   return std::make_unique<ApplyMemRefAffineLayoutPass>();
 }

@@ -25,7 +25,9 @@
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
 namespace mlir {
+namespace func {
 class FuncOp;
+} // end namespace func
 
 namespace byre {
 

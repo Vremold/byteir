@@ -16,7 +16,7 @@ include "byteir/Dialect/Shape/ShapeExtBase.td"
 // ResolveShapeConstraint
 //===----------------------------------------------------------------------===//
 
-def ResolveShapeConstraint : Pass<"resolve-shape-constraint", "mlir::FuncOp"> {
+def ResolveShapeConstraint : Pass<"resolve-shape-constraint", "mlir::func::FuncOp"> {
   let summary = "Resolve shape constraint represented by MeetOp";
   let constructor = "mlir::createResolveShapeConstraintPass()";
 }
@@ -25,7 +25,7 @@ def ResolveShapeConstraint : Pass<"resolve-shape-constraint", "mlir::FuncOp"> {
 // InsertTieShape
 //===----------------------------------------------------------------------===//
 
-def InsertTieShape : Pass<"insert-tie-shape", "mlir::FuncOp"> {
+def InsertTieShape : Pass<"insert-tie-shape", "mlir::func::FuncOp"> {
   let summary = "Insert TieOp";
   let description = [{
     If a Value has dynamic shape, add a TieOp for it. The first operand of the

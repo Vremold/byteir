@@ -13,6 +13,7 @@
 #include "byteir/Dialect/mhlo/Transforms/GenericFusion.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Transforms/passes.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Transforms/Passes.h"
@@ -38,7 +39,7 @@ struct LinalgMemrefGPUPipelinePass
 };
 
 template <typename OTy>
-void collectOp(FuncOp funcOp, SmallVectorImpl<Operation *> &collector) {
+void collectOp(func::FuncOp funcOp, SmallVectorImpl<Operation *> &collector) {
   for (auto op : funcOp.getOps<OTy>()) {
     collector.push_back(op);
   }
@@ -56,7 +57,7 @@ struct MatmulEpilogueGPUPipelinePass
     // tile m-axis
     {
       SmallVector<Operation *> collection;
-      for (auto funcOp : m.getOps<FuncOp>()) {
+      for (auto funcOp : m.getOps<func::FuncOp>()) {
         if (!funcOp->hasAttr(getByteIRMatmulEpilogueFusionAttrName()) ||
             !funcOp.isPrivate()) {
           continue;
@@ -77,7 +78,7 @@ struct MatmulEpilogueGPUPipelinePass
       {
         OpPassManager pm(m.getOperationName());
 
-        pm.addNestedPass<FuncOp>(createLinalgScopeTilingPass(0, 2));
+        pm.addNestedPass<func::FuncOp>(createLinalgScopeTilingPass(0, 2));
         addCleanUpPassPipeline(pm);
         if (mlir::failed(runPipeline(pm, m))) {
           signalPassFailure();

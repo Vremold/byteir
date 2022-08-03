@@ -14,10 +14,13 @@
 #include <vector>
 
 namespace mlir {
+namespace func {
+class FuncOp;
+} // namespace func
 
 void populateIOConvertBatchNormPattern(RewritePatternSet &patterns);
 
-std::unique_ptr<OperationPass<FuncOp>> createIOConvertFusionPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createIOConvertFusionPass();
 
 } // namespace mlir
 

@@ -6,7 +6,7 @@
 
 #map0 = affine_map<(d0, d1) -> (d0, d1)>
 
-func @matmul_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<64x64xf32>,  %arg3: memref<128x64xf32>) {
+func.func @matmul_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<64x64xf32>,  %arg3: memref<128x64xf32>) {
   %0 = memref.alloc() : memref<128x64xf32>
   %1 = memref.alloc() : memref<128x64xf32>
   linalg.matmul {__byteir_scope_tile_anchor__} ins(%arg0, %arg1 : memref<128x64xf32>, memref<64x64xf32>) outs(%0 : memref<128x64xf32>)
@@ -19,14 +19,14 @@ func @matmul_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memre
   return
 }
 
-// AXIS0-LABEL: func @matmul_2(
+// AXIS0-LABEL: func.func @matmul_2(
 // AXIS0: scf.parallel
 // AXIS0:   linalg.matmul
 // AXIS0:   linalg.generic
 // AXIS0:   linalg.matmul
 // AXIS0:   scf.yield
 
-// AXIS1-LABEL: func @matmul_2(
+// AXIS1-LABEL: func.func @matmul_2(
 // AXIS1: scf.for
 // AXIS1:   linalg.matmul
 // AXIS1:   linalg.generic
@@ -34,7 +34,7 @@ func @matmul_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memre
 // AXIS1:   }
 // AXIS1: return
 
-// AXIS2-LABEL: func @matmul_2(
+// AXIS2-LABEL: func.func @matmul_2(
 // AXIS2: scf.for
 // AXIS2:   linalg.matmul
 // AXIS2: }
@@ -42,7 +42,7 @@ func @matmul_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memre
 // AXIS2: linalg.matmul
 // AXIS2: return
 
-// PARAXIS1-LABEL: func @matmul_2(
+// PARAXIS1-LABEL: func.func @matmul_2(
 // PARAXIS1: scf.parallel
 // PARAXIS1:   linalg.matmul
 // PARAXIS1:   linalg.generic
@@ -51,7 +51,7 @@ func @matmul_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memre
 // PARAXIS1-SAME: __byteir_atomic_kind__ = 0 : i32
 // PARAXIS1:   scf.yield
 
-// PARAXIS2-LABEL: func @matmul_2(
+// PARAXIS2-LABEL: func.func @matmul_2(
 // PARAXIS2: scf.parallel
 // PARAXIS2:   linalg.matmul
 // PARAXIS2:   linalg.generic

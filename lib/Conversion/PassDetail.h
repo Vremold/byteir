@@ -8,6 +8,7 @@
 #ifndef BYTEIR_CONVERSION_TO_PASSDETAIL_H
 #define BYTEIR_CONVERSION_TO_PASSDETAIL_H
 
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/Pass.h"
 
 // forward dialects for conversions
@@ -29,6 +30,14 @@ class BufferizationDialect;
 namespace byre {
 class ByreDialect;
 } // namespace byre
+
+namespace cf {
+class ControlFlowDialect;
+} // namespace cf
+
+namespace func {
+class FuncOp;
+} // namespace func
 
 namespace gpu {
 class GPUDialect;

@@ -9,7 +9,8 @@
 #define BYTEIR_CONVERSION_TOGPU_UTILS_H
 
 #include "byteir/Analysis/Alias.h"
-#include "mlir/Dialect/GPU/GPUDialect.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "llvm/ADT/StringRef.h"
 #include <memory.h>
@@ -31,7 +32,7 @@ bool isGPUGlobalAlloc(Operation *);
 gpu::GPUModuleOp getOrCreateGPUModule(ModuleOp m, llvm::StringRef moduleName);
 
 // clone FuncOp with body into GPUFuncOp
-gpu::GPUFuncOp cloneFuncToGPUFunc(OpBuilder &builder, FuncOp func,
+gpu::GPUFuncOp cloneFuncToGPUFunc(OpBuilder &builder, func::FuncOp func,
                                   gpu::GPUModuleOp gm,
                                   SmallVectorImpl<Value> &args);
 

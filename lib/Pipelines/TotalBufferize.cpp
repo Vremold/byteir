@@ -11,6 +11,7 @@
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Transforms/passes.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
@@ -41,12 +42,12 @@ struct ByteIRTotalBufferizePipelinePass
 void mlir::addByteIRTotalBufferizePatterns(OpPassManager &pm) {
   pm.addPass(createConvertHloToLHloPass());
   pm.addPass(createCSEPass());
-  pm.addNestedPass<FuncOp>(createLinalgBufferizePass());
-  pm.addNestedPass<FuncOp>(createTensorBufferizePass());
+  pm.addNestedPass<func::FuncOp>(createLinalgBufferizePass());
+  pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
   addCleanUpPassPipeline(pm);
   // clean-up possible redudant copy-removal from bufferization
   // TODO: enable it after fixing crash
-  // pm.addNestedPass<FuncOp>(createCopyRemovalPass());
+  // pm.addNestedPass<func::FuncOp>(createCopyRemovalPass());
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>

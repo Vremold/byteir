@@ -22,8 +22,8 @@ namespace mlir {
 
 namespace func {
 class CallOp;
-} // namespace func
 class FuncOp;
+} // namespace func
 class Location;
 class Operation;
 class Value;
@@ -119,7 +119,7 @@ removeArgAttrPlaceholders(OpTy op, ArrayRef<StringRef> argAttrNames) {
 }
 
 // Return FuncOp from a CallOp
-mlir::FuncOp GetFuncOp(func::CallOp);
+mlir::func::FuncOp GetFuncOp(func::CallOp);
 
 // Return true if attrs has any of filterAttrs
 bool HasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,

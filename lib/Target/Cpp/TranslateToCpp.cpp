@@ -11,12 +11,13 @@
 
 #include "byteir/Target/Common/EmitUtil.h"
 
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/SCF.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Dialect.h"
@@ -595,7 +596,8 @@ static LogicalResult printOperation(CppEmitter &emitter, ModuleOp moduleOp) {
   return success();
 }
 
-static LogicalResult printOperation(CppEmitter &emitter, FuncOp functionOp) {
+static LogicalResult printOperation(CppEmitter &emitter,
+                                    func::FuncOp functionOp) {
   // We need to declare variables at top if the function has multiple blocks.
   if (!emitter.shouldDeclareVariablesAtTop() &&
       functionOp.getBlocks().size() > 1) {
@@ -606,19 +608,19 @@ static LogicalResult printOperation(CppEmitter &emitter, FuncOp functionOp) {
   CppEmitter::Scope scope(emitter);
   raw_indented_ostream &os = emitter.ostream();
   if (failed(emitter.emitTypes(functionOp.getLoc(),
-                               functionOp.getType().getResults())))
+                               functionOp.getFunctionType().getResults())))
     return failure();
   os << " " << functionOp.getName();
 
   if (functionOp.empty()) {
     os << "(";
-    if (failed(interleaveCommaWithError(functionOp.getType().getInputs(), os,
-                                        [&](Type type) -> LogicalResult {
-                                          if (failed(emitter.emitType(
-                                                  functionOp.getLoc(), type)))
-                                            return failure();
-                                          return success();
-                                        }))) {
+    if (failed(interleaveCommaWithError(
+            functionOp.getFunctionType().getInputs(), os,
+            [&](Type type) -> LogicalResult {
+              if (failed(emitter.emitType(functionOp.getLoc(), type)))
+                return failure();
+              return success();
+            }))) {
       return failure();
     }
     os << ");\n";
@@ -990,7 +992,7 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
           .Case<cf::BranchOp, cf::CondBranchOp>(
               [&](auto op) { return printOperation(*this, op); })
           // Func Ops
-          .Case<func::CallOp, func::ConstantOp, FuncOp, ModuleOp,
+          .Case<func::CallOp, func::ConstantOp, func::FuncOp, ModuleOp,
                 func::ReturnOp>(
               [&](auto op) { return printOperation(*this, op); })
           // Arithmetic ops
@@ -1075,6 +1077,14 @@ LogicalResult CppEmitter::emitType(Location loc, Type type) {
     return emitTupleType(loc, tType.getTypes());
   if (auto oType = type.dyn_cast<emitc::OpaqueType>()) {
     os << oType.getValue();
+    return success();
+  }
+  // FIXME: PointerType is added.
+  if (auto pType = type.dyn_cast<emitc::PointerType>()) {
+    if (failed(emitType(loc, pType.getPointee()))) {
+      return failure();
+    }
+    os << "*";
     return success();
   }
   return emitError(loc, "cannot emit type ") << type;
