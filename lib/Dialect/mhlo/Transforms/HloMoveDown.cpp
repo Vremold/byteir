@@ -862,11 +862,12 @@ struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
 void mlir::populateHloMoveDownPattern(RewritePatternSet &patterns,
                                       const llvm::DenseSet<StringRef> &blocker,
                                       bool allMultiUser, bool multiUser) {
-  patterns.add<TransposeMoveDownPattern, ReshapeMoveDownPattern,
-               BroadcastMoveDownPattern, BroadcastReshapeMoveDownPattern,
-               ReshapeBroadcastDotMoveDownPattern,
-               BroadcastBinaryMoveDownPattern, SliceMoveDownPattern>(
-      patterns.getContext(), blocker, allMultiUser, multiUser);
+  patterns
+      .add<TransposeMoveDownPattern, ReshapeMoveDownPattern,
+           BroadcastMoveDownPattern, BroadcastReshapeMoveDownPattern,
+           ReshapeBroadcastDotMoveDownPattern, BroadcastBinaryMoveDownPattern
+           /*,SliceMoveDownPattern*/>(patterns.getContext(), blocker,
+                                      allMultiUser, multiUser);
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>
