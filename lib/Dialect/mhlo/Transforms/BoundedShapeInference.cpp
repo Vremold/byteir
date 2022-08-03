@@ -26,9 +26,10 @@ using namespace mlir;
 
 namespace {
 
-LogicalResult
-constructNewArgumentTypes(func::FuncOp funcOp,
-                          SmallVectorImpl<Type> &newArgumentTypes) {
+LogicalResult constructNewArgumentTypes(func::FuncOp funcOp,
+                                        SmallVectorImpl<Type> &newArgumentTypes,
+                                        SmallVectorImpl<Type> &newFuncArgTypes,
+                                        OpBuilder &builder) {
   for (unsigned i = 0; i < funcOp.getNumArguments(); ++i) {
     Type origType = funcOp.getArgumentTypes()[i];
 
@@ -41,6 +42,7 @@ constructNewArgumentTypes(func::FuncOp funcOp,
 
     if (origRankedType.hasStaticShape()) {
       newArgumentTypes.push_back(origType);
+      newFuncArgTypes.push_back(origType);
       continue;
     }
 
@@ -65,6 +67,12 @@ constructNewArgumentTypes(func::FuncOp funcOp,
       return failure();
     }
 
+    auto typeWithEncoding = RankedTensorType::get(
+        origRankedType.getShape(), origRankedType.getElementType(),
+        builder.getDictionaryAttr(
+            {builder.getNamedAttr(getBoundedShapeAttrName(),
+                                  builder.getI64ArrayAttr(boundedShape))}));
+    newFuncArgTypes.push_back(typeWithEncoding);
     Type newType = origRankedType.clone(boundedShape);
     newArgumentTypes.push_back(newType);
   }
@@ -82,14 +90,16 @@ struct BoundedShapeInferencePass
 
   void runOnOperation() override {
     func::FuncOp funcOp = getOperation();
+    OpBuilder builder(funcOp);
 
     SmallVector<Type> newArgumentTypes;
-    if (failed(constructNewArgumentTypes(funcOp, newArgumentTypes))) {
+    SmallVector<Type> newFuncArgTypes;
+    if (failed(constructNewArgumentTypes(funcOp, newArgumentTypes,
+                                         newFuncArgTypes, builder))) {
       return;
     }
 
     // Construct new FuncOp
-    OpBuilder builder(funcOp);
     StringRef funcSymName = funcOp.getSymName();
     std::string newFuncSymName = "_bounded_shape_infer_" + funcSymName.str();
     auto newFnType =
@@ -110,8 +120,10 @@ struct BoundedShapeInferencePass
 
     // Set bounded shape attr according to the inferred results
     std::vector<Operation *> originalOps;
+    SmallVector<Type> newFuncRetTypes;
     funcOp.walk([&](Operation *op) { originalOps.push_back(op); });
     unsigned opIndex = 0;
+    func::ReturnOp returnOp;
     newFuncOp.walk([&](Operation *op) {
       opIndex++;
       // set bounded type attr for the original op
@@ -128,11 +140,34 @@ struct BoundedShapeInferencePass
         std::string boundedShapeAttrName =
             getBoundedShapeAttrName().str() + std::to_string(it.index());
         ArrayRef<int64_t> shape = newType.getShape();
-
-        originalOp->setAttr(boundedShapeAttrName,
-                            builder.getI64ArrayAttr(shape));
+        auto resultValue = std::get<0>(it.value());
+        auto tx = resultValue.getType().dyn_cast<RankedTensorType>();
+        if (tx) {
+          auto typeWithEncoding = RankedTensorType::get(
+              tx.getShape(), tx.getElementType(),
+              builder.getDictionaryAttr({builder.getNamedAttr(
+                  getBoundedShapeAttrName(), builder.getI64ArrayAttr(shape))}));
+          resultValue.setType(typeWithEncoding);
+        } else {
+          originalOp->setAttr(boundedShapeAttrName,
+                              builder.getI64ArrayAttr(shape));
+        }
+      }
+      if (isa<func::ReturnOp>(originalOp)) {
+        returnOp = dyn_cast<func::ReturnOp>(originalOp);
       }
     });
+
+    // must find return op
+    newFuncRetTypes = llvm::to_vector(returnOp.getOperandTypes());
+
+    auto newFuncType =
+        FunctionType::get(&getContext(), newFuncArgTypes, newFuncRetTypes);
+    funcOp.setType(newFuncType);
+    for (auto elem :
+         llvm::zip(funcOp.front().getArguments(), newFuncArgTypes)) {
+      std::get<0>(elem).setType(std::get<1>(elem));
+    }
 
     // Erase the auxiliary function op at the end
     newFuncOp->erase();
