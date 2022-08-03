@@ -32,3 +32,10 @@ func.func @registered_shape_infer(%arg0 : tensor<?x4xf32> {byteir.bounded_shape 
   %0 = "mhlo.custom_call"(%arg0) {call_target_name = "byteir.non_zero"} : (tensor<?x4xf32>) -> tensor<?xi64>
   return %0 : tensor<?xi64>
 }
+
+// CHECK-LABEL: @tf_where
+func.func @tf_where(%arg0 : tensor<1xi1>) -> tensor<?x1xi64> {
+  // CHECK-NEXT: byteir.bounded_shape0 = [1, 1]
+  %0 = "mhlo.custom_call"(%arg0) { call_target_name = "tf.Where" } : (tensor<1xi1>) -> tensor<?x1xi64>
+  return %0 : tensor<?x1xi64>
+}

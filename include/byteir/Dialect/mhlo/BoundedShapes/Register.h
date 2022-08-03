@@ -17,9 +17,12 @@ void registerDynamicPartitionInferBoundedReturnTypes();
 
 void registerNonZeroInferBoundedReturnTypes();
 
+void registerWhereInferBoundedReturnTypes();
+
 inline void registerAllMhloInferBoundedReturnTypes() {
   registerDynamicPartitionInferBoundedReturnTypes();
   registerNonZeroInferBoundedReturnTypes();
+  registerWhereInferBoundedReturnTypes();
 }
 
 } // namespace mlir
