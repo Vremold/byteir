@@ -15,6 +15,7 @@ add_mlir_dialect_library(MLIRShapeExt
 add_mlir_dialect_library(ByteIRShapePasses
   Transforms/InsertTieShape.cpp
   Transforms/ResolveShapeConstraint.cpp
+  Transforms/SetAssumingAlwaysTrue.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Shape

@@ -10,6 +10,7 @@
 
 #include "byteir/Dialect/Shape/Transforms/InsertTieShape.h"
 #include "byteir/Dialect/Shape/Transforms/ResolveShapeConstraint.h"
+#include "byteir/Dialect/Shape/Transforms/SetAssumingAlwaysTrue.h"
 
 namespace mlir {
 

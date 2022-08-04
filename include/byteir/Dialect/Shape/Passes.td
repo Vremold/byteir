@@ -40,4 +40,21 @@ def InsertTieShape : Pass<"insert-tie-shape", "mlir::func::FuncOp"> {
   ];
 }
 
+//===----------------------------------------------------------------------===//
+// SetAssumingAlwaysTrue
+//===----------------------------------------------------------------------===//
+
+def SetAssumingAlwaysTrue: Pass<"set-assuming-always-true", "mlir::func::FuncOp"> {
+  let summary = "Make shape.assuming always true";
+  let description = [{
+    set the true to witness in shape.assuming
+  }];
+  let constructor = "mlir::createSetAssumingAlwaysTruePass()";
+  let dependentDialects = [
+    "mlir::shape_ext::ShapeExtDialect",
+    "mlir::tensor::TensorDialect",
+    "mlir::shape::ShapeDialect",
+  ];
+}
+
 #endif // BYTEIR_SHAPE_PASSES
