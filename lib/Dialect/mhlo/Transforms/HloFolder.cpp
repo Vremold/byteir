@@ -194,8 +194,8 @@ struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvolutionOp> {
 // TODO: handle similar cases of dot op followed by mul or add
 //===----------------------------------------------------------------------===//
 
-// Return the expanded constOp if applicable, return None if not. Applicable if
-// all following constraint satisfied:
+// Return the expanded constOp if applicable, return None if not.
+// Applicable if all following constraint satisfied:
 // 1. the op's input has static shape
 // 2. op's input rank equals 1, or it is equal to output rank
 // 3. there's at most one dim in input shape whose size is not equal to 1, and
@@ -508,7 +508,7 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateHloFoldPatterns(patterns);
-    patterns.add<RemoveTrivialTorchIndexSelect>(patterns.getContext(),
+    patterns.add<RemoveTrivialTorchIndexSelect>(context,
                                                 &dim_from_broadcast_analysis);
     // also add canoncializationExt pattern
     mhlo::getCanonicalizationExtPatterns(patterns, patterns.getContext());

@@ -10,7 +10,7 @@
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "byteir/Dialect/Linalg/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
-#include "byteir/Dialect/mhlo/Transforms/GenericFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Transforms/passes.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"

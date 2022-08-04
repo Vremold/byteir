@@ -5,7 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/Transforms/DotTransposeFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
+
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"

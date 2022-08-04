@@ -1,4 +1,4 @@
-//===- MhloPreprocessing.h ------------------------------------*--- C++ -*-===//
+//===- HloFolder.h -------------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -16,7 +16,7 @@ namespace func {
 class FuncOp;
 } // namespace func
 
-// Patterns to fold mhlo::TransposeOp
+// Patterns to fold hlo ops
 void populateHloFoldPatterns(RewritePatternSet &patterns);
 
 std::unique_ptr<OperationPass<func::FuncOp>> createHloFolderPass();

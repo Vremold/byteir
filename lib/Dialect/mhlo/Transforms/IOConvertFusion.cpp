@@ -1,12 +1,12 @@
-//===- BatchNormTrainingFusion.cpp ----------------------------*--- C++ -*-===//
+//===- IOConvertFusion.cpp ------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/Transforms/IOConvertFusion.h"
-#include "./PassDetail.h"
+#include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
+
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
@@ -19,6 +19,8 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace llvm;

@@ -10,11 +10,13 @@ add_byteir_conversion_library(ByteIRToAce
   ByteIRConversionPassIncGen
   ByteIRConversionCommon
   MhloToAceActivationPatternIncGen
+  MLIRAce
 
   LINK_LIBS PUBLIC
   ByteIRConversionCommon
   ByteIRUtils
   MhloDialect
+  MLIRAce
   MLIRIR
   )
 

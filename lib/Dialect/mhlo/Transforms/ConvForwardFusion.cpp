@@ -1,11 +1,12 @@
-//===- ConvBiasActFusion.cpp ----------------------------------*--- C++ -*-===//
+//===- ConvForwardFusion.cpp ----------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/Transforms/ConvBiasActFusion.h"
+#include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
+
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
@@ -86,16 +87,15 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
   }
 };
 
-struct ConvBiasActFusionPass
-    : public ConvBiasActFusionBase<ConvBiasActFusionPass> {
+struct ConvForwardFusionPass
+    : public ConvForwardFusionBase<ConvForwardFusionPass> {
+
   void runOnOperation() override {
     func::FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
-    populateFuseConvBiasActPatterns(patterns);
-    LogicalResult status =
-        applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
-    if (failed(status)) {
+    populateFuseConvForwardPatterns(patterns);
+    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
       signalPassFailure();
     }
   }
@@ -103,11 +103,11 @@ struct ConvBiasActFusionPass
 
 } // namespace
 
-void mlir::populateFuseConvBiasActPatterns(RewritePatternSet &patterns) {
+void mlir::populateFuseConvForwardPatterns(RewritePatternSet &patterns) {
   patterns.add(std::make_unique<FuseConvBiasActPattern>(patterns.getContext()));
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>
-mlir::createConvBiasActFusionPass() {
-  return std::make_unique<ConvBiasActFusionPass>();
+mlir::createConvForwardFusionPass() {
+  return std::make_unique<ConvForwardFusionPass>();
 }

@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/Transforms/TrivialFusion.h"
-#include "PassDetail.h"
+#include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
+
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -14,6 +14,8 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/DenseMap.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;

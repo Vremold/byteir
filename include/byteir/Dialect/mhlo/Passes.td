@@ -49,12 +49,12 @@ def ConvBackwardFusion : Pass<"fuse-conv-backward", "mlir::func::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// ConvBiasActFusion
+// ConvForwardFusion
 //===----------------------------------------------------------------------===//
 
-def ConvBiasActFusion : Pass<"fuse-conv-bias-act", "mlir::func::FuncOp"> {
-  let summary = "Fuse convolution bias activation";
-  let constructor = "mlir::createConvBiasActFusionPass()";
+def ConvForwardFusion : Pass<"fuse-conv-forward", "mlir::func::FuncOp"> {
+  let summary = "Fuse convolution forward, such as conv with bias activation";
+  let constructor = "mlir::createConvForwardFusionPass()";
 }
 
 //===----------------------------------------------------------------------===//

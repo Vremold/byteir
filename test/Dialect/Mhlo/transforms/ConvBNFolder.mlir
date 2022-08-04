@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s --mhlo-test-unfuse-batch-norm --hlo-fold | FileCheck %s
+// RUN: byteir-opt %s -mhlo-test-unfuse-batch-norm -hlo-fold | FileCheck %s
 
 func.func @conv_bn_inference(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
   %weight = mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]> : tensor<1x1x1x2xf32>
