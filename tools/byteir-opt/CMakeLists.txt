@@ -36,7 +36,7 @@ set(MHLO_LIBS
   AllMhloPasses
   LmhloPasses
   MLIRBufferTransforms
-  AllGmlStPasses
+  AllGmlStPasses # FIXME: these two libs should be fixed at upstream
   GmlStDialect
   MLIRHLOAnalysis
   MLIRHLOTestAnalysis
