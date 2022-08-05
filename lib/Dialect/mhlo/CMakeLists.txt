@@ -43,6 +43,7 @@ add_mlir_dialect_library(ByteIRMhloReifyShapes
 
 add_mlir_dialect_library(ByteIRMhloShapeConstraints
   ShapeConstraints/DynamicPartitionRegister.cpp
+  ShapeConstraints/DynamicReshapeRegister.cpp
   ShapeConstraints/DotGeneralRegister.cpp
   ShapeConstraints/EinsumRegister.cpp
 
