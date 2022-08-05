@@ -1,4 +1,4 @@
-add_mlir_dialect_library(MLIRByre
+add_mlir_dialect_library(MLIRByreDialect
   IR/ByreDialect.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -25,7 +25,7 @@ add_mlir_dialect_library(ByteIRByrePasses
 
   DEPENDS
   ByteIRByrePassIncGen
-  MLIRByre
+  MLIRByreDialect
 
   LINK_LIBS PUBLIC
   MLIRIR

@@ -6,18 +6,18 @@ add_byteir_conversion_library(ByteIRToByre
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Conversion/ToByre
 
   DEPENDS
-  MLIRAce
-  MLIRByre
-  MLIRLace
+  MLIRAceDialect
+  MLIRByreDialect
+  MLIRLaceDialect
   ByteIRConversionPassIncGen
   ByteIRConversionCommon
   ByteIRMhloUtils
 
   LINK_LIBS PUBLIC
-  MLIRAce
-  MLIRByre
+  MLIRAceDialect
+  MLIRByreDialect
   MLIRIR
-  MLIRLace
+  MLIRLaceDialect
   MLIRMemRefDialect
   MLIRTransforms
   ByteIRConversionCommon

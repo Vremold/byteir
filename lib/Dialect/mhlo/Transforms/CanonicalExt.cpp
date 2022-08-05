@@ -199,28 +199,6 @@ template <typename T> struct Xor {
 
 } // namespace
 
-LogicalResult
-mlir::mhlo::EliminateSplatConstantTranspose(mhlo::TransposeOp op,
-                                            PatternRewriter &rewriter) {
-
-  if (!op.getType().hasStaticShape()) {
-    return failure();
-  }
-
-  auto const_op = op.operand().getDefiningOp<mhlo::ConstantOp>();
-  if (!const_op) {
-    return failure();
-  }
-
-  auto maybe_new_attr =
-      reshapeSplatElementsAttr(const_op.value(), op.getType());
-  if (!maybe_new_attr.hasValue())
-    return failure();
-
-  rewriter.replaceOpWithNewOp<mhlo::ConstantOp>(op, maybe_new_attr.getValue());
-  return success();
-}
-
 // FIXME: this pattern should move to shape dialect
 LogicalResult mlir::mhlo::FoldShapeBroadcast(shape::BroadcastOp op,
                                              PatternRewriter &rewriter) {
@@ -390,7 +368,6 @@ void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
   }
 
   // add our extension
-  results.add(mlir::mhlo::EliminateSplatConstantTranspose);
   results.add(mlir::mhlo::FoldBroadcastInDim);
   results.add(mlir::mhlo::FoldShapeBroadcast);
   results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::AddOp, std::plus>);

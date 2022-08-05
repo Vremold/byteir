@@ -1,8 +1,8 @@
 get_property(byteir_conversion_libs GLOBAL PROPERTY BYTEIR_CONVERSION_LIBS)
 set(BYTEIR_LIBS
-  MLIRAce
-  MLIRByre
-  MLIRLace
+  MLIRAceDialect
+  MLIRByreDialect
+  MLIRLaceDialect
   ByteIRAffinePasses
   ByteIRByrePasses
   ByteIRGPUPipelines

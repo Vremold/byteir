@@ -8,12 +8,12 @@ add_byteir_conversion_library(ByteIRLmhloToLace
   ByteIRConversionPassIncGen
   ByteIRUtils
   LmhloDialect
-  MLIRLace
+  MLIRLaceDialect
 
   LINK_LIBS PUBLIC
   ByteIRUtils
   LmhloDialect
   MLIRIR
-  MLIRLace
+  MLIRLaceDialect
 )
 

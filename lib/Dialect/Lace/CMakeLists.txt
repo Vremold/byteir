@@ -1,4 +1,4 @@
-add_mlir_dialect_library(MLIRLace
+add_mlir_dialect_library(MLIRLaceDialect
   IR/LaceDialect.cpp
 
   ADDITIONAL_HEADER_DIRS
