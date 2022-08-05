@@ -164,6 +164,17 @@ func.func @reshape_move_down_binary_splat_const(%arg0 : tensor<31x20x32xf32>) ->
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: return
 
+func.func @reshape_move_down_binary_with_arg(%arg0 : tensor<31x20x32xf32>, %arg1 : tensor<31x640xf32>) -> tensor<31x640xf32> {
+    %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x640xf32>
+    %1 = mhlo.add %0, %arg1 : tensor<31x640xf32>
+    return %1 : tensor<31x640xf32>
+}
+// CHECK-LABEL: func.func @reshape_move_down_binary_with_arg
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: mhlo.add
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: return
+
 func.func @reshape_move_down_unary_and_cancel(%arg0 : tensor<31x20x32xf32>) -> tensor<31x20x32xf32> {
     %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<31x640xf32>
     %1 = "mhlo.abs"(%0) : (tensor<31x640xf32>) -> tensor<31x640xf32>
@@ -223,12 +234,14 @@ func.func @reshape_move_down_two_unary(%arg0 : tensor<31x20x32xf32>) -> tensor<2
 func.func @reshape_move_down_1_unary_1_invalid(%arg0 : tensor<31x20x32xf32>, %arg1 : tensor<20x31x32xf32>)-> tensor<20x31x32xf32> {
     %0 = "mhlo.reshape"(%arg0) : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
     %1 = "mhlo.abs"(%0) : (tensor<20x31x32xf32>) -> tensor<20x31x32xf32>
-    %2 = mhlo.add %0, %arg1 : tensor<20x31x32xf32>
-    %3 = mhlo.multiply %1, %2 : tensor<20x31x32xf32>
-    return %3 : tensor<20x31x32xf32>
+    %2 = "mhlo.abs"(%arg1) : (tensor<20x31x32xf32>) -> tensor<20x31x32xf32>
+    %3 = mhlo.add %0, %2 : tensor<20x31x32xf32>
+    %4 = mhlo.multiply %1, %3 : tensor<20x31x32xf32>
+    return %4 : tensor<20x31x32xf32>
 }
 // CHECK-LABEL: func.func @reshape_move_down_1_unary_1_invalid
 // CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: mhlo.abs
 // CHECK-NEXT: mhlo.abs
 // CHECK-NEXT: mhlo.add
 // CHECK-NEXT: mhlo.multiply
@@ -238,12 +251,14 @@ func.func @reshape_move_down_1_unary_1_invalid(%arg0 : tensor<31x20x32xf32>, %ar
 // MULTIUSER-DAG{ABS}: mhlo.abs
 // MULTIUSER-NEXT{ABS}: mhlo.reshape
 // MULTIUSER-DAG{ADD}: mhlo.reshape
+// MULTIUSER-DAG{ABS}: mhlo.abs
 // MULTIUSER-NEXT{ADD}: mhlo.add
 // MULTIUSER: mhlo.multiply
 // MULTIUSER-NEXT: return
 
 // AllMULTIUSER-LABEL: func.func @reshape_move_down_1_unary_1_invalid
 // AllMULTIUSER-NEXT: mhlo.reshape
+// AllMULTIUSER-NEXT: mhlo.abs
 // AllMULTIUSER-NEXT: mhlo.abs
 // AllMULTIUSER-NEXT: mhlo.add
 // AllMULTIUSER-NEXT: mhlo.multiply
@@ -406,5 +421,6 @@ func.func @broadcast_reshape_dot_with_concat_and_add(%arg0 : tensor<1x64xf16>, %
 // CHECK-NEXT: mhlo.dot
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: mhlo.add
+// CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: mhlo.broadcast_in_dim
 // CHECK-NEXT: return
