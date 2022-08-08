@@ -5,9 +5,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <algorithm>
+#include <cstdint>
+#include <functional>
+#include <numeric>
+#include <set>
+#include <unordered_map>
+#include <utility>
+
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/APSInt.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -78,6 +89,114 @@ Optional<Attribute> createBroadcastedDenseElementAttr(
   }
   return None;
 }
+
+static const APFloat &addSign(const APFloat &v, Type) { return v; }
+static APSInt addSign(const APInt &v, Type t) {
+  // Add signedness information to the value, treating signless as signed.
+  return APSInt(v, t.isUnsignedInteger());
+}
+
+// this function copyed from mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
+template <typename Op, typename ElementType = Type, typename ValType,
+          typename Convert>
+static Attribute BinaryFolder(Op *op, ArrayRef<Attribute> attrs) {
+  if (!attrs[0] || !attrs[1])
+    return {};
+
+  DenseElementsAttr lhs = attrs[0].dyn_cast<DenseElementsAttr>();
+  DenseElementsAttr rhs = attrs[1].dyn_cast<DenseElementsAttr>();
+  if (!lhs || !rhs)
+    return {};
+
+  ShapedType type = op->getType().template cast<ShapedType>();
+  if (!type.hasStaticShape()) {
+    return {};
+  }
+
+  Type etype = type.getElementType();
+
+  // Evaluate for integer values.
+  if (!etype.isa<ElementType>()) {
+    return {};
+  }
+
+  // Special case for folding splats no matter how large.
+  // Only covers the case of both attrs being splats; operation-specific cases
+  // like adding a zero or multiplying by one are handled elsewhere.
+  SplatElementsAttr splatLhs = lhs.dyn_cast<SplatElementsAttr>();
+  SplatElementsAttr splatRhs = rhs.dyn_cast<SplatElementsAttr>();
+  if (splatLhs && splatRhs) {
+    auto signedLhs = addSign(splatLhs.getSplatValue<ValType>(), etype);
+    auto signedRhs = addSign(splatRhs.getSplatValue<ValType>(), etype);
+    FailureOr<decltype(signedLhs)> result(Convert()(signedLhs, signedRhs));
+    return succeeded(result) ? SplatElementsAttr::get(type, *result)
+                             : Attribute();
+  }
+
+  SmallVector<ValType, 6> values;
+  values.reserve(lhs.getNumElements());
+  for (const auto zip :
+       llvm::zip(lhs.getValues<ValType>(), rhs.getValues<ValType>())) {
+    auto signedLhs = addSign(std::get<0>(zip), etype);
+    auto signedRhs = addSign(std::get<1>(zip), etype);
+    FailureOr<decltype(signedLhs)> result(Convert()(signedLhs, signedRhs));
+    if (failed(result)) {
+      return {};
+    }
+    values.push_back(std::move(*result));
+  }
+
+  return DenseElementsAttr::get(type, values);
+}
+
+template <typename T> struct Divide : std::divides<T> {};
+
+template <> struct Divide<APSInt> {
+  FailureOr<APSInt> operator()(const APSInt &a, const APSInt &b) const {
+    if (b.isZero())
+      return failure();
+    return a / b;
+  }
+};
+
+template <typename T> struct Remainder : std::modulus<T> {};
+
+template <> struct Remainder<APSInt> {
+  FailureOr<APSInt> operator()(const APSInt &a, const APSInt &b) const {
+    if (b.isZero())
+      return failure();
+    return a % b;
+  }
+};
+
+template <> struct Remainder<APFloat> {
+  APFloat operator()(const APFloat &a, const APFloat &b) const {
+    APFloat result(a);
+    result.remainder(b);
+    return result;
+  }
+};
+
+template <typename T> struct Max {
+  T operator()(const T &a, const T &b) const { return std::max<T>(a, b); }
+};
+
+template <typename T> struct Min {
+  T operator()(const T &a, const T &b) const { return std::min<T>(a, b); }
+};
+
+template <typename T> struct And {
+  T operator()(const T &a, const T &b) const { return a & b; }
+};
+
+template <typename T> struct Or {
+  T operator()(const T &a, const T &b) const { return a | b; }
+};
+
+template <typename T> struct Xor {
+  T operator()(const T &a, const T &b) const { return a ^ b; }
+};
+
 } // namespace
 
 LogicalResult
@@ -102,6 +221,7 @@ mlir::mhlo::EliminateSplatConstantTranspose(mhlo::TransposeOp op,
   return success();
 }
 
+// FIXME: this pattern should move to shape dialect
 LogicalResult mlir::mhlo::FoldShapeBroadcast(shape::BroadcastOp op,
                                              PatternRewriter &rewriter) {
 
@@ -223,6 +343,35 @@ LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
   return success();
 }
 
+template <typename Op, template <typename> typename Func>
+LogicalResult mlir::mhlo::FoldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
+  auto lhsOp = op.lhs().template getDefiningOp<mhlo::ConstantOp>();
+  auto rhsOp = op.rhs().template getDefiningOp<mhlo::ConstantOp>();
+  if (!lhsOp || !rhsOp) {
+    return failure();
+  }
+  RankedTensorType type = op.getType().template dyn_cast<RankedTensorType>();
+  if (!type || !type.hasStaticShape()) {
+    return failure();
+  }
+
+  Attribute result;
+  if (type.getElementType().isa<FloatType>()) {
+    result = BinaryFolder<Op, FloatType, APFloat, Func<APFloat>>(
+        &op, ArrayRef<Attribute>{lhsOp.value(), rhsOp.value()});
+  } else if (type.getElementType().isa<IntegerType>()) {
+    result = BinaryFolder<Op, IntegerType, APInt, Func<APSInt>>(
+        &op, ArrayRef<Attribute>{lhsOp.value(), rhsOp.value()});
+  }
+  if (!result) {
+    return failure();
+  }
+  mhlo::ConstantOp newConstant =
+      rewriter.create<mhlo::ConstantOp>(op->getLoc(), result);
+  rewriter.replaceOp(op, newConstant.output());
+  return success();
+}
+
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
                                                 MLIRContext *ctx) {
 
@@ -244,4 +393,11 @@ void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
   results.add(mlir::mhlo::EliminateSplatConstantTranspose);
   results.add(mlir::mhlo::FoldBroadcastInDim);
   results.add(mlir::mhlo::FoldShapeBroadcast);
+  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::AddOp, std::plus>);
+  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
+  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::SubtractOp, std::minus>);
+  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::DivOp, Divide>);
+  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::RemOp, Remainder>);
+  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::MaxOp, Max>);
+  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::MinOp, Min>);
 }

@@ -25,6 +25,15 @@ func.func @fold_useless_shape_broadcast(%arg0: tensor<?x4xf32>, %arg1: tensor<4x
   %5 = "mhlo.dynamic_broadcast_in_dim"(%2, %4) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<?x4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
   return %5 : tensor<?x4xf32>
 }
-
 // CHECK-LABEL: fold_useless_shape_broadcast
 // CHECK-NOT: shape.broadcast
+
+// FIXME: make constant really large or trigger canonicalize-ext anywhy.
+func.func @fold_large_constant_binary_op() -> tensor<2xf32> {
+  %0 = mhlo.constant dense<[0.00000e+0, 1.00000e+0]> : tensor<2xf32>
+  %1 = mhlo.constant dense<[1.00000e+0, 1.00000e+0]> : tensor<2xf32>
+  %2 = mhlo.add %0, %1 : tensor<2xf32>
+  return %2 : tensor<2xf32>
+}
+// CHECK-NOT: mhlo.add
+// CHECK: mhlo.constant dense<[1.000000e+00, 2.000000e+00]>

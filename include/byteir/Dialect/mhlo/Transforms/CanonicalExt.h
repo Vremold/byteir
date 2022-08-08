@@ -59,6 +59,10 @@ LogicalResult FoldBroadcastInDim(BroadcastInDimOp op,
 LogicalResult FoldShapeBroadcast(shape::BroadcastOp op,
                                  PatternRewriter &rewriter);
 
+// fold binary op with large constant op
+template <typename Op, template <typename> typename Func>
+LogicalResult FoldLargeBinaryOp(Op op, PatternRewriter &rewriter);
+
 // Get all canoncializationExt on top of canoncialization
 void getCanonicalizationExtPatterns(RewritePatternSet &results,
                                     MLIRContext *context);
