@@ -25,7 +25,8 @@ struct SetAssumingAlwaysTruePass
     auto witnessTrueValue = builder.create<shape::ConstWitnessOp>(
         UnknownLoc::get(&getContext()), builder.getBoolAttr(true));
     funcOp.walk([&](Operation *op) {
-      if (auto assumingOp = dyn_cast<shape::AssumingOp>(op)) {
+      auto assumingOp = dyn_cast<shape::AssumingOp>(op);
+      if (assumingOp && assumingOp.getWitness() != witnessTrueValue) {
         auto produceOp = assumingOp.getWitness().getDefiningOp();
         produceOp->replaceAllUsesWith(witnessTrueValue);
       }
