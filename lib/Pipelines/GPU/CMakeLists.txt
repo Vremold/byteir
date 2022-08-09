@@ -15,6 +15,7 @@ add_mlir_library(ByteIRGPUPipelines
   ByteIRLinalgPasses
   ByteIRUtils
   ByteIRSCFPasses
+  ByteIRToPTX
   MLIRIR
   MLIRAffineDialect
   MLIRLinalgDialect
