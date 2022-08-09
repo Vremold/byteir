@@ -85,7 +85,8 @@ add_mlir_dialect_library(ByteIRMhloBoundedShapes
 
 add_mlir_dialect_library(ByteIRMhloAnalysis
   Analysis/DimFromBroadcast.cpp
-
+  Analysis/BoundedShapeAnalysis.cpp
+  
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Analysis
 

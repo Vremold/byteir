@@ -1,0 +1,326 @@
+//===- ShapeAnalysis.cpp --------------------------------------------------===//
+//
+// Copyright (c) ByteDance Inc. All rights reserved.
+// Licensed under the Apache License, Version 2.0
+//
+//===----------------------------------------------------------------------===//
+
+#include "byteir/Analysis/ShapeAnalysis.h"
+#include "mlir/Analysis/DataFlow/ConstantPropagationAnalysis.h"
+#include "mlir/Dialect/Shape/IR/Shape.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/Debug.h"
+
+#define DEBUG_TYPE "shape-analysis"
+
+using namespace mlir::dataflow;
+using namespace mlir::shape_analysis;
+
+namespace mlir {
+namespace shape_analysis {
+ValueKnowledge ValueKnowledge::getKnowledgeFromType(Type type) {
+  ValueKnowledge result = getPessimisticValueState();
+  if (auto shapedType = type.dyn_cast_or_null<ShapedType>()) {
+    if (shapedType.hasRank()) {
+      result.hasRank = true;
+      result.sizes.reserve(shapedType.getRank());
+      for (auto dim : shapedType.getShape())
+        result.sizes.push_back(dim);
+    }
+    result.dtype = shapedType.getElementType();
+  }
+  return result;
+}
+
+ValueKnowledge ValueKnowledge::getPessimisticValueState() {
+  return ValueKnowledge(false, {}, Type());
+}
+
+ValueKnowledge ValueKnowledge::getPessimisticValueState(Value value) {
+  if (value) {
+    return getKnowledgeFromType(value.getType());
+  }
+  return getPessimisticValueState();
+}
+
+ValueKnowledge ValueKnowledge::join(const ValueKnowledge &lhs,
+                                    const ValueKnowledge &rhs) {
+  ValueKnowledge result = getPessimisticValueState();
+  result.hasError = true;
+
+  if (!lhs || !rhs || lhs.dtype != rhs.dtype)
+    return result;
+
+  result.hasError = false;
+  result.dtype = lhs.dtype;
+
+  if (!lhs.hasRank || !rhs.hasRank) {
+    result.hasRank = false;
+    return result;
+  }
+
+  if (lhs.sizes.size() != rhs.sizes.size()) {
+    result.hasRank = false;
+    return result;
+  }
+
+  result.hasRank = true;
+  result.sizes.resize(lhs.sizes.size(), ShapedType::kDynamicSize);
+  for (int i = 0, e = lhs.sizes.size(); i < e; i++) {
+    if (lhs.sizes[i] == rhs.sizes[i]) {
+      result.sizes[i] = lhs.sizes[i];
+    }
+  }
+
+  return result;
+}
+
+ValueKnowledge ValueKnowledge::meet(const ValueKnowledge &lhs,
+                                    const ValueKnowledge &rhs) {
+  ValueKnowledge result = getPessimisticValueState();
+  result.hasError = true;
+
+  if (!lhs || !rhs || lhs.dtype != rhs.dtype)
+    return result;
+
+  result.hasError = false;
+  result.dtype = lhs.dtype;
+
+  if (!lhs.hasRank && !rhs.hasRank)
+    return result;
+
+  if (!rhs.hasRank) {
+    result.hasRank = true;
+    result.sizes = lhs.sizes;
+    return result;
+  }
+
+  if (!lhs.hasRank) {
+    result.hasRank = true;
+    result.sizes = rhs.sizes;
+    return result;
+  }
+
+  if (lhs.sizes.size() != rhs.sizes.size())
+    return result;
+
+  result.hasRank = true;
+  result.sizes.resize(lhs.sizes.size(), ShapedType::kDynamicSize);
+  for (auto i : llvm::seq<unsigned>(0, result.sizes.size())) {
+    int64_t lhsSize = lhs.sizes[i];
+    int64_t rhsSize = rhs.sizes[i];
+    int64_t &resultSize = result.sizes[i];
+    if (lhsSize == ShapedType::kDynamicSize) {
+      resultSize = rhsSize;
+    } else if (rhsSize == ShapedType::kDynamicSize) {
+      resultSize = lhsSize;
+    } else if (lhsSize == rhsSize) {
+      resultSize = lhsSize;
+    } else {
+      result.hasError = true;
+    }
+  }
+
+  return result;
+}
+
+void ValueKnowledge::print(raw_ostream &os) const {
+  if (hasError || !dtype) {
+    os << "None";
+  } else {
+    os << getType();
+  }
+}
+} // namespace shape_analysis
+
+LogicalResult ShapeAnalysis::inferResultShapesWithKnowledges(
+    Operation *op, ShapeKnowledges shapeKnowledges,
+    ShapeValueKnowledges shapeValueKnowledges,
+    llvm::SmallVectorImpl<::mlir::ShapedTypeComponents> &results) {
+  if (op->hasTrait<OpTrait::SameOperandsAndResultShape>()) {
+    auto knowledge = ValueKnowledge::getPessimisticValueState();
+    for (auto &&operand : op->getOperands()) {
+      auto newKnowledge =
+          ValueKnowledge::getKnowledgeFromType(shapeKnowledges(operand));
+      newKnowledge.dtype = nullptr;
+      knowledge = ValueKnowledge::meet(knowledge, newKnowledge);
+    }
+    if (knowledge) {
+      for (auto &&resultType : op->getResultTypes()) {
+        if (auto shapedType = resultType.dyn_cast_or_null<ShapedType>()) {
+          knowledge.dtype = shapedType.getElementType();
+          results.push_back(knowledge.getType().cast<ShapedType>());
+        } else {
+          results.push_back(ShapedTypeComponents{});
+        }
+      }
+      return success();
+    } else {
+      return failure();
+    }
+  }
+
+  if (auto shapeInterface = dyn_cast<InferShapedTypeOpInterface>(op)) {
+    ValueShapeRange range(op->getOperands(), shapeKnowledges,
+                          shapeValueKnowledges);
+    return shapeInterface.inferReturnTypeComponents(
+        op->getContext(), op->getLoc(), range, op->getAttrDictionary(),
+        op->getRegions(), results);
+  }
+
+  if (auto typeInterface = dyn_cast<InferTypeOpInterface>(op)) {
+    ValueTypeModificatoinRAII valueTypeModification;
+    for (auto &&operand : op->getOperands()) {
+      if (auto shape = shapeKnowledges(operand)) {
+        valueTypeModification.Push(operand, shape);
+      }
+    }
+    llvm::SmallVector<Type> inferredType;
+    if (typeInterface
+            .inferReturnTypes(op->getContext(), op->getLoc(), op->getOperands(),
+                              op->getAttrDictionary(), op->getRegions(),
+                              inferredType)
+            .succeeded()) {
+      results.assign(llvm::to_vector(llvm::map_range(
+          inferredType, [](mlir::Type t) -> ShapedTypeComponents {
+            if (auto st = t.dyn_cast_or_null<ShapedType>())
+              return st;
+            return {};
+          })));
+      return success();
+    } else {
+      return failure();
+    }
+  }
+
+  return failure();
+}
+
+void ShapeAnalysis::visitOperation(Operation *op,
+                                   ArrayRef<const ShapeLattice *> operands,
+                                   ArrayRef<ShapeLattice *> results) {
+
+  LLVM_DEBUG(llvm::dbgs() << "shape analysis on " << *op << "\n");
+
+  llvm::DenseMap<Value, Type> shapeProvider;
+  llvm::DenseMap<Value, Attribute> valueProvider;
+  bool missingValue = false;
+  for (auto &&pi : llvm::zip(op->getOperands(), operands)) {
+    auto &&operand = std::get<0>(pi);
+    auto &&shapeLattice = std::get<1>(pi);
+    auto &&valueLattice = getOrCreate<Lattice<ConstantValue>>(operand);
+
+    if (auto shapeKnowledge = shapeLattice->getValue()) {
+      if (shapeKnowledge && shapeKnowledge.dtype) {
+        shapeProvider[operand] = shapeKnowledge.getType();
+      }
+    }
+
+    valueLattice->useDefSubscribe(this);
+    if (!valueLattice->isUninitialized()) {
+      if (auto constant = valueLattice->getValue().getConstantValue()) {
+        valueProvider[operand] = constant;
+      }
+    } else {
+      missingValue = true;
+    }
+  }
+
+  if (missingValue)
+    return;
+
+  auto shapeKnowledges = [&](Value val) -> Type {
+    auto it = shapeProvider.find(val);
+    if (it == shapeProvider.end())
+      return nullptr;
+    return it->second;
+  };
+  auto shapeValueKnowledges = [&](Value val) -> Attribute {
+    auto it = valueProvider.find(val);
+    if (it == valueProvider.end())
+      return nullptr;
+    return it->second;
+  };
+
+  SmallVector<ShapedTypeComponents> inferredShapes;
+  if (inferResultShapesWithKnowledges(op, shapeKnowledges, shapeValueKnowledges,
+                                      inferredShapes)
+          .succeeded()) {
+    for (auto it : llvm::zip(op->getResults(), inferredShapes, results)) {
+      Value result = std::get<0>(it);
+      ShapedTypeComponents predictedShape = std::get<1>(it);
+      ShapeLattice *resultLattice = std::get<2>(it);
+
+      Type resultTy = result.getType();
+      if (!resultTy.isa<ShapedType>()) {
+        propagateIfChanged(resultLattice,
+                           resultLattice->markPessimisticFixpoint());
+        continue;
+      }
+
+      // Compute the knowledge based on the inferred type.
+      auto inferredKnowledge = ValueKnowledge::getPessimisticValueState();
+      inferredKnowledge.dtype = resultTy.cast<ShapedType>().getElementType();
+      inferredKnowledge.hasRank = predictedShape.hasRank();
+      if (predictedShape.hasRank()) {
+        for (auto dim : predictedShape.getDims()) {
+          inferredKnowledge.sizes.push_back(dim);
+        }
+      }
+
+      propagateIfChanged(resultLattice, resultLattice->join(inferredKnowledge));
+    }
+  } else {
+    return markAllPessimisticFixpoint(results);
+  }
+}
+
+void ShapeValueAnalysis::visitOperation(
+    Operation *op, ArrayRef<const ShapeValueLattice *> operands,
+    ArrayRef<const ShapeLattice *> ShapeLattices,
+    ArrayRef<ShapeValueLattice *> results) {
+  ValueTypeModificatoinRAII valueTypeModification;
+
+  bool missingShape = false;
+  for (auto &&pi : zip(op->getOperands(), ShapeLattices)) {
+    auto shapeLattice = std::get<1>(pi);
+    if (shapeLattice) {
+      const_cast<ShapeLattice *>(shapeLattice)->useDefSubscribe(this);
+
+      if (!shapeLattice->isUninitialized()) {
+        auto shapeKnowledge = shapeLattice->getValue();
+        if (shapeKnowledge && shapeKnowledge.dtype) {
+          valueTypeModification.Push(std::get<0>(pi), shapeKnowledge.getType());
+          continue;
+        }
+      } else {
+        missingShape = true;
+      }
+    }
+  }
+  if (missingShape)
+    return;
+
+  SparseConstantPropagation::visitOperation(op, operands, results);
+}
+
+void ShapeValueAnalysis::visitOperation(
+    Operation *op, ArrayRef<const ShapeValueLattice *> operands,
+    ArrayRef<ShapeValueLattice *> results) {
+  TypeSwitch<Operation *>(op)
+      .Case<shape::ShapeOfOp>([&](Operation *op) {
+        auto shapeLattice = getOrCreate<ShapeLattice>(op->getOperand(0));
+        visitOperation(op, operands, {shapeLattice}, results);
+      })
+      .Case<tensor::DimOp>([&](Operation *op) {
+        SmallVector<const ShapeLattice *> shapeLattices(op->getNumOperands(),
+                                                        nullptr);
+        shapeLattices[0] = getOrCreate<ShapeLattice>(op->getOperand(0));
+        visitOperation(op, operands, shapeLattices, results);
+      })
+      .Default([&](Operation *op) {
+        SparseConstantPropagation::visitOperation(op, operands, results);
+      });
+}
+} // namespace mlir

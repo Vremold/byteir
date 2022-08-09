@@ -7,9 +7,12 @@
 
 #include "byteir/Dialect/mhlo/Transforms/BoundedShapeInference.h"
 #include "./PassDetail.h"
+#include "byteir/Dialect/mhlo/Analysis/BoundedShapeAnalysis.h"
 #include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Analysis/DataFlow/ConstantPropagationAnalysis.h"
+#include "mlir/Analysis/DataFlow/DeadCodeAnalysis.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/Operation.h"
@@ -21,6 +24,8 @@
 #include <vector>
 
 using namespace mlir;
+using namespace mlir::shape_analysis;
+using namespace mlir::dataflow;
 
 #define DEBUG_TYPE "bounded-shape-infer"
 
@@ -99,68 +104,58 @@ struct BoundedShapeInferencePass
       return;
     }
 
-    // Construct new FuncOp
-    StringRef funcSymName = funcOp.getSymName();
-    std::string newFuncSymName = "_bounded_shape_infer_" + funcSymName.str();
-    auto newFnType =
-        builder.getFunctionType(newArgumentTypes, funcOp.getResultTypes());
-    auto newFuncOp = builder.create<func::FuncOp>(funcOp->getLoc(),
-                                                  newFuncSymName, newFnType);
-
-    BlockAndValueMapping emptyBvm;
-    funcOp.getBody().cloneInto(&newFuncOp.getBody(), emptyBvm);
-    for (auto it : zip(newArgumentTypes, newFuncOp.getArguments())) {
-      std::get<1>(it).setType(std::get<0>(it));
-    }
-
-    //  Run shape inference on the new created function op
-    if (failed(runShapeInference(newFuncOp, /*isBoundedShapeInfer=*/true))) {
-      return;
-    }
-
-    // Set bounded shape attr according to the inferred results
-    std::vector<Operation *> originalOps;
-    SmallVector<Type> newFuncRetTypes;
-    funcOp.walk([&](Operation *op) { originalOps.push_back(op); });
-    unsigned opIndex = 0;
     func::ReturnOp returnOp;
-    newFuncOp.walk([&](Operation *op) {
-      opIndex++;
-      // set bounded type attr for the original op
-      Operation *originalOp = originalOps[opIndex - 1];
-      for (auto it : llvm::enumerate(
-               llvm::zip(originalOp->getResults(), op->getResults()))) {
-        auto originalType =
-            std::get<0>(it.value()).getType().dyn_cast<ShapedType>();
-        if (!originalType || originalType.hasStaticShape())
-          continue;
-        auto newType = std::get<1>(it.value()).getType().dyn_cast<ShapedType>();
-        if (!newType || !newType.hasRank())
-          continue;
-        std::string boundedShapeAttrName =
-            getBoundedShapeAttrName().str() + std::to_string(it.index());
-        ArrayRef<int64_t> shape = newType.getShape();
-        auto resultValue = std::get<0>(it.value());
-        auto tx = resultValue.getType().dyn_cast<RankedTensorType>();
-        if (tx) {
-          auto typeWithEncoding = RankedTensorType::get(
-              tx.getShape(), tx.getElementType(),
-              builder.getDictionaryAttr({builder.getNamedAttr(
-                  getBoundedShapeAttrName(), builder.getI64ArrayAttr(shape))}));
-          resultValue.setType(typeWithEncoding);
-        } else {
-          originalOp->setAttr(boundedShapeAttrName,
-                              builder.getI64ArrayAttr(shape));
+    {
+      ValueTypeModificatoinRAII valueTypeModification;
+      for (auto &&pi : llvm::zip(funcOp.getArguments(), newArgumentTypes)) {
+        valueTypeModification.Push(std::get<0>(pi), std::get<1>(pi));
+      }
+
+      DataFlowSolver solver;
+      solver.load<BoundedShapeAnalysis>();
+      solver.load<ShapeValueAnalysis>();
+      solver.load<DeadCodeAnalysis>();
+      if (failed(solver.initializeAndRun(funcOp)))
+        return signalPassFailure();
+
+      funcOp->walk([&](Operation *op) {
+        for (auto &&it : llvm::enumerate(op->getResults())) {
+          auto originalType = it.value().getType().dyn_cast<ShapedType>();
+          if (!originalType || originalType.hasStaticShape())
+            continue;
+
+          ShapedType newType;
+          if (auto lattice = solver.lookupState<ShapeLattice>(it.value())) {
+            if (!lattice->isUninitialized()) {
+              newType = lattice->getValue().getType();
+            }
+          }
+          if (!newType || !newType.hasRank())
+            continue;
+
+          auto tx = it.value().getType().dyn_cast<RankedTensorType>();
+          ArrayRef<int64_t> shape = newType.getShape();
+          OpBuilder builder(op);
+          if (tx) {
+            auto typeWithEncoding = RankedTensorType::get(
+                tx.getShape(), tx.getElementType(),
+                builder.getDictionaryAttr(
+                    {builder.getNamedAttr(getBoundedShapeAttrName(),
+                                          builder.getI64ArrayAttr(shape))}));
+            it.value().setType(typeWithEncoding);
+          } else {
+            std::string boundedShapeAttrName =
+                getBoundedShapeAttrName().str() + std::to_string(it.index());
+            op->setAttr(boundedShapeAttrName, builder.getI64ArrayAttr(shape));
+          }
         }
-      }
-      if (isa<func::ReturnOp>(originalOp)) {
-        returnOp = dyn_cast<func::ReturnOp>(originalOp);
-      }
-    });
+        if (isa<func::ReturnOp>(op)) {
+          returnOp = dyn_cast<func::ReturnOp>(op);
+        }
+      });
+    }
 
-    // must find return op
-    newFuncRetTypes = llvm::to_vector(returnOp.getOperandTypes());
-
+    auto newFuncRetTypes = llvm::to_vector(returnOp.getOperandTypes());
     auto newFuncType =
         FunctionType::get(&getContext(), newFuncArgTypes, newFuncRetTypes);
     funcOp.setType(newFuncType);
@@ -168,9 +163,6 @@ struct BoundedShapeInferencePass
          llvm::zip(funcOp.front().getArguments(), newFuncArgTypes)) {
       std::get<0>(elem).setType(std::get<1>(elem));
     }
-
-    // Erase the auxiliary function op at the end
-    newFuncOp->erase();
   };
 };
 

@@ -2,6 +2,7 @@ add_mlir_library(ByteIRAnalysis
   DimFlag.cpp
   Liveness.cpp
   OpDependence.cpp
+  ShapeAnalysis.cpp
   SideEffect.cpp
   SymbolicShape.cpp
   UseRange.cpp
@@ -13,4 +14,6 @@ add_mlir_library(ByteIRAnalysis
   MLIRAnalysis
   MLIRBufferizationTransforms
   MLIRIR
+  MLIRShapeDialect
+  MLIRTensorDialect
 )
