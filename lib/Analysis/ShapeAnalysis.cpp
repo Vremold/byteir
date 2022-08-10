@@ -156,17 +156,19 @@ LogicalResult ShapeAnalysis::inferResultShapesWithKnowledges(
         }
       }
       return success();
-    } else {
-      return failure();
     }
   }
 
   if (auto shapeInterface = dyn_cast<InferShapedTypeOpInterface>(op)) {
     ValueShapeRange range(op->getOperands(), shapeKnowledges,
                           shapeValueKnowledges);
-    return shapeInterface.inferReturnTypeComponents(
-        op->getContext(), op->getLoc(), range, op->getAttrDictionary(),
-        op->getRegions(), results);
+    if (shapeInterface
+            .inferReturnTypeComponents(op->getContext(), op->getLoc(), range,
+                                       op->getAttrDictionary(),
+                                       op->getRegions(), results)
+            .succeeded()) {
+      return success();
+    }
   }
 
   if (auto typeInterface = dyn_cast<InferTypeOpInterface>(op)) {
@@ -189,8 +191,6 @@ LogicalResult ShapeAnalysis::inferResultShapesWithKnowledges(
             return {};
           })));
       return success();
-    } else {
-      return failure();
     }
   }
 

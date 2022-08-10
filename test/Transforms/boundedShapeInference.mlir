@@ -61,3 +61,10 @@ func.func @main_sub_0(%arg0: tensor<?x4xf32> {byteir.bounded_shape = [4, 4]}) ->
 //CHECK-NEXT:  %0 = mhlo.constant dense<-0.000000e+00> : tensor<f32>
 //CHECK-NEXT:  %1 = mhlo.reduce(%arg0 init: %0) applies mhlo.add across dimensions = [1] : (tensor<?x4xf32, {byteir.bounded_shape = [4, 4]}>, tensor<f32>) -> tensor<?xf32, {byteir.bounded_shape = [4]}>
 //CHECK-NEXT:  return %1 : tensor<?xf32, {byteir.bounded_shape = [4]}>
+
+func.func @concat(%arg0 : tensor<?x3xf32> {byteir.bounded_shape = [3, 3]}, %arg1 : tensor<?x3xf32> {byteir.bounded_shape = [3, 3]}) -> tensor <?x6xf32> {
+  %0 = "mhlo.concatenate"(%arg0, %arg1) {dimension = 1 : i64} : (tensor<?x3xf32>, tensor<?x3xf32>) -> tensor<?x6xf32>
+  return %0 : tensor<?x6xf32>
+}
+//CHECK-LABEL: func.func @concat(%arg0: tensor<?x3xf32, {byteir.bounded_shape = [3, 3]}> {byteir.bounded_shape = [3, 3]}, %arg1: tensor<?x3xf32, {byteir.bounded_shape = [3, 3]}> {byteir.bounded_shape = [3, 3]}) -> tensor<?x6xf32, {byteir.bounded_shape = [3, 6]}> {
+//CHECK-NEXT:  %0 = "mhlo.concatenate"(%arg0, %arg1) {dimension = 1 : i64} : (tensor<?x3xf32, {byteir.bounded_shape = [3, 3]}>, tensor<?x3xf32, {byteir.bounded_shape = [3, 3]}>) -> tensor<?x6xf32, {byteir.bounded_shape = [3, 6]}>
