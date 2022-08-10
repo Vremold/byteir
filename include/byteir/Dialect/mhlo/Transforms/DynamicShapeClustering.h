@@ -14,6 +14,10 @@
 namespace mlir {
 class ModuleOp;
 
+constexpr StringRef getDynamicFuncAttrName() {
+  return "__byteir_dynamic_sub_function";
+}
+
 std::unique_ptr<OperationPass<ModuleOp>> createDynamicShapeClusteringPass();
 
 } // namespace mlir
