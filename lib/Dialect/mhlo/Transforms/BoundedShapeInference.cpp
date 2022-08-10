@@ -10,6 +10,7 @@
 #include "byteir/Dialect/mhlo/Analysis/BoundedShapeAnalysis.h"
 #include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
+#include "byteir/Utils/TypeUtils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Analysis/DataFlow/ConstantPropagationAnalysis.h"
 #include "mlir/Analysis/DataFlow/DeadCodeAnalysis.h"
@@ -72,11 +73,10 @@ LogicalResult constructNewArgumentTypes(func::FuncOp funcOp,
       return failure();
     }
 
-    auto typeWithEncoding = RankedTensorType::get(
-        origRankedType.getShape(), origRankedType.getElementType(),
-        builder.getDictionaryAttr(
-            {builder.getNamedAttr(getBoundedShapeAttrName(),
-                                  builder.getI64ArrayAttr(boundedShape))}));
+    auto typeWithEncoding = appendTensorEncodingAttr(
+        origRankedType,
+        builder.getNamedAttr(getBoundedShapeAttrName(),
+                             builder.getI64ArrayAttr(boundedShape)));
     newFuncArgTypes.push_back(typeWithEncoding);
     Type newType = origRankedType.clone(boundedShape);
     newArgumentTypes.push_back(newType);
@@ -137,16 +137,10 @@ struct BoundedShapeInferencePass
           ArrayRef<int64_t> shape = newType.getShape();
           OpBuilder builder(op);
           if (tx) {
-            auto typeWithEncoding = RankedTensorType::get(
-                tx.getShape(), tx.getElementType(),
-                builder.getDictionaryAttr(
-                    {builder.getNamedAttr(getBoundedShapeAttrName(),
-                                          builder.getI64ArrayAttr(shape))}));
+            auto typeWithEncoding = appendTensorEncodingAttr(
+                tx, builder.getNamedAttr(getBoundedShapeAttrName(),
+                                         builder.getI64ArrayAttr(shape)));
             it.value().setType(typeWithEncoding);
-          } else {
-            std::string boundedShapeAttrName =
-                getBoundedShapeAttrName().str() + std::to_string(it.index());
-            op->setAttr(boundedShapeAttrName, builder.getI64ArrayAttr(shape));
           }
         }
         if (isa<func::ReturnOp>(op)) {
@@ -154,6 +148,7 @@ struct BoundedShapeInferencePass
         }
       });
     }
+    assert(returnOp && "there must be return op in func");
 
     auto newFuncRetTypes = llvm::to_vector(returnOp.getOperandTypes());
     auto newFuncType =

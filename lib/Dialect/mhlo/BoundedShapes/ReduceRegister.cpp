@@ -14,6 +14,7 @@
 
 using namespace mlir;
 
+// TODO: this should be removed when push to upstream
 void mlir::registerReduceInferBoundedReturnTypes() {
   static InferBoundedReturnTypesRegistration shapeRegister(
       mhlo::ReduceOp::getOperationName(),
