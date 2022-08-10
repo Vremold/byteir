@@ -29,8 +29,6 @@ using namespace mlir::mhlo;
 
 namespace {
 
-static constexpr char kMoveDownDisableKey[] = "__move_down_disable__";
-
 // For now, we support single result, Elementwise,
 // SameOperandsAndResultShape (avoid implicit broadcast)
 inline bool isElementwiseOneResult(Operation *op) {
@@ -157,9 +155,6 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
 
   LogicalResult matchAndRewrite(mhlo::ReshapeOp op,
                                 PatternRewriter &rewriter) const override {
-    if (op->hasAttr(kMoveDownDisableKey)) {
-      return failure();
-    }
     auto value = op.getResult();
     auto operandType = op.getOperand().getType(); // T1 as Reshape: T1 -> T2
 
@@ -169,15 +164,6 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
     }
 
     SmallDenseSet<Operation *> users;
-    SmallDenseSet<Value> reshapeInsertOperands;
-    const auto isStaticArg = [](Value value) {
-      if (!value || value.getDefiningOp() != nullptr) {
-        return false;
-      }
-      const auto inputTy = value.getType().dyn_cast<RankedTensorType>();
-      return inputTy && inputTy.hasStaticShape();
-    };
-
     for (auto user : value.getUsers()) {
       // skip checked user
       if (users.contains(user))
@@ -205,18 +191,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       // isElementwiseOneResult(user) == true
       bool failed = false;
       for (auto operand : user->getOperands()) {
-        if (operand != value) {
-          if (isSplatMhloConstantValue(operand)) {
-            continue;
-          }
-          // fairly strict condition, so far we only accept static arg
-          // to avoid side-effect on other branches as it seems we dont
-          // know benefits besides branch here.
-          // TODO(@zhangzhiwei.177): shall we remove static restriction?
-          if (isStaticArg(operand)) {
-            reshapeInsertOperands.insert(operand);
-            continue;
-          }
+        if (operand != value && !isSplatMhloConstantValue(operand)) {
           if (allMultiUser)
             return failure();
           failed = true;
@@ -236,7 +211,6 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
     for (auto user : users) {
       BlockAndValueMapping bvm;
       SmallDenseSet<Value> constInputs;
-      SmallDenseSet<Value> insertedReshapeInputs;
       for (auto operand : user->getOperands()) {
         if (operand == value) {
           if (!bvm.contains(value)) {
@@ -245,10 +219,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         } else {
           // isSplatMhloConstantValue(operand) == true
           // since it has been checked when collecting users
-          if (reshapeInsertOperands.contains(operand) &&
-              !insertedReshapeInputs.contains(operand)) {
-            insertedReshapeInputs.insert(operand);
-          } else if (!constInputs.contains(operand)) {
+          if (!constInputs.contains(operand)) {
             constInputs.insert(operand);
           }
         }
@@ -262,13 +233,6 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         auto newConstOp = rewriter.create<mhlo::ConstantOp>(
             op->getLoc(), newConstAttr.getValue());
         bvm.map(input, newConstOp.output());
-      }
-      for (auto input : insertedReshapeInputs) {
-        const auto afterReshapeType = operandType.cast<RankedTensorType>();
-        auto newReshapeOp = rewriter.create<mhlo::ReshapeOp>(
-            rewriter.getUnknownLoc(), afterReshapeType, input);
-        newReshapeOp->setAttr(kMoveDownDisableKey, rewriter.getBoolAttr(true));
-        bvm.map(input, newReshapeOp.getResult());
       }
 
       auto maybeResultTypes =
@@ -891,7 +855,6 @@ struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
           "HloMoveDownPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();
     }
-    funcOp.walk([](ReshapeOp op) { op->removeAttr(kMoveDownDisableKey); });
   }
 };
 } // namespace
