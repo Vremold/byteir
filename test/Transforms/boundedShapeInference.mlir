@@ -84,6 +84,19 @@ func.func @dynamic_reshape(%arg0 : tensor<?x1xi64> {byteir.bounded_shape = [100,
   return %5 : tensor<?xi64>
 }
 
-// CHECK-LABEL func.func @dynamic_reshape(%arg0: tensor<?x1xi64, {byteir.bounded_shape = [100, 1]}> {byteir.bounded_shape = [100, 1]}) -> tensor<?xi64, {byteir.bounded_shape = [100]}> {
+// CHECK-LABEL: func.func @dynamic_reshape(%arg0: tensor<?x1xi64, {byteir.bounded_shape = [100, 1]}> {byteir.bounded_shape = [100, 1]}) -> tensor<?xi64, {byteir.bounded_shape = [100]}> {
 // CHECK: %7 = "mhlo.dynamic_reshape"(%arg0, %6) : (tensor<?x1xi64, {byteir.bounded_shape = [100, 1]}>, tensor<1xindex>) -> tensor<?xi64, {byteir.bounded_shape = [100]}>
 // CHECK: return %5 : tensor<?xi64, {byteir.bounded_shape = [100]}>
+
+func.func @dynamic_broadcast_in_dim(%arg0 : tensor<?x32xf32> {byteir.bounded_shape = [32, 32]}) -> tensor <1x?x30x32xf32> {
+  %c30 = arith.constant 30 : index
+  %c32 = arith.constant 32 : index
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %0 = tensor.dim %arg0, %c0 : tensor<?x32xf32>
+  %1 = tensor.from_elements %c1, %0, %c30, %c32 : tensor<4xindex>
+  %2 = "mhlo.dynamic_broadcast_in_dim"(%arg0, %1) {broadcast_dimensions = dense<[1, 3]> : tensor<2xi64>} : (tensor<?x32xf32>, tensor<4xindex>) -> tensor<1x?x30x32xf32>
+  return %2 : tensor<1x?x30x32xf32>
+}
+//CHECK-LABEL: func.func @dynamic_broadcast_in_dim(%arg0: tensor<?x32xf32, {byteir.bounded_shape = [32, 32]}> {byteir.bounded_shape = [32, 32]}) -> tensor<1x?x30x32xf32, {byteir.bounded_shape = [1, 32, 30, 32]}> {
+//CHECK: %2 = "mhlo.dynamic_broadcast_in_dim"(%arg0, %1) {broadcast_dimensions = dense<[1, 3]> : tensor<2xi64>} : (tensor<?x32xf32, {byteir.bounded_shape = [32, 32]}>, tensor<4xindex>) -> tensor<1x?x30x32xf32, {byteir.bounded_shape = [1, 32, 30, 32]}>

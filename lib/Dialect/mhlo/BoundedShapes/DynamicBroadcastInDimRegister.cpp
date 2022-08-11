@@ -18,7 +18,7 @@ void mlir::registerDynamicBroadcastInDimInferBoundedReturnTypeComponents() {
   static InferBoundedReturnTypeComponentsRegistration shapeRegister(
       mhlo::DynamicBroadcastInDimOp::getOperationName(),
       [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
-         DictionaryAttr, RegionRange,
+         DictionaryAttr attr, RegionRange,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         auto inputType = operands[0].getType().dyn_cast<RankedTensorType>();
         if (inputType == nullptr) {
@@ -31,23 +31,21 @@ void mlir::registerDynamicBroadcastInDimInferBoundedReturnTypeComponents() {
 
         ShapedTypeComponents dynamicShape;
         dynamicShapeAdaptor.getDims(dynamicShape);
+        auto bcastDimensions = attr.get("broadcast_dimensions")
+                                   .dyn_cast_or_null<DenseIntElementsAttr>();
+        if (bcastDimensions == nullptr) {
+          return failure();
+        }
+        auto bcastDimensionsType = bcastDimensions.getType();
+
+        auto bcastDimensionsSize = bcastDimensionsType.getNumElements();
 
         auto boundedShape = llvm::to_vector<6>(dynamicShape.getDims());
-
-        int64_t leadingDimSize =
-            inputType.getRank() - static_cast<int64_t>(boundedShape.size());
-        if (leadingDimSize > 0) {
-          boundedShape.insert(boundedShape.begin(), leadingDimSize, 1);
+        for (int i = 0; i != bcastDimensionsSize; ++i) {
+          auto dimIndex = bcastDimensions.getValues<int64_t>()[i];
+          boundedShape[dimIndex] =
+              std::max(boundedShape[dimIndex], inputType.getShape()[i]);
         }
-        auto inputShape = inputType.getShape();
-        size_t placeOffset = boundedShape.size() - inputShape.size();
-        for (size_t i = 0; i < boundedShape.size(); ++i) {
-          if (i >= placeOffset) {
-            boundedShape[i] =
-                std::max(boundedShape[i], inputShape[i - placeOffset]);
-          }
-        }
-
         Type type =
             RankedTensorType::get(boundedShape, IntegerType::get(context, 64));
         inferredReturnTypes.push_back(type.cast<ShapedType>());
