@@ -49,8 +49,22 @@ LogicalResult BoundedShapeAnalysis::inferResultShapesWithKnowledges(
     }
   }
 
-  ValueShapeRange range(op->getOperands(), shapeKnowledges,
-                        shapeValueKnowledges);
+  //  if return Attr{nullptr}, Type{nullptr} directly, ShapeAdaptor would try
+  //  dync_cast<> which cause crash
+  auto wrapperShapeKnowledges = [&](Value v) -> ShapeAdaptor {
+    if (auto type = shapeKnowledges(v)) {
+      return type;
+    }
+    return nullptr;
+  };
+  auto wrapperShapeValueKnowledges = [&](Value v) -> ShapeAdaptor {
+    if (auto attr = shapeValueKnowledges(v)) {
+      return attr;
+    }
+    return nullptr;
+  };
+  ValueShapeRange range(op->getOperands(), wrapperShapeKnowledges,
+                        wrapperShapeValueKnowledges);
 
   return inferFunc(op->getContext(), op->getLoc(), range,
                    op->getAttrDictionary(), op->getRegions(), results);

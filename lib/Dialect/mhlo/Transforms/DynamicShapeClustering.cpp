@@ -160,13 +160,11 @@ struct DynamicShapeClusteringPass
     for (auto funcOp : funcOps) {
       DynamicSourceAnalysis dynSrcAnalysis(funcOp);
       // TODO: make removeTieOps optional or as an ioslated pass.
+      LLVM_DEBUG(dynSrcAnalysis.print(llvm::dbgs()));
       dynSrcAnalysis.removeTieOps();
 
       auto isFusibleCandidate = [&](Operation *op) {
-        if (llvm::isa<tensor::DimOp, tensor::FromElementsOp, shape::ShapeOfOp,
-                      mhlo::DynamicBroadcastInDimOp, shape::BroadcastOp,
-                      shape::CstrBroadcastableOp, shape::AssumingOp,
-                      tensor::ExtractOp>(op) ||
+        if (isa<tensor::TensorDialect, shape::ShapeDialect>(op->getDialect()) ||
             op->hasTrait<OpTrait::ConstantLike>())
           return true;
 
@@ -174,6 +172,15 @@ struct DynamicShapeClusteringPass
           for (Value operand : op->getOperands()) {
             if (auto shapeType = operand.getType().dyn_cast<ShapedType>()) {
               if (!shapeType.hasStaticShape())
+                return true;
+            }
+          }
+          // the input of DynamicBroadcastInDim are all static, but the result
+          // is dynamic
+          for (auto value : op->getResults()) {
+            if (auto shapeType = value.getType().dyn_cast<ShapedType>()) {
+              if (!dynSrcAnalysis.isDynamicSource(value) &&
+                  !shapeType.hasStaticShape())
                 return true;
             }
           }
@@ -198,10 +205,10 @@ struct DynamicShapeClusteringPass
       auto isFusibleTrigger = [&](Operation *op) { return true; };
 
       auto isFusibleWith = [&](Operation *target, Operation *start) {
-        if (llvm::isa<tensor::DimOp, tensor::FromElementsOp, shape::ShapeOfOp,
-                      mhlo::DynamicBroadcastInDimOp, shape::BroadcastOp,
-                      shape::CstrBroadcastableOp, shape::AssumingOp,
-                      tensor::ExtractOp>(start))
+        if (isa<tensor::TensorDialect, shape::ShapeDialect>(
+                start->getDialect()) ||
+            isa<tensor::TensorDialect, shape::ShapeDialect>(
+                target->getDialect()))
           return true;
 
         DenseSet<Value> targetSources;

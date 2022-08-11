@@ -17,12 +17,14 @@ void registerDotReifyReturnTypeShapes();
 void registerDotGeneralReifyReturnTypeShapes();
 void registerDynamicStitchReifyReturnTypeShapes();
 void registerDynamicMaskStitchReifyReturnTypeShapes();
+void registerDynamicBroadcastInDimReifyReturnTypeShapes();
 
 inline void registerAllMhloReifyReturnTypeShapes() {
   registerDotReifyReturnTypeShapes();
   registerDotGeneralReifyReturnTypeShapes();
   registerDynamicStitchReifyReturnTypeShapes();
   registerDynamicMaskStitchReifyReturnTypeShapes();
+  registerDynamicBroadcastInDimReifyReturnTypeShapes();
 }
 
 } // namespace mlir
