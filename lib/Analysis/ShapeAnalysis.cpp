@@ -308,6 +308,7 @@ void ShapeValueAnalysis::visitOperation(
 void ShapeValueAnalysis::visitOperation(
     Operation *op, ArrayRef<const ShapeValueLattice *> operands,
     ArrayRef<ShapeValueLattice *> results) {
+  LLVM_DEBUG(llvm::dbgs() << "shape value analysis on " << *op << "\n");
   TypeSwitch<Operation *>(op)
       .Case<shape::ShapeOfOp>([&](Operation *op) {
         auto shapeLattice = getOrCreate<ShapeLattice>(op->getOperand(0));

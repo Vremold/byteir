@@ -65,6 +65,7 @@ add_mlir_dialect_library(ByteIRMhloShapeConstraints
 add_mlir_dialect_library(ByteIRMhloBoundedShapes
   BoundedShapes/NonZeroRegister.cpp
   BoundedShapes/WhereRegister.cpp
+  BoundedShapes/DynamicReshapeRegister.cpp
   BoundedShapes/DynamicPartitionRegister.cpp
   BoundedShapes/DynamicBroadcastInDimRegister.cpp
   BoundedShapes/ReduceRegister.cpp

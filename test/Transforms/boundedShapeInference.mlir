@@ -68,3 +68,22 @@ func.func @concat(%arg0 : tensor<?x3xf32> {byteir.bounded_shape = [3, 3]}, %arg1
 }
 //CHECK-LABEL: func.func @concat(%arg0: tensor<?x3xf32, {byteir.bounded_shape = [3, 3]}> {byteir.bounded_shape = [3, 3]}, %arg1: tensor<?x3xf32, {byteir.bounded_shape = [3, 3]}> {byteir.bounded_shape = [3, 3]}) -> tensor<?x6xf32, {byteir.bounded_shape = [3, 6]}> {
 //CHECK-NEXT:  %0 = "mhlo.concatenate"(%arg0, %arg1) {dimension = 1 : i64} : (tensor<?x3xf32, {byteir.bounded_shape = [3, 3]}>, tensor<?x3xf32, {byteir.bounded_shape = [3, 3]}>) -> tensor<?x6xf32, {byteir.bounded_shape = [3, 6]}>
+
+func.func @dynamic_reshape(%arg0 : tensor<?x1xi64> {byteir.bounded_shape = [100, 1]}) -> tensor <?xi64> {
+  %c0 = arith.constant 0 : index
+  %0 = tensor.dim %arg0, %c0 : tensor<?x1xi64>
+  %1 = tensor.from_elements %0 : tensor<1xindex>
+  %2 = shape.shape_of %arg0 : tensor<?x1xi64> -> tensor<2xindex>
+  %3 = shape.num_elements %2 : tensor<2xindex> -> index
+  %4 = mhlo.cstr_reshapable %3, %1 : index, tensor<1xindex>
+  %5 = shape.assuming %4 -> (tensor<?xi64>) {
+    %6 = mhlo.compute_reshape_shape %3, %1 : index, tensor<1xindex> -> tensor<1xindex>
+    %7 = "mhlo.dynamic_reshape"(%arg0, %6) : (tensor<?x1xi64>, tensor<1xindex>) -> tensor<?xi64>
+    shape.assuming_yield %7 : tensor<?xi64>
+  }
+  return %5 : tensor<?xi64>
+}
+
+// CHECK-LABEL func.func @dynamic_reshape(%arg0: tensor<?x1xi64, {byteir.bounded_shape = [100, 1]}> {byteir.bounded_shape = [100, 1]}) -> tensor<?xi64, {byteir.bounded_shape = [100]}> {
+// CHECK: %7 = "mhlo.dynamic_reshape"(%arg0, %6) : (tensor<?x1xi64, {byteir.bounded_shape = [100, 1]}>, tensor<1xindex>) -> tensor<?xi64, {byteir.bounded_shape = [100]}>
+// CHECK: return %5 : tensor<?xi64, {byteir.bounded_shape = [100]}>

@@ -68,33 +68,31 @@ LogicalResult checkAndSetTypes(Operation *op,
 }
 
 LogicalResult inferBoundedShapeUsingRegistry(Operation *op) {
-  InferBoundedReturnTypes inferFunc = nullptr;
+  InferBoundedReturnTypeComponents inferFunc = nullptr;
   if (auto customCall = dyn_cast<mhlo::CustomCallOp>(op)) {
-    inferFunc = inferBoundedReturnTypes(customCall.call_target_name());
+    inferFunc = inferBoundedReturnTypeComponents(customCall.call_target_name());
   } else {
-    inferFunc = inferBoundedReturnTypes(op->getName().getStringRef());
+    inferFunc = inferBoundedReturnTypeComponents(op->getName().getStringRef());
   }
 
   if (nullptr == inferFunc) {
     return success();
   }
 
-  SmallVector<Type> resultShapeTypes;
-  LogicalResult inferStatus =
-      inferFunc(op->getContext(), op->getLoc(), op->getOperands(),
-                op->getAttrDictionary(), op->getRegions(), resultShapeTypes);
+  llvm::SmallVector<ShapedTypeComponents> resultShapeComponnets;
+  LogicalResult inferStatus = inferFunc(
+      op->getContext(), op->getLoc(), op->getOperands(),
+      op->getAttrDictionary(), op->getRegions(), resultShapeComponnets);
   if (failed(inferStatus)) {
-    LLVM_DEBUG(llvm::dbgs() << "Registered InferBoundedReturnTypes failed for "
-                            << *op << "\n");
+    LLVM_DEBUG(llvm::dbgs()
+               << "Registered InferBoundedReturnTypeComponents failed for "
+               << *op << "\n");
     return success();
   }
 
-  ResultShapes resultShapes =
-      llvm::to_vector(llvm::map_range(resultShapeTypes, [](Type t) {
-        if (auto shape = t.dyn_cast<ShapedType>())
-          return shape.getShape();
-        return ArrayRef<int64_t>(llvm::None);
-      }));
+  ResultShapes resultShapes = llvm::to_vector(llvm::map_range(
+      resultShapeComponnets,
+      [](const ShapedTypeComponents &comp) { return comp.getDims(); }));
   return checkAndSetTypes(op, resultShapes);
 }
 
@@ -348,35 +346,36 @@ InsertShapeConstraint mlir::insertShapeConstraint(llvm::StringRef name) {
 }
 
 //===----------------------------------------------------------------------===//
-// InferBoundedReturnTypes Registration
+// InferBoundedReturnTypeComponents Registration
 //===----------------------------------------------------------------------===//
 
-static llvm::StringMap<InferBoundedReturnTypes> &
-getInferBoundedReturnTypesRegistry() {
-  static llvm::StringMap<InferBoundedReturnTypes>
-      inferBoundedReturnTypesRegistry;
-  return inferBoundedReturnTypesRegistry;
+static llvm::StringMap<InferBoundedReturnTypeComponents> &
+getInferBoundedReturnTypeComponentsRegistry() {
+  static llvm::StringMap<InferBoundedReturnTypeComponents>
+      InferBoundedReturnTypeComponentsRegistry;
+  return InferBoundedReturnTypeComponentsRegistry;
 }
 
-static void
-registerInferBoundedReturnTypes(StringRef name,
-                                const InferBoundedReturnTypes &function) {
-  auto &registry = getInferBoundedReturnTypesRegistry();
+static void registerInferBoundedReturnTypeComponents(
+    StringRef name, const InferBoundedReturnTypeComponents &function) {
+  auto &registry = getInferBoundedReturnTypeComponentsRegistry();
   if (registry.find(name) != registry.end())
-    llvm::report_fatal_error(
-        "Attempting to overwrite an existing InferBoundedReturnTypes function");
-  assert(function &&
-         "Attempting to register an empty InferBoundedReturnTypes function");
+    llvm::report_fatal_error("Attempting to overwrite an existing "
+                             "InferBoundedReturnTypeComponents function");
+  assert(function && "Attempting to register an empty "
+                     "InferBoundedReturnTypeComponents function");
   registry[name] = function;
 }
 
-InferBoundedReturnTypesRegistration::InferBoundedReturnTypesRegistration(
-    StringRef name, const InferBoundedReturnTypes &function) {
-  registerInferBoundedReturnTypes(name, function);
+InferBoundedReturnTypeComponentsRegistration::
+    InferBoundedReturnTypeComponentsRegistration(
+        StringRef name, const InferBoundedReturnTypeComponents &function) {
+  registerInferBoundedReturnTypeComponents(name, function);
 }
 
-InferBoundedReturnTypes mlir::inferBoundedReturnTypes(llvm::StringRef name) {
-  auto &registry = getInferBoundedReturnTypesRegistry();
+InferBoundedReturnTypeComponents
+mlir::inferBoundedReturnTypeComponents(llvm::StringRef name) {
+  auto &registry = getInferBoundedReturnTypeComponentsRegistry();
   auto it = registry.find(name);
   if (it != registry.end())
     return it->second;

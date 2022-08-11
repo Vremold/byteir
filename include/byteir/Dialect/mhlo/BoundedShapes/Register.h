@@ -13,22 +13,25 @@
 
 namespace mlir {
 
-void registerDynamicPartitionInferBoundedReturnTypes();
+void registerDynamicPartitionInferBoundedReturnTypeComponents();
 
-void registerNonZeroInferBoundedReturnTypes();
+void registerNonZeroInferBoundedReturnTypeComponents();
 
-void registerWhereInferBoundedReturnTypes();
+void registerWhereInferBoundedReturnTypeComponents();
 
-void registerDynamicBroadcastInDimInferBoundedReturnTypes();
+void registerDynamicBroadcastInDimInferBoundedReturnTypeComponents();
 
-void registerReduceInferBoundedReturnTypes();
+void registerDynamicReshapeInferBoundedReturnTypeComponents();
 
-inline void registerAllMhloInferBoundedReturnTypes() {
-  registerDynamicPartitionInferBoundedReturnTypes();
-  registerNonZeroInferBoundedReturnTypes();
-  registerWhereInferBoundedReturnTypes();
-  registerDynamicBroadcastInDimInferBoundedReturnTypes();
-  registerReduceInferBoundedReturnTypes();
+void registerReduceInferBoundedReturnTypeComponents();
+
+inline void registerAllMhloInferBoundedReturnTypeComponents() {
+  registerDynamicPartitionInferBoundedReturnTypeComponents();
+  registerNonZeroInferBoundedReturnTypeComponents();
+  registerWhereInferBoundedReturnTypeComponents();
+  registerDynamicBroadcastInDimInferBoundedReturnTypeComponents();
+  registerDynamicReshapeInferBoundedReturnTypeComponents();
+  registerReduceInferBoundedReturnTypeComponents();
 }
 
 } // namespace mlir

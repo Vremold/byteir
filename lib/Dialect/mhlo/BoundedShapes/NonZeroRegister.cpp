@@ -14,18 +14,20 @@ using namespace mlir;
 
 /// See NonZero's signature on
 /// https://github.com/onnx/onnx/blob/main/docs/Operators.md#nonzero
-void mlir::registerNonZeroInferBoundedReturnTypes() {
-  static InferBoundedReturnTypesRegistration shapeRegister(
-      getNonZeroName(), [](MLIRContext *context, Optional<Location>,
-                           ValueRange operands, DictionaryAttr, RegionRange,
-                           SmallVectorImpl<Type> &inferredReturnTypes) {
+void mlir::registerNonZeroInferBoundedReturnTypeComponents() {
+  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
+      getNonZeroName(),
+      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
+         DictionaryAttr, RegionRange,
+         SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         Value input = operands[0];
         ShapedType inputShape = input.getType().dyn_cast<ShapedType>();
         if (!inputShape || !inputShape.hasStaticShape())
           return failure();
 
-        inferredReturnTypes.push_back(RankedTensorType::get(
-            {inputShape.getNumElements()}, IntegerType::get(context, 64)));
+        Type type = RankedTensorType::get({inputShape.getNumElements()},
+                                          IntegerType::get(context, 64));
+        inferredReturnTypes.push_back(type.cast<ShapedType>());
         return success();
       });
 }

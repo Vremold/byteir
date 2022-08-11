@@ -90,7 +90,7 @@ struct BoundedShapeInferencePass
   BoundedShapeInferencePass()
       : BoundedShapeInferenceBase<
             BoundedShapeInferencePass>::BoundedShapeInferenceBase() {
-    registerAllMhloInferBoundedReturnTypes();
+    registerAllMhloInferBoundedReturnTypeComponents();
   }
 
   void runOnOperation() override {
@@ -113,7 +113,7 @@ struct BoundedShapeInferencePass
 
       DataFlowSolver solver;
       solver.load<BoundedShapeAnalysis>();
-      solver.load<ShapeValueAnalysis>();
+      solver.load<BoundedShapeValueAnalysis>();
       solver.load<DeadCodeAnalysis>();
       if (failed(solver.initializeAndRun(funcOp)))
         return signalPassFailure();

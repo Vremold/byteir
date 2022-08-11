@@ -14,46 +14,43 @@
 
 using namespace mlir;
 
-void mlir::registerDynamicBroadcastInDimInferBoundedReturnTypes() {
-  static InferBoundedReturnTypesRegistration shapeRegister(
+void mlir::registerDynamicBroadcastInDimInferBoundedReturnTypeComponents() {
+  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
       mhlo::DynamicBroadcastInDimOp::getOperationName(),
-      [](MLIRContext *context, Optional<Location>, ValueRange operands,
+      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
          DictionaryAttr, RegionRange,
-         SmallVectorImpl<Type> &inferredReturnTypes) {
+         SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         auto inputType = operands[0].getType().dyn_cast<RankedTensorType>();
         if (inputType == nullptr) {
           return failure();
         }
-        auto dynamicShapeValue = operands[1];
-        auto attribute =
-            dynamicShapeValue.getType().cast<RankedTensorType>().getEncoding();
-        if (attribute && attribute.dyn_cast<DictionaryAttr>()) {
-          auto dictAttr = attribute.dyn_cast<DictionaryAttr>();
-          auto boundedShapeDense = dictAttr.get(getBoundedShapeDenseAttrName());
-          if (boundedShapeDense == nullptr ||
-              boundedShapeDense.dyn_cast<DenseIntElementsAttr>() == nullptr) {
-            return failure();
-          }
-          auto boundedShape =
-              llvm::to_vector<6>(boundedShapeDense.cast<DenseIntElementsAttr>()
-                                     .getValues<int64_t>());
-          int64_t leadingDimSize =
-              inputType.getRank() - static_cast<int64_t>(boundedShape.size());
-          if (leadingDimSize > 0) {
-            boundedShape.insert(boundedShape.begin(), leadingDimSize, 1);
-          }
-          auto inputShape = inputType.getShape();
-          size_t placeOffset = boundedShape.size() - inputShape.size();
-          for (size_t i = 0; i < boundedShape.size(); ++i) {
-            if (i >= placeOffset) {
-              boundedShape[i] =
-                  std::max(boundedShape[i], inputShape[i - placeOffset]);
-            }
-          }
-          inferredReturnTypes.push_back(RankedTensorType::get(
-              boundedShape, IntegerType::get(context, 64)));
-          return success();
+
+        ShapeAdaptor dynamicShapeAdaptor = operands.getValueAsShape(1);
+        if (!dynamicShapeAdaptor)
+          return failure();
+
+        ShapedTypeComponents dynamicShape;
+        dynamicShapeAdaptor.getDims(dynamicShape);
+
+        auto boundedShape = llvm::to_vector<6>(dynamicShape.getDims());
+
+        int64_t leadingDimSize =
+            inputType.getRank() - static_cast<int64_t>(boundedShape.size());
+        if (leadingDimSize > 0) {
+          boundedShape.insert(boundedShape.begin(), leadingDimSize, 1);
         }
-        return failure();
+        auto inputShape = inputType.getShape();
+        size_t placeOffset = boundedShape.size() - inputShape.size();
+        for (size_t i = 0; i < boundedShape.size(); ++i) {
+          if (i >= placeOffset) {
+            boundedShape[i] =
+                std::max(boundedShape[i], inputShape[i - placeOffset]);
+          }
+        }
+
+        Type type =
+            RankedTensorType::get(boundedShape, IntegerType::get(context, 64));
+        inferredReturnTypes.push_back(type.cast<ShapedType>());
+        return success();
       });
 }

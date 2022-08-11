@@ -12,7 +12,10 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "llvm/ADT/StringMap.h"
+#include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/Debug.h"
+
+#define DEBUG_TYPE "bounded-shape-analysis"
 
 using namespace mlir::shape_analysis;
 
@@ -21,11 +24,11 @@ LogicalResult BoundedShapeAnalysis::inferResultShapesWithKnowledges(
     Operation *op, ShapeKnowledges shapeKnowledges,
     ShapeValueKnowledges shapeValueKnowledges,
     llvm::SmallVectorImpl<::mlir::ShapedTypeComponents> &results) {
-  InferBoundedReturnTypes inferFunc = nullptr;
+  InferBoundedReturnTypeComponents inferFunc = nullptr;
   if (auto customCall = dyn_cast<mhlo::CustomCallOp>(op)) {
-    inferFunc = inferBoundedReturnTypes(customCall.call_target_name());
+    inferFunc = inferBoundedReturnTypeComponents(customCall.call_target_name());
   } else {
-    inferFunc = inferBoundedReturnTypes(op->getName().getStringRef());
+    inferFunc = inferBoundedReturnTypeComponents(op->getName().getStringRef());
   }
 
   if (nullptr == inferFunc) {
@@ -40,33 +43,34 @@ LogicalResult BoundedShapeAnalysis::inferResultShapesWithKnowledges(
     if (auto shape = shapeKnowledges(operand)) {
       newType = shape;
     }
-    if (auto value = shapeValueKnowledges(operand)) {
-      if (auto ty = newType.dyn_cast_or_null<RankedTensorType>()) {
-        newType = RankedTensorType::get(
-            ty.getShape(), ty.getElementType(),
-            DictionaryAttr::get(
-                op->getContext(),
-                {NamedAttribute(StringAttr::get(op->getContext(),
-                                                getBoundedShapeDenseAttrName()),
-                                value)}));
-      }
-    }
     if (newType != operand.getType()) {
       valueTypeModification.Push(operand, newType);
     }
   }
-  llvm::SmallVector<Type> inferredType;
-  LogicalResult inferStatus =
-      inferFunc(op->getContext(), op->getLoc(), op->getOperands(),
-                op->getAttrDictionary(), op->getRegions(), inferredType);
-  if (succeeded(inferStatus)) {
-    results.assign(llvm::to_vector(
-        llvm::map_range(inferredType, [](mlir::Type t) -> ShapedTypeComponents {
-          if (auto st = t.dyn_cast_or_null<ShapedType>())
-            return st;
-          return {};
-        })));
-  }
-  return inferStatus;
+
+  ValueShapeRange range(op->getOperands(), shapeKnowledges,
+                        shapeValueKnowledges);
+
+  return inferFunc(op->getContext(), op->getLoc(), range,
+                   op->getAttrDictionary(), op->getRegions(), results);
+}
+
+void BoundedShapeValueAnalysis::visitOperation(
+    Operation *op, ArrayRef<const ShapeValueLattice *> operands,
+    ArrayRef<ShapeValueLattice *> results) {
+  LLVM_DEBUG(llvm::dbgs() << "bounded shape value analysis on " << *op << "\n");
+  TypeSwitch<Operation *>(op)
+      .Case<mhlo::ComputeReshapeShapeOp>([&](Operation *op) {
+        const ShapeValueLattice *shape = operands[1];
+        assert(!shape->isUninitialized() && "operand must be initialized");
+        ShapeValueLattice *lattice = results[0];
+        Attribute attr = shape->getValue().getConstantValue();
+        LLVM_DEBUG(llvm::dbgs() << "Folded to constant: " << attr << "\n");
+        propagateIfChanged(lattice, lattice->join(mlir::dataflow::ConstantValue(
+                                        attr, op->getDialect())));
+      })
+      .Default([&](Operation *op) {
+        ShapeValueAnalysis::visitOperation(op, operands, results);
+      });
 }
 } // namespace mlir

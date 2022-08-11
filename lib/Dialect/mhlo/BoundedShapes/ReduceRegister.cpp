@@ -15,12 +15,12 @@
 using namespace mlir;
 
 // TODO: this should be removed when push to upstream
-void mlir::registerReduceInferBoundedReturnTypes() {
-  static InferBoundedReturnTypesRegistration shapeRegister(
+void mlir::registerReduceInferBoundedReturnTypeComponents() {
+  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
       mhlo::ReduceOp::getOperationName(),
-      [](MLIRContext *context, Optional<Location>, ValueRange operands,
+      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
          DictionaryAttr attr, RegionRange,
-         SmallVectorImpl<Type> &inferredReturnTypes) {
+         SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         auto inputType = operands[0].getType().dyn_cast<RankedTensorType>();
         if (inputType == nullptr || !inputType.hasStaticShape()) {
           return failure();
@@ -40,8 +40,8 @@ void mlir::registerReduceInferBoundedReturnTypes() {
           if (!dimsMask[i])
             shape.push_back(inputType.getDimSize(i));
         }
-        inferredReturnTypes.push_back(
-            RankedTensorType::get(shape, IntegerType::get(context, 64)));
+        Type type = RankedTensorType::get(shape, IntegerType::get(context, 64));
+        inferredReturnTypes.push_back(type.cast<ShapedType>());
         return success();
       });
 }

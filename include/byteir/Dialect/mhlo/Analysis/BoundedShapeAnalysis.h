@@ -21,6 +21,17 @@ public:
       llvm::SmallVectorImpl<::mlir::ShapedTypeComponents> &results) override;
 };
 
+class BoundedShapeValueAnalysis : public ShapeValueAnalysis {
+public:
+  using ShapeValueAnalysis::ShapeValueAnalysis;
+
+  // in consistent with ShapeValueAnalysis, add customized handle logic for
+  // ops in mhlo dialect
+  void visitOperation(Operation *op,
+                      ArrayRef<const ShapeValueLattice *> operands,
+                      ArrayRef<ShapeValueLattice *> results) override;
+};
+
 } // namespace mlir
 
 #endif // BYTEIR_DIALECT_MHLO_ANALYSIS_BOUNDEDSHAPEANALYSIS_H

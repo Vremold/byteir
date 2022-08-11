@@ -64,16 +64,17 @@ InsertShapeConstraint insertShapeConstraint(llvm::StringRef name);
 // InferBoundedReturnTypes Registration
 //===----------------------------------------------------------------------===//
 
-using InferBoundedReturnTypes = std::function<LogicalResult(
-    MLIRContext *, Optional<Location>, ValueRange operands, DictionaryAttr,
-    RegionRange, SmallVectorImpl<Type> &inferredReturnTypes)>;
+using InferBoundedReturnTypeComponents = std::function<LogicalResult(
+    MLIRContext *, Optional<Location>, ValueShapeRange operands, DictionaryAttr,
+    RegionRange, SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes)>;
 
-struct InferBoundedReturnTypesRegistration {
-  InferBoundedReturnTypesRegistration(llvm::StringRef name,
-                                      const InferBoundedReturnTypes &function);
+struct InferBoundedReturnTypeComponentsRegistration {
+  InferBoundedReturnTypeComponentsRegistration(
+      llvm::StringRef name, const InferBoundedReturnTypeComponents &function);
 };
 
-InferBoundedReturnTypes inferBoundedReturnTypes(llvm::StringRef name);
+InferBoundedReturnTypeComponents
+inferBoundedReturnTypeComponents(llvm::StringRef name);
 
 } // namespace mlir
 

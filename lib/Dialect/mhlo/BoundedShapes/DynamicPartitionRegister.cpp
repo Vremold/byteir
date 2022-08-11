@@ -14,16 +14,20 @@ using namespace mlir;
 
 /// See DynamicPartition's signature on
 /// https://www.tensorflow.org/api_docs/python/tf/dynamic_partition
-void mlir::registerDynamicPartitionInferBoundedReturnTypes() {
-  static InferBoundedReturnTypesRegistration shapeRegister(
+void mlir::registerDynamicPartitionInferBoundedReturnTypeComponents() {
+  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
       getDynamicPartitionName(),
-      [](MLIRContext *context, Optional<Location>, ValueRange operands,
+      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
          DictionaryAttr attr, RegionRange,
-         SmallVectorImpl<Type> &inferredReturnTypes) {
+         SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         auto numPartition = attr.getAs<DictionaryAttr>(getCustomCallAttrName())
                                 .getAs<IntegerAttr>("num_partitions")
                                 .getInt();
-        inferredReturnTypes.append(numPartition, operands[0].getType());
-        return success();
+        if (ShapedType shapedType =
+                operands[0].getType().dyn_cast_or_null<ShapedType>()) {
+          inferredReturnTypes.append(numPartition, shapedType);
+          return success();
+        }
+        return failure();
       });
 }
