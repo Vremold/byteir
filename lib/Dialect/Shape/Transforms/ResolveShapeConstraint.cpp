@@ -13,6 +13,9 @@
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/EquivalenceClasses.h"
+#include "llvm/Support/Debug.h"
+
+#define DEBUG_TYPE "resolve-shape-constraint"
 
 using namespace mlir;
 
@@ -83,8 +86,9 @@ struct ResolveShapeConstraintPass
              "operands of a meetOp must be of the same equivalence class");
 
       if (!eqsToConstant.count(lhsLeader)) {
-        meetOp->emitWarning(
-            "meetOp not resolve, no constant equivalence value found");
+        LLVM_DEBUG(llvm::dbgs()
+                   << "meetOp " << meetOp
+                   << " not resolved, no constant equivalence value found\n");
         return WalkResult::advance();
       }
 

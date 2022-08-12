@@ -25,6 +25,8 @@ void registerDynamicReshapeInferBoundedReturnTypeComponents();
 
 void registerReduceInferBoundedReturnTypeComponents();
 
+void registerTorchIndexSelectInferBoundedReturnTypeComponents();
+
 inline void registerAllMhloInferBoundedReturnTypeComponents() {
   registerDynamicPartitionInferBoundedReturnTypeComponents();
   registerNonZeroInferBoundedReturnTypeComponents();
@@ -32,6 +34,7 @@ inline void registerAllMhloInferBoundedReturnTypeComponents() {
   registerDynamicBroadcastInDimInferBoundedReturnTypeComponents();
   registerDynamicReshapeInferBoundedReturnTypeComponents();
   registerReduceInferBoundedReturnTypeComponents();
+  registerTorchIndexSelectInferBoundedReturnTypeComponents();
 }
 
 } // namespace mlir
