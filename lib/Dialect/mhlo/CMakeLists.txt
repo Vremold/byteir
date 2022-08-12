@@ -145,6 +145,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   ByteIRMhloAnalysis
   ByteIRMhloShapeConstraints
   ByteIRMhloReifyShapes
+  MLIRAceDialect
 
   LINK_LIBS PUBLIC
   MLIRIR
@@ -158,5 +159,6 @@ add_mlir_dialect_library(ByteIRMhloPasses
   ByteIRMhloAnalysis
   ByteIRMhloShapeConstraints
   ByteIRMhloReifyShapes
+  MLIRAceDialect
   MLIRQuantDialect # FIXME: this should link at MhloDialect
   )
