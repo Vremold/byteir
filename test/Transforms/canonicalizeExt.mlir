@@ -37,3 +37,14 @@ func.func @fold_large_constant_binary_op() -> tensor<2xf32> {
 }
 // CHECK-NOT: mhlo.add
 // CHECK: mhlo.constant dense<[1.000000e+00, 2.000000e+00]>
+
+func.func @fold_concat_of_continuous_slices(%arg0: tensor<4x11xf32>) -> tensor<4x11xf32> {
+  %0 = "mhlo.slice"(%arg0) {limit_indices = dense<[4, 7]> : tensor<2xi64>, start_indices = dense<[0, 5]> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (tensor<4x11xf32>) -> tensor<4x2xf32>
+  %1 = "mhlo.slice"(%arg0) {limit_indices = dense<[4, 11]> : tensor<2xi64>, start_indices = dense<[0, 7]> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (tensor<4x11xf32>) -> tensor<4x4xf32>
+  %2 = "mhlo.slice"(%arg0) {limit_indices = dense<[4, 5]> : tensor<2xi64>, start_indices = dense<0> : tensor<2xi64>, strides = dense<1> : tensor<2xi64>} : (tensor<4x11xf32>) -> tensor<4x5xf32>
+  %3 = "mhlo.concatenate"(%2, %0, %1) {dimension = 1 : i64} : (tensor<4x5xf32>, tensor<4x2xf32>, tensor<4x4xf32>) -> tensor<4x11xf32>
+  return %3 : tensor<4x11xf32> 
+}
+// CHECK-LABEL: func.func @fold_concat_of_continuous_slices
+// CHECK-SAME: (%[[ARG0:.*]]: tensor<4x11xf32>)
+// CHECK-NEXT: return %[[ARG0]] : tensor<4x11xf32>

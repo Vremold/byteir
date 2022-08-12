@@ -6,7 +6,7 @@ project(byteir C CXX)
 include(CheckCXXCompilerFlag)
 include(CheckLanguage)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -27,6 +27,9 @@ if (MSVC)
   # See: https://github.com/onnx/onnx/issues/3530
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4125")
 else()
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(-fno-gnu-unique)
+  endif()
   # Global compile options for GCC and clang
   add_compile_options(-fno-operator-names)
 endif()

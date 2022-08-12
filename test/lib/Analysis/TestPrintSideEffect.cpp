@@ -16,6 +16,9 @@ namespace {
 
 struct TestPrintArgSideEffectPass
     : public PassWrapper<TestPrintArgSideEffectPass, OperationPass<ModuleOp>> {
+
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(TestPrintArgSideEffectPass)
+
   StringRef getArgument() const final { return "test-print-arg-side-effect"; }
 
   StringRef getDescription() const final { return "Print the arg side effect"; }
@@ -46,7 +49,7 @@ struct TestPrintArgSideEffectPass
   }
 };
 
-} // end anonymous namespace
+} // namespace
 
 namespace byteir {
 namespace test {

@@ -15,6 +15,8 @@ namespace {
 
 struct TestPrintSymbolicShapePass
     : public PassWrapper<TestPrintSymbolicShapePass, OperationPass<ModuleOp>> {
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(TestPrintSymbolicShapePass)
+
   StringRef getArgument() const final { return "test-print-symbolic-shape"; }
 
   StringRef getDescription() const final {
@@ -31,7 +33,7 @@ struct TestPrintSymbolicShapePass
   }
 };
 
-} // end anonymous namespace
+} // namespace
 
 namespace byteir {
 namespace test {

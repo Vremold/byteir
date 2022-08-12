@@ -24,6 +24,9 @@ namespace {
 
 struct TestPrintLivenessPass
     : public PassWrapper<TestPrintLivenessPass, OperationPass<func::FuncOp>> {
+
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(TestPrintLivenessPass)
+
   StringRef getArgument() const final { return "test-print-liveness"; }
   StringRef getDescription() const final {
     return "Print the contents of a constructed liveness information.";
@@ -34,7 +37,7 @@ struct TestPrintLivenessPass
   }
 };
 
-} // end anonymous namespace
+} // namespace
 
 namespace byteir {
 namespace test {

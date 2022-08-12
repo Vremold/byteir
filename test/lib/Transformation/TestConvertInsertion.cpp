@@ -25,9 +25,11 @@ std::unique_ptr<ConvertRuleBase> unitTestRuleExample(MLIRContext *ctx) {
                                             Float16Type::get(ctx));
   return collector;
 }
+} // namespace
 
 struct TestConvertInsertionPass
     : public PassWrapper<TestConvertInsertionPass, OperationPass<ModuleOp>> {
+
   StringRef getArgument() const final { return "test-insert-convert"; }
 
   StringRef getDescription() const final {
@@ -51,8 +53,6 @@ struct TestConvertInsertionPass
     }
   }
 };
-
-} // end anonymous namespace
 
 namespace byteir {
 namespace test {

@@ -85,6 +85,8 @@ static void addOptimizationPasses(llvm::legacy::PassManagerBase &MPM,
 class SerializeToPTX
     : public PassWrapper<SerializeToPTX, OperationPass<gpu::GPUModuleOp>> {
 public:
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(SerializeToPTX)
+
   SerializeToPTX(unsigned opt, const std::string &libdeviceFile,
                  const std::string &triple, const std::string &chip,
                  const std::string &features, std::string &targetISA)

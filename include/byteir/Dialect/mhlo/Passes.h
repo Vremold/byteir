@@ -15,6 +15,7 @@
 #include "byteir/Dialect/mhlo/Transforms/ConvertInsertion.h"
 //#include "byteir/Dialect/mhlo/Transforms/DotTransposeFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/DynamicShapeClustering.h"
+#include "byteir/Dialect/mhlo/Transforms/FuncArgRearrangement.h"
 #include "byteir/Dialect/mhlo/Transforms/FusionOutlining.h"
 //#include "byteir/Dialect/mhlo/Transforms/GenericFusion.h"
 #include "byteir/Dialect/mhlo/Transforms/HloFolder.h"

@@ -5,6 +5,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Utils/AttrUtils.h"
+#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/APSInt.h"
 #include <algorithm>
 #include <cstdint>
 #include <functional>
@@ -12,13 +18,6 @@
 #include <set>
 #include <unordered_map>
 #include <utility>
-
-#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
-#include "byteir/Utils/AttrUtils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/APInt.h"
-#include "llvm/ADT/APSInt.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -321,6 +320,178 @@ LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
   return success();
 }
 
+namespace {
+
+struct ConcatChunk {
+  bool isSlice;  // specify whether from slice or not
+  int64_t axis;  // concat axis
+  int64_t begin; // concat begin along the concat axis
+  int64_t end;   // concat end along the concat axis
+  Value val; // source val, either slice source if from slice, or concat source
+             // if not from slice
+  SmallVector<unsigned> ids; // concat's arg id
+
+  ConcatChunk(Value v, int64_t id)
+      : val(v), isSlice(false), axis(-1), begin(-1), end(-1) {
+    ids.push_back(id);
+  }
+
+  ConcatChunk(Value v, int64_t a, int64_t b, int64_t e, int64_t id)
+      : val(v), isSlice(true), axis(a), begin(b), end(e) {
+    ids.push_back(id);
+  }
+};
+
+static ConcatChunk getChunkOf1DSlice(unsigned id, mhlo::ConcatenateOp concat,
+                                     mhlo::SliceOp slice) {
+
+  uint64_t dim = concat.dimension();
+  const auto &concatShape = concat.getType().getShape();
+  const auto &sliceShape = slice.getType().getShape();
+
+  auto val = slice.getOperand();
+
+  if (auto valTy = val.getType().dyn_cast<TensorType>()) {
+    const auto &valShape = valTy.getShape();
+
+    if (concatShape.size() == sliceShape.size() &&
+        sliceShape.size() == valShape.size()) {
+      // only support equal rank
+
+      bool isSupport = true;
+      int64_t begin = -1;
+      int64_t end = -1;
+
+      auto startAttr = slice.start_indices();
+      auto limitAttr = slice.limit_indices();
+      auto stridesAttr = slice.strides();
+
+      for (unsigned i = 0; i < concatShape.size(); ++i) {
+        const int64_t start = startAttr.getValues<IntegerAttr>()[i].getInt();
+        const int64_t limit = limitAttr.getValues<IntegerAttr>()[i].getInt();
+        const int64_t stride = stridesAttr.getValues<IntegerAttr>()[i].getInt();
+
+        if (i == dim) {
+          if (stride == 1) {
+            begin = start;
+            end = limit;
+          } else {
+            isSupport = false;
+            break;
+          }
+        } else {
+          if (start != 0 || limit != concatShape[i] || stride != 1) {
+            isSupport = false;
+            break;
+          }
+        }
+      }
+
+      if (isSupport) {
+        return ConcatChunk(val, dim, begin, end, id);
+      }
+    } // equal rank
+  }
+
+  return ConcatChunk(val, id);
+}
+
+static void computeBeginAndEnd(const ConcatChunk &chunk, size_t dim,
+                               SmallVectorImpl<int64_t> &begins,
+                               SmallVectorImpl<int64_t> &ends) {
+
+  if (auto inputTy = chunk.val.getType().dyn_cast<TensorType>()) {
+    const auto &shape = inputTy.getShape();
+
+    for (size_t i = 0; i < shape.size(); ++i) {
+      if (i == dim) {
+        begins[i] = chunk.begin;
+        ends[i] = chunk.end;
+      } else {
+        begins[i] = 0;
+        ends[i] = shape[i];
+      }
+    }
+  };
+}
+
+} // namespace
+
+///
+///  Fold concatenate of continuous slices
+///  FIXME: support static only for now
+LogicalResult
+mlir::mhlo::FoldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
+                                           PatternRewriter &rewriter) {
+
+  // support static now
+  if (!op.getType().hasStaticShape()) {
+    return failure();
+  }
+  uint64_t dim = op.dimension();
+
+  SmallVector<ConcatChunk> chunks;
+  bool hasMerged = false;
+  for (unsigned i = 0; i < op.getNumOperands(); ++i) {
+    if (auto slice = op.getOperand(i).getDefiningOp<mhlo::SliceOp>()) {
+      // handle 1D slice only along dim axis
+      auto chunk = getChunkOf1DSlice(i, op, slice);
+
+      if (!chunks.empty() && (chunks.back().val == chunk.val) &&
+          (chunks.back().axis == chunk.axis) &&
+          (chunks.back().end == chunk.begin)) {
+        chunks.back().end = chunk.end;
+        chunks.back().ids.push_back(i);
+        hasMerged = true;
+      } else {
+        chunks.push_back(chunk);
+      }
+    } else {
+      chunks.push_back(ConcatChunk(op.getOperand(i), i));
+    }
+  }
+
+  if (!hasMerged)
+    return failure();
+
+  // Only handle one chunk for now
+  // TODO: add support to multiple chunk
+  if (chunks.size() > 1)
+    return failure();
+
+  // only one chunk case
+  // chunks.size() == 1
+  auto concatTy = op.getType();
+  const auto &chunk = chunks.back();
+  // either identity or 1 slice
+  auto extent = concatTy.getShape()[dim];
+  if (auto inputTy = chunk.val.getType().dyn_cast<TensorType>()) {
+    if (inputTy == concatTy && chunk.begin == 0 && chunk.end == extent) {
+      // identity
+      rewriter.replaceOp(op, chunk.val);
+    } else {
+      // 1 slice
+      int64_t rank = op.getType().getRank();
+      auto indicesTy = RankedTensorType::get(rank, rewriter.getI64Type());
+
+      SmallVector<int64_t> begins(rank, 0);
+      SmallVector<int64_t> ends(rank, 0);
+
+      // FIXME: support unit-stride now
+      SmallVector<int64_t> strides(rank, 1);
+
+      computeBeginAndEnd(chunk, dim, begins, ends);
+
+      rewriter.replaceOpWithNewOp<mhlo::SliceOp>(
+          op, chunk.val, DenseIntElementsAttr::get(indicesTy, begins),
+          DenseIntElementsAttr::get(indicesTy, ends),
+          DenseIntElementsAttr::get(indicesTy, strides));
+    }
+    return success();
+  }
+  return failure();
+}
+
 template <typename Op, template <typename> typename Func>
 LogicalResult mlir::mhlo::FoldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
   auto lhsOp = op.lhs().template getDefiningOp<mhlo::ConstantOp>();
@@ -369,6 +540,7 @@ void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
 
   // add our extension
   results.add(mlir::mhlo::FoldBroadcastInDim);
+  results.add(mlir::mhlo::FoldConcatWithContinuousSlices);
   results.add(mlir::mhlo::FoldShapeBroadcast);
   results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::AddOp, std::plus>);
   results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::MulOp, std::multiplies>);

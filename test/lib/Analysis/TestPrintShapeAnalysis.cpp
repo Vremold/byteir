@@ -18,6 +18,9 @@ using namespace mlir::dataflow;
 namespace {
 struct TestPrintShapeAnalysisPass
     : public PassWrapper<TestPrintShapeAnalysisPass, OperationPass<ModuleOp>> {
+
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(TestPrintShapeAnalysisPass)
+
   StringRef getArgument() const final { return "test-print-shape-analysis"; }
 
   StringRef getDescription() const final { return "Print the shape analysis."; }

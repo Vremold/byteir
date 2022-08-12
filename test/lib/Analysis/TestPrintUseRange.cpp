@@ -27,6 +27,9 @@ namespace {
 
 struct TestPrintUseRangePass
     : public PassWrapper<TestPrintUseRangePass, OperationPass<func::FuncOp>> {
+
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(TestPrintUseRangePass)
+
   StringRef getArgument() const final { return "test-print-use-range"; }
 
   StringRef getDescription() const final {
@@ -47,7 +50,7 @@ struct TestPrintUseRangePass
   }
 };
 
-} // end anonymous namespace
+} // namespace
 
 namespace byteir {
 namespace test {

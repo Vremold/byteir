@@ -21,6 +21,7 @@ class BroadcastOp;
 namespace mhlo {
 class TransposeOp;
 class BroadcastInDimOp;
+class ConcatenateOp;
 class DynamicBroadcastInDimOp;
 
 // Most of these will push back to upstream
@@ -45,6 +46,11 @@ LogicalResult EliminateSplatConstantTranspose(mhlo::TransposeOp op,
 LogicalResult FoldBroadcastInDim(BroadcastInDimOp op,
                                  PatternRewriter &rewriter);
 
+///
+///  Fold concatenate of continuous slices
+///
+LogicalResult FoldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
+                                             PatternRewriter &rewriter);
 // fold the pattern like this
 // const0 = [4]
 // c = mhlo.xxx(a, b)

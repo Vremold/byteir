@@ -51,6 +51,7 @@ using namespace mlir;
 namespace byteir {
 namespace test {
 void registerTestConvertInsertionPass();
+void registerTestFuncArgRearrangementPass();
 void registerTestPrintArgSideEffectPass();
 void registerTestPrintLivenessPass();
 void registerTestPrintUseRangePass();
@@ -62,6 +63,7 @@ void registerTestPrintShapeAnalysisPass();
 #ifdef BYTEIR_INCLUDE_TESTS
 void registerTestPasses() {
   byteir::test::registerTestConvertInsertionPass();
+  byteir::test::registerTestFuncArgRearrangementPass();
   byteir::test::registerTestPrintArgSideEffectPass();
   byteir::test::registerTestPrintLivenessPass();
   byteir::test::registerTestPrintUseRangePass();

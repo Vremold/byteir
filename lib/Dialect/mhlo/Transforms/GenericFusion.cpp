@@ -107,6 +107,8 @@ static GenericFuserConfig config{getByteIRMatmulEpilogueFusionAttrName(),
 // a derived fusion pass for elementwise
 struct ElementwiseFusionPass : public GenericFusionPass<ElementwiseFusionPass> {
 
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(ElementwiseFusionPass)
+
   ElementwiseFusionPass(bool clusterSingleOp)
       : GenericFusionPass(elementwise::config, clusterSingleOp) {}
 
@@ -130,6 +132,8 @@ struct ElementwiseFusionPass : public GenericFusionPass<ElementwiseFusionPass> {
 // a derived fusion pass for matmul epilogue fusion
 struct MatmulEpilogueFusionPass
     : public GenericFusionPass<MatmulEpilogueFusionPass> {
+
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(MatmulEpilogueFusionPass)
 
   MatmulEpilogueFusionPass()
       : GenericFusionPass(matmul_epilogue::config, false) {}

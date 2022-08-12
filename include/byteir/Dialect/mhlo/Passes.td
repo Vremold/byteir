@@ -92,6 +92,20 @@ def DynamicShapeClustering : Pass<"dynamic-shape-clustering", "mlir::ModuleOp"> 
 }
 
 //===----------------------------------------------------------------------===//
+// FuncArgRearrangement
+//===----------------------------------------------------------------------===//
+
+// def FuncArgRearrangement : Pass<"rearrange-func-arg", "ModuleOp"> {
+//  let summary = "Func Arg Rearrangement: pack, reorder args and returns of func";
+//  let constructor = "mlir::createFuncArgRearrangementPass()";
+//  let options = [
+//    Option<"anchorAttr", "anchor-attr", "std::string",
+//            /*default=*/"",
+//            "An optional Unit attribute anchoring on target functions.">,
+//  ];
+//}
+
+//===----------------------------------------------------------------------===//
 // FusionOutlining
 //===----------------------------------------------------------------------===//
 

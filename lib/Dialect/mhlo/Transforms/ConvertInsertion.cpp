@@ -23,6 +23,8 @@ class ConvertInsertionPass : public ::mlir::OperationPass<ModuleOp> {
 public:
   using Base = ConvertInsertionPass;
 
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(ConvertInsertionPass)
+
   ConvertInsertionPass()
       : ::mlir::OperationPass<ModuleOp>(
             ::mlir::TypeID::get<ConvertInsertionPass>()) {}
