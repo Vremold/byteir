@@ -10,6 +10,7 @@
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
+#include "byteir/Utils/FuncUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -113,12 +114,12 @@ void FuncArgRearrangementPass::runOnOperation() {
 
     // 1. Create a new Func
     OpBuilder builder(f);
-    // StringRef funcSymName = f.getSymName();
-    // auto newFnType = rearrangerPtr->getFunctionType();
 
     auto newFunc = builder.create<func::FuncOp>(
         f->getLoc(), f.getSymName(), rearrangerPtr->getFunctionType(),
         f.getSymVisibilityAttr());
+
+    cloneAllExtraFuncAttrs(f, newFunc, {anchorAttr});
 
     // 2. Rewrite Body if Func is non-empty
     if (!f.empty()) {
@@ -144,15 +145,8 @@ void FuncArgRearrangementPass::runOnOperation() {
 
       // clone body by replace oldArgs to newVals
       f.getBody().cloneInto(&newFunc.getBody(), argBvm);
-      SmallVector<Operation *> ops;
-      for (auto &op : newFunc.getBody().back()) {
-        ops.push_back(&op);
-      }
 
-      for (auto op : ops) {
-        op->moveAfter(&newFunc.getBody().front().back());
-      }
-      newFunc.getBody().back().erase();
+      collapseFuncRegion(newFunc);
 
       // handle ReturnOp
       auto oldRet =
