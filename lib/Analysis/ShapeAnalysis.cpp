@@ -331,8 +331,21 @@ void ShapeValueAnalysis::visitOperation(
                                                       .cast<RankedTensorType>()
                                                       .getElementType());
 
-          auto resultAttr =
-              DenseElementsAttr::get(newType, denseInt.getType().getShape());
+          SmallVector<APInt> newDenseInt;
+          uint32_t width;
+          auto elemType = newType.getElementType();
+          if (elemType.isIntOrFloat()) {
+            width = elemType.getIntOrFloatBitWidth();
+          } else {
+            assert(elemType.isa<IndexType>());
+            width = IndexType::kInternalStorageBitWidth;
+          }
+
+          for (auto i : denseInt.getValues<APInt>()) {
+            newDenseInt.push_back(APInt(width, i.getZExtValue()));
+          }
+
+          auto resultAttr = DenseElementsAttr::get(newType, newDenseInt);
 
           auto lattice = results[0];
           propagateIfChanged(lattice, lattice->join(ConstantValue(
