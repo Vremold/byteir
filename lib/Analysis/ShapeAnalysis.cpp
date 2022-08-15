@@ -7,6 +7,7 @@
 
 #include "byteir/Analysis/ShapeAnalysis.h"
 #include "mlir/Analysis/DataFlow/ConstantPropagationAnalysis.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "llvm/ADT/TypeSwitch.h"
@@ -319,6 +320,27 @@ void ShapeValueAnalysis::visitOperation(
                                                         nullptr);
         shapeLattices[0] = getOrCreate<ShapeLattice>(op->getOperand(0));
         visitOperation(op, operands, shapeLattices, results);
+      })
+      .Case<arith::IndexCastOp>([&](Operation *op) {
+        Attribute constAttr = operands[0]->getValue().getConstantValue();
+        if (auto denseInt =
+                constAttr.dyn_cast_or_null<DenseIntElementsAttr>()) {
+
+          auto newType = denseInt.getType().clone(cast<arith::IndexCastOp>(op)
+                                                      .getType()
+                                                      .cast<RankedTensorType>()
+                                                      .getElementType());
+
+          auto resultAttr =
+              DenseElementsAttr::get(newType, denseInt.getType().getShape());
+
+          auto lattice = results[0];
+          propagateIfChanged(lattice, lattice->join(ConstantValue(
+                                          resultAttr, op->getDialect())));
+
+        } else {
+          SparseConstantPropagation::visitOperation(op, operands, results);
+        }
       })
       .Default([&](Operation *op) {
         SparseConstantPropagation::visitOperation(op, operands, results);

@@ -109,3 +109,29 @@ func.func @torch_index_select(%arg0: tensor<10x128xf16>, %arg1: tensor<?xi32> {b
 // CHECK-LABEL: func.func @torch_index_select(%arg0: tensor<10x128xf16>, %arg1: tensor<?xi32, {byteir.bounded_shape = [10]}> {byteir.bounded_shape = [10]}) -> tensor<?x128xf16, {byteir.bounded_shape = [10, 128]}>
 // CHECK-NEXT:  %0 = "mhlo.torch_index_select"(%arg0, %arg1) {batch_dims = 0 : i64, dim = 0 : i64} : (tensor<10x128xf16>, tensor<?xi32, {byteir.bounded_shape = [10]}>) -> tensor<?x128xf16, {byteir.bounded_shape = [10, 128]}>
 // CHECK-NEXT:  return %0 : tensor<?x128xf16, {byteir.bounded_shape = [10, 128]}>
+
+func.func @index_cast(%arg0: tensor<?x30x32xf32> {byteir.bounded_shape = [30, 30, 32]}) -> tensor<?x30x32xf32> {
+  %c0 = arith.constant 0 : index
+  %c960 = arith.constant 960 : index
+  %0 = mhlo.constant dense<[-1, 30, 32]> : tensor<3xi32>
+  %1 = tensor.dim %arg0, %c0 : tensor<?x30x32xf32>
+  %2 = tensor.from_elements %1, %c960 : tensor<2xindex>
+  %3 = shape.num_elements %2 : tensor<2xindex> -> index
+  %4 = mhlo.compute_reshape_shape %3, %0 : index, tensor<3xi32> -> tensor<3xi32>
+  %5 = arith.index_cast %4 : tensor<3xi32> to tensor<3xindex>
+  %6 = "mhlo.dynamic_broadcast_in_dim"(%arg0, %5) {broadcast_dimensions = dense<[0, 1, 2]> : tensor<3xi64>} : (tensor<?x30x32xf32>, tensor<3xindex>) -> tensor<?x30x32xf32>
+  return %6 : tensor<?x30x32xf32>
+}
+//CHECK-LABEL: func.func @index_cast(%arg0: tensor<?x30x32xf32, {byteir.bounded_shape = [30, 30, 32]}> {byteir.bounded_shape = [30, 30, 32]}) -> tensor<?x30x32xf32, {byteir.bounded_shape = [30, 30, 32]}> {
+
+func.func @dynamic_reshape_case0(%arg0: tensor<32x32xf32>, %arg1: tensor<32xi32>, %arg2: tensor<32x30x32xf32>) -> tensor<?x30x32xf32> {
+  %c30720 = arith.constant 30720 : index
+  %cst = arith.constant dense<[1, 32, 30, 32]> : tensor<4xindex>
+  %0 = mhlo.constant dense<[-1, 30, 32]> : tensor<3xi32>
+  %1:2 = "mhlo.custom_call"(%arg0, %arg1) {api_version = 1 : i32, backend_config = "", byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "tf.DynamicPartition", called_computations = [], has_side_effect = false} : (tensor<32x32xf32>, tensor<32xi32>) -> (tensor<?x32xf32>, tensor<?x32xf32>)
+  %2 = "mhlo.dynamic_broadcast_in_dim"(%1#1, %cst) {broadcast_dimensions = dense<[1, 3]> : tensor<2xi64>} : (tensor<?x32xf32>, tensor<4xindex>) -> tensor<1x?x30x32xf32>
+  %3 = mhlo.compute_reshape_shape %c30720, %0 : index, tensor<3xi32> -> tensor<3xi32>
+  %4 = "mhlo.dynamic_reshape"(%2, %3) : (tensor<1x?x30x32xf32>, tensor<3xi32>) -> tensor<?x30x32xf32>
+  return %4 : tensor<?x30x32xf32>
+}
+//CHECK-LABEL: func.func @dynamic_reshape_case0(%arg0: tensor<32x32xf32>, %arg1: tensor<32xi32>, %arg2: tensor<32x30x32xf32>) -> tensor<?x30x32xf32, {byteir.bounded_shape = [32, 30, 32]}> {

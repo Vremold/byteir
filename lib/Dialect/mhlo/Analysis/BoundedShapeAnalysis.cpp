@@ -8,6 +8,7 @@
 #include "byteir/Dialect/mhlo/Analysis/BoundedShapeAnalysis.h"
 #include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
+#include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -65,6 +66,46 @@ void BoundedShapeValueAnalysis::visitOperation(
         assert(!shape->isUninitialized() && "operand must be initialized");
         ShapeValueLattice *lattice = results[0];
         Attribute attr = shape->getValue().getConstantValue();
+        // in some cases, the shape in computeReshapeShapeOp is dense<[-1, x,
+        // ....]>, we need calculate firstly
+        do {
+          auto denseInt = attr.dyn_cast_or_null<DenseIntElementsAttr>();
+          if (denseInt == nullptr) {
+            break;
+          }
+          auto dataType = denseInt.getElementType().dyn_cast<IntegerType>();
+          // is int32
+          if (dataType == nullptr || dataType.isUnsigned() ||
+              dataType.getWidth() != 32) {
+            break;
+          }
+          llvm::SmallVector<int32_t> shape =
+              llvm::to_vector(denseInt.getValues<int32_t>());
+          int cntDynamic = llvm::count_if(shape, [](int32_t dimSize) {
+            return dimSize == ShapedType::kDynamicSize;
+          });
+          if (cntDynamic == 1) {
+            const ShapeValueLattice *product = operands[0];
+            Attribute productAttr = product->getValue().getConstantValue();
+            if (auto num = productAttr.dyn_cast_or_null<IntegerAttr>()) {
+              int64_t number = num.getInt();
+              if (number < 0) {
+                break;
+              }
+              int32_t index = -1;
+              for (auto elem : llvm::enumerate(shape)) {
+                if (ShapedType::isDynamic(elem.value())) {
+                  index = elem.index();
+                } else {
+                  number /= elem.value();
+                }
+              }
+              shape[index] = number;
+              attr = DenseIntElementsAttr::get(denseInt.getType(), shape);
+            }
+          }
+        } while (0);
+
         LLVM_DEBUG(llvm::dbgs() << "Folded to constant: " << attr << "\n");
         propagateIfChanged(lattice, lattice->join(mlir::dataflow::ConstantValue(
                                         attr, op->getDialect())));
