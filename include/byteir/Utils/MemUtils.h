@@ -39,7 +39,6 @@ llvm::Optional<int64_t> getByteShiftFromAllocOrArgument(Value val);
 // cannot be computed statically, e.g. if the type has a dynamic shape or if its
 // elemental type does not have a known bit width.
 llvm::Optional<int64_t> getSizeInBits(MemRefType t);
-llvm::Optional<int64_t> getSizeInBytes(MemRefType t);
 
 // Returns whether a value of MemRefType is static. It requires the shape,
 // stride and offset are all static value.

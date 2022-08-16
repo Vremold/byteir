@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_TRANSFORMS_INSERTSHAPECONSTRAINT_H
-#define BYTEIR_TRANSFORMS_INSERTSHAPECONSTRAINT_H
+#ifndef BYTEIR_DIALECT_MHLO_TRANSFORMS_INSERTSHAPECONSTRAINT_H
+#define BYTEIR_DIALECT_MHLO_TRANSFORMS_INSERTSHAPECONSTRAINT_H
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
@@ -21,4 +21,4 @@ std::unique_ptr<OperationPass<func::FuncOp>> createInsertShapeConstraintPass();
 
 } // namespace mlir
 
-#endif // BYTEIR_TRANSFORMS_INSERTSHAPECONSTRAINT_H
+#endif // BYTEIR_DIALECT_MHLO_TRANSFORMS_INSERTSHAPECONSTRAINT_H

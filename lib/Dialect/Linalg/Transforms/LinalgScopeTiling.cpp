@@ -52,7 +52,7 @@ struct DimProperty {
 
   DimProperty() : dim(-1), performedReduce(false) {}
 
-  DimProperty(int dim_, bool reduced) : dim(dim_), performedReduce(reduced) {}
+  DimProperty(int d, bool reduced) : dim(d), performedReduce(reduced) {}
 };
 
 // creat a single range

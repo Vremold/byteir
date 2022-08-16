@@ -54,7 +54,7 @@ struct ConvertReshape : public OpRewritePattern<lmhlo::ReshapeOp> {
         rewriter.create<memref::AllocOp>(op.getLoc(), shapeMetaMemRefType);
     auto const_op = rewriter.create<lmhlo::ConstantOp>(
         op.getLoc(),
-        GetI64ElementsAttr(output_shape, output_shape.size(), &rewriter),
+        getI64ElementsAttr(output_shape, output_shape.size(), &rewriter),
         shape_allocOp.getResult());
 
     auto newMemRefType = MemRefType::get(

@@ -88,7 +88,7 @@ gpu::GPUFuncOp mlir::cloneFuncToGPUFunc(OpBuilder &builder, func::FuncOp func,
   Block &funcEntryBlock = funcBody.front();
   // perform AliasAnalysis
   AliasAnalysis aliasAnalysis(&funcEntryBlock, initialVals, isAliasOp);
-  aliasAnalysis.RunOnBlock();
+  aliasAnalysis.runOnBlock();
 
   args.insert(args.end(), func.getArguments().begin(),
               func.getArguments().end());
@@ -104,7 +104,7 @@ gpu::GPUFuncOp mlir::cloneFuncToGPUFunc(OpBuilder &builder, func::FuncOp func,
   SmallDenseMap<int, int> uniqueIndexMap;
   int offset = func.getNumArguments();
   for (auto retVal : ret->getOperands()) {
-    auto leader = aliasAnalysis.GetLeaderIndex(retVal);
+    auto leader = aliasAnalysis.getLeaderIndex(retVal);
 
     auto leaderVal = aliasAnalysis.values[leader];
     // check if leaderVal is from a new alloc

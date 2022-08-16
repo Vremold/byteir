@@ -24,7 +24,7 @@ using namespace llvm;
 using namespace mlir;
 using namespace mlir::memref;
 
-void mlir::ReplicateDefiningOp(Block *block,
+void mlir::replicateDefiningOp(Block *block,
                                std::function<bool(Operation *)> checkFunc) {
   if (block->empty())
     return;
@@ -40,7 +40,7 @@ void mlir::ReplicateDefiningOp(Block *block,
       auto val = op.getOperand(i);
       auto opDef = val.getDefiningOp();
       if (opDef != nullptr && checkFunc(opDef)) {
-        auto maybeIdx = FindResultIndex(opDef, val);
+        auto maybeIdx = findResultIndex(opDef, val);
         replaceOps.emplace_back(&op, i, maybeIdx.getValue());
       }
     }
@@ -50,11 +50,11 @@ void mlir::ReplicateDefiningOp(Block *block,
     auto op = std::get<0>(t);
     auto opId = std::get<1>(t);
     auto resId = std::get<2>(t);
-    (void)ReplicateDefiningOp(builder, op, opId, resId);
+    (void)replicateDefiningOp(builder, op, opId, resId);
   }
 }
 
-Operation *mlir::ReplicateDefiningOp(OpBuilder &b, Operation *op,
+Operation *mlir::replicateDefiningOp(OpBuilder &b, Operation *op,
                                      unsigned opIdx, unsigned resIdx) {
   if (op == nullptr)
     return nullptr;

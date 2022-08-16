@@ -28,12 +28,6 @@ class DynamicBroadcastInDimOp;
 // So this file only includes patterns, not a pass.
 
 ///
-///  Transpose
-///
-LogicalResult EliminateSplatConstantTranspose(mhlo::TransposeOp op,
-                                              PatternRewriter &rewriter);
-
-///
 ///  BroadcastInDim
 ///
 /// BroadcastInDim could be folded in some special cases. Ex.
@@ -43,13 +37,13 @@ LogicalResult EliminateSplatConstantTranspose(mhlo::TransposeOp op,
 ///   broadcast_in_dim  const
 ///       \              /
 ///             mul
-LogicalResult FoldBroadcastInDim(BroadcastInDimOp op,
+LogicalResult foldBroadcastInDim(BroadcastInDimOp op,
                                  PatternRewriter &rewriter);
 
 ///
 ///  Fold concatenate of continuous slices
 ///
-LogicalResult FoldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
+LogicalResult foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
                                              PatternRewriter &rewriter);
 // fold the pattern like this
 // const0 = [4]
@@ -62,12 +56,12 @@ LogicalResult FoldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
 // note the shape of c is [...., 4], ... means any, include dynamic shape
 //
 // generally, when const0 = c.shape[any:], this pattern would fold successfully
-LogicalResult FoldShapeBroadcast(shape::BroadcastOp op,
+LogicalResult foldShapeBroadcast(shape::BroadcastOp op,
                                  PatternRewriter &rewriter);
 
 // fold binary op with large constant op
 template <typename Op, template <typename> typename Func>
-LogicalResult FoldLargeBinaryOp(Op op, PatternRewriter &rewriter);
+LogicalResult foldLargeBinaryOp(Op op, PatternRewriter &rewriter);
 
 // Get all canoncializationExt on top of canoncialization
 void getCanonicalizationExtPatterns(RewritePatternSet &results,

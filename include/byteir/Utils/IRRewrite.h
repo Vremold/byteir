@@ -25,12 +25,12 @@ class ShapedType;
 class TypeRange;
 
 // replicate specific ops satisfying func
-void ReplicateDefiningOp(Block *block,
+void replicateDefiningOp(Block *block,
                          std::function<bool(Operation *)> checkFunc);
 
 // replicate op's opIdx-th DefinitingOp
 // and set op's opIdx-th operand as cloned's resIdx-th result.
-Operation *ReplicateDefiningOp(OpBuilder &b, Operation *op, unsigned opIdx,
+Operation *replicateDefiningOp(OpBuilder &b, Operation *op, unsigned opIdx,
                                unsigned resIdx);
 
 // clone a new op and force to replace its result types without doing type

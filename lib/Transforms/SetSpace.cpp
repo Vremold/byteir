@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/SetSpace.h"
-#include "./PassDetail.h"
 #include "byteir/Analysis/SideEffect.h"
 #include "byteir/Utils/MemUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -17,6 +16,8 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include <utility>
+
+#include "./PassDetail.h"
 
 #define DEBUG_TYPE "set-space-passes"
 #define SPACE_ATTR_NAME "device"

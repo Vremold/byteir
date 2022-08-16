@@ -40,8 +40,7 @@ struct TestPrintArgSideEffectPass
           os << "Testing " << op.getName() << ":\n";
           for (unsigned i = 0; i < op.getNumOperands(); ++i) {
             auto argSETy = analysis.getType(&op, i);
-            os << "arg " << i << " ArgSideEffectType: " << to_str(argSETy)
-               << "\n";
+            os << "arg " << i << " ArgSideEffectType: " << str(argSETy) << "\n";
           }
         }
       }

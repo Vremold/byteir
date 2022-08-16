@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/InsertShapeConstraint.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/ShapeConstraints/Register.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
@@ -16,6 +15,8 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Pass/Pass.h"
 #include <vector>
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

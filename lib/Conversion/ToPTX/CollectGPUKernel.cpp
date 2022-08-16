@@ -5,7 +5,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "../PassDetail.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
@@ -14,7 +13,8 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/SymbolTable.h"
 #include "llvm/ADT/SmallVector.h"
-#include <iostream>
+
+#include "../PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::byre;

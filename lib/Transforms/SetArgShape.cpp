@@ -6,12 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/SetArgShape.h"
-#include "./PassDetail.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include <vector>
+
+#include "./PassDetail.h"
 
 #define DEBUG_TYPE "set-arg-shape-pass"
 
@@ -21,10 +22,10 @@ namespace {
 
 struct SetArgShapePass : public SetArgShapeBase<SetArgShapePass> {
 
-  explicit SetArgShapePass() = default;
+  SetArgShapePass() = default;
 
-  explicit SetArgShapePass(int dim, int size, std::string entryFuncName,
-                           std::string argAttrName)
+  SetArgShapePass(int dim, int size, std::string entryFuncName,
+                  std::string argAttrName)
       : SetArgShapeBase<SetArgShapePass>::SetArgShapeBase() {
     this->dim = dim;
     this->size = size;
@@ -32,8 +33,8 @@ struct SetArgShapePass : public SetArgShapeBase<SetArgShapePass> {
     this->argAttrName = argAttrName;
   }
 
-  explicit SetArgShapePass(int dim, int size, std::string entryFuncName,
-                           std::function<bool(BlockArgument)> shouldSetShape)
+  SetArgShapePass(int dim, int size, std::string entryFuncName,
+                  std::function<bool(BlockArgument)> shouldSetShape)
       : SetArgShapeBase<SetArgShapePass>::SetArgShapeBase() {
     this->dim = dim;
     this->size = size;

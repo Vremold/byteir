@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/GraphClusteringByDevice.h"
-#include "PassDetail.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
@@ -16,6 +15,8 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
+
+#include "PassDetail.h"
 
 using namespace mlir;
 using namespace llvm;
@@ -80,8 +81,8 @@ getFunctionMetadatas(func::FuncOp funcOp, StringRef attrName,
         hostFuncMetadata.ops.push_back(&op);
       }
     }
-    hostFuncMetadata.inputs = GetInputsOfCluster(hostFuncMetadata.ops);
-    hostFuncMetadata.results = GetOutputsOfCluster(hostFuncMetadata.ops);
+    hostFuncMetadata.inputs = getInputsOfCluster(hostFuncMetadata.ops);
+    hostFuncMetadata.results = getOutputsOfCluster(hostFuncMetadata.ops);
     metadatas.push_back(hostFuncMetadata);
   }
 
@@ -96,8 +97,8 @@ getFunctionMetadatas(func::FuncOp funcOp, StringRef attrName,
     }
   }
   if (deviceFuncMetadata.ops.size() > 0) {
-    deviceFuncMetadata.inputs = GetInputsOfCluster(deviceFuncMetadata.ops);
-    deviceFuncMetadata.results = GetOutputsOfCluster(deviceFuncMetadata.ops);
+    deviceFuncMetadata.inputs = getInputsOfCluster(deviceFuncMetadata.ops);
+    deviceFuncMetadata.results = getOutputsOfCluster(deviceFuncMetadata.ops);
     metadatas.push_back(deviceFuncMetadata);
   }
 
@@ -215,9 +216,9 @@ void GraphClusteringByDevicePass::runOnOperation() {
   for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
     for (auto &block : funcOp.getBlocks()) {
       if (dupNonSplat)
-        ReplicateDefiningOp(&block, isMhloConstantLike);
+        replicateDefiningOp(&block, isMhloConstantLike);
       else
-        ReplicateDefiningOp(&block, isSplatMhloConstantLike);
+        replicateDefiningOp(&block, isSplatMhloConstantLike);
     }
     originalFuncs.push_back(funcOp);
   }

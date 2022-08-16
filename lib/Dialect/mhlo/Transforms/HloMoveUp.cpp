@@ -5,10 +5,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "PassDetail.h"
+#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
+
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
-#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
 #include "byteir/Dialect/mhlo/Transforms/MoveCommon.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/AttrUtils.h"
@@ -20,6 +20,8 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/DenseSet.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -50,7 +52,7 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
     // 1) op.getOperand() is an argument
     // 2) op.getOperand() has another user
     // 3) defOp is in the blockers
-    if (defOp == nullptr || UseCount(op.getOperand()) > 1 ||
+    if (defOp == nullptr || useCount(op.getOperand()) > 1 ||
         blockers.contains(defOp->getName().getStringRef())) {
       return failure();
     }
@@ -131,7 +133,7 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
     // 1) op.getOperand() is an argument
     // 2) op.getOperand() has another user
     // 3) defOp is in the blockers
-    if (defOp == nullptr || UseCount(op.getOperand()) > 1 ||
+    if (defOp == nullptr || useCount(op.getOperand()) > 1 ||
         blockers.contains(defOp->getName().getStringRef())) {
       return failure();
     }

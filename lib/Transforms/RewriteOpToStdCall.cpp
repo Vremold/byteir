@@ -6,8 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/RewriteOpToStdCall.h"
-#include "./PassDetail.h"
-
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -16,6 +14,8 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 
@@ -47,14 +47,13 @@ getLibraryCallSymbolRef(Operation *op, PatternRewriter &rewriter,
 }
 
 struct RewriteOpToStdCallPattern : public RewritePattern {
-  RewriteOpToStdCallPattern(MLIRContext *context, const CallTable &_callTable)
-      : RewritePattern(MatchAnyOpTypeTag(), 3, context), callTable(_callTable) {
-  }
+  RewriteOpToStdCallPattern(MLIRContext *context, const CallMapTable &lut)
+      : RewritePattern(MatchAnyOpTypeTag(), 3, context), callMapTable(lut) {}
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const override {
     std::string opName = op->getName().getStringRef().str();
-    auto iter = callTable.find(opName);
-    if (iter != callTable.end()) {
+    auto iter = callMapTable.find(opName);
+    if (iter != callMapTable.end()) {
       FlatSymbolRefAttr libraryCallName =
           getLibraryCallSymbolRef(op, rewriter, iter->second);
       rewriter.replaceOpWithNewOp<func::CallOp>(op, libraryCallName.getValue(),
@@ -63,25 +62,27 @@ struct RewriteOpToStdCallPattern : public RewritePattern {
     }
     return failure();
   }
-  const CallTable &callTable;
+  const CallMapTable &callMapTable;
 };
 
 struct RewriteOpToStdCallPass
     : public RewriteOpToStdCallBase<RewriteOpToStdCallPass> {
   RewriteOpToStdCallPass() = default;
-  RewriteOpToStdCallPass(CallTable _callTable) : _callTable(_callTable) {
+  RewriteOpToStdCallPass(CallMapTable lut) : callMapTable(lut) {
     this->callTable = {};
   }
   void runOnOperation() override {
+
+    // parse callTable into callMapTable
     if (this->callTable.size() != 0) {
       for (auto &table : this->callTable) {
         int semicolon = table.find(':');
-        this->_callTable[table.substr(0, semicolon)] =
+        this->callMapTable[table.substr(0, semicolon)] =
             table.substr(semicolon + 1);
       }
     }
 
-    if (this->_callTable.size() == 0) {
+    if (this->callMapTable.size() == 0) {
       return signalPassFailure();
     }
 
@@ -91,16 +92,16 @@ struct RewriteOpToStdCallPass
     target.addLegalOp<ModuleOp, func::FuncOp, func::ReturnOp>();
     RewritePatternSet patterns(&getContext());
     patterns.add<RewriteOpToStdCallPattern>(patterns.getContext(),
-                                            this->_callTable);
+                                            this->callMapTable);
     if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns)))) {
       signalPassFailure();
     }
   }
-  CallTable _callTable;
+  CallMapTable callMapTable;
 };
 } // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createRewriteOpToStdCallPass(CallTable callTable) {
+mlir::createRewriteOpToStdCallPass(CallMapTable callTable) {
   return std::make_unique<RewriteOpToStdCallPass>(callTable);
 }

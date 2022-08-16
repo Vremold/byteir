@@ -6,9 +6,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/CMAE.h"
-#include "PassDetail.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;

@@ -13,7 +13,7 @@
 namespace byteir {
 
 class DimFromBroadcast : public ComputeFlag {
-  llvm::SmallVector<bool> Compute(mlir::Value v) override;
+  llvm::SmallVector<bool> compute(mlir::Value v) override;
 };
 } // namespace byteir
 

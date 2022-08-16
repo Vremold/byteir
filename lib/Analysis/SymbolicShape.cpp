@@ -37,13 +37,13 @@ Value getArgIfIsAValueAsShapeOp(Value v) {
 } // namespace
 
 SymbolicShapeAnalysis::SymbolicShapeAnalysis(ModuleOp moduleOp)
-    : moduleOp_(moduleOp) {
+    : moduleOp(moduleOp) {
   SmallVector<func::FuncOp> funcOps;
-  for (auto funcOp : moduleOp_.getOps<func::FuncOp>()) {
+  for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
     funcOps.push_back(funcOp);
   }
 
-  SymbolTable symbolTable = SymbolTable(moduleOp_);
+  SymbolTable symbolTable = SymbolTable(moduleOp);
   SmallVector<func::FuncOp> shpFuncOps;
 
   for (auto funcOp : funcOps) {
@@ -103,12 +103,12 @@ SymbolicShapeAnalysis::SymbolicShapeAnalysis(ModuleOp moduleOp)
     allResults.append(valResults);
     builder.create<func::ReturnOp>(builder.getUnknownLoc(), allResults);
 
-    originalFuncToAuxiliary_[funcOp] = shpFuncOp;
+    originalFuncToAuxiliary[funcOp] = shpFuncOp;
     constructSymbolicShapeTable(funcOp, shpFuncOp);
   }
 
   // run shape reification pass on all the auxiliary functions
-  PassManager pm(moduleOp_->getContext(), func::FuncOp::getOperationName());
+  PassManager pm(moduleOp->getContext(), func::FuncOp::getOperationName());
   pm.addPass(createByteIRShapeReificationPass());
   pm.addPass(createCSEPass());
   for (auto funcOp : shpFuncOps) {
@@ -119,8 +119,8 @@ SymbolicShapeAnalysis::SymbolicShapeAnalysis(ModuleOp moduleOp)
 }
 
 SymbolicShapeAnalysis::~SymbolicShapeAnalysis() {
-  SymbolTable symbolTable = SymbolTable(moduleOp_);
-  for (auto it : originalFuncToAuxiliary_) {
+  SymbolTable symbolTable = SymbolTable(moduleOp);
+  for (auto it : originalFuncToAuxiliary) {
     func::FuncOp auxiliaryFunc = it.second;
     symbolTable.erase(auxiliaryFunc);
   }
@@ -133,15 +133,15 @@ void SymbolicShapeAnalysis::constructSymbolicShapeTable(
   int cnt = 0;
   for (auto &op : originalFunc.getBody().front().without_terminator()) {
     for (Value v : op.getResults()) {
-      symbolisShapeTable_[v] = &terminator->getOpOperand(cnt);
+      symbolicShapeTable[v] = &terminator->getOpOperand(cnt);
       cnt++;
     }
   }
 }
 
 Value SymbolicShapeAnalysis::getSymbolicShape(Value v) {
-  auto iter = symbolisShapeTable_.find(v);
-  if (iter == symbolisShapeTable_.end()) {
+  auto iter = symbolicShapeTable.find(v);
+  if (iter == symbolicShapeTable.end()) {
     errs() << "Input is not a valid Value in the original functions, get: " << v
            << "\n";
     return {};
@@ -195,7 +195,7 @@ llvm::DenseMap<Value, llvm::DenseSet<Value>>
 SymbolicShapeAnalysis::constructSymbolicExprSourcesTable() {
   llvm::DenseMap<Value, llvm::DenseSet<Value>> result;
 
-  for (auto it : originalFuncToAuxiliary_) {
+  for (auto it : originalFuncToAuxiliary) {
     func::FuncOp originalFunc = it.first;
     func::FuncOp auxiliaryFunc = it.second;
     llvm::DenseMap<Value, Value> auxiValToOrigin;
@@ -234,7 +234,7 @@ SymbolicShapeAnalysis::constructSymbolicExprSourcesTable() {
 
 void SymbolicShapeAnalysis::dump(raw_ostream &os) {
   SmallVector<func::FuncOp> originalFuncOps;
-  for (auto funcOp : moduleOp_.getOps<func::FuncOp>()) {
+  for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
     if (!funcOp->hasAttr(getSymbolicShapeFuncAttrName()))
       originalFuncOps.push_back(funcOp);
   }
@@ -243,7 +243,7 @@ void SymbolicShapeAnalysis::dump(raw_ostream &os) {
       constructSymbolicExprSourcesTable();
 
   for (auto originalFunc : originalFuncOps) {
-    func::FuncOp auxiliaryFunc = originalFuncToAuxiliary_[originalFunc];
+    func::FuncOp auxiliaryFunc = originalFuncToAuxiliary[originalFunc];
 
     os << "============= auxiliary shape function for @"
        << originalFunc.getSymName() << " =============\n";

@@ -49,7 +49,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
         // handle pad of constant
         auto paddingValDefOp = pad.padding_value().getDefiningOp();
         if (isSplatMhloConstant(paddingValDefOp)) {
-          auto cloned = ReplicateDefiningOp(rewriter, pad, 1, 0);
+          auto cloned = replicateDefiningOp(rewriter, pad, 1, 0);
           pattern.push_back(cloned);
         }
 
@@ -64,7 +64,7 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     for (auto val : op.init_values()) {
       auto initialDefOp = val.getDefiningOp();
       if (isSplatMhloConstant(initialDefOp)) {
-        auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
+        auto cloned = replicateDefiningOp(rewriter, op, idx, 0);
         pattern.push_back(cloned);
       }
       idx++;

@@ -7,11 +7,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/CollectFunc.h"
-#include "./PassDetail.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

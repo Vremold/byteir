@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/CondCanonicalize.h"
-#include "./PassDetail.h"
 #include "byteir/Utils/LoopUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
@@ -16,6 +15,8 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::arith;

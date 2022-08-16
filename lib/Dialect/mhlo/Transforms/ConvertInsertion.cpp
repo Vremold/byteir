@@ -6,11 +6,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/ConvertInsertion.h"
-#include "PassDetail.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "llvm/ADT/StringRef.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;

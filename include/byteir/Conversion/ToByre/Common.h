@@ -25,16 +25,15 @@ public:
   ConvertToByrePattern(MLIRContext *ctx,
                        const llvm::DenseMap<StringRef, StringRef> &lut,
                        bool appendTypes)
-      : OpConversionPattern<SrcOpTy>(ctx), src_to_callee_(lut),
+      : OpConversionPattern<SrcOpTy>(ctx), srcToCallee(lut),
         appendArgTypes(appendTypes) {}
 
   LogicalResult
   matchAndRewrite(SrcOpTy op, typename SrcOpTy::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
 
-    auto found =
-        src_to_callee_.find(op.getOperation()->getName().getStringRef());
-    if (found == src_to_callee_.end()) {
+    auto found = srcToCallee.find(op.getOperation()->getName().getStringRef());
+    if (found == srcToCallee.end()) {
       // TODO adding more error message
       return failure();
     }
@@ -49,7 +48,7 @@ public:
   }
 
 protected:
-  const llvm::DenseMap<StringRef, StringRef> &src_to_callee_;
+  const llvm::DenseMap<StringRef, StringRef> &srcToCallee;
   bool appendArgTypes;
 };
 
@@ -59,16 +58,15 @@ public:
   ConvertToByrePatternWithAllAttrs(
       MLIRContext *ctx, const llvm::DenseMap<StringRef, StringRef> &lut,
       bool appendTypes)
-      : OpConversionPattern<SrcOpTy>(ctx), src_to_callee_(lut),
+      : OpConversionPattern<SrcOpTy>(ctx), srcToCallee(lut),
         appendArgTypes(appendTypes) {}
 
   LogicalResult
   matchAndRewrite(SrcOpTy op, typename SrcOpTy::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
 
-    auto found =
-        src_to_callee_.find(op.getOperation()->getName().getStringRef());
-    if (found == src_to_callee_.end()) {
+    auto found = srcToCallee.find(op.getOperation()->getName().getStringRef());
+    if (found == srcToCallee.end()) {
       // TODO adding more error message
       return failure();
     }
@@ -77,12 +75,12 @@ public:
 
     auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
         op, key, adaptor.getOperands());
-    AddAttrs(compute_op.getOperation(), op->getAttrs());
+    addAttrs(compute_op.getOperation(), op->getAttrs());
     return success();
   }
 
 protected:
-  const llvm::DenseMap<StringRef, StringRef> &src_to_callee_;
+  const llvm::DenseMap<StringRef, StringRef> &srcToCallee;
   bool appendArgTypes;
 };
 

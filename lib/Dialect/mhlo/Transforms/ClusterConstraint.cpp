@@ -45,7 +45,7 @@ static inline mhlo::FusionOp fuseWithConstantArgs(Operation *op,
   MhloFusionPattern pattern;
   // clone each constant arg since they might be shared with another operation
   for (auto &i : constArgs) {
-    auto cloned = ReplicateDefiningOp(rewriter, op, i, 0);
+    auto cloned = replicateDefiningOp(rewriter, op, i, 0);
     pattern.push_back(cloned);
   }
   pattern.push_back(op);

@@ -20,12 +20,9 @@ limitations under the License.
 //
 //===----------------------------------------------------------------------===//
 
-#include <list>
-
-#include "./PassDetail.h"
+#include "byteir/Transforms/MemoryPlanning.h"
 #include "byteir/Analysis/Liveness.h"
 #include "byteir/Analysis/UseRange.h"
-#include "byteir/Transforms/MemoryPlanning.h"
 #include "mlir/Analysis/BufferViewFlowAnalysis.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
@@ -33,6 +30,9 @@ limitations under the License.
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/Pass/Pass.h"
+#include <list>
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace byteir;

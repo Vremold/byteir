@@ -18,63 +18,63 @@
 namespace byteir {
 
 struct AliasAnalysis {
-  AliasAnalysis(mlir::Block *b, llvm::ArrayRef<mlir::Value> initial_copy,
-                std::function<bool(mlir::Operation &op)> is_alias)
-      : block(b), values(initial_copy.begin(), initial_copy.end()),
-        is_alias(is_alias) {
+  AliasAnalysis(mlir::Block *b, llvm::ArrayRef<mlir::Value> initials,
+                std::function<bool(mlir::Operation &op)> checkAlias)
+      : block(b), values(initials.begin(), initials.end()),
+        isAlias(checkAlias) {
     int cnt = values.size();
     for (int i = 0; i < cnt; ++i) {
       mlir::Value val = values[i];
-      if (value_to_index.count(val) == 0) {
-        value_to_index[val] = i;
-        leader_to_index.insert(i);
+      if (valueToIndex.count(val) == 0) {
+        valueToIndex[val] = i;
+        leaderToIndex.insert(i);
       }
     }
   }
 
   virtual ~AliasAnalysis() {}
 
-  virtual int GetOrCreateIndex(mlir::Value val) {
-    if (value_to_index.count(val) == 0) {
+  virtual int getOrCreateIndex(mlir::Value val) {
+    if (valueToIndex.count(val) == 0) {
       int count = values.size();
-      value_to_index[val] = count;
+      valueToIndex[val] = count;
       values.push_back(val);
-      leader_to_index.insert(count);
+      leaderToIndex.insert(count);
     }
-    return value_to_index[val];
+    return valueToIndex[val];
   }
 
-  // default RunOnBlock
+  // default runOnBlock
   // check x = op(y)
-  virtual void RunOnBlock() {
+  virtual void runOnBlock() {
     if (block->empty())
       return;
 
     for (auto &op : block->without_terminator()) {
-      if (is_alias(op)) {
-        int newId = GetOrCreateIndex(op.getResult(0));
-        int newLeader = leader_to_index.getLeaderValue(newId);
-        int oldId = GetOrCreateIndex(op.getOperand(0));
-        int oldLeader = leader_to_index.getLeaderValue(oldId);
+      if (isAlias(op)) {
+        int newId = getOrCreateIndex(op.getResult(0));
+        int newLeader = leaderToIndex.getLeaderValue(newId);
+        int oldId = getOrCreateIndex(op.getOperand(0));
+        int oldLeader = leaderToIndex.getLeaderValue(oldId);
         if (newLeader <= oldLeader) {
-          leader_to_index.unionSets(newLeader, oldLeader);
+          leaderToIndex.unionSets(newLeader, oldLeader);
         } else {
-          leader_to_index.unionSets(oldLeader, newLeader);
+          leaderToIndex.unionSets(oldLeader, newLeader);
         }
       }
     }
   }
 
-  int GetLeaderIndex(mlir::Value val) {
-    return leader_to_index.getLeaderValue(value_to_index[val]);
+  int getLeaderIndex(mlir::Value val) {
+    return leaderToIndex.getLeaderValue(valueToIndex[val]);
   }
 
   mlir::Block *block; // a reference
   llvm::SmallVector<mlir::Value> values;
-  std::function<bool(mlir::Operation &op)> is_alias;
+  std::function<bool(mlir::Operation &op)> isAlias;
 
-  llvm::SmallDenseMap<mlir::Value, int> value_to_index;
-  llvm::EquivalenceClasses<int> leader_to_index;
+  llvm::SmallDenseMap<mlir::Value, int> valueToIndex;
+  llvm::EquivalenceClasses<int> leaderToIndex;
 };
 
 } // namespace byteir

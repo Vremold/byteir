@@ -6,12 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/GenericDeviceConfig.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "llvm/ADT/SmallVector.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::byre;
@@ -19,7 +20,7 @@ using namespace llvm;
 
 namespace {
 
-static void AddGenericFuncAttrs(func::FuncOp func,
+static void addGenericFuncAttrs(func::FuncOp func,
                                 const std::string &computeName) {
   mlir::OpBuilder opBuilder(func);
 
@@ -63,7 +64,7 @@ struct GenericDeviceConfigPass
       return;
     }
 
-    AddGenericFuncAttrs(f, computeName);
+    addGenericFuncAttrs(f, computeName);
   }
 };
 

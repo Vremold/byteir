@@ -23,38 +23,38 @@ using namespace mlir::byre;
 namespace {
 
 struct ByreAliasAnalysis : public AliasAnalysis {
-  ByreAliasAnalysis(mlir::Block *b, llvm::ArrayRef<mlir::Value> initial_copy,
-                    std::function<bool(mlir::Operation &op)> is_alias)
-      : AliasAnalysis(b, initial_copy, is_alias) {
+  ByreAliasAnalysis(mlir::Block *b, llvm::ArrayRef<mlir::Value> initials,
+                    std::function<bool(mlir::Operation &op)> checkAlias)
+      : AliasAnalysis(b, initials, checkAlias) {
     offsets.resize(values.size(), 0);
   }
 
-  int GetOrCreateIndex(mlir::Value val) override {
-    if (value_to_index.count(val) == 0) {
+  int getOrCreateIndex(mlir::Value val) override {
+    if (valueToIndex.count(val) == 0) {
       int count = values.size();
-      value_to_index[val] = count;
+      valueToIndex[val] = count;
       values.push_back(val);
-      leader_to_index.insert(count);
+      leaderToIndex.insert(count);
       offsets.push_back(0);
     }
-    return value_to_index[val];
+    return valueToIndex[val];
   }
 
-  void RunOnBlock() override {
+  void runOnBlock() override {
     if (block->empty())
       return;
 
     for (auto &op : block->without_terminator()) {
-      if (is_alias(op)) {
-        int in_idx = GetOrCreateIndex(op.getOperand(0));
-        int in_leader = leader_to_index.getLeaderValue(in_idx);
-        int out_idx = GetOrCreateIndex(op.getOperand(1));
-        int out_leader = leader_to_index.getLeaderValue(out_idx);
+      if (isAlias(op)) {
+        int in_idx = getOrCreateIndex(op.getOperand(0));
+        int in_leader = leaderToIndex.getLeaderValue(in_idx);
+        int out_idx = getOrCreateIndex(op.getOperand(1));
+        int out_leader = leaderToIndex.getLeaderValue(out_idx);
 
         if (in_leader <= out_idx) {
-          leader_to_index.unionSets(in_leader, out_leader);
+          leaderToIndex.unionSets(in_leader, out_leader);
         } else {
-          leader_to_index.unionSets(out_leader, in_leader);
+          leaderToIndex.unionSets(out_leader, in_leader);
         }
 
         int in_offset = offsets[in_idx];
@@ -69,38 +69,38 @@ struct ByreAliasAnalysis : public AliasAnalysis {
   SmallVector<int> offsets;
 };
 
-bool IsAliasOp(Operation &op) {
+static bool isAliasOp(Operation &op) {
   if (auto compute_op = dyn_cast<byre::ComputeOp>(op)) {
     return compute_op.getCallee() == "AliasOp";
   }
   return false;
 };
 
-void FoldAlias(func::FuncOp func) {
+static void foldAlias(func::FuncOp func) {
   auto ctx = func.getContext();
-  // use all args as initial_copy for alias
+  // use all args as initials for alias
   SmallVector<Value> initial_copy;
   for (auto val : func.getArguments()) {
     initial_copy.push_back(val);
   }
 
   auto &func_block = func.getBody().front();
-  ByreAliasAnalysis byre_alias(&func_block, initial_copy, IsAliasOp);
-  byre_alias.RunOnBlock();
+  ByreAliasAnalysis byre_alias(&func_block, initial_copy, isAliasOp);
+  byre_alias.runOnBlock();
 
   SmallVector<ComputeOp> remove_ops;
 
   for (auto compute_op : func.getOps<ComputeOp>()) {
     if (compute_op.getCallee() == "AliasOp") {
       auto in_val = compute_op.getOperand(0);
-      int in_idx = byre_alias.GetOrCreateIndex(in_val);
+      int in_idx = byre_alias.getOrCreateIndex(in_val);
 
-      int leader_idx = byre_alias.leader_to_index.getLeaderValue(in_idx);
+      int leader_idx = byre_alias.leaderToIndex.getLeaderValue(in_idx);
       if (leader_idx != in_idx) {
         auto leader_val = byre_alias.values[leader_idx];
         // override operand and attr
         auto out_val = compute_op.getOperand(1);
-        int out_idx = byre_alias.GetOrCreateIndex(out_val);
+        int out_idx = byre_alias.getOrCreateIndex(out_val);
         auto offset = byre_alias.offsets[out_idx];
         compute_op.setOperand(0, leader_val);
         compute_op->setAttr(
@@ -144,7 +144,7 @@ struct ByreHoldPass : public ByreFoldBase<ByreHoldPass> {
 
   void runOnOperation() override {
     func::FuncOp func = getOperation();
-    FoldAlias(func);
+    foldAlias(func);
   }
 };
 } // namespace

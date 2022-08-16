@@ -6,9 +6,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/RemoveFuncBody.h"
-#include "./PassDetail.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Attributes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

@@ -5,7 +5,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "../PassDetail.h"
 #include "byteir/Analysis/Alias.h"
 #include "byteir/Conversion/ToByre/Common.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
@@ -26,6 +25,8 @@
 #include "llvm/ADT/SmallVector.h"
 #include <functional>
 
+#include "../PassDetail.h"
+
 using namespace byteir;
 using namespace mlir;
 using namespace mlir::arith;
@@ -36,7 +37,7 @@ using namespace llvm;
 
 namespace {
 
-bool IsAliasOp(Operation &op) {
+static bool isAliasOp(Operation &op) {
   return isa<memref::CollapseShapeOp, memref::ExpandShapeOp, memref::ReshapeOp>(
       op);
 };
@@ -44,7 +45,7 @@ bool IsAliasOp(Operation &op) {
 // support static for now
 // TODO extend it to support dynamic block/grid sizes
 // TODO unify CUDA/PTX into the same pass with compilation option
-static void AddFuncAttrs(func::FuncOp func) {
+static void addFuncAttrs(func::FuncOp func) {
   // handle elementwise fusion
   if (func->hasAttr(getByteIRElementwiseFusionAttrName())) {
     mlir::OpBuilder opBuilder(func);
@@ -75,19 +76,19 @@ static void AddFuncAttrs(func::FuncOp func) {
     // LWC: this is tentative when we are using GPU Kernel Outlining.
     // TODO: drop this when we are arrange our arg placement in our own gpu
     // codegen.
-    SmallVector<Value> initial_copy;
+    SmallVector<Value> initialCopy;
     for (auto val : func.getArguments()) {
-      initial_copy.push_back(val);
+      initialCopy.push_back(val);
     }
 
     func::ReturnOp ret = *func.getOps<func::ReturnOp>().begin();
     for (auto val : ret.getOperands()) {
-      initial_copy.push_back(val);
+      initialCopy.push_back(val);
     }
 
     auto &func_block = func.getBody().front();
-    AliasAnalysis memref_alias(&func_block, initial_copy, IsAliasOp);
-    memref_alias.RunOnBlock();
+    AliasAnalysis memref_alias(&func_block, initialCopy, isAliasOp);
+    memref_alias.runOnBlock();
 
     SmallVector<int32_t> offsets;
     SmallVector<int32_t> ranks;
@@ -95,7 +96,7 @@ static void AddFuncAttrs(func::FuncOp func) {
 
     for (unsigned i = 0; i < launchOp.getNumKernelOperands(); ++i) {
       auto val = launchOp.getKernelOperand(i);
-      int index = memref_alias.GetLeaderIndex(val);
+      int index = memref_alias.getLeaderIndex(val);
       offsets.push_back(index);
       visited.insert(index);
       if (auto memref_type = val.getType().dyn_cast<MemRefType>()) {
@@ -105,13 +106,13 @@ static void AddFuncAttrs(func::FuncOp func) {
 
     // handle unused alias args
     SmallVector<int32_t> unused_alias;
-    for (unsigned i = 0; i < initial_copy.size(); ++i) {
+    for (unsigned i = 0; i < initialCopy.size(); ++i) {
       // skip visisted
       if (visited.contains(i))
         continue;
 
-      auto val = initial_copy[i];
-      int index = memref_alias.GetLeaderIndex(val);
+      auto val = initialCopy[i];
+      int index = memref_alias.getLeaderIndex(val);
 
       unused_alias.push_back(i);
       unused_alias.push_back(index);
@@ -137,7 +138,7 @@ struct GenPTXConfigPass : public GenPTXConfigBase<GenPTXConfigPass> {
 
   void runOnOperation() override {
     func::FuncOp func = getOperation();
-    AddFuncAttrs(func);
+    addFuncAttrs(func);
   }
 };
 

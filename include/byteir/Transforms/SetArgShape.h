@@ -16,6 +16,7 @@ namespace mlir {
 class ModuleOp;
 
 std::unique_ptr<OperationPass<ModuleOp>> createSetArgShapePass();
+
 std::unique_ptr<OperationPass<ModuleOp>>
 createSetArgShapePass(int dim, int size, std::string entryFuncName,
                       std::string argAttrName);

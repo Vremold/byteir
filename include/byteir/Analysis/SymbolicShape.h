@@ -65,14 +65,14 @@ private:
       DenseMap<Value, DenseSet<Value>> &symbolicShapeFnCache,
       const DenseMap<Value, Value> &auxiValToOrigin);
 
-  ModuleOp moduleOp_;
-  DenseMap<func::FuncOp, func::FuncOp> originalFuncToAuxiliary_;
+  ModuleOp moduleOp;
+  DenseMap<func::FuncOp, func::FuncOp> originalFuncToAuxiliary;
 
   // A table mapping value in original function to symbolic shape in
   // corresponding auxiliary shape infer function. The symbolic shape is stored
   // as an pointer to an OpOperand of the terminator in case other intermediate
   // ops be modified after some passes.
-  DenseMap<Value, OpOperand *> symbolisShapeTable_;
+  DenseMap<Value, OpOperand *> symbolicShapeTable;
 };
 
 } // namespace mlir

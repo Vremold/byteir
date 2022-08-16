@@ -16,7 +16,7 @@ using namespace mlir;
 
 namespace {
 
-static void WrapUnregisteredOpWithOpaque(Operation *op) {
+static void wrapUnregisteredOpWithOpaque(Operation *op) {
   Block *block = op->getBlock();
   OpBuilder opBuilder(block, block->begin());
   opBuilder.setInsertionPoint(op);
@@ -48,7 +48,7 @@ struct ConvertUnregisteredToAcePass
     func::FuncOp funcOp = getOperation();
     funcOp.walk([&](mlir::Operation *op) {
       if (!op->getDialect()) {
-        WrapUnregisteredOpWithOpaque(op);
+        wrapUnregisteredOpWithOpaque(op);
       }
     });
   }

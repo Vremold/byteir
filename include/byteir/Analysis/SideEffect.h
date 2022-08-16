@@ -30,7 +30,7 @@ enum ArgSideEffectType : int {
 };
 
 // util to print
-std::string to_str(ArgSideEffectType argSETy);
+std::string str(ArgSideEffectType argSETy);
 
 // currently use registration-based only
 // later, we can iteration-based.

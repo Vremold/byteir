@@ -15,7 +15,7 @@ using namespace llvm;
 using namespace mlir;
 using namespace mlir::func;
 
-std::string byteir::to_str(ArgSideEffectType argSETy) {
+std::string byteir::str(ArgSideEffectType argSETy) {
   if (argSETy == ArgSideEffectType::kInput) {
     return "kInput";
   }

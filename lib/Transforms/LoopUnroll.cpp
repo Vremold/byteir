@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/LoopUnroll.h"
-#include "./PassDetail.h"
 #include "byteir/Utils/LoopUtils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/LoopUtils.h"
@@ -14,6 +13,8 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Utils/Utils.h"
+
+#include "./PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;

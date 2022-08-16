@@ -5,10 +5,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "PassDetail.h"
+#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
+
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
-#include "byteir/Dialect/mhlo/Transforms/HloMove.h"
 #include "byteir/Dialect/mhlo/Transforms/MoveCommon.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/AttrUtils.h"
@@ -20,8 +20,9 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/DenseSet.h"
-#include <iostream>
 #include <numeric>
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -49,7 +50,7 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
     auto operandType = op.getOperand().getType(); // T1 as Transpose: T1 -> T2
 
     // early termination if not allMultiUser nor multiUser but has multi users
-    if (!allMultiUser && !multiUser && UserCount(value) != 1) {
+    if (!allMultiUser && !multiUser && userCount(value) != 1) {
       return failure();
     }
 
@@ -159,7 +160,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
     auto operandType = op.getOperand().getType(); // T1 as Reshape: T1 -> T2
 
     // early termination if not allMultiUser nor multiUser but has multi users
-    if (!allMultiUser && !multiUser && UserCount(value) != 1) {
+    if (!allMultiUser && !multiUser && userCount(value) != 1) {
       return failure();
     }
 
@@ -270,7 +271,7 @@ struct BroadcastMoveDownPattern
         op.getOperand().getType(); // T1 as BroadcastInDim: T1 -> T2
 
     // early termination if not allMultiUser nor multiUser but has multi users
-    if (!allMultiUser && !multiUser && UserCount(value) != 1) {
+    if (!allMultiUser && !multiUser && userCount(value) != 1) {
       return failure();
     }
 
@@ -381,7 +382,7 @@ struct BroadcastBinaryMoveDownPattern
     auto value = op.getResult();
 
     // terminate if multi-users
-    if (UserCount(value) != 1) {
+    if (userCount(value) != 1) {
       return failure();
     }
 
@@ -464,7 +465,7 @@ struct BroadcastReshapeMoveDownPattern
     auto operandType = op.getOperand().getType();
 
     // terminate if multi-users
-    if (UserCount(value) != 1) {
+    if (userCount(value) != 1) {
       return failure();
     }
 
@@ -746,8 +747,9 @@ private:
         bvm.map(operand, new_broadcast_op.getResult());
       }
     }
-    auto new_producer = cloneAndReplaceResultTypes(
-        rewriter, user, bvm, slices[0]->getOperandTypes());
+
+    auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
+                                                  slices[0]->getOperandTypes());
     if (is_reshape_case) {
       auto oldOutputTy = slices[0]->getOperand(0).getType();
       Type dtype = oldOutputTy.cast<RankedTensorType>().getElementType();
@@ -758,17 +760,16 @@ private:
         newOutShape.push_back(oldOutShape[i]);
       }
       RankedTensorType newOutType = RankedTensorType::get(newOutShape, dtype);
-      new_producer =
-          cloneAndReplaceResultTypes(rewriter, user, bvm, newOutType);
+      newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm, newOutType);
     }
 
-    return new_producer;
+    return newProducer;
   }
 
   LogicalResult performFuseAndMoveDown(SmallVector<Operation *> &slices,
                                        SmallVector<Operation *> &slice_users,
                                        Value &binary_common_operand,
-                                       bool is_reshape_case,
+                                       bool isReshapeCase,
                                        PatternRewriter &rewriter) const {
     // step 1: insert Broadcast for common operand
     mhlo::BroadcastInDimOp new_broadcast_op;
@@ -778,8 +779,8 @@ private:
     }
 
     // step 2: create new fused user
-    auto new_producer = createFusedMovedUpOp(
-        slices, slice_users, is_reshape_case, new_broadcast_op, rewriter);
+    auto newProducer = createFusedMovedUpOp(slices, slice_users, isReshapeCase,
+                                            new_broadcast_op, rewriter);
 
     // step 3: perform move down
     for (size_t i = 0; i < slices.size(); i++) {
@@ -788,43 +789,41 @@ private:
       assert(slice);
       auto user = slice_users[i];
       // create slice op
-      if (is_reshape_case) {
-        llvm::SmallVector<int64_t> old_start_indices;
-        llvm::SmallVector<int64_t> old_end_indices;
-        llvm::SmallVector<int64_t> old_strides;
+      if (isReshapeCase) {
+        llvm::SmallVector<int64_t> oldStartIndices;
+        llvm::SmallVector<int64_t> oldEndIndices;
+        llvm::SmallVector<int64_t> oldStrides;
         getValuesFromDenseIntElementsAttr(slice.start_indices(),
-                                          old_start_indices);
-        getValuesFromDenseIntElementsAttr(slice.limit_indices(),
-                                          old_end_indices);
-        getValuesFromDenseIntElementsAttr(slice.strides(), old_strides);
+                                          oldStartIndices);
+        getValuesFromDenseIntElementsAttr(slice.limit_indices(), oldEndIndices);
+        getValuesFromDenseIntElementsAttr(slice.strides(), oldStrides);
         // squeeze 1st dim. See Line 674
-        llvm::SmallVector<int64_t> new_start_indices(
-            old_start_indices.begin() + 1, old_start_indices.end());
-        llvm::SmallVector<int64_t> new_end_indices(old_end_indices.begin() + 1,
-                                                   old_end_indices.end());
-        llvm::SmallVector<int64_t> new_strides(old_strides.begin() + 1,
-                                               old_strides.end());
+        llvm::SmallVector<int64_t> newStartIndices(oldStartIndices.begin() + 1,
+                                                   oldStartIndices.end());
+        llvm::SmallVector<int64_t> newEndIndices(oldEndIndices.begin() + 1,
+                                                 oldEndIndices.end());
+        llvm::SmallVector<int64_t> newStrides(oldStrides.begin() + 1,
+                                              oldStrides.end());
         mlir::Type int64ElementType = rewriter.getI64Type();
-        DenseIntElementsAttr start_attr = DenseIntElementsAttr::get(
+        DenseIntElementsAttr startAttr = DenseIntElementsAttr::get(
             RankedTensorType::get(
-                {static_cast<int64_t>(new_start_indices.size())},
+                {static_cast<int64_t>(newStartIndices.size())},
                 int64ElementType),
-            new_start_indices);
-        DenseIntElementsAttr end_attr = DenseIntElementsAttr::get(
-            RankedTensorType::get(
-                {static_cast<int64_t>(new_end_indices.size())},
-                int64ElementType),
-            new_end_indices);
-        DenseIntElementsAttr stride_attr = DenseIntElementsAttr::get(
-            RankedTensorType::get({static_cast<int64_t>(new_strides.size())},
+            newStartIndices);
+        DenseIntElementsAttr endAttr = DenseIntElementsAttr::get(
+            RankedTensorType::get({static_cast<int64_t>(newEndIndices.size())},
                                   int64ElementType),
-            new_strides);
+            newEndIndices);
+        DenseIntElementsAttr strideAttr = DenseIntElementsAttr::get(
+            RankedTensorType::get({static_cast<int64_t>(newStrides.size())},
+                                  int64ElementType),
+            newStrides);
         rewriter.replaceOpWithNewOp<mhlo::SliceOp>(
-            user, user->getResultTypes(), new_producer->getResult(0),
-            start_attr, end_attr, stride_attr);
+            user, user->getResultTypes(), newProducer->getResult(0), startAttr,
+            endAttr, strideAttr);
       } else {
         rewriter.replaceOpWithNewOp<mhlo::SliceOp>(
-            user, user->getResultTypes(), new_producer->getResult(0),
+            user, user->getResultTypes(), newProducer->getResult(0),
             slice.start_indices(), slice.limit_indices(), slice.strides());
       }
     }

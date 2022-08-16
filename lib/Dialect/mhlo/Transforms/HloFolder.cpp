@@ -31,26 +31,26 @@ namespace {
 //===----------------------------------------------------------------------===//
 
 static LogicalResult
-AddScatterAddMatchAndRewriteHelper(mhlo::AddOp add_op, int idx,
+AddScatterAddMatchAndRewriteHelper(mhlo::AddOp addOp, int idx,
                                    PatternRewriter &rewriter) {
 
   // Match
-  mhlo::ScatterOp scatter_op =
-      add_op.getOperand(idx).getDefiningOp<mhlo::ScatterOp>();
+  mhlo::ScatterOp scatterOp =
+      addOp.getOperand(idx).getDefiningOp<mhlo::ScatterOp>();
 
-  if (!scatter_op) {
+  if (!scatterOp) {
     return failure();
   }
 
   // check wthether scatter supported
-  Region &region = scatter_op.update_computation();
+  Region &region = scatterOp.update_computation();
   // only support single block
   if (region.getBlocks().size() != 1) {
     return failure();
   }
   // only support one operand one update
-  if (scatter_op.operands().size() != 1 || scatter_op.updates().size() != 1 ||
-      scatter_op->getNumResults() != 1) {
+  if (scatterOp.operands().size() != 1 || scatterOp.updates().size() != 1 ||
+      scatterOp->getNumResults() != 1) {
     return failure();
   }
 
@@ -59,17 +59,17 @@ AddScatterAddMatchAndRewriteHelper(mhlo::AddOp add_op, int idx,
     return failure();
   }
 
-  Value initial_val = scatter_op.operands()[0];
-  if (!isSplatMhloConstantValue(initial_val, (int64_t)0) &&
-      !isSplatMhloConstantValue(initial_val, 0.0)) {
+  Value initialVal = scatterOp.operands()[0];
+  if (!isSplatMhloConstantValue(initialVal, (int64_t)0) &&
+      !isSplatMhloConstantValue(initialVal, 0.0)) {
     return failure();
   }
 
   // Rewrite
-  int another_idx = 1 - idx;
-  auto cloned = rewriter.clone(*scatter_op.getOperation());
-  cloned->setOperand(0, add_op.getOperand(another_idx));
-  rewriter.replaceOp(add_op, cloned->getResult(0));
+  int anotherIdx = 1 - idx;
+  auto cloned = rewriter.clone(*scatterOp.getOperation());
+  cloned->setOperand(0, addOp.getOperand(anotherIdx));
+  rewriter.replaceOp(addOp, cloned->getResult(0));
   return success();
 }
 
@@ -97,36 +97,35 @@ struct AddScatterAddToScatterPattern : public OpRewritePattern<mhlo::AddOp> {
 
 struct RemoveTrivialTorchIndexSelect
     : public OpRewritePattern<mhlo::TorchIndexSelectOp> {
-  RemoveTrivialTorchIndexSelect(MLIRContext *context, DimFlagAnalysis *analysis)
-      : OpRewritePattern<mhlo::TorchIndexSelectOp>(context),
-        analysis_(analysis) {}
+  RemoveTrivialTorchIndexSelect(MLIRContext *context, DimFlagAnalysis *analys)
+      : OpRewritePattern<mhlo::TorchIndexSelectOp>(context), analysis(analys) {}
 
   LogicalResult matchAndRewrite(mhlo::TorchIndexSelectOp op,
                                 PatternRewriter &rewriter) const override {
     uint64_t dim = op.dim();
-    uint64_t batch_dims = op.batch_dims();
+    uint64_t batchDims = op.batch_dims();
     Value index = op.index();
     Value input = op.operand();
 
-    auto index_shaped_type = index.getType().dyn_cast<ShapedType>();
-    auto input_shaped_type = input.getType().dyn_cast<ShapedType>();
-    if (batch_dims > 0 || index_shaped_type.getRank() > 1 ||
-        !index_shaped_type || !index_shaped_type.hasStaticShape() ||
-        !input_shaped_type || !input_shaped_type.hasStaticShape() ||
-        index_shaped_type.getShape()[0] != input_shaped_type.getShape()[dim]) {
+    auto indexShapedType = index.getType().dyn_cast<ShapedType>();
+    auto inputShapedType = input.getType().dyn_cast<ShapedType>();
+    if (batchDims > 0 || indexShapedType.getRank() > 1 || !indexShapedType ||
+        !indexShapedType.hasStaticShape() || !inputShapedType ||
+        !inputShapedType.hasStaticShape() ||
+        indexShapedType.getShape()[0] != inputShapedType.getShape()[dim]) {
       return failure();
     }
 
-    SmallVector<bool> from_broadcast = analysis_->GetDimFlag(input);
-    if (!(int64_t(from_broadcast.size()) == input_shaped_type.getRank()) ||
-        !from_broadcast[dim]) {
+    SmallVector<bool> fromBroadcast = analysis->getDimFlag(input);
+    if (!(int64_t(fromBroadcast.size()) == inputShapedType.getRank()) ||
+        !fromBroadcast[dim]) {
       return failure();
     }
     rewriter.replaceOp(op, input);
     return success();
   }
 
-  DimFlagAnalysis *analysis_;
+  DimFlagAnalysis *analysis;
 };
 
 //===----------------------------------------------------------------------===//
@@ -147,37 +146,36 @@ struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvolutionOp> {
       return failure();
     }
 
-    const auto edge_padding_low = padOp.edge_padding_low().getValues<int64_t>();
-    const auto edge_padding_high =
-        padOp.edge_padding_high().getValues<int64_t>();
-    auto dimension_numbers = op.dimension_numbers();
-    auto input_spatial_dims = dimension_numbers.getInputSpatialDimensions();
-    llvm::SmallDenseSet<int64_t> input_spatial_dims_set(
-        input_spatial_dims.begin(), input_spatial_dims.end());
-    for (size_t i = 0; i < edge_padding_low.size(); i++) {
-      if (!input_spatial_dims_set.contains(i)) {
-        if (edge_padding_low[i] != 0 || edge_padding_high[i] != 0) {
+    const auto edgePaddingLow = padOp.edge_padding_low().getValues<int64_t>();
+    const auto edgePaddingHigh = padOp.edge_padding_high().getValues<int64_t>();
+    auto dimensionNumbers = op.dimension_numbers();
+    auto inputSpatialDims = dimensionNumbers.getInputSpatialDimensions();
+    llvm::SmallDenseSet<int64_t> inputSpatialDimsSet(inputSpatialDims.begin(),
+                                                     inputSpatialDims.end());
+    for (size_t i = 0; i < edgePaddingLow.size(); i++) {
+      if (!inputSpatialDimsSet.contains(i)) {
+        if (edgePaddingLow[i] != 0 || edgePaddingHigh[i] != 0) {
           return failure();
         }
       }
     }
 
-    SmallVector<int64_t> oldPadding(input_spatial_dims.size() * 2, 0);
+    SmallVector<int64_t> oldPadding(inputSpatialDims.size() * 2, 0);
     if (op.padding().hasValue()) {
       oldPadding =
           SmallVector<int64_t>(op.paddingAttr().getValues<int64_t>().begin(),
                                op.paddingAttr().getValues<int64_t>().end());
     }
     SmallVector<int64_t> newPadding;
-    for (size_t i = 0; i < input_spatial_dims.size(); i++) {
-      newPadding.push_back(edge_padding_low[input_spatial_dims[i]] +
+    for (size_t i = 0; i < inputSpatialDims.size(); i++) {
+      newPadding.push_back(edgePaddingLow[inputSpatialDims[i]] +
                            oldPadding[i * 2]);
-      newPadding.push_back(edge_padding_high[input_spatial_dims[i]] +
+      newPadding.push_back(edgePaddingHigh[inputSpatialDims[i]] +
                            oldPadding[i * 2 + 1]);
     }
     auto newPaddingAttr = DenseIntElementsAttr::get(
         RankedTensorType::get(
-            {static_cast<int64_t>(input_spatial_dims.size()), 2},
+            {static_cast<int64_t>(inputSpatialDims.size()), 2},
             rewriter.getI64Type()),
         newPadding);
 

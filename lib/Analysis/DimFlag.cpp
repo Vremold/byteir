@@ -11,16 +11,16 @@ using namespace byteir;
 using namespace llvm;
 using namespace mlir;
 
-SmallVector<bool> DimFlagAnalysis::GetDimFlag(Value value) {
-  auto found = memorized_.find(value);
+SmallVector<bool> DimFlagAnalysis::getDimFlag(Value value) {
+  auto found = memorized.find(value);
 
-  if (found != memorized_.end()) {
+  if (found != memorized.end()) {
     return found->second;
   }
 
-  SmallVector<bool> res = compute_flag_->Compute(value);
+  SmallVector<bool> res = computeFlag->compute(value);
 
-  llvm::sys::SmartScopedLock<true> guard(mutex_);
-  memorized_[value] = res;
+  llvm::sys::SmartScopedLock<true> guard(mutex);
+  memorized[value] = res;
   return res;
 }

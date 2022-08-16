@@ -24,10 +24,11 @@ using namespace mlir::linalg;
 
 // some code from mhlo's legalize_to_linalg
 namespace {
-SmallVector<Value, 2> ExtractDynamicSizes(OpBuilder &b, Location loc,
-                                          Value tensor,
-                                          Value shape_tensor = nullptr,
-                                          AffineMap permutation = {}) {
+
+static SmallVector<Value, 2> extractDynamicSizes(OpBuilder &b, Location loc,
+                                                 Value tensor,
+                                                 Value shape_tensor = nullptr,
+                                                 AffineMap permutation = {}) {
   auto tensor_type = tensor.getType().dyn_cast<RankedTensorType>();
   if (!tensor_type)
     return {};
@@ -52,8 +53,8 @@ SmallVector<Value, 2> ExtractDynamicSizes(OpBuilder &b, Location loc,
   return dyn_sizes;
 }
 
-Value GetInitTensor(OpBuilder &b, Location loc, ShapedType type,
-                    ArrayRef<Value> dyn_sizes) {
+static Value getInitTensor(OpBuilder &b, Location loc, ShapedType type,
+                           ArrayRef<Value> dyn_sizes) {
   return b.create<linalg::InitTensorOp>(loc, dyn_sizes, type.getShape(),
                                         type.getElementType());
 }
@@ -61,16 +62,17 @@ Value GetInitTensor(OpBuilder &b, Location loc, ShapedType type,
 /// Returns an ArrayAttr that contains `nLoops` attributes. All the attributes
 /// are "parallel" except the last `nReduction` elements, where are "reduction"
 /// attributes.
-SmallVector<StringRef, 3>
-GetParallelAndReductionIterators(unsigned nLoops, unsigned nReduction) {
+static SmallVector<StringRef, 3>
+getParallelAndReductionIterators(unsigned nLoops, unsigned nReduction) {
   SmallVector<StringRef, 3> res(nLoops - nReduction,
                                 getParallelIteratorTypeName());
   res.append(nReduction, getReductionIteratorTypeName());
   return res;
 }
 
-SmallVector<StringRef, 3> GetNParallelLoopsAttrs(unsigned nParallelLoops) {
-  return GetParallelAndReductionIterators(nParallelLoops, 0);
+static SmallVector<StringRef, 3>
+getNParallelLoopsAttrs(unsigned nParallelLoops) {
+  return getParallelAndReductionIterators(nParallelLoops, 0);
 }
 
 class UnrealizedCastToLinalgConverter
@@ -102,9 +104,9 @@ public:
     ValueRange inputs = adaptor.getOperands();
     Value output;
 
-    auto dyn_sizes = ExtractDynamicSizes(rewriter, loc, max_rank_arg);
+    auto dyn_sizes = extractDynamicSizes(rewriter, loc, max_rank_arg);
 
-    output = GetInitTensor(rewriter, loc, result_ty, dyn_sizes);
+    output = getInitTensor(rewriter, loc, result_ty, dyn_sizes);
 
     // Create indexing maps.
     AffineMap scalar_map = AffineMap::get(nloops, 0, rewriter.getContext());
@@ -117,7 +119,7 @@ public:
 
     // Build `linalg.generic` op.
     auto linalg_op = rewriter.create<linalg::GenericOp>(
-        loc, result_ty, inputs, output, maps, GetNParallelLoopsAttrs(nloops),
+        loc, result_ty, inputs, output, maps, getNParallelLoopsAttrs(nloops),
         [&](OpBuilder &nested_builder, Location nested_loc, ValueRange args) {
           Type inner_result_ty = getElementTypeOrSelf(output);
 

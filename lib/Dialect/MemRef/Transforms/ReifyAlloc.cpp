@@ -55,7 +55,7 @@ struct ReifyAllocPattern : public OpRewritePattern<OpTy> {
         llvm::make_filter_range(opTy->getAttrs(), [&](NamedAttribute attr) {
           return attr.getName().getValue() != "operand_segment_sizes";
         }));
-    AddAttrs(newOp, filteredAttrs);
+    addAttrs(newOp, filteredAttrs);
 
     return success();
   }

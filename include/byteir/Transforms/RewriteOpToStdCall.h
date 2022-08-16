@@ -16,10 +16,10 @@
 namespace mlir {
 class ModuleOp;
 
-using CallTable = std::unordered_map<std::string, std::string>;
+using CallMapTable = std::unordered_map<std::string, std::string>;
 
 std::unique_ptr<OperationPass<ModuleOp>>
-createRewriteOpToStdCallPass(CallTable callTable = {});
+createRewriteOpToStdCallPass(CallMapTable callTable = {});
 
 } // namespace mlir
 

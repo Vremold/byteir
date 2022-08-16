@@ -19,28 +19,28 @@ struct DimFlagAnalysis;
 
 class ComputeFlag {
 public:
-  void SetAnalysis(DimFlagAnalysis *analysis) {
-    assert(!analysis_ && "analysis_ is already set.");
-    analysis_ = analysis;
+  void setAnalysis(DimFlagAnalysis *analys) {
+    assert(!analysis && "analysis is already set.");
+    analysis = analys;
   }
-  virtual llvm::SmallVector<bool> Compute(mlir::Value v) = 0;
+  virtual llvm::SmallVector<bool> compute(mlir::Value v) = 0;
 
 protected:
-  DimFlagAnalysis *analysis_{nullptr};
+  DimFlagAnalysis *analysis{nullptr};
 };
 
 // `DimFlagAnalysis` is used to get the flag of each dim in a Value. Users need
 // to implement a subclass of `ComputeFlag` to define how the flags will be
 // computed.
 struct DimFlagAnalysis {
-  DimFlagAnalysis(ComputeFlag *compute_flag) : compute_flag_(compute_flag) {
-    compute_flag_->SetAnalysis(this);
+  DimFlagAnalysis(ComputeFlag *flag) : computeFlag(flag) {
+    computeFlag->setAnalysis(this);
   }
-  llvm::SmallVector<bool> GetDimFlag(mlir::Value value);
+  llvm::SmallVector<bool> getDimFlag(mlir::Value value);
 
-  llvm::DenseMap<mlir::Value, llvm::SmallVector<bool>> memorized_;
-  ComputeFlag *compute_flag_;
-  llvm::sys::SmartMutex<true> mutex_;
+  llvm::DenseMap<mlir::Value, llvm::SmallVector<bool>> memorized;
+  ComputeFlag *computeFlag;
+  llvm::sys::SmartMutex<true> mutex;
 };
 
 } // namespace byteir

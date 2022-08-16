@@ -227,7 +227,7 @@ struct DynamicShapeClusteringPass
       };
 
       for (auto &block : funcOp.getBlocks()) {
-        ReplicateDefiningOp(&block, [](Operation *op) {
+        replicateDefiningOp(&block, [](Operation *op) {
           return op->hasTrait<OpTrait::ConstantLike>();
         });
       }

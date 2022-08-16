@@ -115,8 +115,8 @@ func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
 
 func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
                                            const MhloFusionPattern &pattern) {
-  SmallVector<Value, 4> inputs = GetInputsOfCluster(pattern);
-  SmallVector<Value, 4> outputs = GetOutputsOfCluster(pattern);
+  SmallVector<Value, 4> inputs = getInputsOfCluster(pattern);
+  SmallVector<Value, 4> outputs = getOutputsOfCluster(pattern);
   return createFuncOpFromPattern(b, sub_fn_name, inputs, outputs, pattern);
 }
 
@@ -172,8 +172,8 @@ mlir::createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
 mhlo::FusionOp
 mlir::createMhloFusionFromPattern(OpBuilder &b,
                                   const MhloFusionPattern &pattern) {
-  SmallVector<Value, 4> inputs = GetInputsOfCluster(pattern);
-  SmallVector<Value, 4> outputs = GetOutputsOfCluster(pattern);
+  SmallVector<Value, 4> inputs = getInputsOfCluster(pattern);
+  SmallVector<Value, 4> outputs = getOutputsOfCluster(pattern);
   return createMhloFusionFromPattern(b, inputs, outputs, pattern);
 }
 
@@ -193,7 +193,7 @@ llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
 
   // output
   for (auto val : op->getResults()) {
-    ret[val] = UseCount(val);
+    ret[val] = useCount(val);
   }
 
   // input

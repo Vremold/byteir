@@ -161,7 +161,7 @@ void mlir::removeAttrPlaceholders(mlir::Operation *op,
   }
 }
 
-mlir::func::FuncOp mlir::GetFuncOp(func::CallOp callOp) {
+mlir::func::FuncOp mlir::getFuncOp(func::CallOp callOp) {
   Operation *op = callOp.getOperation();
   CallOpInterface call = dyn_cast<CallOpInterface>(op);
   Operation *defOp = call.resolveCallable();
@@ -172,7 +172,7 @@ mlir::func::FuncOp mlir::GetFuncOp(func::CallOp callOp) {
   return func::FuncOp();
 }
 
-bool mlir::HasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
+bool mlir::hasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
                          llvm::ArrayRef<llvm::StringRef> filterAttrs) {
   if (filterAttrs.empty())
     return true;
@@ -189,7 +189,7 @@ bool mlir::HasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
   return !filteredAttrs.empty();
 }
 
-void mlir::AddAttrs(mlir::Operation *op,
+void mlir::addAttrs(mlir::Operation *op,
                     llvm::ArrayRef<mlir::NamedAttribute> attrs) {
   for (auto attr : attrs) {
     // override if there is any with the same name
@@ -197,7 +197,7 @@ void mlir::AddAttrs(mlir::Operation *op,
   }
 }
 
-Optional<unsigned> mlir::FindOperandIndex(mlir::Operation *op,
+Optional<unsigned> mlir::findOperandIndex(mlir::Operation *op,
                                           mlir::Value val) {
   if (op == nullptr) {
     return None;
@@ -212,7 +212,7 @@ Optional<unsigned> mlir::FindOperandIndex(mlir::Operation *op,
   return None;
 }
 
-Optional<unsigned> mlir::FindResultIndex(mlir::Operation *op, mlir::Value val) {
+Optional<unsigned> mlir::findResultIndex(mlir::Operation *op, mlir::Value val) {
   if (op == nullptr || val.getDefiningOp() != op) {
     return None;
   }
@@ -234,7 +234,7 @@ void mlir::getValuesFromDenseIntElementsAttr(
 }
 
 SmallVector<Value, 4>
-mlir::GetInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
+mlir::getInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
   SmallVector<Value, 4> inputs;
   SmallDenseSet<Value> input_set;
   SmallDenseSet<Operation *> op_set;
@@ -260,7 +260,7 @@ mlir::GetInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
 }
 
 SmallVector<Value, 4>
-mlir::GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
+mlir::getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
   SmallVector<Value, 4> outputs;
   SmallDenseSet<Operation *> op_set;
   for (Operation *op : cluster) {
@@ -283,7 +283,7 @@ mlir::GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
   return outputs;
 }
 
-bool mlir::IsMemrefTrivial(mlir::Value memref,
+bool mlir::isMemrefTrivial(mlir::Value memref,
                            llvm::ArrayRef<mlir::Operation *> filters) {
   SmallPtrSet<mlir::Operation *, 4> op_sets(filters.begin(), filters.end());
 
@@ -299,7 +299,7 @@ bool mlir::IsMemrefTrivial(mlir::Value memref,
   return true;
 }
 
-int mlir::UserCount(Value val) {
+int mlir::userCount(Value val) {
   SmallDenseSet<Operation *> count;
   for (auto user : val.getUsers()) {
     if (!count.contains(user)) {

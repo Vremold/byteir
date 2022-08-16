@@ -10,7 +10,6 @@
 #include "byteir/Target/Cpp/ToCpp.h"
 
 #include "byteir/Target/Common/EmitUtil.h"
-
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"

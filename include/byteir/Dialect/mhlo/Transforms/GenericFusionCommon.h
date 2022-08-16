@@ -92,7 +92,7 @@ public:
       return;
 
     for (auto &block : funcOp.getBlocks()) {
-      ReplicateDefiningOp(&block, isMhloConstantLike);
+      replicateDefiningOp(&block, isMhloConstantLike);
     }
 
     ProducerFusionPlanner planner(

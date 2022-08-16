@@ -25,7 +25,7 @@ using namespace llvm;
 
 namespace {
 
-static std::string GetOutlineFuncitonName(mhlo::FusionOp fusionOp,
+static std::string getOutlineFuncitonName(mhlo::FusionOp fusionOp,
                                           unsigned &cnt) {
   StringAttr nameAttr =
       fusionOp->getAttrOfType<StringAttr>(byre::getByreComputeName());
@@ -40,7 +40,7 @@ static std::string GetOutlineFuncitonName(mhlo::FusionOp fusionOp,
   return funcName;
 }
 
-static func::FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
+static func::FuncOp createOutlinedFuncOp(mhlo::FusionOp fusionOp,
                                          StringRef funcName) {
 
   // creat outline function
@@ -90,7 +90,7 @@ static func::FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
 
       opBuilder.setInsertionPoint(op);
       auto clonedDefOp = opBuilder.clone(*defOp);
-      auto resIdx = FindResultIndex(defOp, val).getValue();
+      auto resIdx = findResultIndex(defOp, val).getValue();
 
       op->replaceUsesOfWith(val, clonedDefOp->getResult(resIdx));
       opSet.insert(clonedDefOp);
@@ -117,11 +117,11 @@ static func::FuncOp CreateOutlinedFuncOp(mhlo::FusionOp fusionOp,
   secondBlock.erase();
 
   // copy fusionOp's attributes to funcOp
-  AddAttrs(funcOp.getOperation(), fusionOp->getAttrs());
+  addAttrs(funcOp.getOperation(), fusionOp->getAttrs());
   return funcOp;
 }
 
-static void RewriteFusionOpToCall(mhlo::FusionOp fusionOp,
+static void rewriteFusionOpToCall(mhlo::FusionOp fusionOp,
                                   func::FuncOp funcOp) {
   // create a call
   OpBuilder opBuilder(fusionOp);
@@ -154,11 +154,11 @@ void FusionOutliningPass::runOnOperation() {
 
   for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
     funcOp.walk([&](mhlo::FusionOp fusionOp) {
-      auto funcName = GetOutlineFuncitonName(fusionOp, cnt);
+      auto funcName = getOutlineFuncitonName(fusionOp, cnt);
       auto outlinedFuncOp = moduleOp.lookupSymbol<func::FuncOp>(funcName);
 
       if (outlinedFuncOp == nullptr) {
-        outlinedFuncOp = CreateOutlinedFuncOp(fusionOp, funcName);
+        outlinedFuncOp = createOutlinedFuncOp(fusionOp, funcName);
         moduleOp.insert(funcOp, outlinedFuncOp);
 
         // Only set the first time
@@ -169,10 +169,10 @@ void FusionOutliningPass::runOnOperation() {
               return attr.getName().getValue() != byre_compute_name;
             }));
 
-        AddAttrs(outlinedFuncOp, filteredAttrs);
+        addAttrs(outlinedFuncOp, filteredAttrs);
       }
 
-      RewriteFusionOpToCall(fusionOp, outlinedFuncOp);
+      rewriteFusionOpToCall(fusionOp, outlinedFuncOp);
     });
   }
 }

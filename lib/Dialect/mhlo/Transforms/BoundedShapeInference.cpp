@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/BoundedShapeInference.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/Analysis/BoundedShapeAnalysis.h"
 #include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
@@ -23,6 +22,8 @@
 #include "llvm/Support/Debug.h"
 #include <string>
 #include <vector>
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::shape_analysis;

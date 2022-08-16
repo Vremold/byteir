@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/ShapeReification.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/ReifyShapes/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -18,6 +17,8 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace llvm;

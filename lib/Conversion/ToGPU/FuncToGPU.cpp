@@ -5,7 +5,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "../PassDetail.h"
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToGPU/Utils.h"
 #include "byteir/Utils/Hoist.h"
@@ -33,6 +32,8 @@
 #include "llvm/Support/Debug.h"
 #include <iostream> // debug
 #include <utility>  // pair
+
+#include "../PassDetail.h"
 
 #define DEBUG_TYPE "func-to-gpu"
 

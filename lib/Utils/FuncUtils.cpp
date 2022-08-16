@@ -37,7 +37,7 @@ void mlir::cloneAllExtraFuncAttrs(func::FuncOp oldFunc, func::FuncOp newFunc,
 
   getAllExtraFuncAttrs(attrs, oldFunc, filterOut);
 
-  AddAttrs(newFunc, attrs);
+  addAttrs(newFunc, attrs);
 }
 
 void mlir::collapseFuncRegion(func::FuncOp func) {

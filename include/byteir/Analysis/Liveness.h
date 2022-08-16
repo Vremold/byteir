@@ -17,12 +17,11 @@
 #ifndef BYTEIR_ANALYSIS_LIVENESS_H
 #define BYTEIR_ANALYSIS_LIVENESS_H
 
-#include <vector>
-
 #include "mlir/Support/LLVM.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include <vector>
 
 namespace mlir {
 class Block;

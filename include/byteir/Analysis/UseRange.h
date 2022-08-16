@@ -16,12 +16,11 @@ limitations under the License.
 #ifndef BYTEIR_ANALYSIS_USERANGE_H
 #define BYTEIR_ANALYSIS_USERANGE_H
 
-#include <vector>
-
 #include "byteir/Analysis/Liveness.h"
 #include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Value.h"
+#include <vector>
 
 namespace byteir {
 

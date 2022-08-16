@@ -6,11 +6,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/FuncTag.h"
-#include "./PassDetail.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

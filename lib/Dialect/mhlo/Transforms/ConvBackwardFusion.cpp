@@ -29,7 +29,7 @@ using namespace llvm;
 namespace {
 
 static void
-GetConvDimensionNumbers(mhlo::ConvDimensionNumbersAttr dimension_numbers,
+getConvDimensionNumbers(mhlo::ConvDimensionNumbersAttr dimension_numbers,
                         SmallVector<int64_t> &input_dims,
                         SmallVector<int64_t> &kernel_dims,
                         SmallVector<int64_t> &output_dims) {
@@ -60,7 +60,7 @@ struct FuseConvBackwardDataPattern
     }
     auto dimension_numbers = op.dimension_numbersAttr();
     SmallVector<int64_t> output_grad_dims, filter_dims, input_grad_dims;
-    GetConvDimensionNumbers(dimension_numbers, output_grad_dims, filter_dims,
+    getConvDimensionNumbers(dimension_numbers, output_grad_dims, filter_dims,
                             input_grad_dims);
     if (output_grad_dims != ArrayRef<int64_t>{0, 1, 2, 3} /*bf01*/ ||
         filter_dims != ArrayRef<int64_t>{2, 3, 0, 1} /*01io*/ ||
@@ -188,7 +188,7 @@ struct FuseConvBackwardFilterPattern
     }
     auto dimension_numbers = op.dimension_numbersAttr();
     SmallVector<int64_t> input_dims, output_grad_dims, filter_grad_dims;
-    GetConvDimensionNumbers(dimension_numbers, input_dims, output_grad_dims,
+    getConvDimensionNumbers(dimension_numbers, input_dims, output_grad_dims,
                             filter_grad_dims);
     if (input_dims != ArrayRef<int64_t>{1, 0, 2, 3} /*fb01*/ ||
         output_grad_dims != ArrayRef<int64_t>{1, 0, 2, 3} /*io01*/ ||

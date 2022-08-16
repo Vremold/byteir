@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/ToByre/ToByre.h"
-#include "../PassDetail.h"
 #include "byteir/Conversion/Common/FunctionSupport.h"
 #include "byteir/Conversion/ToByre/Common.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
@@ -34,6 +33,8 @@
 #include <functional>
 #include <string>
 
+#include "../PassDetail.h"
+
 using namespace mlir;
 using namespace mlir::byre;
 using namespace mlir::lmhlo;
@@ -42,7 +43,7 @@ using namespace llvm;
 
 namespace {
 // TODO: move this to util if needed
-bool IsArgAlias(SmallVectorImpl<Value> &operands, Value src, Value dst) {
+bool isArgAlias(SmallVectorImpl<Value> &operands, Value src, Value dst) {
   bool is_arg_alias = false;
   // TODO: move this util
   // if output is an arg, swap in and out
@@ -68,57 +69,57 @@ LogicalResult ConvertToByrePattern<lmhlo::GatherOp>::matchAndRewrite(
     lmhlo::GatherOp op, typename lmhlo::GatherOp::Adaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
 
-  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
-  if (found == src_to_callee_.end()) {
+  auto found = srcToCallee.find(op.getOperation()->getName().getStringRef());
+  if (found == srcToCallee.end()) {
     return op->emitOpError() << "can not find matched byre_compute_name";
   }
 
-  auto start_indices = op.getStartIndices();
-  auto start_indices_ty = start_indices.getType().cast<ShapedType>();
-  if (!start_indices_ty.hasRank()) {
+  auto startIndices = op.getStartIndices();
+  auto startIndicesTy = startIndices.getType().cast<ShapedType>();
+  if (!startIndicesTy.hasRank()) {
     return rewriter.notifyMatchFailure(op, "unranked start_indices");
   }
 
   auto operand = op.getOperand();
-  auto operand_ty = operand.getType().cast<ShapedType>();
-  if (!operand_ty.hasRank()) {
+  auto operandTy = operand.getType().cast<ShapedType>();
+  if (!operandTy.hasRank()) {
     return rewriter.notifyMatchFailure(op, "unranked operand");
   }
 
-  int64_t index_vector_dim = start_indices_ty.getRank();
+  int64_t indexVectorDim = startIndicesTy.getRank();
 
-  auto dimension_numbers = op.getDimensionNumbers();
-  if (dimension_numbers.getIndexVectorDim() != index_vector_dim) {
+  auto dimensionNumbers = op.getDimensionNumbers();
+  if (dimensionNumbers.getIndexVectorDim() != indexVectorDim) {
     return rewriter.notifyMatchFailure(
         op, "index_vector_dim not last dimension of start_indices");
   }
 
   // Index select only works across a single dimension.
-  if (start_indices_ty.getShape().empty() || start_indices_ty.getRank() != 1) {
+  if (startIndicesTy.getShape().empty() || startIndicesTy.getRank() != 1) {
     return rewriter.notifyMatchFailure(
         op, "start_indices index vector dimension not 1");
   }
 
   // Only support the default case for start_index_map.
-  if (dimension_numbers.getStartIndexMap().size() != 1 ||
-      dimension_numbers.getStartIndexMap()[0] != 0) {
+  if (dimensionNumbers.getStartIndexMap().size() != 1 ||
+      dimensionNumbers.getStartIndexMap()[0] != 0) {
     return rewriter.notifyMatchFailure(op, "start_index_map != [0]");
   }
 
-  auto result_ty = op.getOutput().getType().dyn_cast<ShapedType>();
-  if (!result_ty) {
+  auto resultTy = op.getOutput().getType().dyn_cast<ShapedType>();
+  if (!resultTy) {
     return rewriter.notifyMatchFailure(op, "unranked result");
   }
 
   // Offset dimensions should be the defaults.
-  if (dimension_numbers.getOffsetDims().size() !=
-      result_ty.getRank() - index_vector_dim) {
+  if (dimensionNumbers.getOffsetDims().size() !=
+      resultTy.getRank() - indexVectorDim) {
     return rewriter.notifyMatchFailure(
         op, "offset_dims.size not operand rank minus index_vector_dim");
   }
 
-  for (auto it : llvm::enumerate(dimension_numbers.getOffsetDims())) {
-    if ((it.index() + index_vector_dim) != it.value()) {
+  for (auto it : llvm::enumerate(dimensionNumbers.getOffsetDims())) {
+    if ((it.index() + indexVectorDim) != it.value()) {
       return rewriter.notifyMatchFailure(
           op, "offset_dims != [index_vector_dim, result.rank)");
     }
@@ -134,14 +135,14 @@ LogicalResult ConvertToByrePattern<lmhlo::GatherOp>::matchAndRewrite(
     }
 
     // The op needs to index the entire slice for each other dimension.
-    if (it.value().getSExtValue() != operand_ty.getDimSize(it.index())) {
+    if (it.value().getSExtValue() != operandTy.getDimSize(it.index())) {
       return rewriter.notifyMatchFailure(
           op, "slice_size doesn't match operand dimension");
     }
   }
 
-  if (dimension_numbers.getCollapsedSliceDims().size() != 1 ||
-      dimension_numbers.getCollapsedSliceDims()[0] != 0) {
+  if (dimensionNumbers.getCollapsedSliceDims().size() != 1 ||
+      dimensionNumbers.getCollapsedSliceDims()[0] != 0) {
     return rewriter.notifyMatchFailure(op, "collapsed_slice_dims != [0]");
   }
 
@@ -161,8 +162,8 @@ LogicalResult ConvertToByrePattern<lmhlo::ScatterOp>::matchAndRewrite(
     lmhlo::ScatterOp op, typename lmhlo::ScatterOp::Adaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
 
-  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
-  if (found == src_to_callee_.end()) {
+  auto found = srcToCallee.find(op.getOperation()->getName().getStringRef());
+  if (found == srcToCallee.end()) {
     return op->emitOpError() << "can not find matched byre_compute_name";
   }
 
@@ -181,11 +182,11 @@ LogicalResult ConvertToByrePattern<lmhlo::ScatterOp>::matchAndRewrite(
   auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
 
   // TODO support inplace
-  auto new_op = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
+  auto newOp = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
       op, key, adaptor.getOperands());
 
   // FIXME: currently only support select on dim0
-  new_op->setAttr("dim", rewriter.getI32IntegerAttr(0));
+  newOp->setAttr("dim", rewriter.getI32IntegerAttr(0));
 
   return success();
 }
@@ -195,8 +196,8 @@ LogicalResult ConvertToByrePattern<lmhlo::SliceOp>::matchAndRewrite(
     lmhlo::SliceOp op, typename lmhlo::SliceOp::Adaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
 
-  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
-  if (found == src_to_callee_.end()) {
+  auto found = srcToCallee.find(op.getOperation()->getName().getStringRef());
+  if (found == srcToCallee.end()) {
     return op->emitOpError() << "can not find matched byre_compute_name";
   }
 
@@ -207,36 +208,36 @@ LogicalResult ConvertToByrePattern<lmhlo::SliceOp>::matchAndRewrite(
 
   auto output = adaptor.getOperands()[1];
   auto shape = output.getType().cast<MemRefType>().getShape();
-  auto start_indices = op.getStartIndices();
-  int64_t num_start = start_indices.getNumElements();
+  auto startIndices = op.getStartIndices();
+  int64_t numStart = startIndices.getNumElements();
   // check high dim of shape is 1
-  if (num_start > 1) {
-    for (int64_t i = 0; i < num_start - 1; ++i) {
+  if (numStart > 1) {
+    for (int64_t i = 0; i < numStart - 1; ++i) {
       if (shape[i] != 1) {
         return rewriter.notifyMatchFailure(op, "unsupport shape of slice");
       }
     }
   }
 
-  // get last element of start_indices
-  int64_t last_start = start_indices.getValues<int64_t>()[num_start - 1];
+  // get last element of startIndices
+  int64_t lastStart = startIndices.getValues<int64_t>()[numStart - 1];
 
   // if output is an arg, use copy
   if (adaptor.getOperands()[1].getDefiningOp() == nullptr) {
-    auto new_op = rewriter.replaceOpWithNewOp<byre::CopyOp>(
+    auto newOp = rewriter.replaceOpWithNewOp<byre::CopyOp>(
         op, adaptor.getOperands()[0], adaptor.getOperands()[1]);
 
-    new_op->setAttr("offset", rewriter.getI32IntegerAttr(last_start));
+    newOp->setAttr("offset", rewriter.getI32IntegerAttr(lastStart));
     return success();
   }
 
-  auto new_op = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
+  auto newOp = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
       op, found->second, adaptor.getOperands());
 
-  new_op->setAttr("offset", rewriter.getI32IntegerAttr(last_start));
+  newOp->setAttr("offset", rewriter.getI32IntegerAttr(lastStart));
 
   if (adaptor.getOperands()[0].getDefiningOp() == nullptr) {
-    new_op->setAttr("arg_alias", rewriter.getUnitAttr());
+    newOp->setAttr("arg_alias", rewriter.getUnitAttr());
   }
 
   return success();
@@ -247,8 +248,8 @@ LogicalResult ConvertToByrePattern<lmhlo::ReshapeOp>::matchAndRewrite(
     lmhlo::ReshapeOp op, typename lmhlo::ReshapeOp::Adaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
 
-  auto found = src_to_callee_.find(op.getOperation()->getName().getStringRef());
-  if (found == src_to_callee_.end()) {
+  auto found = srcToCallee.find(op.getOperation()->getName().getStringRef());
+  if (found == srcToCallee.end()) {
     return op->emitOpError() << "can not find matched byre_compute_name";
   }
 
@@ -262,16 +263,16 @@ LogicalResult ConvertToByrePattern<lmhlo::ReshapeOp>::matchAndRewrite(
   }
 
   SmallVector<Value, 2> operands;
-  bool isArgAlias =
-      IsArgAlias(operands, adaptor.getOperands()[0], adaptor.getOperands()[1]);
+  bool argAlias =
+      isArgAlias(operands, adaptor.getOperands()[0], adaptor.getOperands()[1]);
 
-  auto new_op =
+  auto newOp =
       rewriter.replaceOpWithNewOp<byre::ComputeOp>(op, found->second, operands);
 
-  new_op->setAttr("offset", rewriter.getI32IntegerAttr(0));
+  newOp->setAttr("offset", rewriter.getI32IntegerAttr(0));
 
-  if (isArgAlias) {
-    new_op->setAttr("arg_alias", rewriter.getUnitAttr());
+  if (argAlias) {
+    newOp->setAttr("arg_alias", rewriter.getUnitAttr());
   }
 
   return success();
@@ -293,7 +294,7 @@ public:
   matchAndRewrite(func::CallOp op, func::CallOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
 
-    auto funcOp = GetFuncOp(op);
+    auto funcOp = getFuncOp(op);
     if (funcOp == nullptr) {
       return failure();
     }
@@ -368,19 +369,19 @@ public:
             continue;
           }
 
-          bool isArgAlias = IsArgAlias(aliasOperands, src, dst);
-          auto new_alias =
+          bool argAlias = isArgAlias(aliasOperands, src, dst);
+          auto newAlias =
               rewriter.create<byre::ComputeOp>(loc, "AliasOp", aliasOperands);
 
-          new_alias->setAttr("offset", rewriter.getI32IntegerAttr(0));
-          if (isArgAlias) {
-            new_alias->setAttr("arg_alias", rewriter.getUnitAttr());
+          newAlias->setAttr("offset", rewriter.getI32IntegerAttr(0));
+          if (argAlias) {
+            newAlias->setAttr("arg_alias", rewriter.getUnitAttr());
           }
         }
       }
     }
 
-    AddAttrs(computeOp.getOperation(), attrs);
+    addAttrs(computeOp.getOperation(), attrs);
 
     return success();
   }
@@ -400,68 +401,64 @@ public:
   matchAndRewrite(mlir::lmhlo::DotOp op, mlir::lmhlo::DotOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
 
-    auto dot_dimension_numbers = adaptor.getDotDimensionNumbers();
-    assert(dot_dimension_numbers.getLhsContractingDimensions().size() == 1);
-    assert(dot_dimension_numbers.getRhsContractingDimensions().size() == 1);
-    if (dot_dimension_numbers.getLhsBatchingDimensions().size() == 0) {
+    auto dotDimensionNumbers = adaptor.getDotDimensionNumbers();
+    assert(dotDimensionNumbers.getLhsContractingDimensions().size() == 1);
+    assert(dotDimensionNumbers.getRhsContractingDimensions().size() == 1);
+    if (dotDimensionNumbers.getLhsBatchingDimensions().size() == 0) {
       // convert to MatmulOp
       auto key = getByreKey("MatmulOp", op->getOperandTypes(), appendArgTypes);
 
-      auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+      auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
           op, key, adaptor.getOperands());
 
-      // append attribute 'lhs_contracting_dimension' and
-      // 'rhs_contracting_dimension'
-      int64_t lhs_contracting_dimension =
-          dot_dimension_numbers.getLhsContractingDimensions()[0];
-      int64_t rhs_contracting_dimension =
-          dot_dimension_numbers.getRhsContractingDimensions()[0];
-      compute_op->setAttr(
-          "lhs_contracting_dimension",
-          rewriter.getI64IntegerAttr(lhs_contracting_dimension));
-      compute_op->setAttr(
-          "rhs_contracting_dimension",
-          rewriter.getI64IntegerAttr(rhs_contracting_dimension));
+      // append attribute 'lhsContractingDimension' and
+      // 'rhsContractingDimension'
+      int64_t lhsContractingDimension =
+          dotDimensionNumbers.getLhsContractingDimensions()[0];
+      int64_t rhsContractingDimension =
+          dotDimensionNumbers.getRhsContractingDimensions()[0];
+      computeOp->setAttr("lhs_contracting_dimension",
+                         rewriter.getI64IntegerAttr(lhsContractingDimension));
+      computeOp->setAttr("rhs_contracting_dimension",
+                         rewriter.getI64IntegerAttr(rhsContractingDimension));
     } else {
       // convert to BatchMatmulOp
-      SmallVector<int64_t> batching_dimensions;
+      SmallVector<int64_t> batchingDimensions;
       for (int64_t i = 0,
                    e = op.getOutput().getType().cast<ShapedType>().getRank();
            i < e - 2; i++) {
-        batching_dimensions.push_back(i);
+        batchingDimensions.push_back(i);
       }
-      if (!dot_dimension_numbers.getLhsBatchingDimensions().equals(
-              batching_dimensions) ||
-          !dot_dimension_numbers.getRhsBatchingDimensions().equals(
-              batching_dimensions)) {
+      if (!dotDimensionNumbers.getLhsBatchingDimensions().equals(
+              batchingDimensions) ||
+          !dotDimensionNumbers.getRhsBatchingDimensions().equals(
+              batchingDimensions)) {
         return op->emitOpError()
                << "can not handle unregular batching_dimensions";
       }
 
       auto key =
           getByreKey("BatchMatmulOp", op->getOperandTypes(), appendArgTypes);
-      auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+      auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
           op, key, adaptor.getOperands());
 
       // append attributes of batching and contracting dimensions
-      int64_t lhs_contracting_dimension =
-          dot_dimension_numbers.getLhsContractingDimensions()[0];
-      int64_t rhs_contracting_dimension =
-          dot_dimension_numbers.getRhsContractingDimensions()[0];
-      auto lhs_batching_dimensions =
-          dot_dimension_numbers.getLhsBatchingDimensions();
-      auto rhs_batching_dimensions =
-          dot_dimension_numbers.getRhsBatchingDimensions();
-      compute_op->setAttr(
-          "lhs_contracting_dimension",
-          rewriter.getI64IntegerAttr(lhs_contracting_dimension));
-      compute_op->setAttr(
-          "rhs_contracting_dimension",
-          rewriter.getI64IntegerAttr(rhs_contracting_dimension));
-      compute_op->setAttr("lhs_batching_dimensions",
-                          rewriter.getI64ArrayAttr(lhs_batching_dimensions));
-      compute_op->setAttr("rhs_batching_dimensions",
-                          rewriter.getI64ArrayAttr(rhs_batching_dimensions));
+      int64_t lhsContractingDimension =
+          dotDimensionNumbers.getLhsContractingDimensions()[0];
+      int64_t rhsContractingDimension =
+          dotDimensionNumbers.getRhsContractingDimensions()[0];
+      auto lhsBatchingDimensions =
+          dotDimensionNumbers.getLhsBatchingDimensions();
+      auto rhsBatchingDimensions =
+          dotDimensionNumbers.getRhsBatchingDimensions();
+      computeOp->setAttr("lhs_contracting_dimension",
+                         rewriter.getI64IntegerAttr(lhsContractingDimension));
+      computeOp->setAttr("rhs_contracting_dimension",
+                         rewriter.getI64IntegerAttr(rhsContractingDimension));
+      computeOp->setAttr("lhs_batching_dimensions",
+                         rewriter.getI64ArrayAttr(lhsBatchingDimensions));
+      computeOp->setAttr("rhs_batching_dimensions",
+                         rewriter.getI64ArrayAttr(rhsBatchingDimensions));
     }
     return success();
   }
@@ -484,9 +481,9 @@ public:
     NamedAttrList attrs;
     handleConvAttribute(attrs, op, rewriter);
     auto key = getByreKey("ConvOp", op->getOperandTypes(), appendArgTypes);
-    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+    auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
         op, key, adaptor.getOperands());
-    AddAttrs(compute_op.getOperation(), attrs.getAttrs());
+    addAttrs(computeOp.getOperation(), attrs.getAttrs());
     return success();
   }
 };
@@ -500,21 +497,21 @@ public:
   LogicalResult
   matchAndRewrite(lmhlo::CustomCallOp op, lmhlo::CustomCallOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    mlir::DictionaryAttr dict_attr;
-    auto backend_config = op.getBackendConfig();
-    if (!backend_config.empty()) {
-      auto attrs = mlir::parseAttribute(backend_config, op->getContext());
+    mlir::DictionaryAttr dictAttr;
+    auto backendConfig = op.getBackendConfig();
+    if (!backendConfig.empty()) {
+      auto attrs = mlir::parseAttribute(backendConfig, op->getContext());
       if (!attrs || !attrs.isa<mlir::DictionaryAttr>())
         return failure();
-      dict_attr = attrs.cast<mlir::DictionaryAttr>();
+      dictAttr = attrs.cast<mlir::DictionaryAttr>();
     }
 
-    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+    auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
         op, op.getCallTargetName(), adaptor.getOperands());
-    if (dict_attr) {
-      NamedAttrList originAttrs = compute_op->getAttrs();
-      originAttrs.append(dict_attr);
-      compute_op->setAttrs(originAttrs);
+    if (dictAttr) {
+      NamedAttrList originAttrs = computeOp->getAttrs();
+      originAttrs.append(dictAttr);
+      computeOp->setAttrs(originAttrs);
     }
 
     return success();
@@ -608,10 +605,10 @@ public:
 
     auto key = getByreKey(poolingGradOp, operandTypes, appendArgTypes);
 
-    auto compute_op =
+    auto computeOp =
         rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
 
-    AddAttrs(compute_op, op->getAttrs());
+    addAttrs(computeOp, op->getAttrs());
     return success();
   }
 };
@@ -654,15 +651,15 @@ public:
     }
 
     // check block body
-    auto ret_op = block.getTerminator();
-    if (!isa<mlir::lmhlo::TerminatorOp>(ret_op)) {
+    auto retOp = block.getTerminator();
+    if (!isa<mlir::lmhlo::TerminatorOp>(retOp)) {
       return rewriter.notifyMatchFailure(
           op, "unsupported terminator in reduce's block");
     }
 
-    auto reduce_computation = &block.front();
+    auto reduceComputation = &block.front();
     std::string ReduceOp;
-    auto check_initial_value = [&](auto &&checker) {
+    auto checkInitialValue = [&](auto &&checker) {
       if (!llvm::any_of(
               adaptor.getInitValues()[0].getUses(), [&](OpOperand &use) {
                 if (auto constOp = llvm::dyn_cast_or_null<lmhlo::ConstantOp>(
@@ -679,14 +676,14 @@ public:
     };
     // TODO: more ReduceOp supported
     auto status =
-        llvm::TypeSwitch<Operation *, LogicalResult>(reduce_computation)
+        llvm::TypeSwitch<Operation *, LogicalResult>(reduceComputation)
             .Case<lmhlo::AddOp>([&](...) {
               ReduceOp = "ReduceSumOp";
-              return check_initial_value(isZeroAttribute);
+              return checkInitialValue(isZeroAttribute);
             })
             .Case<lmhlo::MaxOp>([&](...) {
               ReduceOp = "ReduceMaxOp";
-              return check_initial_value(isMinValueAttribute);
+              return checkInitialValue(isMinValueAttribute);
             })
             .Default([&](...) {
               return rewriter.notifyMatchFailure(
@@ -695,9 +692,9 @@ public:
     if (failed(status))
       return status;
 
-    if (reduce_computation->getOperand(0) != block.getArgument(0) ||
-        reduce_computation->getOperand(1) != block.getArgument(1) ||
-        reduce_computation->getOperand(2) != block.getArgument(2)) {
+    if (reduceComputation->getOperand(0) != block.getArgument(0) ||
+        reduceComputation->getOperand(1) != block.getArgument(1) ||
+        reduceComputation->getOperand(2) != block.getArgument(2)) {
     }
 
     auto inputShape = adaptor.getInputs()[0].getType().dyn_cast<MemRefType>();
@@ -726,10 +723,10 @@ public:
 
     auto key = getByreKey(ReduceOp, operandTypes, appendArgTypes);
 
-    auto compute_op =
+    auto computeOp =
         rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
 
-    compute_op->setAttr("dimensions", op.getDimensionsAttr());
+    computeOp->setAttr("dimensions", op.getDimensionsAttr());
 
     return success();
   }
@@ -778,29 +775,29 @@ public:
     }
 
     // check block body
-    auto ret_op = block.getTerminator();
-    if (!isa<mlir::lmhlo::TerminatorOp>(ret_op)) {
+    auto retOp = block.getTerminator();
+    if (!isa<mlir::lmhlo::TerminatorOp>(retOp)) {
       return rewriter.notifyMatchFailure(
           op, "unsupported terminator in reduce's block");
     }
 
-    Operation *reduce_computation = nullptr;
+    Operation *reduceComputation = nullptr;
     if (block.getOperations().size() == 2) {
-      reduce_computation = &block.front();
+      reduceComputation = &block.front();
     } else {
-      reduce_computation = block.front().getNextNode();
+      reduceComputation = block.front().getNextNode();
     }
 
     // only support ReduceWindowMax now
-    if (!isa<lmhlo::MaxOp>(reduce_computation)) {
+    if (!isa<lmhlo::MaxOp>(reduceComputation)) {
       return rewriter.notifyMatchFailure(
           op, "unsupported ops in reduce_computation of reduce_window");
     }
 
     if (block.getOperations().size() == 2 &&
-        (reduce_computation->getOperand(0) != block.getArgument(0) ||
-         reduce_computation->getOperand(1) != block.getArgument(1) ||
-         reduce_computation->getOperand(2) != block.getArgument(2))) {
+        (reduceComputation->getOperand(0) != block.getArgument(0) ||
+         reduceComputation->getOperand(1) != block.getArgument(1) ||
+         reduceComputation->getOperand(2) != block.getArgument(2))) {
       return rewriter.notifyMatchFailure(
           op, "unsupported ops in reduce_computation in reduce_window");
     }
@@ -829,11 +826,11 @@ public:
 
     auto key = getByreKey(ReduceWinOp, operandTypes, appendArgTypes);
 
-    auto compute_op =
+    auto computeOp =
         rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
 
     for (auto attr : op->getAttrs()) {
-      compute_op->setAttr(attr.getName(), attr.getValue());
+      computeOp->setAttr(attr.getName(), attr.getValue());
     }
 
     return success();
@@ -857,10 +854,10 @@ public:
     if (!alloc)
       return failure();
 
-    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
+    auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
         op, "FillOp", adaptor.getOperands());
 
-    compute_op->setAttr("value", op.getValue());
+    computeOp->setAttr("value", op.getValue());
 
     return success();
   }
@@ -880,15 +877,15 @@ public:
     }
     auto output = rewriter.create<memref::AllocOp>(op->getLoc(), op.getType());
     SmallVector<Value, 2> operands;
-    bool isArgAlias = IsArgAlias(operands, adaptor.getSource(), output);
+    bool argAlias = isArgAlias(operands, adaptor.getSource(), output);
 
-    auto new_op =
+    auto newOp =
         rewriter.create<byre::ComputeOp>(op->getLoc(), "AliasOp", operands);
 
-    new_op->setAttr("offset", offset);
+    newOp->setAttr("offset", offset);
 
-    if (isArgAlias) {
-      new_op->setAttr("arg_alias", rewriter.getUnitAttr());
+    if (argAlias) {
+      newOp->setAttr("arg_alias", rewriter.getUnitAttr());
     }
 
     rewriter.replaceOp(op, {output});
@@ -913,19 +910,19 @@ public:
 
     auto output = rewriter.create<memref::AllocOp>(op->getLoc(), dstMemRefType);
     SmallVector<Value, 2> newOperands;
-    bool isArgAlias = IsArgAlias(newOperands, operands[0], output);
+    bool argAlias = isArgAlias(newOperands, operands[0], output);
 
-    auto new_op =
+    auto newOp =
         rewriter.create<byre::ComputeOp>(op->getLoc(), "AliasOp", newOperands);
 
-    new_op->setAttr(
+    newOp->setAttr(
         "offset",
         rewriter.getI32IntegerAttr(
             (op.getOffsetElem() * dstMemRefType.getElementTypeBitWidth() + 7) >>
             3));
 
-    if (isArgAlias) {
-      new_op->setAttr("arg_alias", rewriter.getUnitAttr());
+    if (argAlias) {
+      newOp->setAttr("arg_alias", rewriter.getUnitAttr());
     }
     rewriter.replaceOp(op, {output});
 
@@ -1052,7 +1049,7 @@ static void identifyEntryPointFuncAndCalls(
     entries.push_back(func);
 
     for (auto callOp : func.getOps<func::CallOp>()) {
-      auto calleeFuncOp = GetFuncOp(callOp);
+      auto calleeFuncOp = getFuncOp(callOp);
       if (isRewritablePrivateFunc(calleeFuncOp) && !callSet.contains(callOp)) {
         calls.push_back(callOp);
         callSet.insert(callOp);

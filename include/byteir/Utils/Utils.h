@@ -78,7 +78,7 @@ void getValuesFromDenseIntElementsAttr(DenseIntElementsAttr attr,
                                        SmallVector<int64_t> &arrayValues);
 
 // Returns nD 64-bit dense elements attribute with the given values.
-inline DenseIntElementsAttr GetI64ElementsAttr(ArrayRef<int64_t> values,
+inline DenseIntElementsAttr getI64ElementsAttr(ArrayRef<int64_t> values,
                                                ArrayRef<int64_t> shape,
                                                Builder *builder) {
   RankedTensorType ty =
@@ -119,39 +119,39 @@ removeArgAttrPlaceholders(OpTy op, ArrayRef<StringRef> argAttrNames) {
 }
 
 // Return FuncOp from a CallOp
-mlir::func::FuncOp GetFuncOp(func::CallOp);
+mlir::func::FuncOp getFuncOp(func::CallOp);
 
 // Return true if attrs has any of filterAttrs
-bool HasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
+bool hasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
                    llvm::ArrayRef<llvm::StringRef> filterAttrs);
 
-void AddAttrs(mlir::Operation *, llvm::ArrayRef<mlir::NamedAttribute> attrs);
+void addAttrs(mlir::Operation *, llvm::ArrayRef<mlir::NamedAttribute> attrs);
 
-Optional<unsigned> FindOperandIndex(mlir::Operation *, mlir::Value);
+Optional<unsigned> findOperandIndex(mlir::Operation *, mlir::Value);
 
-Optional<unsigned> FindResultIndex(mlir::Operation *, mlir::Value);
-
-SmallVector<Value, 4>
-GetInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
+Optional<unsigned> findResultIndex(mlir::Operation *, mlir::Value);
 
 SmallVector<Value, 4>
-GetOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
+getInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
+
+SmallVector<Value, 4>
+getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
 
 // return true, if memref is only used in op in the filters, or alloc or dealloc
-bool IsMemrefTrivial(mlir::Value memref,
+bool isMemrefTrivial(mlir::Value memref,
                      llvm::ArrayRef<mlir::Operation *> filters);
 
 // count number of a value is used
 // if a value is used twice by a user, it will count twice
-inline int UseCount(Value val) {
+inline int useCount(Value val) {
   return static_cast<int>(
       std::distance(val.getUses().begin(), val.getUses().end()));
 }
 // count number of users a value has
 // if a value is used twice by a user, it will count one
-int UserCount(Value val);
+int userCount(Value val);
 
-inline Location GetFusedLoc(ArrayRef<Operation *> ops, OpBuilder &op_builder) {
+inline Location getFusedLoc(ArrayRef<Operation *> ops, OpBuilder &op_builder) {
   llvm::SmallVector<Location> locs;
   for (auto op : ops) {
     locs.push_back(op->getLoc());

@@ -73,7 +73,7 @@ DenseIntElementsAttr createNCHW2NHWCAttr2(PatternRewriter &rewriter,
   }
   auto values = attr.getValues<int64_t>();
   assert(values.size() == 4 * 2);
-  return GetI64ElementsAttr({values[0], values[1], values[4], values[5],
+  return getI64ElementsAttr({values[0], values[1], values[4], values[5],
                              values[6], values[7], values[2], values[3]},
                             {4, 2}, &rewriter);
 }
@@ -129,7 +129,7 @@ DenseIntElementsAttr createNCDHW2NDHWCAttr2(PatternRewriter &rewriter,
   }
   auto values = attr.getValues<int64_t>();
   assert(values.size() == 5 * 2);
-  return GetI64ElementsAttr({values[0], values[1], values[4], values[5],
+  return getI64ElementsAttr({values[0], values[1], values[4], values[5],
                              values[6], values[7], values[8], values[9],
                              values[2], values[3]},
                             {5, 2}, &rewriter);
@@ -147,53 +147,53 @@ struct ConvLayoutTransformationPattern
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
-    auto dimension_numbers = op.dimension_numbers();
-    auto conv_layout = getConvLayout(dimension_numbers);
-    auto input_layout = std::get<0>(conv_layout);
-    auto kernel_layout = std::get<1>(conv_layout);
-    auto output_layout = std::get<2>(conv_layout);
+    auto dimensionNumbers = op.dimension_numbers();
+    auto convLayout = getConvLayout(dimensionNumbers);
+    auto inputLayout = std::get<0>(convLayout);
+    auto kernelLayout = std::get<1>(convLayout);
+    auto outputLayout = std::get<2>(convLayout);
 
     if (targetLayout == "NHWC") {
-      if (input_layout == "NCHW" && kernel_layout == "NCHW" &&
-          output_layout == "NCHW") {
-        Value lhs_transpose =
+      if (inputLayout == "NCHW" && kernelLayout == "NCHW" &&
+          outputLayout == "NCHW") {
+        Value lhsTranspose =
             createNCHW2NHWCValue(rewriter, op->getLoc(), op.lhs());
-        Value rhs_transpose =
+        Value rhsTranspose =
             createNCHW2NHWCValue(rewriter, op->getLoc(), op.rhs());
-        Type output_type = createNCHW2NHWCType(op.getResult().getType());
-        auto new_dimension_numbers = mhlo::ConvDimensionNumbersAttr::get(
+        Type outputType = createNCHW2NHWCType(op.getResult().getType());
+        auto newDimensionNumbers = mhlo::ConvDimensionNumbersAttr::get(
             rewriter.getContext(), 0, 3, {1, 2}, 3, 0, {1, 2}, 0, 3, {1, 2});
         auto newOp = rewriter.create<mhlo::ConvolutionOp>(
-            op->getLoc(), output_type, lhs_transpose, rhs_transpose,
+            op->getLoc(), outputType, lhsTranspose, rhsTranspose,
             op.window_stridesAttr(), op.paddingAttr(), op.lhs_dilationAttr(),
             op.rhs_dilationAttr(), op.window_reversalAttr(),
-            new_dimension_numbers, op.feature_group_countAttr(),
+            newDimensionNumbers, op.feature_group_countAttr(),
             op.batch_group_countAttr(), op.precision_configAttr());
-        Value output_transpose =
+        Value outputTranspose =
             createNHWC2NCHWValue(rewriter, op->getLoc(), newOp.getResult());
-        rewriter.replaceOp(op, output_transpose);
+        rewriter.replaceOp(op, outputTranspose);
         return success();
       }
     } else if (targetLayout == "NDHWC") {
-      if (input_layout == "NCDHW" && kernel_layout == "NCDHW" &&
-          output_layout == "NCDHW") {
-        Value lhs_transpose =
+      if (inputLayout == "NCDHW" && kernelLayout == "NCDHW" &&
+          outputLayout == "NCDHW") {
+        Value lhsTranspose =
             createNCDHW2NDHWCValue(rewriter, op->getLoc(), op.lhs());
-        Value rhs_transpose =
+        Value rhsTranspose =
             createNCDHW2NDHWCValue(rewriter, op->getLoc(), op.rhs());
-        Type output_type = createNCDHW2NDHWCType(op.getResult().getType());
-        auto new_dimension_numbers = mhlo::ConvDimensionNumbersAttr::get(
+        Type outputType = createNCDHW2NDHWCType(op.getResult().getType());
+        auto newDimensionNumbers = mhlo::ConvDimensionNumbersAttr::get(
             rewriter.getContext(), 0, 4, {1, 2, 3}, 4, 0, {1, 2, 3}, 0, 4,
             {1, 2, 3});
         auto newOp = rewriter.create<mhlo::ConvolutionOp>(
-            op->getLoc(), output_type, lhs_transpose, rhs_transpose,
+            op->getLoc(), outputType, lhsTranspose, rhsTranspose,
             op.window_stridesAttr(), op.paddingAttr(), op.lhs_dilationAttr(),
             op.rhs_dilationAttr(), op.window_reversalAttr(),
-            new_dimension_numbers, op.feature_group_countAttr(),
+            newDimensionNumbers, op.feature_group_countAttr(),
             op.batch_group_countAttr(), op.precision_configAttr());
-        Value output_transpose =
+        Value outputTranspose =
             createNDHWC2NCDHWValue(rewriter, op->getLoc(), newOp.getResult());
-        rewriter.replaceOp(op, output_transpose);
+        rewriter.replaceOp(op, outputTranspose);
         return success();
       }
     }
@@ -210,45 +210,45 @@ struct ConvBackwardLayoutTransformationPattern
 
   LogicalResult matchAndRewrite(mhlo::FusionOp op,
                                 PatternRewriter &rewriter) const override {
-    StringAttr compute_name =
+    StringAttr computeName =
         op->getAttrOfType<StringAttr>(byre::getByreComputeName());
-    if (!compute_name) {
+    if (!computeName) {
       return failure();
     }
-    if (compute_name.getValue() != "ConvBackwardDataOp" &&
-        compute_name.getValue() != "ConvBackwardFilterOp") {
+    if (computeName.getValue() != "ConvBackwardDataOp" &&
+        computeName.getValue() != "ConvBackwardFilterOp") {
       return failure();
     }
-    auto input_layout =
+    auto inputLayout =
         op->getAttrOfType<StringAttr>(byre::getByrePrefix() + "input_layout")
             .getValue();
-    auto kernel_layout =
+    auto kernelLayout =
         op->getAttrOfType<StringAttr>(byre::getByrePrefix() + "kernel_layout")
             .getValue();
-    auto output_layout =
+    auto outputLayout =
         op->getAttrOfType<StringAttr>(byre::getByrePrefix() + "output_layout")
             .getValue();
 
     if (targetLayout == "NHWC") {
-      if (input_layout == "NCHW" && kernel_layout == "NCHW" &&
-          output_layout == "NCHW") {
-        Value lhs_transpose =
+      if (inputLayout == "NCHW" && kernelLayout == "NCHW" &&
+          outputLayout == "NCHW") {
+        Value lhsTranspose =
             createNCHW2NHWCValue(rewriter, op->getLoc(), op->getOperand(0));
-        Value rhs_transpose =
+        Value rhsTranspose =
             createNCHW2NHWCValue(rewriter, op->getLoc(), op->getOperand(1));
-        Value lhs = createNHWC2NCHWValue(rewriter, op->getLoc(), lhs_transpose);
-        Value rhs = createNHWC2NCHWValue(rewriter, op->getLoc(), rhs_transpose);
-        Type output_type = createNCHW2NHWCType(op->getResult(0).getType());
+        Value lhs = createNHWC2NCHWValue(rewriter, op->getLoc(), lhsTranspose);
+        Value rhs = createNHWC2NCHWValue(rewriter, op->getLoc(), rhsTranspose);
+        Type outputType = createNCHW2NHWCType(op->getResult(0).getType());
         auto newOp = rewriter.create<mhlo::FusionOp>(
-            op->getLoc(), ArrayRef<Type>{output_type},
-            ArrayRef<Value>{lhs_transpose, rhs_transpose}, op->getAttrs());
+            op->getLoc(), ArrayRef<Type>{outputType},
+            ArrayRef<Value>{lhsTranspose, rhsTranspose}, op->getAttrs());
         newOp->setAttr(byre::getByrePrefix() + "input_layout",
                        rewriter.getStringAttr("NHWC"));
         newOp->setAttr(byre::getByrePrefix() + "kernel_layout",
                        rewriter.getStringAttr("NHWC"));
         newOp->setAttr(byre::getByrePrefix() + "output_layout",
                        rewriter.getStringAttr("NHWC"));
-        Value output_transpose =
+        Value outputTranspose =
             createNHWC2NCHWValue(rewriter, op->getLoc(), newOp->getResult(0));
         BlockAndValueMapping bvm;
         bvm.map(op->getOperand(0), lhs);
@@ -269,7 +269,7 @@ struct ConvBackwardLayoutTransformationPattern
           lhs.getDefiningOp()->moveBefore(&block.front());
         }
 
-        rewriter.replaceOp(op, output_transpose);
+        rewriter.replaceOp(op, outputTranspose);
         return success();
       }
     }
@@ -297,42 +297,42 @@ struct ReduceWindownLayoutTransformationPattern
     auto layout = getPoolLayout(op);
 
     if (targetLayout == "NHWC" && layout == "NCHW") {
-      Value operand_transpose =
+      Value operandTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), operand);
-      Type output_type = createNCHW2NHWCType(op->getResults()[0].getType());
+      Type outputType = createNCHW2NHWCType(op->getResults()[0].getType());
       auto newOp = rewriter.create<mhlo::ReduceWindowOp>(
-          op->getLoc(), ArrayRef<Type>{output_type},
-          ArrayRef<Value>{operand_transpose}, op.init_values(),
+          op->getLoc(), ArrayRef<Type>{outputType},
+          ArrayRef<Value>{operandTranspose}, op.init_values(),
           createNCHW2NHWCAttr(rewriter, op.window_dimensionsAttr()),
           createNCHW2NHWCAttr(rewriter, op.window_stridesAttr()),
           createNCHW2NHWCAttr(rewriter, op.base_dilationsAttr()),
           createNCHW2NHWCAttr(rewriter, op.window_dilationsAttr()),
           createNCHW2NHWCAttr2(rewriter, op.paddingAttr()));
       // clone body
-      BlockAndValueMapping empty_map;
-      op.body().cloneInto(&newOp.body(), empty_map);
-      Value output_transpose =
+      BlockAndValueMapping emptyBvm;
+      op.body().cloneInto(&newOp.body(), emptyBvm);
+      Value outputTranspose =
           createNHWC2NCHWValue(rewriter, op->getLoc(), newOp->getResults()[0]);
-      rewriter.replaceOp(op, output_transpose);
+      rewriter.replaceOp(op, outputTranspose);
       return success();
     } else if (targetLayout == "NDHWC" && layout == "NCDHW") {
-      Value operand_transpose =
+      Value operandTranspose =
           createNCDHW2NDHWCValue(rewriter, op->getLoc(), operand);
-      Type output_type = createNCDHW2NDHWCType(op->getResults()[0].getType());
+      Type outputType = createNCDHW2NDHWCType(op->getResults()[0].getType());
       auto newOp = rewriter.create<mhlo::ReduceWindowOp>(
-          op->getLoc(), ArrayRef<Type>{output_type},
-          ArrayRef<Value>{operand_transpose}, op.init_values(),
+          op->getLoc(), ArrayRef<Type>{outputType},
+          ArrayRef<Value>{operandTranspose}, op.init_values(),
           createNCDHW2NDHWCAttr(rewriter, op.window_dimensionsAttr()),
           createNCDHW2NDHWCAttr(rewriter, op.window_stridesAttr()),
           createNCDHW2NDHWCAttr(rewriter, op.base_dilationsAttr()),
           createNCDHW2NDHWCAttr(rewriter, op.window_dilationsAttr()),
           createNCDHW2NDHWCAttr2(rewriter, op.paddingAttr()));
       // clone body
-      BlockAndValueMapping empty_map;
-      op.body().cloneInto(&newOp.body(), empty_map);
-      Value output_transpose = createNDHWC2NCDHWValue(rewriter, op->getLoc(),
-                                                      newOp->getResults()[0]);
-      rewriter.replaceOp(op, output_transpose);
+      BlockAndValueMapping emptyBvm;
+      op.body().cloneInto(&newOp.body(), emptyBvm);
+      Value outputTranspose = createNDHWC2NCDHWValue(rewriter, op->getLoc(),
+                                                     newOp->getResults()[0]);
+      rewriter.replaceOp(op, outputTranspose);
       return success();
     }
     return failure();
@@ -354,44 +354,44 @@ struct SelectAndScatterLayoutTransformationPattern
     auto layout = getPoolGradLayout(op);
 
     if (targetLayout == "NHWC" && layout == "NCHW") {
-      Value operand_transpose =
+      Value operandTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), op.operand());
-      Value source_transpose =
+      Value sourceTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), op.source());
-      Type output_type = createNCHW2NHWCType(op.getResult().getType());
+      Type outputType = createNCHW2NHWCType(op.getResult().getType());
       auto newOp = rewriter.create<mhlo::SelectAndScatterOp>(
-          op->getLoc(), output_type, operand_transpose, source_transpose,
+          op->getLoc(), outputType, operandTranspose, sourceTranspose,
           op.init_value(),
           createNCHW2NHWCAttr(rewriter, op.window_dimensionsAttr()),
           createNCHW2NHWCAttr(rewriter, op.window_stridesAttr()),
           createNCHW2NHWCAttr2(rewriter, op.paddingAttr()));
       // clone body
-      BlockAndValueMapping empty_map;
-      op.select().cloneInto(&newOp.select(), empty_map);
-      op.scatter().cloneInto(&newOp.scatter(), empty_map);
-      Value output_transpose =
+      BlockAndValueMapping emptyBvm;
+      op.select().cloneInto(&newOp.select(), emptyBvm);
+      op.scatter().cloneInto(&newOp.scatter(), emptyBvm);
+      Value outputTranspose =
           createNHWC2NCHWValue(rewriter, op->getLoc(), newOp.getResult());
-      rewriter.replaceOp(op, output_transpose);
+      rewriter.replaceOp(op, outputTranspose);
       return success();
     } else if (targetLayout == "NDHWC" && layout == "NCDHW") {
-      Value operand_transpose =
+      Value operandTranspose =
           createNCDHW2NDHWCValue(rewriter, op->getLoc(), op.operand());
-      Value source_transpose =
+      Value sourceTranspose =
           createNCDHW2NDHWCValue(rewriter, op->getLoc(), op.source());
-      Type output_type = createNCDHW2NDHWCType(op.getResult().getType());
+      Type outputType = createNCDHW2NDHWCType(op.getResult().getType());
       auto newOp = rewriter.create<mhlo::SelectAndScatterOp>(
-          op->getLoc(), output_type, operand_transpose, source_transpose,
+          op->getLoc(), outputType, operandTranspose, sourceTranspose,
           op.init_value(),
           createNCDHW2NDHWCAttr(rewriter, op.window_dimensionsAttr()),
           createNCDHW2NDHWCAttr(rewriter, op.window_stridesAttr()),
           createNCDHW2NDHWCAttr2(rewriter, op.paddingAttr()));
       // clone body
-      BlockAndValueMapping empty_map;
-      op.select().cloneInto(&newOp.select(), empty_map);
-      op.scatter().cloneInto(&newOp.scatter(), empty_map);
-      Value output_transpose =
+      BlockAndValueMapping emptyBvm;
+      op.select().cloneInto(&newOp.select(), emptyBvm);
+      op.scatter().cloneInto(&newOp.scatter(), emptyBvm);
+      Value outputTranspose =
           createNDHWC2NCDHWValue(rewriter, op->getLoc(), newOp.getResult());
-      rewriter.replaceOp(op, output_transpose);
+      rewriter.replaceOp(op, outputTranspose);
       return success();
     }
     return failure();
@@ -414,21 +414,21 @@ struct BatchNormTrainingLayoutTransformationPattern
     auto input_type = op.operand().getType().cast<RankedTensorType>();
     if (targetLayout == "NHWC" && input_type.getRank() == 4 &&
         op.feature_index() == 1) {
-      Value input_transpose =
+      Value inputTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), op.operand());
-      Type output_type = createNCHW2NHWCType(op.output().getType());
-      mhlo::BatchNormTrainingOp op_transpose =
+      Type outputType = createNCHW2NHWCType(op.output().getType());
+      mhlo::BatchNormTrainingOp opTranspose =
           rewriter.create<mhlo::BatchNormTrainingOp>(
               op->getLoc(),
-              ArrayRef<Type>{output_type, op.batch_mean().getType(),
+              ArrayRef<Type>{outputType, op.batch_mean().getType(),
                              op.batch_var().getType()},
-              input_transpose, op.scale(), op.offset(), op.epsilonAttr(),
+              inputTranspose, op.scale(), op.offset(), op.epsilonAttr(),
               rewriter.getI64IntegerAttr(3));
-      Value output_transpose =
-          createNHWC2NCHWValue(rewriter, op->getLoc(), op_transpose.output());
+      Value outputTranspose =
+          createNHWC2NCHWValue(rewriter, op->getLoc(), opTranspose.output());
 
-      rewriter.replaceOp(op, {output_transpose, op_transpose.batch_mean(),
-                              op_transpose.batch_var()});
+      rewriter.replaceOp(op, {outputTranspose, opTranspose.batch_mean(),
+                              opTranspose.batch_var()});
       return success();
     } else {
       return failure();
@@ -448,26 +448,26 @@ struct BatchNormGradLayoutTransformationPattern
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
-    auto input_type = op.operand().getType().cast<RankedTensorType>();
-    if (targetLayout == "NHWC" && input_type.getRank() == 4 &&
+    auto inputType = op.operand().getType().cast<RankedTensorType>();
+    if (targetLayout == "NHWC" && inputType.getRank() == 4 &&
         op.feature_index() == 1) {
-      Value operand_transpose =
+      Value operandTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), op.operand());
-      Value grad_output_transpose =
+      Value gradOutputTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), op.grad_output());
-      Type grad_operand_type = createNCHW2NHWCType(op.grad_operand().getType());
-      mhlo::BatchNormGradOp op_transpose =
+      Type gradOperandType = createNCHW2NHWCType(op.grad_operand().getType());
+      mhlo::BatchNormGradOp opTranspose =
           rewriter.create<mhlo::BatchNormGradOp>(
               op->getLoc(),
-              ArrayRef<Type>{grad_operand_type, op.grad_scale().getType(),
+              ArrayRef<Type>{gradOperandType, op.grad_scale().getType(),
                              op.grad_offset().getType()},
-              operand_transpose, op.scale(), op.mean(), op.variance(),
-              grad_output_transpose, op.epsilonAttr(),
+              operandTranspose, op.scale(), op.mean(), op.variance(),
+              gradOutputTranspose, op.epsilonAttr(),
               rewriter.getI64IntegerAttr(3));
-      Value output_transpose = createNHWC2NCHWValue(
-          rewriter, op->getLoc(), op_transpose.grad_operand());
-      rewriter.replaceOp(op, {output_transpose, op_transpose.grad_scale(),
-                              op_transpose.grad_offset()});
+      Value outputTranspose = createNHWC2NCHWValue(rewriter, op->getLoc(),
+                                                   opTranspose.grad_operand());
+      rewriter.replaceOp(op, {outputTranspose, opTranspose.grad_scale(),
+                              opTranspose.grad_offset()});
       return success();
     }
     return failure();

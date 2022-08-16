@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Analysis/OpDependence.h"
-
 #include "llvm/ADT/DenseMap.h"
 #include <utility> // pair
 
@@ -52,18 +51,18 @@ bool properlyDependsRecursion(
 } // namespace
 
 mlir::OpDependenceInfo::OpDependenceInfo(Block *b)
-    : block_(b), impl_(new OpDependenceInfoImpl()) {}
+    : block(b), impl(new OpDependenceInfoImpl()) {}
 
 mlir::OpDependenceInfo::~OpDependenceInfo() {}
 
-// TODO: use a simpler algorithm by preprocessing block_
+// TODO: use a simpler algorithm by preprocessing block
 bool mlir::OpDependenceInfo::properlyDepends(Operation *opFrom,
                                              Operation *opTo) {
   if (opFrom == opTo)
     return false;
-  return properlyDependsRecursion(opFrom, opTo, block_, impl_->memorized);
+  return properlyDependsRecursion(opFrom, opTo, block, impl->memorized);
 }
 
-bool mlir::OpDependenceInfo::Depends(Operation *a, Operation *b) {
+bool mlir::OpDependenceInfo::depends(Operation *a, Operation *b) {
   return a == b || properlyDepends(a, b);
 }

@@ -49,11 +49,11 @@ struct IOConvertFusionPattern : public OpRewritePattern<OpTy> {
       auto value = op->getOperand(idx);
       auto defOp = value.getDefiningOp();
       if (isa_and_nonnull<mhlo::ConvertOp>(defOp)) {
-        auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
+        auto cloned = replicateDefiningOp(rewriter, op, idx, 0);
         pattern.push_back(cloned);
         inputs.push_back(cloned->getOperand(0));
       } else if (isSplatMhloConstant(defOp)) {
-        auto cloned = ReplicateDefiningOp(rewriter, op, idx, 0);
+        auto cloned = replicateDefiningOp(rewriter, op, idx, 0);
         pattern.push_back(cloned);
       } else {
         inputs.push_back(value);
@@ -67,11 +67,11 @@ struct IOConvertFusionPattern : public OpRewritePattern<OpTy> {
     for (unsigned idx = 0; idx < op->getNumResults(); ++idx) {
       auto value = op->getResult(idx);
 
-      if (UseCount(value) == 0) {
+      if (useCount(value) == 0) {
         continue;
       }
 
-      if (UseCount(value) > 1) {
+      if (useCount(value) > 1) {
         outputs.push_back(value);
         continue;
       }

@@ -6,13 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/LoopTag.h"
-#include "./PassDetail.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "byteir/Utils/LoopUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/IR/MLIRContext.h"
-#include <iostream>
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

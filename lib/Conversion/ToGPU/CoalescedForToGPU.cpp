@@ -5,7 +5,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "../PassDetail.h"
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
@@ -23,6 +22,8 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Sequence.h"
 #include "llvm/Support/Debug.h"
+
+#include "../PassDetail.h"
 
 #define DEBUG_TYPE "coadesced-for-to-gpu"
 

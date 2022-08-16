@@ -29,14 +29,14 @@ public:
   // "Properly" means this function assumes OpFrom is not opTo
   bool properlyDepends(Operation *opFrom, Operation *opTo);
 
-  // "Depends" means either opFrom equal to opTo,
+  // "depends" means either opFrom equal to opTo,
   // or opFrom properly depends opTo.
-  bool Depends(Operation *opFrom, Operation *opTo);
+  bool depends(Operation *opFrom, Operation *opTo);
 
 private:
-  Block *block_;
+  Block *block;
 
-  std::unique_ptr<OpDependenceInfoImpl> impl_;
+  std::unique_ptr<OpDependenceInfoImpl> impl;
 };
 
 } // namespace mlir

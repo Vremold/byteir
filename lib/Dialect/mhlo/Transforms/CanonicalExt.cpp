@@ -199,7 +199,7 @@ template <typename T> struct Xor {
 } // namespace
 
 // FIXME: this pattern should move to shape dialect
-LogicalResult mlir::mhlo::FoldShapeBroadcast(shape::BroadcastOp op,
+LogicalResult mlir::mhlo::foldShapeBroadcast(shape::BroadcastOp op,
                                              PatternRewriter &rewriter) {
 
   SmallVector<SmallVector<int64_t>> shapes;
@@ -265,7 +265,7 @@ LogicalResult mlir::mhlo::FoldShapeBroadcast(shape::BroadcastOp op,
   return failure();
 }
 
-LogicalResult mlir::mhlo::FoldBroadcastInDim(BroadcastInDimOp op,
+LogicalResult mlir::mhlo::foldBroadcastInDim(BroadcastInDimOp op,
                                              PatternRewriter &rewriter) {
   if (!op->getResult(0).hasOneUse())
     return failure();
@@ -421,7 +421,7 @@ static void computeBeginAndEnd(const ConcatChunk &chunk, size_t dim,
 ///  Fold concatenate of continuous slices
 ///  FIXME: support static only for now
 LogicalResult
-mlir::mhlo::FoldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
+mlir::mhlo::foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
                                            PatternRewriter &rewriter) {
 
   // support static now
@@ -493,7 +493,7 @@ mlir::mhlo::FoldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
 }
 
 template <typename Op, template <typename> typename Func>
-LogicalResult mlir::mhlo::FoldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
+LogicalResult mlir::mhlo::foldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
   auto lhsOp = op.lhs().template getDefiningOp<mhlo::ConstantOp>();
   auto rhsOp = op.rhs().template getDefiningOp<mhlo::ConstantOp>();
   if (!lhsOp || !rhsOp) {
@@ -539,14 +539,14 @@ void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
   }
 
   // add our extension
-  results.add(mlir::mhlo::FoldBroadcastInDim);
-  results.add(mlir::mhlo::FoldConcatWithContinuousSlices);
-  results.add(mlir::mhlo::FoldShapeBroadcast);
-  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::AddOp, std::plus>);
-  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
-  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::SubtractOp, std::minus>);
-  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::DivOp, Divide>);
-  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::RemOp, Remainder>);
-  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::MaxOp, Max>);
-  results.add(mlir::mhlo::FoldLargeBinaryOp<mhlo::MinOp, Min>);
+  results.add(mlir::mhlo::foldBroadcastInDim);
+  results.add(mlir::mhlo::foldConcatWithContinuousSlices);
+  results.add(mlir::mhlo::foldShapeBroadcast);
+  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
+  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
+  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::SubtractOp, std::minus>);
+  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::DivOp, Divide>);
+  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::RemOp, Remainder>);
+  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MaxOp, Max>);
+  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MinOp, Min>);
 }

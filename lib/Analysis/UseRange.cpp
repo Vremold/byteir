@@ -14,14 +14,12 @@ limitations under the License.
 ==============================================================================*/
 
 #include "byteir/Analysis/UseRange.h"
-
-#include <algorithm>
-#include <utility>
-
 #include "mlir/IR/Block.h"
 #include "mlir/IR/Region.h"
 #include "mlir/Interfaces/LoopLikeInterface.h"
 #include "llvm/ADT/SetOperations.h"
+#include <algorithm>
+#include <utility>
 
 using namespace mlir;
 using namespace byteir;
