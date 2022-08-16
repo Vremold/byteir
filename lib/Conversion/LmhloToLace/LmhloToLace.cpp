@@ -46,9 +46,6 @@ struct ConvertSlice : public OpConversionPattern<lmhlo::SliceOp> {
   LogicalResult
   matchAndRewrite(lmhlo::SliceOp op, lmhlo::SliceOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    auto allocOp = adaptor.getOutput().getDefiningOp<memref::AllocOp>();
-    if (!allocOp)
-      return failure();
 
     SmallVector<int64_t> startIndices, limitIndices, strides;
     getValuesFromDenseIntElementsAttr(op.getStartIndices(), startIndices);
@@ -67,13 +64,24 @@ struct ConvertSlice : public OpConversionPattern<lmhlo::SliceOp> {
                                 limitIndices, strides))
       return failure();
 
-    auto newSliceOp = rewriter.create<lace::SliceOp>(
-        op.getLoc(), adaptor.getOutput().getType(), adaptor.getOperand(),
-        op.getStartIndices(), op.getLimitIndices(), op.getStrides());
-    rewriter.replaceOp(allocOp, newSliceOp.getResult());
-    rewriter.eraseOp(op);
+    if (auto allocOp = adaptor.getOutput().getDefiningOp<memref::AllocOp>()) {
+      auto newSliceOp = rewriter.create<lace::SliceOp>(
+          op.getLoc(), adaptor.getOutput().getType(), adaptor.getOperand(),
+          op.getStartIndices(), op.getLimitIndices(), op.getStrides());
+      rewriter.replaceOp(allocOp, newSliceOp.getResult());
+      rewriter.eraseOp(op);
+      return success();
+    } else if (adaptor.getOutput().isa<BlockArgument>()) {
+      auto newSliceOp = rewriter.create<lace::SliceOp>(
+          op.getLoc(), adaptor.getOutput().getType(), adaptor.getOperand(),
+          op.getStartIndices(), op.getLimitIndices(), op.getStrides());
+      rewriter.create<memref::CopyOp>(op.getLoc(), newSliceOp.target(),
+                                      adaptor.getOutput());
+      rewriter.eraseOp(op);
+      return success();
+    }
 
-    return success();
+    return failure();
   }
 };
 
@@ -89,7 +97,7 @@ public:
     populateLmhloToLacePattern(patterns);
     target.addIllegalOp<lmhlo::ReshapeOp>();
     target.addIllegalOp<lmhlo::SliceOp>();
-    target.addLegalDialect<lace::LaceDialect>();
+    target.addLegalDialect<lace::LaceDialect, memref::MemRefDialect>();
     if (failed(applyPartialConversion(funcOp, target, std::move(patterns)))) {
       signalPassFailure();
     }
