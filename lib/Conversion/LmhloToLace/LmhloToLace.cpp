@@ -85,6 +85,53 @@ struct ConvertSlice : public OpConversionPattern<lmhlo::SliceOp> {
   }
 };
 
+// Split lmhlo.concat into lace.slice + memref.copy
+//
+// TODO: optimize it as reverse view if possible (i.e. the concat input as an
+// view of the output)
+struct ConvertConcat : public OpConversionPattern<lmhlo::ConcatenateOp> {
+  using OpConversionPattern<lmhlo::ConcatenateOp>::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(lmhlo::ConcatenateOp op,
+                  lmhlo::ConcatenateOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    auto checkStaticShapeMemRef = [&](auto &&operand) {
+      if (auto memrefType =
+              operand.getType().template dyn_cast_or_null<MemRefType>()) {
+        return memrefType.hasStaticShape();
+      }
+      return false;
+    };
+    if (!llvm::all_of(adaptor.getOperands(), checkStaticShapeMemRef)) {
+      return failure();
+    }
+
+    auto outputType = adaptor.getOutput().getType().cast<MemRefType>();
+    auto rank = outputType.getRank();
+    auto concatDim = op.getDimension();
+    SmallVector<int64_t> startIndices(rank, 0);
+    SmallVector<int64_t> limitIndices = llvm::to_vector(outputType.getShape());
+    SmallVector<int64_t> strides(rank, 1);
+
+    for (auto &&i : adaptor.getVal()) {
+      auto concatSize = i.getType().cast<ShapedType>().getDimSize(concatDim);
+      limitIndices[concatDim] = startIndices[concatDim] + concatSize;
+
+      Value target = rewriter.create<lace::SliceOp>(
+          op.getLoc(), i.getType(), adaptor.getOutput(),
+          rewriter.getI64TensorAttr(startIndices),
+          rewriter.getI64TensorAttr(limitIndices),
+          rewriter.getI64TensorAttr(strides));
+      rewriter.create<memref::CopyOp>(op.getLoc(), i, target);
+
+      startIndices[concatDim] = limitIndices[concatDim];
+    }
+    rewriter.eraseOp(op);
+    return success();
+  }
+};
+
 struct LmhloToLacePass : public LmhloToLaceBase<LmhloToLacePass> {
 public:
   LmhloToLacePass() : LmhloToLaceBase() {}
@@ -97,6 +144,7 @@ public:
     populateLmhloToLacePattern(patterns);
     target.addIllegalOp<lmhlo::ReshapeOp>();
     target.addIllegalOp<lmhlo::SliceOp>();
+    target.addIllegalOp<lmhlo::ConcatenateOp>();
     target.addLegalDialect<lace::LaceDialect, memref::MemRefDialect>();
     if (failed(applyPartialConversion(funcOp, target, std::move(patterns)))) {
       signalPassFailure();
@@ -107,7 +155,8 @@ public:
 } // namespace
 
 void mlir::populateLmhloToLacePattern(RewritePatternSet &patterns) {
-  patterns.add<ConvertReshape, ConvertSlice>(patterns.getContext());
+  patterns.add<ConvertReshape, ConvertSlice, ConvertConcat>(
+      patterns.getContext());
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>> mlir::createLmhloToLacePass() {
