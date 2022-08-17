@@ -56,7 +56,7 @@ void mlir::collapseFuncRegion(func::FuncOp func) {
   }
 
   for (auto op : ops) {
-    op->moveAfter(&func.getBody().front().back());
+    op->moveBefore(&blocks.front(), blocks.front().end());
   }
 
   for (unsigned i = 0; i < tailBlockCnt; ++i) {
