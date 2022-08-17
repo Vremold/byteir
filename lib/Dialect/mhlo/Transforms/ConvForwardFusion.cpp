@@ -87,6 +87,61 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
   }
 };
 
+struct FuseConvBiasPattern : public OpRewritePattern<mhlo::AddOp> {
+  using OpRewritePattern<mhlo::AddOp>::OpRewritePattern;
+  LogicalResult matchAndRewrite(mhlo::AddOp op,
+                                PatternRewriter &rewriter) const override {
+    if (op->getParentOfType<mhlo::FusionOp>()) {
+      return failure();
+    }
+    mhlo::BroadcastInDimOp broadcastOp =
+        op.rhs().getDefiningOp<mhlo::BroadcastInDimOp>();
+    if (!broadcastOp || broadcastOp.broadcast_dimensions().size() != 1) {
+      return failure();
+    }
+    int64_t broadcastDim =
+        (*broadcastOp.broadcast_dimensions().begin()).getSExtValue();
+    mhlo::ConvolutionOp convOp = op.lhs().getDefiningOp<mhlo::ConvolutionOp>();
+    if (!convOp) {
+      return failure();
+    }
+
+    SmallVector<Value> inputs{convOp.lhs(), convOp.rhs(),
+                              broadcastOp.operand()};
+    SmallVector<Value> outputs{op.getResult()};
+    MhloFusionPattern pattern{convOp, broadcastOp, op};
+
+    NamedAttrList originAttrs;
+    handleConvAttribute(originAttrs, convOp, rewriter);
+
+    NamedAttrList attrs;
+    for (const auto &attr : originAttrs) {
+      // check bias_add
+      if (attr.getName() == "output_layout") {
+        auto layout = attr.getValue().cast<StringAttr>().getValue();
+        if (layout == "NCHW" && broadcastDim != 1) {
+          return failure();
+        }
+        if (layout == "NHWC" && broadcastDim != 3) {
+          return failure();
+        }
+      }
+
+      byre::appendByreComputeAttr(attrs, attr.getName(), attr.getValue());
+    }
+    byre::appendByreComputeAttr(attrs, "act_func",
+                                rewriter.getStringAttr("none"));
+    attrs.append(byre::getByreComputeName(),
+                 rewriter.getStringAttr("ConvBiasOp"));
+
+    mhlo::FusionOp fusionOp =
+        createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
+    fusionOp->setAttrs(attrs.getDictionary(getContext()));
+
+    return success();
+  }
+};
+
 struct ConvForwardFusionPass
     : public ConvForwardFusionBase<ConvForwardFusionPass> {
 
@@ -104,7 +159,9 @@ struct ConvForwardFusionPass
 } // namespace
 
 void mlir::populateFuseConvForwardPatterns(RewritePatternSet &patterns) {
-  patterns.add(std::make_unique<FuseConvBiasActPattern>(patterns.getContext()));
+  patterns.add(
+      std::make_unique<FuseConvBiasActPattern>(patterns.getContext(), 10));
+  patterns.add(std::make_unique<FuseConvBiasPattern>(patterns.getContext(), 5));
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>

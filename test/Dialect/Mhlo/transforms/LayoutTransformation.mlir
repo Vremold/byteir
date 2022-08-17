@@ -43,6 +43,14 @@ func.func @conv_NCHW(%arg0: tensor<5x69x31x95xf32>, %arg1: tensor<64x69x1x1xf32>
 // CHECK-NEXT:  mhlo.transpose{{.*}}permutation = dense<[0, 3, 1, 2]>
 // CHECK-NEXT:  return
 
+func.func @conv_NHWC(%125: tensor<1x56x56x64xf32>, %54: tensor<1x1x64x256xf32>) -> tensor<1x56x56x256xf32> {
+  %126 = mhlo.convolution(%125, %54) dim_numbers = [b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f], window = {stride = [1, 1], pad = [[0, 0], [0, 0]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x56x56x64xf32>, tensor<1x1x64x256xf32>) -> tensor<1x56x56x256xf32>
+  return %126 : tensor<1x56x56x256xf32>
+}
+// CHECK-LABEL: func.func @conv_NHWC
+// CHECK-NEXT:  %0 = "mhlo.transpose"(%arg1) {permutation = dense<[3, 0, 1, 2]> : tensor<4xi64>} : (tensor<1x1x64x256xf32>) -> tensor<256x1x1x64xf32>
+// CHECK-NEXT:  %1 = mhlo.convolution(%arg0, %0) dim_numbers = [b, 0, 1, f]x[o, 0, 1, i]->[b, 0, 1, f], window = {stride = [1, 1], pad = {{\[}}[0, 0], [0, 0]{{\]}}, lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<1x56x56x64xf32>, tensor<256x1x1x64xf32>) -> tensor<1x56x56x256xf32>
+
 func.func @conv_backward_data(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<32x64x56x56xf16> {
   %0 = "mhlo.fusion"(%arg0, %arg1) ({
     %1 = "mhlo.transpose"(%arg1) {permutation = dense<[2, 3, 1, 0]> : tensor<4xi64>} : (tensor<64x64x3x3xf16>) -> tensor<3x3x64x64xf16>

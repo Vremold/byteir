@@ -47,6 +47,17 @@ Value createNHWC2NCHWValue(PatternRewriter &rewriter, Location loc,
       loc, new_type, input, rewriter.getI64TensorAttr({0, 3, 1, 2}));
 }
 
+Value createHWCN2NHWCValue(PatternRewriter &rewriter, Location loc,
+                           Value input) {
+  auto inputType = input.getType().cast<RankedTensorType>();
+  assert(inputType.getRank() == 4);
+  auto shape = inputType.getShape();
+  RankedTensorType newType = RankedTensorType::get(
+      {shape[3], shape[0], shape[1], shape[2]}, inputType.getElementType());
+  return rewriter.create<mhlo::TransposeOp>(
+      loc, newType, input, rewriter.getI64TensorAttr({3, 0, 1, 2}));
+}
+
 RankedTensorType createNCHW2NHWCType(Type type) {
   auto type_ = type.cast<RankedTensorType>();
   assert(type_.getRank() == 4);
@@ -172,6 +183,20 @@ struct ConvLayoutTransformationPattern
         Value outputTranspose =
             createNHWC2NCHWValue(rewriter, op->getLoc(), newOp.getResult());
         rewriter.replaceOp(op, outputTranspose);
+        return success();
+      } else if (inputLayout == "NHWC" && kernelLayout == "HWCN" &&
+                 outputLayout == "NHWC") {
+        Value rhsTranspose =
+            createHWCN2NHWCValue(rewriter, op->getLoc(), op.rhs());
+        auto newDimensionNumbers = mhlo::ConvDimensionNumbersAttr::get(
+            rewriter.getContext(), 0, 3, {1, 2}, 3, 0, {1, 2}, 0, 3, {1, 2});
+        mhlo::ConvolutionOp newOp = rewriter.create<mhlo::ConvolutionOp>(
+            op->getLoc(), op.getType(), op.lhs(), rhsTranspose,
+            op.window_stridesAttr(), op.paddingAttr(), op.lhs_dilationAttr(),
+            op.rhs_dilationAttr(), op.window_reversalAttr(),
+            newDimensionNumbers, op.feature_group_countAttr(),
+            op.batch_group_countAttr(), op.precision_configAttr());
+        rewriter.replaceOp(op, newOp.getResult());
         return success();
       }
     } else if (targetLayout == "NDHWC") {
