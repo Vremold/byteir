@@ -161,6 +161,12 @@ LogicalResult ShapeAnalysis::inferResultShapesWithKnowledges(
   }
 
   if (auto shapeInterface = dyn_cast<InferShapedTypeOpInterface>(op)) {
+    ValueTypeModificatoinRAII valueTypeModification;
+    for (auto &&operand : op->getOperands()) {
+      if (auto shape = shapeKnowledges(operand)) {
+        valueTypeModification.Push(operand, shape);
+      }
+    }
     ValueShapeRange range(op->getOperands(), shapeKnowledges,
                           shapeValueKnowledges);
     if (shapeInterface

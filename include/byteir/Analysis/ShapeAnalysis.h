@@ -90,6 +90,8 @@ struct ValueTypeModificatoinRAII {
   }
   void Push(Value value, Type type) {
     Type originType = value.getType();
+    if (originType == type)
+      return;
     value.setType(type);
     toRestore.emplace_back(value, originType);
   }

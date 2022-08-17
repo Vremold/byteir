@@ -135,3 +135,10 @@ func.func @dynamic_reshape_case0(%arg0: tensor<32x32xf32>, %arg1: tensor<32xi32>
   return %4 : tensor<?x30x32xf32>
 }
 //CHECK-LABEL: func.func @dynamic_reshape_case0(%arg0: tensor<32x32xf32>, %arg1: tensor<32xi32>, %arg2: tensor<32x30x32xf32>) -> tensor<?x30x32xf32, {byteir.bounded_shape = [32, 30, 32]}> {
+
+func.func @compatible_operands_and_result_type(%arg0 : tensor<?x32x32x12xf16> {byteir.bounded_shape = [6, 32, 32, 12]}) -> tensor<?x12x32x32xf16> {
+  %0 = "mhlo.transpose"(%arg0) {permutation = dense<[0, 3, 1, 2]> : tensor<4xi64>} : (tensor<?x32x32x12xf16>) -> tensor<?x12x32x32xf16>
+  %1 = "mhlo.reverse"(%0) {dimensions = dense<3> : tensor<1xi64>} : (tensor<?x12x32x32xf16>) -> tensor<?x12x32x32xf16>
+  return %1 : tensor<?x12x32x32xf16>
+}
+// CHECK-LABEL: func.func @compatible_operands_and_result_type(%arg0: tensor<?x32x32x12xf16, {byteir.bounded_shape = [6, 32, 32, 12]}> {byteir.bounded_shape = [6, 32, 32, 12]}) -> tensor<?x12x32x32xf16, {byteir.bounded_shape = [6, 12, 32, 32]}>
