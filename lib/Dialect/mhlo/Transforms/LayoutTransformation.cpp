@@ -27,24 +27,24 @@ namespace {
 
 Value createNCHW2NHWCValue(PatternRewriter &rewriter, Location loc,
                            Value input) {
-  auto input_type = input.getType().cast<RankedTensorType>();
-  assert(input_type.getRank() == 4);
-  auto shape = input_type.getShape();
-  RankedTensorType new_type = RankedTensorType::get(
-      {shape[0], shape[2], shape[3], shape[1]}, input_type.getElementType());
+  auto inputType = input.getType().cast<RankedTensorType>();
+  assert(inputType.getRank() == 4);
+  auto shape = inputType.getShape();
+  RankedTensorType newType = RankedTensorType::get(
+      {shape[0], shape[2], shape[3], shape[1]}, inputType.getElementType());
   return rewriter.create<mhlo::TransposeOp>(
-      loc, new_type, input, rewriter.getI64TensorAttr({0, 2, 3, 1}));
+      loc, newType, input, rewriter.getI64TensorAttr({0, 2, 3, 1}));
 }
 
 Value createNHWC2NCHWValue(PatternRewriter &rewriter, Location loc,
                            Value input) {
-  auto input_type = input.getType().cast<RankedTensorType>();
-  assert(input_type.getRank() == 4);
-  auto shape = input_type.getShape();
-  RankedTensorType new_type = RankedTensorType::get(
-      {shape[0], shape[3], shape[1], shape[2]}, input_type.getElementType());
+  auto inputType = input.getType().cast<RankedTensorType>();
+  assert(inputType.getRank() == 4);
+  auto shape = inputType.getShape();
+  RankedTensorType newType = RankedTensorType::get(
+      {shape[0], shape[3], shape[1], shape[2]}, inputType.getElementType());
   return rewriter.create<mhlo::TransposeOp>(
-      loc, new_type, input, rewriter.getI64TensorAttr({0, 3, 1, 2}));
+      loc, newType, input, rewriter.getI64TensorAttr({0, 3, 1, 2}));
 }
 
 Value createHWCN2NHWCValue(PatternRewriter &rewriter, Location loc,
@@ -59,11 +59,11 @@ Value createHWCN2NHWCValue(PatternRewriter &rewriter, Location loc,
 }
 
 RankedTensorType createNCHW2NHWCType(Type type) {
-  auto type_ = type.cast<RankedTensorType>();
-  assert(type_.getRank() == 4);
-  auto shape = type_.getShape();
+  auto rankedTy = type.cast<RankedTensorType>();
+  assert(rankedTy.getRank() == 4);
+  auto shape = rankedTy.getShape();
   return RankedTensorType::get({shape[0], shape[2], shape[3], shape[1]},
-                               type_.getElementType());
+                               rankedTy.getElementType());
 }
 
 DenseIntElementsAttr createNCHW2NHWCAttr(PatternRewriter &rewriter,
@@ -91,35 +91,35 @@ DenseIntElementsAttr createNCHW2NHWCAttr2(PatternRewriter &rewriter,
 
 Value createNCDHW2NDHWCValue(PatternRewriter &rewriter, Location loc,
                              Value input) {
-  auto input_type = input.getType().cast<RankedTensorType>();
-  assert(input_type.getRank() == 5);
-  auto shape = input_type.getShape();
-  RankedTensorType new_type =
+  auto inputType = input.getType().cast<RankedTensorType>();
+  assert(inputType.getRank() == 5);
+  auto shape = inputType.getShape();
+  RankedTensorType newType =
       RankedTensorType::get({shape[0], shape[2], shape[3], shape[4], shape[1]},
-                            input_type.getElementType());
+                            inputType.getElementType());
   return rewriter.create<mhlo::TransposeOp>(
-      loc, new_type, input, rewriter.getI64TensorAttr({0, 2, 3, 4, 1}));
+      loc, newType, input, rewriter.getI64TensorAttr({0, 2, 3, 4, 1}));
 }
 
 Value createNDHWC2NCDHWValue(PatternRewriter &rewriter, Location loc,
                              Value input) {
-  auto input_type = input.getType().cast<RankedTensorType>();
-  assert(input_type.getRank() == 5);
-  auto shape = input_type.getShape();
-  RankedTensorType new_type =
+  auto inputType = input.getType().cast<RankedTensorType>();
+  assert(inputType.getRank() == 5);
+  auto shape = inputType.getShape();
+  RankedTensorType newType =
       RankedTensorType::get({shape[0], shape[4], shape[1], shape[2], shape[3]},
-                            input_type.getElementType());
+                            inputType.getElementType());
   return rewriter.create<mhlo::TransposeOp>(
-      loc, new_type, input, rewriter.getI64TensorAttr({0, 4, 1, 2, 3}));
+      loc, newType, input, rewriter.getI64TensorAttr({0, 4, 1, 2, 3}));
 }
 
 RankedTensorType createNCDHW2NDHWCType(Type type) {
-  auto type_ = type.cast<RankedTensorType>();
-  assert(type_.getRank() == 5);
-  auto shape = type_.getShape();
+  auto rankedTy = type.cast<RankedTensorType>();
+  assert(rankedTy.getRank() == 5);
+  auto shape = rankedTy.getShape();
   return RankedTensorType::get(
       {shape[0], shape[2], shape[3], shape[4], shape[1]},
-      type_.getElementType());
+      rankedTy.getElementType());
 }
 
 DenseIntElementsAttr createNCDHW2NDHWCAttr(PatternRewriter &rewriter,
@@ -436,8 +436,8 @@ struct BatchNormTrainingLayoutTransformationPattern
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
-    auto input_type = op.operand().getType().cast<RankedTensorType>();
-    if (targetLayout == "NHWC" && input_type.getRank() == 4 &&
+    auto inputType = op.operand().getType().cast<RankedTensorType>();
+    if (targetLayout == "NHWC" && inputType.getRank() == 4 &&
         op.feature_index() == 1) {
       Value inputTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), op.operand());

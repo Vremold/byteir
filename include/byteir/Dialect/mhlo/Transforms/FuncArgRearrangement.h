@@ -9,6 +9,7 @@
 #define BYTEIR_DIALECT_MHLO_TRANSFORMS_FUNCARGREARRANGEMENT_H
 
 #include "mlir/Pass/Pass.h"
+#include "llvm/ADT/SmallVector.h"
 #include <memory>
 #include <string>
 
@@ -37,8 +38,8 @@ public:
   virtual Value getOrCreateNewFromOldFuncArg(OpBuilder &b, unsigned newId,
                                              ArrayRef<Value> oldValues) = 0;
 
-  // note old arg might not be constructed from new ones
-  virtual llvm::Optional<Value>
+  // note old arg might have many or non ways to be constructed from new ones
+  virtual llvm::SmallVector<Value>
   getOrCreateOldFromNewFuncArg(OpBuilder &b, unsigned oldId,
                                ArrayRef<Value> newValues) = 0;
 
@@ -46,8 +47,8 @@ public:
   virtual Value getOrCreateNewFromOldFuncResult(OpBuilder &b, unsigned newId,
                                                 ArrayRef<Value> oldValues) = 0;
 
-  // note old result might not be constructed from new ones
-  virtual llvm::Optional<Value>
+  // note old result might have many or non ways to be constructed from new ones
+  virtual llvm::SmallVector<Value>
   getOrCreateOldFromNewFuncResult(OpBuilder &b, unsigned oldId,
                                   ArrayRef<Value> newValues) = 0;
 };

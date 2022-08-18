@@ -19,6 +19,8 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallPtrSet.h"
 
 #include "./PassDetail.h"
 
@@ -26,6 +28,36 @@ using namespace mlir;
 using namespace llvm;
 
 namespace {
+
+static void collectAllDuplicateOps(Operation *op, Value dst, Value src,
+                                   SmallVectorImpl<Operation *> &collector,
+                                   ArrayRef<Operation *> blockers) {
+  if (dst == src) {
+    collector.push_back(op);
+    return;
+  }
+
+  // dst if not src, check definingOp
+  if (Operation *def = dst.getDefiningOp()) {
+    if (llvm::is_contained(blockers, def)) {
+      return;
+    }
+
+    for (auto val : def->getOperands()) {
+      collectAllDuplicateOps(def, val, src, collector, blockers);
+    }
+  }
+}
+
+static void createExcept(SmallPtrSetImpl<Operation *> &collector, Value val,
+                         ArrayRef<Operation *> allows) {
+
+  for (auto user : val.getUsers()) {
+    if (!llvm::is_contained(allows, user)) {
+      collector.insert(user);
+    }
+  }
+}
 
 class FuncArgRearrangementPass : public ::mlir::OperationPass<ModuleOp> {
 public:
@@ -103,6 +135,9 @@ void FuncArgRearrangementPass::runOnOperation() {
     }
   }
 
+  llvm::DenseMap<Value, SmallVector<Value>> duplicateReverseMap;
+  llvm::SmallVector<func::FuncOp> newFuncs;
+
   for (auto f : targetFuncs) {
     SmallVector<Operation *> eraser;
 
@@ -118,6 +153,8 @@ void FuncArgRearrangementPass::runOnOperation() {
     auto newFunc = builder.create<func::FuncOp>(
         f->getLoc(), f.getSymName(), rearrangerPtr->getFunctionType(),
         f.getSymVisibilityAttr());
+
+    newFuncs.push_back(newFunc);
 
     cloneAllExtraFuncAttrs(f, newFunc, {anchorAttr});
 
@@ -135,16 +172,34 @@ void FuncArgRearrangementPass::runOnOperation() {
           [&](const BlockArgument &val) -> Value { return val; }));
 
       for (unsigned i = 0; i < f.getNumArguments(); ++i) {
-        auto maybeToVal =
+        auto toValList =
             rearrangerPtr->getOrCreateOldFromNewFuncArg(builder, i, newArgs);
+        if (!toValList.empty()) {
+          if (toValList.size() > 1) {
+            duplicateReverseMap.try_emplace(toValList.front(), toValList);
+          }
 
-        if (maybeToVal.hasValue()) {
-          argBvm.map(f.getArgument(i), maybeToVal.getValue());
+          argBvm.map(f.getArgument(i), toValList.front());
         }
       }
 
       // clone body by replace oldArgs to newVals
       f.getBody().cloneInto(&newFunc.getBody(), argBvm);
+
+      // update duplicateReverseMap if needed
+      for (auto &it : duplicateReverseMap) {
+        if (argBvm.contains(it.first)) {
+          auto toVal = argBvm.lookup(it.first);
+          it.first = toVal;
+        }
+
+        for (auto &v : it.second) {
+          if (argBvm.contains(v)) {
+            auto toVal = argBvm.lookup(v);
+            v = toVal;
+          }
+        }
+      }
 
       collapseFuncRegion(newFunc);
 
@@ -160,7 +215,8 @@ void FuncArgRearrangementPass::runOnOperation() {
         newRetOperands.push_back(newVal);
       }
 
-      builder.create<func::ReturnOp>(oldRet.getLoc(), newRetOperands);
+      auto newRet =
+          builder.create<func::ReturnOp>(oldRet.getLoc(), newRetOperands);
 
       // collect old ReturnOp in eraser
       eraser.push_back(oldRet);
@@ -191,17 +247,22 @@ void FuncArgRearrangementPass::runOnOperation() {
                             [&](const OpResult &val) -> Value { return val; }));
 
         for (unsigned i = 0; i < callOp.getNumResults(); ++i) {
-          auto maybeToResult = rearrangerPtr->getOrCreateOldFromNewFuncResult(
+          auto toResultList = rearrangerPtr->getOrCreateOldFromNewFuncResult(
               builder, i, newCallResults);
-          if (maybeToResult.hasValue()) {
-            callOp.getResult(i).replaceAllUsesWith(maybeToResult.getValue());
+          if (!toResultList.empty()) {
+            if (toResultList.size() > 1) {
+              duplicateReverseMap.try_emplace(toResultList.front(),
+                                              toResultList);
+            }
+
+            callOp.getResult(i).replaceAllUsesWith(toResultList.front());
           }
         }
 
         // collect old callOp in eraser
         eraser.push_back(callOp);
       }
-    }
+    } // endfor maybeSymbolUses
 
     eraser.push_back(f);
 
@@ -209,7 +270,63 @@ void FuncArgRearrangementPass::runOnOperation() {
     for (auto op : eraser) {
       op->erase();
     }
+  } // endfor targetFuncs
+
+  // the following handle duplicated mapping using a heuristic ordering argument
+  // TODO: (LWC) added more advanced method later from a config object
+
+  // collect all conflict candidates, aka call and return
+  llvm::SmallVector<Operation *> duplicateConflictCandidates;
+  for (auto f : newFuncs) {
+
+    // collect returns
+    if (!f.empty()) {
+      duplicateConflictCandidates.push_back(f.getBody().back().getTerminator());
+    }
+
+    // collect calls
+    auto maybeSymbolUses = f.getSymbolUses(m);
+    for (SymbolTable::SymbolUse symbolUse : *maybeSymbolUses) {
+      if (auto callOp = dyn_cast<func::CallOp>(symbolUse.getUser())) {
+        duplicateConflictCandidates.push_back(callOp);
+      }
+    }
   }
+
+  // solve duplicate for all calls and return
+  for (auto *op : duplicateConflictCandidates) {
+    llvm::DenseMap<Value, unsigned> duplicateIndices;
+    // check pair-wise
+    for (auto val : op->getOperands()) {
+      bool firstUse = false;
+
+      for (auto &it : duplicateReverseMap) {
+        SmallVector<Operation *> conflictOps;
+        conflictOps.clear();
+        collectAllDuplicateOps(op, val, it.first, conflictOps,
+                               duplicateConflictCandidates);
+
+        if (!conflictOps.empty()) {
+          if (duplicateIndices.count(it.first) == 0) {
+            duplicateIndices.try_emplace(it.first, 0);
+            firstUse = true;
+            break;
+          }
+          duplicateIndices[it.first]++;
+
+          // not first use
+          SmallPtrSet<Operation *, 5> exceptList;
+          createExcept(exceptList, it.first, conflictOps);
+          auto newVal = it.second[duplicateIndices[it.first]];
+          it.first.replaceAllUsesExcept(newVal, exceptList);
+        }
+
+      } // endfor duplicateReverseMap
+      if (firstUse) {
+        continue;
+      }
+    } // endfor getOperands
+  }   // endfor duplicateConflictCandidates
 }
 
 } // namespace

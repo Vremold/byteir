@@ -6,11 +6,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/CanonicalizeExt.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

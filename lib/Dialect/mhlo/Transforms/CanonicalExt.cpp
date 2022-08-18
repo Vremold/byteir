@@ -11,6 +11,7 @@
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
+#include "llvm/Support/Debug.h"
 #include <algorithm>
 #include <cstdint>
 #include <functional>
@@ -18,6 +19,8 @@
 #include <set>
 #include <unordered_map>
 #include <utility>
+
+#define DEBUG_TYPE "canonical-ext"
 
 using namespace llvm;
 using namespace mlir;
@@ -426,6 +429,7 @@ mlir::mhlo::foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
 
   // support static now
   if (!op.getType().hasStaticShape()) {
+    LLVM_DEBUG(llvm::dbgs() << "concat has no static shape\n");
     return failure();
   }
   uint64_t dim = op.dimension();
@@ -451,13 +455,25 @@ mlir::mhlo::foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
     }
   }
 
-  if (!hasMerged)
+  if (!hasMerged) {
+    LLVM_DEBUG(llvm::dbgs() << "concat has no mergable slices\n");
     return failure();
+  }
 
   // Only handle one chunk for now
   // TODO: add support to multiple chunk
-  if (chunks.size() > 1)
+  if (chunks.size() > 1) {
+    for (size_t i = 0; i < chunks.size(); ++i) {
+      auto &c = chunks[i];
+      LLVM_DEBUG(llvm::dbgs() << "chunk " << i << "\n");
+      LLVM_DEBUG(llvm::dbgs() << "slice axis " << c.axis << "\n");
+      LLVM_DEBUG(llvm::dbgs() << "slice begin " << c.begin << "\n");
+      LLVM_DEBUG(llvm::dbgs() << "slice end " << c.end << "\n");
+      LLVM_DEBUG(llvm::dbgs() << "operand id from " << c.ids.front() << " to "
+                              << c.ids.back() << "\n");
+    }
     return failure();
+  }
 
   // only one chunk case
   // chunks.size() == 1

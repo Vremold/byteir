@@ -30,8 +30,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Sequence.h"
 #include "llvm/Support/Debug.h"
-#include <iostream> // debug
-#include <utility>  // pair
+#include <utility> // pair
 
 #include "../PassDetail.h"
 

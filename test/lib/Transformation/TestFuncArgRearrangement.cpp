@@ -10,6 +10,7 @@
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include <utility> // pair
 
 using namespace mlir;
 
@@ -34,6 +35,10 @@ enum RearrangeKind {
 struct RearrangeType {
   RearrangeKind kind = RearrangeKind::kInit;
   SmallVector<unsigned> ids;
+};
+
+struct ReverseType {
+  SmallVector<std::pair<RearrangeKind, unsigned>> list;
 };
 
 static void createAllIdentity(SmallVector<RearrangeType> &rearrangeTys,
@@ -99,22 +104,15 @@ static void createRearrange(SmallVector<RearrangeType> &rearrangeTys,
 
 // check whether RearrangeType is valid
 // and compute reverse RearrangeType
-static bool checkAndComputeReverse(SmallVector<RearrangeType> &reverseTys,
+static bool checkAndComputeReverse(SmallVector<ReverseType> &reverseTys,
                                    ArrayRef<RearrangeType> rearrangeTys,
                                    unsigned size) {
   reverseTys.resize(size);
-  DenseSet<unsigned> visited;
 
   for (unsigned i = 0; i < rearrangeTys.size(); ++i) {
     const RearrangeType &r = rearrangeTys[i];
     for (auto id : r.ids) {
-      if (visited.contains(id))
-        return false;
-
-      visited.insert(id);
-
-      reverseTys[id].kind = r.kind;
-      reverseTys[id].ids.push_back(i);
+      reverseTys[id].list.emplace_back(r.kind, i);
     }
   }
   return true;
@@ -422,44 +420,44 @@ public:
     return Value();
   }
 
-  Optional<Value>
+  llvm::SmallVector<Value>
   getOrCreateOldFromNewFuncArg(OpBuilder &b, unsigned oldId,
                                ArrayRef<Value> newValues) override {
-    auto r = reverseArgs[oldId];
+    auto revTy = reverseArgs[oldId];
+    llvm::SmallVector<Value> ret;
 
-    if (r.kind == RearrangeKind::kIdentity) {
-      return newValues[r.ids.back()];
-    } else {
-      // RearrangeKind::kPack or kPack2D
-      auto rForward = rearrangeArgs[r.ids.back()];
-      SmallVector<int64_t> begins;
-      SmallVector<int64_t> ends;
+    for (const auto &p : revTy.list) {
+      if (p.first == RearrangeKind::kIdentity) {
+        ret.push_back(newValues[p.second]);
+      } else {
+        // RearrangeKind::kPack or kPack2D
+        auto rForward = rearrangeArgs[p.second];
+        auto newVal = newValues[p.second];
+        SmallVector<int64_t> begins;
+        SmallVector<int64_t> ends;
+        if (auto newTensorTy = newVal.getType().dyn_cast<TensorType>()) {
+          auto rank = newTensorTy.getRank();
+          bool hasReshape = p.first == RearrangeKind::kPack2D;
 
-      auto newVal = newValues[r.ids.back()];
+          computeBeginAndEndForUnPack(begins, ends, rank, oldId, rForward.ids,
+                                      funcOp.getFunctionType().getInputs(),
+                                      hasReshape);
 
-      if (auto newTensorTy = newVal.getType().dyn_cast<TensorType>()) {
-        auto rank = newTensorTy.getRank();
-        bool hasReshape = r.kind == RearrangeKind::kPack2D;
+          SmallVector<int64_t> strides(rank, 1);
+          auto unPackVal = unPackArg(b, begins, ends, strides, newVal);
 
-        computeBeginAndEndForUnPack(begins, ends, rank, oldId, rForward.ids,
-                                    funcOp.getFunctionType().getInputs(),
-                                    hasReshape);
+          if (hasReshape) {
+            // if RearrangeKind::kPack2D
+            auto oldTy = funcOp.getFunctionType().getInput(oldId);
+            ret.push_back(reshapeArg(b, oldTy, unPackVal));
+          } else {
+            ret.push_back(unPackVal);
+          }
+        } // endif newTensorTy
+      }   // endif p.first
+    }     // endfor
 
-        SmallVector<int64_t> strides(rank, 1);
-        auto unPackVal = unPackArg(b, begins, ends, strides, newVal);
-
-        if (hasReshape) {
-          // if RearrangeKind::kPack2D
-          auto oldTy = funcOp.getFunctionType().getInput(oldId);
-          return reshapeArg(b, oldTy, unPackVal);
-        }
-
-        // if RearrangeKind::kPack
-        return unPackVal;
-      }
-    }
-
-    return llvm::None;
+    return ret;
   }
 
   Value getOrCreateNewFromOldFuncResult(OpBuilder &b, unsigned newId,
@@ -479,42 +477,45 @@ public:
     return Value();
   }
 
-  Optional<Value>
+  llvm::SmallVector<Value>
   getOrCreateOldFromNewFuncResult(OpBuilder &b, unsigned oldId,
                                   ArrayRef<Value> newValues) override {
-    auto r = reverseResults[oldId];
+    auto revTy = reverseResults[oldId];
 
-    if (r.kind == RearrangeKind::kIdentity) {
-      return newValues[r.ids.back()];
-    } else {
-      // RearrangeKind::kPack or kPack2D
-      auto rForward = rearrangeResults[r.ids.back()];
-      SmallVector<int64_t> begins;
-      SmallVector<int64_t> ends;
+    llvm::SmallVector<Value> ret;
 
-      auto newVal = newValues[r.ids.back()];
+    for (const auto &p : revTy.list) {
+      if (p.first == RearrangeKind::kIdentity) {
+        ret.push_back(newValues[p.second]);
+      } else {
+        // RearrangeKind::kPack or kPack2D
+        auto rForward = rearrangeResults[p.second];
+        auto newVal = newValues[p.second];
+        SmallVector<int64_t> begins;
+        SmallVector<int64_t> ends;
 
-      if (auto newTensorTy = newVal.getType().dyn_cast<TensorType>()) {
-        auto rank = newTensorTy.getRank();
-        bool hasReshape = r.kind == RearrangeKind::kPack2D;
-        computeBeginAndEndForUnPack(begins, ends, rank, oldId, rForward.ids,
-                                    funcOp.getFunctionType().getResults(),
-                                    hasReshape);
+        if (auto newTensorTy = newVal.getType().dyn_cast<TensorType>()) {
+          auto rank = newTensorTy.getRank();
+          bool hasReshape = p.first == RearrangeKind::kPack2D;
 
-        SmallVector<int64_t> strides(rank, 1);
-        auto unPackVal = unPackArg(b, begins, ends, strides, newVal);
+          computeBeginAndEndForUnPack(begins, ends, rank, oldId, rForward.ids,
+                                      funcOp.getFunctionType().getResults(),
+                                      hasReshape);
 
-        if (hasReshape) {
-          // if r.kind == RearrangeKind::kPack2D
-          auto oldTy = funcOp.getFunctionType().getResult(oldId);
-          return reshapeArg(b, oldTy, unPackVal);
-        }
-        // if r.kind == RearrangeKind::kPack
-        return unPackVal;
-      }
-    }
+          SmallVector<int64_t> strides(rank, 1);
+          auto unPackVal = unPackArg(b, begins, ends, strides, newVal);
+          if (hasReshape) {
+            // if r.kind == RearrangeKind::kPack2D
+            auto oldTy = funcOp.getFunctionType().getResult(oldId);
+            ret.push_back(reshapeArg(b, oldTy, unPackVal));
+          } else {
+            ret.push_back(unPackVal);
+          }
+        } // endif newTensorTy
+      }   // endif p.first
+    }     // endfor
 
-    return llvm::None;
+    return ret;
   }
 
 private:
@@ -526,8 +527,8 @@ private:
   SmallVector<RearrangeType> rearrangeArgs;
   SmallVector<RearrangeType> rearrangeResults;
 
-  SmallVector<RearrangeType> reverseArgs;
-  SmallVector<RearrangeType> reverseResults;
+  SmallVector<ReverseType> reverseArgs;
+  SmallVector<ReverseType> reverseResults;
 };
 
 class FuncArgRearrangerBuilderTest : public FuncArgRearrangerBuilderBase {
