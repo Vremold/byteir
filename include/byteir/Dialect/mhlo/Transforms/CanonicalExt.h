@@ -23,6 +23,7 @@ class TransposeOp;
 class BroadcastInDimOp;
 class ConcatenateOp;
 class DynamicBroadcastInDimOp;
+class DynamicConvOp;
 
 // Most of these will push back to upstream
 // So this file only includes patterns, not a pass.
@@ -62,6 +63,10 @@ LogicalResult foldShapeBroadcast(shape::BroadcastOp op,
 // fold binary op with large constant op
 template <typename Op, template <typename> typename Func>
 LogicalResult foldLargeBinaryOp(Op op, PatternRewriter &rewriter);
+
+// mhlo.dynamic_conv => mhlo.convolution canonicalization
+LogicalResult simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
+                                        PatternRewriter &rewriter);
 
 // Get all canoncializationExt on top of canoncialization
 void getCanonicalizationExtPatterns(RewritePatternSet &results,

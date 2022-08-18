@@ -7,7 +7,9 @@
 
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
 #include "byteir/Utils/AttrUtils.h"
+#include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/IR/Matchers.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
@@ -537,6 +539,37 @@ LogicalResult mlir::mhlo::foldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
   return success();
 }
 
+// mhlo.dynamic_conv => mhlo.convolution canonicalization
+LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
+                                                    PatternRewriter &rewriter) {
+  DenseIntElementsAttr paddingAttr;
+  if (!matchPattern(op.d_padding(), m_Constant(&paddingAttr))) {
+    return failure();
+  }
+  if (paddingAttr.isSplat() && paddingAttr.getSplatValue<APInt>().isZero()) {
+    mhlo::ConvolutionOp convOp = rewriter.create<mhlo::ConvolutionOp>(
+        op->getLoc(), op.getType(), llvm::ArrayRef<Value>{op.lhs(), op.rhs()},
+        op->getAttrs());
+    rewriter.replaceOp(op, convOp.getResult());
+    return success();
+  } else {
+    assert(!op->hasAttr("padding"));
+    auto padding = llvm::to_vector(
+        llvm::map_range(paddingAttr.getValues<APInt>(),
+                        [&](APInt i) { return i.getSExtValue(); }));
+    SmallVector<NamedAttribute> attrs = llvm::to_vector(op->getAttrs());
+    attrs.push_back(NamedAttribute(
+        rewriter.getStringAttr("padding"),
+        getI64ElementsAttr(padding, {2, padding.size() / 2}, &rewriter)));
+    mhlo::ConvolutionOp convOp = rewriter.create<mhlo::ConvolutionOp>(
+        op->getLoc(), op.getType(), llvm::ArrayRef<Value>{op.lhs(), op.rhs()},
+        attrs);
+    rewriter.replaceOp(op, convOp.getResult());
+    return success();
+  }
+  return failure();
+}
+
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
                                                 MLIRContext *ctx) {
 
@@ -558,6 +591,7 @@ void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
   results.add(mlir::mhlo::foldBroadcastInDim);
   results.add(mlir::mhlo::foldConcatWithContinuousSlices);
   results.add(mlir::mhlo::foldShapeBroadcast);
+  results.add(mlir::mhlo::simplifyDynamicConvToConv);
   results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
   results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
   results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::SubtractOp, std::minus>);
