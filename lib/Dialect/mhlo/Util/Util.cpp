@@ -98,35 +98,33 @@ template bool mlir::isBlockSingleOp<mhlo::AddOp>(Block *);
 template bool mlir::isBlockSingleOp<mhlo::MaxOp>(Block *);
 template bool mlir::isBlockSingleOp<mhlo::MinOp>(Block *);
 
-#define UNKNOWN_LAYOUT "UNKNOWN"
-
-static std::string
+static byteir::NamedLayout
 parsePoolLayout(size_t rank, const SmallVector<int64_t> &window_dimensions,
                 const SmallVector<int64_t> &strides,
                 const SmallVector<int64_t> &padding) {
-  std::string layout = UNKNOWN_LAYOUT;
+  byteir::NamedLayout layout = byteir::NamedLayout::UNKNOWN;
   if (window_dimensions[0] == 1 && window_dimensions[rank - 1] == 1 &&
       strides[0] == 1 && strides[rank - 1] == 1 && padding[0] == 0 &&
       padding[1] == 0 && padding[2 * rank - 2] == 0 &&
       padding[2 * rank - 1] == 0) {
     if (rank == 4) {
-      layout = "NHWC";
+      layout = byteir::NamedLayout::NHWC;
     } else if (rank == 5) {
-      layout = "NDHWC";
+      layout = byteir::NamedLayout::NDHWC;
     }
   } else if (window_dimensions[0] == 1 && window_dimensions[1] == 1 &&
              strides[0] == 1 && strides[1] == 1 && padding[0] == 0 &&
              padding[1] == 0 && padding[2] == 0 && padding[3] == 0) {
     if (rank == 4) {
-      layout = "NCHW";
+      layout = byteir::NamedLayout::NCHW;
     } else if (rank == 5) {
-      layout = "NCDHW";
+      layout = byteir::NamedLayout::NCDHW;
     }
   }
   return layout;
 }
 
-std::string mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
+byteir::NamedLayout mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
   auto base_dilations = op.base_dilationsAttr();
   if (base_dilations && !isSplatValue(base_dilations, 1)) {
     assert(false && "expected base_dilations to be dense<1>");
@@ -157,8 +155,7 @@ std::string mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
   return parsePoolLayout(rank, window_dimensions, strides, padding);
 }
 
-std::string mlir::getPoolGradLayout(mlir::mhlo::SelectAndScatterOp op) {
-  std::string layout = UNKNOWN_LAYOUT;
+byteir::NamedLayout mlir::getPoolGradLayout(mlir::mhlo::SelectAndScatterOp op) {
   SmallVector<int64_t> window_dimensions;
   if (auto window_dimensions_ = op.window_dimensionsAttr()) {
     window_dimensions =
@@ -181,92 +178,111 @@ std::string mlir::getPoolGradLayout(mlir::mhlo::SelectAndScatterOp op) {
   return parsePoolLayout(rank, window_dimensions, strides, padding);
 }
 
-std::tuple<std::string, std::string, std::string>
+std::tuple<byteir::NamedLayout, byteir::NamedLayout, byteir::NamedLayout>
 mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
-  std::string input_layout;
+  byteir::NamedLayout input_layout = byteir::NamedLayout::UNKNOWN;
   auto input_batch_dimension = dimension_numbers.getInputBatchDimension();
   auto input_feature_dimension = dimension_numbers.getInputFeatureDimension();
   auto input_spatial_dimensions = dimension_numbers.getInputSpatialDimensions();
-  if (input_spatial_dimensions.size() == 2) {
+  if (input_spatial_dimensions.size() == 1) {
     if (input_batch_dimension == 0 && input_feature_dimension == 1) {
-      input_layout = "NCHW";
-    } else if (input_batch_dimension == 0 && input_feature_dimension == 3) {
-      input_layout = "NHWC";
+      input_layout = byteir::NamedLayout::NCL;
     } else {
-      input_layout = UNKNOWN_LAYOUT;
+      input_layout = byteir::NamedLayout::UNKNOWN;
+    }
+  } else if (input_spatial_dimensions.size() == 2) {
+    if (input_batch_dimension == 0 && input_feature_dimension == 1) {
+      input_layout = byteir::NamedLayout::NCHW;
+    } else if (input_batch_dimension == 0 && input_feature_dimension == 3) {
+      input_layout = byteir::NamedLayout::NHWC;
+    } else {
+      input_layout = byteir::NamedLayout::UNKNOWN;
     }
   } else if (input_spatial_dimensions.size() == 3) {
     if (input_batch_dimension == 0 && input_feature_dimension == 1) {
-      input_layout = "NCDHW";
+      input_layout = byteir::NamedLayout::NCDHW;
     } else if (input_batch_dimension == 0 && input_feature_dimension == 4) {
-      input_layout = "NDHWC";
+      input_layout = byteir::NamedLayout::NDHWC;
     } else {
-      input_layout = UNKNOWN_LAYOUT;
+      input_layout = byteir::NamedLayout::UNKNOWN;
     }
   } else {
-    input_layout = UNKNOWN_LAYOUT;
+    input_layout = byteir::NamedLayout::UNKNOWN;
   }
 
-  std::string output_layout;
+  byteir::NamedLayout output_layout;
   auto output_batch_dimension = dimension_numbers.getOutputBatchDimension();
   auto output_feature_dimension = dimension_numbers.getOutputFeatureDimension();
   auto output_spatial_dimensions =
       dimension_numbers.getOutputSpatialDimensions();
-  if (output_spatial_dimensions.size() == 2) {
+  if (output_spatial_dimensions.size() == 1) {
     if (output_batch_dimension == 0 && output_feature_dimension == 1) {
-      output_layout = "NCHW";
-    } else if (output_batch_dimension == 0 && output_feature_dimension == 3) {
-      output_layout = "NHWC";
+      output_layout = byteir::NamedLayout::NCL;
     } else {
-      output_layout = UNKNOWN_LAYOUT;
+      output_layout = byteir::NamedLayout::UNKNOWN;
+    }
+  } else if (output_spatial_dimensions.size() == 2) {
+    if (output_batch_dimension == 0 && output_feature_dimension == 1) {
+      output_layout = byteir::NamedLayout::NCHW;
+    } else if (output_batch_dimension == 0 && output_feature_dimension == 3) {
+      output_layout = byteir::NamedLayout::NHWC;
+    } else {
+      output_layout = byteir::NamedLayout::UNKNOWN;
     }
   } else if (output_spatial_dimensions.size() == 3) {
     if (output_batch_dimension == 0 && output_feature_dimension == 1) {
-      output_layout = "NCDHW";
+      output_layout = byteir::NamedLayout::NCDHW;
     } else if (output_batch_dimension == 0 && output_feature_dimension == 4) {
-      output_layout = "NDHWC";
+      output_layout = byteir::NamedLayout::NDHWC;
     } else {
-      output_layout = UNKNOWN_LAYOUT;
+      output_layout = byteir::NamedLayout::UNKNOWN;
     }
   } else {
-    output_layout = UNKNOWN_LAYOUT;
+    output_layout = byteir::NamedLayout::UNKNOWN;
   }
 
-  std::string kernel_layout;
+  byteir::NamedLayout kernel_layout;
   auto kernel_input_feature_dimension =
       dimension_numbers.getKernelInputFeatureDimension();
   auto kernel_output_feature_dimension =
       dimension_numbers.getKernelOutputFeatureDimension();
   auto kernel_spatial_dimensions =
       dimension_numbers.getKernelSpatialDimensions();
-  if (kernel_spatial_dimensions.size() == 2) {
+  if (kernel_spatial_dimensions.size() == 1) {
     if (kernel_input_feature_dimension == 1 &&
         kernel_output_feature_dimension == 0) {
-      kernel_layout = "NCHW";
+      kernel_layout = byteir::NamedLayout::NCL;
+    } else {
+      kernel_layout = byteir::NamedLayout::UNKNOWN;
+    }
+  } else if (kernel_spatial_dimensions.size() == 2) {
+    if (kernel_input_feature_dimension == 1 &&
+        kernel_output_feature_dimension == 0) {
+      kernel_layout = byteir::NamedLayout::NCHW;
     } else if (kernel_input_feature_dimension == 3 &&
                kernel_output_feature_dimension == 0) {
-      kernel_layout = "NHWC";
+      kernel_layout = byteir::NamedLayout::NHWC;
     } else if (kernel_input_feature_dimension == 2 &&
                kernel_output_feature_dimension == 3) {
-      kernel_layout = "HWCN";
+      kernel_layout = byteir::NamedLayout::HWCN;
     } else {
-      kernel_layout = UNKNOWN_LAYOUT;
+      kernel_layout = byteir::NamedLayout::UNKNOWN;
     }
   } else if (kernel_spatial_dimensions.size() == 3) {
     if (kernel_input_feature_dimension == 1 &&
         kernel_output_feature_dimension == 0) {
-      kernel_layout = "NCDHW";
+      kernel_layout = byteir::NamedLayout::NCDHW;
     } else if (kernel_input_feature_dimension == 4 &&
                kernel_output_feature_dimension == 0) {
-      kernel_layout = "NDHWC";
+      kernel_layout = byteir::NamedLayout::NDHWC;
     } else if (kernel_input_feature_dimension == 3 &&
                kernel_output_feature_dimension == 4) {
-      kernel_layout = "DHWCN";
+      kernel_layout = byteir::NamedLayout::DHWCN;
     } else {
-      kernel_layout = UNKNOWN_LAYOUT;
+      kernel_layout = byteir::NamedLayout::UNKNOWN;
     }
   } else {
-    kernel_layout = UNKNOWN_LAYOUT;
+    kernel_layout = byteir::NamedLayout::UNKNOWN;
   }
 
   return std::make_tuple(input_layout, kernel_layout, output_layout);
@@ -283,13 +299,17 @@ void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
   auto input_layout = std::get<0>(conv_layout);
   auto kernel_layout = std::get<1>(conv_layout);
   auto output_layout = std::get<2>(conv_layout);
-  assert(input_layout != UNKNOWN_LAYOUT && kernel_layout != UNKNOWN_LAYOUT &&
-         output_layout != UNKNOWN_LAYOUT);
+  assert(input_layout != byteir::NamedLayout::UNKNOWN &&
+         kernel_layout != byteir::NamedLayout::UNKNOWN &&
+         output_layout != byteir::NamedLayout::UNKNOWN);
   assert(input_layout == kernel_layout && input_layout == output_layout);
 
-  attrs.append("input_layout", rewriter.getStringAttr(input_layout));
-  attrs.append("output_layout", rewriter.getStringAttr(output_layout));
-  attrs.append("kernel_layout", rewriter.getStringAttr(kernel_layout));
+  attrs.append("input_layout",
+               rewriter.getStringAttr(byteir::stringifyEnum(input_layout)));
+  attrs.append("output_layout",
+               rewriter.getStringAttr(byteir::stringifyEnum(output_layout)));
+  attrs.append("kernel_layout",
+               rewriter.getStringAttr(byteir::stringifyEnum(kernel_layout)));
 
   if (conv_op->hasAttr("window_strides")) {
     attrs.append("window_strides", conv_op->getAttr("window_strides"));

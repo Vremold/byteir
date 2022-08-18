@@ -23,6 +23,44 @@ class Operation;
 class OpBuilder;
 class Value;
 
+namespace byteir {
+
+enum class NamedLayout : uint32_t {
+  UNKNOWN = 0,
+  NHWC = 1,
+  NDHWC = 2,
+  NCHW = 3,
+  NCDHW = 4,
+  HWCN = 5,
+  DHWCN = 6,
+  NCL = 7,
+};
+
+inline std::string stringifyEnum(NamedLayout layout) {
+  switch (layout) {
+  case NamedLayout::UNKNOWN:
+    return "UNKNOWN";
+  case NamedLayout::NHWC:
+    return "NHWC";
+  case NamedLayout::NDHWC:
+    return "NDHWC";
+  case NamedLayout::NCHW:
+    return "NCHW";
+  case NamedLayout::NCDHW:
+    return "NCDHW";
+  case NamedLayout::HWCN:
+    return "HWCN";
+  case NamedLayout::DHWCN:
+    return "DHWCN";
+  case NamedLayout::NCL:
+    return "NCL";
+  default:
+    return "UNKNOWN";
+  }
+}
+
+} // namespace byteir
+
 bool isMhlo(Operation *op);
 
 bool isSplatMhloConstant(Operation *op);
@@ -46,18 +84,15 @@ bool isSplatMhloConstantValue(Value val, double splat_val);
 // Return ture if block contains single op: AddOp, MaxOp, MinOp
 template <typename Op> bool isBlockSingleOp(Block *block);
 
-// Return layout like "NCHW"/"NHWC"/"NDHWC"/"NCDHW" if success,
-// return "UNKNOWN" if failed.
-std::string getPoolLayout(mhlo::ReduceWindowOp op);
+// Return layout if success, return UNKNOWN if failed.
+byteir::NamedLayout getPoolLayout(mhlo::ReduceWindowOp op);
 
-// Return layout like "NCHW"/"NHWC"/"NDHWC"/"NCDHW" if success,
-// return "UNKNOWN" if failed.
-std::string getPoolGradLayout(mhlo::SelectAndScatterOp op);
+// Return layout if success, return "UNKNOWN" if failed.
+byteir::NamedLayout getPoolGradLayout(mhlo::SelectAndScatterOp op);
 
 // Return {input_layout, kernel_layout, output_layout} like PoolLayout,
-// layout could be "NCHW"/"NHWC"/"HWCN"/"NDHWC"/"NCDHW"/"DHWCN",
-// return "UNKNOWN" if failed.
-std::tuple<std::string, std::string, std::string>
+// return UNKNOWN if failed.
+std::tuple<byteir::NamedLayout, byteir::NamedLayout, byteir::NamedLayout>
 getConvLayout(mhlo::ConvDimensionNumbersAttr dimension_numbers);
 
 template <typename T>

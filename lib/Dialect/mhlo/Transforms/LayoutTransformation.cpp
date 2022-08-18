@@ -165,8 +165,9 @@ struct ConvLayoutTransformationPattern
     auto outputLayout = std::get<2>(convLayout);
 
     if (targetLayout == "NHWC") {
-      if (inputLayout == "NCHW" && kernelLayout == "NCHW" &&
-          outputLayout == "NCHW") {
+      if (inputLayout == byteir::NamedLayout::NCHW &&
+          kernelLayout == byteir::NamedLayout::NCHW &&
+          outputLayout == byteir::NamedLayout::NCHW) {
         Value lhsTranspose =
             createNCHW2NHWCValue(rewriter, op->getLoc(), op.lhs());
         Value rhsTranspose =
@@ -184,8 +185,9 @@ struct ConvLayoutTransformationPattern
             createNHWC2NCHWValue(rewriter, op->getLoc(), newOp.getResult());
         rewriter.replaceOp(op, outputTranspose);
         return success();
-      } else if (inputLayout == "NHWC" && kernelLayout == "HWCN" &&
-                 outputLayout == "NHWC") {
+      } else if (inputLayout == byteir::NamedLayout::NHWC &&
+                 kernelLayout == byteir::NamedLayout::HWCN &&
+                 outputLayout == byteir::NamedLayout::NHWC) {
         Value rhsTranspose =
             createHWCN2NHWCValue(rewriter, op->getLoc(), op.rhs());
         auto newDimensionNumbers = mhlo::ConvDimensionNumbersAttr::get(
@@ -200,8 +202,9 @@ struct ConvLayoutTransformationPattern
         return success();
       }
     } else if (targetLayout == "NDHWC") {
-      if (inputLayout == "NCDHW" && kernelLayout == "NCDHW" &&
-          outputLayout == "NCDHW") {
+      if (inputLayout == byteir::NamedLayout::NCDHW &&
+          kernelLayout == byteir::NamedLayout::NCDHW &&
+          outputLayout == byteir::NamedLayout::NCDHW) {
         Value lhsTranspose =
             createNCDHW2NDHWCValue(rewriter, op->getLoc(), op.lhs());
         Value rhsTranspose =
@@ -321,7 +324,7 @@ struct ReduceWindownLayoutTransformationPattern
     auto operand = *(op.operands().begin());
     auto layout = getPoolLayout(op);
 
-    if (targetLayout == "NHWC" && layout == "NCHW") {
+    if (targetLayout == "NHWC" && layout == byteir::NamedLayout::NCHW) {
       Value operandTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), operand);
       Type outputType = createNCHW2NHWCType(op->getResults()[0].getType());
@@ -340,7 +343,8 @@ struct ReduceWindownLayoutTransformationPattern
           createNHWC2NCHWValue(rewriter, op->getLoc(), newOp->getResults()[0]);
       rewriter.replaceOp(op, outputTranspose);
       return success();
-    } else if (targetLayout == "NDHWC" && layout == "NCDHW") {
+    } else if (targetLayout == "NDHWC" &&
+               layout == byteir::NamedLayout::NCDHW) {
       Value operandTranspose =
           createNCDHW2NDHWCValue(rewriter, op->getLoc(), operand);
       Type outputType = createNCDHW2NDHWCType(op->getResults()[0].getType());
@@ -378,7 +382,7 @@ struct SelectAndScatterLayoutTransformationPattern
     }
     auto layout = getPoolGradLayout(op);
 
-    if (targetLayout == "NHWC" && layout == "NCHW") {
+    if (targetLayout == "NHWC" && layout == byteir::NamedLayout::NCHW) {
       Value operandTranspose =
           createNCHW2NHWCValue(rewriter, op->getLoc(), op.operand());
       Value sourceTranspose =
@@ -398,7 +402,8 @@ struct SelectAndScatterLayoutTransformationPattern
           createNHWC2NCHWValue(rewriter, op->getLoc(), newOp.getResult());
       rewriter.replaceOp(op, outputTranspose);
       return success();
-    } else if (targetLayout == "NDHWC" && layout == "NCDHW") {
+    } else if (targetLayout == "NDHWC" &&
+               layout == byteir::NamedLayout::NCDHW) {
       Value operandTranspose =
           createNCDHW2NDHWCValue(rewriter, op->getLoc(), op.operand());
       Value sourceTranspose =

@@ -21,7 +21,7 @@
 
 using namespace mlir;
 using namespace llvm;
-using namespace byteir;
+using namespace ::byteir;
 using namespace mlir::mhlo;
 
 namespace {
