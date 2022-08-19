@@ -1,5 +1,6 @@
 # Exclude tests from libMLIR.so
 add_mlir_library(ByteIRTestTransformation
+  TestConvertFuncToCustomCall.cpp
   TestConvertInsertion.cpp
   TestFuncArgRearrangement.cpp
 

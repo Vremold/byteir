@@ -58,7 +58,29 @@ def ConvForwardFusion : Pass<"fuse-conv-forward", "mlir::func::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
-// ConvertInsertion (for CallOps and FunOps now)
+// ConvertFuncToCustomCall // No command-line
+//===----------------------------------------------------------------------===//
+
+//def ConvertFuncToCustomCall : Pass<"convert-func-to-custom", "mlir::ModuleOp"> {
+//  let summary = "Convert Func to CustomCall";
+//  let constructor = "mlir::createConvertFuncToCustomCallPass()";
+//}
+
+//===----------------------------------------------------------------------===//
+// ConvertFuncToCustomCallTorchXLA 
+// tentative; will be removed after TorchXLA finalized
+//===----------------------------------------------------------------------===//
+
+def ConvertFuncToCustomCallTorchXLA : Pass<"convert-func-to-custom-torch-xla", "mlir::ModuleOp"> {
+  let summary = "Convert Func to CustomCall for XLA";
+  let constructor = "mlir::createConvertFuncToCustomCallTorchXLAPass()";
+  let dependentDialects = [
+    "mlir::mhlo::MhloDialect"
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// ConvertInsertion (for CallOps and FunOps now)  // No command-line
 //===----------------------------------------------------------------------===//
 
 //def ConvertInsertion : Pass<"insert-convert", "ModuleOp"> {
@@ -92,7 +114,7 @@ def DynamicShapeClustering : Pass<"dynamic-shape-clustering", "mlir::ModuleOp"> 
 }
 
 //===----------------------------------------------------------------------===//
-// FuncArgRearrangement
+// FuncArgRearrangement // No command-line
 //===----------------------------------------------------------------------===//
 
 // def FuncArgRearrangement : Pass<"rearrange-func-arg", "ModuleOp"> {
@@ -126,7 +148,6 @@ def HloFolder : Pass<"hlo-fold", "mlir::func::FuncOp"> {
   let summary = "Fold mhlo ops";
   let constructor = "mlir::createHloFolderPass()";
 }
-
 
 //===----------------------------------------------------------------------===//
 // HloTransposeDotToDotGeneral

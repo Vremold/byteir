@@ -337,18 +337,18 @@ struct ConcatChunk {
   SmallVector<unsigned> ids; // concat's arg id
 
   ConcatChunk(Value v, int64_t id)
-      : val(v), isSlice(false), axis(-1), begin(-1), end(-1) {
+      : isSlice(false), axis(-1), begin(-1), end(-1), val(v) {
     ids.push_back(id);
   }
 
   ConcatChunk(Value v, int64_t a, int64_t b, int64_t e, int64_t id)
-      : val(v), isSlice(true), axis(a), begin(b), end(e) {
+      : isSlice(true), axis(a), begin(b), end(e), val(v) {
     ids.push_back(id);
   }
 };
 
-static ConcatChunk getChunkOf1DSlice(unsigned id, mhlo::ConcatenateOp concat,
-                                     mhlo::SliceOp slice) {
+static ConcatChunk getChunkOfSlice(unsigned id, mhlo::ConcatenateOp concat,
+                                   mhlo::SliceOp slice) {
 
   uint64_t dim = concat.dimension();
   const auto &concatShape = concat.getType().getShape();
@@ -422,9 +422,8 @@ static void computeBeginAndEnd(const ConcatChunk &chunk, size_t dim,
 
 } // namespace
 
-///
 ///  Fold concatenate of continuous slices
-///  FIXME: support static only for now
+///  FIXME: support static only for now, relax it later
 LogicalResult
 mlir::mhlo::foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
                                            PatternRewriter &rewriter) {
@@ -441,7 +440,7 @@ mlir::mhlo::foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
   for (unsigned i = 0; i < op.getNumOperands(); ++i) {
     if (auto slice = op.getOperand(i).getDefiningOp<mhlo::SliceOp>()) {
       // handle 1D slice only along dim axis
-      auto chunk = getChunkOf1DSlice(i, op, slice);
+      auto chunk = getChunkOfSlice(i, op, slice);
 
       if (!chunks.empty() && (chunks.back().val == chunk.val) &&
           (chunks.back().axis == chunk.axis) &&
@@ -560,7 +559,9 @@ LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
     SmallVector<NamedAttribute> attrs = llvm::to_vector(op->getAttrs());
     attrs.push_back(NamedAttribute(
         rewriter.getStringAttr("padding"),
-        getI64ElementsAttr(padding, {2, padding.size() / 2}, &rewriter)));
+        getI64ElementsAttr(padding,
+                           {2, static_cast<int64_t>(padding.size()) / 2},
+                           &rewriter)));
     mhlo::ConvolutionOp convOp = rewriter.create<mhlo::ConvolutionOp>(
         op->getLoc(), op.getType(), llvm::ArrayRef<Value>{op.lhs(), op.rhs()},
         attrs);

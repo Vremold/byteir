@@ -256,8 +256,8 @@ LogicalResult ConvertToByrePattern<lmhlo::ReshapeOp>::matchAndRewrite(
   // If both args, replace it with copy
   if (adaptor.getOperands()[0].getDefiningOp() == nullptr &&
       adaptor.getOperands()[1].getDefiningOp() == nullptr) {
-    auto new_op = rewriter.replaceOpWithNewOp<byre::CopyOp>(
-        op, adaptor.getOperands()[0], adaptor.getOperands()[1]);
+    rewriter.replaceOpWithNewOp<byre::CopyOp>(op, adaptor.getOperands()[0],
+                                              adaptor.getOperands()[1]);
 
     return success();
   }
@@ -891,11 +891,11 @@ public:
     if (!dstMemRefType)
       return failure();
 
-    auto offset_in_bytes =
+    auto offsetInbytes =
         (op.getOffsetElem() * dstMemRefType.getElementTypeBitWidth() + 7) >> 3;
 
     rewriter.replaceOpWithNewOp<byre::AliasOp>(op, dstMemRefType, operands[0],
-                                               offset_in_bytes);
+                                               offsetInbytes);
 
     return success();
   }
@@ -1145,17 +1145,17 @@ static inline void markFuncOpInOutTypeForLmhlo(func::FuncOp func,
 static inline void rewriteByreResultAttrsToFuncResultAttr(func::FuncOp func) {
   auto resultAttrsName = byre::ByreDialect::getEntryPointFuncResultAttrsName();
   removeAttrPlaceholders(func, {resultAttrsName});
-  if (auto result_attrs_attr =
+  if (auto resultAttrs =
           func->getAttrOfType<mlir::ArrayAttr>(resultAttrsName)) {
-    auto new_result_attrs = result_attrs_attr.getValue();
-    if (func.getNumResults() != new_result_attrs.size())
+    auto newResultAttrs = resultAttrs.getValue();
+    if (func.getNumResults() != newResultAttrs.size())
       return;
-    for (size_t i = 0; i < new_result_attrs.size(); ++i) {
-      if (auto new_result_attrs_dict =
-              new_result_attrs[i].dyn_cast_or_null<DictionaryAttr>()) {
-        NamedAttrList origin_attrs = func.getResultAttrs(i);
-        origin_attrs.append(new_result_attrs_dict.getValue());
-        func.setResultAttrs(i, origin_attrs.getDictionary(func->getContext()));
+    for (size_t i = 0; i < newResultAttrs.size(); ++i) {
+      if (auto newResultAttrsDict =
+              newResultAttrs[i].dyn_cast_or_null<DictionaryAttr>()) {
+        NamedAttrList originAttrs = func.getResultAttrs(i);
+        originAttrs.append(newResultAttrsDict.getValue());
+        func.setResultAttrs(i, originAttrs.getDictionary(func->getContext()));
       }
     }
     func->removeAttr(resultAttrsName);

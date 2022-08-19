@@ -116,6 +116,8 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/ClusterConstraint.cpp
   Transforms/ConvBackwardFusion.cpp
   Transforms/ConvForwardFusion.cpp
+  Transforms/ConvertFuncToCustomCall.cpp
+  Transforms/ConvertFuncToCustomCall/TorchXLA.cpp
   Transforms/ConvertInsertion.cpp
   Transforms/DotTransposeFusion.cpp
   Transforms/DynamicShapeClustering.cpp

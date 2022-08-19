@@ -5,6 +5,16 @@
 //
 //===----------------------------------------------------------------------===//
 
+//===----------------------------------------------------------------------===//
+// Some code in this file is from SCFTOGPU.cpp of LLVM project
+// Orignal License:
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
@@ -25,14 +35,13 @@
 
 #include "../PassDetail.h"
 
-#define DEBUG_TYPE "coadesced-for-to-gpu"
+#define DEBUG_TYPE "coalesced-for-to-gpu"
 
 using namespace llvm;
 using namespace mlir;
 using namespace mlir::arith;
 using namespace mlir::gpu;
 
-// Some code from SCFTOGPU
 namespace {
 
 static LogicalResult checkACoalescedffineLoopMappable(AffineForOp forOp) {
@@ -61,7 +70,7 @@ struct CoalescedAffineLoopToGpuConverter {
   Value step;
 };
 
-static std::pair<Value, Value> CreateGridAndBlock(Value dim,
+static std::pair<Value, Value> createGridAndBlock(Value dim,
                                                   int64_t blockSize) {
   auto loc = dim.getLoc();
   OpBuilder builder(dim.getContext());
@@ -72,7 +81,7 @@ static std::pair<Value, Value> CreateGridAndBlock(Value dim,
 }
 
 // TODO move another file
-static Value CreateLinearizedIndex(OpBuilder &builder, mlir::Location loc,
+static Value createLinearizedIndex(OpBuilder &builder, mlir::Location loc,
                                    Value bId, Value bSize, Value tId) {
   Value mul = builder.create<MulIOp>(loc, bId, bSize);
   Value ret = builder.create<AddIOp>(loc, mul, tId);
@@ -86,7 +95,7 @@ void CoalescedAffineLoopToGpuConverter::createLaunch(AffineForOp forOp,
   // Prepare the grid and block sizes for the launch operation.  If there is
   // no loop mapped to a specific dimension, use constant "1" as its size.
   Value constOne = builder.create<ConstantIndexOp>(forOp.getLoc(), 1);
-  auto p = CreateGridAndBlock(dim, blockSize);
+  auto p = createGridAndBlock(dim, blockSize);
 
   Value gridSizeX = p.first;
   Value gridSizeY = constOne;
@@ -107,7 +116,7 @@ void CoalescedAffineLoopToGpuConverter::createLaunch(AffineForOp forOp,
 
   builder.setInsertionPointToStart(&launchOp.body().front());
   Value bIdx = launchOp.getBlockIds().x;
-  Value id = CreateLinearizedIndex(builder, bIdx.getLoc(), bIdx,
+  Value id = createLinearizedIndex(builder, bIdx.getLoc(), bIdx,
                                    launchOp.getBlockSize().x,
                                    launchOp.getThreadIds().x);
 

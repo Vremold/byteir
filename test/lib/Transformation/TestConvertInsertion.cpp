@@ -25,10 +25,11 @@ std::unique_ptr<ConvertRuleBase> unitTestRuleExample(MLIRContext *ctx) {
                                             Float16Type::get(ctx));
   return collector;
 }
-} // namespace
 
 struct TestConvertInsertionPass
     : public PassWrapper<TestConvertInsertionPass, OperationPass<ModuleOp>> {
+
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(TestConvertInsertionPass)
 
   StringRef getArgument() const final { return "test-insert-convert"; }
 
@@ -53,6 +54,8 @@ struct TestConvertInsertionPass
     }
   }
 };
+
+} // namespace
 
 namespace byteir {
 namespace test {
