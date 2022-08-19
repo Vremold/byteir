@@ -14,7 +14,7 @@ module attributes {byre.container_module} {
     return
   }
 // CHECK-LABEL: func.func @lace_reshape
-//   CHECK:  byre.compute @AliasOp
+//   CHECK:  byre.alias
 //     CHECK-SAME: offset = 0
 //   CHECK:  byre.compute @AddOp
 
@@ -24,7 +24,7 @@ module attributes {byre.container_module} {
     return
   }
 // CHECK-LABEL: func.func @lace_slice
-//   CHECK:  byre.compute @AliasOp
+//   CHECK:  byre.alias
 //     CHECK-SAME: offset = 1024
 //   CHECK:  byre.compute @AddOp
 }

@@ -512,15 +512,17 @@ module {
     return %1 : tensor<1000x512xf16>
   }
   func.func private @Unknown60(%arg0: tensor<1000xf32>, %arg1: tensor<1x1000xf16>) -> tensor<1x1000xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = tensor.expand_shape %arg0 [[0, 1]] : tensor<1000xf32> into tensor<1x1000xf32>
-    %1 = linalg.init_tensor [1, 1000] : tensor<1x1000xf16>
-    %2 = linalg.generic {indexing_maps = [#map1, #map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg1, %0 : tensor<1x1000xf16>, tensor<1x1000xf32>) outs(%1 : tensor<1x1000xf16>) {
+    %0 = linalg.init_tensor [1, 1000] : tensor<1x1000xf16>
+    %1 = tensor.collapse_shape %arg1 [[0, 1]] : tensor<1x1000xf16> into tensor<1000xf16>
+    %2 = tensor.collapse_shape %0 [[0, 1]] : tensor<1x1000xf16> into tensor<1000xf16>
+    %3 = linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%1, %arg0 : tensor<1000xf16>, tensor<1000xf32>) outs(%2 : tensor<1000xf16>) {
     ^bb0(%arg2: f16, %arg3: f32, %arg4: f16):
-      %3 = arith.truncf %arg3 : f32 to f16
-      %4 = arith.addf %arg2, %3 : f16
-      linalg.yield %4 : f16
-    } -> tensor<1x1000xf16>
-    return %2 : tensor<1x1000xf16>
+      %5 = arith.truncf %arg3 : f32 to f16
+      %6 = arith.addf %arg2, %5 : f16
+      linalg.yield %6 : f16
+    } -> tensor<1000xf16>
+    %4 = tensor.expand_shape %3 [[0, 1]] : tensor<1000xf16> into tensor<1x1000xf16>
+    return %4 : tensor<1x1000xf16>
   }
   func.func private @Unknown61(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>) -> tensor<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32

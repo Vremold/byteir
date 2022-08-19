@@ -1,4 +1,4 @@
-// RUN: byteir-opt -allow-unregistered-dialect %s | FileCheck %s
+// RUN: byteir-opt %s | FileCheck %s
 
 module attributes {byre.container_module} {
   func.func @test_compute(%arg0: memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
@@ -34,6 +34,13 @@ module attributes {byre.container_module} {
 // CHECK:   return
 // CHECK: }
 
+  func.func @test_alias(%arg0 : memref<100x32xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1 : memref<100x32xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+    %0 = "byre.alias"(%arg0) {offset = 0: i64} : (memref<100x32xf32>) -> memref<100x32xf32>
+    byre.compute @some_kernel(%0, %arg1) : memref<100x32xf32>, memref<100x32xf32>
+    return
+  }
+// CHECK-LABEL: func.func @test_alias
+// CHECK: "byre.alias"
 }
 
 module attributes {byre.container_module, byre.memory_space = [1, "CPU", 12, "CUDA"]} {

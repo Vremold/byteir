@@ -61,7 +61,7 @@ struct ByreOptPipelinePass : public ByreOptPipelineBase<ByreOptPipelinePass> {
       anchoredPM.addPass(createCanonicalizerPass());
     }
     anchoredPM.addPass(createConvertLmhloToByrePass(appendArgTypes));
-    anchoredPM.addPass(createByreFoldPass());
+    anchoredPM.addPass(createCanonicalizerPass());
 
     pm.addNestedPass<func::FuncOp>(createAnchoredFuncPipelinePass(
         ByreDialect::getEntryPointFunctionAttrName(), anchoredPM));

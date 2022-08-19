@@ -1952,25 +1952,17 @@ module {
     %c0 = arith.constant 0 : index
     %c1000 = arith.constant 1000 : index
     %c1 = arith.constant 1 : index
-    %c-1 = arith.constant -1 : index
-    %0 = memref.expand_shape %arg0 [[0, 1]] : memref<1000xf32> into memref<1x1000xf32>
-    %1 = memref.alloc() {alignment = 128 : i64} : memref<1x1000xf16>
+    %0 = memref.collapse_shape %arg1 [[0, 1]] : memref<1x1000xf16> into memref<1000xf16>
+    %1 = memref.alloc() {alignment = 128 : i64} : memref<1000xf16>
     scf.for %arg2 = %c0 to %c1000 step %c1 {
-      %2 = arith.cmpi slt, %arg2, %c0 : index
-      %3 = arith.addi %arg2, %c1000 : index
-      %4 = arith.select %2, %3, %arg2 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %2, %5, %arg2 : index
-      %7 = arith.divsi %6, %c1000 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %2, %8, %7 : index
-      %10 = memref.load %arg1[%9, %4] : memref<1x1000xf16>
-      %11 = memref.load %0[%9, %4] : memref<1x1000xf32>
-      %12 = arith.truncf %11 : f32 to f16
-      %13 = arith.addf %10, %12 : f16
-      memref.store %13, %1[%9, %4] : memref<1x1000xf16>
+      %3 = memref.load %0[%arg2] : memref<1000xf16>
+      %4 = memref.load %arg0[%arg2] : memref<1000xf32>
+      %5 = arith.truncf %4 : f32 to f16
+      %6 = arith.addf %3, %5 : f16
+      memref.store %6, %1[%arg2] : memref<1000xf16>
     }
-    return %1 : memref<1x1000xf16>
+    %2 = memref.expand_shape %1 [[0, 1]] : memref<1000xf16> into memref<1x1000xf16>
+    return %2 : memref<1x1000xf16>
   }
   func.func private @Unknown61(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.899999976 : f32

@@ -362,20 +362,15 @@ public:
           Value dst = adaptor.getOperands()[passThrough[i]];
           Value src = adaptor.getOperands()[passThrough[i + 1]];
 
-          // If both args, replace it with copy
-          if (src.getDefiningOp() == nullptr &&
-              dst.getDefiningOp() == nullptr) {
+          if (auto alloc = dst.getDefiningOp<memref::AllocOp>()) {
+            rewriter.replaceOpWithNewOp<byre::AliasOp>(alloc, alloc.getType(),
+                                                       src, 0);
+          } else if (auto alloc = dst.getDefiningOp<memref::AllocOp>()) {
+            rewriter.replaceOpWithNewOp<byre::AliasOp>(alloc, alloc.getType(),
+                                                       dst, 0);
+          } else {
+            // copy src to dst
             rewriter.create<byre::CopyOp>(loc, src, dst);
-            continue;
-          }
-
-          bool argAlias = isArgAlias(aliasOperands, src, dst);
-          auto newAlias =
-              rewriter.create<byre::ComputeOp>(loc, "AliasOp", aliasOperands);
-
-          newAlias->setAttr("offset", rewriter.getI32IntegerAttr(0));
-          if (argAlias) {
-            newAlias->setAttr("arg_alias", rewriter.getUnitAttr());
           }
         }
       }
@@ -875,21 +870,9 @@ public:
     if (!matchPattern(adaptor.byte_shift(), m_Constant(&offset))) {
       return failure();
     }
-    auto output = rewriter.create<memref::AllocOp>(op->getLoc(), op.getType());
-    SmallVector<Value, 2> operands;
-    bool argAlias = isArgAlias(operands, adaptor.getSource(), output);
 
-    auto newOp =
-        rewriter.create<byre::ComputeOp>(op->getLoc(), "AliasOp", operands);
-
-    newOp->setAttr("offset", offset);
-
-    if (argAlias) {
-      newOp->setAttr("arg_alias", rewriter.getUnitAttr());
-    }
-
-    rewriter.replaceOp(op, {output});
-
+    rewriter.replaceOpWithNewOp<byre::AliasOp>(
+        op, op->getResult(0).getType(), adaptor.getSource(), offset.getInt());
     return success();
   }
 };
@@ -908,23 +891,11 @@ public:
     if (!dstMemRefType)
       return failure();
 
-    auto output = rewriter.create<memref::AllocOp>(op->getLoc(), dstMemRefType);
-    SmallVector<Value, 2> newOperands;
-    bool argAlias = isArgAlias(newOperands, operands[0], output);
+    auto offset_in_bytes =
+        (op.getOffsetElem() * dstMemRefType.getElementTypeBitWidth() + 7) >> 3;
 
-    auto newOp =
-        rewriter.create<byre::ComputeOp>(op->getLoc(), "AliasOp", newOperands);
-
-    newOp->setAttr(
-        "offset",
-        rewriter.getI32IntegerAttr(
-            (op.getOffsetElem() * dstMemRefType.getElementTypeBitWidth() + 7) >>
-            3));
-
-    if (argAlias) {
-      newOp->setAttr("arg_alias", rewriter.getUnitAttr());
-    }
-    rewriter.replaceOp(op, {output});
+    rewriter.replaceOpWithNewOp<byre::AliasOp>(op, dstMemRefType, operands[0],
+                                               offset_in_bytes);
 
     return success();
   }

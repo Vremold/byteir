@@ -45,254 +45,179 @@ module attributes {byre.container_module, gpu.container_module} {
     byre.compute @PTXOp(%arg122, %arg205) {BlockSize.x = 128 : i32, GridSize.x = 1176 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown0"} : memref<1x3x224x224xf32, "cuda">, memref<1x3x224x224xf16, "cuda">
     byre.compute @PTXOp(%arg2, %arg204) {BlockSize.x = 128 : i32, GridSize.x = 74 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown1"} : memref<64x3x7x7xf32, "cuda">, memref<64x3x7x7xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg205, %arg204, %arg206) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<3> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x3x224x224xf16, "cuda">, memref<64x3x7x7xf16, "cuda">, memref<1x64x112x112xf16, "cuda">
-    %39 = memref.alloc() : memref<1x64x112x112xf16, "cuda">
-    byre.compute @AliasOp(%38, %39) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x64x112x112xf16, "cuda">
-    %40 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%0, %40) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
-    %41 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%1, %41) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
+    %39 = "byre.alias"(%38) {device = "cuda", offset = 0 : i64} : (memref<1605632xi8, "cuda">) -> memref<1x64x112x112xf16, "cuda">
+    %40 = "byre.alias"(%0) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
+    %41 = "byre.alias"(%1) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
     byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg206, %arg125, %arg124, %39, %40, %41) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x112x112xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<1x64x112x112xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
     byre.compute @PTXOp(%39, %arg207) {BlockSize.x = 128 : i32, GridSize.x = 6272 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown3"} : memref<1x64x112x112xf16, "cuda">, memref<1x64x112x112xf16, "cuda">
     byre.compute @PoolMaxOpf16f16(%arg207, %arg208) {base_dilations = dense<1> : tensor<4xi64>, device = "cuda", padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dilations = dense<1> : tensor<4xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : memref<1x64x112x112xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
     byre.compute @PTXOp(%arg9, %arg209) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown4"} : memref<64x64x3x3xf32, "cuda">, memref<64x64x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg208, %arg209, %arg210) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16, "cuda">, memref<64x64x3x3xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
-    %42 = memref.alloc() : memref<1x64x56x56xf16, "cuda">
-    byre.compute @AliasOp(%38, %42) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x64x56x56xf16, "cuda">
-    %43 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%2, %43) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
-    %44 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%3, %44) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
+    %42 = "byre.alias"(%38) {device = "cuda", offset = 0 : i64} : (memref<1605632xi8, "cuda">) -> memref<1x64x56x56xf16, "cuda">
+    %43 = "byre.alias"(%2) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
+    %44 = "byre.alias"(%3) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
     byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg210, %arg127, %arg126, %42, %43, %44) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
     byre.compute @PTXOp(%42, %arg211) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown6"} : memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
     byre.compute @PTXOp(%arg10, %arg212) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown7"} : memref<64x64x3x3xf32, "cuda">, memref<64x64x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg211, %arg212, %arg213) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16, "cuda">, memref<64x64x3x3xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
-    %45 = memref.alloc() : memref<1x64x56x56xf16, "cuda">
-    byre.compute @AliasOp(%38, %45) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x64x56x56xf16, "cuda">
-    %46 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%4, %46) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
-    %47 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%5, %47) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg213, %arg129, %arg128, %45, %46, %47) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%45, %arg208, %arg214) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown9"} : memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
+    %45 = "byre.alias"(%4) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
+    %46 = "byre.alias"(%5) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg213, %arg129, %arg128, %42, %45, %46) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%42, %arg208, %arg214) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown9"} : memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
     byre.compute @PTXOp(%arg15, %arg215) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown10"} : memref<64x64x3x3xf32, "cuda">, memref<64x64x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg214, %arg215, %arg216) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16, "cuda">, memref<64x64x3x3xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
-    %48 = memref.alloc() : memref<1x64x56x56xf16, "cuda">
-    byre.compute @AliasOp(%38, %48) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x64x56x56xf16, "cuda">
-    %49 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%6, %49) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
-    %50 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%7, %50) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg216, %arg131, %arg130, %48, %49, %50) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%48, %arg217) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown12"} : memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
+    %47 = "byre.alias"(%6) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
+    %48 = "byre.alias"(%7) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg216, %arg131, %arg130, %42, %47, %48) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%42, %arg217) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown12"} : memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
     byre.compute @PTXOp(%arg16, %arg218) {BlockSize.x = 128 : i32, GridSize.x = 288 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown13"} : memref<64x64x3x3xf32, "cuda">, memref<64x64x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg217, %arg218, %arg219) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x64x56x56xf16, "cuda">, memref<64x64x3x3xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
-    %51 = memref.alloc() : memref<1x64x56x56xf16, "cuda">
-    byre.compute @AliasOp(%38, %51) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x64x56x56xf16, "cuda">
-    %52 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%8, %52) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
-    %53 = memref.alloc() : memref<64xf32, "cuda">
-    byre.compute @AliasOp(%9, %53) {device = "cuda", offset = 0 : index} : memref<256xi8, "cuda">, memref<64xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg219, %arg133, %arg132, %51, %52, %53) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%51, %arg214, %arg220) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown15"} : memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
+    %49 = "byre.alias"(%8) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
+    %50 = "byre.alias"(%9) {device = "cuda", offset = 0 : i64} : (memref<256xi8, "cuda">) -> memref<64xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg219, %arg133, %arg132, %42, %49, %50) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%42, %arg214, %arg220) {BlockSize.x = 128 : i32, GridSize.x = 1568 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown15"} : memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">, memref<1x64x56x56xf16, "cuda">
     byre.compute @PTXOp(%arg23, %arg226) {BlockSize.x = 128 : i32, GridSize.x = 64 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown16"} : memref<128x64x1x1xf32, "cuda">, memref<128x64x1x1xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg220, %arg226, %arg227) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<0> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x64x56x56xf16, "cuda">, memref<128x64x1x1xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %54 = memref.alloc() : memref<1x128x28x28xf16, "cuda">
-    byre.compute @AliasOp(%37, %54) {device = "cuda", offset = 0 : index} : memref<200704xi8, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %55 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%18, %55) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    %56 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%17, %56) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg227, %arg139, %arg138, %54, %55, %56) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    %51 = "byre.alias"(%37) {device = "cuda", offset = 0 : i64} : (memref<200704xi8, "cuda">) -> memref<1x128x28x28xf16, "cuda">
+    %52 = "byre.alias"(%18) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    %53 = "byre.alias"(%17) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg227, %arg139, %arg138, %51, %52, %53) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
     byre.compute @PTXOp(%arg21, %arg221) {BlockSize.x = 128 : i32, GridSize.x = 576 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown18"} : memref<128x64x3x3xf32, "cuda">, memref<128x64x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg220, %arg221, %arg222) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x64x56x56xf16, "cuda">, memref<128x64x3x3xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %57 = memref.alloc() : memref<1x128x28x28xf16, "cuda">
-    byre.compute @AliasOp(%38, %57) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %58 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%19, %58) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    %59 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%16, %59) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg222, %arg135, %arg134, %57, %58, %59) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%57, %arg223) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown20"} : memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
+    %54 = "byre.alias"(%38) {device = "cuda", offset = 0 : i64} : (memref<1605632xi8, "cuda">) -> memref<1x128x28x28xf16, "cuda">
+    %55 = "byre.alias"(%19) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    %56 = "byre.alias"(%16) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg222, %arg135, %arg134, %54, %55, %56) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%54, %arg223) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown20"} : memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
     byre.compute @PTXOp(%arg22, %arg224) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown21"} : memref<128x128x3x3xf32, "cuda">, memref<128x128x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg223, %arg224, %arg225) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16, "cuda">, memref<128x128x3x3xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %60 = memref.alloc() : memref<1x128x28x28xf16, "cuda">
-    byre.compute @AliasOp(%38, %60) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %61 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%15, %61) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    %62 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%14, %62) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg225, %arg137, %arg136, %60, %61, %62) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%60, %54, %arg228) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown23"} : memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
+    %57 = "byre.alias"(%15) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    %58 = "byre.alias"(%14) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg225, %arg137, %arg136, %54, %57, %58) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%54, %51, %arg228) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown23"} : memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
     byre.compute @PTXOp(%arg30, %arg229) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown24"} : memref<128x128x3x3xf32, "cuda">, memref<128x128x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg228, %arg229, %arg230) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16, "cuda">, memref<128x128x3x3xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %63 = memref.alloc() : memref<1x128x28x28xf16, "cuda">
-    byre.compute @AliasOp(%38, %63) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %64 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%13, %64) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    %65 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%12, %65) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg230, %arg141, %arg140, %63, %64, %65) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%63, %arg231) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown26"} : memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
+    %59 = "byre.alias"(%13) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    %60 = "byre.alias"(%12) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg230, %arg141, %arg140, %54, %59, %60) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%54, %arg231) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown26"} : memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
     byre.compute @PTXOp(%arg31, %arg232) {BlockSize.x = 128 : i32, GridSize.x = 1152 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown27"} : memref<128x128x3x3xf32, "cuda">, memref<128x128x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg231, %arg232, %arg233) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x128x28x28xf16, "cuda">, memref<128x128x3x3xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %66 = memref.alloc() : memref<1x128x28x28xf16, "cuda">
-    byre.compute @AliasOp(%38, %66) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x128x28x28xf16, "cuda">
-    %67 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%11, %67) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    %68 = memref.alloc() : memref<128xf32, "cuda">
-    byre.compute @AliasOp(%10, %68) {device = "cuda", offset = 0 : index} : memref<512xi8, "cuda">, memref<128xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg233, %arg143, %arg142, %66, %67, %68) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%66, %arg228, %arg234) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown29"} : memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
+    %61 = "byre.alias"(%11) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    %62 = "byre.alias"(%10) {device = "cuda", offset = 0 : i64} : (memref<512xi8, "cuda">) -> memref<128xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg233, %arg143, %arg142, %54, %61, %62) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%54, %arg228, %arg234) {BlockSize.x = 128 : i32, GridSize.x = 784 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown29"} : memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">, memref<1x128x28x28xf16, "cuda">
     byre.compute @PTXOp(%arg38, %arg240) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown30"} : memref<256x128x1x1xf32, "cuda">, memref<256x128x1x1xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg234, %arg240, %arg241) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<0> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16, "cuda">, memref<256x128x1x1xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %69 = memref.alloc() : memref<1x256x14x14xf16, "cuda">
-    byre.compute @AliasOp(%38, %69) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %70 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%29, %70) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    %71 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%21, %71) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg241, %arg149, %arg148, %69, %70, %71) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    %63 = "byre.alias"(%38) {device = "cuda", offset = 0 : i64} : (memref<1605632xi8, "cuda">) -> memref<1x256x14x14xf16, "cuda">
+    %64 = "byre.alias"(%29) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %65 = "byre.alias"(%21) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg241, %arg149, %arg148, %63, %64, %65) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
     byre.compute @PTXOp(%arg36, %arg235) {BlockSize.x = 128 : i32, GridSize.x = 2304 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown32"} : memref<256x128x3x3xf32, "cuda">, memref<256x128x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg234, %arg235, %arg236) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x128x28x28xf16, "cuda">, memref<256x128x3x3xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %72 = memref.alloc() : memref<1x256x14x14xf16, "cuda">
-    byre.compute @AliasOp(%38, %72) {device = "cuda", offset = 100352 : index} : memref<1605632xi8, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %73 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%22, %73) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    %74 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%23, %74) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg236, %arg145, %arg144, %72, %73, %74) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%72, %arg237) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown34"} : memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
+    %66 = "byre.alias"(%38) {device = "cuda", offset = 100352 : i64} : (memref<1605632xi8, "cuda">) -> memref<1x256x14x14xf16, "cuda">
+    %67 = "byre.alias"(%22) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %68 = "byre.alias"(%23) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg236, %arg145, %arg144, %66, %67, %68) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%66, %arg237) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown34"} : memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
     byre.compute @PTXOp(%arg37, %arg238) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown35"} : memref<256x256x3x3xf32, "cuda">, memref<256x256x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg237, %arg238, %arg239) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16, "cuda">, memref<256x256x3x3xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %75 = memref.alloc() : memref<1x256x14x14xf16, "cuda">
-    byre.compute @AliasOp(%38, %75) {device = "cuda", offset = 100352 : index} : memref<1605632xi8, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %76 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%24, %76) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    %77 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%20, %77) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg239, %arg147, %arg146, %75, %76, %77) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%75, %69, %arg242) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown37"} : memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
+    %69 = "byre.alias"(%24) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %70 = "byre.alias"(%20) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg239, %arg147, %arg146, %66, %69, %70) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%66, %63, %arg242) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown37"} : memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
     byre.compute @PTXOp(%arg45, %arg243) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown38"} : memref<256x256x3x3xf32, "cuda">, memref<256x256x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg242, %arg243, %arg244) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16, "cuda">, memref<256x256x3x3xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %78 = memref.alloc() : memref<1x256x14x14xf16, "cuda">
-    byre.compute @AliasOp(%38, %78) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %79 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%25, %79) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    %80 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%26, %80) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg244, %arg151, %arg150, %78, %79, %80) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%78, %arg245) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown40"} : memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
+    %71 = "byre.alias"(%25) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %72 = "byre.alias"(%26) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg244, %arg151, %arg150, %63, %71, %72) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%63, %arg245) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown40"} : memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
     byre.compute @PTXOp(%arg46, %arg246) {BlockSize.x = 128 : i32, GridSize.x = 4608 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown41"} : memref<256x256x3x3xf32, "cuda">, memref<256x256x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg245, %arg246, %arg247) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x256x14x14xf16, "cuda">, memref<256x256x3x3xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %81 = memref.alloc() : memref<1x256x14x14xf16, "cuda">
-    byre.compute @AliasOp(%38, %81) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x256x14x14xf16, "cuda">
-    %82 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%27, %82) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    %83 = memref.alloc() : memref<256xf32, "cuda">
-    byre.compute @AliasOp(%28, %83) {device = "cuda", offset = 0 : index} : memref<1024xi8, "cuda">, memref<256xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg247, %arg153, %arg152, %81, %82, %83) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%81, %arg242, %arg248) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown43"} : memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
+    %73 = "byre.alias"(%27) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %74 = "byre.alias"(%28) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg247, %arg153, %arg152, %63, %73, %74) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%63, %arg242, %arg248) {BlockSize.x = 128 : i32, GridSize.x = 392 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown43"} : memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">, memref<1x256x14x14xf16, "cuda">
     byre.compute @PTXOp(%arg53, %arg254) {BlockSize.x = 128 : i32, GridSize.x = 1024 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown44"} : memref<512x256x1x1xf32, "cuda">, memref<512x256x1x1xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg248, %arg254, %arg255) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<0> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16, "cuda">, memref<512x256x1x1xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %84 = memref.alloc() : memref<1x512x7x7xf16, "cuda">
-    byre.compute @AliasOp(%38, %84) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %85 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%37, %85) {device = "cuda", offset = 0 : index} : memref<200704xi8, "cuda">, memref<512xf32, "cuda">
-    %86 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%36, %86) {device = "cuda", offset = 0 : index} : memref<2048xi8, "cuda">, memref<512xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg255, %arg159, %arg158, %84, %85, %86) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    %75 = "byre.alias"(%38) {device = "cuda", offset = 0 : i64} : (memref<1605632xi8, "cuda">) -> memref<1x512x7x7xf16, "cuda">
+    %76 = "byre.alias"(%37) {device = "cuda", offset = 0 : i64} : (memref<200704xi8, "cuda">) -> memref<512xf32, "cuda">
+    %77 = "byre.alias"(%36) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<512xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg255, %arg159, %arg158, %75, %76, %77) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
     byre.compute @PTXOp(%arg51, %arg249) {BlockSize.x = 128 : i32, GridSize.x = 9216 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown46"} : memref<512x256x3x3xf32, "cuda">, memref<512x256x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg248, %arg249, %arg250) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<2> : tensor<2xi64>} : memref<1x256x14x14xf16, "cuda">, memref<512x256x3x3xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %87 = memref.alloc() : memref<1x512x7x7xf16, "cuda">
-    byre.compute @AliasOp(%38, %87) {device = "cuda", offset = 50176 : index} : memref<1605632xi8, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %88 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%37, %88) {device = "cuda", offset = 4096 : index} : memref<200704xi8, "cuda">, memref<512xf32, "cuda">
-    %89 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%37, %89) {device = "cuda", offset = 2048 : index} : memref<200704xi8, "cuda">, memref<512xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg250, %arg155, %arg154, %87, %88, %89) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%87, %arg251) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown48"} : memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
+    %78 = "byre.alias"(%38) {device = "cuda", offset = 50176 : i64} : (memref<1605632xi8, "cuda">) -> memref<1x512x7x7xf16, "cuda">
+    %79 = "byre.alias"(%37) {device = "cuda", offset = 4096 : i64} : (memref<200704xi8, "cuda">) -> memref<512xf32, "cuda">
+    %80 = "byre.alias"(%37) {device = "cuda", offset = 2048 : i64} : (memref<200704xi8, "cuda">) -> memref<512xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg250, %arg155, %arg154, %78, %79, %80) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%78, %arg251) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown48"} : memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
     byre.compute @PTXOp(%arg52, %arg252) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown49"} : memref<512x512x3x3xf32, "cuda">, memref<512x512x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg251, %arg252, %arg253) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16, "cuda">, memref<512x512x3x3xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %90 = memref.alloc() : memref<1x512x7x7xf16, "cuda">
-    byre.compute @AliasOp(%38, %90) {device = "cuda", offset = 50176 : index} : memref<1605632xi8, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %91 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%35, %91) {device = "cuda", offset = 0 : index} : memref<2048xi8, "cuda">, memref<512xf32, "cuda">
-    %92 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%34, %92) {device = "cuda", offset = 0 : index} : memref<2048xi8, "cuda">, memref<512xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg253, %arg157, %arg156, %90, %91, %92) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%90, %84, %arg256) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown51"} : memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
+    %81 = "byre.alias"(%35) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<512xf32, "cuda">
+    %82 = "byre.alias"(%34) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<512xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg253, %arg157, %arg156, %78, %81, %82) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%78, %75, %arg256) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown51"} : memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
     byre.compute @PTXOp(%arg60, %arg257) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown52"} : memref<512x512x3x3xf32, "cuda">, memref<512x512x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg256, %arg257, %arg258) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16, "cuda">, memref<512x512x3x3xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %93 = memref.alloc() : memref<1x512x7x7xf16, "cuda">
-    byre.compute @AliasOp(%38, %93) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %94 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%33, %94) {device = "cuda", offset = 0 : index} : memref<2048xi8, "cuda">, memref<512xf32, "cuda">
-    %95 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%32, %95) {device = "cuda", offset = 0 : index} : memref<2048xi8, "cuda">, memref<512xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg258, %arg161, %arg160, %93, %94, %95) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%93, %arg259) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown54"} : memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
+    %83 = "byre.alias"(%33) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<512xf32, "cuda">
+    %84 = "byre.alias"(%32) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<512xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg258, %arg161, %arg160, %75, %83, %84) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%75, %arg259) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown54"} : memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
     byre.compute @PTXOp(%arg61, %arg260) {BlockSize.x = 128 : i32, GridSize.x = 18432 : i32, arg_ranks = [4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown55"} : memref<512x512x3x3xf32, "cuda">, memref<512x512x3x3xf16, "cuda">
     byre.compute @ConvOpf16f16f16(%arg259, %arg260, %arg261) {batch_group_count = 1 : i64, device = "cuda", feature_group_count = 1 : i64, input_layout = "NCHW", kernel_layout = "NCHW", lhs_dilation = dense<1> : tensor<2xi64>, output_layout = "NCHW", padding = dense<1> : tensor<2x2xi64>, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : memref<1x512x7x7xf16, "cuda">, memref<512x512x3x3xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %96 = memref.alloc() : memref<1x512x7x7xf16, "cuda">
-    byre.compute @AliasOp(%38, %96) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %97 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%31, %97) {device = "cuda", offset = 0 : index} : memref<2048xi8, "cuda">, memref<512xf32, "cuda">
-    %98 = memref.alloc() : memref<512xf32, "cuda">
-    byre.compute @AliasOp(%30, %98) {device = "cuda", offset = 0 : index} : memref<2048xi8, "cuda">, memref<512xf32, "cuda">
-    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg261, %arg163, %arg162, %96, %97, %98) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%96, %arg256, %arg262) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown57"} : memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
-    %99 = memref.alloc() : memref<1x512xf16, "cuda">
-    byre.compute @AliasOp(%38, %99) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1x512xf16, "cuda">
-    byre.compute @ReduceSumOpf16f16(%arg262, %99) {device = "cuda", dimensions = dense<[3, 2]> : tensor<2xi64>} : memref<1x512x7x7xf16, "cuda">, memref<1x512xf16, "cuda">
-    byre.compute @PTXOp(%99, %arg263) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown58"} : memref<1x512xf16, "cuda">, memref<1x512xf16, "cuda">
-    %100 = memref.alloc() : memref<1000x512xf16, "cuda">
-    byre.compute @AliasOp(%38, %100) {device = "cuda", offset = 0 : index} : memref<1605632xi8, "cuda">, memref<1000x512xf16, "cuda">
-    byre.compute @PTXOp(%arg4, %100) {BlockSize.x = 128 : i32, GridSize.x = 4000 : i32, arg_ranks = [2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown59"} : memref<1000x512xf32, "cuda">, memref<1000x512xf16, "cuda">
-    byre.compute @TransposeOpf16f16(%100, %arg264) {device = "cuda", minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : memref<1000x512xf16, "cuda">, memref<512x1000xf16, "cuda">
-    %101 = memref.alloc() : memref<1x1000xf16, "cuda">
-    byre.compute @AliasOp(%37, %101) {device = "cuda", offset = 6144 : index} : memref<200704xi8, "cuda">, memref<1x1000xf16, "cuda">
-    byre.compute @MatmulOpf16f16f16(%arg263, %100, %101) {device = "cuda", lhs_contracting_dimension = 1 : i64, rhs_contracting_dimension = 1 : i64} : memref<1x512xf16, "cuda">, memref<1000x512xf16, "cuda">, memref<1x1000xf16, "cuda">
-    byre.compute @PTXOp(%arg3, %101, %arg123) {BlockSize.x = 128 : i32, GridSize.x = 8 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown60"} : memref<1000xf32, "cuda">, memref<1x1000xf16, "cuda">, memref<1x1000xf16, "cuda">
+    %85 = "byre.alias"(%31) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<512xf32, "cuda">
+    %86 = "byre.alias"(%30) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<512xf32, "cuda">
+    byre.compute @BatchNormTrainingOpf16f32f32f16f32f32(%arg261, %arg163, %arg162, %75, %85, %86) {device = "cuda", epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%75, %arg256, %arg262) {BlockSize.x = 128 : i32, GridSize.x = 196 : i32, arg_ranks = [4 : i32, 4 : i32, 4 : i32], device = "cuda", kernel_name = "Unknown57"} : memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">, memref<1x512x7x7xf16, "cuda">
+    %87 = "byre.alias"(%38) {device = "cuda", offset = 0 : i64} : (memref<1605632xi8, "cuda">) -> memref<1x512xf16, "cuda">
+    byre.compute @ReduceSumOpf16f16(%arg262, %87) {device = "cuda", dimensions = dense<[3, 2]> : tensor<2xi64>} : memref<1x512x7x7xf16, "cuda">, memref<1x512xf16, "cuda">
+    byre.compute @PTXOp(%87, %arg263) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown58"} : memref<1x512xf16, "cuda">, memref<1x512xf16, "cuda">
+    %88 = "byre.alias"(%38) {device = "cuda", offset = 0 : i64} : (memref<1605632xi8, "cuda">) -> memref<1000x512xf16, "cuda">
+    byre.compute @PTXOp(%arg4, %88) {BlockSize.x = 128 : i32, GridSize.x = 4000 : i32, arg_ranks = [2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown59"} : memref<1000x512xf32, "cuda">, memref<1000x512xf16, "cuda">
+    byre.compute @TransposeOpf16f16(%88, %arg264) {device = "cuda", minor_to_major = dense<[0, 1]> : tensor<2xindex>, permutation = dense<[1, 0]> : tensor<2xi64>} : memref<1000x512xf16, "cuda">, memref<512x1000xf16, "cuda">
+    %89 = "byre.alias"(%37) {device = "cuda", offset = 6144 : i64} : (memref<200704xi8, "cuda">) -> memref<1x1000xf16, "cuda">
+    byre.compute @MatmulOpf16f16f16(%arg263, %88, %89) {device = "cuda", lhs_contracting_dimension = 1 : i64, rhs_contracting_dimension = 1 : i64} : memref<1x512xf16, "cuda">, memref<1000x512xf16, "cuda">, memref<1x1000xf16, "cuda">
+    byre.compute @PTXOp(%arg3, %89, %arg123) {BlockSize.x = 128 : i32, GridSize.x = 8 : i32, arg_ranks = [1 : i32, 2 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown60"} : memref<1000xf32, "cuda">, memref<1x1000xf16, "cuda">, memref<1x1000xf16, "cuda">
     byre.compute @PTXOp(%40, %arg63, %arg164) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown61"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
     byre.compute @PTXOp(%41, %arg64, %arg165) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown62"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
     byre.compute @PTXOp(%43, %arg66, %arg166) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown63"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
     byre.compute @PTXOp(%44, %arg67, %arg167) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown64"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%46, %arg69, %arg168) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown65"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%47, %arg70, %arg169) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown66"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%49, %arg72, %arg170) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown67"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%50, %arg73, %arg171) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown68"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%52, %arg75, %arg172) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown69"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%53, %arg76, %arg173) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown70"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
-    byre.compute @PTXOp(%58, %arg78, %arg174) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown71"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%59, %arg79, %arg175) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown72"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%61, %arg81, %arg176) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown73"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%62, %arg82, %arg177) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown74"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%55, %arg84, %arg178) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown75"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%56, %arg85, %arg179) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown76"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%64, %arg87, %arg180) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown77"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%65, %arg88, %arg181) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown78"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%67, %arg90, %arg182) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown79"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%68, %arg91, %arg183) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown80"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%73, %arg93, %arg184) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown81"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%74, %arg94, %arg185) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown82"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%76, %arg96, %arg186) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown83"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%77, %arg97, %arg187) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown84"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%70, %arg99, %arg188) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown85"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%71, %arg100, %arg189) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown86"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%79, %arg102, %arg190) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown87"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%80, %arg103, %arg191) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown88"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%82, %arg105, %arg192) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown89"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%83, %arg106, %arg193) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown90"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%88, %arg108, %arg194) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown91"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%89, %arg109, %arg195) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown92"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%91, %arg111, %arg196) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown93"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%92, %arg112, %arg197) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown94"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%85, %arg114, %arg198) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown95"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%86, %arg115, %arg199) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown96"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%94, %arg117, %arg200) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown97"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%95, %arg118, %arg201) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown98"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%97, %arg120, %arg202) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown99"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%98, %arg121, %arg203) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown100"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%45, %arg69, %arg168) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown65"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%46, %arg70, %arg169) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown66"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%47, %arg72, %arg170) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown67"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%48, %arg73, %arg171) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown68"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%49, %arg75, %arg172) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown69"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%50, %arg76, %arg173) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown70"} : memref<64xf32, "cuda">, memref<64xf32, "cuda">, memref<64xf32, "cuda">
+    byre.compute @PTXOp(%55, %arg78, %arg174) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown71"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%56, %arg79, %arg175) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown72"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%57, %arg81, %arg176) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown73"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%58, %arg82, %arg177) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown74"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%52, %arg84, %arg178) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown75"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%53, %arg85, %arg179) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown76"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%59, %arg87, %arg180) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown77"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%60, %arg88, %arg181) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown78"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%61, %arg90, %arg182) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown79"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%62, %arg91, %arg183) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown80"} : memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%67, %arg93, %arg184) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown81"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%68, %arg94, %arg185) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown82"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%69, %arg96, %arg186) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown83"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%70, %arg97, %arg187) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown84"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%64, %arg99, %arg188) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown85"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%65, %arg100, %arg189) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown86"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%71, %arg102, %arg190) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown87"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%72, %arg103, %arg191) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown88"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%73, %arg105, %arg192) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown89"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%74, %arg106, %arg193) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown90"} : memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%79, %arg108, %arg194) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown91"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%80, %arg109, %arg195) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown92"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%81, %arg111, %arg196) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown93"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%82, %arg112, %arg197) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown94"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%76, %arg114, %arg198) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown95"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%77, %arg115, %arg199) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown96"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%83, %arg117, %arg200) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown97"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%84, %arg118, %arg201) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown98"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%85, %arg120, %arg202) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown99"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%86, %arg121, %arg203) {BlockSize.x = 128 : i32, GridSize.x = 4 : i32, arg_ranks = [1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown100"} : memref<512xf32, "cuda">, memref<512xf32, "cuda">, memref<512xf32, "cuda">
     return
   }
 }

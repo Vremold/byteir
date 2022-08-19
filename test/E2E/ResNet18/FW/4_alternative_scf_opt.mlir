@@ -612,15 +612,16 @@ module {
     return %0 : memref<1000x512xf16>
   }
   func.func private @Unknown60(%arg0: memref<1000xf32>, %arg1: memref<1x1000xf16>) -> memref<1x1000xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = memref.expand_shape %arg0 [[0, 1]] : memref<1000xf32> into memref<1x1000xf32>
-    %1 = memref.alloc() {alignment = 128 : i64} : memref<1x1000xf16>
-    linalg.generic {indexing_maps = [#map1, #map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg1, %0 : memref<1x1000xf16>, memref<1x1000xf32>) outs(%1 : memref<1x1000xf16>) {
+    %0 = memref.collapse_shape %arg1 [[0, 1]] : memref<1x1000xf16> into memref<1000xf16>
+    %1 = memref.alloc() {alignment = 128 : i64} : memref<1000xf16>
+    linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel"]} ins(%0, %arg0 : memref<1000xf16>, memref<1000xf32>) outs(%1 : memref<1000xf16>) {
     ^bb0(%arg2: f16, %arg3: f32, %arg4: f16):
-      %2 = arith.truncf %arg3 : f32 to f16
-      %3 = arith.addf %arg2, %2 : f16
-      linalg.yield %3 : f16
+      %3 = arith.truncf %arg3 : f32 to f16
+      %4 = arith.addf %arg2, %3 : f16
+      linalg.yield %4 : f16
     }
-    return %1 : memref<1x1000xf16>
+    %2 = memref.expand_shape %1 [[0, 1]] : memref<1000xf16> into memref<1x1000xf16>
+    return %2 : memref<1x1000xf16>
   }
   func.func private @Unknown61(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 1.000000e-01 : f32

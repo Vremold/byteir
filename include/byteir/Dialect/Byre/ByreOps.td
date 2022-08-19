@@ -19,6 +19,7 @@ include "mlir/IR/SymbolInterfaces.td"
 include "mlir/Interfaces/DataLayoutInterfaces.td"
 include "mlir/Interfaces/CopyOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/Interfaces/ViewLikeInterface.td"
 
 //===----------------------------------------------------------------------===//
 // Byre Dialect operations.
@@ -97,6 +98,27 @@ def Byre_CopyOp : Byre_Op<"copy",
 
   let hasCanonicalizer = 1;
   let hasFolder = 1;
+  let hasVerifier = 1;
+}
+
+def Byre_AliasOp
+    : Byre_Op<"alias",
+              [HasParent<"func::FuncOp">,
+               DeclareOpInterfaceMethods<ByreInterface, ["getCalleeName"]>,
+               DeclareOpInterfaceMethods<ViewLikeOpInterface>,
+               NoSideEffect]> {
+  let summary = "alias operation";
+
+  let arguments = (ins
+    AnyStridedMemRef:$source,
+    I64Attr:$offset
+  );
+
+  let results = (outs
+    AnyStridedMemRef:$target
+  );
+
+  let hasCanonicalizer = 1;
   let hasVerifier = 1;
 }
 

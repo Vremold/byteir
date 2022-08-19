@@ -803,31 +803,21 @@ module attributes {gpu.container_module} {
       }
       gpu.return
     }
-    gpu.func @Unknown60(%arg0: memref<1000xf32>, %arg1: memref<1x1000xf16>, %arg2: memref<1x1000xf16>) kernel {
-      %c0 = arith.constant 0 : index
+    gpu.func @Unknown60(%arg0: memref<1000xf32>, %arg1: memref<1x1000xf16>, %arg2: memref<1000xf16>) kernel {
       %c1000 = arith.constant 1000 : index
-      %c-1 = arith.constant -1 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.expand_shape %arg0 [[0, 1]] : memref<1000xf32> into memref<1x1000xf32>
+      %5 = memref.collapse_shape %arg1 [[0, 1]] : memref<1x1000xf16> into memref<1000xf16>
       %6 = arith.cmpi slt, %4, %c1000 : index
       scf.if %6 {
-        %7 = arith.cmpi slt, %4, %c0 : index
-        %8 = arith.addi %4, %c1000 : index
-        %9 = arith.select %7, %8, %4 : index
-        %10 = arith.subi %c-1, %4 : index
-        %11 = arith.select %7, %10, %4 : index
-        %12 = arith.divsi %11, %c1000 : index
-        %13 = arith.subi %c-1, %12 : index
-        %14 = arith.select %7, %13, %12 : index
-        %15 = memref.load %arg1[%14, %9] : memref<1x1000xf16>
-        %16 = memref.load %5[%14, %9] : memref<1x1000xf32>
-        %17 = arith.truncf %16 : f32 to f16
-        %18 = arith.addf %15, %17 : f16
-        memref.store %18, %arg2[%14, %9] : memref<1x1000xf16>
+        %7 = memref.load %5[%4] : memref<1000xf16>
+        %8 = memref.load %arg0[%4] : memref<1000xf32>
+        %9 = arith.truncf %8 : f32 to f16
+        %10 = arith.addf %7, %9 : f16
+        memref.store %10, %arg2[%4] : memref<1000xf16>
       }
       gpu.return
     }
@@ -3258,13 +3248,14 @@ module attributes {gpu.container_module} {
     gpu.launch_func  @unified::@Unknown59 blocks in (%c4000, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<1000x512xf32>, %0 : memref<1000x512xf16>)
     return %0 : memref<1000x512xf16>
   }
-  func.func private @Unknown60(%arg0: memref<1000xf32>, %arg1: memref<1x1000xf16>) -> memref<1x1000xf16> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 8 : i32, __byre__arg_ranks = [1 : i32, 2 : i32, 2 : i32], __byre__kernel_name = "Unknown60", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
+  func.func private @Unknown60(%arg0: memref<1000xf32>, %arg1: memref<1x1000xf16>) -> memref<1x1000xf16> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 8 : i32, __byre__arg_ranks = [1 : i32, 2 : i32, 1 : i32], __byre__kernel_name = "Unknown60", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
     %c8 = arith.constant 8 : index
-    %0 = memref.alloc() {alignment = 128 : i64} : memref<1x1000xf16>
-    gpu.launch_func  @unified::@Unknown60 blocks in (%c8, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<1000xf32>, %arg1 : memref<1x1000xf16>, %0 : memref<1x1000xf16>)
-    return %0 : memref<1x1000xf16>
+    %0 = memref.alloc() {alignment = 128 : i64} : memref<1000xf16>
+    %1 = memref.expand_shape %0 [[0, 1]] : memref<1000xf16> into memref<1x1000xf16>
+    gpu.launch_func  @unified::@Unknown60 blocks in (%c8, %c1, %c1) threads in (%c128, %c1, %c1) args(%arg0 : memref<1000xf32>, %arg1 : memref<1x1000xf16>, %0 : memref<1000xf16>)
+    return %1 : memref<1x1000xf16>
   }
   func.func private @Unknown61(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byre__BlockSize.x = 128 : i32, __byre__GridSize.x = 1 : i32, __byre__arg_ranks = [1 : i32, 1 : i32, 1 : i32], __byre__kernel_name = "Unknown61", __byteir_elementwise_fusion__, arg_offsets = [0 : i32, 1 : i32, 2 : i32], byre_compute_name = "PTXOp", byre_force_compute_name} {
     %c128 = arith.constant 128 : index

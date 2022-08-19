@@ -302,6 +302,54 @@ LogicalResult CopyOp::verify() {
   return verifyOpInEntryPointFunc(this->getOperation());
 }
 
+//===----------------------------------------------------------------------===//
+// AliasOp
+//===----------------------------------------------------------------------===/
+
+namespace {
+struct CollapseAliasChain : public OpRewritePattern<AliasOp> {
+  using OpRewritePattern<AliasOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(AliasOp aliasOp,
+                                PatternRewriter &rewriter) const override {
+    if (auto sourceOp = aliasOp.source().getDefiningOp<AliasOp>()) {
+      rewriter.replaceOpWithNewOp<AliasOp>(
+          aliasOp, aliasOp.target().getType(), sourceOp.source(),
+          aliasOp.offset() + sourceOp.offset());
+      return success();
+    }
+    return failure();
+  }
+};
+struct RemoveIdentityAliasOp : public OpRewritePattern<AliasOp> {
+  using OpRewritePattern<AliasOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(AliasOp aliasOp,
+                                PatternRewriter &rewriter) const override {
+    if (aliasOp.source().getType() == aliasOp.target().getType() &&
+        aliasOp.offset() == 0) {
+      rewriter.replaceOp(aliasOp, aliasOp.source());
+      return success();
+    }
+    return failure();
+  }
+};
+} // namespace
+
+// verify AliasOp
+LogicalResult AliasOp::verify() {
+  return verifyOpInEntryPointFunc(this->getOperation());
+}
+
+void AliasOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                          MLIRContext *context) {
+  results.add<CollapseAliasChain, RemoveIdentityAliasOp>(context);
+}
+
+std::string AliasOp::getCalleeName() { return "AliasOp"; }
+
+Value AliasOp::getViewSource() { return source(); }
+
 // LWC: ignore Async for now
 //
 //===----------------------------------------------------------------------===//
