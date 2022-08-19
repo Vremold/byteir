@@ -71,6 +71,9 @@ add_mlir_dialect_library(ByteIRMhloBoundedShapes
   BoundedShapes/DynamicBroadcastInDimRegister.cpp
   BoundedShapes/ReduceRegister.cpp
   BoundedShapes/TorchIndexSelectRegister.cpp
+  BoundedShapes/DotGeneralRegister.cpp
+  BoundedShapes/RealDynamicSliceRegister.cpp
+  BoundedShapes/ConvolutionRegister.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/BoundedShapes
