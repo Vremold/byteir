@@ -38,7 +38,8 @@ def Ace_ConstOp : Ace_Op<"constant", [
   let builders = [
     OpBuilder<(ins "Attribute":$value)>];
 
-  let assemblyFormat = "attr-dict $value";
+  // FIXME: let this op only has generic format for golden ref calculate.
+  // let assemblyFormat = "attr-dict $value";
   let hasFolder = 1;
   let hasVerifier = 0;
 }
