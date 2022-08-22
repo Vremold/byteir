@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/SCFOpt.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Transforms/Passes.h"
 #include "byteir/Utils/PipelineUtils.h"
@@ -15,6 +14,8 @@
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

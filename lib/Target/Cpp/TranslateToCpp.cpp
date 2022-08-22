@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+// Modifications Copyright (c) ByteDance.
 
 #include "byteir/Target/Cpp/CppEmitter.h"
 #include "byteir/Target/Cpp/ToCpp.h"

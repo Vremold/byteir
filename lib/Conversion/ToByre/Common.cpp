@@ -4,6 +4,7 @@
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
+
 #include "byteir/Conversion/ToByre/Common.h"
 #include "llvm/ADT/TypeSwitch.h"
 

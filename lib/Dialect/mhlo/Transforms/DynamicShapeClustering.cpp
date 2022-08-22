@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/DynamicShapeClustering.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
@@ -19,6 +18,8 @@
 #include <string>
 #include <vector>
 
+#include "./PassDetail.h"
+
 using namespace mlir;
 
 #define DEBUG_TYPE "dynamic-shape-clustering"
@@ -29,18 +30,18 @@ struct DynamicSourceAnalysis {
   DynamicSourceAnalysis(Operation *op);
 
   void calPostDomsByTie() {
-    operation_->walk(
-        [&](shape_ext::TieOp tieOp) { postDomByTieMem_[tieOp] = true; });
-    operation_->walk([&](Operation *op) { calPostDomByTieRecursively(op); });
+    operation->walk(
+        [&](shape_ext::TieOp tieOp) { postDomByTieMem[tieOp] = true; });
+    operation->walk([&](Operation *op) { calPostDomByTieRecursively(op); });
   }
 
   bool calPostDomByTieRecursively(Operation *op) {
-    auto it = postDomByTieMem_.find(op);
-    if (it != postDomByTieMem_.end())
+    auto it = postDomByTieMem.find(op);
+    if (it != postDomByTieMem.end())
       return it->second;
 
     if (op->getNumResults() == 0) {
-      postDomByTieMem_[op] = false;
+      postDomByTieMem[op] = false;
       return false;
     }
 
@@ -49,12 +50,12 @@ struct DynamicSourceAnalysis {
         return calPostDomByTieRecursively(user);
       });
       if (!allDomed) {
-        postDomByTieMem_[op] = false;
+        postDomByTieMem[op] = false;
         return false;
       }
     }
 
-    postDomByTieMem_[op] = true;
+    postDomByTieMem[op] = true;
     return true;
   }
 
@@ -62,7 +63,7 @@ struct DynamicSourceAnalysis {
     std::vector<shape_ext::TieOp> tieOps;
     DenseMap<Value, DenseSet<Value>> dynamicSourcesMem;
 
-    operation_->walk([&](shape_ext::TieOp tieOp) { tieOps.push_back(tieOp); });
+    operation->walk([&](shape_ext::TieOp tieOp) { tieOps.push_back(tieOp); });
     for (shape_ext::TieOp tieOp : tieOps) {
       Value v = tieOp.getValue();
       DenseSet<Value> sources;
@@ -73,7 +74,7 @@ struct DynamicSourceAnalysis {
           sources.insert(source);
         }
       }
-      dynamicSources_[v] = sources;
+      dynamicSources[v] = sources;
     }
   }
 
@@ -103,11 +104,11 @@ struct DynamicSourceAnalysis {
 
   void removeTieOps() {
     std::vector<Operation *> ops;
-    operation_->walk<WalkOrder::PreOrder>(
+    operation->walk<WalkOrder::PreOrder>(
         [&](Operation *op) { ops.push_back(op); });
 
     for (auto it = ops.rbegin(); it != ops.rend(); ++it) {
-      if (postDomByTieMem_[*it]) {
+      if (postDomByTieMem[*it]) {
         (*it)->erase();
       }
     }
@@ -116,7 +117,7 @@ struct DynamicSourceAnalysis {
   void print(llvm::raw_ostream &os) {
     os << "=================== DynamicSourceAnalysis Printer "
           "=====================\n";
-    for (auto it : dynamicSources_) {
+    for (auto it : dynamicSources) {
       Value v = it.first;
       os << "Sources of " << v << "\n";
       for (Value source : it.second)
@@ -126,8 +127,8 @@ struct DynamicSourceAnalysis {
   }
 
   bool isDynamicSource(Value v) {
-    auto it = dynamicSources_.find(v);
-    if (it == dynamicSources_.end())
+    auto it = dynamicSources.find(v);
+    if (it == dynamicSources.end())
       return false;
     if (it->second.size() == 1 && v == *(it->second.begin())) {
       return true;
@@ -135,13 +136,13 @@ struct DynamicSourceAnalysis {
     return false;
   }
 
-  DenseMap<Operation *, bool> postDomByTieMem_;
-  DenseMap<Value, DenseSet<Value>> dynamicSources_;
-  Operation *operation_;
+  DenseMap<Operation *, bool> postDomByTieMem;
+  DenseMap<Value, DenseSet<Value>> dynamicSources;
+  Operation *operation;
 };
 
 DynamicSourceAnalysis::DynamicSourceAnalysis(Operation *operation)
-    : operation_(operation) {
+    : operation(operation) {
   calPostDomsByTie();
   calDynamicSource();
 }
@@ -214,12 +215,12 @@ struct DynamicShapeClusteringPass
         DenseSet<Value> targetSources;
         DenseSet<Value> startSources;
         for (Value v : target->getResults()) {
-          for (Value s : dynSrcAnalysis.dynamicSources_[v]) {
+          for (Value s : dynSrcAnalysis.dynamicSources[v]) {
             targetSources.insert(s);
           }
         }
         for (Value v : start->getResults()) {
-          for (Value s : dynSrcAnalysis.dynamicSources_[v]) {
+          for (Value s : dynSrcAnalysis.dynamicSources[v]) {
             startSources.insert(s);
           }
         }

@@ -1,5 +1,4 @@
-//===- NVVMCodegen.cpp -----------------------------------------*--- C++
-//-*-===//
+//===- NVVMCodegen.cpp ----------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/GPU/NVVMCodegen.h"
-#include "./PassDetail.h"
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Dialect/mhlo/Passes.h"
@@ -23,6 +21,8 @@
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

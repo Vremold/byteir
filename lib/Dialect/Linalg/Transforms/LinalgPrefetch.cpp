@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Linalg/Transforms/LinalgPrefetch.h"
-#include "PassDetail.h"
 #include "byteir/Utils/LoopUtils.h"
 #include "byteir/Utils/MemUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -16,6 +15,8 @@
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;

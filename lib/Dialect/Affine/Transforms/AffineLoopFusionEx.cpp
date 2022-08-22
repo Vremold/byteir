@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Affine/Transforms/AffineLoopFusionEx.h"
-#include "PassDetail.h"
 #include "byteir/Utils/Hoist.h"
 #include "mlir/Dialect/Affine/Analysis/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -15,6 +14,8 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Dominance.h"
 #include <utility>
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -25,33 +26,33 @@ namespace {
 Operation *leastDominantDefiningOp(Operation *first, Operation *op,
                                    DominanceInfo &domInfo) {
 
-  Operation *cur_pos = first;
+  Operation *curPos = first;
   for (auto val : op->getOperands()) {
     if (val.getDefiningOp() == nullptr) {
       continue;
     }
 
-    if (domInfo.properlyDominates(cur_pos, val.getDefiningOp())) {
-      cur_pos = val.getDefiningOp();
+    if (domInfo.properlyDominates(curPos, val.getDefiningOp())) {
+      curPos = val.getDefiningOp();
     }
   }
 
-  return cur_pos;
+  return curPos;
 }
 
-bool IsHoistUpOp(Operation *op) {
+bool isHoistUpOp(Operation *op) {
   return isa<memref::AllocOp, memref::CollapseShapeOp, memref::DimOp,
              memref::ExpandShapeOp, memref::ReshapeOp>(op);
 }
 
 void collectAffineLopps(func::FuncOp funcOp,
-                        SmallVector<AffineForOp> &loop_collector) {
+                        SmallVector<AffineForOp> &loopCollector) {
 
   for (auto &block : funcOp.getBody()) {
     for (auto &op : block.without_terminator()) {
       // skip AffineFor
       if (auto forOp = dyn_cast<AffineForOp>(op)) {
-        loop_collector.push_back(forOp);
+        loopCollector.push_back(forOp);
         continue;
       }
     }
@@ -59,7 +60,7 @@ void collectAffineLopps(func::FuncOp funcOp,
 }
 
 // This is a temp fix for affine fusion
-void UpdateComputationSliceState(mlir::ComputationSliceState &sliceUnion,
+void updateComputationSliceState(mlir::ComputationSliceState &sliceUnion,
                                  MLIRContext *ctx) {
   sliceUnion.lbs[0] = AffineMap::getMultiDimIdentityMap(1, ctx);
   // generate d0 + 1
@@ -86,7 +87,7 @@ void fuseAffineLoopEx(func::FuncOp funcOp, ArrayRef<AffineForOp> loops) {
       // just fix sliceUnion to single-step loop (lb = d0, ub = d0+1) so it can
       // trigger fusion
       // TODO change it back after it is fixed.
-      UpdateComputationSliceState(sliceUnion, funcOp.getContext());
+      updateComputationSliceState(sliceUnion, funcOp.getContext());
       fuseLoops(forOp, first, sliceUnion);
       forOp.erase();
     }
@@ -111,7 +112,7 @@ struct AffineLoopFusionExPass
     collectAffineLopps(funcOp, loopCollection);
 
     for (auto &block : funcOp.getBody()) {
-      hoistUpOpsInBlock(&block, domInfo, IsHoistUpOp);
+      hoistUpOpsInBlock(&block, domInfo, isHoistUpOp);
     }
 
     fuseAffineLoopEx(funcOp, loopCollection);

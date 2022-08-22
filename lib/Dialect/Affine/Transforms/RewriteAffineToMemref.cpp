@@ -1,5 +1,4 @@
-//===- RewriteAffineToMemref.cpp --------------------------------------*--- C++
-//-*-===//
+//===- RewriteAffineToMemref.cpp ------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,13 +6,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Affine/Transforms/RewriteAffineToMemref.h"
-#include "PassDetail.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/Utils.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Transforms/DialectConversion.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -81,8 +81,8 @@ public:
 
     RewritePatternSet patterns(&ctx);
     populateAffineLoadStoreConversionPatterns(patterns);
-
-    if (failed(applyPartialConversion(f, target, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPartialConversion(f, target, frozenPatterns))) {
       signalPassFailure();
     }
   }

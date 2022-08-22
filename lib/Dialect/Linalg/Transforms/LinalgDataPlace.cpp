@@ -6,12 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Linalg/Transforms/LinalgDataPlace.h"
-#include "PassDetail.h"
 #include "byteir/Utils/MemUtils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;

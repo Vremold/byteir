@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Shape/Transforms/ResolveShapeConstraint.h"
-#include "PassDetail.h"
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -14,6 +13,8 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/EquivalenceClasses.h"
 #include "llvm/Support/Debug.h"
+
+#include "PassDetail.h"
 
 #define DEBUG_TYPE "resolve-shape-constraint"
 
@@ -110,7 +111,8 @@ struct ResolveShapeConstraintPass
     MLIRContext *ctx = funcOp.getContext();
     RewritePatternSet patterns(ctx);
     shape_ext::TieOp::getCanonicalizationPatterns(patterns, ctx);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp->emitError() << "Canonicalize on tie op failed";
       signalPassFailure();
     }

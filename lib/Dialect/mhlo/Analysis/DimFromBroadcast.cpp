@@ -35,33 +35,31 @@ SmallVector<bool> broadcastInDimHandleFlag(mhlo::BroadcastInDimOp op,
 }
 
 SmallVector<bool> reshapeHandleFlag(mhlo::ReshapeOp op, int64_t rank,
-                                    ArrayRef<int64_t> oup_shape,
+                                    ArrayRef<int64_t> oupShape,
                                     DimFlagAnalysis *analysis) {
   SmallVector<bool> res(rank, false);
   Value inp = op.operand();
-  auto inp_shaped_type = inp.getType().dyn_cast<ShapedType>();
-  if (!inp_shaped_type || !inp_shaped_type.hasRank()) {
+  auto inpShapedType = inp.getType().dyn_cast<ShapedType>();
+  if (!inpShapedType || !inpShapedType.hasRank()) {
     return res;
   }
   // TODO: This is only a conservative check currently. Will not
   // check pattern like X[a*b, c] = mhlo.reshape(Y[a, b, c])
-  ArrayRef<int64_t> inp_shape = inp_shaped_type.getShape();
-  SmallVector<unsigned> oup_greater_than_one_idx =
-      getGreaterThanOneIdx(oup_shape);
-  SmallVector<unsigned> inp_greater_than_one_idx =
-      getGreaterThanOneIdx(inp_shape);
-  if (oup_greater_than_one_idx.size() != inp_greater_than_one_idx.size()) {
+  ArrayRef<int64_t> inpShape = inpShapedType.getShape();
+  SmallVector<unsigned> oupGreaterThanOneIdx = getGreaterThanOneIdx(oupShape);
+  SmallVector<unsigned> inpGreaterThanOneIdx = getGreaterThanOneIdx(inpShape);
+  if (oupGreaterThanOneIdx.size() != inpGreaterThanOneIdx.size()) {
     return res;
   }
-  for (unsigned i = 0; i < oup_greater_than_one_idx.size(); ++i) {
-    if (oup_shape[oup_greater_than_one_idx[i]] !=
-        inp_shape[inp_greater_than_one_idx[i]]) {
+  for (unsigned i = 0; i < oupGreaterThanOneIdx.size(); ++i) {
+    if (oupShape[oupGreaterThanOneIdx[i]] !=
+        inpShape[inpGreaterThanOneIdx[i]]) {
       return res;
     }
   }
-  ArrayRef<bool> inp_res = analysis->getDimFlag(inp);
-  for (unsigned i = 0; i < oup_greater_than_one_idx.size(); ++i) {
-    res[oup_greater_than_one_idx[i]] = inp_res[inp_greater_than_one_idx[i]];
+  ArrayRef<bool> inpRes = analysis->getDimFlag(inp);
+  for (unsigned i = 0; i < oupGreaterThanOneIdx.size(); ++i) {
+    res[oupGreaterThanOneIdx[i]] = inpRes[inpGreaterThanOneIdx[i]];
   }
   return res;
 }
@@ -87,20 +85,20 @@ SmallVector<bool> binaryElementwiseHandleFlag(Operation *op,
 } // namespace
 
 SmallVector<bool> DimFromBroadcast::compute(Value v) {
-  auto shaped_type = v.getType().dyn_cast<ShapedType>();
-  if (!shaped_type || !shaped_type.hasRank()) {
+  auto shapedType = v.getType().dyn_cast<ShapedType>();
+  if (!shapedType || !shapedType.hasRank()) {
     return SmallVector<bool>();
   }
-  int64_t cur_rank = shaped_type.getRank();
-  ArrayRef<int64_t> cur_shape = shaped_type.getShape();
+  int64_t curRank = shapedType.getRank();
+  ArrayRef<int64_t> curShape = shapedType.getShape();
 
-  Operation *def_op = v.getDefiningOp();
-  SmallVector<bool> dim_flag =
-      llvm::TypeSwitch<Operation *, SmallVector<bool>>(def_op)
+  Operation *defOp = v.getDefiningOp();
+  SmallVector<bool> dimFlag =
+      llvm::TypeSwitch<Operation *, SmallVector<bool>>(defOp)
           .Case<mhlo::BroadcastInDimOp>(
-              [&](auto op) { return broadcastInDimHandleFlag(op, cur_rank); })
+              [&](auto op) { return broadcastInDimHandleFlag(op, curRank); })
           .Case<mhlo::ReshapeOp>([&](auto op) {
-            return reshapeHandleFlag(op, cur_rank, cur_shape, analysis);
+            return reshapeHandleFlag(op, curRank, curShape, analysis);
           })
           .Case<mhlo::AbsOp, mhlo::CbrtOp, mhlo::CeilOp, mhlo::ConvertOp,
                 mhlo::ClzOp, mhlo::CosineOp, mhlo::ExpOp, mhlo::Expm1Op,
@@ -119,6 +117,6 @@ SmallVector<bool> DimFromBroadcast::compute(Value v) {
           })
           // TODO: Handle more operation types here.
           .Default(
-              [&](Operation *) { return SmallVector<bool>(cur_rank, false); });
-  return dim_flag;
+              [&](Operation *) { return SmallVector<bool>(curRank, false); });
+  return dimFlag;
 }

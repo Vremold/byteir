@@ -18,10 +18,9 @@ void mlir::registerDotReifyReturnTypeShapes() {
       [](Operation *op, OpBuilder &builder, ValueRange operands,
          SmallVectorImpl<::mlir::Value> &reifiedReturnShapes) {
         auto dotOp = cast<mhlo::DotOp>(op);
-        auto lhs_type = dotOp.lhs().getType().dyn_cast<ShapedType>();
-        auto rhs_type = dotOp.rhs().getType().dyn_cast<ShapedType>();
-        if (!lhs_type || !rhs_type || !lhs_type.hasRank() ||
-            !rhs_type.hasRank()) {
+        auto lhsType = dotOp.lhs().getType().dyn_cast<ShapedType>();
+        auto rhsType = dotOp.rhs().getType().dyn_cast<ShapedType>();
+        if (!lhsType || !rhsType || !lhsType.hasRank() || !rhsType.hasRank()) {
           return failure();
         }
 
@@ -31,21 +30,21 @@ void mlir::registerDotReifyReturnTypeShapes() {
         SmallVector<Value> dimensions;
 
         // vector dot vector
-        if (1 == lhs_type.getRank() && 1 == rhs_type.getRank()) {
+        if (1 == lhsType.getRank() && 1 == rhsType.getRank()) {
           return success();
         }
         // matrix dot vector
-        else if (2 == lhs_type.getRank() && 1 == rhs_type.getRank()) {
+        else if (2 == lhsType.getRank() && 1 == rhsType.getRank()) {
           dimensions.push_back(
               builder.create<tensor::DimOp>(dotOp.getLoc(), lhs, 0));
         }
         // vector dot matrix
-        else if (1 == lhs_type.getRank() && 2 == rhs_type.getRank()) {
+        else if (1 == lhsType.getRank() && 2 == rhsType.getRank()) {
           dimensions.push_back(
               builder.create<tensor::DimOp>(dotOp.getLoc(), rhs, 1));
         }
         // matrix dot matrix
-        else if (2 == lhs_type.getRank() && 2 == rhs_type.getRank()) {
+        else if (2 == lhsType.getRank() && 2 == rhsType.getRank()) {
           dimensions.push_back(
               builder.create<tensor::DimOp>(dotOp.getLoc(), lhs, 0));
           dimensions.push_back(

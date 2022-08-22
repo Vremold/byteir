@@ -1,5 +1,4 @@
-//===- ByreOpt.cpp ---------------------------------------------*--- C++
-//-*-===//
+//===- ByreOpt.cpp --------------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/ByreOpt.h"
-#include "./PassDetail.h"
 #include "byteir/Conversion/LmhloToLace/LmhloToLace.h"
 #include "byteir/Conversion/ToByre/ToByre.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
@@ -18,6 +16,8 @@
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::byre;

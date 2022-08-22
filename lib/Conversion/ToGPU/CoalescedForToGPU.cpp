@@ -5,9 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-// Some code in this file is from SCFTOGPU.cpp of LLVM project
-// Orignal License:
+// Some code from SCFTOGPU.cpp of LLVM project
+// Orignal license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.

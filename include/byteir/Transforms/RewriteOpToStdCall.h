@@ -18,6 +18,9 @@ class ModuleOp;
 
 using CallMapTable = std::unordered_map<std::string, std::string>;
 
+void populateRewriteOpToStdCallPatterns(RewritePatternSet &,
+                                        const CallMapTable &);
+
 std::unique_ptr<OperationPass<ModuleOp>>
 createRewriteOpToStdCallPass(CallMapTable callTable = {});
 

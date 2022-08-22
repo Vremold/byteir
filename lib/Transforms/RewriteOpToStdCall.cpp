@@ -1,4 +1,4 @@
-//===- ConvertOpToStdCall.cpp ---------------------------------*--- C++ -*-===//
+//===- RewriteOpToStdCall.cpp ---------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -91,15 +91,20 @@ struct RewriteOpToStdCallPass
     target.addLegalDialect<func::FuncDialect, memref::MemRefDialect>();
     target.addLegalOp<ModuleOp, func::FuncOp, func::ReturnOp>();
     RewritePatternSet patterns(&getContext());
-    patterns.add<RewriteOpToStdCallPattern>(patterns.getContext(),
-                                            this->callMapTable);
-    if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns)))) {
+    populateRewriteOpToStdCallPatterns(patterns, this->callMapTable);
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(module, frozenPatterns))) {
       signalPassFailure();
     }
   }
   CallMapTable callMapTable;
 };
 } // namespace
+
+void mlir::populateRewriteOpToStdCallPatterns(
+    RewritePatternSet &patterns, const CallMapTable &callMapTable) {
+  patterns.add<RewriteOpToStdCallPattern>(patterns.getContext(), callMapTable);
+}
 
 std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createRewriteOpToStdCallPass(CallMapTable callTable) {

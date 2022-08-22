@@ -91,8 +91,8 @@ struct ReduceFusionPass : public ReduceFusionBase<ReduceFusionPass> {
 
     RewritePatternSet patterns(funcOp.getContext());
     populateFuseReduceWindowPatterns(patterns);
-
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError(
           "ReduceFusionPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();

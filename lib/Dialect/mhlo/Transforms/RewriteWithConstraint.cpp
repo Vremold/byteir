@@ -35,22 +35,22 @@ struct BatchNormGradDropMeanAndVarPattern
     }
     if (!isSplatMhloConstant(mean)) {
       auto type = op.mean().getType().template cast<RankedTensorType>();
-      auto fp_type = type.getElementType().template dyn_cast<FloatType>();
-      assert(fp_type);
+      auto fpType = type.getElementType().template dyn_cast<FloatType>();
+      assert(fpType);
       Value zero = rewriter.create<mhlo::ConstantOp>(
           rewriter.getUnknownLoc(),
           DenseFPElementsAttr::get(
-              type, APFloat::getZero(fp_type.getFloatSemantics())));
+              type, APFloat::getZero(fpType.getFloatSemantics())));
       op->setOperand(2, zero);
     }
     if (!isSplatMhloConstant(variance)) {
       auto type = op.variance().getType().template cast<RankedTensorType>();
-      auto fp_type = type.getElementType().template dyn_cast<FloatType>();
-      assert(fp_type);
+      auto fpType = type.getElementType().template dyn_cast<FloatType>();
+      assert(fpType);
       Value zero = rewriter.create<mhlo::ConstantOp>(
           rewriter.getUnknownLoc(),
           DenseFPElementsAttr::get(
-              type, APFloat::getZero(fp_type.getFloatSemantics())));
+              type, APFloat::getZero(fpType.getFloatSemantics())));
       op->setOperand(3, zero);
     }
     return success();
@@ -64,7 +64,8 @@ struct RewriteWithConstraintPass
     func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
     populateRewriteWithConstraintConstraintPattern(patterns);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError("RewriteWithConstraintPass applyPatternsAndFoldGreedily "
                        "does not converge");
       signalPassFailure();

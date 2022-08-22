@@ -117,7 +117,8 @@ struct IOConvertFusionPass : public IOConvertFusionBase<IOConvertFusionPass> {
 
     RewritePatternSet patterns(context);
     populateIOConvertBatchNormPattern(patterns);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError("IOConvertFusionPass applyPatternsAndFoldGreedily "
                        "does not converge");
       signalPassFailure();

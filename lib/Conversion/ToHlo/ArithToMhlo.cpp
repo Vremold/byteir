@@ -4,6 +4,7 @@
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
+
 #include "byteir/Conversion/ToHlo/ArithToMhlo.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
@@ -25,7 +26,8 @@ struct ConvertArithToMhloPass
     MLIRContext *context = op.getContext();
     RewritePatternSet patterns(context);
     populateWithGenerated(patterns);
-    if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(op, frozenPatterns))) {
       signalPassFailure();
     }
   }

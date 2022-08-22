@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/GPU/LinalgMemrefGPU.h"
-#include "./PassDetail.h"
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "byteir/Dialect/Linalg/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
@@ -17,6 +16,8 @@
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::linalg;

@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/ShapeOpt.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/Shape/Passes.h"
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/Passes.h"
@@ -15,6 +14,8 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

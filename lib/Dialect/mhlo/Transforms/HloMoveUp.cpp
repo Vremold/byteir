@@ -218,7 +218,8 @@ struct HloMoveUpPass : public HloMoveUpBase<HloMoveUpPass> {
     // also add canoncializationExt pattern
     mhlo::getCanonicalizationExtPatterns(patterns, funcOp.getContext());
 
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError(
           "HloMoveUpPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();
@@ -230,8 +231,11 @@ struct HloMoveUpPass : public HloMoveUpBase<HloMoveUpPass> {
 void mlir::populateHloMoveUpPattern(RewritePatternSet &patterns,
                                     const llvm::DenseSet<StringRef> &blocker,
                                     bool multiInput) {
-  patterns.add<TransposeMoveUpPattern, ReshapeMoveUpPattern>(
-      patterns.getContext(), blocker, multiInput);
+  // clang-format off
+  patterns.add<TransposeMoveUpPattern, 
+               ReshapeMoveUpPattern>(
+           patterns.getContext(), blocker, multiInput);
+  // clang-format on
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>

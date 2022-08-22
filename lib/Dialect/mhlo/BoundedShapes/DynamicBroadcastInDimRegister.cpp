@@ -1,4 +1,4 @@
-//===- DynamicPartitionRegister.h -----------------------------*--- C++ -*-===//
+//===- DynamicBroadcastInDimRegister.cpp ----------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0

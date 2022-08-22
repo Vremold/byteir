@@ -509,11 +509,9 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
     patterns.add<RemoveTrivialTorchIndexSelect>(context,
                                                 &dim_from_broadcast_analysis);
     // also add canoncializationExt pattern
-    mhlo::getCanonicalizationExtPatterns(patterns, patterns.getContext());
-
-    LogicalResult status =
-        applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
-    if (failed(status)) {
+    mhlo::getCanonicalizationExtPatterns(patterns, context);
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       signalPassFailure();
     }
   }
@@ -522,10 +520,13 @@ struct HloFolderPass : public HloFolderBase<HloFolderPass> {
 } // namespace
 
 void mlir::populateHloFoldPatterns(RewritePatternSet &patterns) {
-  patterns.add<AddScatterAddToScatterPattern>(patterns.getContext());
-  patterns.add<PadConvToConvPattern>(patterns.getContext());
-  patterns.add<ConvOrConvBiasFollowedByBroadcastOp>(patterns.getContext());
-  patterns.add<PadReduceWindowToReduceWindowPattern>(patterns.getContext());
+  // clang-format off
+  patterns.add<AddScatterAddToScatterPattern, 
+               ConvOrConvBiasFollowedByBroadcastOp,
+               PadConvToConvPattern, 
+               PadReduceWindowToReduceWindowPattern>(
+          patterns.getContext());
+  // clang-format on
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>> mlir::createHloFolderPass() {

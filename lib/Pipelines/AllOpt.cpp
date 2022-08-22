@@ -5,7 +5,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "./PassDetail.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Lace/LaceDialect.h"
 #include "byteir/Pipelines/GPU/Passes.h"
@@ -18,6 +17,8 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Pass/PassManager.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::byre;

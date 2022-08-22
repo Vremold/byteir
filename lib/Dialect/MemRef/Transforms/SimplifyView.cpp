@@ -5,6 +5,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+// Some code is from ComposeSubView.cpp of LLVM project
+// Original license:
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// This file contains patterns for combining composed subview ops (i.e. subview
+// of a subview becomes a single subview).
+//
+//===----------------------------------------------------------------------===//
+
 #include "byteir/Dialect/MemRef/Transforms/SimplifyView.h"
 #include "PassDetail.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -20,7 +34,6 @@ using namespace mlir;
 using namespace mlir::arith;
 using namespace mlir::memref;
 
-// some code from mlir's ComposeSubView
 namespace {
 
 // Util linearize
@@ -147,7 +160,7 @@ struct ComposeViewOfView : public OpRewritePattern<memref::ViewOp> {
 // Replaces a subview of a subview with a single subview. Only supports subview
 // ops with static sizes and static strides of 1 (both static and dynamic
 // offsets are supported).
-// TODO: submit a PR to upstream.
+// TODO: submit a PR to LLVM
 struct ComposeSubViewOfSubView : public OpRewritePattern<memref::SubViewOp> {
   using OpRewritePattern::OpRewritePattern;
 
@@ -257,7 +270,8 @@ public:
     func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
     populateSimplifyViewPattern(patterns);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError("SimplifyViewPass applyPatternsAndFoldGreedily "
                        "does not converge");
       signalPassFailure();
@@ -268,9 +282,11 @@ public:
 } // namespace
 
 void mlir::populateSimplifyViewPattern(RewritePatternSet &patterns) {
-  patterns
-      .add<ComposeViewOfView, ComposeSubViewOfView, ComposeSubViewOfSubView>(
-          patterns.getContext());
+  // clang-format off
+  patterns.add<ComposeViewOfView, 
+               ComposeSubViewOfView, 
+               ComposeSubViewOfSubView>(patterns.getContext());
+  // clang-format on
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>> mlir::createSimplifyViewPass() {

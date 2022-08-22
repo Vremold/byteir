@@ -79,47 +79,47 @@ static bool isAliasOp(Operation &op) {
 static void foldAlias(func::FuncOp func) {
   auto ctx = func.getContext();
   // use all args as initials for alias
-  SmallVector<Value> initial_copy;
+  SmallVector<Value> initialCopy;
   for (auto val : func.getArguments()) {
-    initial_copy.push_back(val);
+    initialCopy.push_back(val);
   }
 
-  auto &func_block = func.getBody().front();
-  ByreAliasAnalysis byre_alias(&func_block, initial_copy, isAliasOp);
-  byre_alias.runOnBlock();
+  auto &funcBlock = func.getBody().front();
+  ByreAliasAnalysis byreAlias(&funcBlock, initialCopy, isAliasOp);
+  byreAlias.runOnBlock();
 
   SmallVector<ComputeOp> remove_ops;
 
-  for (auto compute_op : func.getOps<ComputeOp>()) {
-    if (compute_op.getCallee() == "AliasOp") {
-      auto in_val = compute_op.getOperand(0);
-      int in_idx = byre_alias.getOrCreateIndex(in_val);
+  for (auto computeOp : func.getOps<ComputeOp>()) {
+    if (computeOp.getCallee() == "AliasOp") {
+      auto inVal = computeOp.getOperand(0);
+      int inIdx = byreAlias.getOrCreateIndex(inVal);
 
-      int leader_idx = byre_alias.leaderToIndex.getLeaderValue(in_idx);
-      if (leader_idx != in_idx) {
-        auto leader_val = byre_alias.values[leader_idx];
+      int leaderIdx = byreAlias.leaderToIndex.getLeaderValue(inIdx);
+      if (leaderIdx != inIdx) {
+        auto leaderVal = byreAlias.values[leaderIdx];
         // override operand and attr
-        auto out_val = compute_op.getOperand(1);
-        int out_idx = byre_alias.getOrCreateIndex(out_val);
-        auto offset = byre_alias.offsets[out_idx];
-        compute_op.setOperand(0, leader_val);
-        compute_op->setAttr(
-            "offset", IntegerAttr::get(IntegerType::get(ctx, 32), offset));
+        auto outVal = computeOp.getOperand(1);
+        int outIdx = byreAlias.getOrCreateIndex(outVal);
+        auto offset = byreAlias.offsets[outIdx];
+        computeOp.setOperand(0, leaderVal);
+        computeOp->setAttr("offset",
+                           IntegerAttr::get(IntegerType::get(ctx, 32), offset));
 
-        if (leader_val.getDefiningOp() == nullptr) {
-          compute_op->setAttr("arg_alias", UnitAttr::get(ctx));
+        if (leaderVal.getDefiningOp() == nullptr) {
+          computeOp->setAttr("arg_alias", UnitAttr::get(ctx));
         }
       }
     }
   }
 
-  for (auto compute_op : func.getOps<ComputeOp>()) {
-    if (compute_op.getCallee() == "AliasOp") {
-      auto in_val = compute_op.getOperand(0);
-      auto out_val = compute_op.getOperand(1);
-      if (in_val.getType() == out_val.getType() &&
-          compute_op->getAttrOfType<IntegerAttr>("offset").getInt() == 0) {
-        out_val.replaceAllUsesExcept(in_val, compute_op);
+  for (auto computeOp : func.getOps<ComputeOp>()) {
+    if (computeOp.getCallee() == "AliasOp") {
+      auto inVal = computeOp.getOperand(0);
+      auto outVal = computeOp.getOperand(1);
+      if (inVal.getType() == outVal.getType() &&
+          computeOp->getAttrOfType<IntegerAttr>("offset").getInt() == 0) {
+        outVal.replaceAllUsesExcept(inVal, computeOp);
       }
     }
   }

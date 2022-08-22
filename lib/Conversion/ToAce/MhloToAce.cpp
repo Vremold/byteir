@@ -4,7 +4,9 @@
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
+
 #include "byteir/Conversion/ToAce/MhloToAce.h"
+#include "byteir/Dialect/Ace/AceDialect.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -20,8 +22,8 @@ namespace {
 #include "MhloToAceActivationPattern.inc"
 
 void populateFuseMhloToAceActivationPatterns(MLIRContext *context,
-                                             RewritePatternSet *patterns) {
-  populateWithGenerated(*patterns);
+                                             RewritePatternSet &patterns) {
+  populateWithGenerated(patterns);
 }
 
 struct ConvertMhloToAcePass
@@ -30,8 +32,10 @@ struct ConvertMhloToAcePass
     func::FuncOp op = getOperation();
     MLIRContext *context = op.getContext();
     RewritePatternSet patterns(context);
-    populateFuseMhloToAceActivationPatterns(context, &patterns);
-    if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns)))) {
+    populateFuseMhloToAceActivationPatterns(context, patterns);
+
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(op, frozenPatterns))) {
       signalPassFailure();
     }
   }

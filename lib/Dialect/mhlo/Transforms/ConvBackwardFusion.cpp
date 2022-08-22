@@ -19,9 +19,9 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+#include <assert.h>
 
 #include "./PassDetail.h"
-#include <assert.h>
 
 using namespace mlir;
 using namespace llvm;
@@ -277,9 +277,8 @@ struct ConvBackwardFusionPass
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateFuseConvBackwardPatterns(patterns);
-    LogicalResult status =
-        applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
-    if (failed(status)) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       signalPassFailure();
     }
   }
@@ -288,10 +287,10 @@ struct ConvBackwardFusionPass
 } // namespace
 
 void mlir::populateFuseConvBackwardPatterns(RewritePatternSet &patterns) {
-  patterns.add(
-      std::make_unique<FuseConvBackwardDataPattern>(patterns.getContext()));
-  patterns.add(
-      std::make_unique<FuseConvBackwardFilterPattern>(patterns.getContext()));
+  // clang-format off
+  patterns.add<FuseConvBackwardDataPattern,
+               FuseConvBackwardFilterPattern>(patterns.getContext());
+  // clang-format on
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>

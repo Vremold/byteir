@@ -1236,8 +1236,8 @@ void ConvertFuncAndCallToByrePass::runOnOperation() {
 
   RewritePatternSet patterns(&ctx);
   populateStdToByreConversionPatterns(patterns, appendArgTypes);
-
-  if (failed(applyPartialConversion(m, target, std::move(patterns)))) {
+  FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+  if (failed(applyPartialConversion(m, target, frozenPatterns))) {
     return signalPassFailure();
   }
 
@@ -1261,8 +1261,8 @@ void ConvertLmhloToByrePass::runOnOperation() {
     target.addIllegalOp<memref::ViewOp, memref::CopyOp>();
     RewritePatternSet patterns(&ctx);
     populateViewLikeToByreConversionPatterns(patterns);
-
-    if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPartialConversion(func, target, frozenPatterns))) {
       signalPassFailure();
     }
   }
@@ -1281,8 +1281,8 @@ void ConvertLmhloToByrePass::runOnOperation() {
     RewritePatternSet patterns(&ctx);
     populateLmhloToByreConversionPatterns(patterns, lmhloSupportMap,
                                           appendArgTypes);
-
-    if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPartialConversion(func, target, frozenPatterns))) {
       signalPassFailure();
     }
   }
@@ -1331,9 +1331,12 @@ void mlir::populateLmhloToByreConversionPatterns(
 
 void mlir::populateViewLikeToByreConversionPatterns(
     RewritePatternSet &patterns) {
+  // clang-format off
   patterns.add<ConvertAliasLikeOpToByrePattern,
-               ConvertMemrefCopyOpToByrePattern, ConvertViewOpToByrePattern>(
+               ConvertMemrefCopyOpToByrePattern, 
+               ConvertViewOpToByrePattern>(
       patterns.getContext());
+  // clang-format on
 }
 
 void mlir::populateStdToByreConversionPatterns(RewritePatternSet &patterns,

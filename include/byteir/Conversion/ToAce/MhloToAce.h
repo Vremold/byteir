@@ -8,7 +8,6 @@
 #ifndef BYTEIR_CONVERSION_TOACE_MHLOTOACE_H
 #define BYTEIR_CONVERSION_TOACE_MHLOTOACE_H
 
-#include "byteir/Dialect/Ace/AceDialect.h"
 #include "mlir/Pass/Pass.h"
 #include <memory>
 

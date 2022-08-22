@@ -5,7 +5,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "../PassDetail.h"
+// Some code from legalize_to_linalg.cc of TensorFlow
+// Original license:
+/* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
@@ -22,13 +38,14 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Transforms/DialectConversion.h"
 
+#include "../PassDetail.h"
+
 using namespace mlir;
 using namespace mlir::linalg;
 using namespace mlir::mhlo;
 
 namespace {
 
-// some code from mhlo's legalize_to_linalg
 struct HloFusionToLinalgPass
     : public HloFusionToLinalgBase<HloFusionToLinalgPass> {
 
@@ -63,8 +80,8 @@ struct HloFusionToLinalgPass
     mhlo::RemoveSignTypeConverter type_converter;
 
     mhlo::populateHloToLinalgConversionPattern(&ctx, type_converter, &patterns);
-
-    if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPartialConversion(func, target, frozenPatterns))) {
       signalPassFailure();
     }
   }

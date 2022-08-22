@@ -571,33 +571,33 @@ LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
   return failure();
 }
 
-void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &results,
+void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,
                                                 MLIRContext *ctx) {
 
   // add dialect level getCanonicalizationPatterns
-  auto mhlo_dailect = ctx->getOrLoadDialect<mhlo::MhloDialect>();
-  if (mhlo_dailect) {
-    mhlo_dailect->getCanonicalizationPatterns(results);
+  auto mhloDailect = ctx->getOrLoadDialect<mhlo::MhloDialect>();
+  if (mhloDailect) {
+    mhloDailect->getCanonicalizationPatterns(patterns);
   }
 
   // add op level  getCanonicalizationPatterns
   for (RegisteredOperationName op : ctx->getRegisteredOperations()) {
     // only add mhlo-related
     if (isa<MhloDialect>(op.getDialect())) {
-      op.getCanonicalizationPatterns(results, ctx);
+      op.getCanonicalizationPatterns(patterns, ctx);
     }
   }
 
   // add our extension
-  results.add(mlir::mhlo::foldBroadcastInDim);
-  results.add(mlir::mhlo::foldConcatWithContinuousSlices);
-  results.add(mlir::mhlo::foldShapeBroadcast);
-  results.add(mlir::mhlo::simplifyDynamicConvToConv);
-  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
-  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
-  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::SubtractOp, std::minus>);
-  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::DivOp, Divide>);
-  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::RemOp, Remainder>);
-  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MaxOp, Max>);
-  results.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MinOp, Min>);
+  patterns.add(mlir::mhlo::foldBroadcastInDim);
+  patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
+  patterns.add(mlir::mhlo::foldShapeBroadcast);
+  patterns.add(mlir::mhlo::simplifyDynamicConvToConv);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::SubtractOp, std::minus>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::DivOp, Divide>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::RemOp, Remainder>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MaxOp, Max>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MinOp, Min>);
 }

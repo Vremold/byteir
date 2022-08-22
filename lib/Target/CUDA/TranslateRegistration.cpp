@@ -1,4 +1,12 @@
-//===- TranslateRegistration.cpp - Register translation -------------------===//
+//===- TranslateRegistration.cpp ------------------------------*--- C++ -*-===//
+//
+// Copyright (c) ByteDance Inc. All rights reserved.
+// Licensed under the Apache License, Version 2.0
+//
+//===----------------------------------------------------------------------===//
+
+// Some code from TranslateRegistration.cpp of LLVM
+// Original license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.

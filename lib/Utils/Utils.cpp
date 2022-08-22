@@ -118,8 +118,8 @@ bool mlir::isSplatValue(DenseIntElementsAttr attr, int64_t value) {
   if (!attr.isSplat()) {
     return false;
   }
-  int64_t start_val = attr.getSplatValue<IntegerAttr>().getInt();
-  return start_val == value;
+  int64_t startVal = attr.getSplatValue<IntegerAttr>().getInt();
+  return startVal == value;
 }
 
 // Returns true if the given `attr` is a splat value as the given `value`.
@@ -203,8 +203,8 @@ Optional<unsigned> mlir::findOperandIndex(mlir::Operation *op,
     return None;
   }
 
-  auto num_operand = op->getNumOperands();
-  for (unsigned i = 0; i < num_operand; ++i) {
+  auto numOperand = op->getNumOperands();
+  for (unsigned i = 0; i < numOperand; ++i) {
     if (val == op->getOperand(i)) {
       return i;
     }
@@ -217,8 +217,8 @@ Optional<unsigned> mlir::findResultIndex(mlir::Operation *op, mlir::Value val) {
     return None;
   }
 
-  auto num_result = op->getNumResults();
-  for (unsigned i = 0; i < num_result; ++i) {
+  auto numResult = op->getNumResults();
+  for (unsigned i = 0; i < numResult; ++i) {
     if (val == op->getResult(i)) {
       return i;
     }
@@ -236,22 +236,22 @@ void mlir::getValuesFromDenseIntElementsAttr(
 SmallVector<Value, 4>
 mlir::getInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
   SmallVector<Value, 4> inputs;
-  SmallDenseSet<Value> input_set;
-  SmallDenseSet<Operation *> op_set;
+  SmallDenseSet<Value> inputSet;
+  SmallDenseSet<Operation *> opSet;
   for (Operation *op : cluster) {
-    bool inserted = op_set.insert(op).second;
+    bool inserted = opSet.insert(op).second;
     (void)inserted;
     assert(inserted && "cluster contains duplicate operations");
   }
 
   for (Operation *op : cluster) {
     for (Value operand : op->getOperands()) {
-      Operation *operand_op = operand.getDefiningOp();
-      if (op_set.find(operand_op) != op_set.end()) {
+      Operation *defOp = operand.getDefiningOp();
+      if (opSet.find(defOp) != opSet.end()) {
         // skip if defining op is in the cluster
         continue;
       }
-      if (input_set.insert(operand).second) {
+      if (inputSet.insert(operand).second) {
         inputs.push_back(operand);
       }
     }
@@ -262,20 +262,20 @@ mlir::getInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
 SmallVector<Value, 4>
 mlir::getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
   SmallVector<Value, 4> outputs;
-  SmallDenseSet<Operation *> op_set;
+  SmallDenseSet<Operation *> opSet;
   for (Operation *op : cluster) {
-    bool inserted = op_set.insert(op).second;
+    bool inserted = opSet.insert(op).second;
     (void)inserted;
     assert(inserted && "cluster contains duplicate operations");
   }
 
   for (Operation *op : cluster) {
     for (Value result : op->getResults()) {
-      bool has_external_user =
+      bool hasExternalUser =
           llvm::any_of(result.getUses(), [&](OpOperand &use) {
-            return !op_set.count(use.getOwner());
+            return !opSet.count(use.getOwner());
           });
-      if (has_external_user) {
+      if (hasExternalUser) {
         outputs.push_back(result);
       }
     }
@@ -285,14 +285,14 @@ mlir::getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
 
 bool mlir::isMemrefTrivial(mlir::Value memref,
                            llvm::ArrayRef<mlir::Operation *> filters) {
-  SmallPtrSet<mlir::Operation *, 4> op_sets(filters.begin(), filters.end());
+  SmallPtrSet<mlir::Operation *, 4> opSet(filters.begin(), filters.end());
 
   if (!memref.getDefiningOp<memref::AllocOp>()) {
     return false;
   }
 
   for (Operation *user : memref.getUsers()) {
-    if (!op_sets.contains(user) || !isa<memref::DeallocOp>(user)) {
+    if (!opSet.contains(user) || !isa<memref::DeallocOp>(user)) {
       return false;
     }
   }

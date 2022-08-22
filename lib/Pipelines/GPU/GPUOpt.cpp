@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/GPU/GPUOpt.h"
-#include "./PassDetail.h"
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 #include "byteir/Dialect/Affine/Passes.h"
@@ -21,6 +20,8 @@
 #include "mlir/Dialect/SCF/Transforms/Passes.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::bufferization;

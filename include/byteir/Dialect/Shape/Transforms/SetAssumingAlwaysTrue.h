@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_SHAPE_TRANSFORMS_TRUESHAPEASSUMING_H
-#define BYTEIR_DIALECT_SHAPE_TRANSFORMS_TRUESHAPEASSUMING_H
+#ifndef BYTEIR_DIALECT_SHAPE_TRANSFORMS_SETASSUMINGALWAYSTRUE_H
+#define BYTEIR_DIALECT_SHAPE_TRANSFORMS_SETASSUMINGALWAYSTRUE_H
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
@@ -20,4 +20,4 @@ std::unique_ptr<OperationPass<func::FuncOp>> createSetAssumingAlwaysTruePass();
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_SHAPE_TRANSFORMS_TRUESHAPEASSUMING_H
+#endif // BYTEIR_DIALECT_SHAPE_TRANSFORMS_SETASSUMINGALWAYSTRUE_H

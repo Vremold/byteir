@@ -6,12 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/HloOpt.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::mhlo;

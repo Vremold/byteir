@@ -55,40 +55,40 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
       byre::appendByreComputeAttr(attrs, "rhs_contracting_dimension",
                                   rewriter.getI64IntegerAttr(0));
       pattern.push_back(dot);
-    } else if (mhlo::DotGeneralOp dot_general =
+    } else if (mhlo::DotGeneralOp dotGeneral =
                    op.operand().getDefiningOp<mhlo::DotGeneralOp>()) {
-      if (dot_general.lhs().getType().cast<ShapedType>().getRank() != 2) {
+      if (dotGeneral.lhs().getType().cast<ShapedType>().getRank() != 2) {
         return failure();
       }
-      if (dot_general.rhs().getType().cast<ShapedType>().getRank() != 2) {
+      if (dotGeneral.rhs().getType().cast<ShapedType>().getRank() != 2) {
         return failure();
       }
-      auto dot_dimension_numbers = dot_general.dot_dimension_numbers();
-      if (dot_dimension_numbers.getLhsBatchingDimensions().size() != 0) {
+      auto dotDimensionNumbers = dotGeneral.dot_dimension_numbers();
+      if (dotDimensionNumbers.getLhsBatchingDimensions().size() != 0) {
         return failure();
       }
-      if (dot_dimension_numbers.getRhsBatchingDimensions().size() != 0) {
+      if (dotDimensionNumbers.getRhsBatchingDimensions().size() != 0) {
         return failure();
       }
-      if (dot_dimension_numbers.getLhsContractingDimensions().size() != 1) {
+      if (dotDimensionNumbers.getLhsContractingDimensions().size() != 1) {
         return failure();
       }
-      if (dot_dimension_numbers.getRhsContractingDimensions().size() != 1) {
+      if (dotDimensionNumbers.getRhsContractingDimensions().size() != 1) {
         return failure();
       }
-      inputs.push_back(dot_general.lhs());
-      inputs.push_back(dot_general.rhs());
+      inputs.push_back(dotGeneral.lhs());
+      inputs.push_back(dotGeneral.rhs());
       byre::appendByreComputeAttr(attrs, "output_transpose",
                                   rewriter.getUnitAttr());
       byre::appendByreComputeAttr(
           attrs, "lhs_contracting_dimension",
           rewriter.getI64IntegerAttr(
-              dot_dimension_numbers.getLhsContractingDimensions()[0]));
+              dotDimensionNumbers.getLhsContractingDimensions()[0]));
       byre::appendByreComputeAttr(
           attrs, "rhs_contracting_dimension",
           rewriter.getI64IntegerAttr(
-              dot_dimension_numbers.getRhsContractingDimensions()[0]));
-      pattern.push_back(dot_general);
+              dotDimensionNumbers.getRhsContractingDimensions()[0]));
+      pattern.push_back(dotGeneral);
     } else {
       return failure();
     }
@@ -110,9 +110,8 @@ struct DotTransposeFusionPass
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateDotTransposeFusionPattern(patterns);
-    LogicalResult status =
-        applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
-    if (failed(status)) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       signalPassFailure();
     }
   }
@@ -121,8 +120,7 @@ struct DotTransposeFusionPass
 } // namespace
 
 void mlir::populateDotTransposeFusionPattern(RewritePatternSet &patterns) {
-  patterns.add(
-      std::make_unique<FuseDotTransposePattern>(patterns.getContext()));
+  patterns.add<FuseDotTransposePattern>(patterns.getContext());
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>

@@ -9,6 +9,7 @@
 // This file defines helpers to emit C++ code using the EmitC dialect.
 //
 //===----------------------------------------------------------------------===//
+// Modifications Copyright (c) ByteDance.
 
 #ifndef BYTEIR_TARGET_CPP_TOCPP_H
 #define BYTEIR_TARGET_CPP_TOCPP_H
@@ -19,7 +20,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include <stack>
 
-// some code from Mlir's CppEmitter.h and TranslateToCpp.cpp
 namespace byteir {
 
 void registerToCppTranslation();

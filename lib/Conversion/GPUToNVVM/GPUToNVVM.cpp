@@ -5,6 +5,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+// Some code from LowerGpuOpsToNVVM in LLVM project
+// Original license:
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// This file implements a pass to generate NVVMIR operations for higher-level
+// GPU operations.
+//
+//===----------------------------------------------------------------------===//
+
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
 #include "mlir/Conversion/ArithmeticToLLVM/ArithmeticToLLVM.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
@@ -38,7 +52,6 @@ using namespace mlir::gpu;
 using namespace mlir::LLVM;
 using namespace mlir::NVVM;
 
-// Some code from LowerGpuOpsToNVVM
 namespace {
 
 template <typename SourceOp>
@@ -129,9 +142,8 @@ private:
   const std::string f64Func;
 };
 
-// TODO: push back to LLVM later
-void populateGpuToNVVMExtConversionPatterns(LLVMTypeConverter &converter,
-                                            RewritePatternSet &patterns) {
+void populateOptionalGpuToNVVMExtConversionPatterns(
+    LLVMTypeConverter &converter, RewritePatternSet &patterns) {
 
   patterns.add<OpToFuncCallLowering<arith::MaxFOp>>(converter, "__nv_fmaxf",
                                                     "__nv_fmax");
@@ -185,7 +197,8 @@ struct GPUToNVVMExtPass : public GPUToNVVMExtBase<GPUToNVVMExtPass> {
     // which need to be lowered further, which is not supported by a single
     // conversion pass.
     populateGpuRewritePatterns(patterns);
-    (void)applyPatternsAndFoldGreedily(m, std::move(patterns));
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    (void)applyPatternsAndFoldGreedily(m, frozenPatterns);
 
     arith::populateArithmeticToLLVMConversionPatterns(converter, llvmPatterns);
     cf::populateControlFlowToLLVMConversionPatterns(converter, llvmPatterns);
@@ -194,11 +207,12 @@ struct GPUToNVVMExtPass : public GPUToNVVMExtBase<GPUToNVVMExtPass> {
     populateGpuToNVVMConversionPatterns(converter, llvmPatterns);
     populateGpuWMMAToNVVMConversionPatterns(converter, llvmPatterns);
     // our extension fixing
-    populateGpuToNVVMExtConversionPatterns(converter, llvmPatterns);
+    populateOptionalGpuToNVVMExtConversionPatterns(converter, llvmPatterns);
 
     LLVMConversionTarget target(getContext());
     configureGpuToNVVMConversionLegality(target);
-    if (failed(applyPartialConversion(m, target, std::move(llvmPatterns))))
+    FrozenRewritePatternSet frozenLLVMPatterns(std::move(llvmPatterns));
+    if (failed(applyPartialConversion(m, target, frozenLLVMPatterns)))
       signalPassFailure();
   }
 };

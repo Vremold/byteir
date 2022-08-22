@@ -29,6 +29,7 @@ LogicalResult reifyShapes(OpBuilder &builder, Operation *op,
                           SmallVectorImpl<Value> &reifications) {
   if (!op)
     return failure();
+
   // TODO: support nested function call
   if (auto origin = dyn_cast<InferShapedTypeOpInterface>(op)) {
     if (failed(origin.reifyReturnTypeShapes(builder, origin->getOperands(),
@@ -115,9 +116,11 @@ struct ShapeReificationPattern : public OpRewritePattern<shape::ShapeOfOp> {
 };
 
 void PopulateShapeReificationPatterns(MLIRContext *ctx,
-                                      RewritePatternSet *patterns) {
-  patterns->add<ShapeReificationPattern, ShapeReificationOnTensorDimPattern>(
-      ctx);
+                                      RewritePatternSet &patterns) {
+  // clang-format off
+  patterns.add<ShapeReificationPattern, 
+               ShapeReificationOnTensorDimPattern>(ctx);
+  // clang-format on
 }
 
 struct ShapeReificationPass
@@ -134,14 +137,15 @@ struct ShapeReificationPass
     // Collect patterns.
     MLIRContext *ctx = &getContext();
     RewritePatternSet patterns(ctx);
-    PopulateShapeReificationPatterns(ctx, &patterns);
+    PopulateShapeReificationPatterns(ctx, patterns);
 
     // Apply patterns from the bottom up. This ensures to need no more than one
     // iteration.
     GreedyRewriteConfig cfg;
     cfg.useTopDownTraversal = false;
     func::FuncOp f = getOperation();
-    if (failed(applyPatternsAndFoldGreedily(f, std::move(patterns), cfg))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(f, frozenPatterns, cfg))) {
       return signalPassFailure();
     }
   }

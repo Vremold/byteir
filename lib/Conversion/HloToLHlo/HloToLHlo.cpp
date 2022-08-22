@@ -5,8 +5,24 @@
 //
 //===----------------------------------------------------------------------===//
 
+// Some code from hlo_legalize_to_lhlo.cc of TensorFlow
+// Original license:
+/* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
-#include "../PassDetail.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Dialect/lhlo/transforms/map_hlo_to_lhlo_op.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -20,6 +36,8 @@
 #include "mlir/Dialect/Shape/Transforms/Passes.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Transforms/DialectConversion.h"
+
+#include "../PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -443,8 +461,9 @@ public:
     // Uncommet it after push back to upstream.
     // patterns.insert<HloToLhloTensorStoreOpLegacyConverter>(&context);
 
-    if (failed(applyPartialConversion(getOperation(), target,
-                                      std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(
+            applyPartialConversion(getOperation(), target, frozenPatterns))) {
       signalPassFailure();
     }
   }

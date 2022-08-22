@@ -6,7 +6,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/TotalBufferize.h"
-#include "./PassDetail.h"
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
@@ -16,6 +15,8 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

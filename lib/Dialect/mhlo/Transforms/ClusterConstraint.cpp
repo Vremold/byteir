@@ -101,7 +101,8 @@ struct ClusterConstraintPass
     func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
     populateClusterConstraintPattern(patterns);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError("ClusterConstraintPass applyPatternsAndFoldGreedily "
                        "does not converge");
       signalPassFailure();

@@ -84,7 +84,7 @@ static SmallVector<Value, 4> createTileSize(OpBuilder &b, Location loc,
   return tileSizes;
 }
 
-static bool IsReduction(mlir::linalg::LinalgOp linalgOp) {
+static bool isReduction(mlir::linalg::LinalgOp linalgOp) {
   SmallVector<StringAttr> iterTypes =
       llvm::to_vector<4>(linalgOp.iterator_types().getAsRange<StringAttr>());
   unsigned axis =
@@ -134,7 +134,7 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
   bool isParallel = true;
 
   for (auto &linalgOp : ts.ops) {
-    if (IsReduction(linalgOp)) {
+    if (isReduction(linalgOp)) {
       isParallel = false;
       break;
     }
@@ -192,7 +192,7 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
 
       // if enabling parallelize reduction and the loop is reduction
       // we need to alloc a new buffer and perform all reduce
-      if (parallelizeReduction && IsReduction(linalgOp)) {
+      if (parallelizeReduction && isReduction(linalgOp)) {
         SmallVector<Value> intermediates;
         SmallVector<Value> outputs;
         for (size_t i = linalgOp.getInputBufferOperands().size();
@@ -582,13 +582,12 @@ static void collectTilingScope(func::FuncOp func, unsigned iterAxis,
   }
 }
 
-bool IsHoistUpOp(Operation *op) {
-  return isa<memref::AllocOp>(op) || isa<memref::CollapseShapeOp>(op) ||
-         isa<memref::DimOp>(op) || isa<memref::ExpandShapeOp>(op) ||
-         isa<memref::ReshapeOp>(op);
+bool isHoistUpOp(Operation *op) {
+  return isa<memref::AllocOp, memref::CollapseShapeOp, memref::DimOp,
+             memref::ExpandShapeOp, memref::ReshapeOp>(op);
 }
 
-bool IsHoistDownOp(Operation *op) { return isa<memref::DeallocOp>(op); }
+bool isHoistDownOp(Operation *op) { return isa<memref::DeallocOp>(op); }
 
 struct LinalgScopeTilingPass
     : public LinalgScopeTilingBase<LinalgScopeTilingPass> {
@@ -626,8 +625,8 @@ struct LinalgScopeTilingPass
 
     // hoisting
     for (auto &block : funcOp.getBody()) {
-      hoistUpOpsInBlock(&block, domInfo, IsHoistUpOp);
-      hoistDownOpsInBlock(&block, postDomInfo, IsHoistDownOp);
+      hoistUpOpsInBlock(&block, domInfo, isHoistUpOp);
+      hoistDownOpsInBlock(&block, postDomInfo, isHoistDownOp);
     }
 
     SmallVector<TileScope> collection;

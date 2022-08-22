@@ -13,6 +13,7 @@
 // information on block level.
 //
 //===----------------------------------------------------------------------===//
+// Modifications Copyright (c) ByteDance.
 
 #ifndef BYTEIR_ANALYSIS_LIVENESS_H
 #define BYTEIR_ANALYSIS_LIVENESS_H

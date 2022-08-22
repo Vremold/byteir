@@ -6,13 +6,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/LmhloToLace/LmhloToLace.h"
-#include "../PassDetail.h"
 #include "byteir/Dialect/Lace/LaceDialect.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Transforms/DialectConversion.h"
+
+#include "../PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -142,11 +143,12 @@ public:
     auto funcOp = getOperation();
 
     populateLmhloToLacePattern(patterns);
-    target.addIllegalOp<lmhlo::ReshapeOp>();
-    target.addIllegalOp<lmhlo::SliceOp>();
-    target.addIllegalOp<lmhlo::ConcatenateOp>();
+    target
+        .addIllegalOp<lmhlo::ReshapeOp, lmhlo::SliceOp, lmhlo::ConcatenateOp>();
     target.addLegalDialect<lace::LaceDialect, memref::MemRefDialect>();
-    if (failed(applyPartialConversion(funcOp, target, std::move(patterns)))) {
+
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPartialConversion(funcOp, target, frozenPatterns))) {
       signalPassFailure();
     }
   }

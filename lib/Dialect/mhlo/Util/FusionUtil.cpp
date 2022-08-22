@@ -23,37 +23,37 @@ using namespace llvm;
 
 namespace {
 void moveConsumer(const MhloFusionPattern &pattern) {
-  SmallDenseSet<Operation *> fused_set(pattern.begin(), pattern.end());
-  SmallDenseSet<Operation *> consumers_set;
+  SmallDenseSet<Operation *> fusedSet(pattern.begin(), pattern.end());
+  SmallDenseSet<Operation *> consumerSet;
 
-  SmallVector<Operation *, 4> consumers_vec;
-  auto first_iter = pattern.front()->getIterator();
-  auto last_iter = pattern.back()->getIterator();
+  SmallVector<Operation *, 4> consumersVec;
+  auto firstIter = pattern.front()->getIterator();
+  auto lastIter = pattern.back()->getIterator();
 
-  for (Operation &cur_op : llvm::make_range(first_iter, last_iter)) {
+  for (Operation &curOp : llvm::make_range(firstIter, lastIter)) {
     // isn't fused op && consumer's op
     // move this after fusion op
-    if (!fused_set.contains(&cur_op)) {
+    if (!fusedSet.contains(&curOp)) {
       // fused op's consumer or consumer's consumer
-      bool is_consumer = llvm::any_of(
-          cur_op.getOperands(), [&fused_set, &consumers_set](Value v) {
+      bool isConsumer =
+          llvm::any_of(curOp.getOperands(), [&fusedSet, &consumerSet](Value v) {
             auto op = v.getDefiningOp();
-            return fused_set.contains(op) || consumers_set.contains(op);
+            return fusedSet.contains(op) || consumerSet.contains(op);
           });
-      if (is_consumer) {
-        consumers_set.insert(&cur_op);
-        consumers_vec.push_back(&cur_op);
+      if (isConsumer) {
+        consumerSet.insert(&curOp);
+        consumersVec.push_back(&curOp);
       }
     }
   }
 
-  for (auto op : llvm::reverse(consumers_vec)) {
+  for (auto op : llvm::reverse(consumersVec)) {
     op->moveAfter(pattern.back());
   }
 }
 } // namespace
 
-func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
+func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef subFnName,
                                            ValueRange inputs,
                                            ValueRange outputs,
                                            const MhloFusionPattern &pattern) {
@@ -62,62 +62,61 @@ func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
   for (Operation *op : pattern) {
     locations.push_back(op->getLoc());
   }
-  Location fused_loc = FusedLoc::get(pattern.back()->getContext(), locations);
+  Location fusedLoc = FusedLoc::get(pattern.back()->getContext(), locations);
 
-  SmallVector<Type, 4> output_types;
-  output_types.reserve(outputs.size());
+  SmallVector<Type, 4> outputTypes;
+  outputTypes.reserve(outputs.size());
   for (Value v : outputs) {
-    output_types.push_back(v.getType());
+    outputTypes.push_back(v.getType());
   }
-  SmallVector<Type, 4> input_types;
-  input_types.reserve(inputs.size());
+  SmallVector<Type, 4> inputTypes;
+  inputTypes.reserve(inputs.size());
   for (Value v : inputs) {
-    input_types.push_back(v.getType());
+    inputTypes.push_back(v.getType());
   }
 
   moveConsumer(pattern);
 
-  auto sub_fn_type = b.getFunctionType(input_types, output_types);
+  auto subFnType = b.getFunctionType(inputTypes, outputTypes);
   b.setInsertionPointAfter(pattern[0]->getParentOp());
-  func::FuncOp sub_fn_op =
-      b.create<func::FuncOp>(fused_loc, sub_fn_name, sub_fn_type);
+  func::FuncOp subFnOp = b.create<func::FuncOp>(fusedLoc, subFnName, subFnType);
   b.setInsertionPoint(pattern.back());
-  auto call_op = b.create<func::CallOp>(fused_loc, sub_fn_op, inputs);
+  auto callOp = b.create<func::CallOp>(fusedLoc, subFnOp, inputs);
 
-  Block *block = sub_fn_op.addEntryBlock();
+  Block *block = subFnOp.addEntryBlock();
   b.setInsertionPoint(block, block->end());
   BlockAndValueMapping bvm;
-  for (auto input_and_arg : llvm::zip(inputs, sub_fn_op.getArguments())) {
-    bvm.map(std::get<0>(input_and_arg), std::get<1>(input_and_arg));
+  for (auto inputAndArg : llvm::zip(inputs, subFnOp.getArguments())) {
+    bvm.map(std::get<0>(inputAndArg), std::get<1>(inputAndArg));
   }
   for (Operation *op : pattern) {
     b.clone(*op, bvm);
   }
-  llvm::SmallVector<Value, 4> func_returns;
+  llvm::SmallVector<Value, 4> funcReturns;
   for (Value output : outputs) {
-    func_returns.push_back(bvm.lookupOrDefault(output));
+    funcReturns.push_back(bvm.lookupOrDefault(output));
   }
-  b.create<func::ReturnOp>(fused_loc, func_returns);
+  b.create<func::ReturnOp>(fusedLoc, funcReturns);
 
-  for (auto output_and_result : llvm::zip(outputs, call_op.getResults())) {
-    Value output = std::get<0>(output_and_result);
-    Value call_result = std::get<1>(output_and_result);
+  for (auto outputAndResult : llvm::zip(outputs, callOp.getResults())) {
+    Value output = std::get<0>(outputAndResult);
+    Value callResult = std::get<1>(outputAndResult);
     for (OpOperand &use : llvm::make_early_inc_range(output.getUses())) {
-      use.set(call_result);
+      use.set(callResult);
     }
   }
 
   for (auto op : llvm::reverse(pattern)) {
     op->erase();
   }
-  return sub_fn_op;
+  return subFnOp;
 }
 
-func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef sub_fn_name,
+func::FuncOp mlir::createFuncOpFromPattern(OpBuilder &b, StringRef subFnName,
                                            const MhloFusionPattern &pattern) {
   SmallVector<Value, 4> inputs = getInputsOfCluster(pattern);
   SmallVector<Value, 4> outputs = getOutputsOfCluster(pattern);
-  return createFuncOpFromPattern(b, sub_fn_name, inputs, outputs, pattern);
+  return createFuncOpFromPattern(b, subFnName, inputs, outputs, pattern);
 }
 
 // This code is from mhlo repo
@@ -135,17 +134,17 @@ mlir::createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
   for (Operation *op : pattern) {
     locations.push_back(op->getLoc());
   }
-  Location fused_loc = FusedLoc::get(pattern.back()->getContext(), locations);
+  Location fusedLoc = FusedLoc::get(pattern.back()->getContext(), locations);
 
-  SmallVector<Type, 4> output_types;
-  output_types.reserve(outputs.size());
+  SmallVector<Type, 4> outputTypes;
+  outputTypes.reserve(outputs.size());
   for (Value v : outputs) {
-    output_types.push_back(v.getType());
+    outputTypes.push_back(v.getType());
   }
 
   moveConsumer(pattern);
 
-  FusionOp fusion = b.create<mhlo::FusionOp>(fused_loc, output_types, inputs);
+  FusionOp fusion = b.create<mhlo::FusionOp>(fusedLoc, outputTypes, inputs);
   Region &region = fusion.fused_computation();
   region.push_back(new Block);
   Block &block = region.front();
@@ -155,14 +154,14 @@ mlir::createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
   }
 
   b.setInsertionPoint(&block, block.end());
-  b.create<mhlo::ReturnOp>(fused_loc, outputs);
+  b.create<mhlo::ReturnOp>(fusedLoc, outputs);
 
-  for (auto output_and_result : llvm::zip(outputs, fusion.getResults())) {
-    Value output = std::get<0>(output_and_result);
-    Value fusion_result = std::get<1>(output_and_result);
+  for (auto outputAndResult : llvm::zip(outputs, fusion.getResults())) {
+    Value output = std::get<0>(outputAndResult);
+    Value fusionResult = std::get<1>(outputAndResult);
     for (OpOperand &use : llvm::make_early_inc_range(output.getUses())) {
       if (use.getOwner()->getBlock() != &block)
-        use.set(fusion_result);
+        use.set(fusionResult);
     }
   }
 
@@ -188,7 +187,7 @@ void mlir::applyMhloFusionPattern(const MhloFusionPattern &pattern,
 
 namespace {
 
-llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
+llvm::DenseMap<Value, int> initValueCount(Operation *op) {
   llvm::DenseMap<Value, int> ret;
 
   // output
@@ -211,59 +210,59 @@ llvm::DenseMap<Value, int> InitValueCount(Operation *op) {
 } // namespace
 
 mlir::ProducerFusionPlanner::ProducerFusionPlanner(
-    func::FuncOp funcOp, std::function<bool(Operation *)> is_fusible,
-    std::function<bool(Operation *)> fuse_start,
-    std::function<bool(Operation *)> fuse_trigger,
-    std::function<bool(Operation *, Operation *)> fuse_with)
-    : fuse_candidate_(is_fusible), fuse_start_(fuse_start),
-      fuse_trigger_(fuse_trigger), fuse_with_(fuse_with) {
+    func::FuncOp funcOp, std::function<bool(Operation *)> isFusible,
+    std::function<bool(Operation *)> fuseStartFn,
+    std::function<bool(Operation *)> fuseTriggerFn,
+    std::function<bool(Operation *, Operation *)> fuseWithFn)
+    : fuseCandidate(isFusible), fuseStart(fuseStartFn),
+      fuseTrigger(fuseTriggerFn), fuseWith(fuseWithFn) {
 
   // if empty function jus terminate
   if (funcOp.getBlocks().empty()) {
     return;
   }
 
-  Block &entry_block = funcOp.getBlocks().front();
+  Block &entryBlock = funcOp.getBlocks().front();
 
-  dependence_ = std::make_unique<OpDependenceInfo>(&entry_block);
+  dependence = std::make_unique<OpDependenceInfo>(&entryBlock);
 
-  for (Operation &op : entry_block) {
+  for (Operation &op : entryBlock) {
     // skip non-fusible
-    if (!fuse_candidate_(&op)) {
+    if (!fuseCandidate(&op)) {
       continue;
     }
 
-    int idx = op_list_.size();
-    op_list_.push_back(&op);
-    op_to_node_id_[&op] = idx;
-    leader_to_nodes_.insert(idx);
-    leader_to_value_count_[idx] = InitValueCount(&op);
+    int idx = opList.size();
+    opList.push_back(&op);
+    opToNodeId[&op] = idx;
+    leaderToNodes.insert(idx);
+    leaderToValueCount[idx] = initValueCount(&op);
   }
 }
 
-bool mlir::ProducerFusionPlanner::alreadyFused(Operation *pre_op,
-                                               Operation *cur_op) {
-  assert(op_to_node_id_.count(pre_op) > 0);
-  assert(op_to_node_id_.count(cur_op) > 0);
+bool mlir::ProducerFusionPlanner::alreadyFused(Operation *preOp,
+                                               Operation *curOp) {
+  assert(opToNodeId.count(preOp) > 0);
+  assert(opToNodeId.count(curOp) > 0);
 
-  int pre_id = op_to_node_id_[pre_op];
-  int cur_id = op_to_node_id_[cur_op];
-  return leader_to_nodes_.isEquivalent(pre_id, cur_id);
+  int preId = opToNodeId[preOp];
+  int curId = opToNodeId[curOp];
+  return leaderToNodes.isEquivalent(preId, curId);
 }
 
-bool mlir::ProducerFusionPlanner::checkFusionLegal(Operation *pre_op,
-                                                   Operation *cur_op) {
-  assert(op_to_node_id_.count(pre_op) > 0);
-  assert(op_to_node_id_.count(cur_op) > 0);
+bool mlir::ProducerFusionPlanner::checkFusionLegal(Operation *preOp,
+                                                   Operation *curOp) {
+  assert(opToNodeId.count(preOp) > 0);
+  assert(opToNodeId.count(curOp) > 0);
 
-  int pre_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[pre_op]);
-  const auto &pre_cluster = leader_to_value_count_[pre_leader];
-  int cur_id = op_to_node_id_[cur_op];
+  int preLeader = leaderToNodes.getLeaderValue(opToNodeId[preOp]);
+  const auto &preCluster = leaderToValueCount[preLeader];
+  int curId = opToNodeId[curOp];
 
-  if (!fused_leaders_.contains(pre_leader))
+  if (!fusedLeaders.contains(preLeader))
     return false;
 
-  for (auto it : pre_cluster) {
+  for (auto &it : preCluster) {
 
     // skip input
     if (it.second <= 0) {
@@ -272,27 +271,27 @@ bool mlir::ProducerFusionPlanner::checkFusionLegal(Operation *pre_op,
 
     // output's use
     for (auto &use : it.first.getUses()) {
-      auto another_user = use.getOwner();
+      auto anotherUser = use.getOwner();
 
       // skip if another user is curOp
-      if (another_user == cur_op)
+      if (anotherUser == curOp)
         continue;
 
       // check if another user is a candidate
-      if (op_to_node_id_.count(another_user) > 0) {
-        auto another_id = op_to_node_id_[another_user];
+      if (opToNodeId.count(anotherUser) > 0) {
+        auto anotherId = opToNodeId[anotherUser];
 
         // skip if another user already fused with curOp
-        // or already fused wiht pre_op
-        if (leader_to_nodes_.isEquivalent(cur_id, another_id) ||
-            leader_to_nodes_.isEquivalent(pre_leader, another_id)) {
+        // or already fused wiht preOp
+        if (leaderToNodes.isEquivalent(curId, anotherId) ||
+            leaderToNodes.isEquivalent(preLeader, anotherId)) {
           continue;
         }
       }
 
       // check if there is another path going through another user to curOp
       // if so, return false
-      if (dependence_->properlyDepends(another_user, cur_op)) {
+      if (dependence->properlyDepends(anotherUser, curOp)) {
         return false;
       }
     }
@@ -301,47 +300,47 @@ bool mlir::ProducerFusionPlanner::checkFusionLegal(Operation *pre_op,
   return true;
 }
 
-void mlir::ProducerFusionPlanner::merge(Operation *pre_op, Operation *cur_op) {
-  assert(op_to_node_id_.count(pre_op) > 0);
-  assert(op_to_node_id_.count(cur_op) > 0);
+void mlir::ProducerFusionPlanner::merge(Operation *preOp, Operation *curOp) {
+  assert(opToNodeId.count(preOp) > 0);
+  assert(opToNodeId.count(curOp) > 0);
 
-  int pre_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[pre_op]);
-  int cur_leader = leader_to_nodes_.getLeaderValue(op_to_node_id_[cur_op]);
+  int preLeader = leaderToNodes.getLeaderValue(opToNodeId[preOp]);
+  int curLeader = leaderToNodes.getLeaderValue(opToNodeId[curOp]);
 
-  int small_leader = pre_leader < cur_leader ? pre_leader : cur_leader;
-  int large_leader = pre_leader < cur_leader ? cur_leader : pre_leader;
+  int smallLeader = preLeader < curLeader ? preLeader : curLeader;
+  int largeLeader = preLeader < curLeader ? curLeader : preLeader;
 
-  leader_to_nodes_.unionSets(small_leader, large_leader);
+  leaderToNodes.unionSets(smallLeader, largeLeader);
   // keep small one
-  auto &small_value_cnt = leader_to_value_count_[small_leader];
-  auto &large_value_cnt = leader_to_value_count_[large_leader];
-  for (auto it : large_value_cnt) {
+  auto &smallValueCnt = leaderToValueCount[smallLeader];
+  auto &largeValueCnt = leaderToValueCount[largeLeader];
+  for (auto &it : largeValueCnt) {
 
     // merge two use cnt
-    small_value_cnt[it.first] += it.second;
+    smallValueCnt[it.first] += it.second;
 
-    if (small_value_cnt[it.first] == 0) {
-      small_value_cnt.erase(it.first);
+    if (smallValueCnt[it.first] == 0) {
+      smallValueCnt.erase(it.first);
     }
   }
 
-  leader_to_value_count_.erase(large_leader);
-  fused_leaders_.erase(large_leader);
+  leaderToValueCount.erase(largeLeader);
+  fusedLeaders.erase(largeLeader);
 }
 
 void mlir::ProducerFusionPlanner::run() {
 
-  SmallVector<Operation *, 8> op_iteration = op_list_;
+  SmallVector<Operation *, 8> opIteration = opList;
 
-  for (auto *op : op_iteration) {
+  for (auto *op : opIteration) {
 
-    if (fuse_start_(op)) {
-      auto id = op_to_node_id_[op];
-      fused_leaders_.insert(id);
+    if (fuseStart(op)) {
+      auto id = opToNodeId[op];
+      fusedLeaders.insert(id);
     }
 
-    // fusion check  when fuse_trigger_ is true
-    if (!fuse_trigger_(op)) {
+    // fusion check  when fuseTrigger is true
+    if (!fuseTrigger(op)) {
       continue;
     }
 
@@ -350,47 +349,47 @@ void mlir::ProducerFusionPlanner::run() {
     // check fusion in the operand sequence
     for (unsigned i = 0; i < op->getNumOperands(); ++i) {
       auto val = op->getOperand(i);
-      auto op_def = val.getDefiningOp();
+      auto opDef = val.getDefiningOp();
 
       // skip block arg (input args)
       // or not in candidate
       // or already fused
-      if (op_def == nullptr || op_to_node_id_.count(op_def) == 0 ||
-          alreadyFused(op_def, op)) {
+      if (opDef == nullptr || opToNodeId.count(opDef) == 0 ||
+          alreadyFused(opDef, op)) {
         continue;
       }
 
-      if (!fuse_with_(op_def, op) || !checkFusionLegal(op_def, op)) {
+      if (!fuseWith(opDef, op) || !checkFusionLegal(opDef, op)) {
         continue;
       }
 
       LLVM_DEBUG(llvm::dbgs() << "fused: " << *op << "\n");
       // now we can fuse
-      merge(op_def, op);
+      merge(opDef, op);
     }
   }
 
-  llvm::SmallDenseMap<int, int> leader_to_offset;
+  llvm::SmallDenseMap<int, int> leaderToOffset;
 
-  for (auto it = leader_to_nodes_.begin(); it != leader_to_nodes_.end(); ++it) {
+  for (auto it = leaderToNodes.begin(); it != leaderToNodes.end(); ++it) {
     auto id = it->getData();
-    auto *op = op_list_[id];
-    auto leader = leader_to_nodes_.getLeaderValue(id);
+    auto *op = opList[id];
+    auto leader = leaderToNodes.getLeaderValue(id);
 
-    if (leader_to_offset.count(leader) == 0) {
-      leader_to_offset[leader] = fusion_plan_.size();
+    if (leaderToOffset.count(leader) == 0) {
+      leaderToOffset[leader] = fusionPlan.size();
       MhloFusionPattern pattern;
       pattern.push_back(op);
-      fusion_plan_.push_back(pattern);
+      fusionPlan.push_back(pattern);
     } else {
-      int offset = leader_to_offset[leader];
-      fusion_plan_[offset].push_back(op);
+      int offset = leaderToOffset[leader];
+      fusionPlan[offset].push_back(op);
     }
   }
 
   // clang-format off
   LLVM_DEBUG(llvm::dbgs() << "============== plan result ===============\n";
-             for (auto it : llvm::enumerate(fusion_plan_)) {
+             for (auto it : llvm::enumerate(fusionPlan)) {
                llvm::dbgs() << "============ pattern " << it.index() << " =============\n";
                for (auto v : it.value()) {
                  llvm::outs() << *v << "\n";

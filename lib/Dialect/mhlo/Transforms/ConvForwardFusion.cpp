@@ -44,7 +44,7 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
     if (!broadcastOp || broadcastOp.broadcast_dimensions().size() != 1) {
       return failure();
     }
-    int64_t broadcast_dim =
+    int64_t broadcastDim =
         (*broadcastOp.broadcast_dimensions().begin()).getSExtValue();
     mhlo::ConvolutionOp convOp =
         dyn_cast_or_null<mhlo::ConvolutionOp>(addOp.lhs().getDefiningOp());
@@ -57,18 +57,18 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
     SmallVector<Value> outputs{op.getResult()};
     MhloFusionPattern pattern{convOp, broadcastOp, addOp, op};
 
-    NamedAttrList origin_attrs;
-    handleConvAttribute(origin_attrs, convOp, rewriter);
+    NamedAttrList originAttrs;
+    handleConvAttribute(originAttrs, convOp, rewriter);
 
     NamedAttrList attrs;
-    for (const auto &attr : origin_attrs) {
+    for (const auto &attr : originAttrs) {
       // check bias_add
       if (attr.getName() == "output_layout") {
         auto layout = attr.getValue().cast<StringAttr>().getValue();
-        if (layout == "NCHW" && broadcast_dim != 1) {
+        if (layout == "NCHW" && broadcastDim != 1) {
           return failure();
         }
-        if (layout == "NHWC" && broadcast_dim != 3) {
+        if (layout == "NHWC" && broadcastDim != 3) {
           return failure();
         }
       }
@@ -150,7 +150,8 @@ struct ConvForwardFusionPass
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateFuseConvForwardPatterns(patterns);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       signalPassFailure();
     }
   }
@@ -159,9 +160,8 @@ struct ConvForwardFusionPass
 } // namespace
 
 void mlir::populateFuseConvForwardPatterns(RewritePatternSet &patterns) {
-  patterns.add(
-      std::make_unique<FuseConvBiasActPattern>(patterns.getContext(), 10));
-  patterns.add(std::make_unique<FuseConvBiasPattern>(patterns.getContext(), 5));
+  patterns.add<FuseConvBiasActPattern>(patterns.getContext(), 10);
+  patterns.add<FuseConvBiasPattern>(patterns.getContext(), 5);
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>

@@ -6,11 +6,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Linalg/Transforms/LinalgFuseReshape.h"
-#include "PassDetail.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Transforms/Transforms.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
+#include "PassDetail.h"
 
 using namespace mlir;
 
@@ -59,8 +60,8 @@ struct LinalgFuseReshapePass
     linalg::populateFoldReshapeOpsByCollapsingPatterns(
         fusionPatterns, [](const OpResult & /*producer*/,
                            OpOperand & /*consumer*/) { return true; });
-    (void)applyPatternsAndFoldGreedily(funcOp.getBody(),
-                                       std::move(fusionPatterns));
+    FrozenRewritePatternSet frozenFusionPatterns(std::move(fusionPatterns));
+    (void)applyPatternsAndFoldGreedily(funcOp.getBody(), frozenFusionPatterns);
   }
 };
 } // namespace

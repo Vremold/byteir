@@ -1,5 +1,4 @@
-//===- ByreHost.cpp ---------------------------------------------*--- C++
-//-*-===//
+//===- ByreHost.cpp -------------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,13 +6,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/ByreHost.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/PassManager.h"
 #include <string>
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::byre;

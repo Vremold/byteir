@@ -5,8 +5,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_MHLO_UTIL_FUSIONUTIL_H
-#define BYTEIR_MHLO_UTIL_FUSIONUTIL_H
+#ifndef BYTEIR_DIALECT_MHLO_UTIL_FUSIONUTIL_H
+#define BYTEIR_DIALECT_MHLO_UTIL_FUSIONUTIL_H
 
 #include "byteir/Analysis/OpDependence.h"
 #include "mlir/IR/Block.h"
@@ -83,44 +83,44 @@ public:
 
   void run();
 
-  const MhloFusionPlan &getFusionPlan() { return fusion_plan_; }
+  const MhloFusionPlan &getFusionPlan() { return fusionPlan; }
 
 private:
   // OpDependenceInfo analysis
-  std::unique_ptr<OpDependenceInfo> dependence_;
+  std::unique_ptr<OpDependenceInfo> dependence;
 
   // Fusible criteria functions
 
   // Return true, if op is fusible
-  std::function<bool(Operation *)> fuse_candidate_;
+  std::function<bool(Operation *)> fuseCandidate;
 
   // Return true, if op can be a starting op of a fusion
-  std::function<bool(Operation *)> fuse_start_;
+  std::function<bool(Operation *)> fuseStart;
 
   // Return true, if op will actively trigger a fusion action
   // Note if false, the op won't actively trigger a fusion action with others,
   // but the op might still be fused by others' trigger
-  std::function<bool(Operation *)> fuse_trigger_;
+  std::function<bool(Operation *)> fuseTrigger;
 
   // Return true, if two ops can be fused
-  std::function<bool(Operation *, Operation *)> fuse_with_;
+  std::function<bool(Operation *, Operation *)> fuseWith;
 
   // a list of all candidates
-  SmallVector<Operation *, 8> op_list_;
+  SmallVector<Operation *, 8> opList;
 
   // NodeMap from op to id
-  llvm::DenseMap<Operation *, int> op_to_node_id_;
+  llvm::DenseMap<Operation *, int> opToNodeId;
 
   // a UnionFind set
-  llvm::EquivalenceClasses<int> leader_to_nodes_;
+  llvm::EquivalenceClasses<int> leaderToNodes;
 
-  llvm::SmallDenseSet<int> fused_leaders_;
+  llvm::SmallDenseSet<int> fusedLeaders;
 
   // leader to value cnt, where use cnt
-  llvm::SmallDenseMap<int, llvm::DenseMap<Value, int>> leader_to_value_count_;
+  llvm::SmallDenseMap<int, llvm::DenseMap<Value, int>> leaderToValueCount;
 
   // Fusion Plan
-  MhloFusionPlan fusion_plan_;
+  MhloFusionPlan fusionPlan;
 
   // return true, when two clusters already fused
   bool alreadyFused(Operation *pre_op, Operation *cur_op);
@@ -134,4 +134,4 @@ private:
 
 } // namespace mlir
 
-#endif // BYTEIR_MHLO_UTIL_FUSIONUTIL_H
+#endif // BYTEIR_DIALECT_MHLO_UTIL_FUSIONUTIL_H

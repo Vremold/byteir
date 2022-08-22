@@ -20,19 +20,19 @@ void mlir::registerDotGeneralReifyReturnTypeShapes() {
         // TODO: replace this impl after updating mlir-hlo
         // for now this is copied impl from
         // mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
-        auto dot_general = dyn_cast<mhlo::DotGeneralOp>(op);
-        auto lhsType = dot_general.lhs().getType().dyn_cast<ShapedType>();
-        auto rhsType = dot_general.rhs().getType().dyn_cast<ShapedType>();
+        auto dotGeneral = dyn_cast<mhlo::DotGeneralOp>(op);
+        auto lhsType = dotGeneral.lhs().getType().dyn_cast<ShapedType>();
+        auto rhsType = dotGeneral.rhs().getType().dyn_cast<ShapedType>();
         if (!lhsType || !rhsType) {
           return failure();
         }
 
         mhlo::DotGeneralOp::Adaptor adaptor(operands);
-        auto dimNumbers = dot_general.dot_dimension_numbers();
+        auto dimNumbers = dotGeneral.dot_dimension_numbers();
         SmallVector<Value> dimensions;
         for (const int64_t lhsDim : dimNumbers.getLhsBatchingDimensions()) {
           dimensions.push_back(builder.create<tensor::DimOp>(
-              dot_general.getLoc(), adaptor.lhs(), lhsDim));
+              dotGeneral.getLoc(), adaptor.lhs(), lhsDim));
         }
 
         for (int64_t i = 0; i < lhsType.getRank(); i++) {
@@ -40,7 +40,7 @@ void mlir::registerDotGeneralReifyReturnTypeShapes() {
                                   i) &&
               !llvm::is_contained(dimNumbers.getLhsBatchingDimensions(), i)) {
             dimensions.push_back(builder.create<tensor::DimOp>(
-                dot_general.getLoc(), adaptor.lhs(), i));
+                dotGeneral.getLoc(), adaptor.lhs(), i));
           }
         }
         for (int64_t i = 0; i < rhsType.getRank(); i++) {
@@ -48,12 +48,12 @@ void mlir::registerDotGeneralReifyReturnTypeShapes() {
                                   i) &&
               !llvm::is_contained(dimNumbers.getRhsBatchingDimensions(), i)) {
             dimensions.push_back(builder.create<tensor::DimOp>(
-                dot_general.getLoc(), adaptor.rhs(), i));
+                dotGeneral.getLoc(), adaptor.rhs(), i));
           }
         }
 
         reifiedReturnShapes.push_back(builder.create<tensor::FromElementsOp>(
-            dot_general.getLoc(), dimensions));
+            dotGeneral.getLoc(), dimensions));
         return success();
       });
 }

@@ -6,11 +6,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Shape/Transforms/InsertTieShape.h"
-#include "PassDetail.h"
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
+
+#include "PassDetail.h"
 
 using namespace mlir;
 

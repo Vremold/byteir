@@ -9,9 +9,11 @@
 #define BYTEIR_TRANSFORMS_MEMORY_PLANNING_H
 
 #include "mlir/Pass/Pass.h"
+#include <functional>
 #include <memory>
 
 namespace mlir {
+class Value;
 namespace func {
 class FuncOp;
 } // namespace func

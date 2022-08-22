@@ -1,5 +1,4 @@
-//===- ApplyMemRefAffineLayout.cpp -----------------------------*--- C++
-//-*-===//
+//===- ApplyMemRefAffineLayout.cpp ---------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -7,12 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/MemRef/Transforms/ApplyMemRefAffineLayout.h"
-#include "PassDetail.h"
 #include "byteir/Dialect/MemRef/Utils/Layout.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Builders.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;

@@ -284,13 +284,13 @@ struct ConvBackwardLayoutTransformationPattern
         op.fused_computation().cloneInto(&newOp.fused_computation(), bvm);
         Block &block = newOp.fused_computation().front();
         {
-          for (auto &_op : block) {
-            if (llvm::isa<mhlo::ReturnOp>(&_op)) {
+          for (auto &innerOp : block) {
+            if (llvm::isa<mhlo::ReturnOp>(&innerOp)) {
               OpBuilder::InsertionGuard guard(rewriter);
-              rewriter.setInsertionPoint(&_op);
+              rewriter.setInsertionPoint(&innerOp);
               Value output = createNCHW2NHWCValue(rewriter, op->getLoc(),
-                                                  _op.getOperand(0));
-              _op.setOperand(0, output);
+                                                  innerOp.getOperand(0));
+              innerOp.setOperand(0, output);
             }
           }
           rhs.getDefiningOp()->moveBefore(&block.front());
@@ -523,7 +523,8 @@ struct LayoutTransformationPass
 
     RewritePatternSet patterns(funcOp.getContext());
     populateLayoutTransformationPattern(patterns, this->targetLayout);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError("LayoutTransformationPass applyPatternsAndFoldGreedily "
                        "does not converge");
       signalPassFailure();
@@ -534,6 +535,7 @@ struct LayoutTransformationPass
 
 void mlir::populateLayoutTransformationPattern(RewritePatternSet &patterns,
                                                std::string targetLayout) {
+  // clang-format off
   patterns.add<ConvLayoutTransformationPattern,
                ConvBackwardLayoutTransformationPattern,
                ReduceWindownLayoutTransformationPattern,
@@ -541,6 +543,7 @@ void mlir::populateLayoutTransformationPattern(RewritePatternSet &patterns,
                BatchNormTrainingLayoutTransformationPattern,
                BatchNormGradLayoutTransformationPattern>(patterns.getContext(),
                                                          targetLayout);
+  // clang-format on
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>

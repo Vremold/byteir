@@ -163,10 +163,10 @@ void FusionOutliningPass::runOnOperation() {
 
         // Only set the first time
 
-        StringRef byre_compute_name = byre::getByreComputeName();
+        StringRef byreComputeName = byre::getByreComputeName();
         SmallVector<NamedAttribute, 8> filteredAttrs(llvm::make_filter_range(
             fusionOp->getAttrs(), [&](NamedAttribute attr) {
-              return attr.getName().getValue() != byre_compute_name;
+              return attr.getName().getValue() != byreComputeName;
             }));
 
         addAttrs(outlinedFuncOp, filteredAttrs);

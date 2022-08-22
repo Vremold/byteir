@@ -9,7 +9,6 @@
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_LINALGPREFETCH_H
 
 #include "mlir/Pass/Pass.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include <memory>
 

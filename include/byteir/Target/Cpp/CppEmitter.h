@@ -9,6 +9,7 @@
 // This file defines C++ emitter code using the EmitC dialect.
 //
 //===----------------------------------------------------------------------===//
+// Modifications Copyright (c) ByteDance.
 
 #ifndef BYTEIR_TARGET_CPP_CPPEMITTER_H
 #define BYTEIR_TARGET_CPP_CPPEMITTER_H
@@ -22,7 +23,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include <stack>
 
-// some code from Mlir's CppEmitter.h and TranslateToCpp.cpp
 namespace byteir {
 
 class CppEmitter {

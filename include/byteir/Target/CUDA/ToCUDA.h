@@ -1,12 +1,16 @@
-//===- ToCUDA.h - Helpers to create CUDA emitter ----------------*- C++ -*-===//
+//===- ToCUDA.h -----------------------------------------------*--- C++ -*-===//
+//
+// Copyright (c) ByteDance Inc. All rights reserved.
+// Licensed under the Apache License, Version 2.0
+//
+//===----------------------------------------------------------------------===//
+
+// Some code are CppEmitter.h and TranslateToCpp.cpp of LLVM
+// Original license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//===----------------------------------------------------------------------===//
-//
-// This file defines helpers to emit CUDA code using the EmitC dialect.
 //
 //===----------------------------------------------------------------------===//
 
@@ -19,7 +23,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include <stack>
 
-// some code from Mlir's CppEmitter.h and TranslateToCpp.cpp
 namespace byteir {
 
 void registerToCUDATranslation();

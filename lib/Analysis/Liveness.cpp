@@ -9,6 +9,7 @@
 // Implementation of the liveness analysis.
 //
 //===----------------------------------------------------------------------===//
+// Modifications Copyright (c) ByteDance.
 
 #include "byteir/Analysis/Liveness.h"
 #include "mlir/IR/Block.h"

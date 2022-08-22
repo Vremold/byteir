@@ -1,3 +1,12 @@
+//===- MemoryPlanning.cpp -------------------------------------*--- C++ -*-===//
+//
+// Copyright (c) ByteDance Inc. All rights reserved.
+// Licensed under the Apache License, Version 2.0
+//
+//===----------------------------------------------------------------------===//
+
+// Some code from buffer_packing.cc of TensorFlow
+// Original license:
 /* Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +21,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-
-//===- MemoryPlanning.cpp -------------------------------------*--- C++ -*-===//
-//
-// Copyright (c) ByteDance Inc. All rights reserved.
-// Licensed under the Apache License, Version 2.0
-//
-//===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/MemoryPlanning.h"
 #include "byteir/Analysis/Liveness.h"

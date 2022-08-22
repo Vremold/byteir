@@ -6,13 +6,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/LinalgTensorOpt.h"
-#include "./PassDetail.h"
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "byteir/Dialect/Linalg/Transforms/LinalgFuseReshape.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Transforms/Passes.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

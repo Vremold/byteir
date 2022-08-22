@@ -7,13 +7,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/MemRef/Transforms/ReifyAlloc.h"
-#include "PassDetail.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
+#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -93,8 +94,10 @@ void mlir::reifyAllocLikeShapeAndOperands(ArrayRef<int64_t> oldShape,
 }
 
 void mlir::populateReifyAllocLikePatterns(RewritePatternSet &patterns) {
+  // clang-format off
   patterns.add<ReifyAllocPattern<memref::AllocOp>,
                ReifyAllocPattern<memref::AllocaOp>>(patterns.getContext());
+  // clang-format on
 }
 
 void ReifyAllocPass::runOnOperation() {
@@ -102,8 +105,8 @@ void ReifyAllocPass::runOnOperation() {
 
   RewritePatternSet patterns(funcOp.getContext());
   populateReifyAllocLikePatterns(patterns);
-
-  if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+  FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+  if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
     funcOp.emitError(
         "ReifyAllocPass applyPatternsAndFoldGreedily does not converge");
     signalPassFailure();

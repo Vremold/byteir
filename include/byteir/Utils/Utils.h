@@ -19,14 +19,14 @@
 #include <type_traits>
 
 namespace mlir {
+class Location;
+class Operation;
+class Value;
 
 namespace func {
 class CallOp;
 class FuncOp;
 } // namespace func
-class Location;
-class Operation;
-class Value;
 
 // Return literal from a constant-like value
 // return None if not applicable

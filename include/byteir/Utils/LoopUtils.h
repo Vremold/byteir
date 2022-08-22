@@ -13,13 +13,14 @@
 
 namespace mlir {
 class Block;
-namespace func {
-class FuncOp;
-}
 class LoopLikeOpInterface;
 class OpBuilder;
 class Operation;
 class Value;
+
+namespace func {
+class FuncOp;
+} // namespace func
 
 namespace scf {
 class ForOp;

@@ -9,6 +9,7 @@
 /// FIXME: remove if upstream have implemented shape inference
 ///
 //===----------------------------------------------------------------------===//
+
 #include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
@@ -223,7 +224,7 @@ inferWindowOutputShape(const ArrayRef<int64_t> baseShape,
          "Size of window dimensions must match the size of base shape.");
 
   SmallVector<int64_t> outputDimensions(window.size());
-  for (int64_t i = 0; i < window.size(); ++i) {
+  for (size_t i = 0; i < window.size(); ++i) {
     if (isDynamicDimSize(baseShape[i]) || isDynamicDimSize(window[i].size)) {
       outputDimensions[i] = ShapedType::kDynamicSize;
     } else {

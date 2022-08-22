@@ -73,7 +73,8 @@ struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
     func::FuncOp funcOp = getOperation();
     RewritePatternSet patterns(funcOp.getContext());
     populateTrivialFusionPattern(patterns, mhloNameMap);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError(
           "TrivialFusionPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();

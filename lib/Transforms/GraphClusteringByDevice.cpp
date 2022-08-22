@@ -236,7 +236,7 @@ void GraphClusteringByDevicePass::runOnOperation() {
     // Erases the original operations which have been cloned in the partitioned
     // functions.
     for (auto &metadata : *metadatas) {
-      for (int i = metadata.ops.size() - 1; i >= 0; i--) {
+      for (int i = static_cast<int>(metadata.ops.size()) - 1; i >= 0; i--) {
         metadata.ops[i]->erase();
       }
     }

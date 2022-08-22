@@ -1,5 +1,4 @@
-//===- HloTransposeDotToDotGeneral.cpp ---------------------------------*--- C++
-//-*-===//
+//===- HloTransposeDotToDotGeneral.cpp ------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -29,29 +28,29 @@ struct FuseTransposeDotToDotGeneralPattern
   using OpRewritePattern<mhlo::DotOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(mhlo::DotOp op,
                                 PatternRewriter &rewriter) const override {
-    auto lhs_transpose = op.lhs().getDefiningOp<mhlo::TransposeOp>();
-    auto rhs_transpose = op.rhs().getDefiningOp<mhlo::TransposeOp>();
-    if (!lhs_transpose && !rhs_transpose) {
+    auto lhsTranspose = op.lhs().getDefiningOp<mhlo::TransposeOp>();
+    auto rhsTranspose = op.rhs().getDefiningOp<mhlo::TransposeOp>();
+    if (!lhsTranspose && !rhsTranspose) {
       return failure();
     }
     Value lhs = op.lhs();
     Value rhs = op.rhs();
-    int64_t lhs_contracting_dimension = 1;
-    int64_t rhs_contracting_dimension = 0;
-    if (lhs_transpose) {
-      lhs_contracting_dimension = 0;
-      lhs = lhs_transpose.operand();
+    int64_t lhsContractingDimension = 1;
+    int64_t rhsContractingDimension = 0;
+    if (lhsTranspose) {
+      lhsContractingDimension = 0;
+      lhs = lhsTranspose.operand();
     }
-    if (rhs_transpose) {
-      rhs_contracting_dimension = 1;
-      rhs = rhs_transpose.operand();
+    if (rhsTranspose) {
+      rhsContractingDimension = 1;
+      rhs = rhsTranspose.operand();
     }
-    auto dimension_numbers = mhlo::DotDimensionNumbersAttr::get(
+    auto dimensionNumbers = mhlo::DotDimensionNumbersAttr::get(
         rewriter.getContext(), /*lhsBatchingDimensions=*/{},
-        /*rhsBatchingDimensions=*/{}, {lhs_contracting_dimension},
-        {rhs_contracting_dimension});
+        /*rhsBatchingDimensions=*/{}, {lhsContractingDimension},
+        {rhsContractingDimension});
     rewriter.replaceOpWithNewOp<mhlo::DotGeneralOp>(
-        op, op.getResult().getType(), lhs, rhs, dimension_numbers,
+        op, op.getResult().getType(), lhs, rhs, dimensionNumbers,
         op.precision_configAttr());
     return success();
   }
@@ -65,9 +64,8 @@ struct HloTransposeDotToDotGeneralPass
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
     populateHloTransposeDotToDotGeneralPattern(patterns);
-    LogicalResult status =
-        applyPatternsAndFoldGreedily(funcOp, std::move(patterns));
-    if (failed(status)) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       signalPassFailure();
     }
   }
@@ -77,8 +75,7 @@ struct HloTransposeDotToDotGeneralPass
 
 void mlir::populateHloTransposeDotToDotGeneralPattern(
     RewritePatternSet &patterns) {
-  patterns.add(std::make_unique<FuseTransposeDotToDotGeneralPattern>(
-      patterns.getContext()));
+  patterns.add<FuseTransposeDotToDotGeneralPattern>(patterns.getContext());
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>

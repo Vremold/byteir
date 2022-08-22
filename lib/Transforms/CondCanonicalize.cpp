@@ -90,7 +90,8 @@ struct CondCanonicalizePass
     RewritePatternSet patterns(ctx);
 
     populateCondCanonicalizePatterns(patterns);
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError("CondCanonicalizePass applyPatternsAndFoldGreedily does "
                        "not converge");
       signalPassFailure();
@@ -102,12 +103,12 @@ struct CondCanonicalizePass
 
 void mlir::populateCondCanonicalizePatterns(RewritePatternSet &patterns) {
   MLIRContext *ctx = patterns.getContext();
-
-  patterns
-      .insert<DivOfArgFolder<arith::DivSIOp>, DivOfArgFolder<arith::DivUIOp>,
-              RemOfArgFolder<arith::RemSIOp>, RemOfArgFolder<arith::RemUIOp>>(
-          ctx);
-
+  // clang-format off
+  patterns.add<DivOfArgFolder<arith::DivSIOp>, 
+               DivOfArgFolder<arith::DivUIOp>,
+               RemOfArgFolder<arith::RemSIOp>, 
+               RemOfArgFolder<arith::RemUIOp>>(ctx);
+  // clang-format on
   // add populateSCFForLoopCanonicalizationPatterns by default
   scf::populateSCFForLoopCanonicalizationPatterns(patterns);
 }

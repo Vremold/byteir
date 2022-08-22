@@ -6,13 +6,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/LmhloToMemref/LmhloToMemref.h"
-#include "../PassDetail.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
+#include "../PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -39,29 +40,29 @@ struct ConvertReshape : public OpRewritePattern<lmhlo::ReshapeOp> {
       return failure();
     auto inMemRefType = op.getOperand().getType().cast<MemRefType>();
     auto outMemRefType = op.getOutput().getType().cast<MemRefType>();
-    auto input_shape = inMemRefType.getShape();
-    auto output_shape = outMemRefType.getShape();
+    auto inputShape = inMemRefType.getShape();
+    auto outputShape = outMemRefType.getShape();
 
     // check: product of output's shape must equal to operand's shape
-    if (prod(input_shape) != prod(output_shape))
+    if (prod(inputShape) != prod(outputShape))
       return failure();
 
     // create meta memref of output shape
     SmallVector<int64_t> shape;
-    shape.push_back(output_shape.size());
+    shape.push_back(outputShape.size());
     auto shapeMetaMemRefType = MemRefType::get(shape, rewriter.getI64Type());
-    auto shape_allocOp =
+    auto shapeAllocOp =
         rewriter.create<memref::AllocOp>(op.getLoc(), shapeMetaMemRefType);
-    auto const_op = rewriter.create<lmhlo::ConstantOp>(
+    auto constOp = rewriter.create<lmhlo::ConstantOp>(
         op.getLoc(),
-        getI64ElementsAttr(output_shape, output_shape.size(), &rewriter),
-        shape_allocOp.getResult());
+        getI64ElementsAttr(outputShape, outputShape.size(), &rewriter),
+        shapeAllocOp.getResult());
 
     auto newMemRefType = MemRefType::get(
         outMemRefType.getShape(), outMemRefType.getElementType(),
         outMemRefType.getLayout(), inMemRefType.getMemorySpace());
     auto newReshapeOp = rewriter.create<memref::ReshapeOp>(
-        op.getLoc(), newMemRefType, op.getOperand(), const_op.getOutput());
+        op.getLoc(), newMemRefType, op.getOperand(), constOp.getOutput());
     rewriter.replaceOp(allocOp, newReshapeOp.getResult());
     rewriter.eraseOp(op);
 
@@ -78,33 +79,33 @@ struct SliceToSubview : public OpRewritePattern<lmhlo::SliceOp> {
     if (!allocOp)
       return failure();
     auto inMemRefType = op.getOperand().getType().cast<MemRefType>();
-    auto start_indices = SmallVector<int64_t>();
-    auto limit_indices = SmallVector<int64_t>();
+    auto startIndices = SmallVector<int64_t>();
+    auto limitIndices = SmallVector<int64_t>();
     auto strides = SmallVector<int64_t>();
-    getValuesFromDenseIntElementsAttr(op.getStartIndices(), start_indices);
-    getValuesFromDenseIntElementsAttr(op.getLimitIndices(), limit_indices);
+    getValuesFromDenseIntElementsAttr(op.getStartIndices(), startIndices);
+    getValuesFromDenseIntElementsAttr(op.getLimitIndices(), limitIndices);
     getValuesFromDenseIntElementsAttr(op.getStrides(), strides);
-    auto input_shape = inMemRefType.getShape();
+    auto inputShape = inMemRefType.getShape();
 
-    if (start_indices.size() != limit_indices.size() ||
-        limit_indices.size() != strides.size())
+    if (startIndices.size() != limitIndices.size() ||
+        limitIndices.size() != strides.size())
       return failure();
     // check: 0 <= start_indices[d] < limit_indices[d] < full_dim[d]
     // check: (limit_indices[d] - start_indices[d]) % strides[d] == 0
-    for (size_t i = 0; i < start_indices.size(); ++i) {
-      if (!(0 <= start_indices[i] && start_indices[i] < limit_indices[i] &&
-            limit_indices[i] <= input_shape[i]))
+    for (size_t i = 0; i < startIndices.size(); ++i) {
+      if (!(0 <= startIndices[i] && startIndices[i] < limitIndices[i] &&
+            limitIndices[i] <= inputShape[i]))
         return failure();
-      if ((limit_indices[i] - start_indices[i]) % strides[i] > 0)
+      if ((limitIndices[i] - startIndices[i]) % strides[i] > 0)
         return failure();
     }
 
     SmallVector<int64_t> sizes;
-    for (size_t i = 0; i < start_indices.size(); ++i)
-      sizes.push_back((limit_indices[i] - start_indices[i]) / strides[i]);
+    for (size_t i = 0; i < startIndices.size(); ++i)
+      sizes.push_back((limitIndices[i] - startIndices[i]) / strides[i]);
 
     auto newSubViewOp = rewriter.create<memref::SubViewOp>(
-        op.getLoc(), op.getOperand(), ArrayRef<int64_t>(start_indices),
+        op.getLoc(), op.getOperand(), ArrayRef<int64_t>(startIndices),
         ArrayRef<int64_t>(sizes), ArrayRef<int64_t>(strides));
     rewriter.replaceOp(allocOp, newSubViewOp.getResult());
     rewriter.eraseOp(op);
@@ -123,9 +124,10 @@ public:
     auto funcOp = getOperation();
 
     populateLmhloToMemrefPattern(patterns);
-    target.addIllegalOp<lmhlo::ReshapeOp>();
-    target.addIllegalOp<lmhlo::SliceOp>();
-    if (failed(applyPatternsAndFoldGreedily(funcOp, std::move(patterns)))) {
+    target.addIllegalOp<lmhlo::ReshapeOp, lmhlo::SliceOp>();
+
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       funcOp.emitError("LmhloToMemrefPass applyPatternsAndFoldGreedily "
                        "does not converge");
       signalPassFailure();

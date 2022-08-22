@@ -67,6 +67,7 @@ constexpr llvm::StringRef getWhereName() { return TF_NAME_PREFIX "Where"; }
 
 } // namespace mlir
 
+#undef TF_NAME_PREFIX
 #undef CUSTOM_CALL_NAME_PREFIX
 
 #endif // BYTEIR_DIALECT_MHLO_UTIL_CUSTOMCALLUTIL_H

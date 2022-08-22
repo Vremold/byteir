@@ -6,11 +6,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/StaticShapeInference.h"
-#include "./PassDetail.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Pass/Pass.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 

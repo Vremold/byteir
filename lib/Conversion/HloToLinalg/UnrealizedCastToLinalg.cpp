@@ -5,7 +5,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "../PassDetail.h"
+// Some code from legalize_to_linalg.cc of TensorFlow
+// Original license:
+/* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
@@ -18,11 +34,12 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Transforms/DialectConversion.h"
 
+#include "../PassDetail.h"
+
 using namespace mlir;
 using namespace mlir::arith;
 using namespace mlir::linalg;
 
-// some code from mhlo's legalize_to_linalg
 namespace {
 
 static SmallVector<Value, 2> extractDynamicSizes(OpBuilder &b, Location loc,
@@ -32,7 +49,7 @@ static SmallVector<Value, 2> extractDynamicSizes(OpBuilder &b, Location loc,
   auto tensor_type = tensor.getType().dyn_cast<RankedTensorType>();
   if (!tensor_type)
     return {};
-  SmallVector<Value, 2> dyn_sizes(tensor_type.getRank());
+  SmallVector<Value, 2> dynSizes(tensor_type.getRank());
   for (auto &en : llvm::enumerate(tensor_type.getShape())) {
     if (en.value() != ShapedType::kDynamicSize)
       continue;
@@ -41,16 +58,16 @@ static SmallVector<Value, 2> extractDynamicSizes(OpBuilder &b, Location loc,
       Value extract = b.create<tensor::ExtractOp>(
           loc, shape_tensor,
           ValueRange{b.create<ConstantIndexOp>(loc, en.index())});
-      dyn_sizes[en.index()] =
+      dynSizes[en.index()] =
           b.create<IndexCastOp>(loc, b.getIndexType(), extract);
     } else {
-      dyn_sizes[en.index()] = b.create<tensor::DimOp>(loc, tensor, en.index());
+      dynSizes[en.index()] = b.create<tensor::DimOp>(loc, tensor, en.index());
     }
   }
   if (permutation)
-    dyn_sizes = applyPermutationMap(permutation, makeArrayRef(dyn_sizes));
-  llvm::erase_value(dyn_sizes, nullptr); // Strip out placeholders.
-  return dyn_sizes;
+    dynSizes = applyPermutationMap(permutation, makeArrayRef(dynSizes));
+  llvm::erase_value(dynSizes, nullptr); // Strip out placeholders.
+  return dynSizes;
 }
 
 static Value getInitTensor(OpBuilder &b, Location loc, ShapedType type,
@@ -86,53 +103,51 @@ public:
                   ConversionPatternRewriter &rewriter) const final {
 
     // Find maximum rank / number of loops.
-    auto get_rank = [](Value v) {
+    auto getRank = [](Value v) {
       return v.getType().cast<ShapedType>().getRank();
     };
 
-    auto is_scalar = [&](Value v) { return get_rank(v) == 0; };
-    auto it = llvm::find_if_not(adaptor.getOperands(), is_scalar);
-    Value max_rank_arg = adaptor.getOperands().front();
-    int64_t nloops = get_rank(max_rank_arg);
+    auto isScalar = [&](Value v) { return getRank(v) == 0; };
+    auto it = llvm::find_if_not(adaptor.getOperands(), isScalar);
+    Value maxRankArg = adaptor.getOperands().front();
+    int64_t nloops = getRank(maxRankArg);
 
     // Find result type, if on tensors.
-    ShapedType result_ty =
+    ShapedType resultTy =
         op->getResultTypes().front().template dyn_cast<ShapedType>();
 
     // Find input/output values and types.
     auto loc = op.getLoc();
     ValueRange inputs = adaptor.getOperands();
-    Value output;
 
-    auto dyn_sizes = extractDynamicSizes(rewriter, loc, max_rank_arg);
+    auto dynSizes = extractDynamicSizes(rewriter, loc, maxRankArg);
 
-    output = getInitTensor(rewriter, loc, result_ty, dyn_sizes);
+    Value output = getInitTensor(rewriter, loc, resultTy, dynSizes);
 
     // Create indexing maps.
     AffineMap scalar_map = AffineMap::get(nloops, 0, rewriter.getContext());
     AffineMap id_map = rewriter.getMultiDimIdentityMap(nloops);
     SmallVector<AffineMap, 4> maps;
     for (Value v : adaptor.getOperands()) {
-      maps.push_back(is_scalar(v) ? scalar_map : id_map);
+      maps.push_back(isScalar(v) ? scalar_map : id_map);
     }
     maps.push_back(id_map);
 
     // Build `linalg.generic` op.
-    auto linalg_op = rewriter.create<linalg::GenericOp>(
-        loc, result_ty, inputs, output, maps, getNParallelLoopsAttrs(nloops),
-        [&](OpBuilder &nested_builder, Location nested_loc, ValueRange args) {
-          Type inner_result_ty = getElementTypeOrSelf(output);
+    auto linalgOp = rewriter.create<linalg::GenericOp>(
+        loc, resultTy, inputs, output, maps, getNParallelLoopsAttrs(nloops),
+        [&](OpBuilder &nestedBuilder, Location nestedLoc, ValueRange args) {
+          Type innerResultTy = getElementTypeOrSelf(output);
 
-          auto inner_cast_op =
-              nested_builder.create<UnrealizedConversionCastOp>(
-                  loc, inner_result_ty,
-                  llvm::to_vector<2>(args.take_front(inputs.size())));
-          Value inner_result = inner_cast_op.getResult(0);
+          auto innerCastOp = nestedBuilder.create<UnrealizedConversionCastOp>(
+              loc, innerResultTy,
+              llvm::to_vector<2>(args.take_front(inputs.size())));
+          Value innerResult = innerCastOp.getResult(0);
 
-          nested_builder.create<linalg::YieldOp>(loc, inner_result);
+          nestedBuilder.create<linalg::YieldOp>(loc, innerResult);
         });
 
-    rewriter.replaceOp(op, linalg_op->getResults());
+    rewriter.replaceOp(op, linalgOp->getResults());
     return success();
   }
 };
@@ -166,8 +181,9 @@ struct UnrealizedCastToLinalgPass
                    op.getResult(0).getType().isa<TensorType>());
         });
 
-    populateUnrealizedCastToLinalgConversionPattern(&ctx, &patterns);
-    if (failed(applyPartialConversion(func, target, std::move(patterns)))) {
+    populateUnrealizedCastToLinalgConversionPattern(&ctx, patterns);
+    FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+    if (failed(applyPartialConversion(func, target, frozenPatterns))) {
       signalPassFailure();
     }
   }
@@ -176,8 +192,8 @@ struct UnrealizedCastToLinalgPass
 } // namespace
 
 void mlir::populateUnrealizedCastToLinalgConversionPattern(
-    MLIRContext *context, RewritePatternSet *patterns) {
-  patterns->insert<UnrealizedCastToLinalgConverter>(context);
+    MLIRContext *context, RewritePatternSet &patterns) {
+  patterns.add<UnrealizedCastToLinalgConverter>(context);
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>
