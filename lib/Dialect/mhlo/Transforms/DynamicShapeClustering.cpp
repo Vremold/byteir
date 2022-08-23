@@ -11,6 +11,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "llvm/ADT/SetOperations.h"
@@ -147,6 +148,11 @@ DynamicSourceAnalysis::DynamicSourceAnalysis(Operation *operation)
   calDynamicSource();
 }
 
+inline bool isShapeOp(Operation *op) {
+  return isa<tensor::TensorDialect, shape::ShapeDialect>(op->getDialect()) ||
+         isa<arith::IndexCastOp, mhlo::ComputeReshapeShapeOp>(op);
+}
+
 struct DynamicShapeClusteringPass
     : public DynamicShapeClusteringBase<DynamicShapeClusteringPass> {
 
@@ -165,8 +171,7 @@ struct DynamicShapeClusteringPass
       dynSrcAnalysis.removeTieOps();
 
       auto isFusibleCandidate = [&](Operation *op) {
-        if (isa<tensor::TensorDialect, shape::ShapeDialect>(op->getDialect()) ||
-            op->hasTrait<OpTrait::ConstantLike>())
+        if (isShapeOp(op) || op->hasTrait<OpTrait::ConstantLike>())
           return true;
 
         if (llvm::isa<mhlo::MhloDialect>(op->getDialect())) {
@@ -206,10 +211,7 @@ struct DynamicShapeClusteringPass
       auto isFusibleTrigger = [&](Operation *op) { return true; };
 
       auto isFusibleWith = [&](Operation *target, Operation *start) {
-        if (isa<tensor::TensorDialect, shape::ShapeDialect>(
-                start->getDialect()) ||
-            isa<tensor::TensorDialect, shape::ShapeDialect>(
-                target->getDialect()))
+        if (isShapeOp(start) || isShapeOp(target))
           return true;
 
         DenseSet<Value> targetSources;

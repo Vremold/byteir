@@ -79,6 +79,7 @@ struct ResolveShapeConstraintPass
 
     SmallVector<Operation *> toRemoveMeetOp;
     funcOp.walk([&](shape_ext::MeetOp meetOp) {
+      toRemoveMeetOp.push_back(meetOp);
       Value lhs = meetOp.getArg0();
       Value rhs = meetOp.getArg1();
       Value lhsLeader = eqs.getLeaderValue(lhs);
@@ -100,7 +101,6 @@ struct ResolveShapeConstraintPass
       if (constVal != rhs) {
         rhs.replaceAllUsesWith(constVal);
       }
-      toRemoveMeetOp.push_back(meetOp);
       return WalkResult::advance();
     });
 

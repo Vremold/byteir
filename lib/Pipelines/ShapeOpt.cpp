@@ -35,6 +35,7 @@ struct ShapeOptPipelinePass
     addCleanUpPassPipeline(pm);
     pm.addNestedPass<func::FuncOp>(createResolveShapeConstraintPass());
     pm.addNestedPass<func::FuncOp>(createBoundedShapeInferencePass());
+    pm.addNestedPass<func::FuncOp>(createSetAssumingAlwaysTruePass());
     pm.addPass(createCanonicalizerPass());
     pm.addPass(createDynamicShapeClusteringPass());
 
