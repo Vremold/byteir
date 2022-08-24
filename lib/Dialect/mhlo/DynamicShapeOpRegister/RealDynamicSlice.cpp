@@ -1,4 +1,4 @@
-//===- RealDynamicSliceRegister.cpp ---------------------------*--- C++ -*-===//
+//===- RealDynamicSlice.cpp -----------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -14,7 +14,7 @@
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Support/Debug.h"
 
-#define DEBUG_TYPE "bounded-shape-infer"
+#define DEBUG_TYPE "dynamic-shape-op-register"
 
 using namespace mlir;
 

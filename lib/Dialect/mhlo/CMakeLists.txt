@@ -20,63 +20,25 @@ add_mlir_dialect_library(ByteIRMhloUtils
   ByteIRUtils
   )
 
-add_mlir_dialect_library(ByteIRMhloReifyShapes
-  ReifyShapes/DotRegister.cpp
-  ReifyShapes/DotGeneralRegister.cpp
-  ReifyShapes/DynamicStitchRegister.cpp
-  ReifyShapes/DynamicMaskStitchRegister.cpp
-  ReifyShapes/DynamicBroadcastInDimReigster.cpp
 
-  ADDITIONAL_HEADER_DIRS
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ReifyShapes
-
-  DEPENDS
-  MhloDialect
-  ByteIRMhloUtils
-  ByteIRUtils
-
-  LINK_LIBS PUBLIC
-  MLIRIR
-  MhloDialect
-  MLIRSupport
-  ByteIRUtils
-)
-
-add_mlir_dialect_library(ByteIRMhloShapeConstraints
-  ShapeConstraints/DynamicPartitionRegister.cpp
-  ShapeConstraints/DynamicReshapeRegister.cpp
-  ShapeConstraints/DotGeneralRegister.cpp
-  ShapeConstraints/EinsumRegister.cpp
-
-  ADDITIONAL_HEADER_DIRS
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ShapeConstraints
-
-  DEPENDS
-  MhloDialect
-  ByteIRMhloUtils
-  ByteIRUtils
-
-  LINK_LIBS PUBLIC
-  MLIRIR
-  MhloDialect
-  MLIRSupport
-  ByteIRUtils
-)
-
-add_mlir_dialect_library(ByteIRMhloBoundedShapes
-  BoundedShapes/NonZeroRegister.cpp
-  BoundedShapes/WhereRegister.cpp
-  BoundedShapes/DynamicReshapeRegister.cpp
-  BoundedShapes/DynamicPartitionRegister.cpp
-  BoundedShapes/DynamicBroadcastInDimRegister.cpp
-  BoundedShapes/ReduceRegister.cpp
-  BoundedShapes/TorchIndexSelectRegister.cpp
-  BoundedShapes/DotGeneralRegister.cpp
-  BoundedShapes/RealDynamicSliceRegister.cpp
-  BoundedShapes/ConvolutionRegister.cpp
+add_mlir_dialect_library(ByteIRMhloDynamicShapeOpRegister
+  DynamicShapeOpRegister/Convolution.cpp
+  DynamicShapeOpRegister/Einsum.cpp
+  DynamicShapeOpRegister/DotLike.cpp 
+  DynamicShapeOpRegister/NonZero.cpp
+  DynamicShapeOpRegister/DynamicBroadcastInDim.cpp
+  DynamicShapeOpRegister/RealDynamicSlice.cpp
+  DynamicShapeOpRegister/DynamicPartition.cpp
+  DynamicShapeOpRegister/Reduce.cpp
+  DynamicShapeOpRegister/DynamicReshape.cpp
+  DynamicShapeOpRegister/TorchIndexSelect.cpp
+  DynamicShapeOpRegister/DynamicStitchLike.cpp
+  DynamicShapeOpRegister/Where.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/BoundedShapes
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ReifyShapes
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ShapeConstraints
 
   DEPENDS
   MhloDialect
@@ -142,15 +104,13 @@ add_mlir_dialect_library(ByteIRMhloPasses
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Transforms
 
   DEPENDS
-  ByteIRMhloBoundedShapes
   ByteIRMhloPassIncGen
   ByteIRAnalysis
   MhloDialect
   ByteIRMhloUtils
   ByteIRUtils
   ByteIRMhloAnalysis
-  ByteIRMhloShapeConstraints
-  ByteIRMhloReifyShapes
+  ByteIRMhloDynamicShapeOpRegister
   MLIRAceDialect
 
   LINK_LIBS PUBLIC
@@ -159,12 +119,10 @@ add_mlir_dialect_library(ByteIRMhloPasses
   MLIRSideEffectInterfaces
   MLIRSupport
   ByteIRAnalysis
-  ByteIRMhloBoundedShapes
   ByteIRMhloUtils
   ByteIRUtils
   ByteIRMhloAnalysis
-  ByteIRMhloShapeConstraints
-  ByteIRMhloReifyShapes
+  ByteIRMhloDynamicShapeOpRegister
   MLIRAceDialect
   MLIRQuantDialect # FIXME: this should link at MhloDialect
   )

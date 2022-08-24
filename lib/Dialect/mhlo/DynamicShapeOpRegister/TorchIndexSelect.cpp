@@ -1,4 +1,4 @@
-//===- TorchIndexSelectRegister.cpp ---------------------------*--- C++ -*-===//
+//===- TorchIndexSelect.cpp -----------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -11,13 +11,14 @@
 #include "mlir/IR/Builders.h"
 #include "llvm/Support/Debug.h"
 
-#define DEBUG_TYPE "bounded-shape-infer"
+#define DEBUG_TYPE "dynamic-shape-op-register"
 
 using namespace mlir;
 
 /// This is in fact a normal shape-infer function for mhlo.torch_index_select.
 /// It is not specially designed for bounded shape infer, we just need a shape
 /// infer func in the bounded-shape-infer pass
+/// FIXME: remove if upstream implement
 void mlir::registerTorchIndexSelectInferBoundedReturnTypeComponents() {
   static InferBoundedReturnTypeComponentsRegistration shapeRegister(
       mhlo::TorchIndexSelectOp::getOperationName(),

@@ -1,4 +1,4 @@
-//===- ReduceRegister.cpp -------------------------------------*--- C++ -*-===//
+//===- Reduce.cpp ---------------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -11,6 +11,8 @@
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
+
+#define DEBUG_TYPE "dynamic-shape-op-register"
 
 using namespace mlir;
 

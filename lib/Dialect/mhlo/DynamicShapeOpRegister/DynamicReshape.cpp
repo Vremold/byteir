@@ -1,4 +1,4 @@
-//===- DynamicReshapeRegister.cpp -----------------------------*--- C++ -*-===//
+//===- DynamicReshape.h ---------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -6,13 +6,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/ShapeConstraints/Register.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
-#include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
+#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
-#include "llvm/ADT/Sequence.h"
+#include "mlir/IR/BuiltinTypes.h"
+#include "llvm/Support/Debug.h"
+
+#define DEBUG_TYPE "bounded-shape-infer"
 
 using namespace mlir;
 
@@ -53,4 +56,21 @@ void mlir::registerDynamicReshapeShapeConstraints() {
 
   static InsertShapeConstraintRegistration shapeRegister(
       mhlo::DynamicReshapeOp::getOperationName(), insertShapeConstraints);
+}
+
+void mlir::registerDynamicReshapeInferBoundedReturnTypeComponents() {
+  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
+      mhlo::DynamicReshapeOp::getOperationName(),
+      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
+         DictionaryAttr, RegionRange,
+         SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
+        mlir::ShapeAdaptor shapeAdaptor = operands.getValueAsShape(1);
+        if (!shapeAdaptor)
+          return failure();
+
+        ShapedTypeComponents resShape;
+        shapeAdaptor.getDims(resShape);
+        inferredReturnTypes.push_back(resShape);
+        return success();
+      });
 }

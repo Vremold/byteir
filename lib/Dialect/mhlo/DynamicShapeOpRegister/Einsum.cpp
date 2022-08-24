@@ -1,4 +1,4 @@
-//===- EinsumRegister.cpp -------------------------------------*--- C++ -*-===//
+//===- Einsum.cpp ---------------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -12,6 +12,8 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
 #include "llvm/ADT/Sequence.h"
+
+#define DEBUG_TYPE "dynamic-shape-op-register"
 
 using namespace mlir;
 namespace {

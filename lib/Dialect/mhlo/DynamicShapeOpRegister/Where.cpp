@@ -1,4 +1,4 @@
-//===- NonZeroRegister.h --------------------------------------*--- C++ -*-===//
+//===- Where.h ------------------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
@@ -10,13 +10,15 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
 
+#define DEBUG_TYPE "dynamic-shape-op-register"
+
 using namespace mlir;
 
-/// See NonZero's signature on
-/// https://github.com/onnx/onnx/blob/main/docs/Operators.md#nonzero
-void mlir::registerNonZeroInferBoundedReturnTypeComponents() {
+/// See Where's signature on https://www.tensorflow.org/api_docs/python/tf/where
+/// Bounded shape infer is the same as nonzero
+void mlir::registerWhereInferBoundedReturnTypeComponents() {
   static InferBoundedReturnTypeComponentsRegistration shapeRegister(
-      getNonZeroName(),
+      getWhereName(),
       [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
          DictionaryAttr, RegionRange,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
@@ -24,9 +26,9 @@ void mlir::registerNonZeroInferBoundedReturnTypeComponents() {
         ShapedType inputShape = input.getType().dyn_cast<ShapedType>();
         if (!inputShape || !inputShape.hasStaticShape())
           return failure();
-
-        Type type = RankedTensorType::get({inputShape.getNumElements()},
-                                          IntegerType::get(context, 64));
+        Type type = RankedTensorType::get(
+            {inputShape.getNumElements(), inputShape.getRank()},
+            IntegerType::get(context, 64));
         inferredReturnTypes.push_back(type.cast<ShapedType>());
         return success();
       });

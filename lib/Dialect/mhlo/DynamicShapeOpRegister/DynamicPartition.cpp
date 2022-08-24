@@ -1,21 +1,23 @@
-//===- DynamicPartitionRegister.cpp ---------------------------*--- C++ -*-===//
+//===- DynamicPartition.h -------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/ShapeConstraints/Register.h"
-
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
+#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
+#include "byteir/Dialect/mhlo/ShapeConstraints/Register.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
-#include "llvm/ADT/Sequence.h"
+#include "mlir/IR/BuiltinTypes.h"
+
+#define DEBUG_TYPE "dynamic-shape-op-register"
 
 using namespace mlir;
+
 void mlir::registerDynamicPartitionShapeConstraints() {
   static InsertShapeConstraintRegistration shapeRegister(
       getDynamicPartitionName(), [](Operation *op, OpBuilder &builder) {
@@ -35,5 +37,25 @@ void mlir::registerDynamicPartitionShapeConstraints() {
             builder.create<tensor::DimOp>(op->getLoc(), op->getOperand(0), 0);
         builder.create<shape_ext::MeetOp>(op->getLoc(), sum, dim0OfOperand);
         return success();
+      });
+}
+
+/// See DynamicPartition's signature on
+/// https://www.tensorflow.org/api_docs/python/tf/dynamic_partition
+void mlir::registerDynamicPartitionInferBoundedReturnTypeComponents() {
+  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
+      getDynamicPartitionName(),
+      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
+         DictionaryAttr attr, RegionRange,
+         SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
+        auto numPartition = attr.getAs<DictionaryAttr>(getCustomCallAttrName())
+                                .getAs<IntegerAttr>("num_partitions")
+                                .getInt();
+        if (ShapedType shapedType =
+                operands[0].getType().dyn_cast_or_null<ShapedType>()) {
+          inferredReturnTypes.append(numPartition, shapedType);
+          return success();
+        }
+        return failure();
       });
 }
