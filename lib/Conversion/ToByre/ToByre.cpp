@@ -148,11 +148,11 @@ LogicalResult ConvertToByrePattern<lmhlo::GatherOp>::matchAndRewrite(
 
   auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
 
-  auto compute_op = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
-      op, key, adaptor.getOperands());
+  auto computeOp =
+      replaceLmhloOpWithByreComputeOp(rewriter, op, key, adaptor.getOperands());
 
   // FIXME: currently only support select on dim0
-  compute_op->setAttr("dim", rewriter.getI32IntegerAttr(0));
+  computeOp->setAttr("dim", rewriter.getI32IntegerAttr(0));
 
   return success();
 }
@@ -182,8 +182,8 @@ LogicalResult ConvertToByrePattern<lmhlo::ScatterOp>::matchAndRewrite(
   auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
 
   // TODO support inplace
-  auto newOp = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
-      op, key, adaptor.getOperands());
+  auto newOp =
+      replaceLmhloOpWithByreComputeOp(rewriter, op, key, adaptor.getOperands());
 
   // FIXME: currently only support select on dim0
   newOp->setAttr("dim", rewriter.getI32IntegerAttr(0));
@@ -231,8 +231,8 @@ LogicalResult ConvertToByrePattern<lmhlo::SliceOp>::matchAndRewrite(
     return success();
   }
 
-  auto newOp = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
-      op, found->second, adaptor.getOperands());
+  auto newOp = replaceLmhloOpWithByreComputeOp(rewriter, op, found->second,
+                                               adaptor.getOperands());
 
   newOp->setAttr("offset", rewriter.getI32IntegerAttr(lastStart));
 
@@ -266,8 +266,8 @@ LogicalResult ConvertToByrePattern<lmhlo::ReshapeOp>::matchAndRewrite(
   bool argAlias =
       isArgAlias(operands, adaptor.getOperands()[0], adaptor.getOperands()[1]);
 
-  auto newOp =
-      rewriter.replaceOpWithNewOp<byre::ComputeOp>(op, found->second, operands);
+  auto newOp = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
+      op, found->second, ValueRange{operands[0]}, ValueRange{operands[1]});
 
   newOp->setAttr("offset", rewriter.getI32IntegerAttr(0));
 
@@ -313,6 +313,9 @@ public:
     SmallVector<Value> operands;
 
     SmallVector<int64_t> offsets;
+    ArrayAttr memoryEffectsAttr;
+    auto readonlyOperandNum = op->getAttrOfType<IntegerAttr>(
+        getByreCallOpReadonlyOperandNumAttrName());
     if (funcOp->hasAttr(getByreArgOffsetAttrName())) {
       auto offsetArray =
           funcOp->getAttrOfType<ArrayAttr>(getByreArgOffsetAttrName());
@@ -324,16 +327,37 @@ public:
       for (auto offset : offsets) {
         operands.push_back(adaptor.getOperands()[offset]);
       }
+      if (readonlyOperandNum) {
+        memoryEffectsAttr = rewriter.getArrayAttr(llvm::to_vector(
+            llvm::map_range(offsets, [&](auto offset) -> Attribute {
+              if (offset < readonlyOperandNum.getInt()) {
+                return rewriter.getAttr<MemoryEffectAttr>(MemoryEffect::Read);
+              } else {
+                return rewriter.getAttr<MemoryEffectAttr>(MemoryEffect::Write);
+              }
+            })));
+      }
     } else {
       operands.insert(operands.end(), adaptor.getOperands().begin(),
                       adaptor.getOperands().end());
+      if (readonlyOperandNum) {
+        SmallVector<Attribute> memoryEffectAttrs;
+        memoryEffectAttrs.append(
+            readonlyOperandNum.getInt(),
+            rewriter.getAttr<MemoryEffectAttr>(MemoryEffect::Read));
+        memoryEffectAttrs.append(
+            op->getNumOperands() - readonlyOperandNum.getInt(),
+            rewriter.getAttr<MemoryEffectAttr>(MemoryEffect::Write));
+        memoryEffectsAttr = rewriter.getArrayAttr(memoryEffectAttrs);
+      }
     }
 
     auto key = getByreKey(nameAttr.getValue(), op->getOperandTypes(),
                           effectiveAppendArgTypes);
 
     mlir::byre::ComputeOp computeOp =
-        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
+        rewriter.replaceOpWithNewOp<byre::ComputeOp>(op, key, operands,
+                                                     memoryEffectsAttr);
 
     // copy byre attr, and remove prefix
     SmallVector<NamedAttribute> attrs;
@@ -403,8 +427,8 @@ public:
       // convert to MatmulOp
       auto key = getByreKey("MatmulOp", op->getOperandTypes(), appendArgTypes);
 
-      auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-          op, key, adaptor.getOperands());
+      auto computeOp = replaceLmhloOpWithByreComputeOp(rewriter, op, key,
+                                                       adaptor.getOperands());
 
       // append attribute 'lhsContractingDimension' and
       // 'rhsContractingDimension'
@@ -434,8 +458,8 @@ public:
 
       auto key =
           getByreKey("BatchMatmulOp", op->getOperandTypes(), appendArgTypes);
-      auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-          op, key, adaptor.getOperands());
+      auto computeOp = replaceLmhloOpWithByreComputeOp(rewriter, op, key,
+                                                       adaptor.getOperands());
 
       // append attributes of batching and contracting dimensions
       int64_t lhsContractingDimension =
@@ -476,8 +500,8 @@ public:
     NamedAttrList attrs;
     handleConvAttribute(attrs, op, rewriter);
     auto key = getByreKey("ConvOp", op->getOperandTypes(), appendArgTypes);
-    auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-        op, key, adaptor.getOperands());
+    auto computeOp = replaceLmhloOpWithByreComputeOp(rewriter, op, key,
+                                                     adaptor.getOperands());
     addAttrs(computeOp.getOperation(), attrs.getAttrs());
     return success();
   }
@@ -501,8 +525,8 @@ public:
       dictAttr = attrs.cast<mlir::DictionaryAttr>();
     }
 
-    auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-        op, op.getCallTargetName(), adaptor.getOperands());
+    auto computeOp = replaceLmhloOpWithByreComputeOp(
+        rewriter, op, op.getCallTargetName(), adaptor.getOperands());
     if (dictAttr) {
       NamedAttrList originAttrs = computeOp->getAttrs();
       originAttrs.append(dictAttr);
@@ -592,16 +616,15 @@ public:
     // TODO: more SelectAndScatterOp supported
     std::string poolingGradOp = "PoolMaxGradOp";
 
-    SmallVector<Value, 2> operands{adaptor.getOperand(), adaptor.getSource(),
-                                   adaptor.getOut()};
     SmallVector<Type, 2> operandTypes{adaptor.getOperand().getType(),
                                       adaptor.getSource().getType(),
                                       adaptor.getOut().getType()};
 
     auto key = getByreKey(poolingGradOp, operandTypes, appendArgTypes);
 
-    auto computeOp =
-        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
+    auto computeOp = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
+        op, key, ValueRange{adaptor.getOperand(), adaptor.getSource()},
+        ValueRange{adaptor.getOut()});
 
     addAttrs(computeOp, op->getAttrs());
     return success();
@@ -712,14 +735,14 @@ public:
             op, "only consecutive dimensions were support");
     }
 
-    SmallVector<Value, 2> operands{adaptor.getInputs()[0], adaptor.getOut()[0]};
     SmallVector<Type, 2> operandTypes{adaptor.getInputs()[0].getType(),
                                       adaptor.getOut()[0].getType()};
 
     auto key = getByreKey(ReduceOp, operandTypes, appendArgTypes);
 
-    auto computeOp =
-        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
+    auto computeOp = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
+        op, key, ValueRange{adaptor.getInputs()[0]},
+        ValueRange{adaptor.getOut()[0]});
 
     computeOp->setAttr("dimensions", op.getDimensionsAttr());
 
@@ -815,14 +838,14 @@ public:
         })) {
       return failure();
     }
-    SmallVector<Value, 2> operands{adaptor.getInputs()[0], adaptor.getOut()[0]};
     SmallVector<Type, 2> operandTypes{adaptor.getInputs()[0].getType(),
                                       adaptor.getOut()[0].getType()};
 
     auto key = getByreKey(ReduceWinOp, operandTypes, appendArgTypes);
 
-    auto computeOp =
-        rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key, operands);
+    auto computeOp = rewriter.replaceOpWithNewOp<byre::ComputeOp>(
+        op, key, ValueRange{adaptor.getInputs()[0]},
+        ValueRange{adaptor.getOut()[0]});
 
     for (auto attr : op->getAttrs()) {
       computeOp->setAttr(attr.getName(), attr.getValue());
@@ -849,8 +872,8 @@ public:
     if (!alloc)
       return failure();
 
-    auto computeOp = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-        op, "FillOp", adaptor.getOperands());
+    auto computeOp = replaceLmhloOpWithByreComputeOp(rewriter, op, "FillOp",
+                                                     adaptor.getOperands());
 
     computeOp->setAttr("value", op.getValue());
 
@@ -1075,6 +1098,12 @@ static inline void rewriteCallOpsForFuncOp(ArrayRef<func::CallOp> calls) {
     func::CallOp newCallOp = opBuilder.create<func::CallOp>(
         callOp.getLoc(), callOp.getCalleeAttr(), TypeRange(), oprands);
     newCallOp->setAttrs(callOp->getAttrs());
+    // TODO : we assume that all arguments of the function is with
+    // MemoryEffect::Read and all results of the function is with
+    // MemoryEffect::Write, do we need a more accurate memory R/W analysis in
+    // the function body?
+    newCallOp->setAttr(getByreCallOpReadonlyOperandNumAttrName(),
+                       opBuilder.getIndexAttr(callOp->getNumOperands()));
   }
 
   // remove all remove ops

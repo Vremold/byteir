@@ -28,6 +28,10 @@ inline llvm::StringRef getByreForceComputeNameAttrName() {
   return "byre_force_compute_name";
 }
 
+inline std::string getByreCallOpReadonlyOperandNumAttrName() {
+  return "num_readonly_operand";
+}
+
 // byre.compute attributes prefix string
 inline std::string getByrePrefix() { return "__byre__"; }
 

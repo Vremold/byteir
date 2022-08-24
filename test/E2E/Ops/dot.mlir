@@ -6,4 +6,7 @@ func.func @dot(%arg0 : tensor<64x128xf32> {__placeholder__byre.argname = "A"}, %
     return %1 : tensor<128x32xf32>
 }
 // CHECK-LABEL: func.func @dot
-// CHECK:  byre.compute @MatmulOp{{.*}}{lhs_contracting_dimension = 0 : i64, rhs_contracting_dimension = 0 : i64}
+// CHECK:  byre.compute @MatmulOp
+//   CHECK-DAG: lhs_contracting_dimension = 0 : i64
+//   CHECK-DAG: rhs_contracting_dimension = 0 : i64
+//   CHECK-DAG: memory_effects = [1 : i32, 1 : i32, 2 : i32]

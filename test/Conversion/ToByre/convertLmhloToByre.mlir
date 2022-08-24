@@ -7,7 +7,8 @@ module attributes {byre.container_module} {
     return
   }
 // CHECK-LABEL: func.func @mhlo_add
-//   CHECK:  byre.compute @AddOp(%arg0, %arg1, %arg2) : memref<4xf32>, memref<4xf32>, memref<4xf32>
+//   CHECK:  byre.compute @AddOp(%arg0, %arg1, %arg2)
+//     CHECK-SAME: memory_effects = [1 : i32, 1 : i32, 2 : i32]
   func.func @lace_reshape(%arg0: memref<1x1024xi64> {byre.argname = "A", byre.argtype = 1 : i32}, %arg1: memref<32x32xi64> {byre.argname = "B", byre.argtype = 2 : i32}) attributes { byre.entry_point } {
     %0 = "lace.reshape"(%arg0) : (memref<1x1024xi64>) -> memref<32x32xi64>
     "lmhlo.add"(%0, %0, %arg1) : (memref<32x32xi64>, memref<32x32xi64>, memref<32x32xi64>) -> ()

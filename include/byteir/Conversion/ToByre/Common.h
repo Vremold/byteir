@@ -19,6 +19,30 @@ namespace mlir {
 std::string getByreKey(StringRef original, TypeRange types,
                        bool appendArgTypes);
 
+template <typename OpTy>
+std::enable_if_t<OpTy::template hasTrait<MemoryEffectOpInterface::Trait>(),
+                 byre::ComputeOp>
+replaceLmhloOpWithByreComputeOp(PatternRewriter &rewriter, OpTy op,
+                                StringRef callee, ValueRange newOperands) {
+  assert(newOperands.size() == op->getNumOperands());
+  auto iface = llvm::cast<MemoryEffectOpInterface>(op.getOperation());
+  SmallVector<Attribute> memoryEffectAttrs;
+  memoryEffectAttrs.reserve(op->getNumOperands());
+  for (auto oldValue : op->getOperands()) {
+    auto effect = byre::MemoryEffect::None;
+    if (iface.template getEffectOnValue<MemoryEffects::Read>(oldValue)) {
+      effect = effect | byre::MemoryEffect::Read;
+    }
+    if (iface.template getEffectOnValue<MemoryEffects::Write>(oldValue)) {
+      effect = effect | byre::MemoryEffect::Write;
+    }
+    memoryEffectAttrs.push_back(
+        rewriter.getAttr<byre::MemoryEffectAttr>(effect));
+  }
+  return rewriter.replaceOpWithNewOp<byre::ComputeOp>(
+      op, callee, newOperands, rewriter.getArrayAttr(memoryEffectAttrs));
+}
+
 template <typename SrcOpTy>
 class ConvertToByrePattern : public OpConversionPattern<SrcOpTy> {
 public:
@@ -41,8 +65,7 @@ public:
     auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
 
     // Note all attrs will be removed
-    rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(op, key,
-                                                       adaptor.getOperands());
+    replaceLmhloOpWithByreComputeOp(rewriter, op, key, adaptor.getOperands());
 
     return success();
   }
@@ -73,9 +96,9 @@ public:
 
     auto key = getByreKey(found->second, op->getOperandTypes(), appendArgTypes);
 
-    auto compute_op = rewriter.replaceOpWithNewOp<mlir::byre::ComputeOp>(
-        op, key, adaptor.getOperands());
-    addAttrs(compute_op.getOperation(), op->getAttrs());
+    auto computeOp = replaceLmhloOpWithByreComputeOp(rewriter, op, key,
+                                                     adaptor.getOperands());
+    addAttrs(computeOp.getOperation(), op->getAttrs());
     return success();
   }
 

@@ -10,4 +10,5 @@ func.func private @device_func(memref<1x97xf32>, memref<1x6xf32>) -> memref<1x6x
 // CHECK-LABEL: func.func @main
 // CHECK-SAME: attributes {byre.entry_point}
 // CHECK-NEXT: byre.compute @TestDeviceOp
-// CHECK-SAME: {kernel_name = "device_func"}
+//   CHECK-DAG: kernel_name = "device_func"
+//   CHECK-DAG: memory_effects = [1 : i32, 1 : i32, 2 : i32]

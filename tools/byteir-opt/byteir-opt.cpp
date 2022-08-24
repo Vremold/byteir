@@ -58,6 +58,7 @@ void registerTestPrintLivenessPass();
 void registerTestPrintUseRangePass();
 void registerTestPrintSymbolicShapePass();
 void registerTestPrintShapeAnalysisPass();
+void registerTestByreOpInterfacePass();
 } // namespace test
 } // namespace byteir
 
@@ -71,6 +72,7 @@ void registerTestPasses() {
   byteir::test::registerTestPrintUseRangePass();
   byteir::test::registerTestPrintSymbolicShapePass();
   byteir::test::registerTestPrintShapeAnalysisPass();
+  byteir::test::registerTestByreOpInterfacePass();
 }
 #endif
 

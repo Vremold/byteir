@@ -130,6 +130,17 @@ def ByreInterface : OpInterface<"ByreOp"> {
     >
   ];
 
+  let extraClassDeclaration = [{
+    // Retrieve the inputs of the byre op, return its operands directly if op is
+    // not inherited from MemoryEffectOpInterface or with NoSideEffect, else
+    // only the operand with MemoryEffect::Read would be treated as input
+    SmallVector<Value> getInputs();
+
+    // Retrieve the outputs of the byre op, return its results directly if op is
+    // not inherited from MemoryEffectOpInterface or with NoSideEffect, else the
+    // operand with MemoryEffect::Write would be treated as output additionally
+    SmallVector<Value> getOutputs();
+  }];
 }
 
 def Byre_ArgType_None : I32BitEnumAttrCaseNone<"None">;            // 0
@@ -144,6 +155,20 @@ def Byre_ArgTypeAttr : I32BitEnumAttr<
         Byre_ArgType_Input,
         Byre_ArgType_Output,
         Byre_ArgType_Weight
+    ]> {
+  let cppNamespace = "::mlir::byre";
+}
+
+def Byre_MemoryEffect_None : I32BitEnumAttrCaseNone<"None">;           // 0
+def Byre_MemoryEffect_Read : I32BitEnumAttrCaseBit<"Read", 0x0000>;    // 1
+def Byre_MemoryEffect_Write : I32BitEnumAttrCaseBit<"Write", 0x0001>;  // 2
+
+def Byre_MemoryEffectAttr : I32BitEnumAttr<
+    "MemoryEffect",
+    "memory effect", [
+      Byre_MemoryEffect_None,
+      Byre_MemoryEffect_Read,
+      Byre_MemoryEffect_Write
     ]> {
   let cppNamespace = "::mlir::byre";
 }

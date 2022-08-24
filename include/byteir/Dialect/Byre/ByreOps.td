@@ -30,7 +30,8 @@ class Byre_Op<string mnemonic, list<Trait> traits = []> :
     Op<Byre_Dialect, mnemonic, traits>;
 
 def Byre_ComputeOp : Byre_Op<"compute",
-    [HasParent<"func::FuncOp">, ByreInterface, MemRefsNormalizable]> {
+    [HasParent<"func::FuncOp">, ByreInterface, MemRefsNormalizable,
+     DeclareOpInterfaceMethods<MemoryEffectsOpInterface>]> {
   let summary = "compute operation defines a kernel in runtime";
   let description = [{ 
     Example:
@@ -39,7 +40,17 @@ def Byre_ComputeOp : Byre_Op<"compute",
     ```
   }];
 
-  let arguments = (ins FlatSymbolRefAttr:$callee, Variadic<AnyType>:$operands);
+  let arguments = (ins
+    FlatSymbolRefAttr:$callee,
+    Variadic<AnyType>:$operands,
+    OptionalAttr<ArrayAttr>:$memory_effects
+  );
+
+  let builders = [
+     OpBuilder<(ins "StringRef":$callee,
+                    "ValueRange":$inputs,
+                    "ValueRange":$outputs)>
+  ];
 
   let extraClassDeclaration = [{
     StringRef getCallee() { return callee(); }
@@ -53,7 +64,6 @@ def Byre_ComputeOp : Byre_Op<"compute",
 
     operand_iterator arg_operand_begin() { return operand_begin(); }
     operand_iterator arg_operand_end() { return operand_end(); }
-
   }];
 
   // TODO change assemblyFormat to real parser and printer later
@@ -81,10 +91,9 @@ def Byre_CopyOp : Byre_Op<"copy",
     Note %arg0 is source, %arg1 is destination.
   }];
 
-
   let arguments = (ins
-    AnyStridedMemRef:$source,
-    AnyStridedMemRef:$target);
+    Arg<AnyStridedMemRef, "", [MemRead]>:$source,
+    Arg<AnyStridedMemRef, "", [MemWrite]>:$target);
 
   let extraClassDeclaration = [{
     Value getSource() { return source();}

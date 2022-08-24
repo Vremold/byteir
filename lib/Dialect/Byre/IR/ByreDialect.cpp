@@ -259,13 +259,70 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
 // ComputeOp
 //===----------------------------------------------------------------------===/
 
+void ComputeOp::build(OpBuilder &builder, OperationState &result,
+                      StringRef callee, ValueRange inputs, ValueRange outputs) {
+  SmallVector<Attribute> memoryEffectAttrs;
+  memoryEffectAttrs.append(
+      inputs.size(), builder.getAttr<MemoryEffectAttr>(MemoryEffect::Read));
+  memoryEffectAttrs.append(
+      outputs.size(), builder.getAttr<MemoryEffectAttr>(MemoryEffect::Write));
+  build(builder, result, callee,
+        llvm::to_vector(llvm::concat<Value>(llvm::to_vector(inputs),
+                                            llvm::to_vector(outputs))),
+        builder.getArrayAttr(memoryEffectAttrs));
+}
+
 // verify ComputeOp
 LogicalResult ComputeOp::verify() {
-  return verifyOpInEntryPointFunc(this->getOperation());
+  if (verifyOpInEntryPointFunc(this->getOperation()).failed()) {
+    return failure();
+  }
+
+  auto maybeMemoryEffects = this->memory_effects();
+  if (maybeMemoryEffects) {
+    if (maybeMemoryEffects->size() != this->getNumOperands()) {
+      return emitError("size of memory effects mismatch");
+    }
+    if (llvm::any_of(maybeMemoryEffects->getValue(), [](Attribute attr) {
+          return !attr.isa<MemoryEffectAttr>();
+        })) {
+      return emitError("invalid memory effect attribute");
+    }
+  }
+  return success();
 }
 
 FunctionType mlir::byre::ComputeOp::getType() {
   return FunctionType::get(getContext(), getOperandTypes(), {});
+}
+
+void ComputeOp::getEffects(
+    SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
+        &effects) {
+  if (!this->memory_effects()) {
+    // if memory effects was not set, assume that all operands are readwrite
+    for (auto &&i : this->getOperands()) {
+      effects.emplace_back(MemoryEffects::Read::get(), i,
+                           SideEffects::DefaultResource::get());
+      effects.emplace_back(MemoryEffects::Write::get(), i,
+                           SideEffects::DefaultResource::get());
+    }
+  } else {
+    auto memoryEffects = llvm::to_vector(
+        this->memory_effects()->getAsValueRange<MemoryEffectAttr>());
+    for (auto &&pi : llvm::zip(this->getOperands(), memoryEffects)) {
+      auto value = std::get<0>(pi);
+      MemoryEffect effect = std::get<1>(pi);
+      if (bitEnumContains(effect, MemoryEffect::Read)) {
+        effects.emplace_back(MemoryEffects::Read::get(), value,
+                             SideEffects::DefaultResource::get());
+      }
+      if (bitEnumContains(effect, MemoryEffect::Write)) {
+        effects.emplace_back(MemoryEffects::Write::get(), value,
+                             SideEffects::DefaultResource::get());
+      }
+    }
+  }
 }
 
 //===----------------------------------------------------------------------===//
@@ -370,6 +427,36 @@ void byre::addAsyncDependency(Operation *op, Value token) {
     sizes.push_back(size.getSExtValue());
   ++sizes.front();
   op->setAttr(attrName, Builder(op->getContext()).getI32VectorAttr(sizes));
+}
+
+SmallVector<Value> ByreOp::getInputs() {
+  auto op = getOperation();
+  if (auto iface = llvm::dyn_cast<MemoryEffectOpInterface>(op)) {
+    if (!iface.hasNoEffect()) {
+      return llvm::to_vector(
+          llvm::make_filter_range(op->getOperands(), [&](Value value) {
+            return iface.getEffectOnValue<MemoryEffects::Read>(value)
+                .hasValue();
+          }));
+    }
+  }
+  return op->getOperands();
+}
+
+SmallVector<Value> ByreOp::getOutputs() {
+  auto op = getOperation();
+  if (auto iface = llvm::dyn_cast<MemoryEffectOpInterface>(op)) {
+    if (!iface.hasNoEffect()) {
+      auto outputs = llvm::to_vector(
+          llvm::make_filter_range(op->getOperands(), [&](Value value) {
+            return iface.getEffectOnValue<MemoryEffects::Write>(value)
+                .hasValue();
+          }));
+      outputs.append(op->result_begin(), op->result_end());
+      return outputs;
+    }
+  }
+  return op->getResults();
 }
 
 #include "byteir/Dialect/Byre/ByreOpInterfaces.cpp.inc"
