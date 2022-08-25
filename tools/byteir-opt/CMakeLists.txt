@@ -6,6 +6,7 @@ set(BYTEIR_LIBS
   ByteIRAffinePasses
   ByteIRByrePasses
   ByteIRGPUPipelines
+  ByteIRHostPipelines
   ByteIRLinalgPasses
   ByteIRMemRefPasses
   ByteIRMhloUtils

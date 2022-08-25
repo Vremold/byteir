@@ -18,6 +18,7 @@
 #include "byteir/Conversion/ToByre/ToByre.h"
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToHlo/ArithToMhlo.h"
+#include "byteir/Conversion/ToLLVM/ToLLVM.h"
 #include "byteir/Conversion/ToPTX/ToPTX.h"
 
 namespace mlir {

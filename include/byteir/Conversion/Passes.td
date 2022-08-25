@@ -218,5 +218,24 @@ def ConvertArithToMhlo : Pass<"convert-arith-to-mhlo", "func::FuncOp"> {
   let dependentDialects = ["mlir::mhlo::MhloDialect"];
 }
 
+//===----------------------------------------------------------------------===//
+// ToLLVM
+//===----------------------------------------------------------------------===//
+
+def GenLLVMConfig : Pass<"gen-llvm-config", "func::FuncOp"> {
+  let summary = "Generate LLVM configuration";
+  let constructor = "mlir::createGenLLVMConfigPass()";
+  let options = [
+    Option<"fileName", "file-name", "std::string",
+           /*default=*/"\"host_kernels.ll\"",
+           "To specify where the generated llvm kernel will be writed to">,
+  ];
+}
+
+def CollectFuncToLLVM : Pass<"collect-func-to-llvm", "mlir::ModuleOp"> {
+  let summary =
+      "Collect functions to submodule which will be converted to llvmir";
+  let constructor = "mlir::createCollectFuncToLLVMPass()";
+}
 
 #endif // BYTEIR_CONVERSION_PASSES

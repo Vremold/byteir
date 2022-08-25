@@ -30,6 +30,10 @@ void cloneAllExtraFuncAttrs(func::FuncOp oldFunc, func::FuncOp newFunc,
 // collapse func region into the first block
 void collapseFuncRegion(func::FuncOp func);
 
+// attach compute name, runtime kernel name and trivial arguments offset to
+// func
+void addGenericFuncAttrs(func::FuncOp func, const std::string &computeName);
+
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_FUNCUTILS_H

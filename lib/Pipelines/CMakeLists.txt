@@ -1,4 +1,5 @@
 add_subdirectory(GPU)
+add_subdirectory(Host)
 
 add_mlir_library(ByteIRPipelines
   AffineOpt.cpp
@@ -16,6 +17,7 @@ add_mlir_library(ByteIRPipelines
 
   DEPENDS
   ByteIRGPUPipelines
+  ByteIRHostPipelines
   ByteIRMhloPasses
   ByteIRPipelinesPassIncGen
   ByteIRShapePasses
@@ -25,6 +27,7 @@ add_mlir_library(ByteIRPipelines
 
   LINK_LIBS PUBLIC
   ByteIRGPUPipelines
+  ByteIRHostPipelines
   ByteIRUtils
   MLIRIR
   MLIRAffineDialect

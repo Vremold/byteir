@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Utils/FuncUtils.h"
+#include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "llvm/ADT/STLExtras.h"
@@ -62,4 +63,27 @@ void mlir::collapseFuncRegion(func::FuncOp func) {
   for (unsigned i = 0; i < tailBlockCnt; ++i) {
     blocks.back().erase();
   }
+}
+
+void mlir::addGenericFuncAttrs(func::FuncOp func,
+                               const std::string &computeName) {
+  mlir::OpBuilder opBuilder(func);
+
+  func->setAttr(byre::getByrePrefix() + "kernel_name",
+                opBuilder.getStringAttr(func.getName()));
+  func->setAttr(byre::getByreComputeName(),
+                opBuilder.getStringAttr(computeName));
+  func->setAttr(byre::getByreForceComputeNameAttrName(),
+                opBuilder.getUnitAttr());
+
+  // trivial offsets
+  SmallVector<int32_t> offsets;
+  unsigned numArg = func.getNumArguments() + func.getNumResults();
+  offsets.reserve(numArg);
+  for (unsigned i = 0; i < numArg; ++i) {
+    offsets.push_back(i);
+  }
+
+  func->setAttr(byre::getByreArgOffsetAttrName(),
+                opBuilder.getI32ArrayAttr(offsets));
 }
