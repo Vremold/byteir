@@ -32,7 +32,8 @@ public:
 
   virtual bool init() = 0;
 
-  virtual FunctionType getFunctionType() = 0;
+  // get or create a new func
+  virtual func::FuncOp getOrCreateNewFunc(OpBuilder &b) = 0;
 
   // get or create a FuncArg
   virtual Value getOrCreateNewFromOldFuncArg(OpBuilder &b, unsigned newId,

@@ -7,6 +7,7 @@
 
 #include "byteir/Dialect/mhlo/Transforms/FuncArgRearrangement.h"
 #include "byteir/Utils/PipelineUtils.h"
+#include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -20,6 +21,9 @@ namespace {
 constexpr StringRef getByteIRUnitTestAttrName() {
   return "__byteir_unit_test__";
 }
+
+constexpr StringRef getTestRewriteFromAttrName() { return "test_rewrite_from"; }
+constexpr StringRef getTestRewriteToAttrName() { return "test_rewrite_to"; }
 
 constexpr StringRef getFuncArgAttrName() { return "arg"; }
 
@@ -401,7 +405,21 @@ public:
     return true;
   }
 
-  FunctionType getFunctionType() override { return newFuncType; }
+  func::FuncOp getOrCreateNewFunc(OpBuilder &b) override {
+    auto newFunc =
+        b.create<func::FuncOp>(funcOp->getLoc(), funcOp.getSymName(),
+                               newFuncType, funcOp.getSymVisibilityAttr());
+    // for unit test
+    auto ctx = funcOp.getContext();
+    if (funcOp->hasAttr(getTestRewriteFromAttrName())) {
+      funcOp->removeAttr(getTestRewriteFromAttrName());
+      SmallVector<mlir::NamedAttribute> attrs;
+      attrs.emplace_back(StringAttr::get(ctx, getTestRewriteToAttrName()),
+                         UnitAttr::get(ctx));
+      addAttrs(newFunc, attrs);
+    }
+    return newFunc;
+  }
 
   Value getOrCreateNewFromOldFuncArg(OpBuilder &b, unsigned newId,
                                      ArrayRef<Value> oldValues) override {

@@ -149,11 +149,7 @@ void FuncArgRearrangementPass::runOnOperation() {
 
     // 1. Create a new Func
     OpBuilder builder(f);
-
-    auto newFunc = builder.create<func::FuncOp>(
-        f->getLoc(), f.getSymName(), rearrangerPtr->getFunctionType(),
-        f.getSymVisibilityAttr());
-
+    auto newFunc = rearrangerPtr->getOrCreateNewFunc(builder);
     newFuncs.push_back(newFunc);
 
     cloneAllExtraFuncAttrs(f, newFunc, {anchorAttr});
