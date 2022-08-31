@@ -6,7 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/ShapeReification.h"
-#include "byteir/Dialect/mhlo/ReifyShapes/Register.h"
+#include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -29,6 +29,13 @@ LogicalResult reifyShapes(OpBuilder &builder, Operation *op,
                           SmallVectorImpl<Value> &reifications) {
   if (!op)
     return failure();
+
+  if (op->hasTrait<mhlo::OpTrait::CompatibleOperandsAndResultType>()) {
+    // CompatibleOperandsAndResultType does not implement reify
+    reifications.push_back(
+        builder.create<shape::ShapeOfOp>(op->getLoc(), op->getOperand(0)));
+    return success();
+  }
 
   // TODO: support nested function call
   if (auto origin = dyn_cast<InferShapedTypeOpInterface>(op)) {

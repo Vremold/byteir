@@ -6,8 +6,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/BoundedShapeInference.h"
-#include "byteir/Dialect/mhlo/Analysis/BoundedShapeAnalysis.h"
-#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
+#include "byteir/Dialect/mhlo/Analysis/ShapeAnalysis.h"
+#include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "byteir/Utils/TypeUtils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -91,6 +91,7 @@ struct BoundedShapeInferencePass
   BoundedShapeInferencePass()
       : BoundedShapeInferenceBase<
             BoundedShapeInferencePass>::BoundedShapeInferenceBase() {
+    registerAllMhloInferReturnTypeComponents();
     registerAllMhloInferBoundedReturnTypeComponents();
   }
 
@@ -113,8 +114,8 @@ struct BoundedShapeInferencePass
       }
 
       DataFlowSolver solver;
-      solver.load<BoundedShapeAnalysis>();
-      solver.load<BoundedShapeValueAnalysis>();
+      solver.load<MhloBoundedShapeAnalysis>();
+      solver.load<MhloShapeValueAnalysis>();
       solver.load<DeadCodeAnalysis>();
       if (failed(solver.initializeAndRun(funcOp)))
         return signalPassFailure();

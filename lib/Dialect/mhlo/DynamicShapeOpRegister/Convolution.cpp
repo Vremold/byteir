@@ -10,7 +10,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
+#include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
@@ -244,8 +244,8 @@ inferWindowOutputShape(const ArrayRef<int64_t> baseShape,
 }
 } // namespace
 
-void mlir::registerConvolutionInferBoundedReturnTypeComponents() {
-  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
+void mlir::registerConvolutionInferReturnTypeComponents() {
+  static InferReturnTypeComponentsRegistration shapeRegister(
       mhlo::ConvolutionOp::getOperationName(),
       [](MLIRContext *context, Optional<Location> location,
          ValueShapeRange operands, DictionaryAttr attrs, RegionRange regions,

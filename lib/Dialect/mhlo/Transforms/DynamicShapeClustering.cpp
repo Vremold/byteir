@@ -27,6 +27,10 @@ using namespace mlir;
 
 namespace {
 
+inline bool isShapeOp(Operation *op) {
+  return isa<tensor::TensorDialect, shape::ShapeDialect>(op->getDialect()) ||
+         isa<arith::IndexCastOp, mhlo::ComputeReshapeShapeOp>(op);
+}
 struct DynamicSourceAnalysis {
   DynamicSourceAnalysis(Operation *op);
 
@@ -146,11 +150,6 @@ DynamicSourceAnalysis::DynamicSourceAnalysis(Operation *operation)
     : operation(operation) {
   calPostDomsByTie();
   calDynamicSource();
-}
-
-inline bool isShapeOp(Operation *op) {
-  return isa<tensor::TensorDialect, shape::ShapeDialect>(op->getDialect()) ||
-         isa<arith::IndexCastOp, mhlo::ComputeReshapeShapeOp>(op);
 }
 
 struct DynamicShapeClusteringPass

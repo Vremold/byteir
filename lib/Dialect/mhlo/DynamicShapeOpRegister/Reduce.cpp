@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
+#include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -17,8 +17,8 @@
 using namespace mlir;
 
 // TODO: this should be removed when push to upstream
-void mlir::registerReduceInferBoundedReturnTypeComponents() {
-  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
+void mlir::registerReduceInferReturnTypeComponents() {
+  static InferReturnTypeComponentsRegistration shapeRegister(
       mhlo::ReduceOp::getOperationName(),
       [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
          DictionaryAttr attr, RegionRange,

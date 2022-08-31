@@ -1,12 +1,12 @@
-//===- BoundedShapeAnalysis.cpp -------------------------------------------===//
+//===- ShapeAnalysis.cpp --------------------------------------------------===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/Analysis/BoundedShapeAnalysis.h"
-#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
+#include "byteir/Dialect/mhlo/Analysis/ShapeAnalysis.h"
+#include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -16,12 +16,59 @@
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/Debug.h"
 
-#define DEBUG_TYPE "bounded-shape-analysis"
+#define DEBUG_TYPE "mhlo-shape-analysis"
 
 using namespace mlir::shape_analysis;
 
 namespace mlir {
-LogicalResult BoundedShapeAnalysis::inferResultShapesWithKnowledges(
+LogicalResult MhloShapeAnalysis::inferResultShapesWithKnowledges(
+    Operation *op, ShapeKnowledges shapeKnowledges,
+    ShapeValueKnowledges shapeValueKnowledges,
+    llvm::SmallVectorImpl<::mlir::ShapedTypeComponents> &results) {
+  InferReturnTypeComponents inferFunc = nullptr;
+  if (auto customCall = dyn_cast<mhlo::CustomCallOp>(op)) {
+    inferFunc = inferReturnTypeComponents(customCall.call_target_name());
+  } else {
+    inferFunc = inferReturnTypeComponents(op->getName().getStringRef());
+  }
+  if (nullptr == inferFunc) {
+    // fallback to generic shape analysis
+    return ShapeAnalysis::inferResultShapesWithKnowledges(
+        op, shapeKnowledges, shapeValueKnowledges, results);
+  }
+  ValueTypeModificatoinRAII valueTypeModification;
+  for (auto &&operand : op->getOperands()) {
+    Type newType = operand.getType();
+    if (auto shape = shapeKnowledges(operand)) {
+      newType = shape;
+    }
+    if (newType != operand.getType()) {
+      valueTypeModification.Push(operand, newType);
+    }
+  }
+
+  //  if return Attr{nullptr}, Type{nullptr} directly, ShapeAdaptor would try
+  //  dync_cast<> which cause crash
+  auto wrapperShapeKnowledges = [&](Value v) -> ShapeAdaptor {
+    if (auto type = shapeKnowledges(v)) {
+      return type;
+    }
+    return nullptr;
+  };
+  auto wrapperShapeValueKnowledges = [&](Value v) -> ShapeAdaptor {
+    if (auto attr = shapeValueKnowledges(v)) {
+      return attr;
+    }
+    return nullptr;
+  };
+  ValueShapeRange range(op->getOperands(), wrapperShapeKnowledges,
+                        wrapperShapeValueKnowledges);
+
+  return inferFunc(op->getContext(), op->getLoc(), range,
+                   op->getAttrDictionary(), op->getRegions(), results);
+}
+
+LogicalResult MhloBoundedShapeAnalysis::inferResultShapesWithKnowledges(
     Operation *op, ShapeKnowledges shapeKnowledges,
     ShapeValueKnowledges shapeValueKnowledges,
     llvm::SmallVectorImpl<::mlir::ShapedTypeComponents> &results) {
@@ -33,8 +80,8 @@ LogicalResult BoundedShapeAnalysis::inferResultShapesWithKnowledges(
   }
 
   if (nullptr == inferFunc) {
-    // fallback to generic shape analysis
-    return ShapeAnalysis::inferResultShapesWithKnowledges(
+    // fallback to static mhlo shape analysis
+    return MhloShapeAnalysis::inferResultShapesWithKnowledges(
         op, shapeKnowledges, shapeValueKnowledges, results);
   }
 
@@ -70,10 +117,10 @@ LogicalResult BoundedShapeAnalysis::inferResultShapesWithKnowledges(
                    op->getAttrDictionary(), op->getRegions(), results);
 }
 
-void BoundedShapeValueAnalysis::visitOperation(
+void MhloShapeValueAnalysis::visitOperation(
     Operation *op, ArrayRef<const ShapeValueLattice *> operands,
     ArrayRef<ShapeValueLattice *> results) {
-  LLVM_DEBUG(llvm::dbgs() << "bounded shape value analysis on " << *op << "\n");
+  LLVM_DEBUG(llvm::dbgs() << "mhlo shape value analysis on " << *op << "\n");
   TypeSwitch<Operation *>(op)
       .Case<mhlo::ComputeReshapeShapeOp>([&](Operation *op) {
         const ShapeValueLattice *shape = operands[1];

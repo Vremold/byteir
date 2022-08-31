@@ -23,22 +23,21 @@ add_mlir_dialect_library(ByteIRMhloUtils
 
 add_mlir_dialect_library(ByteIRMhloDynamicShapeOpRegister
   DynamicShapeOpRegister/Convolution.cpp
-  DynamicShapeOpRegister/Einsum.cpp
   DynamicShapeOpRegister/DotLike.cpp 
-  DynamicShapeOpRegister/NonZero.cpp
   DynamicShapeOpRegister/DynamicBroadcastInDim.cpp
-  DynamicShapeOpRegister/RealDynamicSlice.cpp
   DynamicShapeOpRegister/DynamicPartition.cpp
-  DynamicShapeOpRegister/Reduce.cpp
-  DynamicShapeOpRegister/DynamicReshape.cpp
-  DynamicShapeOpRegister/TorchIndexSelect.cpp
   DynamicShapeOpRegister/DynamicStitchLike.cpp
+  DynamicShapeOpRegister/Einsum.cpp
+  DynamicShapeOpRegister/NonZero.cpp
+  DynamicShapeOpRegister/RealDynamicSlice.cpp
+  DynamicShapeOpRegister/Reduce.cpp
+  DynamicShapeOpRegister/ReshapeLike.cpp
+  DynamicShapeOpRegister/Softmax.cpp
+  DynamicShapeOpRegister/TorchIndexSelect.cpp
   DynamicShapeOpRegister/Where.cpp
 
   ADDITIONAL_HEADER_DIRS
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/BoundedShapes
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ReifyShapes
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/ShapeConstraints
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/DynamicShapeOpRegister
 
   DEPENDS
   MhloDialect
@@ -54,7 +53,7 @@ add_mlir_dialect_library(ByteIRMhloDynamicShapeOpRegister
 
 add_mlir_dialect_library(ByteIRMhloAnalysis
   Analysis/DimFromBroadcast.cpp
-  Analysis/BoundedShapeAnalysis.cpp
+  Analysis/ShapeAnalysis.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/Analysis

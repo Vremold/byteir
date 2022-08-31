@@ -5,8 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
-#include "byteir/Dialect/mhlo/ReifyShapes/Register.h"
+#include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -38,8 +37,8 @@ void mlir::registerDynamicBroadcastInDimReifyReturnTypeShapes() {
       });
 }
 
-void mlir::registerDynamicBroadcastInDimInferBoundedReturnTypeComponents() {
-  static InferBoundedReturnTypeComponentsRegistration shapeRegister(
+void mlir::registerDynamicBroadcastInDimInferReturnTypeComponents() {
+  static InferReturnTypeComponentsRegistration shapeRegister(
       mhlo::DynamicBroadcastInDimOp::getOperationName(),
       [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
          DictionaryAttr attr, RegionRange,
@@ -64,14 +63,14 @@ void mlir::registerDynamicBroadcastInDimInferBoundedReturnTypeComponents() {
 
         auto bcastDimensionsSize = bcastDimensionsType.getNumElements();
 
-        auto boundedShape = llvm::to_vector<6>(dynamicShape.getDims());
+        auto outputShape = llvm::to_vector<6>(dynamicShape.getDims());
         for (int i = 0; i != bcastDimensionsSize; ++i) {
           auto dimIndex = bcastDimensions.getValues<int64_t>()[i];
-          boundedShape[dimIndex] =
-              std::max(boundedShape[dimIndex], inputType.getShape()[i]);
+          outputShape[dimIndex] =
+              std::max(outputShape[dimIndex], inputType.getShape()[i]);
         }
         Type type =
-            RankedTensorType::get(boundedShape, IntegerType::get(context, 64));
+            RankedTensorType::get(outputShape, IntegerType::get(context, 64));
         inferredReturnTypes.push_back(type.cast<ShapedType>());
         return success();
       });

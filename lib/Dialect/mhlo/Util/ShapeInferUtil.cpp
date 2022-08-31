@@ -6,7 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
-#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
+#include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -376,6 +376,43 @@ InferBoundedReturnTypeComponentsRegistration::
 InferBoundedReturnTypeComponents
 mlir::inferBoundedReturnTypeComponents(llvm::StringRef name) {
   auto &registry = getInferBoundedReturnTypeComponentsRegistry();
+  auto it = registry.find(name);
+  if (it != registry.end())
+    return it->second;
+  return nullptr;
+}
+
+//===----------------------------------------------------------------------===//
+// InferReturnTypeComponents Registration
+//===----------------------------------------------------------------------===//
+
+static llvm::StringMap<InferReturnTypeComponents> &
+getInferReturnTypeComponentsRegistry() {
+  static llvm::StringMap<InferReturnTypeComponents>
+      InferReturnTypeComponentsRegistry;
+  return InferReturnTypeComponentsRegistry;
+}
+
+static void
+registerInferReturnTypeComponents(StringRef name,
+                                  const InferReturnTypeComponents &function) {
+  auto &registry = getInferReturnTypeComponentsRegistry();
+  if (registry.find(name) != registry.end())
+    llvm::report_fatal_error("Attempting to overwrite an existing "
+                             "InferReturnTypeComponents function");
+  assert(function && "Attempting to register an empty "
+                     "InferReturnTypeComponents function");
+  registry[name] = function;
+}
+
+InferReturnTypeComponentsRegistration::InferReturnTypeComponentsRegistration(
+    StringRef name, const InferReturnTypeComponents &function) {
+  registerInferReturnTypeComponents(name, function);
+}
+
+InferReturnTypeComponents
+mlir::inferReturnTypeComponents(llvm::StringRef name) {
+  auto &registry = getInferReturnTypeComponentsRegistry();
   auto it = registry.find(name);
   if (it != registry.end())
     return it->second;

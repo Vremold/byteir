@@ -6,8 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
-#include "byteir/Dialect/mhlo/BoundedShapes/Register.h"
-#include "byteir/Dialect/mhlo/ShapeConstraints/Register.h"
+#include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
