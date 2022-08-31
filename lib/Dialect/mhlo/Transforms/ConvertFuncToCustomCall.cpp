@@ -97,9 +97,17 @@ protected:
 
 } // namespace
 
+std::function<void(func::FuncOp, ModuleOp)>
+mlir::FuncToCustomCallConverterLookup::getCustomizedConversion(func::FuncOp f) {
+  const std::string &orig = f.getName().str();
+  auto it = funcNameToCustomizedConversion.find(getFuncName(orig));
+  return it == funcNameToCustomizedConversion.end() ? nullptr : it->second;
+}
+
 bool mlir::FuncToCustomCallConverterLookup::checkFunc(func::FuncOp f) {
   const std::string &orig = f.getName().str();
-  return funcNameToCustomMeta.count(getFuncName(orig)) > 0;
+  return funcNameToCustomMeta.count(getFuncName(orig)) > 0 ||
+         funcNameToCustomizedConversion.count(getFuncName(orig)) > 0;
 }
 
 NamedAttrList FuncToCustomCallConverterLookup::getAttrs(func::FuncOp func) {
@@ -193,6 +201,12 @@ void ConvertFuncToCustomCallPass::runOnOperation() {
   }
 
   for (auto func : funcCollecter) {
+    auto convertLogic = converter->getCustomizedConversion(func);
+    if (convertLogic != nullptr) {
+      convertLogic(func, m);
+      continue;
+    }
+
     auto resultTys = converter->getResultTypes(func);
     auto attrs = converter->getAttrs(func);
 

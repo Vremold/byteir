@@ -13,6 +13,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringMap.h"
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -22,6 +23,10 @@ class NamedAttrList;
 class Value;
 class ValueRange;
 class TypeRange;
+
+constexpr llvm::StringRef getByteIRCustomCallAttrName() {
+  return "byteir_attrs";
+}
 
 // the abstract class of FuncToCustomCallConverter
 // Some member functions are implemented for trival cases
@@ -44,6 +49,9 @@ struct FuncToCustomCallConverterBase {
   virtual unsigned getNewResultIdx(func::CallOp, unsigned oldIdx) {
     return oldIdx;
   }
+
+  virtual std::function<void(func::FuncOp, ModuleOp)>
+      getCustomizedConversion(func::FuncOp) = 0;
 };
 
 // a common CustomMeta for creating CustomCall
@@ -92,7 +100,13 @@ struct FuncToCustomCallConverterLookup : public FuncToCustomCallConverterBase {
 
   unsigned getNewResultIdx(func::CallOp, unsigned) override;
 
+  std::function<void(func::FuncOp, ModuleOp)>
+      getCustomizedConversion(func::FuncOp) override;
+
   llvm::StringMap<CustomLoopupMeta> funcNameToCustomMeta;
+
+  llvm::StringMap<std::function<void(func::FuncOp, ModuleOp)>>
+      funcNameToCustomizedConversion;
 };
 
 std::unique_ptr<OperationPass<ModuleOp>>

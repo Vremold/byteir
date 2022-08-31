@@ -47,6 +47,22 @@ constexpr llvm::StringRef getArgMinName() {
   return CUSTOM_CALL_NAME_PREFIX "arg_min";
 }
 
+constexpr llvm::StringRef getReduceMaxName() {
+  return CUSTOM_CALL_NAME_PREFIX "reduce_max";
+}
+
+constexpr llvm::StringRef getReduceMinName() {
+  return CUSTOM_CALL_NAME_PREFIX "reduce_min";
+}
+
+constexpr llvm::StringRef getReduceSumName() {
+  return CUSTOM_CALL_NAME_PREFIX "reduce_sum";
+}
+
+constexpr llvm::StringRef getReduceMeanName() {
+  return CUSTOM_CALL_NAME_PREFIX "reduce_mean";
+}
+
 constexpr llvm::StringRef getLayerNormName() {
   return CUSTOM_CALL_NAME_PREFIX "layer_norm";
 }
