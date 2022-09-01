@@ -76,6 +76,31 @@ def Byre_ComputeOp : Byre_Op<"compute",
   //let skipDefaultBuilders = 1;
 }
 
+def Byre_ComputeShapeOp : Byre_Op<"compute_shape",
+    [HasParent<"func::FuncOp">,
+     DeclareOpInterfaceMethods<ByreInterface, ["getCalleeName"]>,
+     MemRefsNormalizable, NoSideEffect]> {
+  let summary = "operation which references a shape computation fn";
+  let description = [{
+    ComputeShape op references a shape computation function in runtime,
+    unlike normal computing task, shape computation task works on the
+    tensor meta(e.g. tensor shape) and doesn't aware any actual tensor data,
+    so they can be scheduled at the very first even before intermediate
+    memory allocations.
+  }];
+
+  let arguments = (ins
+    StrAttr:$shape_fn,
+    Variadic<AnyMemRef>:$operands
+  );
+
+  let results = (outs
+    Variadic<Index>
+  );
+
+  let hasVerifier = 1;
+}
+
 def Byre_CopyOp : Byre_Op<"copy",
     [HasParent<"func::FuncOp">, ByreInterface, CopyOpInterface]> {
   let summary = "copy operation";

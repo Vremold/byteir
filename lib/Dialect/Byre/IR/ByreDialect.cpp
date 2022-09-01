@@ -326,6 +326,16 @@ void ComputeOp::getEffects(
 }
 
 //===----------------------------------------------------------------------===//
+// ComputeShapeOp
+//===----------------------------------------------------------------------===/
+
+LogicalResult ComputeShapeOp::verify() {
+  return verifyOpInEntryPointFunc(this->getOperation());
+}
+
+std::string ComputeShapeOp::getCalleeName() { return "ComputeShapeOp"; }
+
+//===----------------------------------------------------------------------===//
 // CopyOp
 //===----------------------------------------------------------------------===/
 

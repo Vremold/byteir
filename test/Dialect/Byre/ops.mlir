@@ -41,6 +41,13 @@ module attributes {byre.container_module} {
   }
 // CHECK-LABEL: func.func @test_alias
 // CHECK: "byre.alias"
+
+  func.func @test_compute_shape(%arg0 : memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1 : memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+    %0 = "byre.compute_shape"(%arg0) {shape_fn = "shape_fn"} : (memref<100x?xf32>) -> index
+    return
+  }
+// CHECK-LABEL: func.func @test_compute_shape
+// CHECK: "byre.compute_shape"
 }
 
 module attributes {byre.container_module, byre.memory_space = [1, "CPU", 12, "CUDA"]} {
