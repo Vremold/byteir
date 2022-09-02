@@ -13,6 +13,7 @@
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/Support/Debug.h"
 #include <algorithm>
 #include <cstdint>
@@ -433,8 +434,15 @@ mlir::mhlo::foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
     LLVM_DEBUG(llvm::dbgs() << "concat has no static shape\n");
     return failure();
   }
-  uint64_t dim = op.dimension();
 
+  SmallDenseSet<Value> operandsSet(op->getOperands().begin(),
+                                   op->getOperands().end());
+  if (operandsSet.size() != op->getNumOperands()) {
+    LLVM_DEBUG(llvm::dbgs() << "concat has some same operands\n");
+    return failure();
+  }
+
+  uint64_t dim = op.dimension();
   SmallVector<ConcatChunk> chunks;
   bool hasMerged = false;
   for (unsigned i = 0; i < op.getNumOperands(); ++i) {

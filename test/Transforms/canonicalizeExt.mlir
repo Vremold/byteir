@@ -49,6 +49,15 @@ func.func @fold_concat_of_continuous_slices(%arg0: tensor<4x11xf32>) -> tensor<4
 // CHECK-SAME: (%[[ARG0:.*]]: tensor<4x11xf32>)
 // CHECK-NEXT: return %[[ARG0]] : tensor<4x11xf32>
 
+func.func @not_fold_concat_of_slice(%655: tensor<1x112x56x128xf16>) -> tensor<1x56x112x128xf16> {
+  %656 = "mhlo.slice"(%655) {limit_indices = dense<[1, 59, 56, 128]> : tensor<4xi64>, start_indices = dense<[0, 3, 0, 0]> : tensor<4xi64>, strides = dense<1> : tensor<4xi64>} : (tensor<1x112x56x128xf16>) -> tensor<1x56x56x128xf16>
+  %657 = "mhlo.concatenate"(%656, %656) {dimension = 2 : i64} : (tensor<1x56x56x128xf16>, tensor<1x56x56x128xf16>) -> tensor<1x56x112x128xf16>
+  func.return %657 : tensor<1x56x112x128xf16>
+}
+// CHECK-LEBEL: func.func @not_fold_concat_of_slice
+// CHECK:  "mhlo.slice"
+// CHECK:  "mhlo.concatenate"
+
 func.func @canonicalize_dynamic_conv_case0(%1212: tensor<?x10x19x4xf16>, %85: tensor<5x7x4x12xf16>) -> tensor<?x6x13x12xf16> {
   %cst_1 = arith.constant dense<0> : tensor<4xi32>
   %1214 = "mhlo.dynamic_conv"(%1212, %85, %cst_1) {batch_group_count = 1 : i64, dimension_numbers = #mhlo.conv<[b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f]>, feature_group_count = 1 : i64, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : (tensor<?x10x19x4xf16>, tensor<5x7x4x12xf16>, tensor<4xi32>) -> tensor<?x6x13x12xf16>
