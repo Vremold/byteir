@@ -33,7 +33,7 @@ enum class NamedLayout : uint32_t {
   NCDHW = 4,
   HWCN = 5,
   DHWCN = 6,
-  NCL = 7,
+  NCW = 7,
 };
 
 inline std::string stringifyEnum(NamedLayout layout) {
@@ -52,8 +52,8 @@ inline std::string stringifyEnum(NamedLayout layout) {
     return "HWCN";
   case NamedLayout::DHWCN:
     return "DHWCN";
-  case NamedLayout::NCL:
-    return "NCL";
+  case NamedLayout::NCW:
+    return "NCW";
   default:
     return "UNKNOWN";
   }

@@ -186,7 +186,7 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
   auto input_spatial_dimensions = dimension_numbers.getInputSpatialDimensions();
   if (input_spatial_dimensions.size() == 1) {
     if (input_batch_dimension == 0 && input_feature_dimension == 1) {
-      input_layout = byteir::NamedLayout::NCL;
+      input_layout = byteir::NamedLayout::NCW;
     } else {
       input_layout = byteir::NamedLayout::UNKNOWN;
     }
@@ -217,7 +217,7 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
       dimension_numbers.getOutputSpatialDimensions();
   if (output_spatial_dimensions.size() == 1) {
     if (output_batch_dimension == 0 && output_feature_dimension == 1) {
-      output_layout = byteir::NamedLayout::NCL;
+      output_layout = byteir::NamedLayout::NCW;
     } else {
       output_layout = byteir::NamedLayout::UNKNOWN;
     }
@@ -251,7 +251,7 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
   if (kernel_spatial_dimensions.size() == 1) {
     if (kernel_input_feature_dimension == 1 &&
         kernel_output_feature_dimension == 0) {
-      kernel_layout = byteir::NamedLayout::NCL;
+      kernel_layout = byteir::NamedLayout::NCW;
     } else {
       kernel_layout = byteir::NamedLayout::UNKNOWN;
     }
