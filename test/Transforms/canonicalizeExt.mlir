@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -canonicalize-ext | FileCheck %s
+// RUN: byteir-opt %s -test-mhlo-canonicalize-ext | FileCheck %s
 
 func.func @dead_custom_call() -> tensor<128xf32> {
   %c0 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
@@ -73,3 +73,22 @@ func.func @canonicalize_dynamic_conv_case1(%1212: tensor<?x10x19x4xf16>, %85: te
 }
 // CHECK-NOT: mhlo.dynamic_conv
 // CHECK:  mhlo.convolution(%arg0, %arg1) dim_numbers = [b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f], window = {stride = [1, 1], pad = {{\[}}[1, 1], [1, 1]{{\]}}, rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<?x10x19x4xf16>, tensor<5x7x4x12xf16>) -> tensor<?x8x15x12xf16>
+
+func.func @concat_const_folding_with_dup_value() -> tensor<3x2xi64> {
+  %0 = mhlo.constant dense<1> : tensor<1x2xi64>
+  %1 = mhlo.constant dense<[[2, 3]]> : tensor<1x2xi64>
+  %3 = "mhlo.concatenate"(%0, %1, %1) {dimension = 0 : i64} : (tensor<1x2xi64>, tensor<1x2xi64>, tensor<1x2xi64>) -> tensor<3x2xi64>
+  return %3 : tensor<3x2xi64>
+}
+// CHECK: %0 = mhlo.constant dense<{{\[}}[1, 1], [2, 3], [2, 3]{{\]}}> : tensor<3x2xi64>
+// CHECK: return %0 : tensor<3x2xi64>
+
+func.func @const_const_folding_case1(%arg0: tensor<1x2xi64>) -> tensor<5x2xi64> {
+  %0 = mhlo.constant dense<1> : tensor<1x2xi64>
+  %1 = mhlo.constant dense<[[2, 3]]> : tensor<1x2xi64>
+  %2 = mhlo.constant dense<[[3, 4]]> : tensor<1x2xi64>
+  %4 = "mhlo.concatenate"(%0, %1, %arg0, %2, %2) {dimension = 0 : i64} : (tensor<1x2xi64>, tensor<1x2xi64>, tensor<1x2xi64>, tensor<1x2xi64>, tensor<1x2xi64>) -> tensor<5x2xi64>
+  return %4 : tensor<5x2xi64>
+}
+// CHECK:  %0 = mhlo.constant dense<{{\[}}[1, 1], [2, 3]{{\]}}> : tensor<2x2xi64>
+// CHECK:  %1 = mhlo.constant dense<{{\[}}[3, 4], [3, 4]{{\]}}> : tensor<2x2xi64>

@@ -68,7 +68,14 @@ LogicalResult foldLargeBinaryOp(Op op, PatternRewriter &rewriter);
 LogicalResult simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
                                         PatternRewriter &rewriter);
 
-// Get all canoncializationExt on top of canoncialization
+// constant folding for mhlo.concatenate with large result
+LogicalResult foldLargeConcatenate(mhlo::ConcatenateOp op,
+                                   PatternRewriter &rewriter);
+
+// populate canonicalizeExt patterns
+void populateCanonicalizeExtPatterns(RewritePatternSet &patterns);
+
+// Get all canonicalizationExt on top of canoncialization
 void getCanonicalizationExtPatterns(RewritePatternSet &results,
                                     MLIRContext *context);
 

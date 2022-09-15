@@ -51,6 +51,7 @@ using namespace mlir;
 
 namespace byteir {
 namespace test {
+void registerTestMhloCanonicalizeExtPass();
 void registerTestConvertFuncToCustomCallPass();
 void registerTestConvertInsertionPass();
 void registerTestFuncArgRearrangementPass();
@@ -65,6 +66,7 @@ void registerTestByreOpInterfacePass();
 
 #ifdef BYTEIR_INCLUDE_TESTS
 void registerTestPasses() {
+  byteir::test::registerTestMhloCanonicalizeExtPass();
   byteir::test::registerTestConvertFuncToCustomCallPass();
   byteir::test::registerTestConvertInsertionPass();
   byteir::test::registerTestFuncArgRearrangementPass();

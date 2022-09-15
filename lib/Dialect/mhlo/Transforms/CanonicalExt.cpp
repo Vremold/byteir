@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
@@ -23,7 +24,7 @@
 #include <unordered_map>
 #include <utility>
 
-#define DEBUG_TYPE "canonical-ext"
+#define DEBUG_TYPE "mhlo-canonicalize-ext"
 
 using namespace llvm;
 using namespace mlir;
@@ -94,113 +95,6 @@ Optional<Attribute> createBroadcastedDenseElementAttr(
   }
   return None;
 }
-
-static const APFloat &addSign(const APFloat &v, Type) { return v; }
-static APSInt addSign(const APInt &v, Type t) {
-  // Add signedness information to the value, treating signless as signed.
-  return APSInt(v, t.isUnsignedInteger());
-}
-
-// this function copyed from mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
-template <typename Op, typename ElementType = Type, typename ValType,
-          typename Convert>
-static Attribute BinaryFolder(Op *op, ArrayRef<Attribute> attrs) {
-  if (!attrs[0] || !attrs[1])
-    return {};
-
-  DenseElementsAttr lhs = attrs[0].dyn_cast<DenseElementsAttr>();
-  DenseElementsAttr rhs = attrs[1].dyn_cast<DenseElementsAttr>();
-  if (!lhs || !rhs)
-    return {};
-
-  ShapedType type = op->getType().template cast<ShapedType>();
-  if (!type.hasStaticShape()) {
-    return {};
-  }
-
-  Type etype = type.getElementType();
-
-  // Evaluate for integer values.
-  if (!etype.isa<ElementType>()) {
-    return {};
-  }
-
-  // Special case for folding splats no matter how large.
-  // Only covers the case of both attrs being splats; operation-specific cases
-  // like adding a zero or multiplying by one are handled elsewhere.
-  SplatElementsAttr splatLhs = lhs.dyn_cast<SplatElementsAttr>();
-  SplatElementsAttr splatRhs = rhs.dyn_cast<SplatElementsAttr>();
-  if (splatLhs && splatRhs) {
-    auto signedLhs = addSign(splatLhs.getSplatValue<ValType>(), etype);
-    auto signedRhs = addSign(splatRhs.getSplatValue<ValType>(), etype);
-    FailureOr<decltype(signedLhs)> result(Convert()(signedLhs, signedRhs));
-    return succeeded(result) ? SplatElementsAttr::get(type, *result)
-                             : Attribute();
-  }
-
-  SmallVector<ValType, 6> values;
-  values.reserve(lhs.getNumElements());
-  for (const auto zip :
-       llvm::zip(lhs.getValues<ValType>(), rhs.getValues<ValType>())) {
-    auto signedLhs = addSign(std::get<0>(zip), etype);
-    auto signedRhs = addSign(std::get<1>(zip), etype);
-    FailureOr<decltype(signedLhs)> result(Convert()(signedLhs, signedRhs));
-    if (failed(result)) {
-      return {};
-    }
-    values.push_back(std::move(*result));
-  }
-
-  return DenseElementsAttr::get(type, values);
-}
-
-template <typename T> struct Divide : std::divides<T> {};
-
-template <> struct Divide<APSInt> {
-  FailureOr<APSInt> operator()(const APSInt &a, const APSInt &b) const {
-    if (b.isZero())
-      return failure();
-    return a / b;
-  }
-};
-
-template <typename T> struct Remainder : std::modulus<T> {};
-
-template <> struct Remainder<APSInt> {
-  FailureOr<APSInt> operator()(const APSInt &a, const APSInt &b) const {
-    if (b.isZero())
-      return failure();
-    return a % b;
-  }
-};
-
-template <> struct Remainder<APFloat> {
-  APFloat operator()(const APFloat &a, const APFloat &b) const {
-    APFloat result(a);
-    result.remainder(b);
-    return result;
-  }
-};
-
-template <typename T> struct Max {
-  T operator()(const T &a, const T &b) const { return std::max<T>(a, b); }
-};
-
-template <typename T> struct Min {
-  T operator()(const T &a, const T &b) const { return std::min<T>(a, b); }
-};
-
-template <typename T> struct And {
-  T operator()(const T &a, const T &b) const { return a & b; }
-};
-
-template <typename T> struct Or {
-  T operator()(const T &a, const T &b) const { return a | b; }
-};
-
-template <typename T> struct Xor {
-  T operator()(const T &a, const T &b) const { return a ^ b; }
-};
 
 } // namespace
 
@@ -517,6 +411,118 @@ mlir::mhlo::foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
   return failure();
 }
 
+namespace {
+// functions in this namespace copied from
+// mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
+
+static const APFloat &addSign(const APFloat &v, Type) { return v; }
+static APSInt addSign(const APInt &v, Type t) {
+  // Add signedness information to the value, treating signless as signed.
+  return APSInt(v, t.isUnsignedInteger());
+}
+
+template <typename Op, typename ElementType = Type, typename ValType,
+          typename Convert>
+static Attribute BinaryFolder(Op *op, ArrayRef<Attribute> attrs) {
+  if (!attrs[0] || !attrs[1])
+    return {};
+
+  DenseElementsAttr lhs = attrs[0].dyn_cast<DenseElementsAttr>();
+  DenseElementsAttr rhs = attrs[1].dyn_cast<DenseElementsAttr>();
+  if (!lhs || !rhs)
+    return {};
+
+  ShapedType type = op->getType().template cast<ShapedType>();
+  if (!type.hasStaticShape()) {
+    return {};
+  }
+
+  Type etype = type.getElementType();
+
+  // Evaluate for integer values.
+  if (!etype.isa<ElementType>()) {
+    return {};
+  }
+
+  // Special case for folding splats no matter how large.
+  // Only covers the case of both attrs being splats; operation-specific cases
+  // like adding a zero or multiplying by one are handled elsewhere.
+  SplatElementsAttr splatLhs = lhs.dyn_cast<SplatElementsAttr>();
+  SplatElementsAttr splatRhs = rhs.dyn_cast<SplatElementsAttr>();
+  if (splatLhs && splatRhs) {
+    auto signedLhs = addSign(splatLhs.getSplatValue<ValType>(), etype);
+    auto signedRhs = addSign(splatRhs.getSplatValue<ValType>(), etype);
+    FailureOr<decltype(signedLhs)> result(Convert()(signedLhs, signedRhs));
+    return succeeded(result) ? SplatElementsAttr::get(type, *result)
+                             : Attribute();
+  }
+
+  SmallVector<ValType, 6> values;
+  values.reserve(lhs.getNumElements());
+  for (const auto zip :
+       llvm::zip(lhs.getValues<ValType>(), rhs.getValues<ValType>())) {
+    auto signedLhs = addSign(std::get<0>(zip), etype);
+    auto signedRhs = addSign(std::get<1>(zip), etype);
+    FailureOr<decltype(signedLhs)> result(Convert()(signedLhs, signedRhs));
+    if (failed(result)) {
+      return {};
+    }
+    values.push_back(std::move(*result));
+  }
+
+  return DenseElementsAttr::get(type, values);
+}
+
+template <typename T> struct Divide : std::divides<T> {};
+
+template <> struct Divide<APSInt> {
+  FailureOr<APSInt> operator()(const APSInt &a, const APSInt &b) const {
+    if (b.isZero())
+      return failure();
+    return a / b;
+  }
+};
+
+template <typename T> struct Remainder : std::modulus<T> {};
+
+template <> struct Remainder<APSInt> {
+  FailureOr<APSInt> operator()(const APSInt &a, const APSInt &b) const {
+    if (b.isZero())
+      return failure();
+    return a % b;
+  }
+};
+
+template <> struct Remainder<APFloat> {
+  APFloat operator()(const APFloat &a, const APFloat &b) const {
+    APFloat result(a);
+    result.remainder(b);
+    return result;
+  }
+};
+
+template <typename T> struct Max {
+  T operator()(const T &a, const T &b) const { return std::max<T>(a, b); }
+};
+
+template <typename T> struct Min {
+  T operator()(const T &a, const T &b) const { return std::min<T>(a, b); }
+};
+
+template <typename T> struct And {
+  T operator()(const T &a, const T &b) const { return a & b; }
+};
+
+template <typename T> struct Or {
+  T operator()(const T &a, const T &b) const { return a | b; }
+};
+
+template <typename T> struct Xor {
+  T operator()(const T &a, const T &b) const { return a ^ b; }
+};
+
+} // namespace
+
 template <typename Op, template <typename> typename Func>
 LogicalResult mlir::mhlo::foldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
   auto lhsOp = op.lhs().template getDefiningOp<mhlo::ConstantOp>();
@@ -546,6 +552,7 @@ LogicalResult mlir::mhlo::foldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
   return success();
 }
 
+// TODO(lyq): push this pattern back to upstream
 // mhlo.dynamic_conv => mhlo.convolution canonicalization
 LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
                                                     PatternRewriter &rewriter) {
@@ -579,6 +586,108 @@ LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
   return failure();
 }
 
+namespace {
+// modified from mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
+template <typename T>
+static DenseElementsAttr foldConcatenateHelper(int64_t axis, Type elementType,
+                                               ArrayRef<int64_t> shape,
+                                               ArrayRef<Attribute> operands) {
+  size_t topSize = 1;
+  for (int i = 0, e = axis; i < e; i++) {
+    topSize = topSize * shape[i];
+  }
+
+  SmallVector<T, 6> values;
+  for (size_t i = 0; i < topSize; i++) {
+    for (auto operand : operands) {
+      DenseElementsAttr attr = operand.cast<DenseElementsAttr>();
+      size_t bottomSize = attr.getNumElements() / topSize;
+      auto iter = attr.getValues<T>().begin() + i * bottomSize;
+      values.append(iter, iter + bottomSize);
+    }
+  }
+
+  return DenseElementsAttr::get(RankedTensorType::get(shape, elementType),
+                                values);
+}
+
+} // namespace
+
+LogicalResult mlir::mhlo::foldLargeConcatenate(mhlo::ConcatenateOp op,
+                                               PatternRewriter &rewriter) {
+  LLVM_DEBUG(llvm::dbgs() << "foldLargeConcatenate\n");
+  auto numOperands = op->getNumOperands();
+  int index = -1;
+  for (size_t i = 0; i < numOperands - 1; i++) {
+    if (isa_and_nonnull<mhlo::ConstantOp>(op.val()[i].getDefiningOp()) &&
+        isa_and_nonnull<mhlo::ConstantOp>(op.val()[i + 1].getDefiningOp())) {
+      index = i;
+      break;
+    }
+  }
+  if (index == -1) {
+    LLVM_DEBUG(llvm::dbgs() << "index is -1\n");
+    return failure();
+  }
+
+  DenseElementsAttr firstConst = op.val()[index]
+                                     .getDefiningOp<mhlo::ConstantOp>()
+                                     .value()
+                                     .cast<DenseElementsAttr>();
+  DenseElementsAttr secondConst = op.val()[index + 1]
+                                      .getDefiningOp<mhlo::ConstantOp>()
+                                      .value()
+                                      .cast<DenseElementsAttr>();
+  llvm::SmallVector<int64_t> newConstShape =
+      llvm::to_vector(firstConst.getType().getShape());
+  newConstShape[op.dimension()] +=
+      secondConst.getType().getShape()[op.dimension()];
+  DenseElementsAttr newConstAttr = nullptr;
+  if (firstConst.getElementType().isa<FloatType>()) {
+    newConstAttr = foldConcatenateHelper<APFloat>(
+        op.dimension(), firstConst.getElementType(), newConstShape,
+        {firstConst, secondConst});
+  } else if (firstConst.getElementType().isa<IntegerType>()) {
+    newConstAttr = foldConcatenateHelper<APInt>(
+        op.dimension(), firstConst.getElementType(), newConstShape,
+        {firstConst, secondConst});
+  }
+
+  if (!newConstAttr) {
+    LLVM_DEBUG(llvm::dbgs() << "has no new constant attribute\n");
+    return failure();
+  }
+  mhlo::ConstantOp newConstOp =
+      rewriter.create<mhlo::ConstantOp>(op->getLoc(), newConstAttr);
+  llvm::SmallVector<Value> newOperands;
+  for (size_t i = 0; i < index; i++) {
+    newOperands.push_back(op.val()[i]);
+  }
+  newOperands.push_back(newConstOp.output());
+  for (size_t i = index + 2; i < numOperands; i++) {
+    newOperands.push_back(op.val()[i]);
+  }
+  mhlo::ConcatenateOp newConcatOp = rewriter.create<mhlo::ConcatenateOp>(
+      op->getLoc(), op.getType(), newOperands, op.dimension());
+  rewriter.replaceOp(op, newConcatOp.getResult());
+  return success();
+}
+
+void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
+  patterns.add(mlir::mhlo::foldBroadcastInDim);
+  patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
+  patterns.add(mlir::mhlo::foldShapeBroadcast);
+  patterns.add(mlir::mhlo::simplifyDynamicConvToConv);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::SubtractOp, std::minus>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::DivOp, Divide>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::RemOp, Remainder>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MaxOp, Max>);
+  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MinOp, Min>);
+  patterns.add(mlir::mhlo::foldLargeConcatenate);
+}
+
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,
                                                 MLIRContext *ctx) {
 
@@ -597,15 +706,5 @@ void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,
   }
 
   // add our extension
-  patterns.add(mlir::mhlo::foldBroadcastInDim);
-  patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
-  patterns.add(mlir::mhlo::foldShapeBroadcast);
-  patterns.add(mlir::mhlo::simplifyDynamicConvToConv);
-  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
-  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
-  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::SubtractOp, std::minus>);
-  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::DivOp, Divide>);
-  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::RemOp, Remainder>);
-  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MaxOp, Max>);
-  patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MinOp, Min>);
+  populateCanonicalizeExtPatterns(patterns);
 }
