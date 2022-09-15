@@ -72,6 +72,9 @@ LogicalResult simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
 LogicalResult foldLargeConcatenate(mhlo::ConcatenateOp op,
                                    PatternRewriter &rewriter);
 
+LogicalResult foldTransposeNonSplat(mhlo::TransposeOp op,
+                                    PatternRewriter &rewriter);
+
 // populate canonicalizeExt patterns
 void populateCanonicalizeExtPatterns(RewritePatternSet &patterns);
 

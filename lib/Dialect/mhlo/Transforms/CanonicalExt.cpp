@@ -617,8 +617,8 @@ LogicalResult mlir::mhlo::foldLargeConcatenate(mhlo::ConcatenateOp op,
                                                PatternRewriter &rewriter) {
   LLVM_DEBUG(llvm::dbgs() << "foldLargeConcatenate\n");
   auto numOperands = op->getNumOperands();
-  int index = -1;
-  for (size_t i = 0; i < numOperands - 1; i++) {
+  int64_t index = -1;
+  for (int64_t i = 0; i < numOperands - 1; i++) {
     if (isa_and_nonnull<mhlo::ConstantOp>(op.val()[i].getDefiningOp()) &&
         isa_and_nonnull<mhlo::ConstantOp>(op.val()[i + 1].getDefiningOp())) {
       index = i;
@@ -660,16 +660,106 @@ LogicalResult mlir::mhlo::foldLargeConcatenate(mhlo::ConcatenateOp op,
   mhlo::ConstantOp newConstOp =
       rewriter.create<mhlo::ConstantOp>(op->getLoc(), newConstAttr);
   llvm::SmallVector<Value> newOperands;
-  for (size_t i = 0; i < index; i++) {
+  for (int64_t i = 0; i < index; i++) {
     newOperands.push_back(op.val()[i]);
   }
   newOperands.push_back(newConstOp.output());
-  for (size_t i = index + 2; i < numOperands; i++) {
+  for (int64_t i = index + 2; i < numOperands; i++) {
     newOperands.push_back(op.val()[i]);
   }
   mhlo::ConcatenateOp newConcatOp = rewriter.create<mhlo::ConcatenateOp>(
       op->getLoc(), op.getType(), newOperands, op.dimension());
   rewriter.replaceOp(op, newConcatOp.getResult());
+  return success();
+}
+
+namespace {
+template <typename T>
+DenseElementsAttr foldTransposeHelper(mhlo::TransposeOp op,
+                                      DenseElementsAttr valueAttr) {
+  llvm::SmallVector<int64_t> permutation =
+      llvm::to_vector(op.permutation().getValues<int64_t>());
+  auto inputShape = op.operand().getType().cast<ShapedType>().getShape();
+  auto outputShape = op.getType().cast<ShapedType>().getShape();
+
+  llvm::SmallVector<int64_t> strides(permutation.size(), 1);
+  llvm::SmallVector<int64_t> outputPermutation(permutation.size(), -1);
+  for (int64_t i = permutation.size() - 2; i >= 0; i--) {
+    strides[i] = strides[i + 1] * inputShape[i + 1];
+  }
+  for (int64_t i = 0; i < permutation.size(); i++) {
+    outputPermutation[permutation[i]] = i;
+  }
+
+  SmallVector<T> values;
+  // FIXME: need general implementation
+  if (permutation.size() == 2) {
+    for (int64_t i = 0; i < outputShape[0]; i++) {
+      for (int64_t j = 0; j < outputShape[1]; j++) {
+        int64_t index = i * strides[outputPermutation[0]] +
+                        j * strides[outputPermutation[1]];
+        values.push_back(*(valueAttr.getValues<T>().begin() + index));
+      }
+    }
+  } else if (permutation.size() == 3) {
+    for (int64_t i = 0; i < outputShape[0]; i++) {
+      for (int64_t j = 0; j < outputShape[1]; j++) {
+        for (int64_t k = 0; k < outputShape[2]; k++) {
+          int64_t index = i * strides[outputPermutation[0]] +
+                          j * strides[outputPermutation[1]] +
+                          k * strides[outputPermutation[2]];
+          values.push_back(*(valueAttr.getValues<T>().begin() + index));
+        }
+      }
+    }
+  } else if (permutation.size() == 4) {
+    for (int64_t i = 0; i < outputShape[0]; i++) {
+      for (int64_t j = 0; j < outputShape[1]; j++) {
+        for (int64_t k = 0; k < outputShape[2]; k++) {
+          for (int64_t t = 0; t < outputShape[3]; t++) {
+            int64_t index = i * strides[outputPermutation[0]] +
+                            j * strides[outputPermutation[1]] +
+                            k * strides[outputPermutation[2]] +
+                            t * strides[outputPermutation[3]];
+            values.push_back(*(valueAttr.getValues<T>().begin() + index));
+          }
+        }
+      }
+    }
+  } else {
+    return nullptr;
+  }
+
+  return DenseElementsAttr::get(op.getType(), values);
+}
+} // namespace
+
+LogicalResult mlir::mhlo::foldTransposeNonSplat(mhlo::TransposeOp op,
+                                                PatternRewriter &rewriter) {
+  if (!llvm::isa_and_nonnull<mhlo::ConstantOp>(op.operand().getDefiningOp())) {
+    return failure();
+  }
+  DenseElementsAttr valueAttr = op.operand()
+                                    .getDefiningOp<mhlo::ConstantOp>()
+                                    .value()
+                                    .cast<DenseElementsAttr>();
+  if (valueAttr.isSplat()) {
+    return failure();
+  }
+
+  DenseElementsAttr newValueAttr = nullptr;
+  if (valueAttr.getElementType().isa<FloatType>()) {
+    newValueAttr = foldTransposeHelper<APFloat>(op, valueAttr);
+  } else if (valueAttr.getElementType().isa<IntegerType>()) {
+    newValueAttr = foldTransposeHelper<APInt>(op, valueAttr);
+  }
+
+  if (!newValueAttr) {
+    return failure();
+  }
+  mhlo::ConstantOp newConstOp =
+      rewriter.create<mhlo::ConstantOp>(op->getLoc(), newValueAttr);
+  rewriter.replaceOp(op, newConstOp.output());
   return success();
 }
 
@@ -686,6 +776,7 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MaxOp, Max>);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MinOp, Min>);
   patterns.add(mlir::mhlo::foldLargeConcatenate);
+  patterns.add(mlir::mhlo::foldTransposeNonSplat);
 }
 
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,
