@@ -556,34 +556,33 @@ LogicalResult mlir::mhlo::foldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
 // mhlo.dynamic_conv => mhlo.convolution canonicalization
 LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
                                                     PatternRewriter &rewriter) {
-  DenseIntElementsAttr paddingAttr;
-  if (!matchPattern(op.d_padding(), m_Constant(&paddingAttr))) {
+  DenseIntElementsAttr dPaddingAttr;
+  if (!matchPattern(op.d_padding(), m_Constant(&dPaddingAttr))) {
     return failure();
   }
-  if (paddingAttr.isSplat() && paddingAttr.getSplatValue<APInt>().isZero()) {
-    mhlo::ConvolutionOp convOp = rewriter.create<mhlo::ConvolutionOp>(
-        op->getLoc(), op.getType(), llvm::ArrayRef<Value>{op.lhs(), op.rhs()},
-        op->getAttrs());
-    rewriter.replaceOp(op, convOp.getResult());
-    return success();
-  } else {
-    assert(!op->hasAttr("padding"));
-    auto padding = llvm::to_vector(
-        llvm::map_range(paddingAttr.getValues<APInt>(),
-                        [&](APInt i) { return i.getSExtValue(); }));
-    SmallVector<NamedAttribute> attrs = llvm::to_vector(op->getAttrs());
-    attrs.push_back(NamedAttribute(
-        rewriter.getStringAttr("padding"),
-        getI64ElementsAttr(padding,
-                           {2, static_cast<int64_t>(padding.size()) / 2},
-                           &rewriter)));
-    mhlo::ConvolutionOp convOp = rewriter.create<mhlo::ConvolutionOp>(
-        op->getLoc(), op.getType(), llvm::ArrayRef<Value>{op.lhs(), op.rhs()},
-        attrs);
-    rewriter.replaceOp(op, convOp.getResult());
-    return success();
+  size_t spatialDim = op.dimension_numbers().getInputSpatialDimensions().size();
+  assert(dPaddingAttr.size() == spatialDim * 2);
+
+  llvm::SmallVector<int64_t> newPadding = llvm::to_vector(
+      llvm::map_range(dPaddingAttr.getValues<APInt>(),
+                      [&](APInt i) { return i.getSExtValue(); }));
+  if (op.padding().hasValue()) {
+    DenseIntElementsAttr paddingAttr = op.padding().getValue();
+    assert(paddingAttr.size() == spatialDim * 2);
+
+    for (const auto &it : llvm::enumerate(paddingAttr.getValues<int64_t>())) {
+      newPadding[it.index()] += it.value();
+    }
   }
-  return failure();
+
+  mhlo::ConvolutionOp convOp = rewriter.create<mhlo::ConvolutionOp>(
+      op->getLoc(), op.getType(), llvm::ArrayRef<Value>{op.lhs(), op.rhs()},
+      op->getAttrs());
+  convOp.paddingAttr(DenseIntElementsAttr::get(
+      RankedTensorType::get({spatialDim, 2}, rewriter.getI64Type()),
+      newPadding));
+  rewriter.replaceOp(op, convOp.getResult());
+  return success();
 }
 
 // TODO(wjw): push this back to mlir-hlo upstream
@@ -694,55 +693,39 @@ DenseElementsAttr foldTransposeHelper(mhlo::TransposeOp op,
                                       DenseElementsAttr valueAttr) {
   llvm::SmallVector<int64_t> permutation =
       llvm::to_vector(op.permutation().getValues<int64_t>());
+  int64_t rank = permutation.size();
   auto inputShape = op.operand().getType().cast<ShapedType>().getShape();
-  auto outputShape = op.getType().cast<ShapedType>().getShape();
+  auto outputType = op.getType().cast<ShapedType>();
+  auto outputShape = outputType.getShape();
 
-  llvm::SmallVector<int64_t> strides(permutation.size(), 1);
-  llvm::SmallVector<int64_t> outputPermutation(permutation.size(), -1);
-  for (int64_t i = permutation.size() - 2; i >= 0; i--) {
+  llvm::SmallVector<int64_t> strides(rank, 1);
+  llvm::SmallVector<int64_t> outputStrides(rank, 1);
+  llvm::SmallVector<int64_t> outputPermutation(rank, -1);
+  for (int64_t i = rank - 2; i >= 0; i--) {
     strides[i] = strides[i + 1] * inputShape[i + 1];
+    outputStrides[i] = outputStrides[i + 1] * outputShape[i + 1];
   }
-  for (int64_t i = 0; i < permutation.size(); i++) {
+  for (int64_t i = 0; i < rank; i++) {
     outputPermutation[permutation[i]] = i;
   }
 
+  auto calculateOutputIndices = [&](int64_t index) -> SmallVector<int64_t> {
+    SmallVector<int64_t> indices(rank, -1);
+    for (int64_t i = 0; i < rank; i++) {
+      indices[i] = index / outputStrides[i];
+      index = index % outputStrides[i];
+    }
+    return indices;
+  };
+
   SmallVector<T> values;
-  // FIXME: need general implementation
-  if (permutation.size() == 2) {
-    for (int64_t i = 0; i < outputShape[0]; i++) {
-      for (int64_t j = 0; j < outputShape[1]; j++) {
-        int64_t index = i * strides[outputPermutation[0]] +
-                        j * strides[outputPermutation[1]];
-        values.push_back(*(valueAttr.getValues<T>().begin() + index));
-      }
+  for (int64_t i = 0; i < outputType.getNumElements(); i++) {
+    auto indices = calculateOutputIndices(i);
+    int64_t inputIndex = 0;
+    for (int64_t k = 0; k < rank; k++) {
+      inputIndex += indices[k] * strides[outputPermutation[k]];
     }
-  } else if (permutation.size() == 3) {
-    for (int64_t i = 0; i < outputShape[0]; i++) {
-      for (int64_t j = 0; j < outputShape[1]; j++) {
-        for (int64_t k = 0; k < outputShape[2]; k++) {
-          int64_t index = i * strides[outputPermutation[0]] +
-                          j * strides[outputPermutation[1]] +
-                          k * strides[outputPermutation[2]];
-          values.push_back(*(valueAttr.getValues<T>().begin() + index));
-        }
-      }
-    }
-  } else if (permutation.size() == 4) {
-    for (int64_t i = 0; i < outputShape[0]; i++) {
-      for (int64_t j = 0; j < outputShape[1]; j++) {
-        for (int64_t k = 0; k < outputShape[2]; k++) {
-          for (int64_t t = 0; t < outputShape[3]; t++) {
-            int64_t index = i * strides[outputPermutation[0]] +
-                            j * strides[outputPermutation[1]] +
-                            k * strides[outputPermutation[2]] +
-                            t * strides[outputPermutation[3]];
-            values.push_back(*(valueAttr.getValues<T>().begin() + index));
-          }
-        }
-      }
-    }
-  } else {
-    return nullptr;
+    values.push_back(*(valueAttr.getValues<T>().begin() + inputIndex));
   }
 
   return DenseElementsAttr::get(op.getType(), values);
