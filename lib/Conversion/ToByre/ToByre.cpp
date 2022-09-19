@@ -61,6 +61,15 @@ bool isArgAlias(SmallVectorImpl<Value> &operands, Value src, Value dst) {
   }
   return is_arg_alias;
 }
+
+// return whether given constant should relocate to function arg
+template <typename ConstantOp>
+bool shouldConstantRelocate(ConstantOp constant) {
+  return false;
+}
+bool shouldConstantRelocate(lmhlo::ConstantOp op) {
+  return !op.getValue().isSplat();
+}
 } // namespace
 
 namespace mlir {
@@ -507,19 +516,20 @@ public:
   }
 };
 
+template <typename CustomCallOp>
 class ConvertCustomCallOpToByrePattern
-    : public OpConversionPattern<lmhlo::CustomCallOp> {
+    : public OpConversionPattern<CustomCallOp> {
 public:
   ConvertCustomCallOpToByrePattern(MLIRContext *ctx, bool /*appendArgTypes*/)
-      : OpConversionPattern<lmhlo::CustomCallOp>(ctx) {}
+      : OpConversionPattern<CustomCallOp>(ctx) {}
 
   LogicalResult
-  matchAndRewrite(lmhlo::CustomCallOp op, lmhlo::CustomCallOp::Adaptor adaptor,
+  matchAndRewrite(CustomCallOp op, typename CustomCallOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     mlir::DictionaryAttr dictAttr;
     auto backendConfig = op.getBackendConfig();
     if (!backendConfig.empty()) {
-      auto attrs = mlir::parseAttribute(backendConfig, op->getContext());
+      Attribute attrs = mlir::parseAttribute(backendConfig, op->getContext());
       if (!attrs || !attrs.isa<mlir::DictionaryAttr>())
         return failure();
       dictAttr = attrs.cast<mlir::DictionaryAttr>();
@@ -855,20 +865,21 @@ public:
   }
 };
 
-class ConvertConstOpToByrePattern
-    : public OpConversionPattern<lmhlo::ConstantOp> {
+template <typename ConstantOp>
+class ConvertConstOpToByrePattern : public OpConversionPattern<ConstantOp> {
 public:
   ConvertConstOpToByrePattern(MLIRContext *ctx, bool /*appendArgTypes*/)
-      : OpConversionPattern<lmhlo::ConstantOp>(ctx) {}
+      : OpConversionPattern<ConstantOp>(ctx) {}
 
   LogicalResult
-  matchAndRewrite(lmhlo::ConstantOp op, lmhlo::ConstantOp::Adaptor adaptor,
+  matchAndRewrite(ConstantOp op, typename ConstantOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    if (!op.getValue().isSplat())
+    // it should be already relocated to function arg
+    if (shouldConstantRelocate(op))
       return failure();
 
     // FIXME: only allow allocated memref for now
-    auto alloc = op.getOutput().getDefiningOp<memref::AllocOp>();
+    auto alloc = op.getOutput().template getDefiningOp<memref::AllocOp>();
     if (!alloc)
       return failure();
 
@@ -1124,7 +1135,7 @@ static inline void relocateFuncOpConstantLikeForLmhlo(func::FuncOp func,
       func,
       [&](mlir::Operation *op) {
         if (auto constant = dyn_cast<lmhlo::ConstantOp>(op)) {
-          return !(constant.getValue().isSplat());
+          return shouldConstantRelocate(constant);
         }
         return false;
       },
@@ -1286,7 +1297,9 @@ void ConvertLmhloToByrePass::runOnOperation() {
   {
     ConversionTarget target(getContext());
     target.addLegalDialect<byre::ByreDialect, memref::MemRefDialect>();
-    target.addIllegalDialect<lace::LaceDialect>();
+    target.addDynamicallyLegalDialect<lace::LaceDialect>([](Operation *op) {
+      return !llvm::isa<lace::AliasLikeOpInterface>(op);
+    });
     target.addIllegalOp<memref::ViewOp, memref::CopyOp>();
     RewritePatternSet patterns(&ctx);
     populateViewLikeToByreConversionPatterns(patterns);
@@ -1299,13 +1312,12 @@ void ConvertLmhloToByrePass::runOnOperation() {
   // Below rewrite Lmhlo ops
   {
     ConversionTarget target(getContext());
-    target
-        .addLegalDialect<ace::AceDialect, byre::ByreDialect, func::FuncDialect,
-                         memref::MemRefDialect, scf::SCFDialect>();
+    target.addLegalDialect<byre::ByreDialect, func::FuncDialect,
+                           memref::MemRefDialect, scf::SCFDialect>();
 
     target.addLegalOp<ModuleOp, func::FuncOp, func::ReturnOp>();
 
-    target.addIllegalDialect<LmhloDialect>();
+    target.addIllegalDialect<LmhloDialect, lace::LaceDialect>();
 
     RewritePatternSet patterns(&ctx);
     populateLmhloToByreConversionPatterns(patterns, lmhloSupportMap,
@@ -1347,8 +1359,10 @@ void mlir::populateLmhloToByreConversionPatterns(
                  supportMap, 
                  appendArgTypes);
 
-  patterns.add<ConvertConstOpToByrePattern,
-               ConvertCustomCallOpToByrePattern,
+  patterns.add<ConvertConstOpToByrePattern<lmhlo::ConstantOp>,
+               ConvertConstOpToByrePattern<lace::ConstOp>,
+               ConvertCustomCallOpToByrePattern<lmhlo::CustomCallOp>,
+               ConvertCustomCallOpToByrePattern<lace::CustomCallOp>,
                ConvertDotOpToByrePattern,
                ConvertConvOpToByrePattern,
                ConvertReduceOpToByrePattern,

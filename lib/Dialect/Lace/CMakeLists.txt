@@ -5,6 +5,7 @@ add_mlir_dialect_library(MLIRLaceDialect
   ${BYTEIR_SRC_INCLUDE_DIR}/mlir/Dialect/Lace
 
   DEPENDS
+  MLIRAceOpsIncGen # ace types
   MLIRLaceOpsIncGen
   MLIRLaceOpInterfacesIncGen
 
@@ -12,4 +13,5 @@ add_mlir_dialect_library(MLIRLaceDialect
   MLIRIR
   MLIRSupport
   MLIRViewLikeInterface
+  MLIRAceDialect
 )

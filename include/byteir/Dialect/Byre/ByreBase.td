@@ -15,6 +15,7 @@
 
 include "mlir/IR/OpBase.td"
 include "mlir/IR/EnumAttr.td"
+include "mlir/IR/BuiltinTypeInterfaces.td"
 
 //===----------------------------------------------------------------------===//
 // Byre Dialect.
@@ -60,9 +61,51 @@ def Byre_Dialect : Dialect {
   }];
 }
 
+//===----------------------------------------------------------------------===//
+// Byre Types.
+//===----------------------------------------------------------------------===//
+
 def Byre_AsyncToken : DialectType<
   Byre_Dialect, CPred<"$_self.isa<::mlir::byre::AsyncTokenType>()">, "async token type">,
              BuildableType<"mlir::byre::AsyncTokenType::get($_builder.getContext())">;
+
+//===----------------------------------------------------------------------===//
+// Byre Attributes.
+//===----------------------------------------------------------------------===//
+
+def Byre_ArgType_None : I32BitEnumAttrCaseNone<"None">;            // 0
+def Byre_ArgType_Input : I32BitEnumAttrCaseBit<"Input", 0x0000>;   // 1
+def Byre_ArgType_Output : I32BitEnumAttrCaseBit<"Output", 0x0001>; // 2
+def Byre_ArgType_Weight : I32BitEnumAttrCaseBit<"Weight", 0x0002>; // 4
+
+def Byre_ArgTypeAttr : I32BitEnumAttr<
+    "EntryFuncArgType",
+    "entry function argument type", [
+        Byre_ArgType_None,
+        Byre_ArgType_Input,
+        Byre_ArgType_Output,
+        Byre_ArgType_Weight
+    ]> {
+  let cppNamespace = "::mlir::byre";
+}
+
+def Byre_MemoryEffect_None : I32BitEnumAttrCaseNone<"None">;           // 0
+def Byre_MemoryEffect_Read : I32BitEnumAttrCaseBit<"Read", 0x0000>;    // 1
+def Byre_MemoryEffect_Write : I32BitEnumAttrCaseBit<"Write", 0x0001>;  // 2
+
+def Byre_MemoryEffectAttr : I32BitEnumAttr<
+    "MemoryEffect",
+    "memory effect", [
+      Byre_MemoryEffect_None,
+      Byre_MemoryEffect_Read,
+      Byre_MemoryEffect_Write
+    ]> {
+  let cppNamespace = "::mlir::byre";
+}
+
+//===----------------------------------------------------------------------===//
+// Byre OpInterfaces.
+//===----------------------------------------------------------------------===//
 
 def Byre_AsyncOpInterface : OpInterface<"AsyncOpInterface"> {
   let description = [{
@@ -141,36 +184,6 @@ def ByreInterface : OpInterface<"ByreOp"> {
     // operand with MemoryEffect::Write would be treated as output additionally
     SmallVector<Value> getOutputs();
   }];
-}
-
-def Byre_ArgType_None : I32BitEnumAttrCaseNone<"None">;            // 0
-def Byre_ArgType_Input : I32BitEnumAttrCaseBit<"Input", 0x0000>;   // 1
-def Byre_ArgType_Output : I32BitEnumAttrCaseBit<"Output", 0x0001>; // 2
-def Byre_ArgType_Weight : I32BitEnumAttrCaseBit<"Weight", 0x0002>; // 4
-
-def Byre_ArgTypeAttr : I32BitEnumAttr<
-    "EntryFuncArgType",
-    "entry function argument type", [
-        Byre_ArgType_None,
-        Byre_ArgType_Input,
-        Byre_ArgType_Output,
-        Byre_ArgType_Weight
-    ]> {
-  let cppNamespace = "::mlir::byre";
-}
-
-def Byre_MemoryEffect_None : I32BitEnumAttrCaseNone<"None">;           // 0
-def Byre_MemoryEffect_Read : I32BitEnumAttrCaseBit<"Read", 0x0000>;    // 1
-def Byre_MemoryEffect_Write : I32BitEnumAttrCaseBit<"Write", 0x0001>;  // 2
-
-def Byre_MemoryEffectAttr : I32BitEnumAttr<
-    "MemoryEffect",
-    "memory effect", [
-      Byre_MemoryEffect_None,
-      Byre_MemoryEffect_Read,
-      Byre_MemoryEffect_Write
-    ]> {
-  let cppNamespace = "::mlir::byre";
 }
 
 #endif // BYRE_BASE

@@ -9,6 +9,7 @@
 #define MLIR_DIALECT_LACE_LACEDIALECT_H
 
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/Interfaces/SideEffectInterfaces.h"
 #include "mlir/Interfaces/ViewLikeInterface.h"
 
 #include "byteir/Dialect/Lace/LaceOpInterfaces.h.inc"

@@ -13,6 +13,7 @@
 #ifndef LACE_BASE
 #define LACE_BASE
 
+include "byteir/Dialect/Ace/AceBase.td" // include Ace types
 include "mlir/IR/OpBase.td"
 
 //===----------------------------------------------------------------------===//
@@ -24,8 +25,21 @@ include "mlir/IR/OpBase.td"
 def Lace_Dialect : Dialect {
   let name = "lace";
   let cppNamespace = "::mlir::lace";
+
+  let emitAccessorPrefix = kEmitAccessorPrefix_Both; // TODO: change to prefix
 }
 
+//===----------------------------------------------------------------------===//
+// Lace Types.
+//===----------------------------------------------------------------------===//
+
+def Lace_StringType : TypeAlias<Ace_StringType, "string type in lace dialect">;
+
+def Lace_BufferType : MemRefOf<[AnyFloat, AnyInteger, Lace_StringType]>;
+
+//===----------------------------------------------------------------------===//
+// Lace OpInterfaces.
+//===----------------------------------------------------------------------===//
 
 def Lace_AliasLikeOpInterface : OpInterface<"AliasLikeOpInterface"> {
   let cppNamespace = "::mlir::lace";

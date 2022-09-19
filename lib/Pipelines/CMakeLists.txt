@@ -35,6 +35,7 @@ add_mlir_library(ByteIRPipelines
   MLIRMemRefDialect
   MLIRSCFDialect
   MLIRTransforms
+  ByteIRAcePasses
   ByteIRByrePasses
   ByteIRHloToLhlo
   ByteIRLmhloToLace

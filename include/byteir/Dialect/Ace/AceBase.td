@@ -15,6 +15,7 @@
 
 include "mlir/IR/OpBase.td"
 include "mlir/IR/AttrTypeBase.td"
+include "mlir/IR/BuiltinTypeInterfaces.td"
 
 //===----------------------------------------------------------------------===//
 // Ace Dialect.
@@ -34,11 +35,12 @@ def Ace_Dialect : Dialect {
 // Ace Type.
 //===----------------------------------------------------------------------===//
 
-class Ace_Type<string name, string typeMnemonic> : TypeDef<Ace_Dialect, name> {
+class Ace_Type<string name, string typeMnemonic, list<Trait> traits = []>
+    : TypeDef<Ace_Dialect, name, traits> {
   let mnemonic = typeMnemonic;
 }
 
-def Ace_StringType : Ace_Type<"String", "string"> {
+def Ace_StringType : Ace_Type<"String", "string", [MemRefElementTypeInterface]> {
   let description = [{`ace.string` represents string type}];
 }
 

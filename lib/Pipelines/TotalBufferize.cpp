@@ -7,6 +7,10 @@
 
 #include "byteir/Pipelines/TotalBufferize.h"
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
+#include "byteir/Dialect/Ace/AceDialect.h"
+#include "byteir/Dialect/Ace/Passes.h"
+#include "byteir/Dialect/Ace/Transforms/BufferizableOpInterfaceImpl.h"
+#include "byteir/Dialect/Lace/LaceDialect.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Transforms/passes.h"
@@ -26,6 +30,11 @@ struct ByteIRTotalBufferizePipelinePass
     : public ByteIRTotalBufferizePipelineBase<
           ByteIRTotalBufferizePipelinePass> {
   ByteIRTotalBufferizePipelinePass() : ByteIRTotalBufferizePipelineBase() {}
+  void getDependentDialects(DialectRegistry &registry) const override {
+    ByteIRTotalBufferizePipelineBase::getDependentDialects(registry);
+    registry.insert<ace::AceDialect, lace::LaceDialect>();
+    ace::registerBufferizableOpInterfaceExternalModels(registry);
+  }
 
   void runOnOperation() override {
     auto m = getOperation();
@@ -43,6 +52,7 @@ struct ByteIRTotalBufferizePipelinePass
 void mlir::addByteIRTotalBufferizePatterns(OpPassManager &pm) {
   pm.addPass(createConvertHloToLHloPass());
   pm.addPass(createCSEPass());
+  pm.addNestedPass<func::FuncOp>(createAceBufferizePass());
   pm.addNestedPass<func::FuncOp>(createLinalgBufferizePass());
   pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
   addCleanUpPassPipeline(pm);

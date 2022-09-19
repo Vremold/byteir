@@ -13,6 +13,7 @@
 
 #include "byteir/Conversion/Passes.h"
 #include "byteir/Dialect/Ace/AceDialect.h"
+#include "byteir/Dialect/Ace/Passes.h"
 #include "byteir/Dialect/Affine/Passes.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Passes.h"
@@ -87,6 +88,7 @@ int main(int argc, char **argv) {
 
   registerByteIRConversionPasses();
   registerByteIRTransformsPasses();
+  registerByteIRAcePasses();
   registerByteIRAffinePasses();
   registerByteIRByrePasses();
   registerByteIRLinalgPasses();

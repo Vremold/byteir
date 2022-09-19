@@ -28,4 +28,16 @@ module attributes {byre.container_module} {
 //   CHECK:  byre.alias
 //     CHECK-SAME: offset = 1024
 //   CHECK:  byre.compute @AddOp
+
+ func.func @lace_string_eq(%arg0: memref<!ace.string> {byre.argname = "A", byre.argtype = 1 : i32}, %arg1: memref<i1> {byre.argname = "B", byre.argtype = 2 : i32}) attributes { byre.entry_point } {
+    %0 = memref.alloc() : memref<!ace.string>
+    "lace.constant"(%0) {value = dense<"constant"> : tensor<!ace.string>} : (memref<!ace.string>) -> ()
+    "lace.custom_call"(%arg0, %0, %arg1) {call_target_name="tf.Equal", operand_segment_sizes = dense<[2, 1]> : vector<2xi32>} : (memref<!ace.string>, memref<!ace.string>, memref<i1>) -> ()
+    return
+  }
+// CHECK-LABEL: func.func @lace_string_eq
+//   CHECK-NEXT: %[[Constant:.*]] = memref.alloc
+//   CHECK-NEXT: byre.compute @FillOp(%[[Constant]])
+//     CHECK-SAME: value = dense<"constant">
+//   CHECK-NEXT: byre.compute @tf.Equal(%arg0, %[[Constant]], %arg1)
 }

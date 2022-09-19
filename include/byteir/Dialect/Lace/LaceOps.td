@@ -11,6 +11,7 @@
 
 include "byteir/Dialect/Lace/LaceBase.td"
 include "mlir/Interfaces/ViewLikeInterface.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 
 //===----------------------------------------------------------------------===//
 // Lace Dialect operations.
@@ -20,7 +21,15 @@ class Lace_Op<string mnemonic, list<Trait> traits = []> :
     Op<Lace_Dialect, mnemonic, traits> {
 }
 
-def Lace_ReshapeOp: Lace_Op<"reshape", [ViewLikeOpInterface, Lace_AliasLikeOpInterface]> {
+//===----------------------------------------------------------------------===//
+// Lace alias like operations
+//===----------------------------------------------------------------------===//
+
+class Lace_AliasOp<string mnemonic, list<Trait> traits = []> : 
+  Lace_Op<mnemonic, !listconcat(traits,
+      [ViewLikeOpInterface, NoSideEffect, Lace_AliasLikeOpInterface])>;
+
+def Lace_ReshapeOp: Lace_AliasOp<"reshape"> {
   let arguments = (ins AnyStridedMemRef:$source);
 
   let results = (outs AnyStridedMemRef:$target);
@@ -33,7 +42,7 @@ def Lace_ReshapeOp: Lace_Op<"reshape", [ViewLikeOpInterface, Lace_AliasLikeOpInt
   let hasVerifier = 1;
 }
 
-def Lace_SliceOp: Lace_Op<"slice", [ViewLikeOpInterface, Lace_AliasLikeOpInterface]> {
+def Lace_SliceOp: Lace_AliasOp<"slice"> {
   let arguments = (ins
     AnyStridedMemRef:$source,
     I64ElementsAttr:$start_indices,
@@ -55,6 +64,30 @@ def Lace_SliceOp: Lace_Op<"slice", [ViewLikeOpInterface, Lace_AliasLikeOpInterfa
   }];
 
   let hasVerifier = 1;
+}
+
+//===----------------------------------------------------------------------===//
+// Lace computing operations
+//===----------------------------------------------------------------------===//
+
+def Lace_ConstOp : Lace_Op<"constant"> {
+  let summary = "Constant operator";
+
+  let arguments = (ins
+    ElementsAttr:$value,
+    Arg<Lace_BufferType, "", [MemWrite]>:$output
+  );
+}
+
+def Lace_CustomCallOp : Lace_Op<"custom_call", [AttrSizedOperandSegments]> {
+  let summary = "CustomCall operator";
+
+  let arguments = (ins
+    Arg<Variadic<Lace_BufferType>, "", [MemRead]>:$inputs,
+    Arg<Variadic<Lace_BufferType>, "", [MemWrite]>:$output,
+    StrAttr:$call_target_name,
+    DefaultValuedStrAttr<StrAttr, "">:$backend_config
+  );
 }
 
 #endif // LACE_OPS

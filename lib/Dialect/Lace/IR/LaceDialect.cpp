@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Lace/LaceDialect.h"
+#include "byteir/Dialect/Ace/AceDialect.h" // ace types
 #include "byteir/Utils/MemUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/IR/Builders.h"

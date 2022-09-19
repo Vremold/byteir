@@ -8,12 +8,29 @@
 #include "byteir/Dialect/Ace/AceDialect.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/DialectImplementation.h"
+#include "mlir/Transforms/InliningUtils.h"
 #include "llvm/ADT/TypeSwitch.h"
 
 using namespace mlir;
 using namespace mlir::ace;
 
 #include "byteir/Dialect/Ace/AceOpsDialect.cpp.inc"
+
+//===----------------------------------------------------------------------===//
+// ace Dialect Interfaces
+//===----------------------------------------------------------------------===//
+
+namespace {
+struct AceInlinerInterface : public DialectInlinerInterface {
+  using DialectInlinerInterface::DialectInlinerInterface;
+
+  // Operations in ace dialect are always legal to inline
+  bool isLegalToInline(Operation *, Region *, bool,
+                       BlockAndValueMapping &) const final {
+    return true;
+  }
+};
+} // end anonymous namespace
 
 //===----------------------------------------------------------------------===//
 // ace dialect.
@@ -32,6 +49,7 @@ void AceDialect::initialize() {
 #define GET_ATTRDEF_LIST
 #include "byteir/Dialect/Ace/AceOpsAttributes.cpp.inc"
       >();
+  addInterfaces<AceInlinerInterface>();
 }
 
 #define GET_OP_CLASSES
