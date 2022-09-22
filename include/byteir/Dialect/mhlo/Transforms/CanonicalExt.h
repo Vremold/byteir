@@ -24,6 +24,7 @@ class BroadcastInDimOp;
 class ConcatenateOp;
 class DynamicBroadcastInDimOp;
 class DynamicConvOp;
+class DynamicGatherOp;
 
 // Most of these will push back to upstream
 // So this file only includes patterns, not a pass.
@@ -67,6 +68,10 @@ LogicalResult foldLargeBinaryOp(Op op, PatternRewriter &rewriter);
 // mhlo.dynamic_conv => mhlo.convolution canonicalization
 LogicalResult simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
                                         PatternRewriter &rewriter);
+
+// mhlo.dynamic_gather => mhlo.gather canonicalization
+LogicalResult simplifyDynamicGatherToGather(mhlo::DynamicGatherOp op,
+                                            PatternRewriter &rewriter);
 
 // constant folding for mhlo.concatenate with large result
 LogicalResult foldLargeConcatenate(mhlo::ConcatenateOp op,

@@ -586,6 +586,21 @@ LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
   return failure();
 }
 
+// TODO(wjw): push this back to mlir-hlo upstream
+// mhlo.dynamic_gather => mhlo.gather canonicalization
+LogicalResult
+mlir::mhlo::simplifyDynamicGatherToGather(mhlo::DynamicGatherOp op,
+                                          PatternRewriter &rewriter) {
+  DenseIntElementsAttr sliceSizes;
+  if (!matchPattern(op.slice_sizes(), m_Constant(&sliceSizes))) {
+    return failure();
+  }
+  rewriter.replaceOpWithNewOp<mhlo::GatherOp>(
+      op, op.operand(), op.start_indices(), op.dimension_numbersAttr(),
+      sliceSizes, op.indices_are_sortedAttr());
+  return success();
+}
+
 namespace {
 // modified from mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
 template <typename T>
@@ -768,6 +783,7 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
   patterns.add(mlir::mhlo::foldShapeBroadcast);
   patterns.add(mlir::mhlo::simplifyDynamicConvToConv);
+  patterns.add(mlir::mhlo::simplifyDynamicGatherToGather);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::SubtractOp, std::minus>);

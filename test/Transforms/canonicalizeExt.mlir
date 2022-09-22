@@ -90,6 +90,14 @@ func.func @canonicalize_dynamic_conv_case1(%1212: tensor<?x10x19x4xf16>, %85: te
 // CHECK-NOT: mhlo.dynamic_conv
 // CHECK:  mhlo.convolution(%arg0, %arg1) dim_numbers = [b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f], window = {stride = [1, 1], pad = {{\[}}[1, 1], [1, 1]{{\]}}, rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<?x10x19x4xf16>, tensor<5x7x4x12xf16>) -> tensor<?x8x15x12xf16>
 
+func.func @canonicalize_dynamic_gather(%arg0: tensor<375682x256xf16>, %arg1: tensor<16x64xi64>) -> tensor<16x64x256xf16> {
+  %29 = "arith.constant"() {value = dense<[1, 256]> : tensor<2xi64>} : () -> tensor<2xi64>
+  %143 = "mhlo.dynamic_gather"(%arg0, %arg1, %29) {dimension_numbers = #mhlo.gather<offset_dims = [2], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 2>, indices_are_sorted = false} : (tensor<375682x256xf16>, tensor<16x64xi64>, tensor<2xi64>) -> tensor<16x64x256xf16>
+  return %143 : tensor<16x64x256xf16>
+}
+// CHECK-NOT: mhlo.dynamic_gather
+// CHECK: "mhlo.gather"(%arg0, %arg1) {dimension_numbers = #mhlo.gather<offset_dims = [2], collapsed_slice_dims = [0], start_index_map = [0], index_vector_dim = 2>, indices_are_sorted = false, slice_sizes = dense<[1, 256]> : tensor<2xi64>} : (tensor<375682x256xf16>, tensor<16x64xi64>) -> tensor<16x64x256xf16>
+
 func.func @concat_const_folding_with_dup_value() -> tensor<3x2xi64> {
   %0 = mhlo.constant dense<1> : tensor<1x2xi64>
   %1 = mhlo.constant dense<[[2, 3]]> : tensor<1x2xi64>
