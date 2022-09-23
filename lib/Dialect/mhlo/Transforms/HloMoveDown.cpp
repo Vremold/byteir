@@ -30,6 +30,8 @@ using namespace mlir::mhlo;
 
 namespace {
 
+static constexpr char kMoveDownDisableKey[] = "__move_down_disable__";
+
 // For now, we support single result, Elementwise,
 // SameOperandsAndResultShape (avoid implicit broadcast)
 inline bool isElementwiseOneResult(Operation *op) {
@@ -138,7 +140,7 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
           rewriter, user, bvm, maybeResultTypes.getValue());
 
       // create transpose op
-      auto trans = rewriter.replaceOpWithNewOp<mhlo::TransposeOp>(
+      rewriter.replaceOpWithNewOp<mhlo::TransposeOp>(
           user, user->getResultTypes(), newProducer->getResult(0),
           op.permutation());
     }
@@ -156,6 +158,9 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
 
   LogicalResult matchAndRewrite(mhlo::ReshapeOp op,
                                 PatternRewriter &rewriter) const override {
+    if (op->hasAttr(kMoveDownDisableKey)) {
+      return failure();
+    }
     auto value = op.getResult();
     auto operandType = op.getOperand().getType(); // T1 as Reshape: T1 -> T2
 
@@ -163,6 +168,15 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
     if (!allMultiUser && !multiUser && userCount(value) != 1) {
       return failure();
     }
+
+    SmallDenseSet<Value> reshapeInsertOperands;
+    const auto isStaticArg = [](Value value) {
+      if (!value || value.getDefiningOp() != nullptr) {
+        return false;
+      }
+      const auto inputTy = value.getType().dyn_cast<RankedTensorType>();
+      return inputTy && inputTy.hasStaticShape();
+    };
 
     SmallDenseSet<Operation *> users;
     for (auto user : value.getUsers()) {
@@ -193,6 +207,14 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       bool failed = false;
       for (auto operand : user->getOperands()) {
         if (operand != value && !isSplatMhloConstantValue(operand)) {
+          // fairly strict condition, so far we only accept static arg
+          // to avoid side-effect on other branches as it seems we dont
+          // know benefits besides branch here.
+          // TODO(@zhangzhiwei.177): shall we remove static restriction?
+          if (isStaticArg(operand)) {
+            reshapeInsertOperands.insert(operand);
+            continue;
+          }
           if (allMultiUser)
             return failure();
           failed = true;
@@ -212,6 +234,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
     for (auto user : users) {
       BlockAndValueMapping bvm;
       SmallDenseSet<Value> constInputs;
+      SmallDenseSet<Value> insertedReshapeInputs;
       for (auto operand : user->getOperands()) {
         if (operand == value) {
           if (!bvm.contains(value)) {
@@ -220,7 +243,10 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         } else {
           // isSplatMhloConstantValue(operand) == true
           // since it has been checked when collecting users
-          if (!constInputs.contains(operand)) {
+          if (reshapeInsertOperands.contains(operand) &&
+              !insertedReshapeInputs.contains(operand)) {
+            insertedReshapeInputs.insert(operand);
+          } else if (!constInputs.contains(operand)) {
             constInputs.insert(operand);
           }
         }
@@ -236,6 +262,29 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         bvm.map(input, newConstOp.output());
       }
 
+      for (auto input : insertedReshapeInputs) {
+        const auto afterReshapeType = operandType.cast<RankedTensorType>();
+        bool shouldAddNewReshapeOp = true;
+        for (auto inputUser : input.getUsers()) {
+          auto existingReshapeOp = dyn_cast_or_null<mhlo::ReshapeOp>(inputUser);
+          if (existingReshapeOp &&
+              existingReshapeOp.getResult()
+                      .getType()
+                      .cast<RankedTensorType>() == afterReshapeType) {
+            bvm.map(input, existingReshapeOp.getResult());
+            shouldAddNewReshapeOp = false;
+            break;
+          }
+        }
+        if (!shouldAddNewReshapeOp) {
+          break;
+        }
+        auto newReshapeOp = rewriter.create<mhlo::ReshapeOp>(
+            rewriter.getUnknownLoc(), afterReshapeType, input);
+        newReshapeOp->setAttr(kMoveDownDisableKey, rewriter.getBoolAttr(true));
+        bvm.map(input, newReshapeOp.getResult());
+      }
+
       auto maybeResultTypes =
           mixTypes(/*cloneFromElementTypes*/ user->getResultTypes(),
                    /*cloneFromShapes*/ op->getOperandTypes());
@@ -248,8 +297,8 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
           rewriter, user, bvm, maybeResultTypes.getValue());
 
       // create reshape op
-      auto reshape = rewriter.replaceOpWithNewOp<mhlo::ReshapeOp>(
-          user, user->getResultTypes(), newProducer->getResult(0));
+      rewriter.replaceOpWithNewOp<mhlo::ReshapeOp>(user, user->getResultTypes(),
+                                                   newProducer->getResult(0));
     }
 
     return success();
@@ -359,7 +408,7 @@ struct BroadcastMoveDownPattern
           rewriter, user, bvm, maybeResultTypes.getValue());
 
       // create broadcast op
-      auto newOp = rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
+      rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
           user, user->getResultTypes(), newProducer->getResult(0),
           op.broadcast_dimensions());
     }
@@ -424,7 +473,7 @@ struct BroadcastBinaryMoveDownPattern
     auto newProducer = cloneAndReplaceResultTypes(rewriter, consumer, bvm,
                                                   op->getOperandTypes());
 
-    auto newConsumer = rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
+    rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
         consumer, op.getType(), newProducer->getResult(0),
         op.broadcast_dimensions());
 
@@ -521,7 +570,7 @@ struct BroadcastReshapeMoveDownPattern
     RankedTensorType newOtypeBcast = RankedTensorType::get(
         oshapeReshape, operandType.cast<RankedTensorType>().getElementType());
 
-    auto newConsumer = rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
+    rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
         consumer, newOtypeBcast, newProducer->getResult(0), newBcastAttr);
 
     return success();
@@ -574,9 +623,9 @@ struct ReshapeBroadcastDotMoveDownPattern
         RankedTensorType::get({newDotOShape[1]}, dtype);
     auto newReshape = rewriter.create<ReshapeOp>(op->getLoc(), newReshapeType,
                                                  newDot->getResult(0));
-    auto newBcast = rewriter.replaceOpWithNewOp<BroadcastInDimOp>(
-        op, op.getType(), newReshape->getResult(0),
-        bcast.broadcast_dimensions());
+    rewriter.replaceOpWithNewOp<BroadcastInDimOp>(op, op.getType(),
+                                                  newReshape->getResult(0),
+                                                  bcast.broadcast_dimensions());
 
     return success();
   }
@@ -605,11 +654,9 @@ struct SliceMoveDownPattern : public HloMoveDownPattern<mhlo::SliceOp> {
     SmallVector<Operation *> slices;
     SmallVector<Operation *> sliceUsers;
     Value binaryCommonOperand;
-    bool isReshapeCase = false;
 
     // match pattern
-    patternMatch(op.getOperand(), slices, sliceUsers, binaryCommonOperand,
-                 isReshapeCase);
+    patternMatch(op.getOperand(), slices, sliceUsers, binaryCommonOperand);
 
     // not possible for fusing, simply fail it
     if (slices.size() <= 1) {
@@ -618,13 +665,13 @@ struct SliceMoveDownPattern : public HloMoveDownPattern<mhlo::SliceOp> {
 
     // rewrite
     return performFuseAndMoveDown(slices, sliceUsers, binaryCommonOperand,
-                                  isReshapeCase, rewriter);
+                                  rewriter);
   }
 
 private:
   void patternMatch(const Value &root, SmallVector<Operation *> &slices,
                     SmallVector<Operation *> &sliceUsers,
-                    Value &binaryCommonOperand, bool &isReshapeCase) const {
+                    Value &binaryCommonOperand) const {
     auto rootTy = root.getType().dyn_cast<RankedTensorType>();
     int64_t rank = rootTy.getRank();
     std::string userOpName;
@@ -645,7 +692,7 @@ private:
             startAttr.getValues<IntegerAttr>()[dimIdx].getInt();
         const int64_t limit =
             limitAttr.getValues<IntegerAttr>()[dimIdx].getInt();
-        if (start + 1 != limit) {
+        if (limit - start != rootTy.getDimSize(dimIdx) && start + 1 != limit) {
           isAllSliceDimLenOne = false;
         }
       }
@@ -655,59 +702,52 @@ private:
 
       auto sliceRes = slice.getResult();
 
-      for (auto sliceConsumer : sliceRes.getUsers()) {
-        // condition 3: must be elementwise op or reshape op
-        mhlo::ReshapeOp reshape = dyn_cast<mhlo::ReshapeOp>(*sliceConsumer);
-        if (!sliceConsumer->hasTrait<mlir::OpTrait::Elementwise>() &&
-            !reshape) {
+      // condition 3: slice has no more than one successor
+      if (!llvm::hasSingleElement(sliceRes.getUsers())) {
+        continue;
+      }
+
+      auto sliceConsumer = *(sliceRes.getUsers().begin());
+      // condition 4: must be elementwise op
+      if (!sliceConsumer->hasTrait<mlir::OpTrait::Elementwise>()) {
+        continue;
+      }
+
+      const auto opName = std::string(sliceConsumer->getName().getStringRef());
+      // condition 4.1: same user op type, otherwise
+      // it might not be possible for fusing
+      if (userOpName.empty()) {
+        userOpName = opName;
+      } else if (userOpName.compare(opName)) {
+        continue;
+      }
+
+      // condition 4.2: unary elementwise op
+      if (sliceConsumer->getNumOperands() == 1) {
+        slices.push_back(user);
+        sliceUsers.push_back(sliceConsumer);
+        continue;
+      }
+
+      // condition 4.3: binary elementwise op, for operand, besides SliceOp,
+      // share common operand
+      bool shouldAddBinary = true;
+      for (auto operand : sliceConsumer->getOperands()) {
+        if (operand == sliceRes) {
           continue;
         }
-
-        const auto opName =
-            std::string(sliceConsumer->getName().getStringRef());
-        // condition 3.1: same user op type, otherwise
-        // it might not be possible for fusing
-        if (userOpName.empty()) {
-          userOpName = opName;
-        } else if (userOpName.compare(opName)) {
+        if (!binaryCommonOperand) {
+          binaryCommonOperand = operand;
           continue;
         }
-
-        // condition 3.2: reshape op, we may loose this condition
-        if (reshape && checkReshapeRemoveFirstNumberOneDimension(reshape)) {
-          isReshapeCase = true;
-          slices.push_back(user);
-          sliceUsers.push_back(sliceConsumer);
-          continue;
+        if (binaryCommonOperand != operand) {
+          shouldAddBinary = false;
+          break;
         }
-
-        // condition 3.3: unary elementwise op
-        if (sliceConsumer->getNumOperands() == 1) {
-          slices.push_back(user);
-          sliceUsers.push_back(sliceConsumer);
-          continue;
-        }
-
-        // condition 3.4: binary elementwise op, for operand, besides SliceOp,
-        // share common operand
-        bool shouldAddBinary = true;
-        for (auto operand : sliceConsumer->getOperands()) {
-          if (operand == sliceRes) {
-            continue;
-          }
-          if (!binaryCommonOperand) {
-            binaryCommonOperand = operand;
-            continue;
-          }
-          if (binaryCommonOperand != operand) {
-            shouldAddBinary = false;
-            break;
-          }
-        }
-        if (shouldAddBinary) {
-          slices.push_back(user);
-          sliceUsers.push_back(sliceConsumer);
-        }
+      }
+      if (shouldAddBinary) {
+        slices.push_back(user);
+        sliceUsers.push_back(sliceConsumer);
       }
     }
   }
@@ -728,14 +768,20 @@ private:
             {static_cast<long int>(broadcastDimensions.size())},
             rewriter.getI64Type()),
         broadcastDimensions);
-    return rewriter.create<mhlo::BroadcastInDimOp>(
+    auto broadcastOp = rewriter.create<mhlo::BroadcastInDimOp>(
         rewriter.getUnknownLoc(), afterBroadcastType, binaryCommonOperand,
         newBcastAttr);
+    auto *binaryCommonDefiningOp = binaryCommonOperand.getDefiningOp();
+    if (binaryCommonDefiningOp &&
+        binaryCommonDefiningOp->getBlock() == broadcastOp->getBlock() &&
+        broadcastOp->isBeforeInBlock(binaryCommonDefiningOp)) {
+      broadcastOp->moveAfter(binaryCommonDefiningOp);
+    }
+    return broadcastOp;
   }
 
   auto *createFusedMovedUpOp(SmallVector<Operation *> &slices,
                              SmallVector<Operation *> &sliceUsers,
-                             bool isReshapeCase,
                              mhlo::BroadcastInDimOp &newBroadcastOp,
                              PatternRewriter &rewriter) const {
     auto user = sliceUsers[0];
@@ -743,33 +789,26 @@ private:
     for (auto operand : user->getOperands()) {
       if (operand == slices[0]->getResult(0)) {
         bvm.map(operand, slices[0]->getOperand(0));
-      } else {
+      } else if (newBroadcastOp) {
         bvm.map(operand, newBroadcastOp.getResult());
       }
     }
 
     auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
                                                   slices[0]->getOperandTypes());
-    if (isReshapeCase) {
-      auto oldOutputTy = slices[0]->getOperand(0).getType();
-      Type dtype = oldOutputTy.cast<RankedTensorType>().getElementType();
-      ArrayRef<int64_t> oldOutShape =
-          oldOutputTy.cast<RankedTensorType>().getShape();
-      SmallVector<int64_t> newOutShape;
-      for (size_t i = 1; i < oldOutShape.size(); i++) {
-        newOutShape.push_back(oldOutShape[i]);
+    for (auto operand : newProducer->getOperands()) {
+      const auto parentOp = operand.getDefiningOp();
+      if (parentOp && newProducer->isBeforeInBlock(parentOp)) {
+        newProducer->moveAfter(parentOp);
       }
-      RankedTensorType newOutType = RankedTensorType::get(newOutShape, dtype);
-      newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm, newOutType);
     }
-
+    newProducer->setLoc(rewriter.getUnknownLoc());
     return newProducer;
   }
 
   LogicalResult performFuseAndMoveDown(SmallVector<Operation *> &slices,
                                        SmallVector<Operation *> &sliceUsers,
                                        Value &binaryCommonOperand,
-                                       bool isReshapeCase,
                                        PatternRewriter &rewriter) const {
     // step 1: insert Broadcast for common operand
     mhlo::BroadcastInDimOp newBroadcastOp;
@@ -779,8 +818,8 @@ private:
     }
 
     // step 2: create new fused user
-    auto newProducer = createFusedMovedUpOp(slices, sliceUsers, isReshapeCase,
-                                            newBroadcastOp, rewriter);
+    auto newProducer =
+        createFusedMovedUpOp(slices, sliceUsers, newBroadcastOp, rewriter);
 
     // step 3: perform move down
     for (size_t i = 0; i < slices.size(); i++) {
@@ -789,42 +828,16 @@ private:
       assert(slice);
       auto user = sliceUsers[i];
       // create slice op
-      if (isReshapeCase) {
-        llvm::SmallVector<int64_t> oldStartIndices;
-        llvm::SmallVector<int64_t> oldEndIndices;
-        llvm::SmallVector<int64_t> oldStrides;
-        getValuesFromDenseIntElementsAttr(slice.start_indices(),
-                                          oldStartIndices);
-        getValuesFromDenseIntElementsAttr(slice.limit_indices(), oldEndIndices);
-        getValuesFromDenseIntElementsAttr(slice.strides(), oldStrides);
-        // squeeze 1st dim. See Line 674
-        llvm::SmallVector<int64_t> newStartIndices(oldStartIndices.begin() + 1,
-                                                   oldStartIndices.end());
-        llvm::SmallVector<int64_t> newEndIndices(oldEndIndices.begin() + 1,
-                                                 oldEndIndices.end());
-        llvm::SmallVector<int64_t> newStrides(oldStrides.begin() + 1,
-                                              oldStrides.end());
-        mlir::Type int64ElementType = rewriter.getI64Type();
-        DenseIntElementsAttr startAttr = DenseIntElementsAttr::get(
-            RankedTensorType::get(
-                {static_cast<int64_t>(newStartIndices.size())},
-                int64ElementType),
-            newStartIndices);
-        DenseIntElementsAttr endAttr = DenseIntElementsAttr::get(
-            RankedTensorType::get({static_cast<int64_t>(newEndIndices.size())},
-                                  int64ElementType),
-            newEndIndices);
-        DenseIntElementsAttr strideAttr = DenseIntElementsAttr::get(
-            RankedTensorType::get({static_cast<int64_t>(newStrides.size())},
-                                  int64ElementType),
-            newStrides);
-        rewriter.replaceOpWithNewOp<mhlo::SliceOp>(
-            user, user->getResultTypes(), newProducer->getResult(0), startAttr,
-            endAttr, strideAttr);
-      } else {
-        rewriter.replaceOpWithNewOp<mhlo::SliceOp>(
-            user, user->getResultTypes(), newProducer->getResult(0),
-            slice.start_indices(), slice.limit_indices(), slice.strides());
+      auto sliceOp = rewriter.replaceOpWithNewOp<mhlo::SliceOp>(
+          user, user->getResultTypes(), newProducer->getResult(0),
+          slice.start_indices(), slice.limit_indices(), slice.strides());
+      if (sliceOp->isBeforeInBlock(newProducer)) {
+        sliceOp->moveAfter(newProducer);
+      }
+      for (auto user : sliceOp.getResult().getUsers()) {
+        if (user->isBeforeInBlock(sliceOp)) {
+          user->moveAfter(sliceOp);
+        }
       }
     }
     return success();
@@ -855,6 +868,7 @@ struct HloMoveDownPass : public HloMoveDownBase<HloMoveDownPass> {
           "HloMoveDownPass applyPatternsAndFoldGreedily does not converge");
       signalPassFailure();
     }
+    funcOp.walk([](ReshapeOp op) { op->removeAttr(kMoveDownDisableKey); });
   }
 };
 } // namespace
@@ -863,13 +877,13 @@ void mlir::populateHloMoveDownPattern(RewritePatternSet &patterns,
                                       const llvm::DenseSet<StringRef> &blocker,
                                       bool allMultiUser, bool multiUser) {
   // clang-format off
-  patterns.add<TransposeMoveDownPattern, 
+  patterns.add<TransposeMoveDownPattern,
                ReshapeMoveDownPattern,
-               BroadcastMoveDownPattern, 
+               BroadcastMoveDownPattern,
                BroadcastReshapeMoveDownPattern,
-               ReshapeBroadcastDotMoveDownPattern, 
-               BroadcastBinaryMoveDownPattern
-               /*,SliceMoveDownPattern*/>(
+               ReshapeBroadcastDotMoveDownPattern,
+               BroadcastBinaryMoveDownPattern,
+               SliceMoveDownPattern>(
            patterns.getContext(), blocker, allMultiUser, multiUser);
   // clang-format on
 }
