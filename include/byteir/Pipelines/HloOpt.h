@@ -20,6 +20,9 @@ void addGenericHloFusionPatterns(OpPassManager &pm,
                                  const std::string &entry = "main",
                                  bool outlineSingleElemwiseOp = false);
 
+void addCPUHloFusionPatterns(OpPassManager &pm,
+                             const std::string &entry = "main");
+
 std::unique_ptr<OperationPass<ModuleOp>>
 createHloOptPipelinePass(const std::string &entry = "main",
                          const std::string &target = "",

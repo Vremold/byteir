@@ -6,11 +6,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "../PassDetail.h"
-#include "byteir/Conversion/Common/FunctionSupport.h"
 #include "byteir/Conversion/ToLLVM/ToLLVM.h"
 #include "byteir/Dialect/Byre/Common.h"
+#include "mlir/Dialect/Bufferization/Transforms/Passes.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/Pass/PassManager.h"
 
 using namespace mlir;
 
@@ -39,7 +41,6 @@ LogicalResult processSingleFunc(func::FuncOp func, ModuleOp sm) {
       b.create<func::FuncOp>(func.getLoc(), func.getName(), funcType);
   BlockAndValueMapping bvm;
   func.getRegion().cloneInto(&newFunc.getRegion(), bvm);
-  replicateFuncOpResults(newFunc);
   // TODO: pass llvm config attributes to new function
   // TODO: make c interface optional
   newFunc->setAttr(kEmitIfaceAttrName, UnitAttr::get(newFunc->getContext()));
@@ -73,6 +74,14 @@ struct CollectFuncToLLVMPass
       if (failed(processSingleFunc(func, sm))) {
         signalPassFailure();
       }
+    }
+    OpPassManager pm(sm.getOperationName());
+    pm.addPass(bufferization::createBufferResultsToOutParamsPass());
+    pm.addNestedPass<func::FuncOp>(
+        bufferization::createPromoteBuffersToStackPass(
+            /*isSmallAlloc =*/[](Value) { return true; }));
+    if (mlir::failed(runPipeline(pm, sm))) {
+      return signalPassFailure();
     }
   }
 };

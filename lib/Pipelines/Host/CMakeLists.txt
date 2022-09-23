@@ -23,6 +23,7 @@ add_mlir_library(ByteIRHostPipelines
   ByteIRToLLVM
   MLIRArithmeticTransforms
   MLIRFuncToLLVM
+  MLIRMathToLLVM
   MLIRMemRefToLLVM
   MLIRReconcileUnrealizedCasts
   MLIRSCFToControlFlow

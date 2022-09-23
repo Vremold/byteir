@@ -11,6 +11,7 @@
 #include "mlir/Pass/PassManager.h"
 
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
+#include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
@@ -71,7 +72,9 @@ struct ToLLVMPipelinePass : public ToLLVMPipelineBase<ToLLVMPipelinePass> {
 
     pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
     pm.addPass(createCanonicalizerPass());
+    pm.addPass(arith::createArithmeticExpandOpsPass());
     pm.addPass(createMemRefToLLVMPass());
+    pm.addPass(createConvertMathToLLVMPass());
     pm.addPass(createConvertFuncToLLVMPass());
     pm.addPass(createReconcileUnrealizedCastsPass());
 

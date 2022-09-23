@@ -10,5 +10,6 @@ add_byteir_conversion_library(ByteIRToLLVM
 
   LINK_LIBS PUBLIC
   MLIRIR
+  MLIRBufferizationTransforms
   ByteIRUtils
   )

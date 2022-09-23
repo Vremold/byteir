@@ -31,7 +31,11 @@ struct LinalgTensorOptPipelinePass
     auto m = getOperation();
     OpPassManager pm(m.getOperationName());
 
-    addGenericLinalgElementwisePasses(pm);
+    if (this->target.getValue() == "CPU") {
+      addCPULinalgOptPasses(pm);
+    } else {
+      addGenericLinalgElementwisePasses(pm);
+    }
 
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();
@@ -48,6 +52,16 @@ void mlir::addGenericLinalgElementwisePasses(OpPassManager &pm) {
   pm.addPass(createLinalgElementwiseOpFusionPass());
   pm.addNestedPass<func::FuncOp>(createLinalgFuseReshapePass());
   pm.addPass(createCSEPass());
+}
+
+void mlir::addCPULinalgOptPasses(OpPassManager &pm) {
+  pm.addNestedPass<func::FuncOp>(
+      createHloFusionToLinalgPass(getByteIRHloAggressiveFusionAttrName()));
+  pm.addNestedPass<func::FuncOp>(createUnrealizedCastToLinalgPass());
+  pm.addPass(createLinalgElementwiseOpFusionPass());
+  pm.addNestedPass<func::FuncOp>(createLinalgFuseReshapePass());
+  pm.addPass(createCSEPass());
+  // TODO: more opt passes
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>

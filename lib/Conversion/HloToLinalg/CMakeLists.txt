@@ -17,6 +17,7 @@ add_byteir_conversion_library(ByteIRHloToLinalg
   MLIRLinalgDialect
   MLIRMathDialect
   MLIRMemRefDialect
+  MLIRSCFDialect
   MLIRTransforms
   ByteIRConversionCommon
   )

@@ -53,6 +53,7 @@ def HloFusionToLinalg : Pass<"hlo-fusion-to-linalg", "func::FuncOp"> {
   let constructor = "mlir::createHloFusionToLinalgPass()";
   let dependentDialects = [
     "mlir::linalg::LinalgDialect",
+    "mlir::scf::SCFDialect",
   ];
   let options = [
     Option<"anchorTag", "anchor-tag", "std::string",

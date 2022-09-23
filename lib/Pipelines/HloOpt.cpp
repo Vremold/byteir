@@ -50,8 +50,12 @@ struct HloOptPipelinePass : public HloOptPipelineBase<HloOptPipelinePass> {
     addCleanUpPassPipeline(pm);
 
     // add fusion patterns
-    addGenericHloFusionPatterns(pm, entryFunc,
-                                outlineSingleElemwiseOp.getValue());
+    if (this->target.getValue() == "CPU") {
+      addCPUHloFusionPatterns(pm, entryFunc);
+    } else {
+      addGenericHloFusionPatterns(pm, entryFunc,
+                                  outlineSingleElemwiseOp.getValue());
+    }
 
     if (mlir::failed(runPipeline(pm, m))) {
       signalPassFailure();
@@ -63,7 +67,6 @@ struct HloOptPipelinePass : public HloOptPipelineBase<HloOptPipelinePass> {
 void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
                                        const std::string &entry,
                                        bool outlineSingleElemwiseOp) {
-
   // cluster constraint
   pm.addNestedPass<func::FuncOp>(createClusterConstraintPass());
   pm.addPass(createFusionOutliningPass());
@@ -84,6 +87,23 @@ void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
   // the mhlo.fusion and outline it as an independent function later
   pm.addNestedPass<func::FuncOp>(
       createElementFusionPass(outlineSingleElemwiseOp));
+  pm.addPass(createFusionOutliningPass());
+  pm.addPass(createCSEPass());
+}
+
+void mlir::addCPUHloFusionPatterns(OpPassManager &pm,
+                                   const std::string &entry) {
+  // cluster constraint
+  pm.addNestedPass<func::FuncOp>(createClusterConstraintPass());
+  pm.addPass(createFusionOutliningPass());
+
+  // expand tuple
+  pm.addPass(createExpandHloTuplesPass(entry));
+  pm.addPass(createCSEPass());
+  pm.addNestedPass<func::FuncOp>(createFlattenTuplePass());
+
+  // perform aggressive fusion
+  pm.addNestedPass<func::FuncOp>(createHloAggressiveFusionPass());
   pm.addPass(createFusionOutliningPass());
   pm.addPass(createCSEPass());
 }

@@ -50,6 +50,10 @@ inline void registerByteIRMhloPassesExt() {
   ::mlir::registerPass([]() -> std::unique_ptr<::mlir::Pass> {
     return mlir::createMatmulEpilogueFusionPass();
   });
+
+  ::mlir::registerPass([]() -> std::unique_ptr<::mlir::Pass> {
+    return mlir::createHloAggressiveFusionPass();
+  });
 }
 
 } // namespace mlir

@@ -102,6 +102,7 @@ def LinalgTensorOptPipeline : Pass<"linalg-tensor-opt", "mlir::ModuleOp"> {
   let constructor = "mlir::createLinalgTensorOptPipelinePass()";
   let dependentDialects = [
     "mlir::linalg::LinalgDialect",
+    "mlir::scf::SCFDialect",
   ];
   let options = [
     Option<"target", "target", "std::string",

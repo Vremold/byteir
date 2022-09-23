@@ -17,6 +17,7 @@ namespace mlir {
 class ModuleOp;
 
 void addGenericLinalgElementwisePasses(OpPassManager &pm);
+void addCPULinalgOptPasses(OpPassManager &pm);
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createLinalgTensorOptPipelinePass(const std::string &target = "");

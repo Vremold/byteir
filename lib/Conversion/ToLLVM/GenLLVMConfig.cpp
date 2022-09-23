@@ -36,7 +36,8 @@ struct GenLLVMConfigPass : public GenLLVMConfigBase<GenLLVMConfigPass> {
 
   void runOnOperation() override {
     func::FuncOp func = getOperation();
-    if (func->hasAttr(getByteIRElementwiseFusionAttrName())) {
+    if (func->hasAttr(getByteIRHloAggressiveFusionAttrName()) ||
+        func->hasAttr(getByteIRElementwiseFusionAttrName())) {
       AttachLLVMConfigToAttr(func, this->fileName);
     }
   }

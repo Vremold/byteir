@@ -653,6 +653,35 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
         if (auto callOp = dyn_cast<CallOp>(symbolUse.getUser())) {
           // arguement
           for (unsigned i = 0, e = callOp.getNumOperands(); i < e; ++i) {
+            auto operand = callOp.getOperand(i);
+            if (auto memrefType = operand.getType().dyn_cast<MemRefType>()) {
+              auto curSpace = memrefType.getMemorySpace();
+              // insert arg copy if operand was already set with different space
+              // or operand is the result of some function call with
+              // incompatible space
+              bool needCopy = curSpace && deviceAttr != curSpace;
+              if (auto anotherCall = operand.getDefiningOp<CallOp>())
+                if (auto anotherFunc =
+                        m.lookupSymbol<FuncOp>(anotherCall.getCallee()))
+                  needCopy |=
+                      isFuncNotCompatiableWithSpace(anotherFunc, deviceAttr);
+              if (needCopy) {
+                CopyType_t copyKey = {operand, deviceAttr};
+
+                if (copyPairToCopyTargets.count(copyKey) == 0) {
+                  // if copy not exist, insert copy
+                  auto argSEType = analysis->getType(callOp, i);
+                  auto newArg =
+                      createCopyArg(callOp, operand, memrefType, deviceAttr,
+                                    copyPairToCopyTargets, argSEType);
+                  callOp->setOperand(i, newArg);
+                } else {
+                  // if copy already exist, directly refer it
+                  auto taget = copyPairToCopyTargets[copyKey];
+                  callOp->setOperand(i, taget);
+                }
+              }
+            }
             callOp.getOperand(i).setType(newArgTypes.first[i]);
           }
 

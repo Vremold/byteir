@@ -85,6 +85,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/FuncArgRearrangement.cpp
   Transforms/FusionOutlining.cpp
   Transforms/GenericFusion.cpp
+  Transforms/HloAggressiveFusion.cpp
   Transforms/HloFolder.cpp
   Transforms/HloMoveDown.cpp
   Transforms/HloMoveUp.cpp

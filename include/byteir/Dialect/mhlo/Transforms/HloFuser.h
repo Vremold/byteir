@@ -35,6 +35,10 @@ constexpr StringRef getByteIRTrivialFusionAttrName() {
   return "__byteir_trivial_fusion__";
 }
 
+constexpr StringRef getByteIRHloAggressiveFusionAttrName() {
+  return "__byteir_hlo_aggressive_fusion__";
+}
+
 // fuse ReduceWindow with Pad and/or Constant
 void populateFuseReduceWindowPatterns(RewritePatternSet &patterns);
 
@@ -73,6 +77,8 @@ std::unique_ptr<OperationPass<func::FuncOp>> createIOConvertFusionPass();
 
 // TODO add more target or list of op in arg
 std::unique_ptr<OperationPass<func::FuncOp>> createTrivialFusionPass();
+
+std::unique_ptr<OperationPass<func::FuncOp>> createHloAggressiveFusionPass();
 
 } // namespace mlir
 
