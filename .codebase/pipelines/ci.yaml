@@ -9,7 +9,7 @@ jobs:
     name: byteir compiler CI
     runs-on:
       spec: m1.4xlarge
-    image: hub.byted.org/arnold/byteir_cuda:main
+    image: hub.byted.org/arnold/byteir_cuda:v1
     working-directory: byteir/byteir
     steps:
       - name: Run clang format check

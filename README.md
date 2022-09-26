@@ -18,11 +18,16 @@ An external dialect from https://github.com/tensorflow/mlir-hlo.
 ## Dependency 
 ***LLVM/MLIR***: https://code.byted.org/byteir/llvm-build, current llvm commit id: 439668871ac992159f00309d3bd837db287bdea6
 
+***mhlo_tools***: https://tosv.byted.org/obj/turing/byteir/mhlo_tools-0.0.1.dev0+c55c5a0c-cp37-cp37m-linux_x86_64.whl
+
 ***Python*** (for python binding): minimum version is 3.6, requiring numpy and pybind11 installed.
 
 ## Build
 ### Linux/Mac 
 ```bash
+python3 -m pip install -i https://bytedpypi.byted.org/simple/ torch>=1.12.0
+python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-0.0.1.dev0+c55c5a0c-cp37-cp37m-linux_x86_64.whl
+
 mkdir /path_to_byteir/build
 cd /path_to_byteir/build/
 

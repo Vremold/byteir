@@ -16,6 +16,8 @@ if [ ! -f "$LLVM_BUILD" ]; then
   tar xzf "$LLVM_BUILD"
 fi
 
+python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-0.0.1.dev0+c55c5a0c-cp37-cp37m-linux_x86_64.whl
+
 mkdir build
 cd build
 cmake ../cmake/ -G Ninja -DCMAKE_BUILD_TYPE=Release \

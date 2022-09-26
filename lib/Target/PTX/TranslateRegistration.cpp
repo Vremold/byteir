@@ -72,17 +72,17 @@ void registerToPTXTranslation() {
                        clEnumVal(O3, "Optimization level 3")),
       llvm::cl::init(O3), llvm::cl::cat(PTXCodeGenCat));
 
-  TranslateFromMLIRRegistration reg("gen-ptx",
-                                    [](ModuleOp module, raw_ostream &output) {
-                                      return mlir::translateToPTX(
-                                          module, output, outPrefix, codeGenOpt,
-                                          gpuArch, dumpPtx, saveTemps, verbose);
-                                    },
-                                    [](DialectRegistry &registry) {
-                                      registerAllDialects(registry);
-                                      registerLLVMDialectTranslation(registry);
-                                      registerNVVMDialectTranslation(registry);
-                                    });
+  TranslateFromMLIRRegistration reg(
+      "gen-ptx",
+      [](ModuleOp module, raw_ostream &output) {
+        return mlir::translateToPTX(module, output, outPrefix, codeGenOpt,
+                                    gpuArch, dumpPtx, saveTemps, verbose);
+      },
+      [](DialectRegistry &registry) {
+        registerAllDialects(registry);
+        registerLLVMDialectTranslation(registry);
+        registerNVVMDialectTranslation(registry);
+      });
 }
 
 } // namespace mlir
