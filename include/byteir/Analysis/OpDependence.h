@@ -17,7 +17,7 @@ namespace mlir {
 // declare
 struct OpDependenceInfoImpl;
 
-// handle OpDominanceInfo within a block
+// handle OpDependenceInfo within a block
 class OpDependenceInfo {
 public:
   explicit OpDependenceInfo(Block *b);

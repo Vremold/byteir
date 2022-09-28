@@ -579,7 +579,8 @@ LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
       op->getLoc(), op.getType(), llvm::ArrayRef<Value>{op.lhs(), op.rhs()},
       op->getAttrs());
   convOp.paddingAttr(DenseIntElementsAttr::get(
-      RankedTensorType::get({spatialDim, 2}, rewriter.getI64Type()),
+      RankedTensorType::get({static_cast<int64_t>(spatialDim), 2},
+                            rewriter.getI64Type()),
       newPadding));
   rewriter.replaceOp(op, convOp.getResult());
   return success();

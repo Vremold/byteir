@@ -20,43 +20,48 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/Support/Debug.h"
 
 #include "./PassDetail.h"
+
+#define DEBUG_TYPE "func-arg-rearrange"
 
 using namespace mlir;
 using namespace llvm;
 
 namespace {
 
-static void collectAllDuplicateOps(Operation *op, Value dst, Value src,
-                                   SmallVectorImpl<Operation *> &collector,
-                                   ArrayRef<Operation *> blockers) {
-  if (dst == src) {
-    collector.push_back(op);
-    return;
-  }
-
-  // dst if not src, check definingOp
-  if (Operation *def = dst.getDefiningOp()) {
-    if (llvm::is_contained(blockers, def)) {
-      return;
-    }
-
-    for (auto val : def->getOperands()) {
-      collectAllDuplicateOps(def, val, src, collector, blockers);
-    }
-  }
-}
-
-static void createExcept(SmallPtrSetImpl<Operation *> &collector, Value val,
-                         ArrayRef<Operation *> allows) {
-
-  for (auto user : val.getUsers()) {
-    if (!llvm::is_contained(allows, user)) {
-      collector.insert(user);
+static llvm::Optional<unsigned>
+findMostLikelyUse(Value val, Operation *user,
+                  ArrayRef<Operation *> indicators) {
+  for (auto indicator : indicators) {
+    if (user == indicator) {
+      // check direct use of indicator
+      for (unsigned i = 0; i < indicator->getNumOperands(); ++i) {
+        if (indicator->getOperand(i) == val) {
+          LLVM_DEBUG(llvm::dbgs()
+                     << "findMostLikelyUse found direct user " << i << "\n");
+          return i;
+        }
+      }
+    } else if (user->getNumResults() == 1) {
+      // check indirect use through user
+      for (unsigned i = 0; i < indicator->getNumOperands(); ++i) {
+        // Only support single result only for now
+        // TODO extend it
+        if (indicator->getOperand(i) == user->getResult(0)) {
+          LLVM_DEBUG(llvm::dbgs()
+                     << "findMostLikelyUse found indirect user " << i << "\n");
+          return i;
+        }
+      }
     }
   }
+
+  LLVM_DEBUG(llvm::dbgs() << "findMostLikelyUse found no idx\n");
+  return llvm::None;
 }
 
 class FuncArgRearrangementPass : public ::mlir::OperationPass<ModuleOp> {
@@ -216,7 +221,7 @@ void FuncArgRearrangementPass::runOnOperation() {
 
       // collect old ReturnOp in eraser
       eraser.push_back(oldRet);
-    }
+    } // f.empty
 
     // 3. Rewrite Call
     auto maybeSymbolUses = f.getSymbolUses(m);
@@ -271,58 +276,59 @@ void FuncArgRearrangementPass::runOnOperation() {
   // the following handle duplicated mapping using a heuristic ordering argument
   // TODO: (LWC) added more advanced method later from a config object
 
-  // collect all conflict candidates, aka call and return
-  llvm::SmallVector<Operation *> duplicateConflictCandidates;
+  // use call and return as indicator to resolve duplication
+  llvm::SmallVector<Operation *> duplicateResolveIndicator;
   for (auto f : newFuncs) {
-
     // collect returns
     if (!f.empty()) {
-      duplicateConflictCandidates.push_back(f.getBody().back().getTerminator());
+      duplicateResolveIndicator.push_back(f.getBody().back().getTerminator());
     }
 
     // collect calls
     auto maybeSymbolUses = f.getSymbolUses(m);
     for (SymbolTable::SymbolUse symbolUse : *maybeSymbolUses) {
       if (auto callOp = dyn_cast<func::CallOp>(symbolUse.getUser())) {
-        duplicateConflictCandidates.push_back(callOp);
+        duplicateResolveIndicator.push_back(callOp);
       }
     }
   }
 
-  // solve duplicate for all calls and return
-  for (auto *op : duplicateConflictCandidates) {
-    llvm::DenseMap<Value, unsigned> duplicateIndices;
-    // check pair-wise
-    for (auto val : op->getOperands()) {
-      bool firstUse = false;
+  for (auto &it : duplicateReverseMap) {
+    // find all replacable user
+    SmallVector<std::pair<unsigned, Operation *>> useIdxAndOp;
+    for (auto user : it.first.getUsers()) {
+      auto maybeIdx =
+          findMostLikelyUse(it.first, user, duplicateResolveIndicator);
+      if (maybeIdx.hasValue()) {
+        useIdxAndOp.emplace_back(maybeIdx.getValue(), user);
+      }
+    }
 
-      for (auto &it : duplicateReverseMap) {
-        SmallVector<Operation *> conflictOps;
-        conflictOps.clear();
-        collectAllDuplicateOps(op, val, it.first, conflictOps,
-                               duplicateConflictCandidates);
+    // sort by idx
+    llvm::sort(useIdxAndOp, [&](std::pair<unsigned, Operation *> lhs,
+                                std::pair<unsigned, Operation *> rhs) {
+      return lhs.first < rhs.first;
+    });
 
-        if (!conflictOps.empty()) {
-          if (duplicateIndices.count(it.first) == 0) {
-            duplicateIndices.try_emplace(it.first, 0);
-            firstUse = true;
-            break;
-          }
-          duplicateIndices[it.first]++;
-
-          // not first use
-          SmallPtrSet<Operation *, 5> exceptList;
-          createExcept(exceptList, it.first, conflictOps);
-          auto newVal = it.second[duplicateIndices[it.first]];
-          it.first.replaceAllUsesExcept(newVal, exceptList);
-        }
-
-      } // endfor duplicateReverseMap
-      if (firstUse) {
+    unsigned cnt = 0;
+    for (auto &p : useIdxAndOp) {
+      if (cnt == 0) {
+        cnt++;
         continue;
       }
-    } // endfor getOperands
-  }   // endfor duplicateConflictCandidates
+      if (cnt >= it.second.size()) {
+        LLVM_DEBUG(llvm::dbgs()
+                   << "more replacable value than duplicated value\n");
+        break;
+      }
+
+      // replace specific op
+      it.first.replaceUsesWithIf(it.second[cnt], [&](OpOperand &use) {
+        return use.getOwner() == p.second;
+      });
+      cnt++;
+    }
+  }
 }
 
 } // namespace
