@@ -303,7 +303,7 @@ void mlir::registerConvolutionInferReturnTypeComponents() {
         auto numSpatialDims = inputSpatialDims.size();
         SmallVector<int64_t> inputSpatialDimVals(numSpatialDims);
 
-        for (int i = 0; i < numSpatialDims; ++i)
+        for (size_t i = 0; i < numSpatialDims; ++i)
           inputSpatialDimVals[i] = lhsShape[inputSpatialDims[i]];
 
         auto windowOutputShape =

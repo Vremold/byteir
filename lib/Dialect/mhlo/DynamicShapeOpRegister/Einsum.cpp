@@ -313,7 +313,7 @@ LogicalResult einsumParseOperandsPermuteInfo(Operation *op,
     llvm::SmallVector<int64_t> permShape(ctx->totalSize, -1);
     llvm::SmallVector<int64_t> labelDim(kTotalLabels, -1);
 
-    const auto operand = op->getOperand(i);
+    // const auto operand = op->getOperand(i);
     const auto &labels = ctx->opLabels[i];
 
     // current dimension index of the operand

@@ -73,7 +73,7 @@ void mlir::registerDotGeneralShapeConstraints() {
         // batching dimensions match
         auto lhsBatchingDims = dimNumbers.getLhsBatchingDimensions();
         auto rhsBatchingDims = dimNumbers.getRhsBatchingDimensions();
-        for (int i = 0; i < lhsBatchingDims.size(); ++i) {
+        for (size_t i = 0; i < lhsBatchingDims.size(); ++i) {
           auto lDim = lhsBatchingDims[i];
           auto rDim = rhsBatchingDims[i];
           Value lhsD = builder.create<tensor::DimOp>(op->getLoc(),
@@ -86,7 +86,7 @@ void mlir::registerDotGeneralShapeConstraints() {
         // contracting dimensions match
         auto lhsContractingDims = dimNumbers.getLhsContractingDimensions();
         auto rhsContractingDims = dimNumbers.getRhsContractingDimensions();
-        for (int i = 0; i < lhsContractingDims.size(); ++i) {
+        for (size_t i = 0; i < lhsContractingDims.size(); ++i) {
           auto lDim = lhsContractingDims[i];
           auto rDim = rhsContractingDims[i];
           Value lhsD = builder.create<tensor::DimOp>(op->getLoc(),

@@ -47,7 +47,8 @@ void mlir::registerRealDynamicSliceInferReturnTypeComponents() {
 
         int64_t rank = startIndices.size();
 
-        if (!(rank == limitIndices.size() && rank == strides.size())) {
+        if (!(static_cast<size_t>(rank) == limitIndices.size() &&
+              static_cast<size_t>(rank) == strides.size())) {
           LLVM_DEBUG(llvm::dbgs() << "start,limit,strides rank mismatch");
           return failure();
         }

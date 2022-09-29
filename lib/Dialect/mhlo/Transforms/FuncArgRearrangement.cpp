@@ -216,8 +216,7 @@ void FuncArgRearrangementPass::runOnOperation() {
         newRetOperands.push_back(newVal);
       }
 
-      auto newRet =
-          builder.create<func::ReturnOp>(oldRet.getLoc(), newRetOperands);
+      builder.create<func::ReturnOp>(oldRet.getLoc(), newRetOperands);
 
       // collect old ReturnOp in eraser
       eraser.push_back(oldRet);

@@ -122,13 +122,13 @@ LogicalResult ConvertToByrePattern<lmhlo::GatherOp>::matchAndRewrite(
 
   // Offset dimensions should be the defaults.
   if (dimensionNumbers.getOffsetDims().size() !=
-      resultTy.getRank() - indexVectorDim) {
+      static_cast<size_t>(resultTy.getRank() - indexVectorDim)) {
     return rewriter.notifyMatchFailure(
         op, "offset_dims.size not operand rank minus index_vector_dim");
   }
 
   for (auto it : llvm::enumerate(dimensionNumbers.getOffsetDims())) {
-    if ((it.index() + indexVectorDim) != it.value()) {
+    if ((it.index() + indexVectorDim) != static_cast<size_t>(it.value())) {
       return rewriter.notifyMatchFailure(
           op, "offset_dims != [index_vector_dim, result.rank)");
     }

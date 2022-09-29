@@ -270,8 +270,6 @@ struct ConvOrConvBiasFollowedByBroadcastOp
     if (!convWeight.getType().cast<ShapedType>().hasStaticShape())
       return failure();
 
-    Type elemType = convWeight.getType().cast<ShapedType>().getElementType();
-
     // handle the conv + bias scenario
     auto biasAddOp = dyn_cast_or_null<mhlo::AddOp>(convOrBiasUser);
     ConstantOp biasConst = nullptr;

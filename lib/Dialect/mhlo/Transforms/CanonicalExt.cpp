@@ -561,14 +561,14 @@ LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
     return failure();
   }
   size_t spatialDim = op.dimension_numbers().getInputSpatialDimensions().size();
-  assert(dPaddingAttr.size() == spatialDim * 2);
+  assert(dPaddingAttr.size() == static_cast<int64_t>(spatialDim * 2));
 
   llvm::SmallVector<int64_t> newPadding = llvm::to_vector(
       llvm::map_range(dPaddingAttr.getValues<APInt>(),
                       [&](APInt i) { return i.getSExtValue(); }));
   if (op.padding().hasValue()) {
     DenseIntElementsAttr paddingAttr = op.padding().getValue();
-    assert(paddingAttr.size() == spatialDim * 2);
+    assert(paddingAttr.size() == static_cast<int64_t>(spatialDim * 2));
 
     for (const auto &it : llvm::enumerate(paddingAttr.getValues<int64_t>())) {
       newPadding[it.index()] += it.value();
