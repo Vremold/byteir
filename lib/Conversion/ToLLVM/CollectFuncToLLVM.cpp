@@ -78,8 +78,7 @@ struct CollectFuncToLLVMPass
     OpPassManager pm(sm.getOperationName());
     pm.addPass(bufferization::createBufferResultsToOutParamsPass());
     pm.addNestedPass<func::FuncOp>(
-        bufferization::createPromoteBuffersToStackPass(
-            /*isSmallAlloc =*/[](Value) { return true; }));
+        bufferization::createPromoteBuffersToStackPass());
     if (mlir::failed(runPipeline(pm, sm))) {
       return signalPassFailure();
     }

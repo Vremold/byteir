@@ -22,6 +22,7 @@
 
 #include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
+#include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
@@ -35,6 +36,11 @@ namespace {
 
 struct ToLLVMPipelinePass : public ToLLVMPipelineBase<ToLLVMPipelinePass> {
   ToLLVMPipelinePass() : ToLLVMPipelineBase() {}
+
+  void getDependentDialects(::mlir::DialectRegistry &registry) const override {
+    ToLLVMPipelineBase::getDependentDialects(registry);
+    bufferization::registerAllocationOpInterfaceExternalModels(registry);
+  }
 
   void collectAndInlineLLVMSubmodule(ModuleOp top) {
     SmallVector<Operation *> toRemove;
@@ -69,6 +75,8 @@ struct ToLLVMPipelinePass : public ToLLVMPipelineBase<ToLLVMPipelinePass> {
     // memref.global operations into host module
     pm.addPass(arith::createConstantBufferizePass());
     pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
+    pm.addNestedPass<func::FuncOp>(
+        bufferization::createBufferDeallocationPass());
 
     pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
     pm.addPass(createCanonicalizerPass());
