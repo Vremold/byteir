@@ -10,6 +10,7 @@
 #include "byteir/Utils/AttrUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir-hlo/utils/convert_op_folder.h"
 #include "mlir/IR/Matchers.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
@@ -762,6 +763,46 @@ LogicalResult mlir::mhlo::foldTransposeNonSplat(mhlo::TransposeOp op,
   return success();
 }
 
+LogicalResult
+mlir::mhlo::foldBeneficalLargeConvertOp(mhlo::ConvertOp op,
+                                        PatternRewriter &rewriter) {
+  if (!llvm::isa_and_nonnull<mhlo::ConstantOp>(op.operand().getDefiningOp())) {
+    return failure();
+  }
+  DenseElementsAttr valueAttr = op.operand()
+                                    .getDefiningOp<mhlo::ConstantOp>()
+                                    .value()
+                                    .cast<DenseElementsAttr>();
+  Type inputElementType = valueAttr.getType().getElementType();
+  Type outputElementType =
+      op.getResult().getType().cast<ShapedType>().getElementType();
+  auto getWidth = [](Type type) -> int64_t {
+    if (type.isa<FloatType>()) {
+      return type.cast<FloatType>().getWidth();
+    } else if (type.isa<IntegerType>()) {
+      return type.cast<IntegerType>().getWidth();
+    } else {
+      return -1;
+    }
+  };
+  int64_t inputTypeWidth = getWidth(inputElementType);
+  int64_t outputTypeWidth = getWidth(outputElementType);
+  // only fold down convert
+  if (outputTypeWidth > inputTypeWidth) {
+    return failure();
+  }
+
+  ElementsAttr newValueAttr =
+      hlo::convertElementsAttr(valueAttr, outputElementType);
+  if (!newValueAttr) {
+    return failure();
+  }
+  mhlo::ConstantOp newConstantOp =
+      rewriter.create<mhlo::ConstantOp>(op->getLoc(), newValueAttr);
+  rewriter.replaceOp(op, newConstantOp.output());
+  return success();
+}
+
 void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldBroadcastInDim);
   patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
@@ -777,6 +818,7 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MinOp, Min>);
   patterns.add(mlir::mhlo::foldLargeConcatenate);
   patterns.add(mlir::mhlo::foldTransposeNonSplat);
+  patterns.add(mlir::mhlo::foldBeneficalLargeConvertOp);
 }
 
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,

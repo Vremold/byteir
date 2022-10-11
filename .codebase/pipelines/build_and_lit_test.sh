@@ -16,7 +16,7 @@ if [ ! -f "$LLVM_BUILD" ]; then
   tar xzf "$LLVM_BUILD"
 fi
 
-python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-0.0.1.dev0+c55c5a0c-cp37-cp37m-linux_x86_64.whl
+python3 -m pip install -r requirements.txt
 
 mkdir build
 cd build
