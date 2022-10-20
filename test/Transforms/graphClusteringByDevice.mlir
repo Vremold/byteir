@@ -63,5 +63,22 @@ module {
 // CHECK-NEXT:   %2 = mhlo.add %1, %0 : tensor<i1>
 // CHECK-NEXT:   return %2 : tensor<i1>
 // CHECK-NEXT: }
+
+  func.func @ops_used_by_internal_region(%arg0: !shape.witness, %arg1: tensor<?xf32>) -> tensor<1xindex> {
+    %0 = shape.const_shape [32] : tensor<1xindex>
+    %1 = shape.shape_of %arg1 : tensor<?xf32> -> tensor<1xindex>
+    %2 = shape.assuming %arg0 -> (tensor<1xindex>) {
+      %3 = shape.broadcast %1, %0 : tensor<1xindex>, tensor<1xindex> -> tensor<1xindex>
+      shape.assuming_yield %3 : tensor<1xindex>
+    }
+    return %2 : tensor<1xindex>
+  }
+// CHECK-LABEL:   func.func @ops_used_by_internal_region
+// CHECK-NEXT:      %0 = call @ops_used_by_internal_region_test(%arg1, %arg0) : (tensor<?xf32>, !shape.witness) -> tensor<1xindex>
+// CHECK-NEXT:      return %0 : tensor<1xindex>
+  
+// CHECK-LABEL:   func.func @ops_used_by_internal_region_test
+// CHECK:     return %2 : tensor<1xindex>
+
 }
 

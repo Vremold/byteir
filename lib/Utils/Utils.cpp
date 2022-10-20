@@ -264,9 +264,13 @@ mlir::getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
   SmallVector<Value, 4> outputs;
   SmallDenseSet<Operation *> opSet;
   for (Operation *op : cluster) {
-    bool inserted = opSet.insert(op).second;
-    (void)inserted;
-    assert(inserted && "cluster contains duplicate operations");
+    // Should add all the operations recursively because a value might be used
+    // by an operation of an inner region.
+    op->walk([&](Operation *innerOp) {
+      bool inserted = opSet.insert(innerOp).second;
+      (void)inserted;
+      assert(inserted && "cluster contains duplicate operations");
+    });
   }
 
   for (Operation *op : cluster) {
