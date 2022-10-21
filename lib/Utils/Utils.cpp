@@ -260,7 +260,8 @@ mlir::getInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
 }
 
 SmallVector<Value, 4>
-mlir::getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
+mlir::getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster,
+                          const llvm::DenseMap<Value, int64_t> *outputStats) {
   SmallVector<Value, 4> outputs;
   SmallDenseSet<Operation *> opSet;
   for (Operation *op : cluster) {
@@ -280,7 +281,12 @@ mlir::getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster) {
             return !opSet.count(use.getOwner());
           });
       if (hasExternalUser) {
-        outputs.push_back(result);
+        if (outputStats != nullptr && outputStats->count(result)) {
+          outputs.insert(outputs.end(), outputStats->find(result)->second,
+                         result);
+        } else {
+          outputs.push_back(result);
+        }
       }
     }
   }

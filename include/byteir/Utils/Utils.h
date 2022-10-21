@@ -134,8 +134,9 @@ Optional<unsigned> findResultIndex(mlir::Operation *, mlir::Value);
 SmallVector<Value, 4>
 getInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
 
-SmallVector<Value, 4>
-getOutputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);
+SmallVector<Value, 4> getOutputsOfCluster(
+    const llvm::SmallVector<Operation *, 8> &cluster,
+    const llvm::DenseMap<Value, int64_t> *outputStats = nullptr);
 
 // return true, if memref is only used in op in the filters, or alloc or dealloc
 bool isMemrefTrivial(mlir::Value memref,

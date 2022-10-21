@@ -80,5 +80,17 @@ module {
 // CHECK-LABEL:   func.func @ops_used_by_internal_region_test
 // CHECK:     return %2 : tensor<1xindex>
 
+  func.func @duplicate_outputs() -> (tensor<1xi64>, tensor<1xi64>) {
+    %0 = mhlo.constant dense<1> : tensor<1xi64>
+    return %0, %0 : tensor<1xi64>, tensor<1xi64>
+  }
+// CHECK-LABEL:  func.func @duplicate_outputs
+// CHECK-NEXT:     %0:2 = call @duplicate_outputs_test() : () -> (tensor<1xi64>, tensor<1xi64>)
+// CHECK-NEXT:     return %0#0, %0#1 : tensor<1xi64>, tensor<1xi64>
+  
+// CHECK-LABEL:  func.func @duplicate_outputs_test
+// CHECK-NEXT:     %0 = mhlo.constant dense<1> : tensor<1xi64>
+// CHECK-NEXT:     return %0, %0 : tensor<1xi64>, tensor<1xi64>
+
 }
 

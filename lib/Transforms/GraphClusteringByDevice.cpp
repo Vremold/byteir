@@ -58,7 +58,8 @@ void insertOpsRecursively(Operation *op, SmallDenseSet<Operation *> &opSet) {
 
 Optional<SmallVector<FunctionMetadata, 4>>
 getFunctionMetadatas(func::FuncOp funcOp, StringRef attrName,
-                     StringRef deviceAttr, StringRef deviceAnchorName) {
+                     StringRef deviceAttr, StringRef deviceAnchorName,
+                     bool dupOutputs) {
   SmallVector<FunctionMetadata, 4> metadatas;
   SmallDenseSet<Operation *> hostOps;
   for (Operation &op : funcOp.front().without_terminator()) {
@@ -67,6 +68,16 @@ getFunctionMetadatas(func::FuncOp funcOp, StringRef attrName,
       if (attr.getValue().str() == DEVICE_ATTR_HOST) {
         insertOpsRecursively(&op, hostOps);
       }
+    }
+  }
+
+  Operation &retOp = funcOp.front().back();
+  llvm::DenseMap<Value, int64_t> retStats;
+  for (const auto &operand : retOp.getOperands()) {
+    if (retStats.count(operand)) {
+      retStats[operand] += 1;
+    } else {
+      retStats.insert(std::make_pair(operand, 1));
     }
   }
 
@@ -82,7 +93,8 @@ getFunctionMetadatas(func::FuncOp funcOp, StringRef attrName,
       }
     }
     hostFuncMetadata.inputs = getInputsOfCluster(hostFuncMetadata.ops);
-    hostFuncMetadata.results = getOutputsOfCluster(hostFuncMetadata.ops);
+    hostFuncMetadata.results = getOutputsOfCluster(
+        hostFuncMetadata.ops, dupOutputs ? &retStats : nullptr);
     metadatas.push_back(hostFuncMetadata);
   }
 
@@ -98,7 +110,9 @@ getFunctionMetadatas(func::FuncOp funcOp, StringRef attrName,
   }
   if (deviceFuncMetadata.ops.size() > 0) {
     deviceFuncMetadata.inputs = getInputsOfCluster(deviceFuncMetadata.ops);
-    deviceFuncMetadata.results = getOutputsOfCluster(deviceFuncMetadata.ops);
+    deviceFuncMetadata.results = getOutputsOfCluster(
+        deviceFuncMetadata.ops, dupOutputs ? &retStats : nullptr);
+
     metadatas.push_back(deviceFuncMetadata);
   }
 
@@ -159,7 +173,8 @@ void createFunctions(ModuleOp module_op,
 }
 
 void createCalls(MLIRContext *context,
-                 const SmallVector<FunctionMetadata, 4> &metadatas) {
+                 const SmallVector<FunctionMetadata, 4> &metadatas,
+                 Operation *retOp, bool dupOutputs) {
   BlockAndValueMapping mapping;
   for (auto &metadata : metadatas) {
     // Creates the CallOp.
@@ -181,12 +196,30 @@ void createCalls(MLIRContext *context,
     Operation *clonedCallOp = builder.clone(*callOp.getOperation(), mapping);
     callOp.erase();
 
+    llvm::DenseMap<Value, SmallVector<int>> retOperand2Indices;
+    for (int i = retOp->getNumOperands() - 1; i >= 0; --i) {
+      Value value = retOp->getOperand(i);
+      retOperand2Indices[value].push_back(i);
+    }
+
     // Replaces usages of the results of the original operations with the
     // results of the CallOp operations.
     for (int i : llvm::seq<int>(0, metadata.results.size())) {
       Value originalValue = metadata.results[i];
       Value newValue = clonedCallOp->getResult(i);
-      originalValue.replaceAllUsesWith(newValue);
+      if (dupOutputs) {
+        originalValue.replaceAllUsesExcept(newValue, retOp);
+        if (retOperand2Indices.find(originalValue) !=
+            retOperand2Indices.end()) {
+          assert(retOperand2Indices[originalValue].size() > 0 &&
+                 "Corresponding indices vector must not be empty");
+          int idx = retOperand2Indices[originalValue].back();
+          retOperand2Indices[originalValue].pop_back();
+          retOp->getOpOperand(idx).set(newValue);
+        }
+      } else {
+        originalValue.replaceAllUsesWith(newValue);
+      }
       mapping.map(originalValue, newValue);
     }
   }
@@ -197,13 +230,14 @@ struct GraphClusteringByDevicePass
 
   explicit GraphClusteringByDevicePass(std::string attrName, std::string device,
                                        std::string deviceAnchorName,
-                                       bool dupNonSplat)
+                                       bool dupNonSplat, bool dupOutputs)
       : GraphClusteringByDeviceBase<
             GraphClusteringByDevicePass>::GraphClusteringByDeviceBase() {
     this->attrName = attrName;
     this->device = device;
     this->deviceAnchorName = deviceAnchorName;
     this->dupNonSplat = dupNonSplat;
+    this->dupOutputs = dupOutputs;
   }
 
   void runOnOperation() override;
@@ -223,15 +257,16 @@ void GraphClusteringByDevicePass::runOnOperation() {
     originalFuncs.push_back(funcOp);
   }
   for (auto funcOp : originalFuncs) {
-    Optional<SmallVector<FunctionMetadata, 4>> metadatas =
-        getFunctionMetadatas(funcOp, attrName, device, deviceAnchorName);
+    Optional<SmallVector<FunctionMetadata, 4>> metadatas = getFunctionMetadatas(
+        funcOp, attrName, device, deviceAnchorName, dupOutputs);
     if (!metadatas) {
       signalPassFailure();
       return;
     }
 
+    Operation &retOp = funcOp.front().back();
     createFunctions(moduleOp, *metadatas, attrName);
-    createCalls(context, *metadatas);
+    createCalls(context, *metadatas, &retOp, dupOutputs);
 
     // Erases the original operations which have been cloned in the partitioned
     // functions.
@@ -249,7 +284,7 @@ std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createGraphClusteringByDevicePass(std::string attrName,
                                         std::string device,
                                         std::string deviceAnchorName,
-                                        bool dupNonSplat) {
+                                        bool dupNonSplat, bool dupOutputs) {
   return std::make_unique<GraphClusteringByDevicePass>(
-      attrName, device, deviceAnchorName, dupNonSplat);
+      attrName, device, deviceAnchorName, dupNonSplat, dupOutputs);
 }

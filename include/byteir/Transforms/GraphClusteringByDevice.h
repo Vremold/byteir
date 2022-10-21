@@ -24,7 +24,7 @@ constexpr StringRef getHostAnchorName() { return "__byteir_host_device__"; }
 std::unique_ptr<OperationPass<ModuleOp>> createGraphClusteringByDevicePass(
     std::string attrName = "device", std::string device = "test",
     std::string deviceAnchorName = "__byteir_test_device__",
-    bool dupNonSplat = false);
+    bool dupNonSplat = false, bool dupOutputs = true);
 
 } // namespace mlir
 
