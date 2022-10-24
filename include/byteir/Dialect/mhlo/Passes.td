@@ -111,6 +111,11 @@ def DynamicShapeClustering : Pass<"dynamic-shape-clustering", "mlir::ModuleOp"> 
     source are only from function arguments.
   }];
   let constructor = "mlir::createDynamicShapeClusteringPass()";
+  let options = [
+    Option<"anchorAttr", "anchor-attr", "std::string",
+            /*default=*/"",
+            "An optional Unit attribute anchoring on target functions.">,
+  ];
 }
 
 //===----------------------------------------------------------------------===//

@@ -127,7 +127,7 @@ def SCFOptPipeline : Pass<"scf-opt", "mlir::ModuleOp"> {
 // Shape Opt Pipeline
 //===----------------------------------------------------------------------===//
 
-def ShapeOptPipeline : Pass<"shape-opt", "mlir::ModuleOp"> {
+def ShapeOptPipeline : Pass<"shape-opt", "mlir::func::FuncOp"> {
   let summary = "Shape Opt Pipeline";
   let constructor = "mlir::createShapeOptPipelinePass()";
   let dependentDialects = [

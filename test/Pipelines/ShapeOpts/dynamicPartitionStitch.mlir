@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -shape-opt | FileCheck %s
+// RUN: byteir-opt %s -shape-opt --dynamic-shape-clustering | FileCheck %s
 
 func.func @dynamic_partition_and_stitch(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
   %0 = shape.const_shape [4] : tensor<1xindex>

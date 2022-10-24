@@ -18,7 +18,8 @@ constexpr StringRef getDynamicFuncAttrName() {
   return "__byteir_dynamic_sub_function";
 }
 
-std::unique_ptr<OperationPass<ModuleOp>> createDynamicShapeClusteringPass();
+std::unique_ptr<OperationPass<ModuleOp>>
+createDynamicShapeClusteringPass(llvm::StringRef anchorTag = "");
 
 } // namespace mlir
 

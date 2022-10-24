@@ -26,21 +26,20 @@ struct ShapeOptPipelinePass
   ShapeOptPipelinePass() : ShapeOptPipelineBase() {}
 
   void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
+    auto funcOp = getOperation();
+    OpPassManager pm(funcOp.getOperationName());
 
-    pm.addNestedPass<func::FuncOp>(createSetAssumingAlwaysTruePass());
+    pm.addPass(createSetAssumingAlwaysTruePass());
     pm.addPass(createCanonicalizerPass());
-    pm.addNestedPass<func::FuncOp>(createInsertTieShapePass());
-    pm.addNestedPass<func::FuncOp>(createInsertShapeConstraintPass());
-    pm.addNestedPass<func::FuncOp>(createByteIRShapeReificationPass());
+    pm.addPass(createInsertTieShapePass());
+    pm.addPass(createInsertShapeConstraintPass());
+    pm.addPass(createByteIRShapeReificationPass());
     addCleanUpPassPipeline(pm);
-    pm.addNestedPass<func::FuncOp>(createResolveShapeConstraintPass());
-    pm.addNestedPass<func::FuncOp>(createBoundedShapeInferencePass());
+    pm.addPass(createResolveShapeConstraintPass());
+    pm.addPass(createBoundedShapeInferencePass());
     pm.addPass(createCanonicalizerPass());
-    pm.addPass(createDynamicShapeClusteringPass());
 
-    if (mlir::failed(runPipeline(pm, m))) {
+    if (mlir::failed(runPipeline(pm, funcOp))) {
       signalPassFailure();
     }
   }
@@ -48,6 +47,7 @@ struct ShapeOptPipelinePass
 
 } // namespace
 
-std::unique_ptr<OperationPass<ModuleOp>> mlir::createShapeOptPipelinePass() {
+std::unique_ptr<OperationPass<func::FuncOp>>
+mlir::createShapeOptPipelinePass() {
   return std::make_unique<ShapeOptPipelinePass>();
 }

@@ -155,12 +155,19 @@ DynamicSourceAnalysis::DynamicSourceAnalysis(Operation *operation)
 struct DynamicShapeClusteringPass
     : public DynamicShapeClusteringBase<DynamicShapeClusteringPass> {
 
+  explicit DynamicShapeClusteringPass(const std::string &anchorAttr)
+      : DynamicShapeClusteringBase<DynamicShapeClusteringPass>() {
+    this->anchorAttr = anchorAttr;
+  }
+
   void runOnOperation() override {
     ModuleOp moduleOp = getOperation();
     SymbolTable symTable(moduleOp);
     SmallVector<func::FuncOp> funcOps;
     for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
-      funcOps.push_back(funcOp);
+      if (this->anchorAttr == "" || funcOp->hasAttr(this->anchorAttr)) {
+        funcOps.push_back(funcOp);
+      }
     }
 
     for (auto funcOp : funcOps) {
@@ -267,6 +274,6 @@ struct DynamicShapeClusteringPass
 } // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createDynamicShapeClusteringPass() {
-  return std::make_unique<DynamicShapeClusteringPass>();
+mlir::createDynamicShapeClusteringPass(llvm::StringRef anchorTag /*=""*/) {
+  return std::make_unique<DynamicShapeClusteringPass>(anchorTag.str());
 }

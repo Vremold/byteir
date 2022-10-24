@@ -12,9 +12,11 @@
 #include <memory>
 
 namespace mlir {
-class ModuleOp;
+namespace func {
+class FuncOp;
+} // namespace func
 
-std::unique_ptr<OperationPass<ModuleOp>> createShapeOptPipelinePass();
+std::unique_ptr<OperationPass<func::FuncOp>> createShapeOptPipelinePass();
 
 } // namespace mlir
 
