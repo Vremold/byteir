@@ -8,13 +8,17 @@
 #ifndef BYTEIR_PIPELINES_SCFOPT_H
 #define BYTEIR_PIPELINES_SCFOPT_H
 
-#include "mlir/Pass/Pass.h"
-#include <memory>
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Pass/PassRegistry.h"
 
 namespace mlir {
-class ModuleOp;
 
-std::unique_ptr<OperationPass<ModuleOp>> createSCFOptPipelinePass();
+void createSCFOptPipeline(OpPassManager &pm);
+
+inline void registerSCFOptPipeline() {
+  PassPipelineRegistration<>("scf-opt", "SCF Opt Pipeline",
+                             createSCFOptPipeline);
+}
 
 } // namespace mlir
 

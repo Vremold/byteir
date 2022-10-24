@@ -8,13 +8,17 @@
 #ifndef BYTEIR_PIPELINES_NVVMCODEGEN_H
 #define BYTEIR_PIPELINES_NVVMCODEGEN_H
 
-#include "mlir/Pass/Pass.h"
-#include <memory>
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Pass/PassRegistry.h"
 
 namespace mlir {
-class ModuleOp;
 
-std::unique_ptr<OperationPass<ModuleOp>> createNVVMCodegenPipelinePass();
+void createNVVMCodegenPipeline(OpPassManager &pm);
+
+inline void registerNVVMCodegenPipeline() {
+  PassPipelineRegistration<>("nvvm-codegen", "NVVM Codegen Pipeline",
+                             createNVVMCodegenPipeline);
+}
 
 } // namespace mlir
 

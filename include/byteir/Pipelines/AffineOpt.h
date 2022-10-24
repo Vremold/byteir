@@ -8,13 +8,17 @@
 #ifndef BYTEIR_PIPELINES_AFFINEOPT_H
 #define BYTEIR_PIPELINES_AFFINEOPT_H
 
-#include "mlir/Pass/Pass.h"
-#include <memory>
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Pass/PassRegistry.h"
 
 namespace mlir {
-class ModuleOp;
 
-std::unique_ptr<OperationPass<ModuleOp>> createAffineOptPipelinePass();
+void createAffineOptPipeline(OpPassManager &pm);
+
+inline void registerAffineOptPipeline() {
+  PassPipelineRegistration<>("affine-opt", "Affine Opt Pipeline",
+                             createAffineOptPipeline);
+}
 
 } // namespace mlir
 

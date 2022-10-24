@@ -5,18 +5,21 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_PIPELINES_TOLLVM_H
-#define BYTEIR_PIPELINES_TOLLVM_H
+#ifndef BYTEIR_PIPELINES_HOST_TOLLVM_H
+#define BYTEIR_PIPELINES_HOST_TOLLVM_H
 
-#include "mlir/Pass/Pass.h"
-#include <memory>
-#include <string>
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Pass/PassRegistry.h"
 
 namespace mlir {
-class ModuleOp;
 
-std::unique_ptr<OperationPass<ModuleOp>> createToLLVMPipelinePass();
+void createToLLVMPipeline(OpPassManager &pm);
+
+inline void registerToLLVMPipeline() {
+  PassPipelineRegistration<>("to-llvm", "To LLVM dialect Pipeline",
+                             createToLLVMPipeline);
+}
 
 } // namespace mlir
 
-#endif // BYTEIR_PIPELINES_TOLLVM_H
+#endif // BYTEIR_PIPELINES_HOST_TOLLVM_H

@@ -15,34 +15,13 @@
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
-#include "./PassDetail.h"
-
 using namespace mlir;
 
-namespace {
-
-struct SCFOptPipelinePass : public SCFOptPipelineBase<SCFOptPipelinePass> {
-  SCFOptPipelinePass() : SCFOptPipelineBase() {}
-
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
-
-    pm.addNestedPass<func::FuncOp>(createConvertLinalgToLoopsPass());
-    // lower affine.apply in case there is some
-    pm.addPass(createLowerAffinePass());
-    pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
-    pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
-    addCleanUpPassPipeline(pm);
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
-
-} // namespace
-
-std::unique_ptr<OperationPass<ModuleOp>> mlir::createSCFOptPipelinePass() {
-  return std::make_unique<SCFOptPipelinePass>();
+void mlir::createSCFOptPipeline(OpPassManager &pm) {
+  pm.addNestedPass<func::FuncOp>(createConvertLinalgToLoopsPass());
+  // lower affine.apply in case there is some
+  pm.addPass(createLowerAffinePass());
+  pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
+  pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
+  addCleanUpPassPipeline(pm);
 }

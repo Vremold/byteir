@@ -7,7 +7,6 @@ add_mlir_library(ByteIRGPUPipelines
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Pipelines/GPU
 
   DEPENDS
-  ByteIRGPUPipelinesPassIncGen
   ByteIRTransforms
   ByteIRUtils
 
@@ -17,9 +16,5 @@ add_mlir_library(ByteIRGPUPipelines
   ByteIRSCFPasses
   ByteIRToPTX
   MLIRIR
-  MLIRAffineDialect
-  MLIRLinalgDialect
-  MLIRMemRefDialect
-  MLIRSCFDialect
   MLIRTransforms
 )

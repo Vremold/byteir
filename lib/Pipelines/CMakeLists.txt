@@ -19,7 +19,6 @@ add_mlir_library(ByteIRPipelines
   ByteIRGPUPipelines
   ByteIRHostPipelines
   ByteIRMhloPasses
-  ByteIRPipelinesPassIncGen
   ByteIRShapePasses
   ByteIRLinalgPasses
   ByteIRTransforms
@@ -30,10 +29,6 @@ add_mlir_library(ByteIRPipelines
   ByteIRHostPipelines
   ByteIRUtils
   MLIRIR
-  MLIRAffineDialect
-  MLIRLinalgDialect
-  MLIRMemRefDialect
-  MLIRSCFDialect
   MLIRTransforms
   ByteIRAcePasses
   ByteIRByrePasses

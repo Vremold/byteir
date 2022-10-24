@@ -13,39 +13,10 @@
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Transforms/Passes.h"
 
-#include "./PassDetail.h"
-
 using namespace mlir;
 
 namespace {
-
-struct LinalgTensorOptPipelinePass
-    : public LinalgTensorOptPipelineBase<LinalgTensorOptPipelinePass> {
-  LinalgTensorOptPipelinePass(const std::string &target)
-      : LinalgTensorOptPipelineBase() {
-    // TODO use target to decide passes
-    this->target = target;
-  }
-
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
-
-    if (this->target.getValue() == "CPU") {
-      addCPULinalgOptPasses(pm);
-    } else {
-      addGenericLinalgElementwisePasses(pm);
-    }
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
-
-} // namespace
-
-void mlir::addGenericLinalgElementwisePasses(OpPassManager &pm) {
+void addGenericLinalgElementwisePasses(OpPassManager &pm) {
   pm.addNestedPass<func::FuncOp>(
       createHloFusionToLinalgPass(getByteIRElementwiseFusionAttrName()));
   pm.addNestedPass<func::FuncOp>(createUnrealizedCastToLinalgPass());
@@ -54,7 +25,7 @@ void mlir::addGenericLinalgElementwisePasses(OpPassManager &pm) {
   pm.addPass(createCSEPass());
 }
 
-void mlir::addCPULinalgOptPasses(OpPassManager &pm) {
+void addCPULinalgOptPasses(OpPassManager &pm) {
   pm.addNestedPass<func::FuncOp>(
       createHloFusionToLinalgPass(getByteIRHloAggressiveFusionAttrName()));
   pm.addNestedPass<func::FuncOp>(createUnrealizedCastToLinalgPass());
@@ -64,7 +35,17 @@ void mlir::addCPULinalgOptPasses(OpPassManager &pm) {
   // TODO: more opt passes
 }
 
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createLinalgTensorOptPipelinePass(const std::string &target) {
-  return std::make_unique<LinalgTensorOptPipelinePass>(target);
+void createLinalgTensorOptPipelineImpl(OpPassManager &pm,
+                                       const std::string &target) {
+  if (target == "CPU") {
+    addCPULinalgOptPasses(pm);
+  } else {
+    addGenericLinalgElementwisePasses(pm);
+  }
+}
+} // namespace
+
+void mlir::createLinalgTensorOptPipeline(
+    OpPassManager &pm, const LinalgTensorOptPipelineOptions &options) {
+  createLinalgTensorOptPipelineImpl(pm, options.target);
 }

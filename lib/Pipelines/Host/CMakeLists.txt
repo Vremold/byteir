@@ -5,23 +5,14 @@ add_mlir_library(ByteIRHostPipelines
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Pipelines/Host
 
-  DEPENDS
-  ByteIRHostPipelinesPassIncGen
-
   LINK_LIBS PUBLIC
   MLIRIR
 
-  MLIRArithmeticDialect
-  MLIRBufferizationDialect
-  MLIRControlFlowDialect
   MLIRFuncDialect
-  MLIRLLVMDialect
-  MLIRMemRefDialect
-  MLIRSCFDialect
-  MLIRTensorDialect
 
   ByteIRToLLVM
   MLIRArithmeticTransforms
+  MLIRBufferizationTransforms
   MLIRFuncToLLVM
   MLIRMathToLLVM
   MLIRMemRefToLLVM

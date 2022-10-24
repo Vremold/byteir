@@ -8,18 +8,19 @@
 #ifndef BYTEIR_PIPELINES_TOTALBUFFERIZE_H
 #define BYTEIR_PIPELINES_TOTALBUFFERIZE_H
 
-#include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
-#include <memory>
-#include <string>
+#include "mlir/Pass/PassRegistry.h"
 
 namespace mlir {
-class ModuleOp;
 
-void addByteIRTotalBufferizePatterns(OpPassManager &pm);
+void createByteIRTotalBufferizePipeline(OpPassManager &pm);
 
-std::unique_ptr<OperationPass<ModuleOp>>
-createByteIRTotalBufferizePipelinePass();
+inline void registerByteIRTotalBufferizePipeline() {
+  PassPipelineRegistration<>(
+      "byteir-total-bufferize",
+      "Performs all bufferization, including mhlo to lmhlo",
+      createByteIRTotalBufferizePipeline);
+}
 
 } // namespace mlir
 

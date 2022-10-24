@@ -14,13 +14,22 @@
 #include <string>
 
 namespace mlir {
-class ModuleOp;
+struct LinalgTensorOptPipelineOptions
+    : public PassPipelineOptions<LinalgTensorOptPipelineOptions> {
+  Option<std::string> target{
+      *this, "target",
+      llvm::cl::desc("An optional attribute to speicify target."),
+      llvm::cl::init("")};
+};
 
-void addGenericLinalgElementwisePasses(OpPassManager &pm);
-void addCPULinalgOptPasses(OpPassManager &pm);
+void createLinalgTensorOptPipeline(
+    OpPassManager &pm, const LinalgTensorOptPipelineOptions &options);
 
-std::unique_ptr<OperationPass<ModuleOp>>
-createLinalgTensorOptPipelinePass(const std::string &target = "");
+inline void registerLinalgTensorOptPipeline() {
+  PassPipelineRegistration<LinalgTensorOptPipelineOptions>(
+      "linalg-tensor-opt", "Linalg Opt Pipeline in Tensor",
+      createLinalgTensorOptPipeline);
+}
 
 } // namespace mlir
 

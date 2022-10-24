@@ -12,48 +12,18 @@
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
-#include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
-#include "mlir/Dialect/LLVMIR/NVVMDialect.h"
-#include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/IR/SCF.h"
-#include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
-
-#include "./PassDetail.h"
 
 using namespace mlir;
 
-namespace {
-
-struct NVVMCodegenPipelinePass
-    : public NVVMCodegenPipelineBase<NVVMCodegenPipelinePass> {
-  NVVMCodegenPipelinePass() : NVVMCodegenPipelineBase() {
-    // TODO add target for supporting different SMs
-    // TODO use target to decide passes
-  }
-
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
-
-    pm.addPass(createCollectGPUKernelPass());
-    pm.addPass(createConvertSCFToCFPass());
-    pm.addNestedPass<gpu::GPUModuleOp>(createGPUToNVVMExtPass());
-    pm.addPass(createCSEPass());
-    pm.addPass(createReconcileUnrealizedCastsPass());
-    addMultiCSEPipeline(pm, 3);
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
-
-} // namespace
-
-std::unique_ptr<OperationPass<ModuleOp>> mlir::createNVVMCodegenPipelinePass() {
-  return std::make_unique<NVVMCodegenPipelinePass>();
+void mlir::createNVVMCodegenPipeline(OpPassManager &pm) {
+  // TODO add target for supporting different SMs
+  // TODO use target to decide passes
+  pm.addPass(createCollectGPUKernelPass());
+  pm.addPass(createConvertSCFToCFPass());
+  pm.addNestedPass<gpu::GPUModuleOp>(createGPUToNVVMExtPass());
+  pm.addPass(createCSEPass());
+  pm.addPass(createReconcileUnrealizedCastsPass());
+  addMultiCSEPipeline(pm, 3);
 }

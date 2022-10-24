@@ -29,6 +29,10 @@ struct AnchoredFuncPipelinePass
     this->anchorAttr = anchor;
   }
 
+  void getDependentDialects(DialectRegistry &registry) const override {
+    pm.getDependentDialects(registry);
+  }
+
   void runOnOperation() override {
     if (anchorAttr.empty()) {
       return;

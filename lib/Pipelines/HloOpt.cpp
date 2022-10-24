@@ -12,61 +12,12 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
 
-#include "./PassDetail.h"
-
 using namespace mlir;
 using namespace mlir::mhlo;
 
 namespace {
-
-struct HloOptPipelinePass : public HloOptPipelineBase<HloOptPipelinePass> {
-  HloOptPipelinePass(const std::string &entry, const std::string &target,
-                     bool outlineSingleElemwiseOp)
-      : HloOptPipelineBase() {
-    // TODO use target to decide passes
-    this->entryFunc = entry;
-    this->target = target;
-    this->outlineSingleElemwiseOp = outlineSingleElemwiseOp;
-  }
-
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
-
-    pm.addPass(createInlinerPass());
-    pm.addPass(createCanonicalizerPass());
-
-    addCleanUpPassPipeline(pm);
-
-    // generic folding
-    pm.addNestedPass<func::FuncOp>(createHloFolderPass());
-    pm.addNestedPass<func::FuncOp>(createHloFolderPass());
-    pm.addNestedPass<func::FuncOp>(createHloTransposeDotToDotGeneralPass());
-    pm.addNestedPass<func::FuncOp>(createReduceFusionPass());
-
-    // rewrite with constraint
-    pm.addNestedPass<func::FuncOp>(createRewriteWithConstraintPass());
-
-    addCleanUpPassPipeline(pm);
-
-    // add fusion patterns
-    if (this->target.getValue() == "CPU") {
-      addCPUHloFusionPatterns(pm, entryFunc);
-    } else {
-      addGenericHloFusionPatterns(pm, entryFunc,
-                                  outlineSingleElemwiseOp.getValue());
-    }
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
-} // namespace
-
-void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
-                                       const std::string &entry,
-                                       bool outlineSingleElemwiseOp) {
+void addGenericHloFusionPatterns(OpPassManager &pm, const std::string &entry,
+                                 bool outlineSingleElemwiseOp) {
   // cluster constraint
   pm.addNestedPass<func::FuncOp>(createClusterConstraintPass());
   pm.addPass(createFusionOutliningPass());
@@ -91,8 +42,7 @@ void mlir::addGenericHloFusionPatterns(OpPassManager &pm,
   pm.addPass(createCSEPass());
 }
 
-void mlir::addCPUHloFusionPatterns(OpPassManager &pm,
-                                   const std::string &entry) {
+void addCPUHloFusionPatterns(OpPassManager &pm, const std::string &entry) {
   // cluster constraint
   pm.addNestedPass<func::FuncOp>(createClusterConstraintPass());
   pm.addPass(createFusionOutliningPass());
@@ -108,10 +58,37 @@ void mlir::addCPUHloFusionPatterns(OpPassManager &pm,
   pm.addPass(createCSEPass());
 }
 
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createHloOptPipelinePass(const std::string &entry,
-                               const std::string &target,
-                               bool outliningSingleElemwiseOp) {
-  return std::make_unique<HloOptPipelinePass>(entry, target,
-                                              outliningSingleElemwiseOp);
+void createHloOptPipelineImpl(OpPassManager &pm, const std::string &entryFunc,
+                              const std::string &target,
+                              bool outlineSingleElemwiseOp) {
+
+  pm.addPass(createInlinerPass());
+  pm.addPass(createCanonicalizerPass());
+
+  addCleanUpPassPipeline(pm);
+
+  // generic folding
+  pm.addNestedPass<func::FuncOp>(createHloFolderPass());
+  pm.addNestedPass<func::FuncOp>(createHloFolderPass());
+  pm.addNestedPass<func::FuncOp>(createHloTransposeDotToDotGeneralPass());
+  pm.addNestedPass<func::FuncOp>(createReduceFusionPass());
+
+  // rewrite with constraint
+  pm.addNestedPass<func::FuncOp>(createRewriteWithConstraintPass());
+
+  addCleanUpPassPipeline(pm);
+
+  // add fusion patterns
+  if (target == "CPU") {
+    addCPUHloFusionPatterns(pm, entryFunc);
+  } else {
+    addGenericHloFusionPatterns(pm, entryFunc, outlineSingleElemwiseOp);
+  }
+}
+} // namespace
+
+void mlir::createHloOptPipeline(OpPassManager &pm,
+                                const HloOptPipelineOptions &options) {
+  createHloOptPipelineImpl(pm, options.entryFunc, options.target,
+                           options.outlineSingleElemwiseOp);
 }

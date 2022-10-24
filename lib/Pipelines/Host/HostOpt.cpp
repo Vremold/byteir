@@ -6,37 +6,19 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/Host/HostOpt.h"
-#include "./PassDetail.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/IR/BuiltinOps.h"
-#include "mlir/Pass/PassManager.h"
-
 #include "byteir/Conversion/ToLLVM/ToLLVM.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 
 using namespace mlir;
 
 namespace {
-
-struct HostOptPipelinePass : public HostOptPipelineBase<HostOptPipelinePass> {
-  HostOptPipelinePass(const std::string &fileName) : HostOptPipelineBase() {
-    this->fileName = fileName;
-  }
-
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
-    pm.addNestedPass<func::FuncOp>(createGenLLVMConfigPass(this->fileName));
-    pm.addPass(createCollectFuncToLLVMPass());
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
-
+void createHostOptPipelineImpl(OpPassManager &pm, const std::string &fileName) {
+  pm.addNestedPass<func::FuncOp>(createGenLLVMConfigPass(fileName));
+  pm.addPass(createCollectFuncToLLVMPass());
+}
 } // namespace
 
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createHostOptPipelinePass(const std::string &fileName) {
-  return std::make_unique<HostOptPipelinePass>(fileName);
+void mlir::createHostOptPipeline(OpPassManager &pm,
+                                 const HostOptPipelineOptions &options) {
+  createHostOptPipelineImpl(pm, options.fileName);
 }

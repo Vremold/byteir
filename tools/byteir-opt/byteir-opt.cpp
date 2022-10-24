@@ -24,9 +24,7 @@
 #include "byteir/Dialect/Shape/Passes.h"
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/Passes.h"
-#include "byteir/Pipelines/GPU/Passes.h"
-#include "byteir/Pipelines/Host/Passes.h"
-#include "byteir/Pipelines/Passes.h"
+#include "byteir/Pipelines/InitAllPipelines.h"
 #include "byteir/Transforms/Passes.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir-hlo/Dialect/lhlo/transforms/register_passes.h"
@@ -97,9 +95,9 @@ int main(int argc, char **argv) {
   registerByteIRSCFPasses();
   registerByteIRShapePasses();
 
-  registerByteIRPipelinesPasses();
-  registerByteIRGPUPipelinesPasses();
-  registerByteIRHostPipelinesPasses();
+  registerAllByteIRCommonPipelines();
+  registerAllByteIRGPUPipelines();
+  registerAllByteIRHostPipelines();
 
 #ifdef BYTEIR_INCLUDE_TESTS
   registerTestPasses();

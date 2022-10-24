@@ -6,9 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/Host/ToLLVM.h"
-#include "./PassDetail.h"
 #include "byteir/Conversion/ToLLVM/ToLLVM.h"
-#include "mlir/Pass/PassManager.h"
 
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
 #include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
@@ -16,31 +14,19 @@
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
 #include "mlir/Dialect/Arithmetic/Transforms/Passes.h"
+#include "mlir/Dialect/Bufferization/Transforms/Passes.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
 
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
-#include "mlir/Dialect/Bufferization/IR/Bufferization.h"
-#include "mlir/Dialect/Bufferization/Transforms/Passes.h"
-#include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
-#include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/IR/SCF.h"
-#include "mlir/Dialect/Tensor/IR/Tensor.h"
-
 using namespace mlir;
 
 namespace {
-
-struct ToLLVMPipelinePass : public ToLLVMPipelineBase<ToLLVMPipelinePass> {
-  ToLLVMPipelinePass() : ToLLVMPipelineBase() {}
-
-  void getDependentDialects(::mlir::DialectRegistry &registry) const override {
-    ToLLVMPipelineBase::getDependentDialects(registry);
-    bufferization::registerAllocationOpInterfaceExternalModels(registry);
-  }
+// pass to collect llvm submodule which was never used outside `ToLLVMPipeline`
+struct CollectLLVMSubmodulePass
+    : public PassWrapper<CollectLLVMSubmodulePass, OperationPass<ModuleOp>> {
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(CollectLLVMSubmodulePass);
 
   void collectAndInlineLLVMSubmodule(ModuleOp top) {
     SmallVector<Operation *> toRemove;
@@ -68,34 +54,25 @@ struct ToLLVMPipelinePass : public ToLLVMPipelineBase<ToLLVMPipelinePass> {
     if (!m->hasAttr(getByteIRLLVMModuleAttrName())) {
       collectAndInlineLLVMSubmodule(m);
     }
-
-    OpPassManager pm(m.getOperationName());
-
-    // TODO: move bufferize passes to total bufferize and collect
-    // memref.global operations into host module
-    pm.addPass(arith::createConstantBufferizePass());
-    pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
-    pm.addNestedPass<func::FuncOp>(
-        bufferization::createBufferDeallocationPass());
-
-    pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
-    pm.addPass(createCanonicalizerPass());
-    pm.addPass(arith::createArithmeticExpandOpsPass());
-    pm.addPass(createMemRefToLLVMPass());
-    pm.addPass(createConvertMathToLLVMPass());
-    pm.addPass(createConvertFuncToLLVMPass());
-    pm.addPass(createReconcileUnrealizedCastsPass());
-
-    pm.addPass(createCanonicalizerPass());
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
   }
 };
-
 } // namespace
 
-std::unique_ptr<OperationPass<ModuleOp>> mlir::createToLLVMPipelinePass() {
-  return std::make_unique<ToLLVMPipelinePass>();
+void mlir::createToLLVMPipeline(OpPassManager &pm) {
+  pm.addPass(std::make_unique<CollectLLVMSubmodulePass>());
+  // TODO: move bufferize passes to total bufferize and collect
+  // memref.global operations into host module
+  pm.addPass(arith::createConstantBufferizePass());
+  pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
+  pm.addNestedPass<func::FuncOp>(bufferization::createBufferDeallocationPass());
+
+  pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
+  pm.addPass(createCanonicalizerPass());
+  pm.addPass(arith::createArithmeticExpandOpsPass());
+  pm.addPass(createMemRefToLLVMPass());
+  pm.addPass(createConvertMathToLLVMPass());
+  pm.addPass(createConvertFuncToLLVMPass());
+  pm.addPass(createReconcileUnrealizedCastsPass());
+
+  pm.addPass(createCanonicalizerPass());
 }

@@ -8,15 +8,17 @@
 #ifndef BYTEIR_PIPELINES_SHAPEOPT_H
 #define BYTEIR_PIPELINES_SHAPEOPT_H
 
-#include "mlir/Pass/Pass.h"
-#include <memory>
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Pass/PassRegistry.h"
 
 namespace mlir {
-namespace func {
-class FuncOp;
-} // namespace func
 
-std::unique_ptr<OperationPass<func::FuncOp>> createShapeOptPipelinePass();
+void createShapeOptPipeline(OpPassManager &pm);
+
+inline void registerShapeOptPipeline() {
+  PassPipelineRegistration<>("shape-opt", "Shape Opt Pipeline",
+                             createShapeOptPipeline);
+}
 
 } // namespace mlir
 

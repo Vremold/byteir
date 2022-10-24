@@ -5,61 +5,54 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Byre/ByreDialect.h"
-#include "byteir/Dialect/Lace/LaceDialect.h"
-#include "byteir/Pipelines/GPU/Passes.h"
-#include "byteir/Pipelines/Passes.h"
-#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
-#include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "byteir/Pipelines/AllOpt.h"
+#include "byteir/Pipelines/AffineOpt.h"
+#include "byteir/Pipelines/ByreHost.h"
+#include "byteir/Pipelines/ByreOpt.h"
+#include "byteir/Pipelines/GPU/GPUOpt.h"
+#include "byteir/Pipelines/HloOpt.h"
+#include "byteir/Pipelines/LinalgTensorOpt.h"
+#include "byteir/Pipelines/SCFOpt.h"
+#include "byteir/Pipelines/ShapeOpt.h"
+#include "byteir/Pipelines/TotalBufferize.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
-#include "mlir/Dialect/GPU/IR/GPUDialect.h"
-#include "mlir/Dialect/Linalg/IR/Linalg.h"
-#include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Pass/PassManager.h"
 
-#include "./PassDetail.h"
-
 using namespace mlir;
-using namespace mlir::byre;
 
 namespace {
+void createByteIRAllOptPipelineImpl(OpPassManager &pm,
+                                    const std::string &entryFunc,
+                                    const std::string &target) {
+  HloOptPipelineOptions hloOptOptions;
+  hloOptOptions.entryFunc = entryFunc;
+  hloOptOptions.target = target;
+  hloOptOptions.outlineSingleElemwiseOp = true;
+  createHloOptPipeline(pm, hloOptOptions);
 
-struct ByteirAllOptPipelinePass
-    : public ByteirAllOptPipelineBase<ByteirAllOptPipelinePass> {
-  ByteirAllOptPipelinePass(const std::string &entry, const std::string &target)
-      : ByteirAllOptPipelineBase() {
-    // TODO use target to decide passes
-    this->entryFunc = entry;
-    this->target = target;
-  }
+  LinalgTensorOptPipelineOptions linalgTensorOptOptions;
+  linalgTensorOptOptions.target = target;
+  createLinalgTensorOptPipeline(pm, linalgTensorOptOptions);
 
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
+  createByteIRTotalBufferizePipeline(pm);
 
-    pm.addPass(createHloOptPipelinePass(entryFunc, target,
-                                        true /*outlineSingleElemwiseOp*/));
+  createAffineOptPipeline(pm);
+  // optional, alternative to affine-opt
+  // createSCFOptPipeline(pm);
 
-    pm.addPass(createLinalgTensorOptPipelinePass(target));
-    pm.addPass(createByteIRTotalBufferizePipelinePass());
+  GPUOptPipelineOptions gpuOptOptions;
+  gpuOptOptions.target = target;
+  createGPUOptPipeline(pm, gpuOptOptions);
 
-    pm.addPass(createAffineOptPipelinePass());
-    // optional, alternative to affine-opt
-    // pm.addPass(createSCFOptPipelinePass());
-
-    pm.addPass(createGPUOptPipelinePass(target));
-    pm.addPass(createByreOptPipelinePass(entryFunc, true /*appendArgTypes*/,
-                                         false /*disableMemoryPlanning*/));
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
+  ByreOptPipelineOptions byreOptOptions;
+  byreOptOptions.entryFunc = entryFunc;
+  byreOptOptions.appendArgTypes = true;
+  byreOptOptions.disableMemoryPlanning = false;
+  createByreOptPipeline(pm, byreOptOptions);
+}
 } // namespace
 
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createByteIRAllOptPipelinePass(const std::string &entry,
-                                     const std::string &target) {
-  return std::make_unique<ByteirAllOptPipelinePass>(entry, target);
+void mlir::createByteIRAllOptPipeline(
+    OpPassManager &pm, const ByteIRAllOptPipelineOptions &options) {
+  createByteIRAllOptPipelineImpl(pm, options.entryFunc, options.target);
 }

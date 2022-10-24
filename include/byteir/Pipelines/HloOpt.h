@@ -8,25 +8,36 @@
 #ifndef BYTEIR_PIPELINES_HLOOPT_H
 #define BYTEIR_PIPELINES_HLOOPT_H
 
-#include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
-#include <memory>
+#include "mlir/Pass/PassOptions.h"
+#include "mlir/Pass/PassRegistry.h"
 #include <string>
 
 namespace mlir {
-class ModuleOp;
+struct HloOptPipelineOptions
+    : public PassPipelineOptions<HloOptPipelineOptions> {
+  Option<std::string> entryFunc{
+      *this, "entry-func",
+      llvm::cl::desc("An optional string to speicify entry function."),
+      llvm::cl::init("main")};
+  Option<std::string> target{
+      *this, "target",
+      llvm::cl::desc("An optional attribute to speicify target."),
+      llvm::cl::init("")};
+  Option<bool> outlineSingleElemwiseOp{
+      *this, "outline-single-elemwise-op",
+      llvm::cl::desc("whether to outline the single element-wise operation as "
+                     "an independent function"),
+      llvm::cl::init(false)};
+};
 
-void addGenericHloFusionPatterns(OpPassManager &pm,
-                                 const std::string &entry = "main",
-                                 bool outlineSingleElemwiseOp = false);
+void createHloOptPipeline(OpPassManager &pm,
+                          const HloOptPipelineOptions &options);
 
-void addCPUHloFusionPatterns(OpPassManager &pm,
-                             const std::string &entry = "main");
-
-std::unique_ptr<OperationPass<ModuleOp>>
-createHloOptPipelinePass(const std::string &entry = "main",
-                         const std::string &target = "",
-                         bool outlineSingleElemwiseOp = false);
+inline void registerHloOptPipeline() {
+  PassPipelineRegistration<HloOptPipelineOptions>("hlo-opt", "Hlo Opt Pipeline",
+                                                  createHloOptPipeline);
+}
 
 } // namespace mlir
 

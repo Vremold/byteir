@@ -8,19 +8,45 @@
 #ifndef BYTEIR_PIPELINES_GPU_LINALGMEMREFGPU_H
 #define BYTEIR_PIPELINES_GPU_LINALGMEMREFGPU_H
 
-#include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
-#include <memory>
-#include <string>
+#include "mlir/Pass/PassOptions.h"
+#include "mlir/Pass/PassRegistry.h"
 
 namespace mlir {
-class ModuleOp;
 
-std::unique_ptr<OperationPass<ModuleOp>>
-createMatmulEpilogueGPUPipelinePass(const std::string &target = "");
+struct LinalgMemrefGPUPipelineOptions
+    : public PassPipelineOptions<LinalgMemrefGPUPipelineOptions> {
+  Option<std::string> target{
+      *this, "target",
+      llvm::cl::desc("An optional attribute to speicify target."),
+      llvm::cl::init("")};
+};
 
-std::unique_ptr<OperationPass<ModuleOp>>
-createLinalgMemrefGPUPipelinePass(const std::string &target = "");
+void createLinalgMemrefGPUPipeline(
+    OpPassManager &pm, const LinalgMemrefGPUPipelineOptions &options);
+
+inline void registerLinalgMemrefGPUPipeline() {
+  PassPipelineRegistration<LinalgMemrefGPUPipelineOptions>(
+      "linalg-memref-gpu", "Linalg Opt Pipeline in Memref for GPU",
+      createLinalgMemrefGPUPipeline);
+}
+
+struct MatmulEpilogueGPUPipelineOptions
+    : public PassPipelineOptions<MatmulEpilogueGPUPipelineOptions> {
+  Option<std::string> target{
+      *this, "target",
+      llvm::cl::desc("An optional attribute to speicify target."),
+      llvm::cl::init("")};
+};
+
+void createMatmulEpilogueGPUPipeline(
+    OpPassManager &pm, const MatmulEpilogueGPUPipelineOptions &options);
+
+inline void registerMatmulEpilogueGPUPipeline() {
+  PassPipelineRegistration<MatmulEpilogueGPUPipelineOptions>(
+      "matmul-epilogue-gpu", "Mamtmul Epilogue for gpu",
+      createMatmulEpilogueGPUPipeline);
+}
 
 } // namespace mlir
 

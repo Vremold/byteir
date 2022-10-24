@@ -16,86 +16,68 @@
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/GPU/Transforms/Passes.h"
-#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Transforms/Passes.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
-
-#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::bufferization;
 
 namespace {
+void createGPUOptPipelineImpl(OpPassManager &pm, const std::string &target) {
+  // apply PromotoBufferStack to func's with
+  // getByteIRElementwiseFusionAttrName
+  {
+    OpPassManager anchoredPM(func::FuncOp::getOperationName());
 
-struct GPUOptPipelinePass : public GPUOptPipelineBase<GPUOptPipelinePass> {
-  GPUOptPipelinePass(const std::string &target) : GPUOptPipelineBase() {
-    // TODO use target to decide passes
-    this->target = target;
+    anchoredPM.addPass(createPromoteBuffersToStackPass(
+        /*isSmallAlloc =*/[](Value) { return true; }));
+
+    pm.addNestedPass<func::FuncOp>(createAnchoredFuncPipelinePass(
+        getByteIRElementwiseFusionAttrName(), anchoredPM));
   }
 
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
+  // Note: a trivial loop will be removed by canonicalizer
+  // so no canonicalizer before used
+  pm.addNestedPass<func::FuncOp>(
+      createInsertTrivialSCFLoopPass(getByteIRElementwiseFusionAttrName()));
 
-    // apply PromotoBufferStack to func's with
-    // getByteIRElementwiseFusionAttrName
-    {
-      OpPassManager anchoredPM(func::FuncOp::getOperationName());
+  // attach ToGPUAttr
+  pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
+                               getToGPUAttrName()));
 
-      anchoredPM.addPass(createPromoteBuffersToStackPass(
-          /*isSmallAlloc =*/[](Value) { return true; }));
+  // TODO add device here after general copy finished
+  // std::string deviceCudaAttr = "device:String:cuda";
+  // pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
+  //                              deviceCudaAttr));
 
-      pm.addNestedPass<func::FuncOp>(createAnchoredFuncPipelinePass(
-          getByteIRElementwiseFusionAttrName(), anchoredPM));
-    }
+  std::string iteratorAttr =
+      getLoopToSIMTAttrName().str() + ":String:" + getLinearIdXName().str();
 
-    // Note: a trivial loop will be removed by canonicalizer
-    // so no canonicalizer before used
-    pm.addNestedPass<func::FuncOp>(
-        createInsertTrivialSCFLoopPass(getByteIRElementwiseFusionAttrName()));
+  pm.addNestedPass<func::FuncOp>(
+      createLoopTagPass(getByteIRElementwiseFusionAttrName(), iteratorAttr));
 
-    // attach ToGPUAttr
-    pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
-                                 getToGPUAttrName()));
+  pm.addPass(createConvertFuncToGPUPass(/*bs=*/{128, 1, 1}));
 
-    // TODO add device here after general copy finished
-    // std::string deviceCudaAttr = "device:String:cuda";
-    // pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
-    //                              deviceCudaAttr));
+  addCleanUpPassPipeline(pm);
+  pm.addNestedPass<func::FuncOp>(createGenPTXConfigPass());
 
-    std::string iteratorAttr =
-        getLoopToSIMTAttrName().str() + ":String:" + getLinearIdXName().str();
-
-    pm.addNestedPass<func::FuncOp>(
-        createLoopTagPass(getByteIRElementwiseFusionAttrName(), iteratorAttr));
-
-    pm.addPass(createConvertFuncToGPUPass(/*bs=*/{128, 1, 1}));
-
-    addCleanUpPassPipeline(pm);
-    pm.addNestedPass<func::FuncOp>(createGenPTXConfigPass());
-
-    // soft-deprecated the following, since LoopFusionPass is buggy
-    /*
-    pm.addNestedPass<func::FuncOp>(createRewriteAffineToMemrefPass());
-    pm.addNestedPass<func::FuncOp>(createCoalescedForToGPULaunchPass(128));
-    addCleanUpPassPipeline(pm);
-    pm.addPass(createLowerAffinePass());
-    pm.addPass(createGpuLauchSinkIndexComputationsPass());
-    pm.addPass(createGpuKernelOutliningPass());
-    pm.addPass(createCSEPass());
-    pm.addNestedPass<func::FuncOp>(createGenPTXConfigPass());
-    */
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
+  // soft-deprecated the following, since LoopFusionPass is buggy
+  /*
+  pm.addNestedPass<func::FuncOp>(createRewriteAffineToMemrefPass());
+  pm.addNestedPass<func::FuncOp>(createCoalescedForToGPULaunchPass(128));
+  addCleanUpPassPipeline(pm);
+  pm.addPass(createLowerAffinePass());
+  pm.addPass(createGpuLauchSinkIndexComputationsPass());
+  pm.addPass(createGpuKernelOutliningPass());
+  pm.addPass(createCSEPass());
+  pm.addNestedPass<func::FuncOp>(createGenPTXConfigPass());
+  */
+}
 
 } // namespace
 
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createGPUOptPipelinePass(const std::string &target) {
-  return std::make_unique<GPUOptPipelinePass>(target);
+void mlir::createGPUOptPipeline(OpPassManager &pm,
+                                const GPUOptPipelineOptions &options) {
+  createGPUOptPipelineImpl(pm, options.target);
 }

@@ -12,32 +12,18 @@
 #include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Transforms/passes.h"
-#include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Transforms/Passes.h"
-
-#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::linalg;
 
 namespace {
 
-struct LinalgMemrefGPUPipelinePass
-    : public LinalgMemrefGPUPipelineBase<LinalgMemrefGPUPipelinePass> {
-  LinalgMemrefGPUPipelinePass(const std::string & /*target*/)
-      : LinalgMemrefGPUPipelineBase() {}
-
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
+void createLinalgMemrefGPUPipelineImpl(OpPassManager & /* pm */,
+                                       const std::string & /*target*/) {
+  // TODO?
+}
 
 template <typename OTy>
 void collectOp(func::FuncOp funcOp, SmallVectorImpl<Operation *> &collector) {
@@ -46,10 +32,12 @@ void collectOp(func::FuncOp funcOp, SmallVectorImpl<Operation *> &collector) {
   }
 }
 
-struct MatmulEpilogueGPUPipelinePass
-    : public MatmulEpilogueGPUPipelineBase<MatmulEpilogueGPUPipelinePass> {
-  MatmulEpilogueGPUPipelinePass(const std::string & /*target*/)
-      : MatmulEpilogueGPUPipelineBase() {}
+// preprocess pass which was never used outside `MatmulEpilogueGPUPipeline`
+struct MatmulEpilogueGPUPipelinePreprocessPass
+    : PassWrapper<MatmulEpilogueGPUPipelinePreprocessPass,
+                  OperationPass<ModuleOp>> {
+  MLIR_DEFINE_EXPLICIT_INTERNAL_INLINE_TYPE_ID(
+      MatmulEpilogueGPUPipelinePreprocessPass)
 
   void runOnOperation() override {
     auto m = getOperation();
@@ -74,29 +62,25 @@ struct MatmulEpilogueGPUPipelinePass
       for (auto op : collection) {
         op->setAttr(getScopeTilingAnchorAttrName(), UnitAttr::get(ctx));
       }
-
-      // pass manager
-      {
-        OpPassManager pm(m.getOperationName());
-
-        pm.addNestedPass<func::FuncOp>(createLinalgScopeTilingPass(0, 2));
-        addCleanUpPassPipeline(pm);
-        if (mlir::failed(runPipeline(pm, m))) {
-          signalPassFailure();
-        }
-      }
     }
   }
 };
 
-} // namespace
-
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createMatmulEpilogueGPUPipelinePass(const std::string &target) {
-  return std::make_unique<MatmulEpilogueGPUPipelinePass>(target);
+void createMatmulEpilogueGPUPipelineImpl(OpPassManager &pm,
+                                         const std::string &target) {
+  pm.addPass(std::make_unique<MatmulEpilogueGPUPipelinePreprocessPass>());
+  pm.addNestedPass<func::FuncOp>(createLinalgScopeTilingPass(0, 2));
+  addCleanUpPassPipeline(pm);
 }
 
-std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createLinalgMemrefGPUPipelinePass(const std::string &target) {
-  return std::make_unique<LinalgMemrefGPUPipelinePass>(target);
+} // namespace
+
+void mlir::createLinalgMemrefGPUPipeline(
+    OpPassManager &pm, const LinalgMemrefGPUPipelineOptions &options) {
+  createLinalgMemrefGPUPipelineImpl(pm, options.target);
+}
+
+void mlir::createMatmulEpilogueGPUPipeline(
+    OpPassManager &pm, const MatmulEpilogueGPUPipelineOptions &options) {
+  createMatmulEpilogueGPUPipelineImpl(pm, options.target);
 }

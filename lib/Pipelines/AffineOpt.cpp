@@ -12,54 +12,17 @@
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
-#include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
-#include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
-#include "./PassDetail.h"
-
 using namespace mlir;
-using namespace mlir::mhlo;
 
-namespace {
-
-struct AffineOptPipelinePass
-    : public AffineOptPipelineBase<AffineOptPipelinePass> {
-  AffineOptPipelinePass() : AffineOptPipelineBase() {}
-
-  void runOnOperation() override {
-    auto m = getOperation();
-    OpPassManager pm(m.getOperationName());
-
-    pm.addNestedPass<func::FuncOp>(createConvertLinalgToAffineLoopsPass());
-    pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
-    pm.addNestedPass<func::FuncOp>(createSimplifyAffineStructuresPass());
-    pm.addPass(createLowerAffinePass());
-    pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
-    addCleanUpPassPipeline(pm);
-
-    // soft-deprecated the following, since LoopFusionPass is buggy
-    /*
-    pm.addNestedPass<func::FuncOp>(createConvertLinalgToAffineLoopsPass());
-    pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
-    pm.addNestedPass<func::FuncOp>(createSimplifyAffineStructuresPass());
-    pm.addNestedPass<func::FuncOp>(createAffineLoopFusionExPass());
-    pm.addNestedPass<func::FuncOp>(createInsertTrivialAffineLoopPass(
-        getByteIRElementwiseFusionAttrName()));
-    pm.addPass(createCSEPass());
-    pm.addNestedPass<func::FuncOp>(createCMAEPass());
-    */
-
-    if (mlir::failed(runPipeline(pm, m))) {
-      signalPassFailure();
-    }
-  }
-};
-
-} // namespace
-
-std::unique_ptr<OperationPass<ModuleOp>> mlir::createAffineOptPipelinePass() {
-  return std::make_unique<AffineOptPipelinePass>();
+void mlir::createAffineOptPipeline(OpPassManager &pm) {
+  pm.addNestedPass<func::FuncOp>(createConvertLinalgToAffineLoopsPass());
+  pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
+  pm.addNestedPass<func::FuncOp>(createSimplifyAffineStructuresPass());
+  pm.addPass(createLowerAffinePass());
+  pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
+  addCleanUpPassPipeline(pm);
 }
