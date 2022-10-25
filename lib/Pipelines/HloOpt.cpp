@@ -43,10 +43,6 @@ void addGenericHloFusionPatterns(OpPassManager &pm, const std::string &entry,
 }
 
 void addCPUHloFusionPatterns(OpPassManager &pm, const std::string &entry) {
-  // cluster constraint
-  pm.addNestedPass<func::FuncOp>(createClusterConstraintPass());
-  pm.addPass(createFusionOutliningPass());
-
   // expand tuple
   pm.addPass(createExpandHloTuplesPass(entry));
   pm.addPass(createCSEPass());
