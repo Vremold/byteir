@@ -39,14 +39,25 @@ LogicalResult InsertReshapeShapeConstraints(Operation *op, OpBuilder &builder) {
     dimOfResult.push_back(
         builder.create<tensor::DimOp>(op->getLoc(), result, i));
 
-  Value opr_size = dimOfOperand[0];
-  for (size_t i = 1; i < dimOfOperand.size(); ++i)
-    opr_size =
-        builder.create<shape::MulOp>(op->getLoc(), opr_size, dimOfOperand[i]);
-  Value res_size = dimOfResult[0];
-  for (size_t i = 1; i < dimOfResult.size(); ++i)
-    res_size =
-        builder.create<shape::MulOp>(op->getLoc(), res_size, dimOfResult[i]);
+  Value opr_size;
+  if (dimOfOperand.size() == 0) {
+    opr_size = builder.create<arith::ConstantIndexOp>(op->getLoc(), 1);
+  } else {
+    opr_size = dimOfOperand[0];
+    for (size_t i = 1; i < dimOfOperand.size(); ++i)
+      opr_size =
+          builder.create<shape::MulOp>(op->getLoc(), opr_size, dimOfOperand[i]);
+  }
+
+  Value res_size;
+  if (dimOfResult.size() == 0) {
+    res_size = builder.create<arith::ConstantIndexOp>(op->getLoc(), 1);
+  } else {
+    res_size = dimOfResult[0];
+    for (size_t i = 1; i < dimOfResult.size(); ++i)
+      res_size =
+          builder.create<shape::MulOp>(op->getLoc(), res_size, dimOfResult[i]);
+  }
   builder.create<shape_ext::MeetOp>(op->getLoc(), opr_size, res_size);
 
   return success();

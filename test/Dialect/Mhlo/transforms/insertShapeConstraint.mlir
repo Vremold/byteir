@@ -103,3 +103,9 @@ func.func @dynamic_reshape(%arg0: tensor<?x128xf16>, %arg1: tensor<?xf16>) -> te
 // CHECK-DAG:     %[[V3:.+]] = shape.mul %[[V2]], %[[C2]] : index, index -> index
 // CHECK-DAG:     "shape_ext.meet"(%[[V0]], %[[V3]])
 
+func.func @reshape_scalar(%arg0 : tensor<1x1xf32>) -> tensor<f32> {
+  %0 = "mhlo.reshape"(%arg0) : (tensor<1x1xf32>) -> tensor<f32>
+  return %0 : tensor<f32>
+}
+// CHECK-LABEL: @reshape_scalar(%arg0: tensor<1x1xf32>) -> tensor<f32>
+// CHECK: "shape_ext.meet"
