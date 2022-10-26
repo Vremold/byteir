@@ -7,6 +7,7 @@
 
 #include "byteir/Pipelines/Host/ToLLVM.h"
 #include "byteir/Conversion/ToLLVM/ToLLVM.h"
+#include "byteir/Utils/PipelineUtils.h"
 
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
 #include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
@@ -59,20 +60,25 @@ struct CollectLLVMSubmodulePass
 } // namespace
 
 void mlir::createToLLVMPipeline(OpPassManager &pm) {
-  pm.addPass(std::make_unique<CollectLLVMSubmodulePass>());
-  // TODO: move bufferize passes to total bufferize and collect
-  // memref.global operations into host module
-  pm.addPass(arith::createConstantBufferizePass());
-  pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
-  pm.addNestedPass<func::FuncOp>(bufferization::createBufferDeallocationPass());
+  invokeOpPassPipelineBuilder(
+      [](OpPassManager &pm) {
+        pm.addPass(std::make_unique<CollectLLVMSubmodulePass>());
+        // TODO: move bufferize passes to total bufferize and collect
+        // memref.global operations into host module
+        pm.addPass(arith::createConstantBufferizePass());
+        pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
+        pm.addNestedPass<func::FuncOp>(
+            bufferization::createBufferDeallocationPass());
 
-  pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
-  pm.addPass(createCanonicalizerPass());
-  pm.addPass(arith::createArithmeticExpandOpsPass());
-  pm.addPass(createMemRefToLLVMPass());
-  pm.addPass(createConvertMathToLLVMPass());
-  pm.addPass(createConvertFuncToLLVMPass());
-  pm.addPass(createReconcileUnrealizedCastsPass());
+        pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
+        pm.addPass(createCanonicalizerPass());
+        pm.addPass(arith::createArithmeticExpandOpsPass());
+        pm.addPass(createMemRefToLLVMPass());
+        pm.addPass(createConvertMathToLLVMPass());
+        pm.addPass(createConvertFuncToLLVMPass());
+        pm.addPass(createReconcileUnrealizedCastsPass());
 
-  pm.addPass(createCanonicalizerPass());
+        pm.addPass(createCanonicalizerPass());
+      },
+      pm);
 }

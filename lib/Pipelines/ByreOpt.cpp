@@ -11,6 +11,7 @@
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Passes.h"
 #include "byteir/Transforms/Passes.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
 #include "mlir/Transforms/Passes.h"
@@ -57,6 +58,7 @@ void createByreOptPipelineImpl(OpPassManager &pm, const std::string &entryFunc,
 
 void mlir::createByreOptPipeline(OpPassManager &pm,
                                  const ByreOptPipelineOptions &options) {
-  createByreOptPipelineImpl(pm, options.entryFunc, options.appendArgTypes,
-                            options.disableMemoryPlanning);
+  invokeOpPassPipelineBuilder(createByreOptPipelineImpl, pm, options.entryFunc,
+                              options.appendArgTypes,
+                              options.disableMemoryPlanning);
 }

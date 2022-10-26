@@ -79,5 +79,5 @@ void createGPUOptPipelineImpl(OpPassManager &pm, const std::string &target) {
 
 void mlir::createGPUOptPipeline(OpPassManager &pm,
                                 const GPUOptPipelineOptions &options) {
-  createGPUOptPipelineImpl(pm, options.target);
+  invokeOpPassPipelineBuilder(createGPUOptPipelineImpl, pm, options.target);
 }

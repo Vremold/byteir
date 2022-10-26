@@ -10,6 +10,7 @@
 #include "byteir/Dialect/Linalg/Transforms/LinalgFuseReshape.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Transforms/Passes.h"
 
@@ -47,5 +48,6 @@ void createLinalgTensorOptPipelineImpl(OpPassManager &pm,
 
 void mlir::createLinalgTensorOptPipeline(
     OpPassManager &pm, const LinalgTensorOptPipelineOptions &options) {
-  createLinalgTensorOptPipelineImpl(pm, options.target);
+  invokeOpPassPipelineBuilder(createLinalgTensorOptPipelineImpl, pm,
+                              options.target);
 }

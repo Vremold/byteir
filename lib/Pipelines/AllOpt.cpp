@@ -15,6 +15,7 @@
 #include "byteir/Pipelines/SCFOpt.h"
 #include "byteir/Pipelines/ShapeOpt.h"
 #include "byteir/Pipelines/TotalBufferize.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Pass/PassManager.h"
 
@@ -54,5 +55,6 @@ void createByteIRAllOptPipelineImpl(OpPassManager &pm,
 
 void mlir::createByteIRAllOptPipeline(
     OpPassManager &pm, const ByteIRAllOptPipelineOptions &options) {
-  createByteIRAllOptPipelineImpl(pm, options.entryFunc, options.target);
+  invokeOpPassPipelineBuilder(createByteIRAllOptPipelineImpl, pm,
+                              options.entryFunc, options.target);
 }

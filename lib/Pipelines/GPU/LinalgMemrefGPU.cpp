@@ -77,10 +77,12 @@ void createMatmulEpilogueGPUPipelineImpl(OpPassManager &pm,
 
 void mlir::createLinalgMemrefGPUPipeline(
     OpPassManager &pm, const LinalgMemrefGPUPipelineOptions &options) {
-  createLinalgMemrefGPUPipelineImpl(pm, options.target);
+  invokeOpPassPipelineBuilder(createLinalgMemrefGPUPipelineImpl, pm,
+                              options.target);
 }
 
 void mlir::createMatmulEpilogueGPUPipeline(
     OpPassManager &pm, const MatmulEpilogueGPUPipelineOptions &options) {
-  createMatmulEpilogueGPUPipelineImpl(pm, options.target);
+  invokeOpPassPipelineBuilder(createMatmulEpilogueGPUPipelineImpl, pm,
+                              options.target);
 }

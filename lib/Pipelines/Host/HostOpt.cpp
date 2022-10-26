@@ -7,7 +7,9 @@
 
 #include "byteir/Pipelines/Host/HostOpt.h"
 #include "byteir/Conversion/ToLLVM/ToLLVM.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinOps.h"
 
 using namespace mlir;
 
@@ -20,5 +22,5 @@ void createHostOptPipelineImpl(OpPassManager &pm, const std::string &fileName) {
 
 void mlir::createHostOptPipeline(OpPassManager &pm,
                                  const HostOptPipelineOptions &options) {
-  createHostOptPipelineImpl(pm, options.fileName);
+  invokeOpPassPipelineBuilder(createHostOptPipelineImpl, pm, options.fileName);
 }

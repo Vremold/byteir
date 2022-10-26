@@ -85,6 +85,6 @@ void createHloOptPipelineImpl(OpPassManager &pm, const std::string &entryFunc,
 
 void mlir::createHloOptPipeline(OpPassManager &pm,
                                 const HloOptPipelineOptions &options) {
-  createHloOptPipelineImpl(pm, options.entryFunc, options.target,
-                           options.outlineSingleElemwiseOp);
+  invokeOpPassPipelineBuilder(createHloOptPipelineImpl, pm, options.entryFunc,
+                              options.target, options.outlineSingleElemwiseOp);
 }

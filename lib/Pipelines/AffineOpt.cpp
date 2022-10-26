@@ -19,10 +19,14 @@
 using namespace mlir;
 
 void mlir::createAffineOptPipeline(OpPassManager &pm) {
-  pm.addNestedPass<func::FuncOp>(createConvertLinalgToAffineLoopsPass());
-  pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
-  pm.addNestedPass<func::FuncOp>(createSimplifyAffineStructuresPass());
-  pm.addPass(createLowerAffinePass());
-  pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
-  addCleanUpPassPipeline(pm);
+  invokeOpPassPipelineBuilder(
+      [](OpPassManager &pm) {
+        pm.addNestedPass<func::FuncOp>(createConvertLinalgToAffineLoopsPass());
+        pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
+        pm.addNestedPass<func::FuncOp>(createSimplifyAffineStructuresPass());
+        pm.addPass(createLowerAffinePass());
+        pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
+        addCleanUpPassPipeline(pm);
+      },
+      pm);
 }

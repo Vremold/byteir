@@ -8,6 +8,7 @@
 #include "byteir/Pipelines/ByreHost.h"
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Transforms/Passes.h"
+#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 
@@ -35,6 +36,6 @@ void createByreHostPipelineImpl(OpPassManager &pm, const std::string &entryFunc,
 
 void mlir::createByreHostPipeline(OpPassManager &pm,
                                   const ByreHostPipelineOptions &options) {
-  createByreHostPipelineImpl(pm, options.entryFunc, options.deviceFile,
-                             options.target);
+  invokeOpPassPipelineBuilder(createByreHostPipelineImpl, pm, options.entryFunc,
+                              options.deviceFile, options.target);
 }

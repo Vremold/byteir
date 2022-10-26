@@ -18,10 +18,14 @@
 using namespace mlir;
 
 void mlir::createSCFOptPipeline(OpPassManager &pm) {
-  pm.addNestedPass<func::FuncOp>(createConvertLinalgToLoopsPass());
-  // lower affine.apply in case there is some
-  pm.addPass(createLowerAffinePass());
-  pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
-  pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
-  addCleanUpPassPipeline(pm);
+  invokeOpPassPipelineBuilder(
+      [](OpPassManager &pm) {
+        pm.addNestedPass<func::FuncOp>(createConvertLinalgToLoopsPass());
+        // lower affine.apply in case there is some
+        pm.addPass(createLowerAffinePass());
+        pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
+        pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
+        addCleanUpPassPipeline(pm);
+      },
+      pm);
 }

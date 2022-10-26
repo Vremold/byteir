@@ -14,13 +14,17 @@
 using namespace mlir;
 
 void mlir::createShapeOptPipeline(OpPassManager &pm) {
-  pm.addNestedPass<func::FuncOp>(createSetAssumingAlwaysTruePass());
-  pm.addPass(createCanonicalizerPass());
-  pm.addNestedPass<func::FuncOp>(createInsertTieShapePass());
-  pm.addNestedPass<func::FuncOp>(createInsertShapeConstraintPass());
-  pm.addNestedPass<func::FuncOp>(createByteIRShapeReificationPass());
-  addCleanUpPassPipeline(pm);
-  pm.addNestedPass<func::FuncOp>(createResolveShapeConstraintPass());
-  pm.addNestedPass<func::FuncOp>(createBoundedShapeInferencePass());
-  pm.addPass(createCanonicalizerPass());
+  invokeOpPassPipelineBuilder<func::FuncOp>(
+      [](OpPassManager &pm) {
+        pm.addPass(createSetAssumingAlwaysTruePass());
+        pm.addPass(createCanonicalizerPass());
+        pm.addPass(createInsertTieShapePass());
+        pm.addPass(createInsertShapeConstraintPass());
+        pm.addPass(createByteIRShapeReificationPass());
+        addCleanUpPassPipeline(pm);
+        pm.addPass(createResolveShapeConstraintPass());
+        pm.addPass(createBoundedShapeInferencePass());
+        pm.addPass(createCanonicalizerPass());
+      },
+      pm);
 }

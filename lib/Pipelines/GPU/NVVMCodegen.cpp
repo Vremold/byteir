@@ -13,17 +13,22 @@
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
 
 void mlir::createNVVMCodegenPipeline(OpPassManager &pm) {
-  // TODO add target for supporting different SMs
-  // TODO use target to decide passes
-  pm.addPass(createCollectGPUKernelPass());
-  pm.addPass(createConvertSCFToCFPass());
-  pm.addNestedPass<gpu::GPUModuleOp>(createGPUToNVVMExtPass());
-  pm.addPass(createCSEPass());
-  pm.addPass(createReconcileUnrealizedCastsPass());
-  addMultiCSEPipeline(pm, 3);
+  invokeOpPassPipelineBuilder(
+      [](OpPassManager &pm) {
+        // TODO add target for supporting different SMs
+        // TODO use target to decide passes
+        pm.addPass(createCollectGPUKernelPass());
+        pm.addPass(createConvertSCFToCFPass());
+        pm.addNestedPass<gpu::GPUModuleOp>(createGPUToNVVMExtPass());
+        pm.addPass(createCSEPass());
+        pm.addPass(createReconcileUnrealizedCastsPass());
+        addMultiCSEPipeline(pm, 3);
+      },
+      pm);
 }

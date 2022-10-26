@@ -18,13 +18,17 @@
 using namespace mlir;
 
 void mlir::createByteIRTotalBufferizePipeline(OpPassManager &pm) {
-  pm.addPass(createConvertHloToLHloPass());
-  pm.addPass(createCSEPass());
-  pm.addNestedPass<func::FuncOp>(createAceBufferizePass());
-  pm.addNestedPass<func::FuncOp>(createLinalgBufferizePass());
-  pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
-  addCleanUpPassPipeline(pm);
-  // clean-up possible redudant copy-removal from bufferization
-  // TODO: enable it after fixing crash
-  // pm.addNestedPass<func::FuncOp>(createCopyRemovalPass());
+  invokeOpPassPipelineBuilder(
+      [](OpPassManager &pm) {
+        pm.addPass(createConvertHloToLHloPass());
+        pm.addPass(createCSEPass());
+        pm.addNestedPass<func::FuncOp>(createAceBufferizePass());
+        pm.addNestedPass<func::FuncOp>(createLinalgBufferizePass());
+        pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
+        addCleanUpPassPipeline(pm);
+        // clean-up possible redudant copy-removal from bufferization
+        // TODO: enable it after fixing crash
+        // pm.addNestedPass<func::FuncOp>(createCopyRemovalPass());
+      },
+      pm);
 }
