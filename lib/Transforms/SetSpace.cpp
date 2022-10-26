@@ -361,6 +361,7 @@ void updateOpTypes(FuncOp func, ModuleOp m,
                   cloneMemRefTypeWithMemSpace(MemrefTy, opSpaceAttr);
               operand.setType(newOperandType);
             } else if (opSpaceAttr != curSpace) {
+              // insert copy when curSpace is not desired opSpaceAttr
               CopyType_t copyKey = {operand, opSpaceAttr};
 
               if (copyPairToCopyTargets.count(copyKey) == 0) {
@@ -374,10 +375,11 @@ void updateOpTypes(FuncOp func, ModuleOp m,
                 auto taget = copyPairToCopyTargets[copyKey];
                 op.setOperand(i, taget);
               }
-            }
-          }
-        }
+            } // if else
+          }   // if MemrefTy
+        }     // for i < op.getNumOperands()
 
+        // set operand type
         for (auto operand : op.getOperands()) {
           if (auto MemrefTy = operand.getType().dyn_cast<MemRefType>()) {
             auto newOperandType =
@@ -385,8 +387,17 @@ void updateOpTypes(FuncOp func, ModuleOp m,
             operand.setType(newOperandType);
           }
         }
-      }
-    }
+
+        // set result type in case it has
+        for (auto result : op.getResults()) {
+          if (auto MemrefTy = result.getType().dyn_cast<MemRefType>()) {
+            auto newOperandType =
+                cloneMemRefTypeWithMemSpace(MemrefTy, opSpaceAttr);
+            result.setType(newOperandType);
+          }
+        }
+      } // if opSpaceAttr
+    }   // for op in block.without_terminator()
   }
 }
 
@@ -695,13 +706,11 @@ struct SetArgSpacePass : public SetArgSpaceBase<SetArgSpacePass> {
 
     // rewrite FunctionType
     for (auto it : funcToArgTypes) {
-      FunctionType funcType = it.first.getFunctionType();
       it.first.setType(
           FunctionType::get(ctx, it.second.first, it.second.second));
-
       // update all func ops
       updateOpTypes(it.first, m, copyPairToCopyTargets, analysis);
-    }
+    };
   }
 
   llvm::SmallVector<std::string, 16> argSpaces;
