@@ -22,11 +22,15 @@
 .DS_store
 
 # Nested build directory
-build*
-*build*
-*Build*
 build/
-build.sh
+
+# prebuilt llvm in CI
+llvm_install*
+llvm_build/
+
+# byteir artifact in CI
+byre_install*
+byre_install/
 
 # Local Test
 local_test*
@@ -37,4 +41,3 @@ local_test*
 .vscode/
 
 /compile_commands.json
-
