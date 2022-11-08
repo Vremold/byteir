@@ -283,9 +283,11 @@ func.func @broadcast_move_down_convert(%arg0 : tensor<32xi32>) -> tensor<4x32xf3
     return %2 : tensor<4x32xf32>
 }
 // CHECK-LABEL: func.func @broadcast_move_down_convert
-// CHECK-NEXT: mhlo.convert(%[[ARG0:.*]]) : (tensor<32xi32>) -> tensor<32xf32>
-// CHECK-NEXT: mhlo.abs %[[V0:.*]] : tensor<32xf32>
-// CHECK-NEXT: "mhlo.broadcast_in_dim"([[V1:.*]]) {{.*}} : (tensor<32xf32>) -> tensor<4x32xf32>
+// CHECK-SAME: %[[ARG:[a-zA-Z0-9]+]]
+// CHECK-NEXT: %[[V0:.*]] = mhlo.convert(%[[ARG]]) : (tensor<32xi32>) -> tensor<32xf32>
+// CHECK-NEXT: %[[V1:.*]] = mhlo.abs %[[V0]] : tensor<32xf32>
+// CHECK-NEXT: %[[V2:.*]] = "mhlo.broadcast_in_dim"(%[[V1]])
+// CHECK-SAME: (tensor<32xf32>) -> tensor<4x32xf32>
 // CHECK-NEXT: return
 
 func.func @broadcast_binary_same(%arg0 : tensor<32xf32>) -> tensor<4x32xf32> {
