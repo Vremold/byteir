@@ -108,3 +108,11 @@ func.func @const_const_folding_case1(%arg0: tensor<1x2xi64>) -> tensor<5x2xi64> 
 }
 // CHECK:  %0 = mhlo.constant dense<{{\[}}[1, 1], [2, 3]{{\]}}> : tensor<2x2xi64>
 // CHECK:  %1 = mhlo.constant dense<{{\[}}[3, 4], [3, 4]{{\]}}> : tensor<2x2xi64>
+
+func.func @canonicalize_const_broadcast() -> tensor<1x10x2xi64> {
+  %0 = mhlo.constant dense<[[2, 3]]> : tensor<1x2xi64>
+  %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<[0, 2]> : tensor<2xi64>} : (tensor<1x2xi64>) -> (tensor<1x10x2xi64>)
+  return %1 : tensor<1x10x2xi64>
+}
+// CHECK: %[[V0:.*]] = mhlo.constant dense<[2, 3]> : tensor<2xi64>
+// CHECK: "mhlo.broadcast_in_dim"(%[[V0]]) {broadcast_dimensions = dense<2> : tensor<1xi64>} : (tensor<2xi64>) -> tensor<1x10x2xi64>

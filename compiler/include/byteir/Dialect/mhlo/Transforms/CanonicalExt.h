@@ -16,7 +16,21 @@ class MLIRContext;
 
 namespace shape {
 class BroadcastOp;
-}
+
+// fold the pattern like this
+// const0 = [4]
+// c = mhlo.xxx(a, b)
+// d = shape.shape_of(c)
+// e = shape.broadcast(d, const0)
+//
+// remove the shape.broadcast
+//
+// note the shape of c is [...., 4], ... means any, include dynamic shape
+//
+// generally, when const0 = c.shape[any:], this pattern would fold successfully
+LogicalResult foldShapeBroadcast(shape::BroadcastOp op,
+                                 PatternRewriter &rewriter);
+} // namespace shape
 
 namespace mhlo {
 class ConvertOp;
@@ -27,6 +41,7 @@ class ConcatenateOp;
 class DynamicBroadcastInDimOp;
 class DynamicConvOp;
 class DynamicGatherOp;
+class ReshapeOp;
 
 Optional<Attribute> createBroadcastedDenseElementAttr(
     DenseElementsAttr originAttr, ArrayRef<int64_t> originShape,
@@ -53,19 +68,6 @@ LogicalResult foldBroadcastInDim(BroadcastInDimOp op,
 ///
 LogicalResult foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
                                              PatternRewriter &rewriter);
-// fold the pattern like this
-// const0 = [4]
-// c = mhlo.xxx(a, b)
-// d = shape.shape_of(c)
-// e = shape.broadcast(d, const0)
-//
-// remove the shape.broadcast
-//
-// note the shape of c is [...., 4], ... means any, include dynamic shape
-//
-// generally, when const0 = c.shape[any:], this pattern would fold successfully
-LogicalResult foldShapeBroadcast(shape::BroadcastOp op,
-                                 PatternRewriter &rewriter);
 
 // fold binary op with large constant op
 template <typename Op, template <typename> typename Func>
@@ -89,6 +91,14 @@ LogicalResult foldConsecutiveConvertOp(mhlo::ConvertOp op,
                                        PatternRewriter &rewriter);
 
 LogicalResult foldLargeCompareOp(mhlo::CompareOp op, PatternRewriter &rewriter);
+
+// const + broadcast_in_dim => const + broadcast_in_dim
+LogicalResult CanonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
+                                              PatternRewriter &rewriter);
+
+// broadcast_in_dim + reshape => broadcast_in_dim
+LogicalResult foldReshapeBroadcastInDim(mhlo::ReshapeOp op,
+                                        PatternRewriter &rewriter);
 
 // populate canonicalizeExt patterns
 void populateCanonicalizeExtPatterns(RewritePatternSet &patterns);

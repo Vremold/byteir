@@ -109,7 +109,7 @@ func.func @conv_bias_mul(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
 }
 // CHECK-LABEL: func.func @conv_bias_mul
 // CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[2.000000e+00, 6.000000e+00]]]]>
-// CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[4.000000e+00]], [[3.000000e+00]]]]>
+// CHECK-NEXT{LITERAL}: mhlo.constant dense<[4.000000e+00, 3.000000e+00]>
 // CHECK-NEXT: mhlo.convolution
 // CHECK-NEXT: "mhlo.broadcast_in_dim"
 // CHECK-NEXT: mhlo.add
@@ -127,7 +127,7 @@ func.func @conv_bias_offset(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
   return %0 : tensor<1x2x2x2xf32>
 }
 // CHECK-LABEL: func.func @conv_bias_offset
-// CHECK-NEXT{LITERAL}:  mhlo.constant dense<[[[[4.000000e+00]], [[6.000000e+00]]]]>
+// CHECK-NEXT{LITERAL}:  mhlo.constant dense<[4.000000e+00, 6.000000e+00]>
 // CHECK-NEXT{LITERAL}:  mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]>
 // CHECK-NEXT:  mhlo.convolution
 // CHECK-NEXT:  "mhlo.broadcast_in_dim"
@@ -149,7 +149,7 @@ func.func @conv_bias_mul_offset(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf3
   return %1 : tensor<1x2x2x2xf32>
 }
 // CHECK-LABEL: func.func @conv_bias_mul_offset
-// CHECK-NEXT{LITERAL}:  mhlo.constant dense<[[[[1.400000e+01]], [[1.200000e+01]]]]>
+// CHECK-NEXT{LITERAL}:  mhlo.constant dense<[1.400000e+01, 1.200000e+01]>
 // CHECK-NEXT{LITERAL}:  mhlo.constant dense<[[[[4.000000e+00, 1.000000e+01]]]]>
 // CHECK-NEXT:  mhlo.convolution
 // CHECK-NEXT:  "mhlo.broadcast_in_dim"
@@ -184,7 +184,7 @@ func.func @conv_bias_one_rank_mul_offset(%arg0: tensor<1x1x2x2xf32>) -> tensor<1
   return %1 : tensor<1x2x2x2xf32>
 }
 // CHECK-LABEL:  func.func @conv_bias_one_rank_mul_offset
-// CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[1.400000e+01]], [[1.200000e+01]]]]>
+// CHECK-NEXT{LITERAL}: mhlo.constant dense<[1.400000e+01, 1.200000e+01]>
 // CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[4.000000e+00, 1.000000e+01]]]]>
 // CHECK-NEXT: mhlo.convolution
 // CHECK-NEXT: "mhlo.broadcast_in_dim"
@@ -200,8 +200,8 @@ func.func @conv_subtract(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
   return %conv_sub : tensor<1x2x2x2xf32>
 }
 // CHECK-LABEL:  func.func @conv_subtract
+// CHECK-DAG{LITERAL}: mhlo.constant dense<[-2.000000e+00, -1.000000e+00]>
 // CHECK-DAG{LITERAL}: mhlo.constant dense<[[[[1.000000e+00, 2.000000e+00]]]]>
-// CHECK-DAG{LITERAL}: mhlo.constant dense<[[[[-2.000000e+00]], [[-1.000000e+00]]]]>
 // CHECK-NEXT: mhlo.convolution
 // CHECK-NEXT: "mhlo.broadcast_in_dim"
 // CHECK-NEXT: mhlo.add
@@ -220,7 +220,7 @@ func.func @conv_bias_div(%arg0: tensor<1x1x2x2xf32>) -> tensor<1x2x2x2xf32> {
 }
 // CHECK-LABEL:  func.func @conv_bias_div
 // CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[1.250000e-01, 1.000000e+00]]]]>
-// CHECK-NEXT{LITERAL}: mhlo.constant dense<[[[[2.500000e-01]], [[5.000000e-01]]]]>
+// CHECK-NEXT{LITERAL}: mhlo.constant dense<[2.500000e-01, 5.000000e-01]>
 // CHECK-NEXT: mhlo.convolution
 // CHECK-NEXT: "mhlo.broadcast_in_dim"
 // CHECK-NEXT: mhlo.add

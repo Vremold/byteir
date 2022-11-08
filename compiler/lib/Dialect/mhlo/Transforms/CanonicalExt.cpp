@@ -101,8 +101,8 @@ Optional<Attribute> mlir::mhlo::createBroadcastedDenseElementAttr(
 }
 
 // FIXME: this pattern should move to shape dialect
-LogicalResult mlir::mhlo::foldShapeBroadcast(shape::BroadcastOp op,
-                                             PatternRewriter &rewriter) {
+LogicalResult mlir::shape::foldShapeBroadcast(shape::BroadcastOp op,
+                                              PatternRewriter &rewriter) {
 
   SmallVector<SmallVector<int64_t>> shapes;
   SmallVector<Value> values;
@@ -889,10 +889,56 @@ LogicalResult mlir::mhlo::foldConsecutiveConvertOp(mhlo::ConvertOp op,
   return failure();
 }
 
+namespace {
+// this function copied from mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
+DenseElementsAttr reshape(DenseElementsAttr attr, ShapedType newType) {
+  // TODO(b/232866626): DenseElementsAttr::reshape is broken for bool splats.
+  // Once that ticket is fixed, we can remove this conditional.
+  if (attr.isSplat() && newType.getElementType().isInteger(/*width=*/1)) {
+    auto splatValue = attr.getValues<bool>()[0];
+    return DenseElementsAttr::get(newType, {splatValue});
+  }
+  return attr.reshape(newType);
+}
+} // namespace
+
+LogicalResult
+mlir::mhlo::CanonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
+                                            PatternRewriter &rewriter) {
+  auto constOp = op.getOperand().getDefiningOp<mhlo::ConstantOp>();
+  if (!constOp) {
+    return failure();
+  }
+  if (!op.getOperand().hasOneUse()) {
+    return failure();
+  }
+  DenseElementsAttr valueAttr = constOp.getValue().cast<DenseElementsAttr>();
+  ShapedType valueType = valueAttr.getType();
+  if (llvm::none_of(valueType.getShape(),
+                    [](int64_t dim) { return dim == 1; })) {
+    return failure();
+  }
+  llvm::SmallVector<int64_t> newValueShape, newBroadcastDims;
+  for (unsigned i = 0, e = valueType.getRank(); i < e; ++i) {
+    if (valueType.getDimSize(i) != 1) {
+      newValueShape.push_back(valueType.getDimSize(i));
+      newBroadcastDims.push_back(
+          op.getBroadcastDimensions().getValues<int64_t>()[i]);
+    }
+  }
+  auto newValueType =
+      RankedTensorType::get(newValueShape, valueType.getElementType());
+  valueAttr = reshape(valueAttr, newValueType);
+  constOp.setValueAttr(valueAttr);
+  constOp.getOutput().setType(newValueType);
+  op.setBroadcastDimensionsAttr(rewriter.getI64TensorAttr(newBroadcastDims));
+  return success();
+}
+
 void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldBroadcastInDim);
   patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
-  patterns.add(mlir::mhlo::foldShapeBroadcast);
+  patterns.add(mlir::shape::foldShapeBroadcast);
   patterns.add(mlir::mhlo::simplifyDynamicConvToConv);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
@@ -906,6 +952,7 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldTransposeNonSplat);
   patterns.add(mlir::mhlo::foldBeneficialConstantConvertOp);
   patterns.add(mlir::mhlo::foldConsecutiveConvertOp);
+  patterns.add(mlir::mhlo::CanonicalizeBroadcastInDimConst);
 }
 
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,
