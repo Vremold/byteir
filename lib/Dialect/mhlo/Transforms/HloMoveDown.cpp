@@ -794,8 +794,15 @@ private:
       }
     }
 
+    auto maybeResultTypes =
+        mixTypes(/*cloneFromElementTypes*/ user->getResultTypes(),
+                 /*cloneFromShapes*/ slices[0]->getOperandTypes());
+
+    // maybeResultTypes should always have value
+    assert(maybeResultTypes.hasValue());
+
     auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                                  slices[0]->getOperandTypes());
+                                                  maybeResultTypes.getValue());
     for (auto operand : newProducer->getOperands()) {
       const auto parentOp = operand.getDefiningOp();
       if (parentOp && newProducer->isBeforeInBlock(parentOp)) {
