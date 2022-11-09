@@ -38,7 +38,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-option(BYTEIR_ENABLE_BINDINGS_PYTHON "Enable byteir python bindings" OFF)
 option(BYTEIR_INCLUDE_TESTS "Generate build targets for the ByteIR unit tests." ON)
 if (BYTEIR_INCLUDE_TESTS)
   add_definitions(-DBYTEIR_INCLUDE_TESTS)
@@ -90,12 +89,6 @@ add_subdirectory(${REPO_ROOT_DIR}/include ${CMAKE_BINARY_DIR}/include)
 
 # Build tools
 add_subdirectory(${REPO_ROOT_DIR}/tools ${CMAKE_BINARY_DIR}/tools)
-
-if (BYTEIR_ENABLE_BINDINGS_PYTHON)
-  include(MLIRDetectPythonEnv)
-  mlir_configure_python_dev_packages()
-  add_subdirectory(${REPO_ROOT_DIR}/python ${CMAKE_BINARY_DIR}/python)
-endif()
 
 if(MSVC)
   set(BYTEIR_TOOLS_DIR ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})
