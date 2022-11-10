@@ -83,7 +83,9 @@ Attribute createBroadcastedDenseElementAttrImpl(
   return DenseElementsAttr::get(newType, newValues);
 }
 
-Optional<Attribute> createBroadcastedDenseElementAttr(
+} // namespace
+
+Optional<Attribute> mlir::mhlo::createBroadcastedDenseElementAttr(
     DenseElementsAttr originAttr, ArrayRef<int64_t> originShape,
     ShapedType newType, ArrayRef<int64_t> broadcastDims) {
   Type elemType = originAttr.getElementType();
@@ -96,8 +98,6 @@ Optional<Attribute> createBroadcastedDenseElementAttr(
   }
   return None;
 }
-
-} // namespace
 
 // FIXME: this pattern should move to shape dialect
 LogicalResult mlir::mhlo::foldShapeBroadcast(shape::BroadcastOp op,
