@@ -474,6 +474,40 @@ static Attribute BinaryFolder(Op *op, ArrayRef<Attribute> attrs) {
   return DenseElementsAttr::get(type, values);
 }
 
+template <typename ElementType, typename SrcType, typename Convert>
+static Attribute CompareFolder(CompareOp op, ArrayRef<Attribute> attrs) {
+  if (!attrs[0] || !attrs[1])
+    return {};
+
+  DenseElementsAttr lhs = attrs[0].dyn_cast<DenseElementsAttr>();
+  DenseElementsAttr rhs = attrs[1].dyn_cast<DenseElementsAttr>();
+  if (!lhs || !rhs)
+    return {};
+
+  ShapedType operandType =
+      op.getOperand(0).getType().template cast<ShapedType>();
+  if (!operandType.hasStaticShape()) {
+    return {};
+  }
+
+  auto etype = operandType.getElementType();
+  if (!etype.isa<ElementType>()) {
+    return {};
+  }
+
+  SmallVector<bool, 6> values;
+  values.reserve(lhs.getNumElements());
+  for (const auto zip :
+       llvm::zip(lhs.getValues<SrcType>(), rhs.getValues<SrcType>())) {
+    values.push_back(
+        Convert()(addSign(std::get<0>(zip), lhs.getElementType()),
+                  addSign(std::get<1>(zip), rhs.getElementType())));
+  }
+
+  auto resultTy = op.getType().cast<ShapedType>();
+  return DenseElementsAttr::get(resultTy, values);
+}
+
 template <typename T> struct Divide : std::divides<T> {};
 
 template <> struct Divide<APSInt> {
@@ -551,6 +585,51 @@ LogicalResult mlir::mhlo::foldLargeBinaryOp(Op op, PatternRewriter &rewriter) {
       rewriter.create<mhlo::ConstantOp>(op->getLoc(), result);
   rewriter.replaceOp(op, newConstant.output());
   return success();
+}
+
+LogicalResult mlir::mhlo::foldLargeCompareOp(mhlo::CompareOp op,
+                                             PatternRewriter &rewriter) {
+  auto lhsOp = op.lhs().getDefiningOp<mhlo::ConstantOp>();
+  auto rhsOp = op.rhs().getDefiningOp<mhlo::ConstantOp>();
+  if (!lhsOp || !rhsOp) {
+    return failure();
+  }
+  auto elementType =
+      lhsOp.value().getType().cast<ShapedType>().getElementType();
+  if (elementType.isa<ComplexType>()) {
+    return failure();
+  }
+  // upstream handled splat value
+  if (lhsOp.value().isSplat() || rhsOp.value().isSplat()) {
+    return failure();
+  }
+
+  Attribute folded = nullptr;
+#define COMPARE_FOLDER(comparison, Func)                                       \
+  if (op.comparison_direction() == comparison) {                               \
+    if (folded = CompareFolder<FloatType, APFloat, Func<APFloat>>(             \
+            op, {lhsOp.value(), rhsOp.value()})) {                             \
+      mhlo::ConstantOp newConstOp =                                            \
+          rewriter.create<mhlo::ConstantOp>(op->getLoc(), folded);             \
+      rewriter.replaceOp(op, newConstOp.output());                             \
+      return success();                                                        \
+    }                                                                          \
+    if (folded = CompareFolder<IntegerType, APInt, Func<APSInt>>(              \
+            op, {lhsOp.value(), rhsOp.value()})) {                             \
+      mhlo::ConstantOp newConstOp =                                            \
+          rewriter.create<mhlo::ConstantOp>(op->getLoc(), folded);             \
+      rewriter.replaceOp(op, newConstOp.output());                             \
+      return success();                                                        \
+    }                                                                          \
+  }
+
+  COMPARE_FOLDER(ComparisonDirection::EQ, std::equal_to);
+  COMPARE_FOLDER(ComparisonDirection::NE, std::not_equal_to);
+  COMPARE_FOLDER(ComparisonDirection::LT, std::less);
+  COMPARE_FOLDER(ComparisonDirection::LE, std::less_equal);
+  COMPARE_FOLDER(ComparisonDirection::GT, std::greater);
+  COMPARE_FOLDER(ComparisonDirection::GE, std::greater_equal);
+#undef COMPARE_FOLDER
 }
 
 // TODO(lyq): push this pattern back to upstream
@@ -816,6 +895,7 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::RemOp, Remainder>);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MaxOp, Max>);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MinOp, Min>);
+  patterns.add(mlir::mhlo::foldLargeCompareOp);
   patterns.add(mlir::mhlo::foldLargeConcatenate);
   patterns.add(mlir::mhlo::foldTransposeNonSplat);
   patterns.add(mlir::mhlo::foldBeneficalLargeConvertOp);

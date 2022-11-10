@@ -20,6 +20,7 @@ class BroadcastOp;
 
 namespace mhlo {
 class ConvertOp;
+class CompareOp;
 class TransposeOp;
 class BroadcastInDimOp;
 class ConcatenateOp;
@@ -87,6 +88,8 @@ LogicalResult foldTransposeNonSplat(mhlo::TransposeOp op,
 
 LogicalResult foldBeneficalLargeConvertOp(mhlo::ConvertOp op,
                                           PatternRewriter &rewriter);
+
+LogicalResult foldLargeCompareOp(mhlo::CompareOp op, PatternRewriter &rewriter);
 
 // populate canonicalizeExt patterns
 void populateCanonicalizeExtPatterns(RewritePatternSet &patterns);
