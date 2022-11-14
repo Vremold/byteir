@@ -33,9 +33,38 @@ using namespace llvm;
 
 namespace {
 
+static bool checkUser(Value val, Operation *user,
+                      SmallPtrSetImpl<Operation *> &indicators) {
+
+  if (user == nullptr)
+    return false;
+
+  for (auto result : user->getResults()) {
+    if (val == result) {
+      return true;
+    }
+  }
+
+  for (auto result : user->getResults()) {
+    for (auto grandUser : result.getUsers()) {
+      // avoid going through another indicator
+      if (indicators.contains(grandUser)) {
+        continue;
+      }
+
+      if (checkUser(val, grandUser, indicators)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 static llvm::Optional<unsigned>
 findMostLikelyUse(Value val, Operation *user,
                   ArrayRef<Operation *> indicators) {
+
   for (auto indicator : indicators) {
     if (user == indicator) {
       // check direct use of indicator
@@ -46,20 +75,21 @@ findMostLikelyUse(Value val, Operation *user,
           return i;
         }
       }
-    } else if (user->getNumResults() == 1) {
-      // check indirect use through user
-      for (unsigned i = 0; i < indicator->getNumOperands(); ++i) {
-        // Only support single result only for now
-        // TODO extend it
-        if (indicator->getOperand(i) == user->getResult(0)) {
-          LLVM_DEBUG(llvm::dbgs()
-                     << "findMostLikelyUse found indirect user " << i << "\n");
-          return i;
-        }
-      }
     }
   }
 
+  SmallPtrSet<Operation *, 4> allIndicatorSet(indicators.begin(),
+                                              indicators.end());
+  for (auto indicator : indicators) {
+    // check indirect use through user
+    for (unsigned i = 0; i < indicator->getNumOperands(); ++i) {
+      if (checkUser(indicator->getOperand(i), user, allIndicatorSet)) {
+        LLVM_DEBUG(llvm::dbgs()
+                   << "findMostLikelyUse found indirect user " << i << "\n");
+        return i;
+      }
+    }
+  }
   LLVM_DEBUG(llvm::dbgs() << "findMostLikelyUse found no idx\n");
   return llvm::None;
 }
@@ -304,8 +334,8 @@ void FuncArgRearrangementPass::runOnOperation() {
     }
 
     // sort by idx
-    llvm::sort(useIdxAndOp, [&](std::pair<unsigned, Operation *> lhs,
-                                std::pair<unsigned, Operation *> rhs) {
+    llvm::stable_sort(useIdxAndOp, [&](std::pair<unsigned, Operation *> lhs,
+                                       std::pair<unsigned, Operation *> rhs) {
       return lhs.first < rhs.first;
     });
 
