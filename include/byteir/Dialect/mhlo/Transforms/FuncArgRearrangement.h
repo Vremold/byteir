@@ -66,7 +66,8 @@ public:
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createFuncArgRearrangementPass(FuncArgRearrangerBuilderBase *builder,
-                               const std::string &anchor = "");
+                               const std::string &anchor = "",
+                               bool keepAnchor = false);
 
 } // namespace mlir
 

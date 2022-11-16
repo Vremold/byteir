@@ -31,11 +31,12 @@ struct ConvertRuleBase {
   // default all function
   virtual bool checkFunc(func::FuncOp) { return true; }
 
-  virtual llvm::Optional<mlir::TensorType> checkType(mlir::Type) = 0;
+  virtual llvm::Optional<mlir::TensorType>
+  checkArg(func::FuncOp func, size_t offset, bool isArg) = 0;
 };
 
 // a common ConvertRule
-// using only ElementType in registered convertElementType for checkType
+// using only ElementType in registered convertElementType for checkArg
 // and only anchorAttr for checkFunc
 struct ConvertOnlyCheckElementType : public ConvertRuleBase {
 
@@ -44,7 +45,8 @@ struct ConvertOnlyCheckElementType : public ConvertRuleBase {
   virtual ~ConvertOnlyCheckElementType() {}
 
   virtual bool checkFunc(func::FuncOp) override;
-  llvm::Optional<mlir::TensorType> checkType(mlir::Type) override;
+  llvm::Optional<mlir::TensorType> checkArg(func::FuncOp func, size_t offset,
+                                            bool isArg) override;
 
   // convert element type from first to second
   llvm::DenseMap<mlir::Type, mlir::Type> convertElementType;

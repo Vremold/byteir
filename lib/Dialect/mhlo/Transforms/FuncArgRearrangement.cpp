@@ -108,10 +108,10 @@ public:
       : ::mlir::OperationPass<ModuleOp>(other) {}
 
   FuncArgRearrangementPass(FuncArgRearrangerBuilderBase *builder,
-                           const std::string &anchor)
+                           const std::string &anchor, bool keepAnchor)
       : ::mlir::OperationPass<ModuleOp>(
             ::mlir::TypeID::get<FuncArgRearrangementPass>()),
-        rearrangeBuilder(builder), anchorAttr(anchor) {}
+        rearrangeBuilder(builder), anchorAttr(anchor), keepAnchor(keepAnchor) {}
 
 // Note command-line was disable in this pass, due to it using a class to drive
 // Please use TestConvertInsertion (test-insert-convert) in command-line
@@ -154,6 +154,7 @@ public:
 protected:
   FuncArgRearrangerBuilderBase *rearrangeBuilder = nullptr;
   std::string anchorAttr = "";
+  bool keepAnchor;
 };
 
 void FuncArgRearrangementPass::runOnOperation() {
@@ -187,7 +188,10 @@ void FuncArgRearrangementPass::runOnOperation() {
     auto newFunc = rearrangerPtr->getOrCreateNewFunc(builder);
     newFuncs.push_back(newFunc);
 
-    cloneAllExtraFuncAttrs(f, newFunc, {anchorAttr});
+    if (keepAnchor)
+      cloneAllExtraFuncAttrs(f, newFunc);
+    else
+      cloneAllExtraFuncAttrs(f, newFunc, {anchorAttr});
 
     // 2. Rewrite Body if Func is non-empty
     if (!f.empty()) {
@@ -364,6 +368,8 @@ void FuncArgRearrangementPass::runOnOperation() {
 
 std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createFuncArgRearrangementPass(FuncArgRearrangerBuilderBase *builder,
-                                     const std::string &anchor) {
-  return std::make_unique<FuncArgRearrangementPass>(builder, anchor);
+                                     const std::string &anchor,
+                                     bool keepAnchor) {
+  return std::make_unique<FuncArgRearrangementPass>(builder, anchor,
+                                                    keepAnchor);
 }

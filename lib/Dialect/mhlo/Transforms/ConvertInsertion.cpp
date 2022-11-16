@@ -107,7 +107,7 @@ void ConvertInsertionPass::runOnOperation() {
     // arg
     for (unsigned i = 0; i < funcType.getNumInputs(); ++i) {
       auto oldTy = funcType.getInput(i);
-      auto maybeTensor = collector->checkType(oldTy);
+      auto maybeTensor = collector->checkArg(func, i, true);
       if (maybeTensor.hasValue()) {
         argTypes.push_back(maybeTensor.getValue());
       } else {
@@ -118,7 +118,7 @@ void ConvertInsertionPass::runOnOperation() {
     // results
     for (unsigned i = 0; i < funcType.getNumResults(); ++i) {
       auto oldTy = funcType.getResult(i);
-      auto maybeTensor = collector->checkType(oldTy);
+      auto maybeTensor = collector->checkArg(func, i, false);
       if (maybeTensor.hasValue()) {
         retTypes.push_back(maybeTensor.getValue());
       } else {
@@ -167,7 +167,14 @@ bool mlir::ConvertOnlyCheckElementType::checkFunc(func::FuncOp func) {
 }
 
 llvm::Optional<mlir::TensorType>
-mlir::ConvertOnlyCheckElementType::checkType(mlir::Type type) {
+mlir::ConvertOnlyCheckElementType::checkArg(func::FuncOp func, size_t offset,
+                                            bool isArg) {
+  FunctionType funcType = func.getFunctionType();
+  mlir::Type type;
+  if (isArg)
+    type = funcType.getInput(offset);
+  else
+    type = funcType.getResult(offset);
   if (auto TensorTy = type.dyn_cast<TensorType>()) {
     auto elementTy = TensorTy.getElementType();
     if (convertElementType.count(elementTy) > 0) {
