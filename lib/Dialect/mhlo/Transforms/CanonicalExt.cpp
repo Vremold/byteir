@@ -607,15 +607,15 @@ LogicalResult mlir::mhlo::foldLargeCompareOp(mhlo::CompareOp op,
   Attribute folded = nullptr;
 #define COMPARE_FOLDER(comparison, Func)                                       \
   if (op.getComparisonDirection() == comparison) {                             \
-    if (folded = CompareFolder<FloatType, APFloat, Func<APFloat>>(             \
-            op, {lhsOp.getValue(), rhsOp.getValue()})) {                       \
+    if ((folded = CompareFolder<FloatType, APFloat, Func<APFloat>>(            \
+             op, {lhsOp.getValue(), rhsOp.getValue()}))) {                     \
       mhlo::ConstantOp newConstOp =                                            \
           rewriter.create<mhlo::ConstantOp>(op->getLoc(), folded);             \
       rewriter.replaceOp(op, newConstOp.getOutput());                          \
       return success();                                                        \
     }                                                                          \
-    if (folded = CompareFolder<IntegerType, APInt, Func<APSInt>>(              \
-            op, {lhsOp.getValue(), rhsOp.getValue()})) {                       \
+    if ((folded = CompareFolder<IntegerType, APInt, Func<APSInt>>(             \
+             op, {lhsOp.getValue(), rhsOp.getValue()}))) {                     \
       mhlo::ConstantOp newConstOp =                                            \
           rewriter.create<mhlo::ConstantOp>(op->getLoc(), folded);             \
       rewriter.replaceOp(op, newConstOp.getOutput());                          \
@@ -630,6 +630,7 @@ LogicalResult mlir::mhlo::foldLargeCompareOp(mhlo::CompareOp op,
   COMPARE_FOLDER(ComparisonDirection::GT, std::greater);
   COMPARE_FOLDER(ComparisonDirection::GE, std::greater_equal);
 #undef COMPARE_FOLDER
+  return failure();
 }
 
 // TODO(lyq): push this pattern back to upstream
