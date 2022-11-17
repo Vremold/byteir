@@ -53,6 +53,7 @@ namespace test {
 void registerTestMhloCanonicalizeExtPass();
 void registerTestConvertFuncToCustomCallPass();
 void registerTestConvertInsertionPass();
+void registerTestCustomConvertPass();
 void registerTestFuncArgRearrangementPass();
 void registerTestPrintArgSideEffectPass();
 void registerTestPrintLivenessPass();
@@ -68,6 +69,7 @@ void registerTestPasses() {
   byteir::test::registerTestMhloCanonicalizeExtPass();
   byteir::test::registerTestConvertFuncToCustomCallPass();
   byteir::test::registerTestConvertInsertionPass();
+  byteir::test::registerTestCustomConvertPass();
   byteir::test::registerTestFuncArgRearrangementPass();
   byteir::test::registerTestPrintArgSideEffectPass();
   byteir::test::registerTestPrintLivenessPass();
