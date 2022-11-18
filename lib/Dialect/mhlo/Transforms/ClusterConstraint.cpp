@@ -77,12 +77,12 @@ struct RngConstraint : public OpRewritePattern<mhlo::RngOp> {
     auto fusion = fuseWithConstantArgs(op, {0, 1, 2}, rewriter);
     fusion->setAttr(byre::getByreForceComputeNameAttrName(),
                     UnitAttr::get(fusion.getContext()));
-    if (op.rng_distribution() == mhlo::RngDistribution::UNIFORM) {
+    if (op.getRngDistribution() == mhlo::RngDistribution::UNIFORM) {
       fusion->setAttr(byre::getByrePrefix() + "low", a);
       fusion->setAttr(byre::getByrePrefix() + "high", b);
       fusion->setAttr(byre::getByreComputeName(),
                       rewriter.getStringAttr("RngUniform"));
-    } else if (op.rng_distribution() == mhlo::RngDistribution::NORMAL) {
+    } else if (op.getRngDistribution() == mhlo::RngDistribution::NORMAL) {
       fusion->setAttr(byre::getByrePrefix() + "mu", a);
       fusion->setAttr(byre::getByrePrefix() + "sigma", b);
       fusion->setAttr(byre::getByreComputeName(),

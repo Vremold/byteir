@@ -85,11 +85,11 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
     // create all const and put into bvm
     for (auto input : constInputs) {
       ElementsAttr oldConstAttr =
-          input.getDefiningOp<mhlo::ConstantOp>().value();
+          input.getDefiningOp<mhlo::ConstantOp>().getValue();
       auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, resultType);
-      auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-          op->getLoc(), newConstAttr.getValue());
-      bvm.map(input, newConstOp.output());
+      auto newConstOp =
+          rewriter.create<mhlo::ConstantOp>(op->getLoc(), newConstAttr.value());
+      bvm.map(input, newConstOp.getOutput());
     }
 
     // clone new Transpose for nonConstInputs
@@ -109,10 +109,10 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
         mixTypes(/*cloneFromElementTypes*/ defOp->getResultTypes(),
                  /*cloneFromShapes*/ op->getResultTypes());
     // maybeResultTypes should always have value
-    assert(maybeResultTypes.hasValue());
+    assert(maybeResultTypes.has_value());
 
     auto newConsumer = cloneAndReplaceResultTypes(rewriter, defOp, bvm,
-                                                  maybeResultTypes.getValue());
+                                                  maybeResultTypes.value());
     rewriter.replaceOp(op, newConsumer->getResults());
     return success();
   }
@@ -166,11 +166,11 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
     // create all const and put into bvm
     for (auto input : constInputs) {
       ElementsAttr oldConstAttr =
-          input.getDefiningOp<mhlo::ConstantOp>().value();
+          input.getDefiningOp<mhlo::ConstantOp>().getValue();
       auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, resultType);
       auto newConstOp = rewriter.create<mhlo::ConstantOp>(
           op->getLoc(), newConstAttr.getValue());
-      bvm.map(input, newConstOp.output());
+      bvm.map(input, newConstOp.getOutput());
     }
 
     // clone new Reshape for nonConstInputs
@@ -192,10 +192,10 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
         mixTypes(/*cloneFromElementTypes*/ defOp->getResultTypes(),
                  /*cloneFromShapes*/ op->getResultTypes());
     // maybeResultTypes should always have value
-    assert(maybeResultTypes.hasValue());
+    assert(maybeResultTypes.has_value());
 
     auto newConsumer = cloneAndReplaceResultTypes(rewriter, defOp, bvm,
-                                                  maybeResultTypes.getValue());
+                                                  maybeResultTypes.value());
     rewriter.replaceOp(op, newConsumer->getResults());
 
     return success();

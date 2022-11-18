@@ -39,15 +39,15 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
     NamedAttrList attrs;
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr("MatmulOp"));
-    if (mhlo::DotOp dot = op.operand().getDefiningOp<mhlo::DotOp>()) {
-      if (dot.lhs().getType().cast<ShapedType>().getRank() != 2) {
+    if (mhlo::DotOp dot = op.getOperand().getDefiningOp<mhlo::DotOp>()) {
+      if (dot.getLhs().getType().cast<ShapedType>().getRank() != 2) {
         return failure();
       }
-      if (dot.rhs().getType().cast<ShapedType>().getRank() != 2) {
+      if (dot.getRhs().getType().cast<ShapedType>().getRank() != 2) {
         return failure();
       }
-      inputs.push_back(dot.lhs());
-      inputs.push_back(dot.rhs());
+      inputs.push_back(dot.getLhs());
+      inputs.push_back(dot.getRhs());
       byre::appendByreComputeAttr(attrs, "output_transpose",
                                   rewriter.getUnitAttr());
       byre::appendByreComputeAttr(attrs, "lhs_contracting_dimension",
@@ -56,14 +56,14 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
                                   rewriter.getI64IntegerAttr(0));
       pattern.push_back(dot);
     } else if (mhlo::DotGeneralOp dotGeneral =
-                   op.operand().getDefiningOp<mhlo::DotGeneralOp>()) {
-      if (dotGeneral.lhs().getType().cast<ShapedType>().getRank() != 2) {
+                   op.getOperand().getDefiningOp<mhlo::DotGeneralOp>()) {
+      if (dotGeneral.getLhs().getType().cast<ShapedType>().getRank() != 2) {
         return failure();
       }
-      if (dotGeneral.rhs().getType().cast<ShapedType>().getRank() != 2) {
+      if (dotGeneral.getRhs().getType().cast<ShapedType>().getRank() != 2) {
         return failure();
       }
-      auto dotDimensionNumbers = dotGeneral.dot_dimension_numbers();
+      auto dotDimensionNumbers = dotGeneral.getDotDimensionNumbers();
       if (dotDimensionNumbers.getLhsBatchingDimensions().size() != 0) {
         return failure();
       }
@@ -76,8 +76,8 @@ struct FuseDotTransposePattern : public OpRewritePattern<mhlo::TransposeOp> {
       if (dotDimensionNumbers.getRhsContractingDimensions().size() != 1) {
         return failure();
       }
-      inputs.push_back(dotGeneral.lhs());
-      inputs.push_back(dotGeneral.rhs());
+      inputs.push_back(dotGeneral.getLhs());
+      inputs.push_back(dotGeneral.getRhs());
       byre::appendByreComputeAttr(attrs, "output_transpose",
                                   rewriter.getUnitAttr());
       byre::appendByreComputeAttr(

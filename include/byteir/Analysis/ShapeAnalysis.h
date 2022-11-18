@@ -28,8 +28,9 @@ namespace shape_analysis {
 ///
 /// This class could also be called "dataflow facts", "lattice value", etc.
 struct ValueKnowledge {
-  ValueKnowledge() = delete;
-  ValueKnowledge(bool hasRank, llvm::ArrayRef<int64_t> newSizes, Type dtype)
+  ValueKnowledge() : hasError(false), hasRank(false), dtype(None) {}
+  ValueKnowledge(bool hasRank, llvm::ArrayRef<int64_t> newSizes,
+                 Optional<Type> dtype)
       : hasError(false), hasRank(hasRank), dtype(dtype) {
     sizes.reserve(newSizes.size());
     for (auto size : newSizes)
@@ -47,14 +48,17 @@ struct ValueKnowledge {
 
   static ValueKnowledge getPessimisticValueState(Value value);
 
+  /// Whether the state is uninitialized.
+  bool isUninitialized() const { return !dtype.has_value(); }
+
   ShapedTypeComponents getShapedTypeComponents() const {
     return hasRank ? ShapedTypeComponents(sizes) : ShapedTypeComponents();
   }
 
   Type getType() const {
     if (hasRank)
-      return RankedTensorType::get(llvm::makeArrayRef(sizes), dtype);
-    return UnrankedTensorType::get(dtype);
+      return RankedTensorType::get(llvm::makeArrayRef(sizes), dtype.value());
+    return UnrankedTensorType::get(dtype.value());
   }
 
   bool operator==(const ValueKnowledge &rhs) const {
@@ -78,8 +82,8 @@ struct ValueKnowledge {
   llvm::SmallVector<int64_t> sizes;
   // The dtype of a tensor.
   // This is equal to nullptr if we don't know that it is a specific concrete
-  // type.
-  Type dtype;
+  // type. The ValueKnowledge object is isUninitialized if dtype is None.
+  Optional<Type> dtype;
 };
 
 struct ValueTypeModificatoinRAII {
@@ -107,6 +111,8 @@ public:
 
   void visitOperation(Operation *op, ArrayRef<const ShapeLattice *> operands,
                       ArrayRef<ShapeLattice *> results) override;
+
+  void setToEntryState(ShapeLattice *lattice) override;
 
 protected:
   using ShapeKnowledges = function_ref<Type(Value)>;

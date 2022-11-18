@@ -18,8 +18,8 @@ module {
 // CHECK-NEXT: %[[RES1:.*]] = "tf.Equal"(%arg0, %0) {device = "host", incompatible_shape_error = true} : (tensor<1x1x!tf_type.string>, tensor<!tf_type.string>) -> tensor<1x1xi1>
 
 // CHECK: func.func @contain_string_test(%arg0: tensor<1x1xi1>, %arg1: tensor<1x10xf32>, %arg2: tensor<1x10xf32>) -> tensor<1x10xf32> attributes {__byteir_test_device__, device = "test"} {
-// CHECK-NEXT: %[[RES0:.*]] = "mhlo.reshape"(%arg0) : (tensor<1x1xi1>) -> tensor<i1>
-// CHECK-NEXT: %[[RES1:.*]] = "mhlo.select"(%0, %arg1, %arg2) : (tensor<i1>, tensor<1x10xf32>, tensor<1x10xf32>) -> tensor<1x10xf32>
+// CHECK-NEXT: %[[RES0:.*]] = mhlo.reshape %arg0 : (tensor<1x1xi1>) -> tensor<i1>
+// CHECK-NEXT: %[[RES1:.*]] = mhlo.select %0, %arg1, %arg2 : tensor<i1>, tensor<1x10xf32>
 // CHECK-NEXT: %[[RES2:.*]] = mhlo.add %1, %arg1 : tensor<1x10xf32>
 
   func.func @no_host_ops(%arg0: tensor<1x1x!tf_type.string>, %arg1: tensor<1x10xf32>, %arg2: tensor<1x10xf32>) -> tensor<1x10xf32> {
@@ -59,7 +59,7 @@ module {
 
 // CHECK-LABEL: func.func @duplicate_splat_mhlo_const_test(%arg0: tensor<i1>, %arg1: tensor<i1>, %arg2: tensor<i1>) -> tensor<i1> attributes {__byteir_test_device__, device = "test"} {
 // CHECK-NEXT:   %0 = mhlo.constant dense<true> : tensor<i1>
-// CHECK-NEXT:   %1 = "mhlo.select"(%arg0, %arg1, %arg2) : (tensor<i1>, tensor<i1>, tensor<i1>) -> tensor<i1>
+// CHECK-NEXT:   %1 = mhlo.select %arg0, %arg1, %arg2 : tensor<i1>, tensor<i1>
 // CHECK-NEXT:   %2 = mhlo.add %1, %0 : tensor<i1>
 // CHECK-NEXT:   return %2 : tensor<i1>
 // CHECK-NEXT: }

@@ -12,6 +12,7 @@
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
+#include "mlir/Dialect/MemRef/Transforms/Passes.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
@@ -22,6 +23,7 @@ void mlir::createSCFOptPipeline(OpPassManager &pm) {
       [](OpPassManager &pm) {
         pm.addNestedPass<func::FuncOp>(createConvertLinalgToLoopsPass());
         // lower affine.apply in case there is some
+        pm.addPass(memref::createFoldMemRefAliasOpsPass());
         pm.addPass(createLowerAffinePass());
         pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
         pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());

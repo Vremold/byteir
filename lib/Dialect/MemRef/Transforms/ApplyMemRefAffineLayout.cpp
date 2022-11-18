@@ -38,7 +38,7 @@ void applyAffineLayout(OpBuilder &b, ArrayRef<Operation *> collector) {
           b.getContext(), firstMemref);
 
       // early termination if not legal
-      if (!maybeAttrMap.hasValue())
+      if (!maybeAttrMap.has_value())
         return;
 
       b.setInsertionPoint(op);
@@ -48,8 +48,8 @@ void applyAffineLayout(OpBuilder &b, ArrayRef<Operation *> collector) {
         if (auto memref =
                 cloned->getResult(i).getType().dyn_cast<MemRefType>()) {
           MemRefType newMemref = MemRefType::get(
-              memref.getShape(), memref.getElementType(),
-              maybeAttrMap.getValue(), memref.getMemorySpaceAsInt());
+              memref.getShape(), memref.getElementType(), maybeAttrMap.value(),
+              memref.getMemorySpaceAsInt());
 
           cloned->getResult(i).setType(newMemref);
           op->getResult(i).replaceAllUsesWith(cloned->getResult(i));

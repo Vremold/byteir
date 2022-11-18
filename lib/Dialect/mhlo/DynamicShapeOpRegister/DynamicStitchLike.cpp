@@ -60,7 +60,8 @@ void mlir::registerDynamicStitchReifyReturnTypeShapes() {
         Value dim0 = builder.create<tensor::DimOp>(op->getLoc(), data[0], 0);
         for (unsigned i = 1; i < halfNum; ++i) {
           Value ithDim0 =
-              builder.create<tensor::DimOp>(op->getLoc(), data[i], 0).result();
+              builder.create<tensor::DimOp>(op->getLoc(), data[i], 0)
+                  .getResult();
           dim0 = builder.create<shape::AddOp>(op->getLoc(), dim0, ithDim0);
         }
         SmallVector<Value> dims;

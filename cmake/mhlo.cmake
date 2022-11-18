@@ -2,13 +2,10 @@ set(MHLO_BUILD_EMBEDDED ON)
 
 add_subdirectory(${REPO_ROOT_DIR}/external/mlir-hlo ${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo EXCLUDE_FROM_ALL)
 
-# FIXME: this should be fixed at upstream
-add_dependencies(obj.GmlStTransforms MLIRGmlStComposeSetInterfaceIncGen)
-add_dependencies(obj.GmlStBufferizableOpInterface MLIRGmlStComposeSetInterfaceIncGen)
-add_dependencies(obj.MLIRBufferTransforms MLIRGmlStComposeSetInterfaceIncGen)
-
 include_directories(${REPO_ROOT_DIR}/external/mlir-hlo/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo/include)
+include_directories(${REPO_ROOT_DIR}/external/mlir-hlo/stablehlo)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo/stablehlo)
 
 install(DIRECTORY ${REPO_ROOT_DIR}/external/mlir-hlo/include/mlir-hlo ${REPO_ROOT_DIR}/external/mlir-hlo/include/mlir-hlo-c
   DESTINATION external/include

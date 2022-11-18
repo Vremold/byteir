@@ -166,7 +166,7 @@ llvm::DenseSet<Value> SymbolicShapeAnalysis::findSymbolicExprSourcesRecursively(
     if (auto arg = auxiValToOrigin.lookup(symbolicShape))
       result.insert(arg);
   } else if (auto dimOp = dyn_cast<tensor::DimOp>(defOp)) {
-    if (auto originVal = auxiValToOrigin.lookup(dimOp.source()))
+    if (auto originVal = auxiValToOrigin.lookup(dimOp.getSource()))
       result.insert(originVal);
   } else if (auto shapeOfOp = dyn_cast<shape::ShapeOfOp>(defOp)) {
     if (auto originVal = auxiValToOrigin.lookup(shapeOfOp.getArg()))

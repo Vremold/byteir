@@ -125,7 +125,7 @@ static void foldAlias(func::FuncOp func) {
   }
 
   for (auto op : func.getOps<ComputeOp>()) {
-    if (op.callee() == "AliasOp") {
+    if (op.getCallee() == "AliasOp") {
       auto value = op->getOperand(1);
       if (value.hasOneUse()) {
         remove_ops.emplace_back(op);

@@ -27,7 +27,7 @@ limitations under the License.
 #include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/type_conversion.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
@@ -70,7 +70,7 @@ struct HloFusionToLinalgPass
     MLIRContext &ctx = getContext();
     RewritePatternSet patterns(&ctx);
     ConversionTarget target(ctx);
-    target.addLegalDialect<arith::ArithmeticDialect, cf::ControlFlowDialect,
+    target.addLegalDialect<arith::ArithDialect, cf::ControlFlowDialect,
                            func::FuncDialect, linalg::LinalgDialect,
                            math::MathDialect, tensor::TensorDialect,
                            scf::SCFDialect, shape::ShapeDialect>();

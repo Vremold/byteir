@@ -23,5 +23,5 @@ func.func @mhlo_tuple_return(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>) -> tu
 // CHECK-LABEL: func.func @mhlo_tuple_return
 // CHECK: %[[VAR_0:.*]] = mhlo.add %{{.*}}, %{{.*}} : tensor<4xf32>
 // CHECK: %[[VAR_1:.*]] = mhlo.add %{{.*}}, %{{.*}} : tensor<4xf32>
-// CHECK: %[[VAR_2:.*]] = "mhlo.tuple"(%[[VAR_0]], %[[VAR_1]]) : (tensor<4xf32>, tensor<4xf32>) -> tuple<tensor<4xf32>, tensor<4xf32>>
+// CHECK: %[[VAR_2:.*]] = mhlo.tuple %[[VAR_0]], %[[VAR_1]] : tuple<tensor<4xf32>, tensor<4xf32>>
 // CHECK: return %[[VAR_2]] : tuple<tensor<4xf32>, tensor<4xf32>>

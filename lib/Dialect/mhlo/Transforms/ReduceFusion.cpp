@@ -37,17 +37,17 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     }
 
     // only support cases of all pads or none pads
-    size_t numPad = llvm::count_if(op.operands(), [&](Value v) {
+    size_t numPad = llvm::count_if(op.getInputs(), [&](Value v) {
       return isa_and_nonnull<mhlo::PadOp>(v.getDefiningOp());
     });
 
     MhloFusionPattern pattern;
     // handle the case of all pads
-    if (numPad == op.operands().size()) {
-      for (auto val : op.operands()) {
+    if (numPad == op.getInputs().size()) {
+      for (auto val : op.getInputs()) {
         auto pad = cast<mhlo::PadOp>(val.getDefiningOp());
         // handle pad of constant
-        auto paddingValDefOp = pad.padding_value().getDefiningOp();
+        auto paddingValDefOp = pad.getPaddingValue().getDefiningOp();
         if (isSplatMhloConstant(paddingValDefOp)) {
           auto cloned = replicateDefiningOp(rewriter, pad, 1, 0);
           pattern.push_back(cloned);
@@ -60,8 +60,8 @@ struct PadReduceWindowPattern : public OpRewritePattern<mhlo::ReduceWindowOp> {
     }
 
     // handle initial as a constant
-    size_t idx = op.operands().size();
-    for (auto val : op.init_values()) {
+    size_t idx = op.getInputs().size();
+    for (auto val : op.getInitValues()) {
       auto initialDefOp = val.getDefiningOp();
       if (isSplatMhloConstant(initialDefOp)) {
         auto cloned = replicateDefiningOp(rewriter, op, idx, 0);

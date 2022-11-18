@@ -41,7 +41,7 @@ void mlir::replicateDefiningOp(Block *block,
       auto opDef = val.getDefiningOp();
       if (opDef != nullptr && checkFunc(opDef)) {
         auto maybeIdx = findResultIndex(opDef, val);
-        replaceOps.emplace_back(&op, i, maybeIdx.getValue());
+        replaceOps.emplace_back(&op, i, maybeIdx.value());
       }
     }
   }
@@ -156,7 +156,8 @@ static bool isStore(Operation *op) {
 template <typename T> bool isSameAccessImpl(Operation *x, Operation *y) {
   if (auto tX = dyn_cast<T>(x)) {
     if (auto tY = dyn_cast<T>(y)) {
-      return tX.memref() == tY.memref() && tX.indices() == tY.indices();
+      return tX.getMemref() == tY.getMemref() &&
+             tX.getIndices() == tY.getIndices();
     }
   }
   return false;
@@ -180,19 +181,19 @@ static bool isSameOperation(Operation *x, Operation *y) {
 
 static Value getMemoryAccessBase(Operation *op) {
   if (auto load = dyn_cast<AffineLoadOp>(op)) {
-    return load.memref();
+    return load.getMemref();
   }
 
   if (auto load = dyn_cast<LoadOp>(op)) {
-    return load.memref();
+    return load.getMemref();
   }
 
   if (auto store = dyn_cast<AffineStoreOp>(op)) {
-    return store.memref();
+    return store.getMemref();
   }
 
   if (auto store = dyn_cast<StoreOp>(op)) {
-    return store.memref();
+    return store.getMemref();
   }
 
   // not reachable

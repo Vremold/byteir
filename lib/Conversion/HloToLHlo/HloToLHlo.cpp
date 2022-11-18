@@ -27,7 +27,7 @@ limitations under the License.
 #include "mlir-hlo/Dialect/lhlo/transforms/map_hlo_to_lhlo_op.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/Transforms/Bufferize.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
 #include "mlir/Dialect/Func/Transforms/FuncConversions.h"
@@ -236,7 +236,7 @@ public:
     // rewrite all tuple user
     for (auto *user : allUsers) {
       auto getElementOp = cast<mhlo::GetTupleElementOp>(user);
-      unsigned index = inputNum + getElementOp.index();
+      unsigned index = inputNum + getElementOp.getIndex();
       rewriter.replaceOp(getElementOp, {buffer_args[index]});
     }
 
@@ -257,7 +257,7 @@ public:
                   ConversionPatternRewriter &rewriter) const final {
     ValueRange operands = adaptor.getOperands();
     auto loc = op.getLoc();
-    if (!llvm::hasSingleElement(op.body())) {
+    if (!llvm::hasSingleElement(op.getBody())) {
       return op.emitOpError()
              << "tensor to buffer conversion expects a single block "
                 "in the region containing the operation";
@@ -269,7 +269,7 @@ public:
         loc, llvm::None, buffer_args, op->getAttrs());
 
     // Copy over the operations inside the region.
-    rewriter.inlineRegionBefore(op.body(), new_op.getBody(),
+    rewriter.inlineRegionBefore(op.getBody(), new_op.getBody(),
                                 new_op.getBody().end());
 
     // Convert the region signature to memref and add extra result.
@@ -283,7 +283,7 @@ public:
     }
     auto return_op = cast<mhlo::ReturnOp>(entry_block.getTerminator());
     if (auto tuple_ty =
-            return_op.results().front().getType().dyn_cast<TupleType>()) {
+            return_op.getResults().front().getType().dyn_cast<TupleType>()) {
       auto tuple_op = return_op.getODSOperands(0).front().getDefiningOp();
       return_op.getOperation()->dropAllReferences();
       rewriter.eraseOp(tuple_op);
@@ -295,7 +295,7 @@ public:
       }
     } else {
       auto result_type =
-          return_op.results().front().getType().cast<TensorType>();
+          return_op.getResults().front().getType().cast<TensorType>();
       sig_conversion.addInputs({MemRefType::get(result_type.getShape(),
                                                 result_type.getElementType())});
     }
@@ -341,12 +341,12 @@ public:
         static_cast<int32_t>(operands.size()),
         static_cast<int32_t>(buffer_args.size() - operands.size())};
     lhloOp->setAttr(lhloOp.getOperandSegmentSizeAttr(),
-                    rewriter.getI32VectorAttr(segments));
+                    rewriter.getDenseI32ArrayAttr(segments));
 
     // rewrite all tuple user
     for (auto *user : allUsers) {
       auto getElementOp = cast<mhlo::GetTupleElementOp>(user);
-      unsigned index = inputNum + getElementOp.index();
+      unsigned index = inputNum + getElementOp.getIndex();
       rewriter.replaceOp(getElementOp, {buffer_args[index]});
     }
 
@@ -396,7 +396,7 @@ public:
     RewritePatternSet patterns(&context);
     ConversionTarget target(context);
 
-    target.addLegalDialect<arith::ArithmeticDialect>();
+    target.addLegalDialect<arith::ArithDialect>();
     target.addLegalDialect<bufferization::BufferizationDialect>();
     target.addLegalDialect<cf::ControlFlowDialect>();
     target.addLegalDialect<func::FuncDialect>();

@@ -68,19 +68,19 @@ static LogicalResult printOperation(CUDAEmitter &emitter,
     os << "__global__ ";
 
   if (failed(emitter.emitTypes(functionOp.getLoc(),
-                               functionOp.function_type().getResults())))
+                               functionOp.getFunctionType().getResults())))
     return failure();
   os << " " << functionOp.getName();
 
   if (functionOp.empty()) {
     os << "(";
-    if (failed(interleaveCommaWithError(functionOp.function_type().getInputs(),
-                                        os, [&](Type type) -> LogicalResult {
-                                          if (failed(emitter.emitType(
-                                                  functionOp.getLoc(), type)))
-                                            return failure();
-                                          return success();
-                                        }))) {
+    if (failed(interleaveCommaWithError(
+            functionOp.getFunctionType().getInputs(), os,
+            [&](Type type) -> LogicalResult {
+              if (failed(emitter.emitType(functionOp.getLoc(), type)))
+                return failure();
+              return success();
+            }))) {
       return failure();
     }
     os << ");\n";
@@ -210,28 +210,28 @@ static LogicalResult printOperation(CUDAEmitter &emitter,
 static LogicalResult printOperation(CUDAEmitter &emitter, GridDimOp gdimOp) {
   RETURN_IF_FAILED(emitter.emitAssignPrefix(*gdimOp.getOperation()));
   raw_ostream &os = emitter.ostream();
-  os << "gridDim." << mlir::gpu::stringifyDimension(gdimOp.dimension());
+  os << "gridDim." << mlir::gpu::stringifyDimension(gdimOp.getDimension());
   return success();
 }
 
 static LogicalResult printOperation(CUDAEmitter &emitter, BlockDimOp bdimOp) {
   RETURN_IF_FAILED(emitter.emitAssignPrefix(*bdimOp.getOperation()));
   raw_ostream &os = emitter.ostream();
-  os << "blockDim." << mlir::gpu::stringifyDimension(bdimOp.dimension());
+  os << "blockDim." << mlir::gpu::stringifyDimension(bdimOp.getDimension());
   return success();
 }
 
 static LogicalResult printOperation(CUDAEmitter &emitter, BlockIdOp bidOp) {
   RETURN_IF_FAILED(emitter.emitAssignPrefix(*bidOp.getOperation()));
   raw_ostream &os = emitter.ostream();
-  os << "blockIdx." << mlir::gpu::stringifyDimension(bidOp.dimension());
+  os << "blockIdx." << mlir::gpu::stringifyDimension(bidOp.getDimension());
   return success();
 }
 
 static LogicalResult printOperation(CUDAEmitter &emitter, ThreadIdOp tidOp) {
   RETURN_IF_FAILED(emitter.emitAssignPrefix(*tidOp.getOperation()));
   raw_ostream &os = emitter.ostream();
-  os << "threadIdx." << mlir::gpu::stringifyDimension(tidOp.dimension());
+  os << "threadIdx." << mlir::gpu::stringifyDimension(tidOp.getDimension());
   return success();
 }
 

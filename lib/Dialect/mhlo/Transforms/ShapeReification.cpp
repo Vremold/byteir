@@ -30,7 +30,7 @@ LogicalResult reifyShapes(OpBuilder &builder, Operation *op,
   if (!op)
     return failure();
 
-  if (op->hasTrait<mhlo::OpTrait::CompatibleOperandsAndResultType>()) {
+  if (op->hasTrait<hlo::OpTrait::CompatibleOperandsAndResultType>()) {
     // CompatibleOperandsAndResultType does not implement reify
     reifications.push_back(
         builder.create<shape::ShapeOfOp>(op->getLoc(), op->getOperand(0)));
@@ -49,7 +49,7 @@ LogicalResult reifyShapes(OpBuilder &builder, Operation *op,
       return failure();
     }
   } else if (auto customCall = dyn_cast<mhlo::CustomCallOp>(op)) {
-    auto inferFunc = reifyReturnTypeShapes(customCall.call_target_name());
+    auto inferFunc = reifyReturnTypeShapes(customCall.getCallTargetName());
     if (!inferFunc) {
       return failure();
     }
@@ -74,16 +74,17 @@ struct ShapeReificationOnTensorDimPattern
 
   LogicalResult matchAndRewrite(tensor::DimOp op,
                                 PatternRewriter &rewriter) const override {
-    auto origin = op.source().getDefiningOp();
+    auto origin = op.getSource().getDefiningOp();
     SmallVector<Value, 1> reifications;
 
     if (failed(reifyShapes(rewriter, origin, reifications))) {
       return failure();
     }
 
-    Value shape = reifications[op.source().cast<OpResult>().getResultNumber()];
+    Value shape =
+        reifications[op.getSource().cast<OpResult>().getResultNumber()];
     Value dimOfShape =
-        rewriter.create<tensor::ExtractOp>(op.getLoc(), shape, op.index());
+        rewriter.create<tensor::ExtractOp>(op.getLoc(), shape, op.getIndex());
 
     // Insert cast, if needed.
     if (dimOfShape.getType() != op.getType()) {

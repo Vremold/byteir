@@ -72,8 +72,8 @@ static SmallVector<Value, 2> extractDynamicSizes(OpBuilder &b, Location loc,
 
 static Value getInitTensor(OpBuilder &b, Location loc, ShapedType type,
                            ArrayRef<Value> dyn_sizes) {
-  return b.create<linalg::InitTensorOp>(loc, dyn_sizes, type.getShape(),
-                                        type.getElementType());
+  return b.create<tensor::EmptyOp>(loc, type.getShape(), type.getElementType(),
+                                   dyn_sizes);
 }
 
 /// Returns an ArrayAttr that contains `nLoops` attributes. All the attributes
@@ -108,7 +108,6 @@ public:
     };
 
     auto isScalar = [&](Value v) { return getRank(v) == 0; };
-    auto it = llvm::find_if_not(adaptor.getOperands(), isScalar);
     Value maxRankArg = adaptor.getOperands().front();
     int64_t nloops = getRank(maxRankArg);
 
@@ -170,7 +169,7 @@ struct UnrealizedCastToLinalgPass
     RewritePatternSet patterns(&ctx);
     ConversionTarget target(ctx);
 
-    target.addLegalDialect<arith::ArithmeticDialect, cf::ControlFlowDialect,
+    target.addLegalDialect<arith::ArithDialect, cf::ControlFlowDialect,
                            func::FuncDialect, linalg::LinalgDialect,
                            math::MathDialect, tensor::TensorDialect,
                            scf::SCFDialect, shape::ShapeDialect>();

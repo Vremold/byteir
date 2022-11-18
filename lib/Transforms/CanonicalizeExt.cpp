@@ -59,7 +59,7 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
         op->erase();
       } else {
         auto customOp = llvm::dyn_cast<mhlo::CustomCallOp>(op);
-        if (customOp && !customOp.has_side_effect())
+        if (customOp && !customOp.getHasSideEffect())
           op->erase();
       }
     }

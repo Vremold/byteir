@@ -44,7 +44,7 @@ struct TestPrintShapeAnalysisPass
                      << ", inferred shapes are:\n\t";
         for (Value value : op->getResults()) {
           if (auto lattice = solver.lookupState<ShapeLattice>(value)) {
-            if (!lattice->isUninitialized()) {
+            if (!lattice->getValue().isUninitialized()) {
               lattice->getValue().print(llvm::outs());
             }
           }
@@ -57,7 +57,7 @@ struct TestPrintShapeAnalysisPass
         for (Value value : op->getResults()) {
           if (auto lattice =
                   solver.lookupState<Lattice<ConstantValue>>(value)) {
-            if (!lattice->isUninitialized()) {
+            if (!lattice->getValue().isUninitialized()) {
               lattice->getValue().print(llvm::outs());
             }
           }

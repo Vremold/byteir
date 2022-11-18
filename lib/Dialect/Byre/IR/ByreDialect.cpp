@@ -205,13 +205,13 @@ LogicalResult ByreDialect::verifyOperationAttribute(Operation *op,
                  << func::FuncOp::getOperationName() << "' under '"
                  << ModuleOp::getOperationName() << '\'';
         }
-        if (bitEnumContains(argType, ArgType::Input)) {
+        if (bitEnumContainsAll(argType, ArgType::Input)) {
           numInputs++;
         }
-        if (bitEnumContains(argType, ArgType::Output)) {
+        if (bitEnumContainsAll(argType, ArgType::Output)) {
           numOutputs++;
         }
-        if (bitEnumContains(argType, ArgType::Weight)) {
+        if (bitEnumContainsAll(argType, ArgType::Weight)) {
           numWeights++;
         }
       } else {
@@ -278,7 +278,7 @@ LogicalResult ComputeOp::verify() {
     return failure();
   }
 
-  auto maybeMemoryEffects = this->memory_effects();
+  auto maybeMemoryEffects = this->getMemoryEffects();
   if (maybeMemoryEffects) {
     if (maybeMemoryEffects->size() != this->getNumOperands()) {
       return emitError("size of memory effects mismatch");
@@ -299,7 +299,7 @@ FunctionType mlir::byre::ComputeOp::getType() {
 void ComputeOp::getEffects(
     SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
         &effects) {
-  if (!this->memory_effects()) {
+  if (!this->getMemoryEffects()) {
     // if memory effects was not set, assume that all operands are readwrite
     for (auto &&i : this->getOperands()) {
       effects.emplace_back(MemoryEffects::Read::get(), i,
@@ -309,15 +309,15 @@ void ComputeOp::getEffects(
     }
   } else {
     auto memoryEffects = llvm::to_vector(
-        this->memory_effects()->getAsValueRange<MemoryEffectAttr>());
+        this->getMemoryEffects()->getAsValueRange<MemoryEffectAttr>());
     for (auto &&pi : llvm::zip(this->getOperands(), memoryEffects)) {
       auto value = std::get<0>(pi);
       MemoryEffect effect = std::get<1>(pi);
-      if (bitEnumContains(effect, MemoryEffect::Read)) {
+      if (bitEnumContainsAll(effect, MemoryEffect::Read)) {
         effects.emplace_back(MemoryEffects::Read::get(), value,
                              SideEffects::DefaultResource::get());
       }
-      if (bitEnumContains(effect, MemoryEffect::Write)) {
+      if (bitEnumContainsAll(effect, MemoryEffect::Write)) {
         effects.emplace_back(MemoryEffects::Write::get(), value,
                              SideEffects::DefaultResource::get());
       }
@@ -346,7 +346,7 @@ struct EraseIdentityCopyOp : public OpRewritePattern<CopyOp> {
 
   LogicalResult matchAndRewrite(CopyOp copyOp,
                                 PatternRewriter &rewriter) const override {
-    if (copyOp.source() == copyOp.target()) {
+    if (copyOp.getSource() == copyOp.getTarget()) {
       rewriter.eraseOp(copyOp);
       return success();
     }
@@ -379,10 +379,10 @@ struct CollapseAliasChain : public OpRewritePattern<AliasOp> {
 
   LogicalResult matchAndRewrite(AliasOp aliasOp,
                                 PatternRewriter &rewriter) const override {
-    if (auto sourceOp = aliasOp.source().getDefiningOp<AliasOp>()) {
+    if (auto sourceOp = aliasOp.getSource().getDefiningOp<AliasOp>()) {
       rewriter.replaceOpWithNewOp<AliasOp>(
-          aliasOp, aliasOp.target().getType(), sourceOp.source(),
-          aliasOp.offset() + sourceOp.offset());
+          aliasOp, aliasOp.getTarget().getType(), sourceOp.getSource(),
+          aliasOp.getOffset() + sourceOp.getOffset());
       return success();
     }
     return failure();
@@ -393,9 +393,9 @@ struct RemoveIdentityAliasOp : public OpRewritePattern<AliasOp> {
 
   LogicalResult matchAndRewrite(AliasOp aliasOp,
                                 PatternRewriter &rewriter) const override {
-    if (aliasOp.source().getType() == aliasOp.target().getType() &&
-        aliasOp.offset() == 0) {
-      rewriter.replaceOp(aliasOp, aliasOp.source());
+    if (aliasOp.getSource().getType() == aliasOp.getTarget().getType() &&
+        aliasOp.getOffset() == 0) {
+      rewriter.replaceOp(aliasOp, aliasOp.getSource());
       return success();
     }
     return failure();
@@ -415,7 +415,7 @@ void AliasOp::getCanonicalizationPatterns(RewritePatternSet &results,
 
 std::string AliasOp::getCalleeName() { return "AliasOp"; }
 
-Value AliasOp::getViewSource() { return source(); }
+Value AliasOp::getViewSource() { return getSource(); }
 
 // LWC: ignore Async for now
 //
@@ -429,12 +429,10 @@ void byre::addAsyncDependency(Operation *op, Value token) {
     return;
   auto attrName =
       OpTrait::AttrSizedOperandSegments<void>::getOperandSegmentSizeAttr();
-  auto sizeAttr = op->template getAttrOfType<DenseIntElementsAttr>(attrName);
+  auto sizeAttr = op->template getAttrOfType<DenseI32ArrayAttr>(attrName);
   if (!sizeAttr)
     return; // Async dependencies is the only variadic operand.
-  SmallVector<int32_t, 8> sizes;
-  for (auto size : sizeAttr.getValues<APInt>())
-    sizes.push_back(size.getSExtValue());
+  SmallVector<int32_t, 8> sizes(sizeAttr.asArrayRef());
   ++sizes.front();
   op->setAttr(attrName, Builder(op->getContext()).getI32VectorAttr(sizes));
 }
@@ -446,7 +444,7 @@ SmallVector<Value> ByreOp::getInputs() {
       return llvm::to_vector(
           llvm::make_filter_range(op->getOperands(), [&](Value value) {
             return iface.getEffectOnValue<MemoryEffects::Read>(value)
-                .hasValue();
+                .has_value();
           }));
     }
   }
@@ -460,7 +458,7 @@ SmallVector<Value> ByreOp::getOutputs() {
       auto outputs = llvm::to_vector(
           llvm::make_filter_range(op->getOperands(), [&](Value value) {
             return iface.getEffectOnValue<MemoryEffects::Write>(value)
-                .hasValue();
+                .has_value();
           }));
       outputs.append(op->result_begin(), op->result_end());
       return outputs;

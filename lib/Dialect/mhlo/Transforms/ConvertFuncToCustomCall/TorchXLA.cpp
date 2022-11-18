@@ -67,7 +67,7 @@ void convertTorchMax(func::FuncOp func, ModuleOp m) {
   OpBuilder b(ctx);
   DenseIntElementsAttr axisAttr;
   func.walk([&](mhlo::ReduceOp reduceOp) {
-    axisAttr = reduceOp.dimensions();
+    axisAttr = reduceOp.getDimensions();
     return WalkResult::interrupt();
   });
   int64_t axisInt = (*axisAttr.begin()).getSExtValue();

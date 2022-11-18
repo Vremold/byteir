@@ -27,7 +27,7 @@ class Lace_Op<string mnemonic, list<Trait> traits = []> :
 
 class Lace_AliasOp<string mnemonic, list<Trait> traits = []> : 
   Lace_Op<mnemonic, !listconcat(traits,
-      [ViewLikeOpInterface, NoSideEffect, Lace_AliasLikeOpInterface])>;
+      [ViewLikeOpInterface, Pure, Lace_AliasLikeOpInterface])>;
 
 def Lace_ReshapeOp: Lace_AliasOp<"reshape"> {
   let arguments = (ins AnyStridedMemRef:$source);

@@ -9,7 +9,6 @@
 #define BYTEIR_LINALG_PASSES_H
 
 #include "byteir/Dialect/Linalg/Transforms/LinalgDataPlace.h"
-#include "byteir/Dialect/Linalg/Transforms/LinalgFuseReshape.h"
 #include "byteir/Dialect/Linalg/Transforms/LinalgPrefetch.h"
 #include "byteir/Dialect/Linalg/Transforms/LinalgScopeTiling.h"
 

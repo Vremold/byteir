@@ -202,8 +202,8 @@ static bool isGlobalAllocAlias(Operation &op) {
 };
 
 static bool isHoistUpOp(Operation *op) {
-  return isa<memref::AllocOp, memref::CollapseShapeOp, memref::DimOp,
-             memref::ExpandShapeOp, memref::ReshapeOp>(op);
+  return isa<memref::AllocOp, memref::AllocaOp, memref::CollapseShapeOp,
+             memref::DimOp, memref::ExpandShapeOp, memref::ReshapeOp>(op);
 }
 
 static void rewriteToGPULaunchFuncImpl(OpBuilder &builder, func::FuncOp func,
@@ -237,9 +237,9 @@ int64_t estimateGridSize(LoopLikeOpInterface loopLike, int64_t currGs,
 
   auto maybeTripCnt = getConstantTripCount(loopLike, stepMultiplier);
 
-  if (maybeTripCnt.hasValue() &&
-      (maybeTripCnt.getValue() > static_cast<uint64_t>(currGs))) {
-    return maybeTripCnt.getValue();
+  if (maybeTripCnt.has_value() &&
+      (maybeTripCnt.value() > static_cast<uint64_t>(currGs))) {
+    return maybeTripCnt.value();
   }
   return currGs;
 }

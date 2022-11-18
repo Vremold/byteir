@@ -11,7 +11,7 @@ add_mlir_library(ByteIRHostPipelines
   MLIRFuncDialect
 
   ByteIRToLLVM
-  MLIRArithmeticTransforms
+  MLIRArithTransforms
   MLIRBufferizationTransforms
   MLIRFuncToLLVM
   MLIRMathToLLVM

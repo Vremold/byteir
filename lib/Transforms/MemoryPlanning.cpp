@@ -25,9 +25,9 @@ limitations under the License.
 #include "byteir/Transforms/MemoryPlanning.h"
 #include "byteir/Analysis/Liveness.h"
 #include "byteir/Analysis/UseRange.h"
-#include "mlir/Analysis/BufferViewFlowAnalysis.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
+#include "mlir/Dialect/Bufferization/Transforms/BufferViewFlowAnalysis.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Operation.h"
@@ -415,7 +415,7 @@ public:
         Location loc = viewDefOp->getLoc();
         mlir::OpBuilder viewBuilder(viewDefOp);
 
-        // Create a arithmetic ConstantOp with the aligned offset.
+        // Create a arith ConstantOp with the aligned offset.
         Value constantOp = viewBuilder.create<mlir::arith::ConstantOp>(
             loc, viewBuilder.getIndexType(),
             viewBuilder.getIntegerAttr(viewBuilder.getIndexType(), offset));

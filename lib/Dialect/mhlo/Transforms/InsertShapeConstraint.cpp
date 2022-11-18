@@ -42,7 +42,7 @@ struct InsertShapeConstraintPass
       llvm::StringRef opName;
 
       if (auto customCall = llvm::dyn_cast<mhlo::CustomCallOp>(op)) {
-        opName = customCall.call_target_name();
+        opName = customCall.getCallTargetName();
       } else {
         opName = op->getName().getStringRef();
       }

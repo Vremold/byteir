@@ -97,11 +97,14 @@ func.func @dynamic_reshape(%arg0: tensor<?x128xf16>, %arg1: tensor<?xf16>) -> te
 // CHECK-DAG:     %[[C0:.+]] = arith.constant 0 : index
 // CHECK-DAG:     %[[C1:.+]] = arith.constant 1 : index
 // CHECK-DAG:     %[[C2:.+]] = arith.constant 128 : index
-// CHECK-DAG:     %[[V0:.+]] = tensor.dim %arg1, %[[C0]] : tensor<?xf16>
-// CHECK-DAG:     %[[V1:.+]] = tensor.dim %2, %[[C0]] : tensor<?x1x128xf16>
-// CHECK-DAG:     %[[V2:.+]] = shape.mul %[[V1]], %[[C1]] : index, index -> index
+// CHECK-DAG:     %[[DIM:.+]] = tensor.dim %arg0, %[[C0]] : tensor<?x128xf16>
+// CHECK-DAG:     %[[FROM_ELEMENTS:.+]] = tensor.from_elements %[[DIM]], %[[C1]], %[[C2]] : tensor<3xindex>
+// CHECK-DAG:     %[[V0:.+]] = mhlo.dynamic_reshape %arg1, %[[FROM_ELEMENTS]] : (tensor<?xf16>, tensor<3xindex>) -> tensor<?x1x128xf16>
+// CHECK-DAG:     %[[DIM0:.+]] = tensor.dim %arg1, %[[C0]] : tensor<?xf16>
+// CHECK-DAG:     %[[DIM1:.+]] = tensor.dim %[[V0]], %[[C0]] : tensor<?x1x128xf16>
+// CHECK-DAG:     %[[V2:.+]] = shape.mul %[[DIM1]], %[[C1]] : index, index -> index
 // CHECK-DAG:     %[[V3:.+]] = shape.mul %[[V2]], %[[C2]] : index, index -> index
-// CHECK-DAG:     "shape_ext.meet"(%[[V0]], %[[V3]])
+// CHECK-DAG:     "shape_ext.meet"(%[[DIM0]], %[[V3]])
 
 func.func @reshape_scalar(%arg0 : tensor<1x1xf32>) -> tensor<f32> {
   %0 = "mhlo.reshape"(%arg0) : (tensor<1x1xf32>) -> tensor<f32>

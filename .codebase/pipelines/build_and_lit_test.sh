@@ -4,11 +4,11 @@ set -e
 
 export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
 export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
+export no_proxy='*.byted.org'
 git submodule update --init --recursive
 unset http_proxy; unset https_proxy
 
-LLVM_BUILD="llvm_install_439668871ac992159f00309d3bd837db287bdea6.tar.gz"
+LLVM_BUILD="llvm_install_74fb770de9399d7258a8eda974c93610cfde698e.tar.gz"
 if [ ! -f "$LLVM_BUILD" ]; then
   rm -rf llvm_install*
   rm -rf llvm_build

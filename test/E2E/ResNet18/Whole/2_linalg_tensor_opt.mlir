@@ -3,331 +3,331 @@
 // CHECK-LABEL: func.func @main
 module @IrToMhlo.2452 {
   func.func private @Unknown0(%arg0: tensor<4x3x224x224xf32>) -> tensor<4x3x224x224xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x3x224x224xf32>) -> tensor<4x3x224x224xf16>
+    %0 = mhlo.convert %arg0 : (tensor<4x3x224x224xf32>) -> tensor<4x3x224x224xf16>
     return %0 : tensor<4x3x224x224xf16>
   }
   func.func private @Unknown1(%arg0: tensor<64x3x7x7xf32>) -> tensor<64x3x7x7xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<64x3x7x7xf32>) -> tensor<64x3x7x7xf16>
+    %0 = mhlo.convert %arg0 : (tensor<64x3x7x7xf32>) -> tensor<64x3x7x7xf16>
     return %0 : tensor<64x3x7x7xf16>
   }
   func.func private @BatchNormTrainingOp2(%arg0: tensor<4x64x112x112xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> tensor<4x64x112x112xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<4x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x64x112x112xf32>) -> tensor<4x64x112x112xf16>
+    %1 = mhlo.convert %output : (tensor<4x64x112x112xf32>) -> tensor<4x64x112x112xf16>
     return %1 : tensor<4x64x112x112xf16>
   }
   func.func private @Unknown3(%arg0: tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
     return %0 : tensor<64x64x3x3xf16>
   }
   func.func private @Unknown4(%arg0: tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
     return %0 : tensor<64x64x3x3xf16>
   }
   func.func private @Unknown5(%arg0: tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
     return %0 : tensor<64x64x3x3xf16>
   }
   func.func private @Unknown6(%arg0: tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<64x64x3x3xf32>) -> tensor<64x64x3x3xf16>
     return %0 : tensor<64x64x3x3xf16>
   }
   func.func private @Unknown7(%arg0: tensor<128x64x1x1xf32>) -> tensor<128x64x1x1xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<128x64x1x1xf32>) -> tensor<128x64x1x1xf16>
+    %0 = mhlo.convert %arg0 : (tensor<128x64x1x1xf32>) -> tensor<128x64x1x1xf16>
     return %0 : tensor<128x64x1x1xf16>
   }
   func.func private @Unknown8(%arg0: tensor<128x64x3x3xf32>) -> tensor<128x64x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<128x64x3x3xf32>) -> tensor<128x64x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<128x64x3x3xf32>) -> tensor<128x64x3x3xf16>
     return %0 : tensor<128x64x3x3xf16>
   }
   func.func private @Unknown9(%arg0: tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
     return %0 : tensor<128x128x3x3xf16>
   }
   func.func private @Unknown10(%arg0: tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
     return %0 : tensor<128x128x3x3xf16>
   }
   func.func private @Unknown11(%arg0: tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<128x128x3x3xf32>) -> tensor<128x128x3x3xf16>
     return %0 : tensor<128x128x3x3xf16>
   }
   func.func private @Unknown12(%arg0: tensor<256x128x1x1xf32>) -> tensor<256x128x1x1xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<256x128x1x1xf32>) -> tensor<256x128x1x1xf16>
+    %0 = mhlo.convert %arg0 : (tensor<256x128x1x1xf32>) -> tensor<256x128x1x1xf16>
     return %0 : tensor<256x128x1x1xf16>
   }
   func.func private @Unknown13(%arg0: tensor<256x128x3x3xf32>) -> tensor<256x128x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<256x128x3x3xf32>) -> tensor<256x128x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<256x128x3x3xf32>) -> tensor<256x128x3x3xf16>
     return %0 : tensor<256x128x3x3xf16>
   }
   func.func private @Unknown14(%arg0: tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
     return %0 : tensor<256x256x3x3xf16>
   }
   func.func private @Unknown15(%arg0: tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
     return %0 : tensor<256x256x3x3xf16>
   }
   func.func private @Unknown16(%arg0: tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<256x256x3x3xf32>) -> tensor<256x256x3x3xf16>
     return %0 : tensor<256x256x3x3xf16>
   }
   func.func private @Unknown17(%arg0: tensor<512x256x1x1xf32>) -> tensor<512x256x1x1xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<512x256x1x1xf32>) -> tensor<512x256x1x1xf16>
+    %0 = mhlo.convert %arg0 : (tensor<512x256x1x1xf32>) -> tensor<512x256x1x1xf16>
     return %0 : tensor<512x256x1x1xf16>
   }
   func.func private @Unknown18(%arg0: tensor<512x256x3x3xf32>) -> tensor<512x256x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<512x256x3x3xf32>) -> tensor<512x256x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<512x256x3x3xf32>) -> tensor<512x256x3x3xf16>
     return %0 : tensor<512x256x3x3xf16>
   }
   func.func private @Unknown19(%arg0: tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
     return %0 : tensor<512x512x3x3xf16>
   }
   func.func private @Unknown20(%arg0: tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
     return %0 : tensor<512x512x3x3xf16>
   }
   func.func private @Unknown21(%arg0: tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
+    %0 = mhlo.convert %arg0 : (tensor<512x512x3x3xf32>) -> tensor<512x512x3x3xf16>
     return %0 : tensor<512x512x3x3xf16>
   }
   func.func private @Unknown22(%arg0: tensor<4x1000xf32>) -> tensor<4x1000xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<-2.500000e-01> : tensor<4x1000xf32>
     %1 = mhlo.multiply %arg0, %0 : tensor<4x1000xf32>
-    %2 = mhlo.convert(%1) : (tensor<4x1000xf32>) -> tensor<4x1000xf16>
+    %2 = mhlo.convert %1 : (tensor<4x1000xf32>) -> tensor<4x1000xf16>
     return %2 : tensor<4x1000xf16>
   }
   func.func private @Unknown23(%arg0: tensor<1000x512xf32>) -> tensor<1000x512xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<1000x512xf32>) -> tensor<1000x512xf16>
+    %0 = mhlo.convert %arg0 : (tensor<1000x512xf32>) -> tensor<1000x512xf16>
     return %0 : tensor<1000x512xf16>
   }
   func.func private @Unknown24(%arg0: tensor<1000xf32>) -> tensor<1000xf16> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<1000xf32>) -> tensor<1000xf16>
+    %0 = mhlo.convert %arg0 : (tensor<1000xf32>) -> tensor<1000xf16>
     return %0 : tensor<1000xf16>
   }
   func.func private @Unknown25(%arg0: tensor<4x64x112x112xf16>) -> (tensor<4x64x112x112xf16>, tensor<4x64x112x112xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x112x112xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x64x112x112xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x64x112x112xf16>, tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x64x112x112xf16>, tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xi1>
     return %1, %2 : tensor<4x64x112x112xf16>, tensor<4x64x112x112xi1>
   }
   func.func private @BatchNormTrainingOp26(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> tensor<4x64x56x56xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
+    %1 = mhlo.convert %output : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
     return %1 : tensor<4x64x56x56xf16>
   }
   func.func private @Unknown27(%arg0: tensor<4x64x56x56xf16>) -> (tensor<4x64x56x56xf16>, tensor<4x64x56x56xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x56x56xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x64x56x56xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xi1>
     return %1, %2 : tensor<4x64x56x56xf16>, tensor<4x64x56x56xi1>
   }
   func.func private @BatchNormTrainingOp28(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> tensor<4x64x56x56xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
+    %1 = mhlo.convert %output : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
     return %1 : tensor<4x64x56x56xf16>
   }
   func.func private @Unknown29(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<4x64x56x56xf16>) -> (tensor<4x64x56x56xf16>, tensor<4x64x56x56xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x56x56xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x64x56x56xf16>
     %2 = mhlo.maximum %1, %0 : tensor<4x64x56x56xf16>
-    %3 = "mhlo.compare"(%2, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xi1>
+    %3 = mhlo.compare  GT, %2, %0 : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xi1>
     return %2, %3 : tensor<4x64x56x56xf16>, tensor<4x64x56x56xi1>
   }
   func.func private @BatchNormTrainingOp30(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> tensor<4x64x56x56xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
+    %1 = mhlo.convert %output : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
     return %1 : tensor<4x64x56x56xf16>
   }
   func.func private @Unknown31(%arg0: tensor<4x64x56x56xf16>) -> (tensor<4x64x56x56xf16>, tensor<4x64x56x56xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x56x56xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x64x56x56xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xi1>
     return %1, %2 : tensor<4x64x56x56xf16>, tensor<4x64x56x56xi1>
   }
   func.func private @BatchNormTrainingOp32(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<64xf32>) -> tensor<4x64x56x56xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>) -> (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
+    %1 = mhlo.convert %output : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
     return %1 : tensor<4x64x56x56xf16>
   }
   func.func private @Unknown33(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<4x64x56x56xf16>) -> (tensor<4x64x56x56xf16>, tensor<4x64x56x56xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x56x56xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x64x56x56xf16>
     %2 = mhlo.maximum %1, %0 : tensor<4x64x56x56xf16>
-    %3 = "mhlo.compare"(%2, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xi1>
+    %3 = mhlo.compare  GT, %2, %0 : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xi1>
     return %2, %3 : tensor<4x64x56x56xf16>, tensor<4x64x56x56xi1>
   }
   func.func private @BatchNormTrainingOp34(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> tensor<4x128x28x28xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %1 = mhlo.convert %output : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %1 : tensor<4x128x28x28xf16>
   }
   func.func private @BatchNormTrainingOp35(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> tensor<4x128x28x28xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %1 = mhlo.convert %output : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %1 : tensor<4x128x28x28xf16>
   }
   func.func private @Unknown36(%arg0: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<4x128x28x28xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x128x28x28xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x128x28x28xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xi1>
     return %1, %2 : tensor<4x128x28x28xf16>, tensor<4x128x28x28xi1>
   }
   func.func private @BatchNormTrainingOp37(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> tensor<4x128x28x28xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %1 = mhlo.convert %output : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %1 : tensor<4x128x28x28xf16>
   }
   func.func private @Unknown38(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<4x128x28x28xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x128x28x28xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x128x28x28xf16>
     %2 = mhlo.maximum %1, %0 : tensor<4x128x28x28xf16>
-    %3 = "mhlo.compare"(%2, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xi1>
+    %3 = mhlo.compare  GT, %2, %0 : (tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xi1>
     return %2, %3 : tensor<4x128x28x28xf16>, tensor<4x128x28x28xi1>
   }
   func.func private @BatchNormTrainingOp39(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> tensor<4x128x28x28xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %1 = mhlo.convert %output : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %1 : tensor<4x128x28x28xf16>
   }
   func.func private @Unknown40(%arg0: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<4x128x28x28xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x128x28x28xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x128x28x28xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xi1>
     return %1, %2 : tensor<4x128x28x28xf16>, tensor<4x128x28x28xi1>
   }
   func.func private @BatchNormTrainingOp41(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> tensor<4x128x28x28xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %1 = mhlo.convert %output : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %1 : tensor<4x128x28x28xf16>
   }
   func.func private @Unknown42(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<4x128x28x28xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x128x28x28xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x128x28x28xf16>
     %2 = mhlo.maximum %1, %0 : tensor<4x128x28x28xf16>
-    %3 = "mhlo.compare"(%2, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xi1>
+    %3 = mhlo.compare  GT, %2, %0 : (tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xi1>
     return %2, %3 : tensor<4x128x28x28xf16>, tensor<4x128x28x28xi1>
   }
   func.func private @BatchNormTrainingOp43(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> tensor<4x256x14x14xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %1 = mhlo.convert %output : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %1 : tensor<4x256x14x14xf16>
   }
   func.func private @BatchNormTrainingOp44(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> tensor<4x256x14x14xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %1 = mhlo.convert %output : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %1 : tensor<4x256x14x14xf16>
   }
   func.func private @Unknown45(%arg0: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<4x256x14x14xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x256x14x14xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x256x14x14xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xi1>
     return %1, %2 : tensor<4x256x14x14xf16>, tensor<4x256x14x14xi1>
   }
   func.func private @BatchNormTrainingOp46(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> tensor<4x256x14x14xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %1 = mhlo.convert %output : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %1 : tensor<4x256x14x14xf16>
   }
   func.func private @Unknown47(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<4x256x14x14xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x256x14x14xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x256x14x14xf16>
     %2 = mhlo.maximum %1, %0 : tensor<4x256x14x14xf16>
-    %3 = "mhlo.compare"(%2, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xi1>
+    %3 = mhlo.compare  GT, %2, %0 : (tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xi1>
     return %2, %3 : tensor<4x256x14x14xf16>, tensor<4x256x14x14xi1>
   }
   func.func private @BatchNormTrainingOp48(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> tensor<4x256x14x14xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %1 = mhlo.convert %output : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %1 : tensor<4x256x14x14xf16>
   }
   func.func private @Unknown49(%arg0: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<4x256x14x14xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x256x14x14xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x256x14x14xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xi1>
     return %1, %2 : tensor<4x256x14x14xf16>, tensor<4x256x14x14xi1>
   }
   func.func private @BatchNormTrainingOp50(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<256xf32>) -> tensor<4x256x14x14xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %1 = mhlo.convert %output : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %1 : tensor<4x256x14x14xf16>
   }
   func.func private @Unknown51(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<4x256x14x14xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x256x14x14xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x256x14x14xf16>
     %2 = mhlo.maximum %1, %0 : tensor<4x256x14x14xf16>
-    %3 = "mhlo.compare"(%2, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xi1>
+    %3 = mhlo.compare  GT, %2, %0 : (tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xi1>
     return %2, %3 : tensor<4x256x14x14xf16>, tensor<4x256x14x14xi1>
   }
   func.func private @BatchNormTrainingOp52(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> tensor<4x512x7x7xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %1 = mhlo.convert %output : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %1 : tensor<4x512x7x7xf16>
   }
   func.func private @BatchNormTrainingOp53(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> tensor<4x512x7x7xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %1 = mhlo.convert %output : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %1 : tensor<4x512x7x7xf16>
   }
   func.func private @Unknown54(%arg0: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<4x512x7x7xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x512x7x7xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x512x7x7xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xi1>
     return %1, %2 : tensor<4x512x7x7xf16>, tensor<4x512x7x7xi1>
   }
   func.func private @BatchNormTrainingOp55(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> tensor<4x512x7x7xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %1 = mhlo.convert %output : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %1 : tensor<4x512x7x7xf16>
   }
   func.func private @Unknown56(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<4x512x7x7xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x512x7x7xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x512x7x7xf16>
     %2 = mhlo.maximum %1, %0 : tensor<4x512x7x7xf16>
-    %3 = "mhlo.compare"(%2, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xi1>
+    %3 = mhlo.compare  GT, %2, %0 : (tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xi1>
     return %2, %3 : tensor<4x512x7x7xf16>, tensor<4x512x7x7xi1>
   }
   func.func private @BatchNormTrainingOp57(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> tensor<4x512x7x7xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %1 = mhlo.convert %output : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %1 : tensor<4x512x7x7xf16>
   }
   func.func private @Unknown58(%arg0: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<4x512x7x7xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x512x7x7xf16>
     %1 = mhlo.maximum %arg0, %0 : tensor<4x512x7x7xf16>
-    %2 = "mhlo.compare"(%1, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xi1>
+    %2 = mhlo.compare  GT, %1, %0 : (tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xi1>
     return %1, %2 : tensor<4x512x7x7xf16>, tensor<4x512x7x7xi1>
   }
   func.func private @BatchNormTrainingOp59(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<512xf32>) -> tensor<4x512x7x7xf16> attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormTrainingOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %output, %batch_mean, %batch_var = "mhlo.batch_norm_training"(%0, %arg1, %arg2) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %1 = mhlo.convert(%output) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %1 = mhlo.convert %output : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %1 : tensor<4x512x7x7xf16>
   }
   func.func private @Unknown60(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<4x512x7x7xi1>) attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x512x7x7xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x512x7x7xf16>
     %2 = mhlo.maximum %1, %0 : tensor<4x512x7x7xf16>
-    %3 = "mhlo.compare"(%2, %0) {comparison_direction = #mhlo<comparison_direction GT>} : (tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xi1>
+    %3 = mhlo.compare  GT, %2, %0 : (tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xi1>
     return %2, %3 : tensor<4x512x7x7xf16>, tensor<4x512x7x7xi1>
   }
   func.func private @Unknown61(%arg0: tensor<4x512xf16>) -> tensor<4x512xf16> attributes {__byteir_elementwise_fusion__} {
@@ -357,9 +357,9 @@ module @IrToMhlo.2452 {
     %3 = "mhlo.broadcast_in_dim"(%arg2) {broadcast_dimensions = dense<0> : tensor<1xi64>} : (tensor<4xf16>) -> tensor<4x1000xf16>
     %4 = mhlo.multiply %2, %3 : tensor<4x1000xf16>
     %5 = mhlo.subtract %arg3, %4 : tensor<4x1000xf16>
-    %6 = mhlo.convert(%1) : (tensor<4x1000xf16>) -> tensor<4x1000xf32>
+    %6 = mhlo.convert %1 : (tensor<4x1000xf16>) -> tensor<4x1000xf32>
     %7 = mhlo.multiply %6, %arg4 : tensor<4x1000xf32>
-    %8 = mhlo.convert(%5) : (tensor<4x1000xf16>) -> tensor<4x1000xf32>
+    %8 = mhlo.convert %5 : (tensor<4x1000xf16>) -> tensor<4x1000xf32>
     return %5, %7, %8 : tensor<4x1000xf16>, tensor<4x1000xf32>, tensor<4x1000xf32>
   }
   func.func private @Unknown66(%arg0: tensor<4x512xf16>, %arg1: tensor<4x512x7x7xi1>) -> tensor<4x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
@@ -367,15 +367,15 @@ module @IrToMhlo.2452 {
     %1 = mhlo.constant dense<0.000000e+00> : tensor<4x512x7x7xf16>
     %2 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<4x512xf16>) -> tensor<4x512x7x7xf16>
     %3 = mhlo.divide %2, %0 : tensor<4x512x7x7xf16>
-    %4 = "mhlo.select"(%arg1, %3, %1) : (tensor<4x512x7x7xi1>, tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf16>
+    %4 = mhlo.select %arg1, %3, %1 : tensor<4x512x7x7xi1>, tensor<4x512x7x7xf16>
     return %4 : tensor<4x512x7x7xf16>
   }
   func.func private @BatchNormGradOp67(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<4x512x7x7xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func.func private @ConvBackwardDataOp68(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<4x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -391,15 +391,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown70(%arg0: tensor<4x512x7x7xi1>, %arg1: tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x512x7x7xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x512x7x7xi1>, tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x512x7x7xi1>, tensor<4x512x7x7xf16>
     return %1 : tensor<4x512x7x7xf16>
   }
   func.func private @BatchNormGradOp71(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<4x512x7x7xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func.func private @ConvBackwardDataOp72(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<4x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -416,15 +416,15 @@ module @IrToMhlo.2452 {
   func.func private @Unknown74(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<4x512x7x7xf16>, %arg2: tensor<4x512x7x7xi1>) -> tensor<4x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x512x7x7xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x512x7x7xf16>
-    %2 = "mhlo.select"(%arg2, %1, %0) : (tensor<4x512x7x7xi1>, tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf16>
+    %2 = mhlo.select %arg2, %1, %0 : tensor<4x512x7x7xi1>, tensor<4x512x7x7xf16>
     return %2 : tensor<4x512x7x7xf16>
   }
   func.func private @BatchNormGradOp75(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<4x512x7x7xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func.func private @ConvBackwardDataOp76(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512x512x3x3xf16>) -> tensor<4x512x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -440,15 +440,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown78(%arg0: tensor<4x512x7x7xi1>, %arg1: tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x512x7x7xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x512x7x7xi1>, tensor<4x512x7x7xf16>, tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x512x7x7xi1>, tensor<4x512x7x7xf16>
     return %1 : tensor<4x512x7x7xf16>
   }
   func.func private @BatchNormGradOp79(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<4x512x7x7xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func.func private @ConvBackwardDataOp80(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512x256x3x3xf16>) -> tensor<4x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -463,11 +463,11 @@ module @IrToMhlo.2452 {
     return %1 : tensor<512x256x3x3xf16>
   }
   func.func private @BatchNormGradOp82(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512xf32>, %arg2: tensor<4x512x7x7xf16>) -> (tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x512x7x7xf16>) -> tensor<4x512x7x7xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<512xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512xf32>, tensor<4x512x7x7xf32>) -> (tensor<4x512x7x7xf32>, tensor<512xf32>, tensor<512xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x512x7x7xf32>) -> tensor<4x512x7x7xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x512x7x7xf16>, tensor<512xf32>, tensor<512xf32>
   }
   func.func private @ConvBackwardDataOp83(%arg0: tensor<4x512x7x7xf16>, %arg1: tensor<512x256x1x1xf16>) -> tensor<4x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -483,15 +483,15 @@ module @IrToMhlo.2452 {
   func.func private @Unknown85(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<4x256x14x14xf16>, %arg2: tensor<4x256x14x14xi1>) -> tensor<4x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x256x14x14xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x256x14x14xf16>
-    %2 = "mhlo.select"(%arg2, %1, %0) : (tensor<4x256x14x14xi1>, tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf16>
+    %2 = mhlo.select %arg2, %1, %0 : tensor<4x256x14x14xi1>, tensor<4x256x14x14xf16>
     return %2 : tensor<4x256x14x14xf16>
   }
   func.func private @BatchNormGradOp86(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<4x256x14x14xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func.func private @ConvBackwardDataOp87(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<4x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -507,15 +507,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown89(%arg0: tensor<4x256x14x14xi1>, %arg1: tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x256x14x14xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x256x14x14xi1>, tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x256x14x14xi1>, tensor<4x256x14x14xf16>
     return %1 : tensor<4x256x14x14xf16>
   }
   func.func private @BatchNormGradOp90(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<4x256x14x14xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func.func private @ConvBackwardDataOp91(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<4x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -532,15 +532,15 @@ module @IrToMhlo.2452 {
   func.func private @Unknown93(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<4x256x14x14xf16>, %arg2: tensor<4x256x14x14xi1>) -> tensor<4x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x256x14x14xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x256x14x14xf16>
-    %2 = "mhlo.select"(%arg2, %1, %0) : (tensor<4x256x14x14xi1>, tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf16>
+    %2 = mhlo.select %arg2, %1, %0 : tensor<4x256x14x14xi1>, tensor<4x256x14x14xf16>
     return %2 : tensor<4x256x14x14xf16>
   }
   func.func private @BatchNormGradOp94(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<4x256x14x14xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func.func private @ConvBackwardDataOp95(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256x256x3x3xf16>) -> tensor<4x256x14x14xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -556,15 +556,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown97(%arg0: tensor<4x256x14x14xi1>, %arg1: tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x256x14x14xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x256x14x14xi1>, tensor<4x256x14x14xf16>, tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x256x14x14xi1>, tensor<4x256x14x14xf16>
     return %1 : tensor<4x256x14x14xf16>
   }
   func.func private @BatchNormGradOp98(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<4x256x14x14xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func.func private @ConvBackwardDataOp99(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256x128x3x3xf16>) -> tensor<4x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -579,11 +579,11 @@ module @IrToMhlo.2452 {
     return %1 : tensor<256x128x3x3xf16>
   }
   func.func private @BatchNormGradOp101(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256xf32>, %arg2: tensor<4x256x14x14xf16>) -> (tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x256x14x14xf16>) -> tensor<4x256x14x14xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<256xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256xf32>, tensor<4x256x14x14xf32>) -> (tensor<4x256x14x14xf32>, tensor<256xf32>, tensor<256xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x256x14x14xf32>) -> tensor<4x256x14x14xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x256x14x14xf16>, tensor<256xf32>, tensor<256xf32>
   }
   func.func private @ConvBackwardDataOp102(%arg0: tensor<4x256x14x14xf16>, %arg1: tensor<256x128x1x1xf16>) -> tensor<4x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -599,15 +599,15 @@ module @IrToMhlo.2452 {
   func.func private @Unknown104(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<4x128x28x28xf16>, %arg2: tensor<4x128x28x28xi1>) -> tensor<4x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x128x28x28xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x128x28x28xf16>
-    %2 = "mhlo.select"(%arg2, %1, %0) : (tensor<4x128x28x28xi1>, tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf16>
+    %2 = mhlo.select %arg2, %1, %0 : tensor<4x128x28x28xi1>, tensor<4x128x28x28xf16>
     return %2 : tensor<4x128x28x28xf16>
   }
   func.func private @BatchNormGradOp105(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<4x128x28x28xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func.func private @ConvBackwardDataOp106(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<4x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -623,15 +623,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown108(%arg0: tensor<4x128x28x28xi1>, %arg1: tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x128x28x28xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x128x28x28xi1>, tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x128x28x28xi1>, tensor<4x128x28x28xf16>
     return %1 : tensor<4x128x28x28xf16>
   }
   func.func private @BatchNormGradOp109(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<4x128x28x28xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func.func private @ConvBackwardDataOp110(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<4x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -648,15 +648,15 @@ module @IrToMhlo.2452 {
   func.func private @Unknown112(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<4x128x28x28xf16>, %arg2: tensor<4x128x28x28xi1>) -> tensor<4x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x128x28x28xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x128x28x28xf16>
-    %2 = "mhlo.select"(%arg2, %1, %0) : (tensor<4x128x28x28xi1>, tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf16>
+    %2 = mhlo.select %arg2, %1, %0 : tensor<4x128x28x28xi1>, tensor<4x128x28x28xf16>
     return %2 : tensor<4x128x28x28xf16>
   }
   func.func private @BatchNormGradOp113(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<4x128x28x28xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func.func private @ConvBackwardDataOp114(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128x128x3x3xf16>) -> tensor<4x128x28x28xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -672,15 +672,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown116(%arg0: tensor<4x128x28x28xi1>, %arg1: tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x128x28x28xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x128x28x28xi1>, tensor<4x128x28x28xf16>, tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x128x28x28xi1>, tensor<4x128x28x28xf16>
     return %1 : tensor<4x128x28x28xf16>
   }
   func.func private @BatchNormGradOp117(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<4x128x28x28xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func.func private @ConvBackwardDataOp118(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128x64x3x3xf16>) -> tensor<4x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -695,11 +695,11 @@ module @IrToMhlo.2452 {
     return %1 : tensor<128x64x3x3xf16>
   }
   func.func private @BatchNormGradOp120(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128xf32>, %arg2: tensor<4x128x28x28xf16>) -> (tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x128x28x28xf16>) -> tensor<4x128x28x28xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<128xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128xf32>, tensor<4x128x28x28xf32>) -> (tensor<4x128x28x28xf32>, tensor<128xf32>, tensor<128xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x128x28x28xf32>) -> tensor<4x128x28x28xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x128x28x28xf16>, tensor<128xf32>, tensor<128xf32>
   }
   func.func private @ConvBackwardDataOp121(%arg0: tensor<4x128x28x28xf16>, %arg1: tensor<128x64x1x1xf16>) -> tensor<4x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<0> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -715,15 +715,15 @@ module @IrToMhlo.2452 {
   func.func private @Unknown123(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<4x64x56x56xf16>, %arg2: tensor<4x64x56x56xi1>) -> tensor<4x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x56x56xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x64x56x56xf16>
-    %2 = "mhlo.select"(%arg2, %1, %0) : (tensor<4x64x56x56xi1>, tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf16>
+    %2 = mhlo.select %arg2, %1, %0 : tensor<4x64x56x56xi1>, tensor<4x64x56x56xf16>
     return %2 : tensor<4x64x56x56xf16>
   }
   func.func private @BatchNormGradOp124(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<4x64x56x56xf16>) -> (tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<4x64x56x56xf32>) -> (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func.func private @ConvBackwardDataOp125(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<4x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -739,15 +739,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown127(%arg0: tensor<4x64x56x56xi1>, %arg1: tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x56x56xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x64x56x56xi1>, tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x64x56x56xi1>, tensor<4x64x56x56xf16>
     return %1 : tensor<4x64x56x56xf16>
   }
   func.func private @BatchNormGradOp128(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<4x64x56x56xf16>) -> (tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<4x64x56x56xf32>) -> (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func.func private @ConvBackwardDataOp129(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<4x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -764,15 +764,15 @@ module @IrToMhlo.2452 {
   func.func private @Unknown131(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<4x64x56x56xf16>, %arg2: tensor<4x64x56x56xi1>) -> tensor<4x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x56x56xf16>
     %1 = mhlo.add %arg0, %arg1 : tensor<4x64x56x56xf16>
-    %2 = "mhlo.select"(%arg2, %1, %0) : (tensor<4x64x56x56xi1>, tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf16>
+    %2 = mhlo.select %arg2, %1, %0 : tensor<4x64x56x56xi1>, tensor<4x64x56x56xf16>
     return %2 : tensor<4x64x56x56xf16>
   }
   func.func private @BatchNormGradOp132(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<4x64x56x56xf16>) -> (tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<4x64x56x56xf32>) -> (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func.func private @ConvBackwardDataOp133(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<4x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -788,15 +788,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown135(%arg0: tensor<4x64x56x56xi1>, %arg1: tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x56x56xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x64x56x56xi1>, tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x64x56x56xi1>, tensor<4x64x56x56xf16>
     return %1 : tensor<4x64x56x56xf16>
   }
   func.func private @BatchNormGradOp136(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64xf32>, %arg2: tensor<4x64x56x56xf16>) -> (tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<4x64x56x56xf32>) -> (tensor<4x64x56x56xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x64x56x56xf32>) -> tensor<4x64x56x56xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func.func private @ConvBackwardDataOp137(%arg0: tensor<4x64x56x56xf16>, %arg1: tensor<64x64x3x3xf16>) -> tensor<4x64x56x56xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<1> : tensor<4xi64>, __byre__window_strides = dense<1> : tensor<2xi64>, byre_compute_name = "ConvBackwardDataOp"} {
@@ -816,15 +816,15 @@ module @IrToMhlo.2452 {
   }
   func.func private @Unknown140(%arg0: tensor<4x64x112x112xi1>, %arg1: tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf16> attributes {__byteir_elementwise_fusion__} {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<4x64x112x112xf16>
-    %1 = "mhlo.select"(%arg0, %arg1, %0) : (tensor<4x64x112x112xi1>, tensor<4x64x112x112xf16>, tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf16>
+    %1 = mhlo.select %arg0, %arg1, %0 : tensor<4x64x112x112xi1>, tensor<4x64x112x112xf16>
     return %1 : tensor<4x64x112x112xf16>
   }
   func.func private @BatchNormGradOp141(%arg0: tensor<4x64x112x112xf16>, %arg1: tensor<64xf32>, %arg2: tensor<4x64x112x112xf16>) -> (tensor<4x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>) attributes {__byre__epsilon = 9.99999974E-6 : f32, __byre__feature_index = 1 : i64, byre_compute_name = "BatchNormGradOp"} {
-    %0 = mhlo.convert(%arg0) : (tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf32>
-    %1 = mhlo.convert(%arg2) : (tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf32>
+    %0 = mhlo.convert %arg0 : (tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf32>
+    %1 = mhlo.convert %arg2 : (tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf32>
     %2 = mhlo.constant dense<0.000000e+00> : tensor<64xf32>
     %grad_operand, %grad_scale, %grad_offset = "mhlo.batch_norm_grad"(%0, %arg1, %2, %2, %1) {epsilon = 9.99999974E-6 : f32, feature_index = 1 : i64} : (tensor<4x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<4x64x112x112xf32>) -> (tensor<4x64x112x112xf32>, tensor<64xf32>, tensor<64xf32>)
-    %3 = mhlo.convert(%grad_operand) : (tensor<4x64x112x112xf32>) -> tensor<4x64x112x112xf16>
+    %3 = mhlo.convert %grad_operand : (tensor<4x64x112x112xf32>) -> tensor<4x64x112x112xf16>
     return %3, %grad_scale, %grad_offset : tensor<4x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>
   }
   func.func private @ConvBackwardFilterOp142(%arg0: tensor<4x3x224x224xf16>, %arg1: tensor<4x64x112x112xf16>) -> tensor<64x3x7x7xf16> attributes {__byre__batch_group_count = 1 : i64, __byre__feature_group_count = 1 : i64, __byre__input_layout = "NCHW", __byre__kernel_layout = "NCHW", __byre__output_layout = "NCHW", __byre__padding = dense<3> : tensor<4xi64>, __byre__window_strides = dense<2> : tensor<2xi64>, byre_compute_name = "ConvBackwardFilterOp"} {
@@ -839,83 +839,83 @@ module @IrToMhlo.2452 {
     return %2 : tensor<f32>
   }
   func.func private @Unknown144(%arg0: tensor<64x3x7x7xf16>) -> tensor<64x3x7x7xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[64,3,7,7]{0,1,3,2}"} : (tensor<64x3x7x7xf16>) -> tensor<64x3x7x7xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[64,3,7,7]{0,1,3,2}"} : (tensor<64x3x7x7xf16>) -> tensor<64x3x7x7xf32>
     return %0 : tensor<64x3x7x7xf32>
   }
   func.func private @Unknown145(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[64,64,3,3]{0,1,3,2}"} : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[64,64,3,3]{0,1,3,2}"} : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
     return %0 : tensor<64x64x3x3xf32>
   }
   func.func private @Unknown146(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[64,64,3,3]{0,1,3,2}"} : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[64,64,3,3]{0,1,3,2}"} : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
     return %0 : tensor<64x64x3x3xf32>
   }
   func.func private @Unknown147(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[64,64,3,3]{0,1,3,2}"} : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[64,64,3,3]{0,1,3,2}"} : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
     return %0 : tensor<64x64x3x3xf32>
   }
   func.func private @Unknown148(%arg0: tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[64,64,3,3]{0,1,3,2}"} : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[64,64,3,3]{0,1,3,2}"} : (tensor<64x64x3x3xf16>) -> tensor<64x64x3x3xf32>
     return %0 : tensor<64x64x3x3xf32>
   }
   func.func private @Unknown149(%arg0: tensor<128x64x3x3xf16>) -> tensor<128x64x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[128,64,3,3]{0,1,3,2}"} : (tensor<128x64x3x3xf16>) -> tensor<128x64x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[128,64,3,3]{0,1,3,2}"} : (tensor<128x64x3x3xf16>) -> tensor<128x64x3x3xf32>
     return %0 : tensor<128x64x3x3xf32>
   }
   func.func private @Unknown150(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[128,128,3,3]{0,1,3,2}"} : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[128,128,3,3]{0,1,3,2}"} : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
     return %0 : tensor<128x128x3x3xf32>
   }
   func.func private @Unknown151(%arg0: tensor<128x64x1x1xf16>) -> tensor<128x64x1x1xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[128,64,1,1]{0,1,3,2}"} : (tensor<128x64x1x1xf16>) -> tensor<128x64x1x1xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[128,64,1,1]{0,1,3,2}"} : (tensor<128x64x1x1xf16>) -> tensor<128x64x1x1xf32>
     return %0 : tensor<128x64x1x1xf32>
   }
   func.func private @Unknown152(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[128,128,3,3]{0,1,3,2}"} : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[128,128,3,3]{0,1,3,2}"} : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
     return %0 : tensor<128x128x3x3xf32>
   }
   func.func private @Unknown153(%arg0: tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[128,128,3,3]{0,1,3,2}"} : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[128,128,3,3]{0,1,3,2}"} : (tensor<128x128x3x3xf16>) -> tensor<128x128x3x3xf32>
     return %0 : tensor<128x128x3x3xf32>
   }
   func.func private @Unknown154(%arg0: tensor<256x128x3x3xf16>) -> tensor<256x128x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[256,128,3,3]{0,1,3,2}"} : (tensor<256x128x3x3xf16>) -> tensor<256x128x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[256,128,3,3]{0,1,3,2}"} : (tensor<256x128x3x3xf16>) -> tensor<256x128x3x3xf32>
     return %0 : tensor<256x128x3x3xf32>
   }
   func.func private @Unknown155(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[256,256,3,3]{0,1,3,2}"} : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[256,256,3,3]{0,1,3,2}"} : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
     return %0 : tensor<256x256x3x3xf32>
   }
   func.func private @Unknown156(%arg0: tensor<256x128x1x1xf16>) -> tensor<256x128x1x1xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[256,128,1,1]{0,1,3,2}"} : (tensor<256x128x1x1xf16>) -> tensor<256x128x1x1xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[256,128,1,1]{0,1,3,2}"} : (tensor<256x128x1x1xf16>) -> tensor<256x128x1x1xf32>
     return %0 : tensor<256x128x1x1xf32>
   }
   func.func private @Unknown157(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[256,256,3,3]{0,1,3,2}"} : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[256,256,3,3]{0,1,3,2}"} : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
     return %0 : tensor<256x256x3x3xf32>
   }
   func.func private @Unknown158(%arg0: tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[256,256,3,3]{0,1,3,2}"} : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[256,256,3,3]{0,1,3,2}"} : (tensor<256x256x3x3xf16>) -> tensor<256x256x3x3xf32>
     return %0 : tensor<256x256x3x3xf32>
   }
   func.func private @Unknown159(%arg0: tensor<512x256x3x3xf16>) -> tensor<512x256x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[512,256,3,3]{0,1,3,2}"} : (tensor<512x256x3x3xf16>) -> tensor<512x256x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[512,256,3,3]{0,1,3,2}"} : (tensor<512x256x3x3xf16>) -> tensor<512x256x3x3xf32>
     return %0 : tensor<512x256x3x3xf32>
   }
   func.func private @Unknown160(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[512,512,3,3]{0,1,3,2}"} : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[512,512,3,3]{0,1,3,2}"} : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
     return %0 : tensor<512x512x3x3xf32>
   }
   func.func private @Unknown161(%arg0: tensor<512x256x1x1xf16>) -> tensor<512x256x1x1xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[512,256,1,1]{0,1,3,2}"} : (tensor<512x256x1x1xf16>) -> tensor<512x256x1x1xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[512,256,1,1]{0,1,3,2}"} : (tensor<512x256x1x1xf16>) -> tensor<512x256x1x1xf32>
     return %0 : tensor<512x256x1x1xf32>
   }
   func.func private @Unknown162(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[512,512,3,3]{0,1,3,2}"} : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[512,512,3,3]{0,1,3,2}"} : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
     return %0 : tensor<512x512x3x3xf32>
   }
   func.func private @Unknown163(%arg0: tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[512,512,3,3]{0,1,3,2}"} : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[512,512,3,3]{0,1,3,2}"} : (tensor<512x512x3x3xf16>) -> tensor<512x512x3x3xf32>
     return %0 : tensor<512x512x3x3xf32>
   }
   func.func private @MatmulOp164(%arg0: tensor<4x512xf16>, %arg1: tensor<4x1000xf16>) -> tensor<1000x512xf16> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"} {
@@ -924,12 +924,12 @@ module @IrToMhlo.2452 {
     return %1 : tensor<1000x512xf16>
   }
   func.func private @Unknown165(%arg0: tensor<1000x512xf16>) -> tensor<1000x512xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) {xla_shape = "f32[1000,512]{0,1}"} : (tensor<1000x512xf16>) -> tensor<1000x512xf32>
+    %0 = mhlo.convert %arg0 {xla_shape = "f32[1000,512]{0,1}"} : (tensor<1000x512xf16>) -> tensor<1000x512xf32>
     return %0 : tensor<1000x512xf32>
   }
   func.func private @Unknown166(%arg0: tensor<1000xf32>) -> tensor<1000xf32> attributes {__byteir_elementwise_fusion__} {
-    %0 = mhlo.convert(%arg0) : (tensor<1000xf32>) -> tensor<1000xf16>
-    %1 = mhlo.convert(%0) : (tensor<1000xf16>) -> tensor<1000xf32>
+    %0 = mhlo.convert %arg0 : (tensor<1000xf32>) -> tensor<1000xf16>
+    %1 = mhlo.convert %0 : (tensor<1000xf16>) -> tensor<1000xf32>
     return %1 : tensor<1000xf32>
   }
   func.func @main(%arg0: tensor<4x3x224x224xf32>, %arg1: tensor<4x1000xf32>, %arg2: tensor<64x3x7x7xf32>, %arg3: tensor<64xf32>, %arg4: tensor<64xf32>, %arg5: tensor<64xf32>, %arg6: tensor<64xf32>, %arg7: tensor<64x64x3x3xf32>, %arg8: tensor<64xf32>, %arg9: tensor<64xf32>, %arg10: tensor<64xf32>, %arg11: tensor<64xf32>, %arg12: tensor<64x64x3x3xf32>, %arg13: tensor<64xf32>, %arg14: tensor<64xf32>, %arg15: tensor<64xf32>, %arg16: tensor<64xf32>, %arg17: tensor<64x64x3x3xf32>, %arg18: tensor<64xf32>, %arg19: tensor<64xf32>, %arg20: tensor<64xf32>, %arg21: tensor<64xf32>, %arg22: tensor<64x64x3x3xf32>, %arg23: tensor<64xf32>, %arg24: tensor<64xf32>, %arg25: tensor<64xf32>, %arg26: tensor<64xf32>, %arg27: tensor<128x64x3x3xf32>, %arg28: tensor<128xf32>, %arg29: tensor<128xf32>, %arg30: tensor<128xf32>, %arg31: tensor<128xf32>, %arg32: tensor<128x128x3x3xf32>, %arg33: tensor<128xf32>, %arg34: tensor<128xf32>, %arg35: tensor<128xf32>, %arg36: tensor<128xf32>, %arg37: tensor<128x64x1x1xf32>, %arg38: tensor<128xf32>, %arg39: tensor<128xf32>, %arg40: tensor<128xf32>, %arg41: tensor<128xf32>, %arg42: tensor<128x128x3x3xf32>, %arg43: tensor<128xf32>, %arg44: tensor<128xf32>, %arg45: tensor<128xf32>, %arg46: tensor<128xf32>, %arg47: tensor<128x128x3x3xf32>, %arg48: tensor<128xf32>, %arg49: tensor<128xf32>, %arg50: tensor<128xf32>, %arg51: tensor<128xf32>, %arg52: tensor<256x128x3x3xf32>, %arg53: tensor<256xf32>, %arg54: tensor<256xf32>, %arg55: tensor<256xf32>, %arg56: tensor<256xf32>, %arg57: tensor<256x256x3x3xf32>, %arg58: tensor<256xf32>, %arg59: tensor<256xf32>, %arg60: tensor<256xf32>, %arg61: tensor<256xf32>, %arg62: tensor<256x128x1x1xf32>, %arg63: tensor<256xf32>, %arg64: tensor<256xf32>, %arg65: tensor<256xf32>, %arg66: tensor<256xf32>, %arg67: tensor<256x256x3x3xf32>, %arg68: tensor<256xf32>, %arg69: tensor<256xf32>, %arg70: tensor<256xf32>, %arg71: tensor<256xf32>, %arg72: tensor<256x256x3x3xf32>, %arg73: tensor<256xf32>, %arg74: tensor<256xf32>, %arg75: tensor<256xf32>, %arg76: tensor<256xf32>, %arg77: tensor<512x256x3x3xf32>, %arg78: tensor<512xf32>, %arg79: tensor<512xf32>, %arg80: tensor<512xf32>, %arg81: tensor<512xf32>, %arg82: tensor<512x512x3x3xf32>, %arg83: tensor<512xf32>, %arg84: tensor<512xf32>, %arg85: tensor<512xf32>, %arg86: tensor<512xf32>, %arg87: tensor<512x256x1x1xf32>, %arg88: tensor<512xf32>, %arg89: tensor<512xf32>, %arg90: tensor<512xf32>, %arg91: tensor<512xf32>, %arg92: tensor<512x512x3x3xf32>, %arg93: tensor<512xf32>, %arg94: tensor<512xf32>, %arg95: tensor<512xf32>, %arg96: tensor<512xf32>, %arg97: tensor<512x512x3x3xf32>, %arg98: tensor<512xf32>, %arg99: tensor<512xf32>, %arg100: tensor<512xf32>, %arg101: tensor<512xf32>, %arg102: tensor<1000x512xf32>, %arg103: tensor<1000xf32>) -> (tensor<f32>, tensor<64x3x7x7xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128x64x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x64x1x1xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256x128x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x128x1x1xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512x256x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x256x1x1xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<1000x512xf32>, tensor<1000xf32>) {
@@ -965,13 +965,13 @@ module @IrToMhlo.2452 {
     %29 = mhlo.reduce(%26 init: %1) across dimensions = [1] : (tensor<4x1000xf16>, tensor<f16>) -> tensor<4xf16>
      reducer(%arg104: tensor<f16>, %arg105: tensor<f16>)  {
       %200 = mhlo.add %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%200) : (tensor<f16>) -> ()
+      mhlo.return %200 : tensor<f16>
     }
     %30:2 = call @Unknown25(%6) : (tensor<4x64x112x112xf16>) -> (tensor<4x64x112x112xf16>, tensor<4x64x112x112xi1>)
     %31 = "mhlo.reduce_window"(%30#0, %2) ({
     ^bb0(%arg104: tensor<f16>, %arg105: tensor<f16>):
       %200 = mhlo.maximum %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%200) : (tensor<f16>) -> ()
+      mhlo.return %200 : tensor<f16>
     }) {base_dilations = dense<1> : tensor<4xi64>, padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dilations = dense<1> : tensor<4xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (tensor<4x64x112x112xf16>, tensor<f16>) -> tensor<4x64x56x56xf16>
     %32 = mhlo.convolution(%31, %7) dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1], window = {stride = [1, 1], pad = [[1, 1], [1, 1]], lhs_dilate = [1, 1], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<4x64x56x56xf16>, tensor<64x64x3x3xf16>) -> tensor<4x64x56x56xf16>
     %33 = call @BatchNormTrainingOp26(%32, %arg8, %arg9) : (tensor<4x64x56x56xf16>, tensor<64xf32>, tensor<64xf32>) -> tensor<4x64x56x56xf16>
@@ -1030,7 +1030,7 @@ module @IrToMhlo.2452 {
     %86 = mhlo.reduce(%85#0 init: %1) across dimensions = [3, 2] : (tensor<4x512x7x7xf16>, tensor<f16>) -> tensor<4x512xf16>
      reducer(%arg104: tensor<f16>, %arg105: tensor<f16>)  {
       %200 = mhlo.add %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%200) : (tensor<f16>) -> ()
+      mhlo.return %200 : tensor<f16>
     }
     %87 = call @Unknown61(%86) : (tensor<4x512xf16>) -> tensor<4x512xf16>
     %88 = "mhlo.dot_general"(%87, %27) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [1]>, precision_config = [#mhlo<precision DEFAULT>, #mhlo<precision DEFAULT>]} : (tensor<4x512xf16>, tensor<1000x512xf16>) -> tensor<4x1000xf16>
@@ -1038,13 +1038,13 @@ module @IrToMhlo.2452 {
     %90 = mhlo.reduce(%89 init: %2) across dimensions = [1] : (tensor<4x1000xf16>, tensor<f16>) -> tensor<4xf16>
      reducer(%arg104: tensor<f16>, %arg105: tensor<f16>)  {
       %200 = mhlo.maximum %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%200) : (tensor<f16>) -> ()
+      mhlo.return %200 : tensor<f16>
     }
     %91:2 = call @Unknown63(%90, %89) : (tensor<4xf16>, tensor<4x1000xf16>) -> (tensor<4x1000xf16>, tensor<4x1000xf16>)
     %92 = mhlo.reduce(%91#1 init: %1) across dimensions = [1] : (tensor<4x1000xf16>, tensor<f16>) -> tensor<4xf16>
      reducer(%arg104: tensor<f16>, %arg105: tensor<f16>)  {
       %200 = mhlo.add %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%200) : (tensor<f16>) -> ()
+      mhlo.return %200 : tensor<f16>
     }
     %93 = call @Unknown64(%92) : (tensor<4xf16>) -> tensor<4xf16>
     %94:3 = call @Unknown65(%93, %91#0, %29, %26, %arg1) : (tensor<4xf16>, tensor<4x1000xf16>, tensor<4xf16>, tensor<4x1000xf16>, tensor<4x1000xf32>) -> (tensor<4x1000xf16>, tensor<4x1000xf32>, tensor<4x1000xf32>)
@@ -1125,12 +1125,12 @@ module @IrToMhlo.2452 {
     %169 = call @Unknown139(%161, %167) : (tensor<4x64x56x56xf16>, tensor<4x64x56x56xf16>) -> tensor<4x64x56x56xf16>
     %170 = "mhlo.select_and_scatter"(%30#0, %169, %1) ({
     ^bb0(%arg104: tensor<f16>, %arg105: tensor<f16>):
-      %200 = "mhlo.compare"(%arg104, %arg105) {comparison_direction = #mhlo<comparison_direction GE>} : (tensor<f16>, tensor<f16>) -> tensor<i1>
-      "mhlo.return"(%200) : (tensor<i1>) -> ()
+      %200 = mhlo.compare  GE, %arg104, %arg105 : (tensor<f16>, tensor<f16>) -> tensor<i1>
+      mhlo.return %200 : tensor<i1>
     }, {
     ^bb0(%arg104: tensor<f16>, %arg105: tensor<f16>):
       %200 = mhlo.add %arg104, %arg105 : tensor<f16>
-      "mhlo.return"(%200) : (tensor<f16>) -> ()
+      mhlo.return %200 : tensor<f16>
     }) {padding = dense<[[0, 0], [0, 0], [1, 1], [1, 1]]> : tensor<4x2xi64>, window_dimensions = dense<[1, 1, 3, 3]> : tensor<4xi64>, window_strides = dense<[1, 1, 2, 2]> : tensor<4xi64>} : (tensor<4x64x112x112xf16>, tensor<4x64x56x56xf16>, tensor<f16>) -> tensor<4x64x112x112xf16>
     %171 = call @Unknown140(%30#1, %170) : (tensor<4x64x112x112xi1>, tensor<4x64x112x112xf16>) -> tensor<4x64x112x112xf16>
     %172:3 = call @BatchNormGradOp141(%5, %arg3, %171) : (tensor<4x64x112x112xf16>, tensor<64xf32>, tensor<4x64x112x112xf16>) -> (tensor<4x64x112x112xf16>, tensor<64xf32>, tensor<64xf32>)
@@ -1138,7 +1138,7 @@ module @IrToMhlo.2452 {
     %174 = mhlo.reduce(%94#1 init: %0) across dimensions = [0, 1] : (tensor<4x1000xf32>, tensor<f32>) -> tensor<f32>
      reducer(%arg104: tensor<f32>, %arg105: tensor<f32>)  {
       %200 = mhlo.add %arg104, %arg105 : tensor<f32>
-      "mhlo.return"(%200) : (tensor<f32>) -> ()
+      mhlo.return %200 : tensor<f32>
     }
     %175 = call @Unknown143(%174) : (tensor<f32>) -> tensor<f32>
     %176 = call @Unknown144(%173) : (tensor<64x3x7x7xf16>) -> tensor<64x3x7x7xf32>
@@ -1166,7 +1166,7 @@ module @IrToMhlo.2452 {
     %198 = mhlo.reduce(%94#2 init: %0) across dimensions = [0] : (tensor<4x1000xf32>, tensor<f32>) -> tensor<1000xf32>
      reducer(%arg104: tensor<f32>, %arg105: tensor<f32>)  {
       %200 = mhlo.add %arg104, %arg105 : tensor<f32>
-      "mhlo.return"(%200) : (tensor<f32>) -> ()
+      mhlo.return %200 : tensor<f32>
     }
     %199 = call @Unknown166(%198) : (tensor<1000xf32>) -> tensor<1000xf32>
     return %175, %176, %172#1, %172#2, %177, %166#1, %166#2, %178, %162#1, %162#2, %179, %158#1, %158#2, %180, %154#1, %154#2, %181, %147#1, %147#2, %182, %143#1, %143#2, %183, %150#1, %150#2, %184, %139#1, %139#2, %185, %135#1, %135#2, %186, %128#1, %128#2, %187, %124#1, %124#2, %188, %131#1, %131#2, %189, %120#1, %120#2, %190, %116#1, %116#2, %191, %109#1, %109#2, %192, %105#1, %105#2, %193, %112#1, %112#2, %194, %101#1, %101#2, %195, %97#1, %97#2, %197, %199 : tensor<f32>, tensor<64x3x7x7xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64x64x3x3xf32>, tensor<64xf32>, tensor<64xf32>, tensor<128x64x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x64x1x1xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<128x128x3x3xf32>, tensor<128xf32>, tensor<128xf32>, tensor<256x128x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x128x1x1xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<256x256x3x3xf32>, tensor<256xf32>, tensor<256xf32>, tensor<512x256x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x256x1x1xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<512x512x3x3xf32>, tensor<512xf32>, tensor<512xf32>, tensor<1000x512xf32>, tensor<1000xf32>

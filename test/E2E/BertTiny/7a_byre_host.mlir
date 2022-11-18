@@ -44,26 +44,35 @@ module attributes {byre.container_module, gpu.container_module} {
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.collapse_shape %arg1 [[0, 1], [2]] : memref<2x128x128xf32> into memref<256x128xf32>
-      %6 = arith.cmpi slt, %4, %c32768 : index
-      scf.if %6 {
-        %7 = arith.remsi %4, %c128 : index
-        %8 = arith.cmpi slt, %7, %c0 : index
-        %9 = arith.addi %7, %c128 : index
-        %10 = arith.select %8, %9, %7 : index
-        %11 = arith.cmpi slt, %4, %c0 : index
-        %12 = arith.subi %c-1, %4 : index
-        %13 = arith.select %11, %12, %4 : index
-        %14 = arith.divsi %13, %c128 : index
-        %15 = arith.subi %c-1, %14 : index
-        %16 = arith.select %11, %15, %14 : index
-        %17 = memref.load %arg0[%16] : memref<256xi1>
-        %18 = memref.load %5[%16, %10] : memref<256x128xf32>
-        %19 = arith.select %17, %18, %cst : f32
-        memref.store %19, %arg3[%16, %10] : memref<256x128xf32>
-        %20 = memref.load %arg2[%16] : memref<256xi1>
-        %21 = arith.select %20, %18, %cst : f32
-        memref.store %21, %arg4[%16, %10] : memref<256x128xf32>
+      %5 = arith.cmpi slt, %4, %c32768 : index
+      scf.if %5 {
+        %6 = arith.remsi %4, %c128 : index
+        %7 = arith.cmpi slt, %6, %c0 : index
+        %8 = arith.addi %6, %c128 : index
+        %9 = arith.select %7, %8, %6 : index
+        %10 = arith.cmpi slt, %4, %c0 : index
+        %11 = arith.subi %c-1, %4 : index
+        %12 = arith.select %10, %11, %4 : index
+        %13 = arith.divsi %12, %c128 : index
+        %14 = arith.subi %c-1, %13 : index
+        %15 = arith.select %10, %14, %13 : index
+        %16 = memref.load %arg0[%15] : memref<256xi1>
+        %17 = arith.cmpi slt, %15, %c0 : index
+        %18 = arith.subi %c-1, %15 : index
+        %19 = arith.select %17, %18, %15 : index
+        %20 = arith.divsi %19, %c128 : index
+        %21 = arith.subi %c-1, %20 : index
+        %22 = arith.select %17, %21, %20 : index
+        %23 = arith.remsi %15, %c128 : index
+        %24 = arith.cmpi slt, %23, %c0 : index
+        %25 = arith.addi %23, %c128 : index
+        %26 = arith.select %24, %25, %23 : index
+        %27 = memref.load %arg1[%22, %26, %9] : memref<2x128x128xf32>
+        %28 = arith.select %16, %27, %cst : f32
+        memref.store %28, %arg3[%15, %9] : memref<256x128xf32>
+        %29 = memref.load %arg2[%15] : memref<256xi1>
+        %30 = arith.select %29, %27, %cst : f32
+        memref.store %30, %arg4[%15, %9] : memref<256x128xf32>
       }
       gpu.return
     }
@@ -337,73 +346,49 @@ module attributes {byre.container_module, gpu.container_module} {
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.alloca() : memref<256x30522xf32>
-      %6 = arith.cmpi slt, %4, %c7813632 : index
-      scf.if %6 {
-        %9 = arith.remsi %4, %c30522 : index
-        %10 = arith.cmpi slt, %9, %c0 : index
-        %11 = arith.addi %9, %c30522 : index
-        %12 = arith.select %10, %11, %9 : index
-        %13 = arith.cmpi slt, %4, %c0 : index
-        %14 = arith.subi %c-1, %4 : index
-        %15 = arith.select %13, %14, %4 : index
-        %16 = arith.divsi %15, %c30522 : index
-        %17 = arith.subi %c-1, %16 : index
-        %18 = arith.select %13, %17, %16 : index
-        %19 = memref.load %arg1[%18, %12] : memref<256x30522xf32>
-        %20 = memref.load %arg0[%18] : memref<256xf32>
-        %21 = arith.subf %19, %20 : f32
-        memref.store %21, %5[%18, %12] : memref<256x30522xf32>
-      }
-      %7 = memref.alloca() : memref<256x30522xf32>
-      scf.if %6 {
-        %9 = arith.remsi %4, %c30522 : index
-        %10 = arith.cmpi slt, %9, %c0 : index
-        %11 = arith.addi %9, %c30522 : index
-        %12 = arith.select %10, %11, %9 : index
-        %13 = arith.cmpi slt, %4, %c0 : index
-        %14 = arith.subi %c-1, %4 : index
-        %15 = arith.select %13, %14, %4 : index
-        %16 = arith.divsi %15, %c30522 : index
-        %17 = arith.subi %c-1, %16 : index
-        %18 = arith.select %13, %17, %16 : index
-        %19 = memref.load %arg2[%18] : memref<256xi64>
-        %20 = arith.index_cast %12 : index to i64
+      %alloca = memref.alloca() : memref<256x30522xf32>
+      %alloca_1 = memref.alloca() : memref<256x30522xf32>
+      %alloca_2 = memref.alloca() : memref<256x30522xf32>
+      %5 = arith.cmpi slt, %4, %c7813632 : index
+      scf.if %5 {
+        %6 = arith.remsi %4, %c30522 : index
+        %7 = arith.cmpi slt, %6, %c0 : index
+        %8 = arith.addi %6, %c30522 : index
+        %9 = arith.select %7, %8, %6 : index
+        %10 = arith.cmpi slt, %4, %c0 : index
+        %11 = arith.subi %c-1, %4 : index
+        %12 = arith.select %10, %11, %4 : index
+        %13 = arith.divsi %12, %c30522 : index
+        %14 = arith.subi %c-1, %13 : index
+        %15 = arith.select %10, %14, %13 : index
+        %16 = memref.load %arg1[%15, %9] : memref<256x30522xf32>
+        %17 = memref.load %arg0[%15] : memref<256xf32>
+        %18 = arith.subf %16, %17 : f32
+        memref.store %18, %alloca_2[%15, %9] : memref<256x30522xf32>
+        %19 = memref.load %arg2[%15] : memref<256xi64>
+        %20 = arith.index_cast %9 : index to i64
         %21 = arith.cmpi eq, %19, %20 : i64
         %22 = arith.select %21, %cst, %cst_0 : f32
-        memref.store %22, %7[%18, %12] : memref<256x30522xf32>
-      }
-      %8 = memref.alloca() : memref<256x30522xf32>
-      scf.if %6 {
-        %9 = arith.remsi %4, %c30522 : index
-        %10 = arith.cmpi slt, %9, %c0 : index
-        %11 = arith.addi %9, %c30522 : index
-        %12 = arith.select %10, %11, %9 : index
-        %13 = arith.cmpi slt, %4, %c0 : index
-        %14 = arith.subi %c-1, %4 : index
-        %15 = arith.select %13, %14, %4 : index
-        %16 = arith.divsi %15, %c30522 : index
-        %17 = arith.subi %c-1, %16 : index
-        %18 = arith.select %13, %17, %16 : index
-        %19 = memref.load %7[%18, %12] : memref<256x30522xf32>
-        %20 = arith.negf %19 : f32
-        memref.store %20, %8[%18, %12] : memref<256x30522xf32>
-        %21 = memref.load %arg3[%18] : memref<256xi1>
-        %22 = arith.select %21, %cst, %cst_0 : f32
-        %23 = arith.mulf %22, %19 : f32
-        memref.store %23, %arg4[%18, %12] : memref<256x30522xf32>
-        %24 = memref.load %8[%18, %12] : memref<256x30522xf32>
-        %25 = memref.load %5[%18, %12] : memref<256x30522xf32>
-        %26 = memref.load %arg4[%18, %12] : memref<256x30522xf32>
-        %27 = arith.mulf %24, %25 : f32
-        %28 = arith.cmpf une, %19, %cst : f32
-        %29 = arith.select %28, %cst_0, %27 : f32
-        %30 = arith.mulf %29, %26 : f32
-        memref.store %30, %arg5[%18, %12] : memref<256x30522xf32>
-        %31 = arith.mulf %24, %26 : f32
-        memref.store %31, %arg6[%18, %12] : memref<256x30522xf32>
-        %32 = math.exp %25 : f32
-        memref.store %32, %arg7[%18, %12] : memref<256x30522xf32>
+        memref.store %22, %alloca_1[%15, %9] : memref<256x30522xf32>
+        %23 = memref.load %alloca_1[%15, %9] : memref<256x30522xf32>
+        %24 = arith.negf %23  : f32
+        memref.store %24, %alloca[%15, %9] : memref<256x30522xf32>
+        %25 = memref.load %arg3[%15] : memref<256xi1>
+        %26 = arith.select %25, %cst, %cst_0 : f32
+        %27 = arith.mulf %26, %23 : f32
+        memref.store %27, %arg4[%15, %9] : memref<256x30522xf32>
+        %28 = memref.load %alloca[%15, %9] : memref<256x30522xf32>
+        %29 = memref.load %alloca_2[%15, %9] : memref<256x30522xf32>
+        %30 = memref.load %arg4[%15, %9] : memref<256x30522xf32>
+        %31 = arith.mulf %28, %29 : f32
+        %32 = arith.cmpf une, %23, %cst : f32
+        %33 = arith.select %32, %cst_0, %31 : f32
+        %34 = arith.mulf %33, %30 : f32
+        memref.store %34, %arg5[%15, %9] : memref<256x30522xf32>
+        %35 = arith.mulf %28, %30 : f32
+        memref.store %35, %arg6[%15, %9] : memref<256x30522xf32>
+        %36 = math.exp %29 : f32
+        memref.store %36, %arg7[%15, %9] : memref<256x30522xf32>
       }
       gpu.return
     }
@@ -454,11 +439,12 @@ module attributes {byre.container_module, gpu.container_module} {
       }
       gpu.return
     }
-    gpu.func @Unknown5(%arg0: memref<256x30522xf32>, %arg1: memref<30522xf32>, %arg2: memref<256x30522xf32>) kernel {
+    gpu.func @Unknown5(%arg0: memref<256x30522xf32>, %arg1: memref<30522xf32>, %arg2: memref<2x128x30522xf32>) kernel {
       %c0 = arith.constant 0 : index
       %c7813632 = arith.constant 7813632 : index
       %c30522 = arith.constant 30522 : index
       %c-1 = arith.constant -1 : index
+      %c128 = arith.constant 128 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
@@ -476,10 +462,22 @@ module attributes {byre.container_module, gpu.container_module} {
         %13 = arith.divsi %12, %c30522 : index
         %14 = arith.subi %c-1, %13 : index
         %15 = arith.select %10, %14, %13 : index
-        %16 = memref.load %arg0[%15, %9] : memref<256x30522xf32>
-        %17 = memref.load %arg1[%9] : memref<30522xf32>
-        %18 = arith.addf %16, %17 : f32
-        memref.store %18, %arg2[%15, %9] : memref<256x30522xf32>
+        %16 = arith.remsi %15, %c128 : index
+        %17 = arith.cmpi slt, %16, %c0 : index
+        %18 = arith.addi %16, %c128 : index
+        %19 = arith.select %17, %18, %16 : index
+        %20 = arith.cmpi slt, %15, %c0 : index
+        %21 = arith.subi %c-1, %15 : index
+        %22 = arith.select %20, %21, %15 : index
+        %23 = arith.divsi %22, %c128 : index
+        %24 = arith.subi %c-1, %23 : index
+        %25 = arith.select %20, %24, %23 : index
+        %26 = arith.muli %25, %c128 : index
+        %27 = arith.addi %26, %19 : index
+        %28 = memref.load %arg0[%27, %9] : memref<256x30522xf32>
+        %29 = memref.load %arg1[%9] : memref<30522xf32>
+        %30 = arith.addf %28, %29 : f32
+        memref.store %30, %arg2[%25, %19, %9] : memref<2x128x30522xf32>
       }
       gpu.return
     }
@@ -493,66 +491,75 @@ module attributes {byre.container_module, gpu.container_module} {
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.expand_shape %arg1 [[0, 1], [2]] : memref<256x128xf32> into memref<2x128x128xf32>
-      %6 = memref.expand_shape %arg0 [[0, 1], [2]] : memref<256x128xf32> into memref<2x128x128xf32>
-      %7 = arith.cmpi slt, %4, %c32768 : index
-      scf.if %7 {
-        %8 = arith.remsi %4, %c128 : index
-        %9 = arith.cmpi slt, %8, %c0 : index
-        %10 = arith.addi %8, %c128 : index
-        %11 = arith.select %9, %10, %8 : index
-        %12 = arith.cmpi slt, %4, %c0 : index
-        %13 = arith.subi %c-1, %4 : index
-        %14 = arith.select %12, %13, %4 : index
-        %15 = arith.divsi %14, %c128 : index
-        %16 = arith.subi %c-1, %15 : index
-        %17 = arith.select %12, %16, %15 : index
-        %18 = arith.remsi %17, %c128 : index
-        %19 = arith.cmpi slt, %18, %c0 : index
-        %20 = arith.addi %18, %c128 : index
-        %21 = arith.select %19, %20, %18 : index
-        %22 = arith.cmpi slt, %17, %c0 : index
-        %23 = arith.subi %c-1, %17 : index
-        %24 = arith.select %22, %23, %17 : index
-        %25 = arith.divsi %24, %c128 : index
-        %26 = arith.subi %c-1, %25 : index
-        %27 = arith.select %22, %26, %25 : index
-        %28 = memref.load %6[%27, %21, %11] : memref<2x128x128xf32>
-        %29 = memref.load %5[%27, %21, %11] : memref<2x128x128xf32>
-        %30 = memref.load %arg2[%21, %11] : memref<128x128xf32>
+      %5 = arith.cmpi slt, %4, %c32768 : index
+      scf.if %5 {
+        %6 = arith.remsi %4, %c128 : index
+        %7 = arith.cmpi slt, %6, %c0 : index
+        %8 = arith.addi %6, %c128 : index
+        %9 = arith.select %7, %8, %6 : index
+        %10 = arith.cmpi slt, %4, %c0 : index
+        %11 = arith.subi %c-1, %4 : index
+        %12 = arith.select %10, %11, %4 : index
+        %13 = arith.divsi %12, %c128 : index
+        %14 = arith.subi %c-1, %13 : index
+        %15 = arith.select %10, %14, %13 : index
+        %16 = arith.remsi %15, %c128 : index
+        %17 = arith.cmpi slt, %16, %c0 : index
+        %18 = arith.addi %16, %c128 : index
+        %19 = arith.select %17, %18, %16 : index
+        %20 = arith.cmpi slt, %15, %c0 : index
+        %21 = arith.subi %c-1, %15 : index
+        %22 = arith.select %20, %21, %15 : index
+        %23 = arith.divsi %22, %c128 : index
+        %24 = arith.subi %c-1, %23 : index
+        %25 = arith.select %20, %24, %23 : index
+        %26 = arith.muli %25, %c128 : index
+        %27 = arith.addi %26, %19 : index
+        %28 = memref.load %arg0[%27, %9] : memref<256x128xf32>
+        %29 = memref.load %arg1[%27, %9] : memref<256x128xf32>
+        %30 = memref.load %arg2[%19, %9] : memref<128x128xf32>
         %31 = arith.addf %28, %29 : f32
         %32 = arith.addf %31, %30 : f32
-        memref.store %32, %arg3[%27, %21, %11] : memref<2x128x128xf32>
+        memref.store %32, %arg3[%25, %19, %9] : memref<2x128x128xf32>
       }
       gpu.return
     }
-    gpu.func @Unknown3(%arg0: memref<1x128xi64>, %arg1: memref<128xui32>, %arg2: memref<128xi64>, %arg3: memref<128xi1>) kernel {
+    gpu.func @Unknown3(%arg0: memref<1x128xi64>, %arg1: memref<128xui32>, %arg2: memref<128x1xi64>, %arg3: memref<128xi1>) kernel {
       %c512_i64 = arith.constant 512 : i64
       %c0_i64 = arith.constant 0 : i64
       %c-1_i64 = arith.constant -1 : i64
+      %c0 = arith.constant 0 : index
       %c128 = arith.constant 128 : index
+      %c-1 = arith.constant -1 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.collapse_shape %arg0 [[0, 1]] : memref<1x128xi64> into memref<128xi64>
-      %6 = arith.cmpi slt, %4, %c128 : index
-      scf.if %6 {
-        %7 = memref.load %5[%4] : memref<128xi64>
-        %8 = arith.trunci %7 : i64 to i32
-        %9 = builtin.unrealized_conversion_cast %8 : i32 to ui32
-        memref.store %9, %arg1[%4] : memref<128xui32>
-        %10 = arith.addi %7, %c512_i64 : i64
-        %11 = arith.cmpi slt, %7, %c0_i64 : i64
-        %12 = arith.select %11, %10, %7 : i64
-        memref.store %12, %arg2[%4] : memref<128xi64>
-        %13 = arith.cmpi ne, %7, %c-1_i64 : i64
-        memref.store %13, %arg3[%4] : memref<128xi1>
+      %5 = arith.cmpi slt, %4, %c128 : index
+      scf.if %5 {
+        %6 = arith.cmpi slt, %4, %c0 : index
+        %7 = arith.subi %c-1, %4 : index
+        %8 = arith.select %6, %7, %4 : index
+        %9 = arith.divsi %8, %c128 : index
+        %10 = arith.subi %c-1, %9 : index
+        %11 = arith.select %6, %10, %9 : index
+        %12 = arith.addi %4, %c128 : index
+        %13 = arith.select %6, %12, %4 : index
+        %14 = memref.load %arg0[%11, %13] : memref<1x128xi64>
+        %15 = arith.trunci %14 : i64 to i32
+        %16 = builtin.unrealized_conversion_cast %15 : i32 to ui32
+        memref.store %16, %arg1[%4] : memref<128xui32>
+        %17 = arith.addi %14, %c512_i64 : i64
+        %18 = arith.cmpi slt, %14, %c0_i64 : i64
+        %19 = arith.select %18, %17, %14 : i64
+        memref.store %19, %arg2[%4, %c0] : memref<128x1xi64>
+        %20 = arith.cmpi ne, %14, %c-1_i64 : i64
+        memref.store %20, %arg3[%4] : memref<128xi1>
       }
       gpu.return
     }
-    gpu.func @Unknown2(%arg0: memref<128xi64>, %arg1: memref<2x128xui32>, %arg2: memref<2x128xi64>, %arg3: memref<2x128xi1>) kernel {
+    gpu.func @Unknown2(%arg0: memref<128xi64>, %arg1: memref<256xui32>, %arg2: memref<256x1xi64>, %arg3: memref<256xi1>) kernel {
       %c2_i64 = arith.constant 2 : i64
       %c0_i64 = arith.constant 0 : i64
       %c-1_i64 = arith.constant -1 : i64
@@ -565,334 +572,358 @@ module attributes {byre.container_module, gpu.container_module} {
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.alloca() : memref<2x128xi64>
-      %6 = arith.cmpi slt, %4, %c256 : index
-      scf.if %6 {
-        %7 = arith.remsi %4, %c128 : index
-        %8 = arith.cmpi slt, %7, %c0 : index
-        %9 = arith.addi %7, %c128 : index
-        %10 = arith.select %8, %9, %7 : index
-        %11 = arith.cmpi slt, %4, %c0 : index
-        %12 = arith.subi %c-1, %4 : index
-        %13 = arith.select %11, %12, %4 : index
-        %14 = arith.divsi %13, %c128 : index
-        %15 = arith.subi %c-1, %14 : index
-        %16 = arith.select %11, %15, %14 : index
-        %17 = memref.load %arg0[%10] : memref<128xi64>
-        memref.store %17, %5[%16, %10] : memref<2x128xi64>
-        %18 = memref.load %5[%16, %10] : memref<2x128xi64>
-        %19 = arith.trunci %18 : i64 to i32
-        %20 = builtin.unrealized_conversion_cast %19 : i32 to ui32
-        memref.store %20, %arg1[%16, %10] : memref<2x128xui32>
-        %21 = arith.addi %18, %c2_i64 : i64
-        %22 = arith.cmpi slt, %18, %c0_i64 : i64
-        %23 = arith.select %22, %21, %18 : i64
-        memref.store %23, %arg2[%16, %10] : memref<2x128xi64>
-        %24 = arith.cmpi ne, %18, %c-1_i64 : i64
-        memref.store %24, %arg3[%16, %10] : memref<2x128xi1>
+      %alloca = memref.alloca() : memref<2x128xi64>
+      %5 = arith.cmpi slt, %4, %c256 : index
+      scf.if %5 {
+        %6 = arith.remsi %4, %c128 : index
+        %7 = arith.cmpi slt, %6, %c0 : index
+        %8 = arith.addi %6, %c128 : index
+        %9 = arith.select %7, %8, %6 : index
+        %10 = arith.cmpi slt, %4, %c0 : index
+        %11 = arith.subi %c-1, %4 : index
+        %12 = arith.select %10, %11, %4 : index
+        %13 = arith.divsi %12, %c128 : index
+        %14 = arith.subi %c-1, %13 : index
+        %15 = arith.select %10, %14, %13 : index
+        %16 = memref.load %arg0[%9] : memref<128xi64>
+        memref.store %16, %alloca[%15, %9] : memref<2x128xi64>
+        %17 = memref.load %alloca[%15, %9] : memref<2x128xi64>
+        %18 = arith.trunci %17 : i64 to i32
+        %19 = builtin.unrealized_conversion_cast %18 : i32 to ui32
+        memref.store %19, %arg1[%4] : memref<256xui32>
+        %20 = arith.addi %17, %c2_i64 : i64
+        %21 = arith.cmpi slt, %17, %c0_i64 : i64
+        %22 = arith.select %21, %20, %17 : i64
+        memref.store %22, %arg2[%4, %c0] : memref<256x1xi64>
+        %23 = arith.cmpi ne, %17, %c-1_i64 : i64
+        memref.store %23, %arg3[%4] : memref<256xi1>
       }
       gpu.return
     }
-    gpu.func @Unknown1(%arg0: memref<2x128xi64>, %arg1: memref<256xui32>, %arg2: memref<256xi64>, %arg3: memref<256xi1>) kernel {
+    gpu.func @Unknown1(%arg0: memref<2x128xi64>, %arg1: memref<256xui32>, %arg2: memref<256x1xi64>, %arg3: memref<256xi1>) kernel {
       %c30522_i64 = arith.constant 30522 : i64
       %c0_i64 = arith.constant 0 : i64
+      %c0 = arith.constant 0 : index
       %c256 = arith.constant 256 : index
+      %c128 = arith.constant 128 : index
+      %c-1 = arith.constant -1 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.collapse_shape %arg0 [[0, 1]] : memref<2x128xi64> into memref<256xi64>
-      %6 = arith.cmpi slt, %4, %c256 : index
-      scf.if %6 {
-        %7 = memref.load %5[%4] : memref<256xi64>
-        %8 = arith.trunci %7 : i64 to i32
-        %9 = builtin.unrealized_conversion_cast %8 : i32 to ui32
-        memref.store %9, %arg1[%4] : memref<256xui32>
-        %10 = arith.addi %7, %c30522_i64 : i64
-        %11 = arith.cmpi slt, %7, %c0_i64 : i64
-        %12 = arith.select %11, %10, %7 : i64
-        memref.store %12, %arg2[%4] : memref<256xi64>
-        %13 = arith.cmpi ne, %7, %c0_i64 : i64
-        memref.store %13, %arg3[%4] : memref<256xi1>
+      %5 = arith.cmpi slt, %4, %c256 : index
+      scf.if %5 {
+        %6 = arith.cmpi slt, %4, %c0 : index
+        %7 = arith.subi %c-1, %4 : index
+        %8 = arith.select %6, %7, %4 : index
+        %9 = arith.divsi %8, %c128 : index
+        %10 = arith.subi %c-1, %9 : index
+        %11 = arith.select %6, %10, %9 : index
+        %12 = arith.remsi %4, %c128 : index
+        %13 = arith.cmpi slt, %12, %c0 : index
+        %14 = arith.addi %12, %c128 : index
+        %15 = arith.select %13, %14, %12 : index
+        %16 = memref.load %arg0[%11, %15] : memref<2x128xi64>
+        %17 = arith.trunci %16 : i64 to i32
+        %18 = builtin.unrealized_conversion_cast %17 : i32 to ui32
+        memref.store %18, %arg1[%4] : memref<256xui32>
+        %19 = arith.addi %16, %c30522_i64 : i64
+        %20 = arith.cmpi slt, %16, %c0_i64 : i64
+        %21 = arith.select %20, %19, %16 : i64
+        memref.store %21, %arg2[%4, %c0] : memref<256x1xi64>
+        %22 = arith.cmpi ne, %16, %c0_i64 : i64
+        memref.store %22, %arg3[%4] : memref<256xi1>
       }
       gpu.return
     }
     gpu.func @Unknown0(%arg0: memref<2x128xi64>, %arg1: memref<256xi1>) kernel {
       %c-100_i64 = arith.constant -100 : i64
+      %c0 = arith.constant 0 : index
       %c256 = arith.constant 256 : index
+      %c128 = arith.constant 128 : index
+      %c-1 = arith.constant -1 : index
       %0 = gpu.block_id  x
       %1 = gpu.block_dim  x
       %2 = gpu.thread_id  x
       %3 = arith.muli %1, %0 : index
       %4 = arith.addi %2, %3 : index
-      %5 = memref.collapse_shape %arg0 [[0, 1]] : memref<2x128xi64> into memref<256xi64>
-      %6 = arith.cmpi slt, %4, %c256 : index
-      scf.if %6 {
-        %7 = memref.load %5[%4] : memref<256xi64>
-        %8 = arith.cmpi ne, %7, %c-100_i64 : i64
-        memref.store %8, %arg1[%4] : memref<256xi1>
+      %5 = arith.cmpi slt, %4, %c256 : index
+      scf.if %5 {
+        %6 = arith.cmpi slt, %4, %c0 : index
+        %7 = arith.subi %c-1, %4 : index
+        %8 = arith.select %6, %7, %4 : index
+        %9 = arith.divsi %8, %c128 : index
+        %10 = arith.subi %c-1, %9 : index
+        %11 = arith.select %6, %10, %9 : index
+        %12 = arith.remsi %4, %c128 : index
+        %13 = arith.cmpi slt, %12, %c0 : index
+        %14 = arith.addi %12, %c128 : index
+        %15 = arith.select %13, %14, %12 : index
+        %16 = memref.load %arg0[%11, %15] : memref<2x128xi64>
+        %17 = arith.cmpi ne, %16, %c-100_i64 : i64
+        memref.store %17, %arg1[%4] : memref<256xi1>
       }
       gpu.return
     }
   }
   func.func @main(%arg0: memref<2x128xi64> {byre.argname = "Input0", byre.argtype = 1 : i32}, %arg1: memref<2x128xi64> {byre.argname = "Input1", byre.argtype = 1 : i32}, %arg2: memref<1x512xi64> {byre.argname = "Input2", byre.argtype = 1 : i32}, %arg3: memref<1x512xi64> {byre.argname = "Input3", byre.argtype = 1 : i32}, %arg4: memref<30522x128xf32> {byre.argname = "Input4", byre.argtype = 1 : i32}, %arg5: memref<2x128xf32> {byre.argname = "Input5", byre.argtype = 1 : i32}, %arg6: memref<512x128xf32> {byre.argname = "Input6", byre.argtype = 1 : i32}, %arg7: memref<128xf32> {byre.argname = "Input7", byre.argtype = 1 : i32}, %arg8: memref<128xf32> {byre.argname = "Input8", byre.argtype = 1 : i32}, %arg9: memref<128x128xf32> {byre.argname = "Input9", byre.argtype = 1 : i32}, %arg10: memref<128xf32> {byre.argname = "Input10", byre.argtype = 1 : i32}, %arg11: memref<128x128xf32> {byre.argname = "Input11", byre.argtype = 1 : i32}, %arg12: memref<128xf32> {byre.argname = "Input12", byre.argtype = 1 : i32}, %arg13: memref<128x128xf32> {byre.argname = "Input13", byre.argtype = 1 : i32}, %arg14: memref<128xf32> {byre.argname = "Input14", byre.argtype = 1 : i32}, %arg15: memref<128x128xf32> {byre.argname = "Input15", byre.argtype = 1 : i32}, %arg16: memref<128xf32> {byre.argname = "Input16", byre.argtype = 1 : i32}, %arg17: memref<128xf32> {byre.argname = "Input17", byre.argtype = 1 : i32}, %arg18: memref<128xf32> {byre.argname = "Input18", byre.argtype = 1 : i32}, %arg19: memref<512x128xf32> {byre.argname = "Input19", byre.argtype = 1 : i32}, %arg20: memref<512xf32> {byre.argname = "Input20", byre.argtype = 1 : i32}, %arg21: memref<128x512xf32> {byre.argname = "Input21", byre.argtype = 1 : i32}, %arg22: memref<128xf32> {byre.argname = "Input22", byre.argtype = 1 : i32}, %arg23: memref<128xf32> {byre.argname = "Input23", byre.argtype = 1 : i32}, %arg24: memref<128xf32> {byre.argname = "Input24", byre.argtype = 1 : i32}, %arg25: memref<128x128xf32> {byre.argname = "Input25", byre.argtype = 1 : i32}, %arg26: memref<128xf32> {byre.argname = "Input26", byre.argtype = 1 : i32}, %arg27: memref<128x128xf32> {byre.argname = "Input27", byre.argtype = 1 : i32}, %arg28: memref<128xf32> {byre.argname = "Input28", byre.argtype = 1 : i32}, %arg29: memref<128x128xf32> {byre.argname = "Input29", byre.argtype = 1 : i32}, %arg30: memref<128xf32> {byre.argname = "Input30", byre.argtype = 1 : i32}, %arg31: memref<128x128xf32> {byre.argname = "Input31", byre.argtype = 1 : i32}, %arg32: memref<128xf32> {byre.argname = "Input32", byre.argtype = 1 : i32}, %arg33: memref<128xf32> {byre.argname = "Input33", byre.argtype = 1 : i32}, %arg34: memref<128xf32> {byre.argname = "Input34", byre.argtype = 1 : i32}, %arg35: memref<512x128xf32> {byre.argname = "Input35", byre.argtype = 1 : i32}, %arg36: memref<512xf32> {byre.argname = "Input36", byre.argtype = 1 : i32}, %arg37: memref<128x512xf32> {byre.argname = "Input37", byre.argtype = 1 : i32}, %arg38: memref<128xf32> {byre.argname = "Input38", byre.argtype = 1 : i32}, %arg39: memref<128xf32> {byre.argname = "Input39", byre.argtype = 1 : i32}, %arg40: memref<128xf32> {byre.argname = "Input40", byre.argtype = 1 : i32}, %arg41: memref<128x128xf32> {byre.argname = "Input41", byre.argtype = 1 : i32}, %arg42: memref<128xf32> {byre.argname = "Input42", byre.argtype = 1 : i32}, %arg43: memref<128xf32> {byre.argname = "Input43", byre.argtype = 1 : i32}, %arg44: memref<128xf32> {byre.argname = "Input44", byre.argtype = 1 : i32}, %arg45: memref<30522xf32> {byre.argname = "Input45", byre.argtype = 1 : i32}, %arg46: memref<2x128x30522xf32> {byre.argname = "Output0", byre.argtype = 2 : i32}, %arg47: memref<f32> {byre.argname = "Output1", byre.argtype = 2 : i32}, %arg48: memref<30522x128xf32> {byre.argname = "Output2", byre.argtype = 2 : i32}, %arg49: memref<2x128xf32> {byre.argname = "Output3", byre.argtype = 2 : i32}, %arg50: memref<512x128xf32> {byre.argname = "Output4", byre.argtype = 2 : i32}, %arg51: memref<128xf32> {byre.argname = "Output5", byre.argtype = 2 : i32}, %arg52: memref<128xf32> {byre.argname = "Output6", byre.argtype = 2 : i32}, %arg53: memref<128x128xf32> {byre.argname = "Output7", byre.argtype = 2 : i32}, %arg54: memref<128xf32> {byre.argname = "Output8", byre.argtype = 2 : i32}, %arg55: memref<128x128xf32> {byre.argname = "Output9", byre.argtype = 2 : i32}, %arg56: memref<128xf32> {byre.argname = "Output10", byre.argtype = 2 : i32}, %arg57: memref<128x128xf32> {byre.argname = "Output11", byre.argtype = 2 : i32}, %arg58: memref<128xf32> {byre.argname = "Output12", byre.argtype = 2 : i32}, %arg59: memref<128x128xf32> {byre.argname = "Output13", byre.argtype = 2 : i32}, %arg60: memref<128xf32> {byre.argname = "Output14", byre.argtype = 2 : i32}, %arg61: memref<128xf32> {byre.argname = "Output15", byre.argtype = 2 : i32}, %arg62: memref<128xf32> {byre.argname = "Output16", byre.argtype = 2 : i32}, %arg63: memref<512x128xf32> {byre.argname = "Output17", byre.argtype = 2 : i32}, %arg64: memref<512xf32> {byre.argname = "Output18", byre.argtype = 2 : i32}, %arg65: memref<128x512xf32> {byre.argname = "Output19", byre.argtype = 2 : i32}, %arg66: memref<128xf32> {byre.argname = "Output20", byre.argtype = 2 : i32}, %arg67: memref<128xf32> {byre.argname = "Output21", byre.argtype = 2 : i32}, %arg68: memref<128xf32> {byre.argname = "Output22", byre.argtype = 2 : i32}, %arg69: memref<128x128xf32> {byre.argname = "Output23", byre.argtype = 2 : i32}, %arg70: memref<128xf32> {byre.argname = "Output24", byre.argtype = 2 : i32}, %arg71: memref<128x128xf32> {byre.argname = "Output25", byre.argtype = 2 : i32}, %arg72: memref<128xf32> {byre.argname = "Output26", byre.argtype = 2 : i32}, %arg73: memref<128x128xf32> {byre.argname = "Output27", byre.argtype = 2 : i32}, %arg74: memref<128xf32> {byre.argname = "Output28", byre.argtype = 2 : i32}, %arg75: memref<128x128xf32> {byre.argname = "Output29", byre.argtype = 2 : i32}, %arg76: memref<128xf32> {byre.argname = "Output30", byre.argtype = 2 : i32}, %arg77: memref<128xf32> {byre.argname = "Output31", byre.argtype = 2 : i32}, %arg78: memref<128xf32> {byre.argname = "Output32", byre.argtype = 2 : i32}, %arg79: memref<512x128xf32> {byre.argname = "Output33", byre.argtype = 2 : i32}, %arg80: memref<512xf32> {byre.argname = "Output34", byre.argtype = 2 : i32}, %arg81: memref<128x512xf32> {byre.argname = "Output35", byre.argtype = 2 : i32}, %arg82: memref<128xf32> {byre.argname = "Output36", byre.argtype = 2 : i32}, %arg83: memref<128xf32> {byre.argname = "Output37", byre.argtype = 2 : i32}, %arg84: memref<128xf32> {byre.argname = "Output38", byre.argtype = 2 : i32}, %arg85: memref<128x128xf32> {byre.argname = "Output39", byre.argtype = 2 : i32}, %arg86: memref<128xf32> {byre.argname = "Output40", byre.argtype = 2 : i32}, %arg87: memref<128xf32> {byre.argname = "Output41", byre.argtype = 2 : i32}, %arg88: memref<128xf32> {byre.argname = "Output42", byre.argtype = 2 : i32}, %arg89: memref<30522xf32> {byre.argname = "Output43", byre.argtype = 2 : i32}) attributes {byre.entry_point} {
-    %0 = memref.alloc() : memref<0xi8>
-    %1 = memref.alloc() : memref<0xi8>
-    %2 = memref.alloc() : memref<0xi8>
-    %3 = memref.alloc() : memref<16xi8>
-    %4 = memref.alloc() : memref<32xi8>
-    %5 = memref.alloc() : memref<32xi8>
-    %6 = memref.alloc() : memref<32xi8>
-    %7 = memref.alloc() : memref<1024xi8>
-    %8 = memref.alloc() : memref<1024xi8>
-    %9 = memref.alloc() : memref<1024xi8>
-    %10 = memref.alloc() : memref<1024xi8>
-    %11 = memref.alloc() : memref<1024xi8>
-    %12 = memref.alloc() : memref<1024xi8>
-    %13 = memref.alloc() : memref<1024xi8>
-    %14 = memref.alloc() : memref<1024xi8>
-    %15 = memref.alloc() : memref<1024xi8>
-    %16 = memref.alloc() : memref<1024xi8>
-    %17 = memref.alloc() : memref<1024xi8>
-    %18 = memref.alloc() : memref<1024xi8>
-    %19 = memref.alloc() : memref<1024xi8>
-    %20 = memref.alloc() : memref<1024xi8>
-    %21 = memref.alloc() : memref<2048xi8>
-    %22 = memref.alloc() : memref<2048xi8>
-    %23 = memref.alloc() : memref<65536xi8>
-    %24 = memref.alloc() : memref<65536xi8>
-    %25 = memref.alloc() : memref<131072xi8>
-    %26 = memref.alloc() : memref<131072xi8>
-    %27 = memref.alloc() : memref<131072xi8>
-    %28 = memref.alloc() : memref<131072xi8>
-    %29 = memref.alloc() : memref<131072xi8>
-    %30 = memref.alloc() : memref<131072xi8>
-    %31 = memref.alloc() : memref<131072xi8>
-    %32 = memref.alloc() : memref<131072xi8>
-    %33 = memref.alloc() : memref<131072xi8>
-    %34 = memref.alloc() : memref<131072xi8>
-    %35 = memref.alloc() : memref<131072xi8>
-    %36 = memref.alloc() : memref<131072xi8>
-    %37 = memref.alloc() : memref<131072xi8>
-    %38 = memref.alloc() : memref<131072xi8>
-    %39 = memref.alloc() : memref<131072xi8>
-    %40 = memref.alloc() : memref<131072xi8>
-    %41 = memref.alloc() : memref<131072xi8>
-    %42 = memref.alloc() : memref<131072xi8>
-    %43 = memref.alloc() : memref<131072xi8>
-    %44 = memref.alloc() : memref<131072xi8>
-    %45 = memref.alloc() : memref<131072xi8>
-    %46 = memref.alloc() : memref<262144xi8>
-    %47 = memref.alloc() : memref<262144xi8>
-    %48 = memref.alloc() : memref<524288xi8>
-    %49 = memref.alloc() : memref<524288xi8>
-    %50 = memref.alloc() : memref<524288xi8>
-    %51 = memref.alloc() : memref<524288xi8>
-    %52 = memref.alloc() : memref<31254528xi8>
-    %53 = memref.alloc() : memref<31254528xi8>
-    %54 = memref.alloc() : memref<31254528xi8>
-    %55 = memref.alloc() : memref<31254528xi8>
-    %56 = memref.alloc() : memref<31254528xi8>
-    %57 = memref.alloc() : memref<512x128xf32>
-    byre.compute @FillOp(%57) {memory_effects = [2 : i32], value = dense<0.000000e+00> : tensor<512x128xf32>} : memref<512x128xf32>
-    %58 = memref.alloc() : memref<2x128xf32>
-    byre.compute @FillOp(%58) {memory_effects = [2 : i32], value = dense<0.000000e+00> : tensor<2x128xf32>} : memref<2x128xf32>
-    %59 = memref.alloc() : memref<2x128x128xf32>
-    byre.compute @FillOp(%59) {memory_effects = [2 : i32], value = dense<-0.000000e+00> : tensor<2x128x128xf32>} : memref<2x128x128xf32>
-    %60 = "byre.alias"(%arg2) {offset = 0 : i64} : (memref<1x512xi64>) -> memref<128xi64>
-    %61 = "byre.alias"(%arg3) {offset = 0 : i64} : (memref<1x512xi64>) -> memref<1x128xi64>
-    %62 = "byre.alias"(%6) {offset = 0 : i64} : (memref<32xi8>) -> memref<256xi1>
-    byre.compute @PTXOp(%arg1, %62) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [2 : i32, 1 : i32], kernel_name = "Unknown0", memory_effects = [1 : i32, 2 : i32]} : memref<2x128xi64>, memref<256xi1>
-    %63 = "byre.alias"(%arg1) {offset = 0 : i64} : (memref<2x128xi64>) -> memref<256xi64>
-    %64 = "byre.alias"(%56) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256xui32>
-    %65 = "byre.alias"(%22) {offset = 0 : i64} : (memref<2048xi8>) -> memref<256x1xi64>
-    %66 = "byre.alias"(%4) {offset = 0 : i64} : (memref<32xi8>) -> memref<256xi1>
-    byre.compute @PTXOp(%arg0, %64, %65, %66) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [2 : i32, 1 : i32, 1 : i32, 1 : i32], kernel_name = "Unknown1", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128xi64>, memref<256xui32>, memref<256x1xi64>, memref<256xi1>
-    %67 = "byre.alias"(%55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x128xf32>
-    byre.compute @IndexSelectOpf32ui32f32(%arg4, %64, %67) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<30522x128xf32>, memref<256xui32>, memref<256x128xf32>
-    %68 = "byre.alias"(%55) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<256xui32>
-    %69 = "byre.alias"(%21) {offset = 0 : i64} : (memref<2048xi8>) -> memref<256x1xi64>
-    %70 = "byre.alias"(%5) {offset = 0 : i64} : (memref<32xi8>) -> memref<256xi1>
-    byre.compute @PTXOp(%60, %68, %69, %70) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown2", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<128xi64>, memref<256xui32>, memref<256x1xi64>, memref<256xi1>
-    %71 = "byre.alias"(%56) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x128xf32>
-    byre.compute @IndexSelectOpf32ui32f32(%arg5, %68, %71) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128xf32>, memref<256xui32>, memref<256x128xf32>
-    %72 = "byre.alias"(%55) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<128xui32>
-    %73 = "byre.alias"(%19) {offset = 0 : i64} : (memref<1024xi8>) -> memref<128x1xi64>
-    %74 = "byre.alias"(%3) {offset = 0 : i64} : (memref<16xi8>) -> memref<128xi1>
-    byre.compute @PTXOp(%61, %72, %73, %74) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [2 : i32, 1 : i32, 1 : i32, 1 : i32], kernel_name = "Unknown3", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<1x128xi64>, memref<128xui32>, memref<128x1xi64>, memref<128xi1>
-    %75 = "byre.alias"(%56) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<128x128xf32>
-    byre.compute @IndexSelectOpf32ui32f32(%arg6, %72, %75) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<512x128xf32>, memref<128xui32>, memref<128x128xf32>
-    %76 = "byre.alias"(%35) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    byre.compute @PTXOp(%67, %71, %75, %76) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [2 : i32, 2 : i32, 2 : i32, 3 : i32], kernel_name = "Unknown4", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<256x128xf32>, memref<256x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>
-    %77 = "byre.alias"(%36) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %78 = "byre.alias"(%18) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %79 = "byre.alias"(%17) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    byre.compute @ftv4.layernorm(%76, %arg7, %arg8, %77, %78, %79) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>
-    %80 = "byre.alias"(%37) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.linear_transpose(%77, %arg9, %arg10, %80) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
-    %81 = "byre.alias"(%38) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.linear_transpose(%77, %arg11, %arg12, %81) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
-    %82 = "byre.alias"(%55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x128xf32>
-    byre.compute @ftv4.matmul(%80, %81, %82) {memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x128xf32>
-    %83 = "byre.alias"(%47) {offset = 0 : i64} : (memref<262144xi8>) -> memref<2x2x128x128xf32>
-    %84 = "byre.alias"(%56) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x128xf32>
-    %85 = "byre.alias"(%24) {offset = 0 : i64} : (memref<65536xi8>) -> memref<2x2x128x128xui8>
-    byre.compute @ftv4.softmax(%82, %59, %83, %84, %85) {batch_first = true, dropout_rate = 0.000000e+00 : f32, head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x128xf32>, memref<2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xui8>
-    %86 = "byre.alias"(%39) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.linear_transpose(%77, %arg13, %arg14, %86) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
-    %87 = "byre.alias"(%56) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.matmul(%83, %86, %87) {memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>
-    %88 = "byre.alias"(%40) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x2x64xf32>
-    byre.compute @ftv4.transpose4d(%87, %88) {forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x2x64xf32>
-    %89 = "byre.alias"(%40) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %90 = "byre.alias"(%56) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.linear(%89, %arg15, %arg16, %90) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x128x128xf32>
-    %91 = "byre.alias"(%34) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %92 = "byre.alias"(%16) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %93 = "byre.alias"(%15) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %94 = "byre.alias"(%25) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_residual(%90, %arg17, %arg18, %77, %91, %92, %93, %94) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>
-    %95 = "byre.alias"(%49) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x512xf32>
-    %96 = "byre.alias"(%50) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x512xf32>
-    %97 = "byre.alias"(%2) {offset = 0 : i64} : (memref<0xi8>) -> memref<0xf32>
-    byre.compute @ftv4.linear_gelu_dropout(%91, %arg19, %arg20, %95, %96, %97) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<512x128xf32>, memref<512xf32>, memref<2x128x512xf32>, memref<2x128x512xf32>, memref<0xf32>
-    byre.compute @ftv4.linear(%95, %arg21, %arg22, %90) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x512xf32>, memref<128x512xf32>, memref<128xf32>, memref<2x128x128xf32>
-    %98 = "byre.alias"(%26) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %99 = "byre.alias"(%14) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %100 = "byre.alias"(%13) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %101 = "byre.alias"(%27) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_residual(%90, %arg23, %arg24, %91, %98, %99, %100, %101) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>
-    %102 = "byre.alias"(%28) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.linear_transpose(%98, %arg25, %arg26, %102) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
-    %103 = "byre.alias"(%29) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.linear_transpose(%98, %arg27, %arg28, %103) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
-    byre.compute @ftv4.matmul(%102, %103, %82) {memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x128xf32>
-    %104 = "byre.alias"(%46) {offset = 0 : i64} : (memref<262144xi8>) -> memref<2x2x128x128xf32>
-    %105 = "byre.alias"(%23) {offset = 0 : i64} : (memref<65536xi8>) -> memref<2x2x128x128xui8>
-    byre.compute @ftv4.softmax(%82, %59, %104, %84, %105) {batch_first = true, dropout_rate = 0.000000e+00 : f32, head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x128xf32>, memref<2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xui8>
-    %106 = "byre.alias"(%30) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.linear_transpose(%98, %arg29, %arg30, %106) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
-    byre.compute @ftv4.matmul(%104, %106, %87) {memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>
-    %107 = "byre.alias"(%31) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x2x64xf32>
-    byre.compute @ftv4.transpose4d(%87, %107) {forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x2x64xf32>
-    %108 = "byre.alias"(%31) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.linear(%108, %arg31, %arg32, %90) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x128x128xf32>
-    %109 = "byre.alias"(%32) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %110 = "byre.alias"(%12) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %111 = "byre.alias"(%20) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %112 = "byre.alias"(%33) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_residual(%90, %arg33, %arg34, %98, %109, %110, %111, %112) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>
-    %113 = "byre.alias"(%51) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x512xf32>
-    %114 = "byre.alias"(%48) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x512xf32>
-    %115 = "byre.alias"(%1) {offset = 0 : i64} : (memref<0xi8>) -> memref<0xf32>
-    byre.compute @ftv4.linear_gelu_dropout(%109, %arg35, %arg36, %113, %114, %115) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<512x128xf32>, memref<512xf32>, memref<2x128x512xf32>, memref<2x128x512xf32>, memref<0xf32>
-    byre.compute @ftv4.linear(%113, %arg37, %arg38, %90) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x512xf32>, memref<128x512xf32>, memref<128xf32>, memref<2x128x128xf32>
-    %116 = "byre.alias"(%42) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %117 = "byre.alias"(%11) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %118 = "byre.alias"(%10) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %119 = "byre.alias"(%43) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_residual(%90, %arg39, %arg40, %109, %116, %117, %118, %119) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>
-    %120 = "byre.alias"(%44) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %121 = "byre.alias"(%45) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %122 = "byre.alias"(%0) {offset = 0 : i64} : (memref<0xi8>) -> memref<0xf32>
-    byre.compute @ftv4.linear_gelu_dropout(%116, %arg41, %arg42, %120, %121, %122) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<0xf32>
-    %123 = "byre.alias"(%41) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
-    %124 = "byre.alias"(%9) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    %125 = "byre.alias"(%8) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    byre.compute @ftv4.layernorm(%120, %arg43, %arg44, %123, %124, %125) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>
-    %126 = "byre.alias"(%41) {offset = 0 : i64} : (memref<131072xi8>) -> memref<256x128xf32>
-    %127 = "byre.alias"(%56) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
-    byre.compute @MatmulOpf32f32f32(%126, %arg4, %127) {lhs_contracting_dimension = 1 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], rhs_contracting_dimension = 1 : i64} : memref<256x128xf32>, memref<30522x128xf32>, memref<256x30522xf32>
-    byre.compute @PTXOp(%127, %arg45, %arg46) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [2 : i32, 1 : i32, 2 : i32], kernel_name = "Unknown5", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<30522xf32>, memref<2x128x30522xf32>
-    %128 = "byre.alias"(%arg46) {offset = 0 : i64} : (memref<2x128x30522xf32>) -> memref<256x30522xf32>
-    %129 = "byre.alias"(%54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256xf32>
-    byre.compute @ReduceMaxOpf32f32(%128, %129) {dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<256xf32>
-    %130 = "byre.alias"(%55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
-    byre.compute @PTXOp(%129, %128, %127, %130) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown6", memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32]} : memref<256xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
-    byre.compute @ReduceSumOpf32f32(%130, %129) {dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<256xf32>
-    %131 = "byre.alias"(%7) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
-    byre.compute @PTXOp(%129, %131) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32], kernel_name = "Unknown7", memory_effects = [1 : i32, 2 : i32]} : memref<256xf32>, memref<256xf32>
-    %132 = "byre.alias"(%54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
-    %133 = "byre.alias"(%53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
-    %134 = "byre.alias"(%52) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
-    byre.compute @PTXOp(%131, %127, %63, %62, %130, %132, %133, %134) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown8", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<256xf32>, memref<256x30522xf32>, memref<256xi64>, memref<256xi1>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
-    %135 = "byre.alias"(%56) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<f32>
-    byre.compute @ReduceSumOpf32f32(%132, %135) {dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<f32>
-    %136 = "byre.alias"(%56) {offset = 4 : i64} : (memref<31254528xi8>) -> memref<f32>
-    byre.compute @ReduceSumOpf32f32(%130, %136) {dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<f32>
-    byre.compute @PTXOp(%135, %136, %arg47) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [0 : i32, 0 : i32, 0 : i32], kernel_name = "Unknown9", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<f32>, memref<f32>, memref<f32>
-    byre.compute @ReduceSumOpf32f32(%130, %135) {dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<f32>
-    %137 = "byre.alias"(%54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<f32>
-    byre.compute @PTXOp(%135, %137) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [0 : i32, 0 : i32], kernel_name = "Unknown10", memory_effects = [1 : i32, 2 : i32]} : memref<f32>, memref<f32>
-    byre.compute @PTXOp(%137, %133, %130) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [0 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown11", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<f32>, memref<256x30522xf32>, memref<256x30522xf32>
-    byre.compute @ReduceSumOpf32f32(%130, %129) {dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<256xf32>
-    byre.compute @PTXOp(%129, %134, %130, %127) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown12", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<256xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
-    %138 = "byre.alias"(%56) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x30522xf32>
-    %139 = "byre.alias"(%55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<30522x128xf32>
-    byre.compute @MatmulOpf32f32f32(%126, %127, %139) {lhs_contracting_dimension = 0 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], output_transpose, rhs_contracting_dimension = 0 : i64} : memref<256x128xf32>, memref<256x30522xf32>, memref<30522x128xf32>
-    %140 = "byre.alias"(%55) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<256x128xf32>
-    byre.compute @MatmulOpf32f32f32(%127, %arg4, %140) {lhs_contracting_dimension = 1 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], rhs_contracting_dimension = 0 : i64} : memref<256x30522xf32>, memref<30522x128xf32>, memref<256x128xf32>
-    %141 = "byre.alias"(%55) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
-    %142 = "byre.alias"(%54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_backward(%141, %120, %arg43, %124, %125, %142, %arg87, %arg88) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>
-    byre.compute @ftv4.linear_gelu_dropout_backward(%142, %116, %arg41, %121, %122, %141, %arg85, %arg86) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<0xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    %143 = "byre.alias"(%53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_backward_residual(%141, %119, %arg39, %117, %118, %142, %arg83, %arg84, %143) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>
-    %144 = "byre.alias"(%55) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x128x512xf32>
-    byre.compute @ftv4.linear_backward(%142, %113, %arg37, %144, %arg81, %arg82) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x512xf32>, memref<128x512xf32>, memref<2x128x512xf32>, memref<128x512xf32>, memref<128xf32>
-    byre.compute @ftv4.linear_gelu_dropout_backward(%144, %109, %arg35, %114, %115, %142, %arg79, %arg80) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x512xf32>, memref<2x128x128xf32>, memref<512x128xf32>, memref<2x128x512xf32>, memref<0xf32>, memref<2x128x128xf32>, memref<512x128xf32>, memref<512xf32>
-    %145 = "byre.alias"(%52) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
-    byre.compute @PTXOp(%143, %142, %145) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32], kernel_name = "Unknown14", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>
-    %146 = "byre.alias"(%51) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_backward_residual(%145, %112, %arg33, %110, %111, %141, %arg77, %arg78, %146) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>
-    byre.compute @ftv4.linear_backward(%141, %108, %arg31, %142, %arg75, %arg76) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    %147 = "byre.alias"(%54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x2x64xf32>
-    %148 = "byre.alias"(%55) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.transpose4d_backward(%147, %148) {forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x128x2x64xf32>, memref<2x2x128x64xf32>
-    %149 = "byre.alias"(%54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x128xf32>
-    %150 = "byre.alias"(%53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.matmul_backward(%148, %104, %106, %149, %150) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x64xf32>, memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x128xf32>, memref<2x2x128x64xf32>
-    %151 = "byre.alias"(%55) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x2x128x128xf32>
-    byre.compute @ftv4.softmax_backward(%149, %104, %105, %151) {dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xui8>, memref<2x2x128x128xf32>
-    %152 = "byre.alias"(%53) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
-    %153 = "byre.alias"(%52) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.matmul_backward(%151, %102, %103, %152, %153) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>
-    byre.compute @ftv4.linear_transpose_backward(%152, %98, %arg25, %142, %arg69, %arg70) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    byre.compute @ftv4.linear_transpose_backward(%150, %98, %arg29, %141, %arg73, %arg74) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    %154 = "byre.alias"(%55) {offset = 15758336 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.linear_transpose_backward(%153, %98, %arg27, %154, %arg71, %arg72) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    byre.compute @PTXOp(%146, %142, %141, %154, %143) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], kernel_name = "Unknown15", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_backward_residual(%143, %101, %arg23, %99, %100, %142, %arg67, %arg68, %145) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>
-    byre.compute @ftv4.linear_backward(%142, %95, %arg21, %144, %arg65, %arg66) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x512xf32>, memref<128x512xf32>, memref<2x128x512xf32>, memref<128x512xf32>, memref<128xf32>
-    byre.compute @ftv4.linear_gelu_dropout_backward(%144, %91, %arg19, %96, %97, %142, %arg63, %arg64) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x512xf32>, memref<2x128x128xf32>, memref<512x128xf32>, memref<2x128x512xf32>, memref<0xf32>, memref<2x128x128xf32>, memref<512x128xf32>, memref<512xf32>
-    byre.compute @PTXOp(%145, %142, %141) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32], kernel_name = "Unknown16", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_backward_residual(%141, %94, %arg17, %92, %93, %142, %arg61, %arg62, %145) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>
-    byre.compute @ftv4.linear_backward(%142, %89, %arg15, %141, %arg59, %arg60) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    %155 = "byre.alias"(%55) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x128x2x64xf32>
-    %156 = "byre.alias"(%54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.transpose4d_backward(%155, %156) {forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x128x2x64xf32>, memref<2x2x128x64xf32>
-    byre.compute @ftv4.matmul_backward(%156, %83, %86, %151, %150) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x64xf32>, memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x128xf32>, memref<2x2x128x64xf32>
-    byre.compute @ftv4.softmax_backward(%151, %83, %85, %149) {dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xui8>, memref<2x2x128x128xf32>
-    %157 = "byre.alias"(%55) {offset = 15758336 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
-    byre.compute @ftv4.matmul_backward(%149, %80, %81, %157, %148) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>
-    byre.compute @ftv4.linear_transpose_backward(%157, %77, %arg9, %142, %arg53, %arg54) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    %158 = "byre.alias"(%54) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.linear_transpose_backward(%150, %77, %arg13, %158, %arg57, %arg58) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    %159 = "byre.alias"(%54) {offset = 262144 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
-    byre.compute @ftv4.linear_transpose_backward(%148, %77, %arg11, %159, %arg55, %arg56) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
-    byre.compute @PTXOp(%145, %142, %158, %159, %141) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], kernel_name = "Unknown17", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>
-    byre.compute @ftv4.layernorm_backward(%141, %76, %arg7, %78, %79, %142, %arg51, %arg52) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>
-    %160 = "byre.alias"(%54) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<256x128xf32>
-    byre.compute @PTXOp(%66, %142, %70, %140, %160) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [1 : i32, 3 : i32, 1 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown18", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32]} : memref<256xi1>, memref<2x128x128xf32>, memref<256xi1>, memref<256x128xf32>, memref<256x128xf32>
-    byre.compute @IndexPutOpf32i64f32f32(%139, %65, %140, %arg48) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<30522x128xf32>, memref<256x1xi64>, memref<256x128xf32>, memref<30522x128xf32>
-    byre.compute @IndexPutOpf32i64f32f32(%58, %69, %160, %arg49) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128xf32>, memref<256x1xi64>, memref<256x128xf32>, memref<2x128xf32>
-    %161 = "byre.alias"(%53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<128x128xf32>
-    byre.compute @ReduceSumOpf32f32(%142, %161) {dimensions = dense<0> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>
-    %162 = "byre.alias"(%55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<128x128xf32>
-    byre.compute @PTXOp(%74, %161, %162) {BlockSize.x = 128 : i32, GridSize.x = 128 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown19", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<128xi1>, memref<128x128xf32>, memref<128x128xf32>
-    byre.compute @IndexPutOpf32i64f32f32(%57, %73, %162, %arg50) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<512x128xf32>, memref<128x1xi64>, memref<128x128xf32>, memref<512x128xf32>
-    byre.compute @ReduceSumOpf32f32(%138, %arg89) {dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<2x128x30522xf32>, memref<30522xf32>
+    %alloc = memref.alloc() : memref<0xi8>
+    %alloc_0 = memref.alloc() : memref<0xi8>
+    %alloc_1 = memref.alloc() : memref<0xi8>
+    %alloc_2 = memref.alloc() : memref<16xi8>
+    %alloc_3 = memref.alloc() : memref<32xi8>
+    %alloc_4 = memref.alloc() : memref<32xi8>
+    %alloc_5 = memref.alloc() : memref<32xi8>
+    %alloc_6 = memref.alloc() : memref<1024xi8>
+    %alloc_7 = memref.alloc() : memref<1024xi8>
+    %alloc_8 = memref.alloc() : memref<1024xi8>
+    %alloc_9 = memref.alloc() : memref<1024xi8>
+    %alloc_10 = memref.alloc() : memref<1024xi8>
+    %alloc_11 = memref.alloc() : memref<1024xi8>
+    %alloc_12 = memref.alloc() : memref<1024xi8>
+    %alloc_13 = memref.alloc() : memref<1024xi8>
+    %alloc_14 = memref.alloc() : memref<1024xi8>
+    %alloc_15 = memref.alloc() : memref<1024xi8>
+    %alloc_16 = memref.alloc() : memref<1024xi8>
+    %alloc_17 = memref.alloc() : memref<1024xi8>
+    %alloc_18 = memref.alloc() : memref<1024xi8>
+    %alloc_19 = memref.alloc() : memref<1024xi8>
+    %alloc_20 = memref.alloc() : memref<2048xi8>
+    %alloc_21 = memref.alloc() : memref<2048xi8>
+    %alloc_22 = memref.alloc() : memref<65536xi8>
+    %alloc_23 = memref.alloc() : memref<65536xi8>
+    %alloc_24 = memref.alloc() : memref<131072xi8>
+    %alloc_25 = memref.alloc() : memref<131072xi8>
+    %alloc_26 = memref.alloc() : memref<131072xi8>
+    %alloc_27 = memref.alloc() : memref<131072xi8>
+    %alloc_28 = memref.alloc() : memref<131072xi8>
+    %alloc_29 = memref.alloc() : memref<131072xi8>
+    %alloc_30 = memref.alloc() : memref<131072xi8>
+    %alloc_31 = memref.alloc() : memref<131072xi8>
+    %alloc_32 = memref.alloc() : memref<131072xi8>
+    %alloc_33 = memref.alloc() : memref<131072xi8>
+    %alloc_34 = memref.alloc() : memref<131072xi8>
+    %alloc_35 = memref.alloc() : memref<131072xi8>
+    %alloc_36 = memref.alloc() : memref<131072xi8>
+    %alloc_37 = memref.alloc() : memref<131072xi8>
+    %alloc_38 = memref.alloc() : memref<131072xi8>
+    %alloc_39 = memref.alloc() : memref<131072xi8>
+    %alloc_40 = memref.alloc() : memref<131072xi8>
+    %alloc_41 = memref.alloc() : memref<131072xi8>
+    %alloc_42 = memref.alloc() : memref<131072xi8>
+    %alloc_43 = memref.alloc() : memref<131072xi8>
+    %alloc_44 = memref.alloc() : memref<131072xi8>
+    %alloc_45 = memref.alloc() : memref<262144xi8>
+    %alloc_46 = memref.alloc() : memref<262144xi8>
+    %alloc_47 = memref.alloc() : memref<524288xi8>
+    %alloc_48 = memref.alloc() : memref<524288xi8>
+    %alloc_49 = memref.alloc() : memref<524288xi8>
+    %alloc_50 = memref.alloc() : memref<524288xi8>
+    %alloc_51 = memref.alloc() : memref<31254528xi8>
+    %alloc_52 = memref.alloc() : memref<31254528xi8>
+    %alloc_53 = memref.alloc() : memref<31254528xi8>
+    %alloc_54 = memref.alloc() : memref<31254528xi8>
+    %alloc_55 = memref.alloc() : memref<31254528xi8>
+    %alloc_56 = memref.alloc() : memref<512x128xf32>
+    byre.compute @FillOp(%alloc_56) {memory_effects = [2 : i32], value = dense<0.000000e+00> : tensor<512x128xf32>} : memref<512x128xf32>
+    %alloc_57 = memref.alloc() : memref<2x128xf32>
+    byre.compute @FillOp(%alloc_57) {memory_effects = [2 : i32], value = dense<0.000000e+00> : tensor<2x128xf32>} : memref<2x128xf32>
+    %alloc_58 = memref.alloc() : memref<2x128x128xf32>
+    byre.compute @FillOp(%alloc_58) {memory_effects = [2 : i32], value = dense<-0.000000e+00> : tensor<2x128x128xf32>} : memref<2x128x128xf32>
+    %0 = "byre.alias"(%arg2) {offset = 0 : i64} : (memref<1x512xi64>) -> memref<128xi64>
+    %1 = "byre.alias"(%arg3) {offset = 0 : i64} : (memref<1x512xi64>) -> memref<1x128xi64>
+    %2 = "byre.alias"(%alloc_5) {offset = 0 : i64} : (memref<32xi8>) -> memref<256xi1>
+    byre.compute @PTXOp(%arg1, %2) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [2 : i32, 1 : i32], kernel_name = "Unknown0", memory_effects = [1 : i32, 2 : i32]} : memref<2x128xi64>, memref<256xi1>
+    %3 = "byre.alias"(%arg1) {offset = 0 : i64} : (memref<2x128xi64>) -> memref<256xi64>
+    %4 = "byre.alias"(%alloc_55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256xui32>
+    %5 = "byre.alias"(%alloc_21) {offset = 0 : i64} : (memref<2048xi8>) -> memref<256x1xi64>
+    %6 = "byre.alias"(%alloc_3) {offset = 0 : i64} : (memref<32xi8>) -> memref<256xi1>
+    byre.compute @PTXOp(%arg0, %4, %5, %6) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [2 : i32, 1 : i32, 2 : i32, 1 : i32], kernel_name = "Unknown1", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128xi64>, memref<256xui32>, memref<256x1xi64>, memref<256xi1>
+    %7 = "byre.alias"(%alloc_54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x128xf32>
+    byre.compute @IndexSelectOpf32ui32f32(%arg4, %4, %7) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<30522x128xf32>, memref<256xui32>, memref<256x128xf32>
+    %8 = "byre.alias"(%alloc_54) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<256xui32>
+    %9 = "byre.alias"(%alloc_20) {offset = 0 : i64} : (memref<2048xi8>) -> memref<256x1xi64>
+    %10 = "byre.alias"(%alloc_4) {offset = 0 : i64} : (memref<32xi8>) -> memref<256xi1>
+    byre.compute @PTXOp(%0, %8, %9, %10) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 2 : i32, 1 : i32], kernel_name = "Unknown2", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<128xi64>, memref<256xui32>, memref<256x1xi64>, memref<256xi1>
+    %11 = "byre.alias"(%alloc_55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x128xf32>
+    byre.compute @IndexSelectOpf32ui32f32(%arg5, %8, %11) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128xf32>, memref<256xui32>, memref<256x128xf32>
+    %12 = "byre.alias"(%alloc_54) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<128xui32>
+    %13 = "byre.alias"(%alloc_18) {offset = 0 : i64} : (memref<1024xi8>) -> memref<128x1xi64>
+    %14 = "byre.alias"(%alloc_2) {offset = 0 : i64} : (memref<16xi8>) -> memref<128xi1>
+    byre.compute @PTXOp(%1, %12, %13, %14) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [2 : i32, 1 : i32, 2 : i32, 1 : i32], kernel_name = "Unknown3", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<1x128xi64>, memref<128xui32>, memref<128x1xi64>, memref<128xi1>
+    %15 = "byre.alias"(%alloc_55) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<128x128xf32>
+    byre.compute @IndexSelectOpf32ui32f32(%arg6, %12, %15) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<512x128xf32>, memref<128xui32>, memref<128x128xf32>
+    %16 = "byre.alias"(%alloc_34) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    byre.compute @PTXOp(%7, %11, %15, %16) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [2 : i32, 2 : i32, 2 : i32, 3 : i32], kernel_name = "Unknown4", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<256x128xf32>, memref<256x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>
+    %17 = "byre.alias"(%alloc_35) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %18 = "byre.alias"(%alloc_17) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %19 = "byre.alias"(%alloc_16) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    byre.compute @ftv4.layernorm(%16, %arg7, %arg8, %17, %18, %19) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>
+    %20 = "byre.alias"(%alloc_36) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.linear_transpose(%17, %arg9, %arg10, %20) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
+    %21 = "byre.alias"(%alloc_37) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.linear_transpose(%17, %arg11, %arg12, %21) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
+    %22 = "byre.alias"(%alloc_54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x128xf32>
+    byre.compute @ftv4.matmul(%20, %21, %22) {memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x128xf32>
+    %23 = "byre.alias"(%alloc_46) {offset = 0 : i64} : (memref<262144xi8>) -> memref<2x2x128x128xf32>
+    %24 = "byre.alias"(%alloc_55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x128xf32>
+    %25 = "byre.alias"(%alloc_23) {offset = 0 : i64} : (memref<65536xi8>) -> memref<2x2x128x128xui8>
+    byre.compute @ftv4.softmax(%22, %alloc_58, %23, %24, %25) {batch_first = true, dropout_rate = 0.000000e+00 : f32, head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x128xf32>, memref<2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xui8>
+    %26 = "byre.alias"(%alloc_38) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.linear_transpose(%17, %arg13, %arg14, %26) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
+    %27 = "byre.alias"(%alloc_55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.matmul(%23, %26, %27) {memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>
+    %28 = "byre.alias"(%alloc_39) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x2x64xf32>
+    byre.compute @ftv4.transpose4d(%27, %28) {forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x2x64xf32>
+    %29 = "byre.alias"(%alloc_39) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %30 = "byre.alias"(%alloc_55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.linear(%29, %arg15, %arg16, %30) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x128x128xf32>
+    %31 = "byre.alias"(%alloc_33) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %32 = "byre.alias"(%alloc_15) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %33 = "byre.alias"(%alloc_14) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %34 = "byre.alias"(%alloc_24) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_residual(%30, %arg17, %arg18, %17, %31, %32, %33, %34) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>
+    %35 = "byre.alias"(%alloc_48) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x512xf32>
+    %36 = "byre.alias"(%alloc_49) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x512xf32>
+    %37 = "byre.alias"(%alloc_1) {offset = 0 : i64} : (memref<0xi8>) -> memref<0xf32>
+    byre.compute @ftv4.linear_gelu_dropout(%31, %arg19, %arg20, %35, %36, %37) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<512x128xf32>, memref<512xf32>, memref<2x128x512xf32>, memref<2x128x512xf32>, memref<0xf32>
+    byre.compute @ftv4.linear(%35, %arg21, %arg22, %30) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x512xf32>, memref<128x512xf32>, memref<128xf32>, memref<2x128x128xf32>
+    %38 = "byre.alias"(%alloc_25) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %39 = "byre.alias"(%alloc_13) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %40 = "byre.alias"(%alloc_12) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %41 = "byre.alias"(%alloc_26) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_residual(%30, %arg23, %arg24, %31, %38, %39, %40, %41) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>
+    %42 = "byre.alias"(%alloc_27) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.linear_transpose(%38, %arg25, %arg26, %42) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
+    %43 = "byre.alias"(%alloc_28) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.linear_transpose(%38, %arg27, %arg28, %43) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
+    byre.compute @ftv4.matmul(%42, %43, %22) {memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x128xf32>
+    %44 = "byre.alias"(%alloc_45) {offset = 0 : i64} : (memref<262144xi8>) -> memref<2x2x128x128xf32>
+    %45 = "byre.alias"(%alloc_22) {offset = 0 : i64} : (memref<65536xi8>) -> memref<2x2x128x128xui8>
+    byre.compute @ftv4.softmax(%22, %alloc_58, %44, %24, %45) {batch_first = true, dropout_rate = 0.000000e+00 : f32, head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x128xf32>, memref<2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xui8>
+    %46 = "byre.alias"(%alloc_29) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.linear_transpose(%38, %arg29, %arg30, %46) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x2x128x64xf32>
+    byre.compute @ftv4.matmul(%44, %46, %27) {memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>
+    %47 = "byre.alias"(%alloc_30) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x2x64xf32>
+    byre.compute @ftv4.transpose4d(%27, %47) {forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x2x64xf32>
+    %48 = "byre.alias"(%alloc_30) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.linear(%48, %arg31, %arg32, %30) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x128x128xf32>
+    %49 = "byre.alias"(%alloc_31) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %50 = "byre.alias"(%alloc_11) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %51 = "byre.alias"(%alloc_19) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %52 = "byre.alias"(%alloc_32) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_residual(%30, %arg33, %arg34, %38, %49, %50, %51, %52) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>
+    %53 = "byre.alias"(%alloc_50) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x512xf32>
+    %54 = "byre.alias"(%alloc_47) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x512xf32>
+    %55 = "byre.alias"(%alloc_0) {offset = 0 : i64} : (memref<0xi8>) -> memref<0xf32>
+    byre.compute @ftv4.linear_gelu_dropout(%49, %arg35, %arg36, %53, %54, %55) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<512x128xf32>, memref<512xf32>, memref<2x128x512xf32>, memref<2x128x512xf32>, memref<0xf32>
+    byre.compute @ftv4.linear(%53, %arg37, %arg38, %30) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x512xf32>, memref<128x512xf32>, memref<128xf32>, memref<2x128x128xf32>
+    %56 = "byre.alias"(%alloc_41) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %57 = "byre.alias"(%alloc_10) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %58 = "byre.alias"(%alloc_9) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %59 = "byre.alias"(%alloc_42) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_residual(%30, %arg39, %arg40, %49, %56, %57, %58, %59) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>
+    %60 = "byre.alias"(%alloc_43) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %61 = "byre.alias"(%alloc_44) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %62 = "byre.alias"(%alloc) {offset = 0 : i64} : (memref<0xi8>) -> memref<0xf32>
+    byre.compute @ftv4.linear_gelu_dropout(%56, %arg41, %arg42, %60, %61, %62) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<0xf32>
+    %63 = "byre.alias"(%alloc_40) {offset = 0 : i64} : (memref<131072xi8>) -> memref<2x128x128xf32>
+    %64 = "byre.alias"(%alloc_8) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    %65 = "byre.alias"(%alloc_7) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    byre.compute @ftv4.layernorm(%60, %arg43, %arg44, %63, %64, %65) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>, memref<256xf32>, memref<256xf32>
+    %66 = "byre.alias"(%alloc_40) {offset = 0 : i64} : (memref<131072xi8>) -> memref<256x128xf32>
+    %67 = "byre.alias"(%alloc_55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
+    byre.compute @MatmulOpf32f32f32(%66, %arg4, %67) {lhs_contracting_dimension = 1 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], rhs_contracting_dimension = 1 : i64} : memref<256x128xf32>, memref<30522x128xf32>, memref<256x30522xf32>
+    byre.compute @PTXOp(%67, %arg45, %arg46) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [2 : i32, 1 : i32, 3 : i32], kernel_name = "Unknown5", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<30522xf32>, memref<2x128x30522xf32>
+    %68 = "byre.alias"(%arg46) {offset = 0 : i64} : (memref<2x128x30522xf32>) -> memref<256x30522xf32>
+    %69 = "byre.alias"(%alloc_53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256xf32>
+    byre.compute @ReduceMaxOpf32f32(%68, %69) {dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<256xf32>
+    %70 = "byre.alias"(%alloc_54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
+    byre.compute @PTXOp(%69, %68, %67, %70) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown6", memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32]} : memref<256xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
+    byre.compute @ReduceSumOpf32f32(%70, %69) {dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<256xf32>
+    %71 = "byre.alias"(%alloc_6) {offset = 0 : i64} : (memref<1024xi8>) -> memref<256xf32>
+    byre.compute @PTXOp(%69, %71) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32], kernel_name = "Unknown7", memory_effects = [1 : i32, 2 : i32]} : memref<256xf32>, memref<256xf32>
+    %72 = "byre.alias"(%alloc_53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
+    %73 = "byre.alias"(%alloc_52) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
+    %74 = "byre.alias"(%alloc_51) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<256x30522xf32>
+    byre.compute @PTXOp(%71, %67, %3, %2, %70, %72, %73, %74) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown8", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<256xf32>, memref<256x30522xf32>, memref<256xi64>, memref<256xi1>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
+    %75 = "byre.alias"(%alloc_55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<f32>
+    byre.compute @ReduceSumOpf32f32(%72, %75) {dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<f32>
+    %76 = "byre.alias"(%alloc_55) {offset = 4 : i64} : (memref<31254528xi8>) -> memref<f32>
+    byre.compute @ReduceSumOpf32f32(%70, %76) {dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<f32>
+    byre.compute @PTXOp(%75, %76, %arg47) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [0 : i32, 0 : i32, 0 : i32], kernel_name = "Unknown9", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<f32>, memref<f32>, memref<f32>
+    byre.compute @ReduceSumOpf32f32(%70, %75) {dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<f32>
+    %77 = "byre.alias"(%alloc_53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<f32>
+    byre.compute @PTXOp(%75, %77) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [0 : i32, 0 : i32], kernel_name = "Unknown10", memory_effects = [1 : i32, 2 : i32]} : memref<f32>, memref<f32>
+    byre.compute @PTXOp(%77, %73, %70) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [0 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown11", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<f32>, memref<256x30522xf32>, memref<256x30522xf32>
+    byre.compute @ReduceSumOpf32f32(%70, %69) {dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32>, memref<256xf32>
+    byre.compute @PTXOp(%69, %74, %70, %67) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown12", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<256xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
+    %78 = "byre.alias"(%alloc_55) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x30522xf32>
+    %79 = "byre.alias"(%alloc_54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<30522x128xf32>
+    byre.compute @MatmulOpf32f32f32(%66, %67, %79) {lhs_contracting_dimension = 0 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], output_transpose, rhs_contracting_dimension = 0 : i64} : memref<256x128xf32>, memref<256x30522xf32>, memref<30522x128xf32>
+    %80 = "byre.alias"(%alloc_54) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<256x128xf32>
+    byre.compute @MatmulOpf32f32f32(%67, %arg4, %80) {lhs_contracting_dimension = 1 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], rhs_contracting_dimension = 0 : i64} : memref<256x30522xf32>, memref<30522x128xf32>, memref<256x128xf32>
+    %81 = "byre.alias"(%alloc_54) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
+    %82 = "byre.alias"(%alloc_53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_backward(%81, %60, %arg43, %64, %65, %82, %arg87, %arg88) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>
+    byre.compute @ftv4.linear_gelu_dropout_backward(%82, %56, %arg41, %61, %62, %81, %arg85, %arg86) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<0xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    %83 = "byre.alias"(%alloc_52) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_backward_residual(%81, %59, %arg39, %57, %58, %82, %arg83, %arg84, %83) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>
+    %84 = "byre.alias"(%alloc_54) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x128x512xf32>
+    byre.compute @ftv4.linear_backward(%82, %53, %arg37, %84, %arg81, %arg82) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x512xf32>, memref<128x512xf32>, memref<2x128x512xf32>, memref<128x512xf32>, memref<128xf32>
+    byre.compute @ftv4.linear_gelu_dropout_backward(%84, %49, %arg35, %54, %55, %82, %arg79, %arg80) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x512xf32>, memref<2x128x128xf32>, memref<512x128xf32>, memref<2x128x512xf32>, memref<0xf32>, memref<2x128x128xf32>, memref<512x128xf32>, memref<512xf32>
+    %85 = "byre.alias"(%alloc_51) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
+    byre.compute @PTXOp(%83, %82, %85) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32], kernel_name = "Unknown14", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>
+    %86 = "byre.alias"(%alloc_50) {offset = 0 : i64} : (memref<524288xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_backward_residual(%85, %52, %arg33, %50, %51, %81, %arg77, %arg78, %86) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>
+    byre.compute @ftv4.linear_backward(%81, %48, %arg31, %82, %arg75, %arg76) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    %87 = "byre.alias"(%alloc_53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x128x2x64xf32>
+    %88 = "byre.alias"(%alloc_54) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.transpose4d_backward(%87, %88) {forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x128x2x64xf32>, memref<2x2x128x64xf32>
+    %89 = "byre.alias"(%alloc_53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x128xf32>
+    %90 = "byre.alias"(%alloc_52) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.matmul_backward(%88, %44, %46, %89, %90) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x64xf32>, memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x128xf32>, memref<2x2x128x64xf32>
+    %91 = "byre.alias"(%alloc_54) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x2x128x128xf32>
+    byre.compute @ftv4.softmax_backward(%89, %44, %45, %91) {dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xui8>, memref<2x2x128x128xf32>
+    %92 = "byre.alias"(%alloc_52) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
+    %93 = "byre.alias"(%alloc_51) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.matmul_backward(%91, %42, %43, %92, %93) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>
+    byre.compute @ftv4.linear_transpose_backward(%92, %38, %arg25, %82, %arg69, %arg70) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    byre.compute @ftv4.linear_transpose_backward(%90, %38, %arg29, %81, %arg73, %arg74) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    %94 = "byre.alias"(%alloc_54) {offset = 15758336 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.linear_transpose_backward(%93, %38, %arg27, %94, %arg71, %arg72) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    byre.compute @PTXOp(%86, %82, %81, %94, %83) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], kernel_name = "Unknown15", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_backward_residual(%83, %41, %arg23, %39, %40, %82, %arg67, %arg68, %85) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>
+    byre.compute @ftv4.linear_backward(%82, %35, %arg21, %84, %arg65, %arg66) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x512xf32>, memref<128x512xf32>, memref<2x128x512xf32>, memref<128x512xf32>, memref<128xf32>
+    byre.compute @ftv4.linear_gelu_dropout_backward(%84, %31, %arg19, %36, %37, %82, %arg63, %arg64) {act_gelu = true, dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x512xf32>, memref<2x128x128xf32>, memref<512x128xf32>, memref<2x128x512xf32>, memref<0xf32>, memref<2x128x128xf32>, memref<512x128xf32>, memref<512xf32>
+    byre.compute @PTXOp(%85, %82, %81) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32], kernel_name = "Unknown16", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_backward_residual(%81, %34, %arg17, %32, %33, %82, %arg61, %arg62, %85) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>, memref<2x128x128xf32>
+    byre.compute @ftv4.linear_backward(%82, %29, %arg15, %81, %arg59, %arg60) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    %95 = "byre.alias"(%alloc_54) {offset = 15627264 : i64} : (memref<31254528xi8>) -> memref<2x128x2x64xf32>
+    %96 = "byre.alias"(%alloc_53) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.transpose4d_backward(%95, %96) {forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x128x2x64xf32>, memref<2x2x128x64xf32>
+    byre.compute @ftv4.matmul_backward(%96, %23, %26, %91, %90) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x64xf32>, memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x128xf32>, memref<2x2x128x64xf32>
+    byre.compute @ftv4.softmax_backward(%91, %23, %25, %89) {dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x2x128x128xf32>, memref<2x2x128x128xf32>, memref<2x2x128x128xui8>, memref<2x2x128x128xf32>
+    %97 = "byre.alias"(%alloc_54) {offset = 15758336 : i64} : (memref<31254528xi8>) -> memref<2x2x128x64xf32>
+    byre.compute @ftv4.matmul_backward(%89, %20, %21, %97, %88) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x128xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>, memref<2x2x128x64xf32>
+    byre.compute @ftv4.linear_transpose_backward(%97, %17, %arg9, %82, %arg53, %arg54) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    %98 = "byre.alias"(%alloc_53) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.linear_transpose_backward(%90, %17, %arg13, %98, %arg57, %arg58) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    %99 = "byre.alias"(%alloc_53) {offset = 262144 : i64} : (memref<31254528xi8>) -> memref<2x128x128xf32>
+    byre.compute @ftv4.linear_transpose_backward(%88, %17, %arg11, %99, %arg55, %arg56) {forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>, memref<128xf32>
+    byre.compute @PTXOp(%85, %82, %98, %99, %81) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], kernel_name = "Unknown17", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>
+    byre.compute @ftv4.layernorm_backward(%81, %16, %arg7, %18, %19, %82, %arg51, %arg52) {memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<256xf32>, memref<256xf32>, memref<2x128x128xf32>, memref<128xf32>, memref<128xf32>
+    %100 = "byre.alias"(%alloc_53) {offset = 131072 : i64} : (memref<31254528xi8>) -> memref<256x128xf32>
+    byre.compute @PTXOp(%6, %82, %10, %80, %100) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [1 : i32, 3 : i32, 1 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown18", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32]} : memref<256xi1>, memref<2x128x128xf32>, memref<256xi1>, memref<256x128xf32>, memref<256x128xf32>
+    byre.compute @IndexPutOpf32i64f32f32(%79, %5, %80, %arg48) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<30522x128xf32>, memref<256x1xi64>, memref<256x128xf32>, memref<30522x128xf32>
+    byre.compute @IndexPutOpf32i64f32f32(%alloc_57, %9, %100, %arg49) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128xf32>, memref<256x1xi64>, memref<256x128xf32>, memref<2x128xf32>
+    %101 = "byre.alias"(%alloc_52) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<128x128xf32>
+    byre.compute @ReduceSumOpf32f32(%82, %101) {dimensions = dense<0> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<2x128x128xf32>, memref<128x128xf32>
+    %102 = "byre.alias"(%alloc_54) {offset = 0 : i64} : (memref<31254528xi8>) -> memref<128x128xf32>
+    byre.compute @PTXOp(%14, %101, %102) {BlockSize.x = 128 : i32, GridSize.x = 128 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32], kernel_name = "Unknown19", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<128xi1>, memref<128x128xf32>, memref<128x128xf32>
+    byre.compute @IndexPutOpf32i64f32f32(%alloc_56, %13, %102, %arg50) {dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<512x128xf32>, memref<128x1xi64>, memref<128x128xf32>, memref<512x128xf32>
+    byre.compute @ReduceSumOpf32f32(%78, %arg89) {dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<2x128x30522xf32>, memref<30522xf32>
     return
   }
 }

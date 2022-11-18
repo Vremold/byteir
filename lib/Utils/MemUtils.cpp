@@ -6,11 +6,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Utils/MemUtils.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/IR/AllocationOpInterface.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/IR/BuiltinTypes.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -64,11 +63,11 @@ Optional<Value> mlir::createAlloc(OpBuilder &b, Value val, unsigned space) {
   for (unsigned idx = 0, n = shape.size(); idx < n; ++idx) {
     if (shape[idx] == ShapedType::kDynamicSize) {
       auto maybeValue = getDimSize(b, val, idx);
-      if (!maybeValue.hasValue()) {
+      if (!maybeValue.has_value()) {
         return llvm::None;
       }
 
-      dynValue.push_back(maybeValue.getValue());
+      dynValue.push_back(maybeValue.value());
     }
   }
 
@@ -89,18 +88,18 @@ llvm::Optional<int64_t> mlir::getByteShiftFromAllocOrArgument(Value val) {
   if (!op || isa<memref::AllocOp>(op)) {
     return 0;
   } else if (auto viewOp = dyn_cast<memref::ViewOp>(op)) {
-    Value offsetVal = viewOp.byte_shift();
+    Value offsetVal = viewOp.getByteShift();
     if (auto offsetOp = offsetVal.getDefiningOp<arith::ConstantOp>()) {
       if (auto offsetLit =
               offsetOp.getValue().dyn_cast_or_null<IntegerAttr>()) {
         int64_t curOffset = offsetLit.getInt();
         llvm::Optional<int64_t> subOffset =
-            getByteShiftFromAllocOrArgument(viewOp.source());
-        if (!subOffset.hasValue())
+            getByteShiftFromAllocOrArgument(viewOp.getSource());
+        if (!subOffset.has_value())
           // the byte shift of viewOp's source is None
           return None;
         else
-          return curOffset + subOffset.getValue();
+          return curOffset + subOffset.value();
       } else {
         llvm_unreachable(
             "view op's byte shift is arith.constant but not of Integer type.");
@@ -110,7 +109,7 @@ llvm::Optional<int64_t> mlir::getByteShiftFromAllocOrArgument(Value val) {
       return None;
     }
   } else if (auto subViewOp = dyn_cast<memref::SubViewOp>(op)) {
-    return getByteShiftFromAllocOrArgument(subViewOp.source());
+    return getByteShiftFromAllocOrArgument(subViewOp.getSource());
   } else if (auto viewLike = dyn_cast<ViewLikeOpInterface>(op)) {
     return getByteShiftFromAllocOrArgument(viewLike.getViewSource());
   }
@@ -171,6 +170,24 @@ MemRefType mlir::cloneMemRefTypeAndRemoveMemSpace(MemRefType t) {
 }
 
 bool mlir::isStaticShapeAndContiguousRowMajorEx(MemRefType memref) {
+  auto isStaticShapeAndContiguousRowMajor = [](MemRefType type) {
+    if (!type.hasStaticShape())
+      return false;
+
+    SmallVector<int64_t> strides;
+    int64_t offset;
+    if (failed(getStridesAndOffset(type, strides, offset)))
+      return false;
+
+    int64_t runningStride = 1;
+    for (unsigned i = strides.size(); i > 0; --i) {
+      if (strides[i - 1] != runningStride)
+        return false;
+      runningStride *= type.getDimSize(i - 1);
+    }
+    return true;
+  };
+
   auto canonicalizer = [](MemRefType memref) -> MemRefType {
     if (!memref.hasStaticShape())
       return memref;

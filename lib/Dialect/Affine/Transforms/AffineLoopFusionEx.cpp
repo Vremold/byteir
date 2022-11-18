@@ -22,24 +22,6 @@ using namespace mlir;
 
 namespace {
 
-// TODO: maybe move this to util if it is useful for others
-Operation *leastDominantDefiningOp(Operation *first, Operation *op,
-                                   DominanceInfo &domInfo) {
-
-  Operation *curPos = first;
-  for (auto val : op->getOperands()) {
-    if (val.getDefiningOp() == nullptr) {
-      continue;
-    }
-
-    if (domInfo.properlyDominates(curPos, val.getDefiningOp())) {
-      curPos = val.getDefiningOp();
-    }
-  }
-
-  return curPos;
-}
-
 bool isHoistUpOp(Operation *op) {
   return isa<memref::AllocOp, memref::CollapseShapeOp, memref::DimOp,
              memref::ExpandShapeOp, memref::ReshapeOp>(op);

@@ -258,31 +258,31 @@ void mlir::registerConvolutionInferReturnTypeComponents() {
           return failure();
         }
 
-        auto lhsType = adaptor.lhs().getType().dyn_cast<RankedTensorType>();
-        auto rhsType = adaptor.rhs().getType().dyn_cast<RankedTensorType>();
+        auto lhsType = adaptor.getLhs().getType().dyn_cast<RankedTensorType>();
+        auto rhsType = adaptor.getRhs().getType().dyn_cast<RankedTensorType>();
         if (!lhsType || !rhsType) {
           LLVM_DEBUG(llvm::dbgs() << loc << ": operands type missing\n");
           return failure();
         }
 
         auto kernelSpatialDimensions =
-            adaptor.dimension_numbers().getKernelSpatialDimensions();
+            adaptor.getDimensionNumbers().getKernelSpatialDimensions();
         SmallVector<int64_t> windowDimensions(kernelSpatialDimensions.size());
         for (size_t i = 0; i < windowDimensions.size(); i++)
           windowDimensions[i] = rhsType.getShape()[kernelSpatialDimensions[i]];
 
-        auto paddingOrErr = convertNx2Attribute(adaptor.padding(), loc);
+        auto paddingOrErr = convertNx2Attribute(adaptor.getPadding(), loc);
         if (failed(paddingOrErr)) {
           LLVM_DEBUG(llvm::dbgs() << "parse padding failed\n");
           return failure();
         }
         SmallVector<std::pair<int64_t, int64_t>> padding = *paddingOrErr;
 
-        // adaptor.dimension_numbers() return failure();
+        // adaptor.getDimensionNumbers() return failure();
         auto windowOrErr = verifyWindowAttributesAndInferWindowDimensions(
-            windowDimensions, convertDenseIntAttr(adaptor.window_strides()),
-            padding, convertDenseIntAttr(adaptor.lhs_dilation()),
-            convertDenseIntAttr(adaptor.rhs_dilation()), loc);
+            windowDimensions, convertDenseIntAttr(adaptor.getWindowStrides()),
+            padding, convertDenseIntAttr(adaptor.getLhsDilation()),
+            convertDenseIntAttr(adaptor.getRhsDilation()), loc);
         if (failed(windowOrErr))
           return failure();
 
@@ -299,7 +299,7 @@ void mlir::registerConvolutionInferReturnTypeComponents() {
 
         // Infer the output spatial dimensions.
         auto inputSpatialDims =
-            adaptor.dimension_numbers().getInputSpatialDimensions();
+            adaptor.getDimensionNumbers().getInputSpatialDimensions();
         auto numSpatialDims = inputSpatialDims.size();
         SmallVector<int64_t> inputSpatialDimVals(numSpatialDims);
 
@@ -310,23 +310,23 @@ void mlir::registerConvolutionInferReturnTypeComponents() {
             inferWindowOutputShape(inputSpatialDimVals, *windowOrErr);
 
         for (int i = 0, e = window.size(); i < e; ++i)
-          outputDimensions[adaptor.dimension_numbers()
+          outputDimensions[adaptor.getDimensionNumbers()
                                .getOutputSpatialDimensions()[i]] =
               windowOutputShape[i];
 
         // Infer the output-batch-dimension and output-feature-dimension.
         const int64_t inputBatch =
-            lhsShape[adaptor.dimension_numbers().getInputBatchDimension()];
+            lhsShape[adaptor.getDimensionNumbers().getInputBatchDimension()];
         const int64_t kernelOutputFeatures =
-            rhsShape[adaptor.dimension_numbers()
+            rhsShape[adaptor.getDimensionNumbers()
                          .getKernelOutputFeatureDimension()];
 
-        outputDimensions[adaptor.dimension_numbers()
+        outputDimensions[adaptor.getDimensionNumbers()
                              .getOutputBatchDimension()] =
             isDynamicDimSize(inputBatch)
                 ? ShapedType::kDynamicSize
-                : inputBatch / adaptor.batch_group_count();
-        outputDimensions[adaptor.dimension_numbers()
+                : inputBatch / adaptor.getBatchGroupCount();
+        outputDimensions[adaptor.getDimensionNumbers()
                              .getOutputFeatureDimension()] =
             kernelOutputFeatures;
 

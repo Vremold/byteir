@@ -332,8 +332,8 @@ void FuncArgRearrangementPass::runOnOperation() {
     for (auto user : it.first.getUsers()) {
       auto maybeIdx =
           findMostLikelyUse(it.first, user, duplicateResolveIndicator);
-      if (maybeIdx.hasValue()) {
-        useIdxAndOp.emplace_back(maybeIdx.getValue(), user);
+      if (maybeIdx.has_value()) {
+        useIdxAndOp.emplace_back(maybeIdx.value(), user);
       }
     }
 

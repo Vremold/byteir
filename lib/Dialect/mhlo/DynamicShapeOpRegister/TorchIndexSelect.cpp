@@ -23,11 +23,11 @@ void mlir::registerTorchIndexSelectReifyReturnTypeShapes() {
       [](Operation *op, OpBuilder &builder, ValueRange operands,
          SmallVectorImpl<::mlir::Value> &reifiedReturnShapes) {
         auto thisOp = llvm::cast<mhlo::TorchIndexSelectOp>(op);
-        uint64_t batchDims = thisOp.batch_dims();
-        uint64_t dim = thisOp.dim();
+        uint64_t batchDims = thisOp.getBatchDims();
+        uint64_t dim = thisOp.getDim();
 
-        Value operand = thisOp.operand();
-        Value index = thisOp.index();
+        Value operand = thisOp.getOperand();
+        Value index = thisOp.getIndex();
 
         Location loc = op->getLoc();
 
@@ -75,8 +75,8 @@ void mlir::registerTorchIndexSelectInferReturnTypeComponents() {
          DictionaryAttr attrs, RegionRange regions,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         mhlo::TorchIndexSelectOp::Adaptor adaptor(operands, attrs, regions);
-        uint64_t batchDims = adaptor.batch_dims();
-        uint64_t dim = adaptor.dim();
+        uint64_t batchDims = adaptor.getBatchDims();
+        uint64_t dim = adaptor.getDim();
 
         SmallVector<int64_t, 4> dataShape;
         SmallVector<int64_t, 4> indicesShape;

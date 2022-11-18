@@ -7,7 +7,7 @@
 
 #include "byteir/Utils/LoopUtils.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
@@ -95,16 +95,16 @@ Value mlir::createRelativeIndexValue(OpBuilder &b, LoopLikeOpInterface looplike,
 bool mlir::confirmGEUpperBound(Value val, LoopLikeOpInterface looplike) {
   auto maybeValI64 = getLiteralFromConstantLike(val);
 
-  if (!maybeValI64.hasValue())
+  if (!maybeValI64.has_value())
     return false;
 
   // TODO add support for ohter loop
   if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
     auto ub = forOp.getUpperBound();
     auto maybeUBI64 = getLiteralFromConstantLike(ub);
-    if (!maybeUBI64.hasValue())
+    if (!maybeUBI64.has_value())
       return false;
-    return maybeValI64.getValue() >= maybeUBI64.getValue();
+    return maybeValI64.value() >= maybeUBI64.value();
   }
 
   return false;
@@ -278,17 +278,17 @@ mlir::createTrivialSCFForIfHaveNone(func::FuncOp funcOp) {
 
 LogicalResult mlir::loopUnrollFull(scf::ForOp forOp) {
   auto mayBeConstantCount = getConstantTripCount(forOp);
-  if (!mayBeConstantCount.hasValue())
+  if (!mayBeConstantCount.has_value())
     return failure();
-  return loopUnrollByFactor(forOp, mayBeConstantCount.getValue());
+  return loopUnrollByFactor(forOp, mayBeConstantCount.value());
 }
 
 LogicalResult mlir::loopUnrollUpToFactor(scf::ForOp forOp,
                                          uint64_t unrollFactor) {
   auto mayBeConstantCount = getConstantTripCount(forOp);
-  if (mayBeConstantCount.hasValue() &&
-      mayBeConstantCount.getValue() <= unrollFactor) {
-    return loopUnrollByFactor(forOp, mayBeConstantCount.getValue());
+  if (mayBeConstantCount.has_value() &&
+      mayBeConstantCount.value() <= unrollFactor) {
+    return loopUnrollByFactor(forOp, mayBeConstantCount.value());
   }
   return loopUnrollByFactor(forOp, unrollFactor);
 }

@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Target/CUDA/ToCUDA.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -53,14 +53,14 @@ void byteir::registerToCUDATranslation() {
       llvm::cl::cat(CudaCat));
 
   TranslateFromMLIRRegistration reg(
-      "emit-cuda",
+      "emit-cuda", "translate from mlir to cuda",
       [](ModuleOp module, raw_ostream &output) {
         return byteir::translateToCUDA(module, output, declareVariablesAtTop,
                                        kernelOnly, forceExternC);
       },
       [](DialectRegistry &registry) {
         // clang-format off
-        registry.insert<arith::ArithmeticDialect,
+        registry.insert<arith::ArithDialect,
                         cf::ControlFlowDialect,
                         emitc::EmitCDialect,
                         func::FuncDialect,

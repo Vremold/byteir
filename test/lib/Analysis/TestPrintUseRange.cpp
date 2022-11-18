@@ -16,8 +16,8 @@ limitations under the License.
 #include "byteir/Analysis/Liveness.h"
 #include "byteir/Analysis/UseRange.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
-#include "mlir/Analysis/BufferViewFlowAnalysis.h"
 #include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
+#include "mlir/Dialect/Bufferization/Transforms/BufferViewFlowAnalysis.h"
 #include "mlir/Pass/Pass.h"
 
 using namespace mlir;

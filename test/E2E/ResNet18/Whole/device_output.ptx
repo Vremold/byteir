@@ -3497,10 +3497,10 @@ $L__BB40_2:
 {
 	.reg .pred 	%p<2>;
 	.reg .b16 	%h<10>;
-	.reg .b16 	%rs<8>;
+	.reg .b16 	%rs<7>;
 	.reg .b32 	%r<7>;
 	.reg .f32 	%f<21>;
-	.reg .b64 	%rd<26>;
+	.reg .b64 	%rd<27>;
 
 	mov.u32 	%r1, %ctaid.x;
 	mov.u32 	%r2, %ntid.x;
@@ -3519,26 +3519,26 @@ $L__BB40_2:
 	ld.param.u64 	%rd3, [Unknown65_param_6];
 	ld.param.u64 	%rd2, [Unknown65_param_1];
 	cvt.u16.u64 	%rs1, %rd1;
-	shr.u16 	%rs3, %rs1, 3;
-	mul.hi.u16 	%rs4, %rs3, 8389;
-	shr.u16 	%rs5, %rs4, 4;
-	mul.lo.s16 	%rs6, %rs5, 1000;
-	sub.s16 	%rs7, %rs1, %rs6;
-	cvt.u64.u16 	%rd12, %rs7;
-	cvt.u32.u16 	%r4, %rs5;
-	mul.wide.u32 	%rd13, %r4, 1000;
-	add.s64 	%rd14, %rd13, %rd12;
-	shl.b64 	%rd15, %rd14, 1;
-	add.s64 	%rd16, %rd3, %rd15;
-	ld.b16 	%h1, [%rd16];
-	mul.wide.u32 	%rd17, %r4, 2;
-	add.s64 	%rd18, %rd2, %rd17;
-	ld.b16 	%h2, [%rd18];
+	shr.u16 	%rs2, %rs1, 3;
+	mul.hi.u16 	%rs3, %rs2, 8389;
+	shr.u16 	%rs4, %rs3, 4;
+	mul.lo.s16 	%rs5, %rs4, 1000;
+	sub.s16 	%rs6, %rs1, %rs5;
+	cvt.u64.u16 	%rd13, %rs6;
+	cvt.u32.u16 	%r4, %rs4;
+	mul.wide.u32 	%rd14, %r4, 1000;
+	add.s64 	%rd15, %rd14, %rd13;
+	shl.b64 	%rd16, %rd15, 1;
+	add.s64 	%rd17, %rd3, %rd16;
+	ld.b16 	%h1, [%rd17];
+	mul.wide.u32 	%rd18, %r4, 2;
+	add.s64 	%rd19, %rd2, %rd18;
+	ld.b16 	%h2, [%rd19];
 	sub.rn.f16 	%h3, %h1, %h2;
-	add.s64 	%rd19, %rd5, %rd15;
-	ld.b16 	%h4, [%rd19];
-	add.s64 	%rd20, %rd4, %rd17;
-	ld.b16 	%h5, [%rd20];
+	add.s64 	%rd20, %rd5, %rd16;
+	ld.b16 	%h4, [%rd20];
+	add.s64 	%rd21, %rd4, %rd18;
+	ld.b16 	%h5, [%rd21];
 	cvt.f32.f16 	%f1, %h3;
 	mov.f32 	%f2, 0f3F000000;
 	mov.f32 	%f3, 0f3BBB989D;
@@ -3561,18 +3561,18 @@ $L__BB40_2:
 	cvt.rn.f16.f32 	%h6, %f17;
 	mul.rn.f16 	%h7, %h5, %h6;
 	sub.rn.f16 	%h8, %h4, %h7;
-	add.s64 	%rd21, %rd7, %rd15;
-	st.b16 	[%rd21], %h8;
-	shl.b64 	%rd22, %rd14, 2;
-	add.s64 	%rd23, %rd6, %rd22;
-	ld.f32 	%f18, [%rd23];
+	add.s64 	%rd22, %rd7, %rd16;
+	st.b16 	[%rd22], %h8;
+	shl.b64 	%rd23, %rd15, 2;
+	add.s64 	%rd24, %rd6, %rd23;
+	ld.f32 	%f18, [%rd24];
 	mul.rn.f32 	%f19, %f18, %f1;
-	add.s64 	%rd24, %rd8, %rd22;
-	st.f32 	[%rd24], %f19;
-	ld.b16 	%h9, [%rd21];
+	add.s64 	%rd25, %rd8, %rd23;
+	st.f32 	[%rd25], %f19;
+	ld.b16 	%h9, [%rd22];
 	cvt.f32.f16 	%f20, %h9;
-	add.s64 	%rd25, %rd9, %rd22;
-	st.f32 	[%rd25], %f20;
+	add.s64 	%rd26, %rd9, %rd23;
+	st.f32 	[%rd26], %f20;
 $L__BB41_2:
 	ret;
 
@@ -3690,10 +3690,10 @@ $L__BB42_2:
 {
 	.reg .pred 	%p<2>;
 	.reg .b16 	%h<5>;
-	.reg .b16 	%rs<8>;
+	.reg .b16 	%rs<7>;
 	.reg .b32 	%r<7>;
 	.reg .f32 	%f<18>;
-	.reg .b64 	%rd<17>;
+	.reg .b64 	%rd<18>;
 
 	mov.u32 	%r1, %ctaid.x;
 	mov.u32 	%r2, %ntid.x;
@@ -3708,24 +3708,24 @@ $L__BB42_2:
 	ld.param.u64 	%rd3, [Unknown63_param_6];
 	ld.param.u64 	%rd2, [Unknown63_param_1];
 	cvt.u16.u64 	%rs1, %rd1;
-	shr.u16 	%rs3, %rs1, 3;
-	mul.hi.u16 	%rs4, %rs3, 8389;
-	shr.u16 	%rs5, %rs4, 4;
-	mul.lo.s16 	%rs6, %rs5, 1000;
-	sub.s16 	%rs7, %rs1, %rs6;
-	cvt.u64.u16 	%rd8, %rs7;
-	cvt.u32.u16 	%r4, %rs5;
-	mul.wide.u32 	%rd9, %r4, 1000;
-	add.s64 	%rd10, %rd9, %rd8;
-	shl.b64 	%rd11, %rd10, 1;
-	add.s64 	%rd12, %rd3, %rd11;
-	ld.b16 	%h1, [%rd12];
-	mul.wide.u32 	%rd13, %r4, 2;
-	add.s64 	%rd14, %rd2, %rd13;
-	ld.b16 	%h2, [%rd14];
+	shr.u16 	%rs2, %rs1, 3;
+	mul.hi.u16 	%rs3, %rs2, 8389;
+	shr.u16 	%rs4, %rs3, 4;
+	mul.lo.s16 	%rs5, %rs4, 1000;
+	sub.s16 	%rs6, %rs1, %rs5;
+	cvt.u64.u16 	%rd9, %rs6;
+	cvt.u32.u16 	%r4, %rs4;
+	mul.wide.u32 	%rd10, %r4, 1000;
+	add.s64 	%rd11, %rd10, %rd9;
+	shl.b64 	%rd12, %rd11, 1;
+	add.s64 	%rd13, %rd3, %rd12;
+	ld.b16 	%h1, [%rd13];
+	mul.wide.u32 	%rd14, %r4, 2;
+	add.s64 	%rd15, %rd2, %rd14;
+	ld.b16 	%h2, [%rd15];
 	sub.rn.f16 	%h3, %h1, %h2;
-	add.s64 	%rd15, %rd4, %rd11;
-	st.b16 	[%rd15], %h3;
+	add.s64 	%rd16, %rd4, %rd12;
+	st.b16 	[%rd16], %h3;
 	cvt.f32.f16 	%f1, %h3;
 	mov.f32 	%f2, 0f3F000000;
 	mov.f32 	%f3, 0f3BBB989D;
@@ -3746,8 +3746,8 @@ $L__BB42_2:
 	ex2.approx.ftz.f32 	%f16, %f14;
 	mul.rn.f32 	%f17, %f16, %f15;
 	cvt.rn.f16.f32 	%h4, %f17;
-	add.s64 	%rd16, %rd5, %rd11;
-	st.b16 	[%rd16], %h4;
+	add.s64 	%rd17, %rd5, %rd12;
+	st.b16 	[%rd17], %h4;
 $L__BB43_2:
 	ret;
 
@@ -3908,7 +3908,7 @@ $L__BB45_2:
 	.reg .b16 	%h<6>;
 	.reg .b16 	%rs<11>;
 	.reg .b32 	%r<18>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<22>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -3961,9 +3961,8 @@ $L__BB45_2:
 	ld.b16 	%h2, [%rd19];
 	add.rn.f16 	%h3, %h1, %h2;
 	cvt.f32.f16 	%f1, %h3;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h4, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h4, %f2;
 	add.s64 	%rd20, %rd4, %rd17;
 	st.b16 	[%rd20], %h4;
 	mov.b16 	%h5, 0x0000;
@@ -4016,7 +4015,7 @@ $L__BB46_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<11>;
 	.reg .b32 	%r<18>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4065,9 +4064,8 @@ $L__BB46_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;
@@ -4131,7 +4129,7 @@ $L__BB47_2:
 	.reg .b16 	%h<6>;
 	.reg .b16 	%rs<11>;
 	.reg .b32 	%r<18>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<22>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4184,9 +4182,8 @@ $L__BB47_2:
 	ld.b16 	%h2, [%rd19];
 	add.rn.f16 	%h3, %h1, %h2;
 	cvt.f32.f16 	%f1, %h3;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h4, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h4, %f2;
 	add.s64 	%rd20, %rd4, %rd17;
 	st.b16 	[%rd20], %h4;
 	mov.b16 	%h5, 0x0000;
@@ -4239,7 +4236,7 @@ $L__BB48_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<11>;
 	.reg .b32 	%r<18>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4288,9 +4285,8 @@ $L__BB48_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;
@@ -4354,7 +4350,7 @@ $L__BB49_2:
 	.reg .b16 	%h<6>;
 	.reg .b16 	%rs<9>;
 	.reg .b32 	%r<16>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<22>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4403,9 +4399,8 @@ $L__BB49_2:
 	ld.b16 	%h2, [%rd19];
 	add.rn.f16 	%h3, %h1, %h2;
 	cvt.f32.f16 	%f1, %h3;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h4, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h4, %f2;
 	add.s64 	%rd20, %rd4, %rd17;
 	st.b16 	[%rd20], %h4;
 	mov.b16 	%h5, 0x0000;
@@ -4458,7 +4453,7 @@ $L__BB50_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<9>;
 	.reg .b32 	%r<16>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4503,9 +4498,8 @@ $L__BB50_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;
@@ -4569,7 +4563,7 @@ $L__BB51_2:
 	.reg .b16 	%h<6>;
 	.reg .b16 	%rs<9>;
 	.reg .b32 	%r<16>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<22>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4618,9 +4612,8 @@ $L__BB51_2:
 	ld.b16 	%h2, [%rd19];
 	add.rn.f16 	%h3, %h1, %h2;
 	cvt.f32.f16 	%f1, %h3;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h4, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h4, %f2;
 	add.s64 	%rd20, %rd4, %rd17;
 	st.b16 	[%rd20], %h4;
 	mov.b16 	%h5, 0x0000;
@@ -4673,7 +4666,7 @@ $L__BB52_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<9>;
 	.reg .b32 	%r<16>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4718,9 +4711,8 @@ $L__BB52_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;
@@ -4784,7 +4776,7 @@ $L__BB53_2:
 	.reg .b16 	%h<6>;
 	.reg .b16 	%rs<9>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<22>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4832,9 +4824,8 @@ $L__BB53_2:
 	ld.b16 	%h2, [%rd19];
 	add.rn.f16 	%h3, %h1, %h2;
 	cvt.f32.f16 	%f1, %h3;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h4, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h4, %f2;
 	add.s64 	%rd20, %rd4, %rd17;
 	st.b16 	[%rd20], %h4;
 	mov.b16 	%h5, 0x0000;
@@ -4887,7 +4878,7 @@ $L__BB54_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<9>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -4931,9 +4922,8 @@ $L__BB54_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;
@@ -4997,7 +4987,7 @@ $L__BB55_2:
 	.reg .b16 	%h<6>;
 	.reg .b16 	%rs<9>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<22>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -5045,9 +5035,8 @@ $L__BB55_2:
 	ld.b16 	%h2, [%rd19];
 	add.rn.f16 	%h3, %h1, %h2;
 	cvt.f32.f16 	%f1, %h3;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h4, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h4, %f2;
 	add.s64 	%rd20, %rd4, %rd17;
 	st.b16 	[%rd20], %h4;
 	mov.b16 	%h5, 0x0000;
@@ -5100,7 +5089,7 @@ $L__BB56_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<9>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -5144,9 +5133,8 @@ $L__BB56_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;
@@ -5210,7 +5198,7 @@ $L__BB57_2:
 	.reg .b16 	%h<6>;
 	.reg .b16 	%rs<8>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<22>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -5257,9 +5245,8 @@ $L__BB57_2:
 	ld.b16 	%h2, [%rd19];
 	add.rn.f16 	%h3, %h1, %h2;
 	cvt.f32.f16 	%f1, %h3;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h4, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h4, %f2;
 	add.s64 	%rd20, %rd4, %rd17;
 	st.b16 	[%rd20], %h4;
 	mov.b16 	%h5, 0x0000;
@@ -5312,7 +5299,7 @@ $L__BB58_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<8>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -5355,9 +5342,8 @@ $L__BB58_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;
@@ -5421,7 +5407,7 @@ $L__BB59_2:
 	.reg .b16 	%h<6>;
 	.reg .b16 	%rs<8>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<22>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -5468,9 +5454,8 @@ $L__BB59_2:
 	ld.b16 	%h2, [%rd19];
 	add.rn.f16 	%h3, %h1, %h2;
 	cvt.f32.f16 	%f1, %h3;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h4, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h4, %f2;
 	add.s64 	%rd20, %rd4, %rd17;
 	st.b16 	[%rd20], %h4;
 	mov.b16 	%h5, 0x0000;
@@ -5523,7 +5508,7 @@ $L__BB60_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<8>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -5566,9 +5551,8 @@ $L__BB60_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;
@@ -5621,7 +5605,7 @@ $L__BB61_2:
 	.reg .b16 	%h<4>;
 	.reg .b16 	%rs<8>;
 	.reg .b32 	%r<15>;
-	.reg .f32 	%f<4>;
+	.reg .f32 	%f<3>;
 	.reg .b64 	%rd<20>;
 
 	mov.u32 	%r1, %ctaid.x;
@@ -5664,9 +5648,8 @@ $L__BB61_2:
 	add.s64 	%rd17, %rd2, %rd16;
 	ld.b16 	%h1, [%rd17];
 	cvt.f32.f16 	%f1, %h1;
-	mov.f32 	%f2, 0f00000000;
-	max.f32 	%f3, %f1, %f2;
-	cvt.rn.f16.f32 	%h2, %f3;
+	max.f32 	%f2, %f1, 0f00000000;
+	cvt.rn.f16.f32 	%h2, %f2;
 	add.s64 	%rd18, %rd3, %rd16;
 	st.b16 	[%rd18], %h2;
 	mov.b16 	%h3, 0x0000;

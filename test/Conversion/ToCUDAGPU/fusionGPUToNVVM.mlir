@@ -36,8 +36,8 @@ module attributes {gpu.container_module}  {
       gpu.return
     }
   }
-  // CHECK: llvm.func @__nv_fmaxf
   // CHECK: llvm.func @__nv_expf
   // CHECK: llvm.func @fusion_broadcast_kernel
+  // CHECK: llvm.intr.maxnum
 }
 

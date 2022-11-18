@@ -8,7 +8,8 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
 
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Location.h"
@@ -35,11 +36,12 @@ struct TileScope {
 
 // TODO maybe relax this
 inline bool isStructuralLinalg(mlir::linalg::LinalgOp op) {
-  return op.getNumOutputs() == 1;
+  return op.getNumDpsInits() == 1;
 }
 
-void unpackRanges(ArrayRef<Range> ranges, SmallVectorImpl<Value> &lbs,
-                  SmallVectorImpl<Value> &ubs, SmallVectorImpl<Value> &steps);
+void unpackRanges(OpBuilder &builder, Location loc, ArrayRef<Range> ranges,
+                  SmallVectorImpl<Value> &lbs, SmallVectorImpl<Value> &ubs,
+                  SmallVectorImpl<Value> &steps);
 
 LogicalResult buildSCFLoop(OpBuilder &builder, Location loc, bool isParallel,
                            ValueRange lbs, ValueRange ubs, ValueRange steps,

@@ -20,7 +20,7 @@ def LinalgDataPlace : Pass<"linalg-data-place", "func::FuncOp"> {
   let constructor = "mlir::createLinalgDataPlacePass()";
   let dependentDialects = [
     "memref::MemRefDialect",
-    "arith::ArithmeticDialect",
+    "arith::ArithDialect",
   ];
   let options = [
     ListOption<"memSpaces", "mem-spaces", "int64_t",
@@ -53,7 +53,7 @@ def LinalgScopeTiling : Pass<"linalg-scope-tile", "func::FuncOp"> {
   let constructor = "mlir::createLinalgScopeTilingPass()";
   let dependentDialects = [
     "AffineDialect",
-    "arith::ArithmeticDialect",
+    "arith::ArithDialect",
     "memref::MemRefDialect",
     "scf::SCFDialect"
   ];
@@ -69,15 +69,6 @@ def LinalgScopeTiling : Pass<"linalg-scope-tile", "func::FuncOp"> {
     Option<"distributionType", "distribution-type", "std::string", /*default=*/"",
            "DistributionTypes (if loop-type=tiled_loop)">,
   ];
-}
-
-//===----------------------------------------------------------------------===//
-// LinalgFuseReshape
-//===----------------------------------------------------------------------===//
-
-def LinalgFuseReshape : Pass<"linalg-fuse-reshape", "func::FuncOp"> {
-  let summary = "Fuse Reshape by Collapsing and Expansion";
-  let constructor = "mlir::createLinalgFuseReshapePass()";
 }
 
 #endif // BYTEIR_LINALG_PASSES

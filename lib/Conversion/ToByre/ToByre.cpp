@@ -16,6 +16,7 @@
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h" // LmhloDialect
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mlir/AsmParser/AsmParser.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -604,7 +605,7 @@ public:
     // check whether valid PoolingGrad
     // only support MaxPoolingGrad now
     if (auto compare = dyn_cast<mhlo::CompareOp>(selectBlock.front())) {
-      if (compare.comparison_direction() != mhlo::ComparisonDirection::GE ||
+      if (compare.getComparisonDirection() != mhlo::ComparisonDirection::GE ||
           compare->getOperand(0) != selectBlock.getArgument(0) ||
           compare->getOperand(1) != selectBlock.getArgument(1)) {
         return rewriter.notifyMatchFailure(
@@ -901,7 +902,7 @@ public:
   matchAndRewrite(memref::ViewOp op, memref::ViewOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     IntegerAttr offset;
-    if (!matchPattern(adaptor.byte_shift(), m_Constant(&offset))) {
+    if (!matchPattern(adaptor.getByteShift(), m_Constant(&offset))) {
       return failure();
     }
 
@@ -937,8 +938,8 @@ public:
 
 Optional<StringAttr> getCalleeAttr(memref::CopyOp op) {
   auto ctx = op->getContext();
-  auto srcSpace = op.source().getType().cast<MemRefType>().getMemorySpace();
-  auto dstSpace = op.target().getType().cast<MemRefType>().getMemorySpace();
+  auto srcSpace = op.getSource().getType().cast<MemRefType>().getMemorySpace();
+  auto dstSpace = op.getTarget().getType().cast<MemRefType>().getMemorySpace();
 
   if (!srcSpace.isa_and_nonnull<StringAttr>() ||
       !dstSpace.isa_and_nonnull<StringAttr>()) {
@@ -965,8 +966,8 @@ public:
 
     auto maybeCallee = getCalleeAttr(op);
 
-    if (maybeCallee.hasValue()) {
-      newOp->setAttr("callee", maybeCallee.getValue());
+    if (maybeCallee.has_value()) {
+      newOp->setAttr("callee", maybeCallee.value());
     }
 
     return success();
@@ -1331,7 +1332,7 @@ void ConvertLmhloToByrePass::runOnOperation() {
   // TODO move this to fold
   // remove unused fill op
   func.walk([&](byre::ComputeOp op) {
-    if (op.callee() == "FillOp") {
+    if (op.getCallee() == "FillOp") {
       auto value = op->getOperand(0);
       if (value.hasOneUse() && value.getDefiningOp<memref::AllocOp>()) {
         op->erase();

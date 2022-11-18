@@ -44,7 +44,7 @@ using namespace mlir::gpu;
 namespace {
 
 static LogicalResult checkACoalescedffineLoopMappable(AffineForOp forOp) {
-  Region &limit = forOp.region();
+  Region &limit = forOp.getRegion();
 
   if (!areValuesDefinedAbove(forOp.getLowerBoundOperands(), limit) ||
       !areValuesDefinedAbove(forOp.getUpperBoundOperands(), limit)) {
@@ -113,7 +113,7 @@ void CoalescedAffineLoopToGpuConverter::createLaunch(AffineForOp forOp,
   Operation *terminator = forOp.getBody()->getTerminator();
   terminator->erase();
 
-  builder.setInsertionPointToStart(&launchOp.body().front());
+  builder.setInsertionPointToStart(&launchOp.getBody().front());
   Value bIdx = launchOp.getBlockIds().x;
   Value id = createLinearizedIndex(builder, bIdx.getLoc(), bIdx,
                                    launchOp.getBlockSize().x,
@@ -137,8 +137,8 @@ void CoalescedAffineLoopToGpuConverter::createLaunch(AffineForOp forOp,
   iv.replaceAllUsesWith(ivReplacement);
 
   // Insert terminator
-  builder.setInsertionPointToEnd(&launchOp.body().front());
-  auto terminatorLoc = launchOp.body().front().back().getLoc();
+  builder.setInsertionPointToEnd(&launchOp.getBody().front());
+  auto terminatorLoc = launchOp.getBody().front().back().getLoc();
   builder.create<gpu::TerminatorOp>(terminatorLoc, llvm::None);
 
   forOp.erase();

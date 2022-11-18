@@ -7,7 +7,7 @@
 
 #include "byteir/Dialect/Linalg/Transforms/LinalgDataPlace.h"
 #include "byteir/Utils/MemUtils.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -57,7 +57,7 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
   int idx = 0;
 
   // handle inputs
-  for (auto input : op.inputs()) {
+  for (Value input : SmallVector<Value>(op.getDpsInputOperands())) {
     int64_t space = getSpace(memSpaces, idx++);
 
     if (space == getUnplacedSpace()) {
@@ -66,10 +66,10 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
       b.setInsertionPoint(op);
       auto maybeNewInput = createAlloc(b, input, space);
 
-      if (maybeNewInput.hasValue()) {
-        operands.push_back(maybeNewInput.getValue());
+      if (maybeNewInput.has_value()) {
+        operands.push_back(maybeNewInput.value());
         // create copy
-        b.create<linalg::CopyOp>(loc, input, maybeNewInput.getValue());
+        b.create<linalg::CopyOp>(loc, input, maybeNewInput.value());
       } else {
         operands.push_back(input);
       }
@@ -78,7 +78,7 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
 
   // handle outputs
   SmallVector<bool, 4> outputReplaced;
-  for (auto output : op.outputs()) {
+  for (auto output : SmallVector<Value>(op.getDpsInitOperands())) {
     int64_t space = getSpace(memSpaces, idx++);
 
     if (space == getUnplacedSpace()) {
@@ -88,8 +88,8 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
       b.setInsertionPoint(op);
       auto maybeNewInput = createAlloc(b, output, space);
 
-      if (maybeNewInput.hasValue()) {
-        operands.push_back(maybeNewInput.getValue());
+      if (maybeNewInput.has_value()) {
+        operands.push_back(maybeNewInput.value());
         outputReplaced.push_back(true);
         // TODO check outputs as inout??
         // if so, do copy
@@ -105,8 +105,8 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
   cloned->removeAttr(getDataPlaceAttrName());
 
   idx = 0;
-  int64_t numInputs = op.getNumInputs();
-  for (auto output : op.outputs()) {
+  int64_t numInputs = op.getNumDpsInputs();
+  for (auto output : SmallVector<Value>(op.getDpsInitOperands())) {
     if (outputReplaced[idx]) {
       // copy output
       b.create<linalg::CopyOp>(loc, operands[numInputs + idx], output);

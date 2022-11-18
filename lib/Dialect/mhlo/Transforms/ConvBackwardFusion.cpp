@@ -58,7 +58,7 @@ struct FuseConvBackwardDataPattern
     if (op->getParentOfType<mhlo::FusionOp>()) {
       return failure();
     }
-    auto dimension_numbers = op.dimension_numbersAttr();
+    auto dimension_numbers = op.getDimensionNumbersAttr();
     SmallVector<int64_t> output_grad_dims, filter_dims, input_grad_dims;
     getConvDimensionNumbers(dimension_numbers, output_grad_dims, filter_dims,
                             input_grad_dims);
@@ -70,28 +70,30 @@ struct FuseConvBackwardDataPattern
 
     MhloFusionPattern pattern;
     SmallVector<Value> inputs, outputs;
-    if (auto reverseOp = op.rhs().getDefiningOp<mhlo::ReverseOp>()) {
+    if (auto reverseOp = op.getRhs().getDefiningOp<mhlo::ReverseOp>()) {
       SmallVector<int64_t> dimensions;
-      getValuesFromDenseIntElementsAttr(reverseOp.dimensions(), dimensions);
+      getValuesFromDenseIntElementsAttr(reverseOp.getDimensions(), dimensions);
       assert((dimensions == ArrayRef<int64_t>{0, 1}));
       if (auto transposeOp =
-              reverseOp.operand().getDefiningOp<mhlo::TransposeOp>()) {
+              reverseOp.getOperand().getDefiningOp<mhlo::TransposeOp>()) {
         SmallVector<int64_t> permutation;
-        getValuesFromDenseIntElementsAttr(transposeOp.permutation(),
+        getValuesFromDenseIntElementsAttr(transposeOp.getPermutation(),
                                           permutation);
         assert((permutation == ArrayRef<int64_t>{2, 3, 1, 0}));
-        inputs.push_back(op.lhs());
-        inputs.push_back(transposeOp.operand());
+        inputs.push_back(op.getLhs());
+        inputs.push_back(transposeOp.getOperand());
         pattern.push_back(transposeOp);
         pattern.push_back(reverseOp);
       }
-    } else if (auto transposeOp = op.rhs().getDefiningOp<mhlo::TransposeOp>()) {
+    } else if (auto transposeOp =
+                   op.getRhs().getDefiningOp<mhlo::TransposeOp>()) {
       // TODO: check kH = 1 and kW = 1
       SmallVector<int64_t> permutation;
-      getValuesFromDenseIntElementsAttr(transposeOp.permutation(), permutation);
+      getValuesFromDenseIntElementsAttr(transposeOp.getPermutation(),
+                                        permutation);
       assert((permutation == ArrayRef<int64_t>{2, 3, 1, 0}));
-      inputs.push_back(op.lhs());
-      inputs.push_back(transposeOp.operand());
+      inputs.push_back(op.getLhs());
+      inputs.push_back(transposeOp.getOperand());
       pattern.push_back(transposeOp);
     } else {
       return failure();
@@ -103,17 +105,17 @@ struct FuseConvBackwardDataPattern
         createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
 
     NamedAttrList attrs;
-    if (op.window_stridesAttr()) {
+    if (op.getWindowStridesAttr()) {
       SmallVector<int64_t> window_strides;
-      getValuesFromDenseIntElementsAttr(op.window_stridesAttr(),
+      getValuesFromDenseIntElementsAttr(op.getWindowStridesAttr(),
                                         window_strides);
       assert((window_strides == ArrayRef<int64_t>{1, 1}));
     }
     // TODO: handle more window_strides pattern
     int64_t stridesH, stridesW;
-    if (op.lhs_dilationAttr()) {
+    if (op.getLhsDilationAttr()) {
       SmallVector<int64_t> lhs_dilation;
-      getValuesFromDenseIntElementsAttr(op.lhs_dilationAttr(), lhs_dilation);
+      getValuesFromDenseIntElementsAttr(op.getLhsDilationAttr(), lhs_dilation);
       if (lhs_dilation == ArrayRef<int64_t>{1, 1}) {
         stridesH = 1;
         stridesW = 1;
@@ -127,9 +129,9 @@ struct FuseConvBackwardDataPattern
       stridesH = 1;
       stridesW = 1;
     }
-    if (op.rhs_dilationAttr()) {
+    if (op.getRhsDilationAttr()) {
       SmallVector<int64_t> rhs_dilation;
-      getValuesFromDenseIntElementsAttr(op.rhs_dilationAttr(), rhs_dilation);
+      getValuesFromDenseIntElementsAttr(op.getRhsDilationAttr(), rhs_dilation);
       assert((rhs_dilation == ArrayRef<int64_t>{1, 1}));
     }
 
@@ -177,16 +179,17 @@ struct FuseConvBackwardFilterPattern
       return failure();
     }
     SmallVector<int64_t> permutation;
-    getValuesFromDenseIntElementsAttr(transposeOp.permutation(), permutation);
+    getValuesFromDenseIntElementsAttr(transposeOp.getPermutation(),
+                                      permutation);
     if (permutation != ArrayRef<int64_t>{3, 2, 0, 1}) {
       return failure();
     }
 
-    auto op = transposeOp.operand().getDefiningOp<mhlo::ConvolutionOp>();
+    auto op = transposeOp.getOperand().getDefiningOp<mhlo::ConvolutionOp>();
     if (!op) {
       return failure();
     }
-    auto dimension_numbers = op.dimension_numbersAttr();
+    auto dimension_numbers = op.getDimensionNumbersAttr();
     SmallVector<int64_t> input_dims, output_grad_dims, filter_grad_dims;
     getConvDimensionNumbers(dimension_numbers, input_dims, output_grad_dims,
                             filter_grad_dims);
@@ -196,7 +199,7 @@ struct FuseConvBackwardFilterPattern
       return failure();
     }
 
-    SmallVector<Value> inputs{op.lhs(), op.rhs()};
+    SmallVector<Value> inputs{op.getLhs(), op.getRhs()};
     SmallVector<Value> outputs{transposeOp.getResult()};
     MhloFusionPattern pattern{op, transposeOp};
 
@@ -204,17 +207,17 @@ struct FuseConvBackwardFilterPattern
         createMhloFusionFromPattern(rewriter, inputs, outputs, pattern);
 
     NamedAttrList attrs;
-    if (op.window_stridesAttr()) {
+    if (op.getWindowStridesAttr()) {
       SmallVector<int64_t> window_strides;
-      getValuesFromDenseIntElementsAttr(op.window_stridesAttr(),
+      getValuesFromDenseIntElementsAttr(op.getWindowStridesAttr(),
                                         window_strides);
       assert((window_strides == ArrayRef<int64_t>{1, 1}));
     }
     // TODO: handle more window_strides pattern
     int64_t stridesH, stridesW;
-    if (op.rhs_dilationAttr()) {
+    if (op.getRhsDilationAttr()) {
       SmallVector<int64_t> rhs_dilation;
-      getValuesFromDenseIntElementsAttr(op.rhs_dilationAttr(), rhs_dilation);
+      getValuesFromDenseIntElementsAttr(op.getRhsDilationAttr(), rhs_dilation);
       if (rhs_dilation == ArrayRef<int64_t>{1, 1}) {
         stridesH = 1;
         stridesW = 1;
@@ -228,9 +231,9 @@ struct FuseConvBackwardFilterPattern
       stridesH = 1;
       stridesW = 1;
     }
-    if (op.lhs_dilationAttr()) {
+    if (op.getLhsDilationAttr()) {
       SmallVector<int64_t> lhs_dilation;
-      getValuesFromDenseIntElementsAttr(op.lhs_dilationAttr(), lhs_dilation);
+      getValuesFromDenseIntElementsAttr(op.getLhsDilationAttr(), lhs_dilation);
       assert((lhs_dilation == ArrayRef<int64_t>{1, 1}));
     }
 

@@ -64,7 +64,7 @@ static func::FuncOp createOutlinedFuncOp(mhlo::FusionOp fusionOp,
   }
 
   // clone fusionOp's block into the next block
-  fusionOp.fused_computation().cloneInto(&funcOp.getBody(), bvm);
+  fusionOp.getFusedComputation().cloneInto(&funcOp.getBody(), bvm);
   Block &secondBlock = funcOp.getBody().back();
 
   // collect all movable ops

@@ -8,7 +8,7 @@
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -70,7 +70,8 @@ LogicalResult checkAndSetTypes(Operation *op,
 LogicalResult inferBoundedShapeUsingRegistry(Operation *op) {
   InferBoundedReturnTypeComponents inferFunc = nullptr;
   if (auto customCall = dyn_cast<mhlo::CustomCallOp>(op)) {
-    inferFunc = inferBoundedReturnTypeComponents(customCall.call_target_name());
+    inferFunc =
+        inferBoundedReturnTypeComponents(customCall.getCallTargetName());
   } else {
     inferFunc = inferBoundedReturnTypeComponents(op->getName().getStringRef());
   }
@@ -180,7 +181,7 @@ bool isTensor(Operation *op) {
 
 bool isArith(Operation *op) {
   Dialect *dialect = op->getDialect();
-  return dialect && isa<arith::ArithmeticDialect>(dialect);
+  return dialect && isa<arith::ArithDialect>(dialect);
 }
 
 LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer,

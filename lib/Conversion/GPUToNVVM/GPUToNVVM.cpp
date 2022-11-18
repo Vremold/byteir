@@ -20,7 +20,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/GPUToNVVM/GPUToNVVM.h"
-#include "mlir/Conversion/ArithmeticToLLVM/ArithmeticToLLVM.h"
+#include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/GPUToNVVM/GPUToNVVMPass.h"
@@ -31,7 +31,7 @@
 #include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
 #include "mlir/Conversion/VectorToLLVM/ConvertVectorToLLVM.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
@@ -91,13 +91,13 @@ public:
         op->getLoc(), resultType, SymbolRefAttr::get(funcOp), castedOperands);
 
     if (resultType == adaptor.getOperands().front().getType()) {
-      rewriter.replaceOp(op, {callOp.getResult(0)});
+      rewriter.replaceOp(op, {callOp.getResult()});
       return success();
     }
 
     mlir::Value truncated = rewriter.create<LLVM::FPTruncOp>(
         op->getLoc(), adaptor.getOperands().front().getType(),
-        callOp.getResult(0));
+        callOp.getResult());
     rewriter.replaceOp(op, {truncated});
     return success();
   }
@@ -200,14 +200,14 @@ struct GPUToNVVMExtPass : public GPUToNVVMExtBase<GPUToNVVMExtPass> {
     FrozenRewritePatternSet frozenPatterns(std::move(patterns));
     (void)applyPatternsAndFoldGreedily(m, frozenPatterns);
 
-    arith::populateArithmeticToLLVMConversionPatterns(converter, llvmPatterns);
+    arith::populateArithToLLVMConversionPatterns(converter, llvmPatterns);
     cf::populateControlFlowToLLVMConversionPatterns(converter, llvmPatterns);
     populateFuncToLLVMConversionPatterns(converter, llvmPatterns);
     populateMemRefToLLVMConversionPatterns(converter, llvmPatterns);
     populateGpuToNVVMConversionPatterns(converter, llvmPatterns);
     populateGpuWMMAToNVVMConversionPatterns(converter, llvmPatterns);
     // our extension fixing
-    populateOptionalGpuToNVVMExtConversionPatterns(converter, llvmPatterns);
+    // populateOptionalGpuToNVVMExtConversionPatterns(converter, llvmPatterns);
 
     LLVMConversionTarget target(getContext());
     configureGpuToNVVMConversionLegality(target);

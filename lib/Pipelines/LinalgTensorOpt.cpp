@@ -7,7 +7,6 @@
 
 #include "byteir/Pipelines/LinalgTensorOpt.h"
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
-#include "byteir/Dialect/Linalg/Transforms/LinalgFuseReshape.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
 #include "byteir/Utils/PipelineUtils.h"
@@ -22,7 +21,6 @@ void addGenericLinalgElementwisePasses(OpPassManager &pm) {
       createHloFusionToLinalgPass(getByteIRElementwiseFusionAttrName()));
   pm.addNestedPass<func::FuncOp>(createUnrealizedCastToLinalgPass());
   pm.addPass(createLinalgElementwiseOpFusionPass());
-  pm.addNestedPass<func::FuncOp>(createLinalgFuseReshapePass());
   pm.addPass(createCSEPass());
 }
 
@@ -31,7 +29,6 @@ void addCPULinalgOptPasses(OpPassManager &pm) {
       createHloFusionToLinalgPass(getByteIRHloAggressiveFusionAttrName()));
   pm.addNestedPass<func::FuncOp>(createUnrealizedCastToLinalgPass());
   pm.addPass(createLinalgElementwiseOpFusionPass());
-  pm.addNestedPass<func::FuncOp>(createLinalgFuseReshapePass());
   pm.addPass(createCSEPass());
   // TODO: more opt passes
 }

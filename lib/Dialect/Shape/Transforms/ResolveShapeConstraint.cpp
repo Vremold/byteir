@@ -9,7 +9,7 @@
 #include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
@@ -37,7 +37,7 @@ struct ResolveShapeConstraintPass
   // get constant dim size from value, return dynamic if failed
   static int64_t getConstIndex(const Value &val) {
     llvm::Optional<int64_t> i64Val = getLiteralFromConstantLike(val);
-    int64_t ret = i64Val.getValueOr(ShapedType::kDynamicSize);
+    int64_t ret = i64Val.value_or(ShapedType::kDynamicSize);
     if (ret == -1) {
       if (auto cOp =
               llvm::dyn_cast_or_null<shape::ConstSizeOp>(val.getDefiningOp())) {
@@ -89,13 +89,13 @@ struct ResolveShapeConstraintPass
       return {indexCastOp.getIn(), dimSize};
 
     if (auto extractOp = llvm::dyn_cast<tensor::ExtractOp>(op)) {
-      if (extractOp.indices().size() != 1u)
+      if (extractOp.getIndices().size() != 1u)
         return getNullKnowledge();
-      Value indexValue = extractOp.indices()[0];
+      Value indexValue = extractOp.getIndices()[0];
       int64_t index = getConstIndex(indexValue);
       if (index < 0)
         return getNullKnowledge();
-      Value tensor = extractOp.tensor();
+      Value tensor = extractOp.getTensor();
       return deriveKnowledgeFromShapeValue(tensor, index, dimSize);
     }
 
@@ -106,7 +106,7 @@ struct ResolveShapeConstraintPass
               llvm::dyn_cast<tensor::FromElementsOp>(shapeOp)) {
         int64_t dynamicDim = -1;
         int64_t prod = 1;
-        for (const auto it : llvm::enumerate(fromElementsOp.elements())) {
+        for (const auto it : llvm::enumerate(fromElementsOp.getElements())) {
           int64_t dim = getConstIndex(it.value());
           if (!ShapedType::isDynamic(dim)) {
             prod *= dim;
@@ -119,7 +119,7 @@ struct ResolveShapeConstraintPass
         if (dimSize % prod != 0)
           return getNullKnowledge();
         if (dynamicDim != -1)
-          return {fromElementsOp.elements()[dynamicDim], dimSize / prod};
+          return {fromElementsOp.getElements()[dynamicDim], dimSize / prod};
       }
     }
 

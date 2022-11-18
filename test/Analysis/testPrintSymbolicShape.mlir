@@ -1,26 +1,6 @@
 // RUN: byteir-opt %s -test-print-symbolic-shape -split-input-file 2>&1 | FileCheck %s
 
 
-func.func @simple(%arg0 : tensor<?x4xf32>, %arg1 : tensor<?x4xf32>) -> tensor<?x4xf32> {
-  %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
-  return %0 : tensor<?x4xf32>
-}
-// CHECK-LABEL: ============= auxiliary shape function for @simple =============
-// CHECK-NEXT: func.func private @_shape_infer_simple
-// CHECK-NEXT:   %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
-// CHECK-NEXT:   %1 = shape.shape_of %arg0 : tensor<?x4xf32> -> tensor<2xindex>
-// CHECK-NEXT:   %2 = shape.value_as_shape %1 : tensor<2xindex> -> !shape.shape
-// CHECK-NEXT:   return %2, %0 : !shape.shape, tensor<?x4xf32>
-
-// CHECK-LABEL: ============= symbolic shape table for @simple =============
-// CHECK-NEXT: original value: %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
-// CHECK-NEXT: %1 = shape.shape_of %arg0 : tensor<?x4xf32> -> tensor<2xindex>
-
-// CHECK-LABEL: ============= symbolic expr sources table for @simple =============
-// CHECK-NEXT: original value: %0 = mhlo.add %arg0, %arg1 : tensor<?x4xf32>
-// CHECK-NEXT: symbolic shape sources: 
-// CHECK-NEXT: <block argument> of type 'tensor<?x4xf32>' at index: 0
-
 func.func @several_ops(%arg0: tensor<?x4xf32>, %arg1: tensor<4x4xf32>, %arg2: tensor<4xf32>) -> tensor<?x4xf32> {
   %0 = "mhlo.dot"(%arg0, %arg1) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
   %1 = shape.shape_of %0 : tensor<?x4xf32> -> tensor<2xindex>
@@ -41,13 +21,16 @@ func.func @several_ops(%arg0: tensor<?x4xf32>, %arg1: tensor<4x4xf32>, %arg2: te
 
 // CHECK-LABEL: ============= symbolic shape table for @several_ops =============
 // CHECK-NEXT: original value: %0 = "mhlo.dot"(%arg0, %arg1) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>
-// CHECK-NEXT: symbolic shape: %3 = tensor.from_elements %2, %c4 : tensor<2xindex>
+// CHECK-NEXT: symbolic shape: %from_elements = tensor.from_elements %dim, %c4 : tensor<2xindex>
+
 // CHECK:      original value: %1 = shape.shape_of %0 : tensor<?x4xf32> -> tensor<2xindex>
 // CHECK-NEXT: symbolic shape: %0 = shape.const_shape [2] : tensor<1xindex>
+
 // CHECK:      original value: %2 = "mhlo.dynamic_broadcast_in_dim"(%arg2, %1) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<4xf32>, tensor<2xindex>) -> tensor<?x4xf32>
-// CHECK-NEXT: symbolic shape: %3 = tensor.from_elements %2, %c4 : tensor<2xindex>
+// CHECK-NEXT: symbolic shape: %from_elements = tensor.from_elements %dim, %c4 : tensor<2xindex>
+
 // CHECK:      original value: %3 = mhlo.add %0, %2 : tensor<?x4xf32>
-// CHECK-NEXT: symbolic shape: %3 = tensor.from_elements %2, %c4 : tensor<2xindex>
+// CHECK-NEXT: symbolic shape: %from_elements = tensor.from_elements %dim, %c4 : tensor<2xindex>
 
 // CHECK-LABEL: ============= symbolic expr sources table for @several_ops =============
 // CHECK-NEXT: original value: %0 = "mhlo.dot"(%arg0, %arg1) : (tensor<?x4xf32>, tensor<4x4xf32>) -> tensor<?x4xf32>

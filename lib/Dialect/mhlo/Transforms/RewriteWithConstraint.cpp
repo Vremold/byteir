@@ -28,13 +28,13 @@ struct BatchNormGradDropMeanAndVarPattern
 
   LogicalResult matchAndRewrite(mhlo::BatchNormGradOp op,
                                 PatternRewriter &rewriter) const override {
-    auto mean = op.mean().getDefiningOp();
-    auto variance = op.variance().getDefiningOp();
+    auto mean = op.getMean().getDefiningOp();
+    auto variance = op.getVariance().getDefiningOp();
     if (isSplatMhloConstant(mean) && isSplatMhloConstant(variance)) {
       return failure();
     }
     if (!isSplatMhloConstant(mean)) {
-      auto type = op.mean().getType().template cast<RankedTensorType>();
+      auto type = op.getMean().getType().template cast<RankedTensorType>();
       auto fpType = type.getElementType().template dyn_cast<FloatType>();
       assert(fpType);
       Value zero = rewriter.create<mhlo::ConstantOp>(
@@ -44,7 +44,7 @@ struct BatchNormGradDropMeanAndVarPattern
       op->setOperand(2, zero);
     }
     if (!isSplatMhloConstant(variance)) {
-      auto type = op.variance().getType().template cast<RankedTensorType>();
+      auto type = op.getVariance().getType().template cast<RankedTensorType>();
       auto fpType = type.getElementType().template dyn_cast<FloatType>();
       assert(fpType);
       Value zero = rewriter.create<mhlo::ConstantOp>(

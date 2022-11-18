@@ -53,8 +53,6 @@ def Byre_ComputeOp : Byre_Op<"compute",
   ];
 
   let extraClassDeclaration = [{
-    StringRef getCallee() { return callee(); }
-
     FunctionType getType();
 	
     /// Get the argument operands to the called function.
@@ -79,7 +77,7 @@ def Byre_ComputeOp : Byre_Op<"compute",
 def Byre_ComputeShapeOp : Byre_Op<"compute_shape",
     [HasParent<"func::FuncOp">,
      DeclareOpInterfaceMethods<ByreInterface, ["getCalleeName"]>,
-     MemRefsNormalizable, NoSideEffect]> {
+     MemRefsNormalizable, Pure]> {
   let summary = "operation which references a shape computation fn";
   let description = [{
     ComputeShape op references a shape computation function in runtime,
@@ -120,11 +118,6 @@ def Byre_CopyOp : Byre_Op<"copy",
     Arg<AnyStridedMemRef, "", [MemRead]>:$source,
     Arg<AnyStridedMemRef, "", [MemWrite]>:$target);
 
-  let extraClassDeclaration = [{
-    Value getSource() { return source();}
-    Value getTarget() { return target(); }
-  }];
-
   let assemblyFormat = [{
     `(` $source `,` $target `)` attr-dict `:`
         type($source) `,` type($target)
@@ -140,7 +133,7 @@ def Byre_AliasOp
               [HasParent<"func::FuncOp">,
                DeclareOpInterfaceMethods<ByreInterface, ["getCalleeName"]>,
                DeclareOpInterfaceMethods<ViewLikeOpInterface>,
-               NoSideEffect]> {
+               Pure]> {
   let summary = "alias operation";
 
   let arguments = (ins

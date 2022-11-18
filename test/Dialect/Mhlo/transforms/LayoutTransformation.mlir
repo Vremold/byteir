@@ -72,7 +72,7 @@ func.func @conv_backward_data(%arg0: tensor<32x64x56x56xf16>, %arg1: tensor<64x6
 // CHECK:    %[[V7:.*]] = "mhlo.reverse"(%[[V6]])
 // CHECK:    %[[V8:.*]] = mhlo.convolution(%[[V4]], %[[V7]])
 // CHECK:    %[[V9:.*]] = "mhlo.transpose"(%[[V8]]) {permutation = dense<[0, 2, 3, 1]> : tensor<4xi64>} : (tensor<32x64x56x56xf16>) -> tensor<32x56x56x64xf16>
-// CHECK:    "mhlo.return"(%[[V9]]) : (tensor<32x56x56x64xf16>) -> ()
+// CHECK:    mhlo.return %[[V9]] : tensor<32x56x56x64xf16>
 // CHECK:  __byre__input_layout = "NHWC", __byre__kernel_layout = "NHWC", __byre__output_layout = "NHWC"
 // CHECK-NEXT:  %[[V3:.*]] = "mhlo.transpose"(%[[V2]]) {permutation = dense<[0, 3, 1, 2]> : tensor<4xi64>} : (tensor<32x56x56x64xf16>) -> tensor<32x64x56x56xf16>
 // CHECK-NEXT:  return %[[V3]]

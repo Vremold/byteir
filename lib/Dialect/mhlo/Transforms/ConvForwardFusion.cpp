@@ -35,25 +35,26 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
       return failure();
     }
     mhlo::AddOp addOp =
-        dyn_cast_or_null<mhlo::AddOp>(op.input().getDefiningOp());
+        dyn_cast_or_null<mhlo::AddOp>(op.getInput().getDefiningOp());
     if (!addOp) {
       return failure();
     }
     mhlo::BroadcastInDimOp broadcastOp =
-        dyn_cast_or_null<mhlo::BroadcastInDimOp>(addOp.rhs().getDefiningOp());
-    if (!broadcastOp || broadcastOp.broadcast_dimensions().size() != 1) {
+        dyn_cast_or_null<mhlo::BroadcastInDimOp>(
+            addOp.getRhs().getDefiningOp());
+    if (!broadcastOp || broadcastOp.getBroadcastDimensions().size() != 1) {
       return failure();
     }
     int64_t broadcastDim =
-        (*broadcastOp.broadcast_dimensions().begin()).getSExtValue();
+        (*broadcastOp.getBroadcastDimensions().begin()).getSExtValue();
     mhlo::ConvolutionOp convOp =
-        dyn_cast_or_null<mhlo::ConvolutionOp>(addOp.lhs().getDefiningOp());
+        dyn_cast_or_null<mhlo::ConvolutionOp>(addOp.getLhs().getDefiningOp());
     if (!convOp) {
       return failure();
     }
 
-    SmallVector<Value> inputs{convOp.lhs(), convOp.rhs(),
-                              broadcastOp.operand()};
+    SmallVector<Value> inputs{convOp.getLhs(), convOp.getRhs(),
+                              broadcastOp.getOperand()};
     SmallVector<Value> outputs{op.getResult()};
     MhloFusionPattern pattern{convOp, broadcastOp, addOp, op};
 
@@ -75,7 +76,7 @@ struct FuseConvBiasActPattern : public OpRewritePattern<ace::ActivateOp> {
 
       byre::appendByreComputeAttr(attrs, attr.getName(), attr.getValue());
     }
-    byre::appendByreComputeAttr(attrs, "act_func", op.act_funcAttr());
+    byre::appendByreComputeAttr(attrs, "act_func", op.getActFuncAttr());
     attrs.append(byre::getByreComputeName(),
                  rewriter.getStringAttr("ConvBiasOp"));
 
@@ -95,19 +96,20 @@ struct FuseConvBiasPattern : public OpRewritePattern<mhlo::AddOp> {
       return failure();
     }
     mhlo::BroadcastInDimOp broadcastOp =
-        op.rhs().getDefiningOp<mhlo::BroadcastInDimOp>();
-    if (!broadcastOp || broadcastOp.broadcast_dimensions().size() != 1) {
+        op.getRhs().getDefiningOp<mhlo::BroadcastInDimOp>();
+    if (!broadcastOp || broadcastOp.getBroadcastDimensions().size() != 1) {
       return failure();
     }
     int64_t broadcastDim =
-        (*broadcastOp.broadcast_dimensions().begin()).getSExtValue();
-    mhlo::ConvolutionOp convOp = op.lhs().getDefiningOp<mhlo::ConvolutionOp>();
+        (*broadcastOp.getBroadcastDimensions().begin()).getSExtValue();
+    mhlo::ConvolutionOp convOp =
+        op.getLhs().getDefiningOp<mhlo::ConvolutionOp>();
     if (!convOp) {
       return failure();
     }
 
-    SmallVector<Value> inputs{convOp.lhs(), convOp.rhs(),
-                              broadcastOp.operand()};
+    SmallVector<Value> inputs{convOp.getLhs(), convOp.getRhs(),
+                              broadcastOp.getOperand()};
     SmallVector<Value> outputs{op.getResult()};
     MhloFusionPattern pattern{convOp, broadcastOp, op};
 

@@ -16,9 +16,9 @@ ByRE is a runtime IR for the ByteIR runtime.
 An external dialect from https://github.com/tensorflow/mlir-hlo.
 
 ## Dependency 
-***LLVM/MLIR***: https://code.byted.org/byteir/llvm-build, current llvm commit id: 439668871ac992159f00309d3bd837db287bdea6
+***LLVM/MLIR***: https://code.byted.org/byteir/llvm-build, current llvm commit id: 74fb770de9399d7258a8eda974c93610cfde698e
 
-***mhlo_tools***: https://tosv.byted.org/obj/turing/byteir/mhlo_tools-0.0.1.dev0+44abd740-cp37-cp37m-linux_x86_64.whl
+***mhlo_tools***: https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.2-cp37-cp37m-linux_x86_64.whl
 
 ***Python*** (for python binding): minimum version is 3.6, requiring numpy and pybind11 installed.
 

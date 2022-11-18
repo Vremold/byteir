@@ -14,6 +14,7 @@ add_byteir_translation_library(ByteIRTargetPTX
   MLIRIR
   MLIRLLVMDialect
   MLIRAMDGPUDialect
+  MLIRIndexDialect
   MLIRMLProgramDialect
   MLIRPass
   MLIRLLVMToLLVMIRTranslation
@@ -22,7 +23,9 @@ add_byteir_translation_library(ByteIRTargetPTX
   MLIRTransforms
   MLIRTransformUtils
   MLIRTranslateLib
+  MLIRGPUTransformOps
   MLIRLinalgTransformOps
+  MLIRMemRefTransformOps
   MLIRSCFTransformOps
   MLIRBufferizationTransformOps
   MLIRShapeOpsTransforms

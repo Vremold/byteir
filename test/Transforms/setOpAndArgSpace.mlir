@@ -32,42 +32,42 @@ module {
   }
 }
 // CHECK-LABEL: func.func @main(%arg0: memref<128x64xf32, "cpu">, %arg1: memref<64x32xf32, "cpu">, %arg2: memref<32xf32, "cpu">) -> memref<128x32xf32, "cpu"> {
-// CHECK-NEXT:    %0 = memref.alloc() : memref<128x64xf16, "test">
-// CHECK-NEXT:    %1 = memref.alloc() : memref<128x64xf16, "cpu">
-// CHECK-NEXT:    "lmhlo.convert"(%arg0, %1) {device = "cpu"} : (memref<128x64xf32, "cpu">, memref<128x64xf16, "cpu">) -> ()
-// CHECK-NEXT:    memref.copy %1, %0 : memref<128x64xf16, "cpu"> to memref<128x64xf16, "test">
-// CHECK-NEXT:    %2 = memref.alloc() : memref<64x32xf16, "test">
-// CHECK-NEXT:    %3 = memref.alloc() : memref<64x32xf16, "cpu">
-// CHECK-NEXT:    "lmhlo.convert"(%arg1, %3) {device = "cpu"} : (memref<64x32xf32, "cpu">, memref<64x32xf16, "cpu">) -> ()
-// CHECK-NEXT:    memref.copy %3, %2 : memref<64x32xf16, "cpu"> to memref<64x32xf16, "test">
-// CHECK-NEXT:    %4 = memref.alloc() : memref<32xf16, "test">
-// CHECK-NEXT:    %5 = memref.alloc() : memref<32xf16, "cpu">
-// CHECK-NEXT:    "lmhlo.convert"(%arg2, %5) {device = "cpu"} : (memref<32xf32, "cpu">, memref<32xf16, "cpu">) -> ()
-// CHECK-NEXT:    memref.copy %5, %4 : memref<32xf16, "cpu"> to memref<32xf16, "test">
-// CHECK-NEXT:    %6 = call @func_with_bufferization() : () -> memref<1x97xf32, "cpu">
-// CHECK-NEXT:    %7 = memref.alloc() : memref<1x97xf32, "test">
-// CHECK-NEXT:    memref.copy %6, %7 : memref<1x97xf32, "cpu"> to memref<1x97xf32, "test">
-// CHECK-NEXT:    %8 = call @mlp_device(%0, %2, %4, %7) : (memref<128x64xf16, "test">, memref<64x32xf16, "test">, memref<32xf16, "test">, memref<1x97xf32, "test">) -> memref<128x32xf16, "test">
-// CHECK-NEXT:    %9 = memref.alloc() : memref<128x32xf32, "cpu">
-// CHECK-NEXT:    %10 = memref.alloc() : memref<128x32xf16, "cpu">
-// CHECK-NEXT:    memref.copy %8, %10 : memref<128x32xf16, "test"> to memref<128x32xf16, "cpu">
-// CHECK-NEXT:    "lmhlo.convert"(%10, %9) {device = "cpu"} : (memref<128x32xf16, "cpu">, memref<128x32xf32, "cpu">) -> ()
-// CHECK-NEXT:    return %9 : memref<128x32xf32, "cpu">
+// CHECK-NEXT:    %alloc = memref.alloc() : memref<128x64xf16, "test">
+// CHECK-NEXT:    %alloc_0 = memref.alloc() : memref<128x64xf16, "cpu">
+// CHECK-NEXT:    "lmhlo.convert"(%arg0, %alloc_0) {device = "cpu"} : (memref<128x64xf32, "cpu">, memref<128x64xf16, "cpu">) -> ()
+// CHECK-NEXT:    memref.copy %alloc_0, %alloc : memref<128x64xf16, "cpu"> to memref<128x64xf16, "test">
+// CHECK-NEXT:    %alloc_1 = memref.alloc() : memref<64x32xf16, "test">
+// CHECK-NEXT:    %alloc_2 = memref.alloc() : memref<64x32xf16, "cpu">
+// CHECK-NEXT:    "lmhlo.convert"(%arg1, %alloc_2) {device = "cpu"} : (memref<64x32xf32, "cpu">, memref<64x32xf16, "cpu">) -> ()
+// CHECK-NEXT:    memref.copy %alloc_2, %alloc_1 : memref<64x32xf16, "cpu"> to memref<64x32xf16, "test">
+// CHECK-NEXT:    %alloc_3 = memref.alloc() : memref<32xf16, "test">
+// CHECK-NEXT:    %alloc_4 = memref.alloc() : memref<32xf16, "cpu">
+// CHECK-NEXT:    "lmhlo.convert"(%arg2, %alloc_4) {device = "cpu"} : (memref<32xf32, "cpu">, memref<32xf16, "cpu">) -> ()
+// CHECK-NEXT:    memref.copy %alloc_4, %alloc_3 : memref<32xf16, "cpu"> to memref<32xf16, "test">
+// CHECK-NEXT:    %0 = call @func_with_bufferization() : () -> memref<1x97xf32, "cpu">
+// CHECK-NEXT:    %alloc_5 = memref.alloc() : memref<1x97xf32, "test">
+// CHECK-NEXT:    memref.copy %0, %alloc_5 : memref<1x97xf32, "cpu"> to memref<1x97xf32, "test">
+// CHECK-NEXT:    %1 = call @mlp_device(%alloc, %alloc_1, %alloc_3, %alloc_5) : (memref<128x64xf16, "test">, memref<64x32xf16, "test">, memref<32xf16, "test">, memref<1x97xf32, "test">) -> memref<128x32xf16, "test">
+// CHECK-NEXT:    %alloc_6 = memref.alloc() : memref<128x32xf32, "cpu">
+// CHECK-NEXT:    %alloc_7 = memref.alloc() : memref<128x32xf16, "cpu">
+// CHECK-NEXT:    memref.copy %1, %alloc_7 : memref<128x32xf16, "test"> to memref<128x32xf16, "cpu">
+// CHECK-NEXT:    "lmhlo.convert"(%alloc_7, %alloc_6) {device = "cpu"} : (memref<128x32xf16, "cpu">, memref<128x32xf32, "cpu">) -> ()
+// CHECK-NEXT:    return %alloc_6 : memref<128x32xf32, "cpu">
 // CHECK-NEXT:  }
 
 // CHECK-LABEL: func.func private @mlp_device(memref<128x64xf16, "test">, memref<64x32xf16, "test">, memref<32xf16, "test">, memref<1x97xf32, "test">) -> memref<128x32xf16, "test"> attributes {device = "test"}
 
 // CHECK-LABEL: func.func private @func_with_bufferization() -> memref<1x97xf32, "cpu"> attributes {device = "cpu"} {
-// CHECK-NEXT:    %0 = memref.alloc() : memref<f32, "cpu">
-// CHECK-NEXT:    "lmhlo.constant"(%0) {device = "cpu", value = dense<0.000000e+00> : tensor<f32>} : (memref<f32, "cpu">) -> ()
-// CHECK-NEXT:    %1 = bufferization.to_tensor %0 {device = "cpu"} : memref<f32, "cpu">
-// CHECK-NEXT:    %2 = memref.alloc() : memref<f32, "cpu">
-// CHECK-NEXT:    "lmhlo.constant"(%2) {device = "cpu", value = dense<1.000000e+00> : tensor<f32>} : (memref<f32, "cpu">) -> ()
-// CHECK-NEXT:    %3 = bufferization.to_tensor %2 {device = "cpu"} : memref<f32, "cpu">
-// CHECK-NEXT:    %4 = memref.alloc() : memref<2xi64, "cpu">
-// CHECK-NEXT:    "lmhlo.constant"(%4) {device = "cpu", value = dense<[1, 97]> : tensor<2xi64>} : (memref<2xi64, "cpu">) -> ()
-// CHECK-NEXT:    %5 = bufferization.to_tensor %4 {device = "cpu"} : memref<2xi64, "cpu">
-// CHECK-NEXT:    %6 = "mhlo.rng"(%1, %3, %5) {device = "host", rng_distribution = #mhlo.rng_distribution<UNIFORM>} : (tensor<f32>, tensor<f32>, tensor<2xi64>) -> tensor<1x97xf32>
-// CHECK-NEXT:    %7 = bufferization.to_memref %6 {device = "cpu"} : memref<1x97xf32, "cpu">
-// CHECK-NEXT:    return %7 : memref<1x97xf32, "cpu">
+// CHECK-NEXT:    %alloc = memref.alloc() : memref<f32, "cpu">
+// CHECK-NEXT:    "lmhlo.constant"(%alloc) {device = "cpu", value = dense<0.000000e+00> : tensor<f32>} : (memref<f32, "cpu">) -> ()
+// CHECK-NEXT:    %0 = bufferization.to_tensor %alloc {device = "cpu"} : memref<f32, "cpu">
+// CHECK-NEXT:    %alloc_0 = memref.alloc() : memref<f32, "cpu">
+// CHECK-NEXT:    "lmhlo.constant"(%alloc_0) {device = "cpu", value = dense<1.000000e+00> : tensor<f32>} : (memref<f32, "cpu">) -> ()
+// CHECK-NEXT:    %1 = bufferization.to_tensor %alloc_0 {device = "cpu"} : memref<f32, "cpu">
+// CHECK-NEXT:    %alloc_1 = memref.alloc() : memref<2xi64, "cpu">
+// CHECK-NEXT:    "lmhlo.constant"(%alloc_1) {device = "cpu", value = dense<[1, 97]> : tensor<2xi64>} : (memref<2xi64, "cpu">) -> ()
+// CHECK-NEXT:    %2 = bufferization.to_tensor %alloc_1 {device = "cpu"} : memref<2xi64, "cpu">
+// CHECK-NEXT:    %3 = "mhlo.rng"(%0, %1, %2) {device = "host", rng_distribution = #mhlo.rng_distribution<UNIFORM>} : (tensor<f32>, tensor<f32>, tensor<2xi64>) -> tensor<1x97xf32>
+// CHECK-NEXT:    %4 = bufferization.to_memref %3 {device = "cpu"} : memref<1x97xf32, "cpu">
+// CHECK-NEXT:    return %4 : memref<1x97xf32, "cpu">
 // CHECK-NEXT:  }

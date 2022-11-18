@@ -22,7 +22,7 @@ class Ace_Op<string mnemonic, list<Trait> traits = []> :
 }
 
 def Ace_ConstOp : Ace_Op<"constant", [
-    ConstantLike, NoSideEffect, AllTypesMatch<["value", "output"]>]> {
+    ConstantLike, Pure, AllTypesMatch<["value", "output"]>]> {
   let summary = "Constant operator";
   let description = [{
     Represents a constant value.
@@ -45,7 +45,7 @@ def Ace_ConstOp : Ace_Op<"constant", [
 }
 
 
-def Ace_ActivateOp : Ace_Op<"activate", [NoSideEffect]> {
+def Ace_ActivateOp : Ace_Op<"activate", [Pure]> {
   let summary = "Activate operation";
 
   let arguments = (ins
@@ -63,7 +63,7 @@ def Ace_ActivateOp : Ace_Op<"activate", [NoSideEffect]> {
       "llvm::ArrayRef<NamedAttribute>":$attrs),
       [{
         $_state.addOperands(input);
-        $_state.addAttribute(act_funcAttrName(odsState.name), actType);
+        $_state.addAttribute(getActFuncAttrName(odsState.name), actType);
         $_state.addTypes(output);
         $_state.addAttributes(attrs);
       }]>,
@@ -71,7 +71,7 @@ def Ace_ActivateOp : Ace_Op<"activate", [NoSideEffect]> {
 }
 
 
-def Ace_ReturnOp : Ace_Op<"return", [NoSideEffect, Terminator]> {
+def Ace_ReturnOp : Ace_Op<"return", [Pure, Terminator]> {
   let summary = [{
     The `ace.return` operation terminates a region and returns values.
   }];
@@ -112,7 +112,7 @@ def Ace_OpaqueOp : Ace_Op<"opaque", [SingleBlockImplicitTerminator<"ReturnOp">]>
 
 }
 
-def Ace_CustomCallOp : Ace_Op<"custom_call", [NoSideEffect]> {
+def Ace_CustomCallOp : Ace_Op<"custom_call", [Pure]> {
   let summary = "CustomCall operator";
 
   let arguments = (ins

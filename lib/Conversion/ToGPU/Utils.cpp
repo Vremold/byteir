@@ -156,7 +156,7 @@ gpu::GPUFuncOp mlir::cloneFuncToGPUFunc(OpBuilder &builder, func::FuncOp func,
   gpuFunc->setAttr(gpu::GPUDialect::getKernelFuncAttrName(),
                    builder.getUnitAttr());
 
-  Region &gpuFuncBody = gpuFunc.body();
+  Region &gpuFuncBody = gpuFunc.getBody();
 
   Block &gpuEntryBlock = gpuFuncBody.front();
 

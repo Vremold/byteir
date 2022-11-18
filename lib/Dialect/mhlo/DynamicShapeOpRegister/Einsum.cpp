@@ -89,7 +89,7 @@ LogicalResult einsumParseBasicInfo(Operation *op, EinsumParseContext *ctx) {
     llvm::errs() << "mhlo::CustomCallOp for einsum not supported yet";
     return failure();
   } else if (auto einsumOp = llvm::dyn_cast<mhlo::EinsumOp>(op)) {
-    einsumConfig = einsumOp.einsum_config();
+    einsumConfig = einsumOp.getEinsumConfig();
   } else {
     llvm::errs() << "op not mhlo::CustomCallOp or mhlo::EinsumOp";
     return failure();

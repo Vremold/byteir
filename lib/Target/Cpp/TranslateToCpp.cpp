@@ -11,7 +11,7 @@
 #include "byteir/Target/Cpp/ToCpp.h"
 
 #include "byteir/Target/Common/EmitUtil.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -205,21 +205,22 @@ static LogicalResult printArithBinaryOp(CppEmitter &emitter, Operation *binOp) {
   os << emitter.getOrCreateName(binOp->getOperand(0)) << " ";
 
   llvm::TypeSwitch<Operation *, void>(binOp)
-      .Case<AddIOp, AddFOp>([&](auto &) { os << "+"; })
-      .Case<SubIOp, SubFOp>([&](auto &) { os << "-"; })
-      .Case<MulIOp, MulFOp>([&](auto &) { os << "*"; })
-      .Case<DivUIOp, DivSIOp, DivFOp>([&](auto &) { os << "/"; })
-      .Case<RemUIOp, RemSIOp>([&](auto &) { os << "%"; })
-      .Case<AndIOp>([&](auto &) { os << "&"; })
-      .Case<OrIOp>([&](auto &) { os << "|"; })
-      .Case<XOrIOp>([&](auto &) { os << "^"; })
-      .Case<ShLIOp>([&](auto &) { os << "<<"; })
-      .Case<ShRUIOp, ShRSIOp>([&](auto &) { os << ">>"; })
-      .Case<CmpIOp>(
-          [&](CmpIOp op) { os << getCmpIOpString(op.getPredicate()); })
-      .Case<CmpFOp>(
-          [&](CmpFOp op) { os << getCmpFOpString(op.getPredicate()); })
-      .Default([&](auto &) { os << "<<unknown ArithmeticOp>>"; });
+      .Case<arith::AddIOp, arith::AddFOp>([&](auto &) { os << "+"; })
+      .Case<arith::SubIOp, arith::SubFOp>([&](auto &) { os << "-"; })
+      .Case<arith::MulIOp, arith::MulFOp>([&](auto &) { os << "*"; })
+      .Case<arith::DivUIOp, arith::DivSIOp, arith::DivFOp>(
+          [&](auto &) { os << "/"; })
+      .Case<arith::RemUIOp, arith::RemSIOp>([&](auto &) { os << "%"; })
+      .Case<arith::AndIOp>([&](auto &) { os << "&"; })
+      .Case<arith::OrIOp>([&](auto &) { os << "|"; })
+      .Case<arith::XOrIOp>([&](auto &) { os << "^"; })
+      .Case<arith::ShLIOp>([&](auto &) { os << "<<"; })
+      .Case<arith::ShRUIOp, arith::ShRSIOp>([&](auto &) { os << ">>"; })
+      .Case<arith::CmpIOp>(
+          [&](arith::CmpIOp op) { os << getCmpIOpString(op.getPredicate()); })
+      .Case<arith::CmpFOp>(
+          [&](arith::CmpFOp op) { os << getCmpFOpString(op.getPredicate()); })
+      .Default([&](auto &) { os << "<<unknown ArithOp>>"; });
 
   os << " " << emitter.getOrCreateName(binOp->getOperand(1));
 
@@ -245,7 +246,7 @@ static LogicalResult printSimpleCastOp(CppEmitter &emitter, Operation *op) {
 static LogicalResult printOperation(CppEmitter &emitter,
                                     emitc::ConstantOp constantOp) {
   Operation *operation = constantOp.getOperation();
-  Attribute value = constantOp.value();
+  Attribute value = constantOp.getValue();
 
   return printConstantOp(emitter, operation, value);
 }
@@ -350,7 +351,7 @@ static LogicalResult printOperation(CppEmitter &emitter, emitc::CallOp callOp) {
 
   if (failed(emitter.emitAssignPrefix(op)))
     return failure();
-  os << callOp.callee();
+  os << callOp.getCallee();
 
   auto emitArgs = [&](Attribute attr) -> LogicalResult {
     if (auto t = attr.dyn_cast<IntegerAttr>()) {
@@ -372,9 +373,10 @@ static LogicalResult printOperation(CppEmitter &emitter, emitc::CallOp callOp) {
     return success();
   };
 
-  if (callOp.template_args()) {
+  if (callOp.getTemplateArgs()) {
     os << "<";
-    if (failed(interleaveCommaWithError(*callOp.template_args(), os, emitArgs)))
+    if (failed(
+            interleaveCommaWithError(*callOp.getTemplateArgs(), os, emitArgs)))
       return failure();
     os << ">";
   }
@@ -382,8 +384,9 @@ static LogicalResult printOperation(CppEmitter &emitter, emitc::CallOp callOp) {
   os << "(";
 
   LogicalResult emittedArgs =
-      callOp.args() ? interleaveCommaWithError(*callOp.args(), os, emitArgs)
-                    : emitter.emitOperands(op);
+      callOp.getArgs()
+          ? interleaveCommaWithError(*callOp.getArgs(), os, emitArgs)
+          : emitter.emitOperands(op);
   if (failed(emittedArgs))
     return failure();
   os << ")";
@@ -397,7 +400,7 @@ static LogicalResult printOperation(CppEmitter &emitter,
 
   if (failed(emitter.emitAssignPrefix(op)))
     return failure();
-  os << applyOp.applicableOperator();
+  os << applyOp.getApplicableOperator();
   os << emitter.getOrCreateName(applyOp.getOperand());
 
   return success();
@@ -408,10 +411,10 @@ static LogicalResult printOperation(CppEmitter &emitter,
   raw_ostream &os = emitter.ostream();
 
   os << "#include ";
-  if (includeOp.is_standard_include())
-    os << "<" << includeOp.include() << ">";
+  if (includeOp.getIsStandardInclude())
+    os << "<" << includeOp.getInclude() << ">";
   else
-    os << "\"" << includeOp.include() << "\"";
+    os << "\"" << includeOp.getInclude() << "\"";
 
   return success();
 }
@@ -707,7 +710,7 @@ static LogicalResult printOperation(CppEmitter &emitter, LoadOp loadOp) {
   RETURN_IF_FAILED(checkMemRefType(memRefType));
   auto indices = loadOp.getIndices();
   auto rank = memRefType.getRank();
-  if (indices.size() != rank) {
+  if (indices.size() != size_t(rank)) {
     return loadOp.emitOpError() << "<<Indices do not match rank>>";
   }
 
@@ -873,7 +876,7 @@ LogicalResult CppEmitter::emitAttribute(Location loc, Attribute attr) {
   if (auto type = attr.dyn_cast<TypeAttr>())
     return emitType(loc, type.getValue());
 
-  return emitError(loc, "cannot emit attribute of type ") << attr.getType();
+  return emitError(loc, "cannot emit attribute ") << attr;
 }
 
 LogicalResult CppEmitter::emitOperands(Operation &op) {
@@ -995,10 +998,10 @@ LogicalResult CppEmitter::emitOperation(Operation &op, bool trailingSemicolon) {
           .Case<func::CallOp, func::ConstantOp, func::FuncOp, ModuleOp,
                 func::ReturnOp>(
               [&](auto op) { return printOperation(*this, op); })
-          // Arithmetic ops
+          // Arith ConstantOp
           .Case<arith::ConstantOp>(
               [&](auto op) { return printOperation(*this, op); })
-          // Arithmetic binary ops
+          // Arith binary ops
           .Case<AddIOp, AddFOp, SubIOp, SubFOp, MulIOp, MulFOp, DivUIOp,
                 DivSIOp, DivFOp, RemUIOp, RemSIOp, AndIOp, OrIOp, XOrIOp,
                 ShLIOp, ShRUIOp, ShRSIOp, CmpIOp, CmpFOp>(

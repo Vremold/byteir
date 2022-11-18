@@ -13,10 +13,10 @@ func.func @func_empty() {
 
 // CHECK-LABEL: Testing : useRangeGap
 // CHECK: ---- Id and Operation Begins -----
-// CHECK-NEXT: ID: 7, Op: "lmhlo.negate"(%arg1, %0)
-// CHECK-NEXT: ID: 9, Op: "lmhlo.negate"(%arg1, %1)
-// CHECK-NEXT: ID: 13, Op: "lmhlo.negate"(%arg2, %0)
-// CHECK-NEXT: ID: 15, Op: "lmhlo.negate"(%arg2, %1)
+// CHECK-NEXT: ID: 7, Op: "lmhlo.negate"(%arg1, %alloc)
+// CHECK-NEXT: ID: 9, Op: "lmhlo.negate"(%arg1, %alloc_0)
+// CHECK-NEXT: ID: 13, Op: "lmhlo.negate"(%arg2, %alloc)
+// CHECK-NEXT: ID: 15, Op: "lmhlo.negate"(%arg2, %alloc_0)
 func.func @useRangeGap(%arg0: i1, %arg1: memref<2xf32>, %arg2: memref<2xf32>)
 {
   %0 = memref.alloc() : memref<2xf32>
@@ -33,9 +33,9 @@ func.func @useRangeGap(%arg0: i1, %arg1: memref<2xf32>, %arg2: memref<2xf32>)
 ^bb3:
   return
 }
-//      CHECK:  Value: %0 {{ *}}
+//      CHECK:  Value: %alloc {{ *}}
 // CHECK-NEXT:  Userange: {(7, 7), (13, 13)}
-//      CHECK:  Value: %1 {{ *}}
+//      CHECK:  Value: %alloc_0 {{ *}}
 // CHECK-NEXT:  Userange: {(9, 9), (15, 15)}
 
 // -----
@@ -59,11 +59,11 @@ func.func @useRangeGapWithView(%arg0: i1, %arg1: memref<2xf32>, %arg2: memref<2x
 ^bb3:
   return
 }
-//      CHECK:  Value: %0 {{ *}}
+//      CHECK:  Value: %alloc {{ *}}
 // CHECK-NEXT:  Userange: {(11, 11), (17, 17)}
-//      CHECK:  Value: %1 {{ *}}
+//      CHECK:  Value: %alloc_0 {{ *}}
 // CHECK-NEXT:  Userange: {(7, 7), (11, 13), (17, 19), (7, 9)}
-//      CHECK:  Value: %2 {{ *}}
+//      CHECK:  Value: %view {{ *}}
 // CHECK-NEXT:  Userange: {(11, 13), (17, 19), (7, 9)}
 
 // -----
@@ -92,15 +92,15 @@ func.func @loopWithNestedRegion(%arg0: i1, %arg1: memref<2xf32>, %arg2: memref<2
   "lmhlo.negate"(%arg1, %3) : (memref<2xf32>, memref<2xf32>) -> ()
   return
 }
-//      CHECK:  Value: %0 {{ *}}
+//      CHECK:  Value: %alloc {{ *}}
 // CHECK-NEXT:  Userange: {(11, 23)}
-//      CHECK:  Value: %1 {{ *}}
+//      CHECK:  Value: %alloc_0 {{ *}}
 // CHECK-NEXT:  Userange: {(11, 23)}
-//      CHECK:  Value: %2 {{ *}}
+//      CHECK:  Value: %alloc_1 {{ *}}
 // CHECK-NEXT:  Userange: {(11, 25)}
-//      CHECK:  Value: %3 {{ *}}
+//      CHECK:  Value: %alloc_2 {{ *}}
 // CHECK-NEXT:  Userange: {(27, 27)}
-//      CHECK:  Value: %4 {{ *}}
+//      CHECK:  Value: %0 {{ *}}
 //      CHECK:  Userange: {(19, 19)}
 
 // -----
@@ -128,13 +128,13 @@ func.func @condBranchWithAlias(%arg0: i1, %arg1: memref<2xf32>, %arg2: memref<2x
   "lmhlo.copy"(%5, %arg2) : (memref<2xf32>, memref<2xf32>) -> ()
   return
 }
-//      CHECK:  Value: %0 {{ *}}
+//      CHECK:  Value: %alloc {{ *}}
 // CHECK-NEXT:  Userange: {(5, 7), (15, 27)}
-//      CHECK:  Value: %1 {{ *}}
+//      CHECK:  Value: %alloc_0 {{ *}}
 // CHECK-NEXT:  Userange: {(11, 17)}
-//      CHECK:  Value: %3 {{ *}}
+//      CHECK:  Value: %alloc_1 {{ *}}
 // CHECK-NEXT:  Userange: {(19, 19)}
-//      CHECK:  Value: %4 {{ *}}
+//      CHECK:  Value: %alloc_2 {{ *}}
 // CHECK-NEXT:  Userange: {(23, 23)}
 //      CHECK:  Value: <block argument> of type 'memref<2xf32>' at index: 0
 // CHECK-SAME:  Userange: {(15, 17)}

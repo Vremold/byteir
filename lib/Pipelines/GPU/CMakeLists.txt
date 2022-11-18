@@ -9,6 +9,7 @@ add_mlir_library(ByteIRGPUPipelines
   DEPENDS
   ByteIRTransforms
   ByteIRUtils
+  MhloDialect
 
   LINK_LIBS PUBLIC
   ByteIRLinalgPasses

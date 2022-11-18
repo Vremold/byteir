@@ -121,11 +121,11 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       // create all const and put into bvm
       for (auto input : constInputs) {
         ElementsAttr oldConstAttr =
-            input.getDefiningOp<mhlo::ConstantOp>().value();
+            input.getDefiningOp<mhlo::ConstantOp>().getValue();
         auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
         auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-            op->getLoc(), newConstAttr.getValue());
-        bvm.map(input, newConstOp.output());
+            op->getLoc(), newConstAttr.value());
+        bvm.map(input, newConstOp.getOutput());
       }
 
       auto maybeResultTypes =
@@ -133,16 +133,16 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
                    /*cloneFromShapes*/ op->getOperandTypes());
 
       // maybeResultTypes should always have value
-      assert(maybeResultTypes.hasValue());
+      assert(maybeResultTypes.has_value());
 
       // clone an elementwise op as producer
-      auto newProducer = cloneAndReplaceResultTypes(
-          rewriter, user, bvm, maybeResultTypes.getValue());
+      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
+                                                    maybeResultTypes.value());
 
       // create transpose op
       rewriter.replaceOpWithNewOp<mhlo::TransposeOp>(
           user, user->getResultTypes(), newProducer->getResult(0),
-          op.permutation());
+          op.getPermutation());
     }
 
     return success();
@@ -255,11 +255,11 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       // create all const and put into bvm
       for (auto input : constInputs) {
         ElementsAttr oldConstAttr =
-            input.getDefiningOp<mhlo::ConstantOp>().value();
+            input.getDefiningOp<mhlo::ConstantOp>().getValue();
         auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
         auto newConstOp = rewriter.create<mhlo::ConstantOp>(
             op->getLoc(), newConstAttr.getValue());
-        bvm.map(input, newConstOp.output());
+        bvm.map(input, newConstOp.getOutput());
       }
 
       for (auto input : insertedReshapeInputs) {
@@ -290,11 +290,11 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
                    /*cloneFromShapes*/ op->getOperandTypes());
 
       // maybeResultTypes should always have value
-      assert(maybeResultTypes.hasValue());
+      assert(maybeResultTypes.has_value());
 
       // clone an elementwise op as producer
-      auto newProducer = cloneAndReplaceResultTypes(
-          rewriter, user, bvm, maybeResultTypes.getValue());
+      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
+                                                    maybeResultTypes.value());
 
       // create reshape op
       rewriter.replaceOpWithNewOp<mhlo::ReshapeOp>(user, user->getResultTypes(),
@@ -389,11 +389,11 @@ struct BroadcastMoveDownPattern
       // create all const and put into bvm
       for (auto input : constInputs) {
         ElementsAttr oldConstAttr =
-            input.getDefiningOp<mhlo::ConstantOp>().value();
+            input.getDefiningOp<mhlo::ConstantOp>().getValue();
         auto newConstAttr = cloneSplatElementsAttr(oldConstAttr, operandType);
         auto newConstOp = rewriter.create<mhlo::ConstantOp>(
             op->getLoc(), newConstAttr.getValue());
-        bvm.map(input, newConstOp.output());
+        bvm.map(input, newConstOp.getOutput());
       }
 
       auto maybeResultTypes =
@@ -401,16 +401,16 @@ struct BroadcastMoveDownPattern
                    /*cloneFromShapes*/ op->getOperandTypes());
 
       // maybeResultTypes should always have value
-      assert(maybeResultTypes.hasValue());
+      assert(maybeResultTypes.has_value());
 
       // clone an elementwise op as producer
-      auto newProducer = cloneAndReplaceResultTypes(
-          rewriter, user, bvm, maybeResultTypes.getValue());
+      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
+                                                    maybeResultTypes.value());
 
       // create broadcast op
       rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
           user, user->getResultTypes(), newProducer->getResult(0),
-          op.broadcast_dimensions());
+          op.getBroadcastDimensions());
     }
 
     return success();
@@ -460,7 +460,7 @@ struct BroadcastBinaryMoveDownPattern
     auto rhs = rhsValue.getDefiningOp<BroadcastInDimOp>();
 
     // lhs and rhs must have the same attribtue
-    if (lhs.broadcast_dimensions() != rhs.broadcast_dimensions()) {
+    if (lhs.getBroadcastDimensions() != rhs.getBroadcastDimensions()) {
       return failure();
     }
 
@@ -475,7 +475,7 @@ struct BroadcastBinaryMoveDownPattern
 
     rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
         consumer, op.getType(), newProducer->getResult(0),
-        op.broadcast_dimensions());
+        op.getBroadcastDimensions());
 
     return success();
   }
@@ -527,7 +527,7 @@ struct BroadcastReshapeMoveDownPattern
     }
 
     // make sure broadcast do not touch the first dimension
-    DenseIntElementsAttr bcastDim = op.broadcast_dimensions();
+    DenseIntElementsAttr bcastDim = op.getBroadcastDimensions();
     if (*(bcastDim.begin()) != 0) {
       return failure();
     }
@@ -623,16 +623,16 @@ struct ReshapeBroadcastDotMoveDownPattern
         RankedTensorType::get({newDotOShape[1]}, dtype);
     auto newReshape = rewriter.create<ReshapeOp>(op->getLoc(), newReshapeType,
                                                  newDot->getResult(0));
-    rewriter.replaceOpWithNewOp<BroadcastInDimOp>(op, op.getType(),
-                                                  newReshape->getResult(0),
-                                                  bcast.broadcast_dimensions());
+    rewriter.replaceOpWithNewOp<BroadcastInDimOp>(
+        op, op.getType(), newReshape->getResult(0),
+        bcast.getBroadcastDimensions());
 
     return success();
   }
 
 private:
   bool checkBroadcastFirstDimension(BroadcastInDimOp op) const {
-    DenseIntElementsAttr bcastDim = op.broadcast_dimensions();
+    DenseIntElementsAttr bcastDim = op.getBroadcastDimensions();
     for (auto it = bcastDim.begin(); it < bcastDim.end(); ++it) {
       if (*it == 0) {
         return false;
@@ -684,8 +684,8 @@ private:
       }
 
       // condition 2: slice dim len must be 1
-      auto startAttr = slice.start_indices();
-      auto limitAttr = slice.limit_indices();
+      auto startAttr = slice.getStartIndices();
+      auto limitAttr = slice.getLimitIndices();
       bool isAllSliceDimLenOne = true;
       for (int64_t dimIdx = 0; dimIdx < rank; dimIdx++) {
         const int64_t start =
@@ -799,10 +799,10 @@ private:
                  /*cloneFromShapes*/ slices[0]->getOperandTypes());
 
     // maybeResultTypes should always have value
-    assert(maybeResultTypes.hasValue());
+    assert(maybeResultTypes.has_value());
 
     auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                                  maybeResultTypes.getValue());
+                                                  maybeResultTypes.value());
     for (auto operand : newProducer->getOperands()) {
       const auto parentOp = operand.getDefiningOp();
       if (parentOp && newProducer->isBeforeInBlock(parentOp)) {
@@ -837,7 +837,7 @@ private:
       // create slice op
       auto sliceOp = rewriter.replaceOpWithNewOp<mhlo::SliceOp>(
           user, user->getResultTypes(), newProducer->getResult(0),
-          slice.start_indices(), slice.limit_indices(), slice.strides());
+          slice.getStartIndices(), slice.getLimitIndices(), slice.getStrides());
       if (sliceOp->isBeforeInBlock(newProducer)) {
         sliceOp->moveAfter(newProducer);
       }

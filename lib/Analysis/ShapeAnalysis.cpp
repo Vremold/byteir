@@ -7,7 +7,7 @@
 
 #include "byteir/Analysis/ShapeAnalysis.h"
 #include "mlir/Analysis/DataFlow/ConstantPropagationAnalysis.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "llvm/ADT/TypeSwitch.h"
@@ -50,7 +50,17 @@ ValueKnowledge ValueKnowledge::join(const ValueKnowledge &lhs,
   ValueKnowledge result = getPessimisticValueState();
   result.hasError = true;
 
-  if (!lhs || !rhs || lhs.dtype != rhs.dtype)
+  // if ((lhs.dtype.has_value() && !lhs.dtype.value()) ||
+  //     (rhs.dtype.has_value() && !rhs.dtype.value()) ||
+  //     (lhs.dtype.has_value() && rhs.dtype.has_value() &&
+  //      lhs.dtype.value() != rhs.dtype.value()))
+  //   return result;
+  if (lhs.isUninitialized())
+    return rhs;
+  if (rhs.isUninitialized())
+    return lhs;
+  if (!lhs.dtype.value() || !rhs.dtype.value() ||
+      lhs.dtype.value() != rhs.dtype.value())
     return result;
 
   result.hasError = false;
@@ -82,7 +92,17 @@ ValueKnowledge ValueKnowledge::meet(const ValueKnowledge &lhs,
   ValueKnowledge result = getPessimisticValueState();
   result.hasError = true;
 
-  if (!lhs || !rhs || lhs.dtype != rhs.dtype)
+  // if ((lhs.dtype.has_value() && !lhs.dtype.value()) ||
+  //     (rhs.dtype.has_value() && !rhs.dtype.value()) ||
+  //     (lhs.dtype.has_value() && rhs.dtype.has_value() &&
+  //      lhs.dtype.value() != rhs.dtype.value()))
+  //   return result;
+  if (lhs.isUninitialized())
+    return rhs;
+  if (rhs.isUninitialized())
+    return lhs;
+  if (!lhs.dtype.value() || !rhs.dtype.value() ||
+      lhs.dtype.value() != rhs.dtype.value())
     return result;
 
   result.hasError = false;
@@ -219,13 +239,17 @@ void ShapeAnalysis::visitOperation(Operation *op,
     auto &&valueLattice = getOrCreate<Lattice<ConstantValue>>(operand);
 
     if (auto shapeKnowledge = shapeLattice->getValue()) {
-      if (shapeKnowledge && shapeKnowledge.dtype) {
-        shapeProvider[operand] = shapeKnowledge.getType();
+      if (!shapeKnowledge.isUninitialized()) {
+        if (shapeKnowledge.dtype.value()) {
+          shapeProvider[operand] = shapeKnowledge.getType();
+        }
+      } else {
+        missingValue = true;
       }
     }
 
     valueLattice->useDefSubscribe(this);
-    if (!valueLattice->isUninitialized()) {
+    if (!valueLattice->getValue().isUninitialized()) {
       if (auto constant = valueLattice->getValue().getConstantValue()) {
         valueProvider[operand] = constant;
       }
@@ -234,8 +258,9 @@ void ShapeAnalysis::visitOperation(Operation *op,
     }
   }
 
-  if (missingValue)
+  if (missingValue) {
     return;
+  }
 
   auto shapeKnowledges = [&](Value val) -> Type {
     auto it = shapeProvider.find(val);
@@ -261,8 +286,7 @@ void ShapeAnalysis::visitOperation(Operation *op,
 
       Type resultTy = result.getType();
       if (!resultTy.isa<ShapedType>()) {
-        propagateIfChanged(resultLattice,
-                           resultLattice->markPessimisticFixpoint());
+        setToEntryState(resultLattice);
         continue;
       }
 
@@ -279,8 +303,15 @@ void ShapeAnalysis::visitOperation(Operation *op,
       propagateIfChanged(resultLattice, resultLattice->join(inferredKnowledge));
     }
   } else {
-    return markAllPessimisticFixpoint(results);
+    return setAllToEntryStates(results);
   }
+}
+
+void ShapeAnalysis::setToEntryState(ShapeLattice *lattice) {
+  propagateIfChanged(
+      lattice,
+      lattice->join(shape_analysis::ValueKnowledge::getPessimisticValueState(
+          lattice->getPoint())));
 }
 
 void ShapeValueAnalysis::visitOperation(
@@ -295,7 +326,7 @@ void ShapeValueAnalysis::visitOperation(
     if (shapeLattice) {
       const_cast<ShapeLattice *>(shapeLattice)->useDefSubscribe(this);
 
-      if (!shapeLattice->isUninitialized()) {
+      if (!shapeLattice->getValue().isUninitialized()) {
         auto shapeKnowledge = shapeLattice->getValue();
         if (shapeKnowledge && shapeKnowledge.dtype) {
           valueTypeModification.Push(std::get<0>(pi), shapeKnowledge.getType());

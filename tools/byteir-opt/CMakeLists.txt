@@ -34,12 +34,17 @@ set(LLVM_LINK_COMPONENTS
   )
 
 set(MHLO_LIBS
-  MhloRegisterDialects
-  AllMhloPasses
-  LmhloPasses
-  MLIRBufferTransforms
-  AllGmlStPasses # FIXME: these two libs should be fixed at upstream
+  AllGmlStPasses
   GmlStDialect
+  GmlStTransforms
+  LmhloDialect
+  LmhloGPUDialect
+  MhloRegisterDialects
+  LmhloPasses
+  AllMhloPasses
+  AllThloPasses
+  MLIRBufferTransforms
+  MLIRHLOGPUTransforms
   MLIRHLOAnalysis
   MLIRHLOTestAnalysis
 )

@@ -9,7 +9,7 @@
 #define ARITH_TO_MHLO_PATTERN
 
 include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.td"
-include "mlir/Dialect/Arithmetic/IR/ArithmeticOps.td"
+include "mlir/Dialect/Arith/IR/ArithOps.td"
 
 def ArithToMhloConstOpPattern : Pat<
   (Arith_ConstantOp:$output $value),

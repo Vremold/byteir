@@ -28,22 +28,22 @@ struct FuseTransposeDotToDotGeneralPattern
   using OpRewritePattern<mhlo::DotOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(mhlo::DotOp op,
                                 PatternRewriter &rewriter) const override {
-    auto lhsTranspose = op.lhs().getDefiningOp<mhlo::TransposeOp>();
-    auto rhsTranspose = op.rhs().getDefiningOp<mhlo::TransposeOp>();
+    auto lhsTranspose = op.getLhs().getDefiningOp<mhlo::TransposeOp>();
+    auto rhsTranspose = op.getRhs().getDefiningOp<mhlo::TransposeOp>();
     if (!lhsTranspose && !rhsTranspose) {
       return failure();
     }
-    Value lhs = op.lhs();
-    Value rhs = op.rhs();
+    Value lhs = op.getLhs();
+    Value rhs = op.getRhs();
     int64_t lhsContractingDimension = 1;
     int64_t rhsContractingDimension = 0;
     if (lhsTranspose) {
       lhsContractingDimension = 0;
-      lhs = lhsTranspose.operand();
+      lhs = lhsTranspose.getOperand();
     }
     if (rhsTranspose) {
       rhsContractingDimension = 1;
-      rhs = rhsTranspose.operand();
+      rhs = rhsTranspose.getOperand();
     }
     auto dimensionNumbers = mhlo::DotDimensionNumbersAttr::get(
         rewriter.getContext(), /*lhsBatchingDimensions=*/{},
@@ -51,7 +51,7 @@ struct FuseTransposeDotToDotGeneralPattern
         {rhsContractingDimension});
     rewriter.replaceOpWithNewOp<mhlo::DotGeneralOp>(
         op, op.getResult().getType(), lhs, rhs, dimensionNumbers,
-        op.precision_configAttr());
+        op.getPrecisionConfigAttr());
     return success();
   }
 };

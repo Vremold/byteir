@@ -14,7 +14,7 @@
 #include "byteir/Utils/MemUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Passes.h"
@@ -67,26 +67,28 @@ makeTiledLoopRange(OpBuilder &b, Location loc, AffineMap map,
 
   // Create a new range with the applied tile sizes.
   SmallVector<Range, 4> res;
-  res.push_back(Range{b.create<ConstantIndexOp>(loc, 0), shapeSizes[axis],
-                      tileSizeValue});
+  res.push_back(Range{b.create<ConstantIndexOp>(loc, 0).getValue(),
+                      shapeSizes[axis], tileSizeValue});
   return res;
 }
 
-static SmallVector<Value, 4> createTileSize(OpBuilder &b, Location loc,
-                                            unsigned axis, unsigned rank,
-                                            int64_t tileSize) {
+static SmallVector<OpFoldResult, 4> createTileSize(OpBuilder &b, Location loc,
+                                                   unsigned axis, unsigned rank,
+                                                   int64_t tileSize) {
 
-  SmallVector<Value, 4> tileSizes;
+  SmallVector<OpFoldResult, 4> tileSizes;
   for (unsigned i = 0; i < rank; ++i) {
     int64_t val = i == axis ? tileSize : 0;
-    tileSizes.push_back(b.create<ConstantIndexOp>(loc, val));
+    tileSizes.push_back(b.create<ConstantIndexOp>(loc, val).getValue());
   }
   return tileSizes;
 }
 
 static bool isReduction(mlir::linalg::LinalgOp linalgOp) {
-  SmallVector<StringAttr> iterTypes =
-      llvm::to_vector<4>(linalgOp.iterator_types().getAsRange<StringAttr>());
+  MLIRContext *ctx = linalgOp.getContext();
+  SmallVector<StringAttr> iterTypes = llvm::to_vector<4>(
+      llvm::map_range(linalgOp.getIteratorTypesArray(),
+                      [=](StringRef s) { return StringAttr::get(ctx, s); }));
   unsigned axis =
       linalgOp->getAttrOfType<IntegerAttr>(getScopeTilingAxisAttrName())
           .getInt();
@@ -105,14 +107,13 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
   auto lastOp = ts.ops.back();
   unsigned lastAxis =
       lastOp->getAttrOfType<IntegerAttr>(getScopeTilingAxisAttrName()).getInt();
-  unsigned lastRank =
-      lastOp->getAttrOfType<IntegerAttr>(getScopeTilingRankAttrName()).getInt();
   auto loc = lastOp.getLoc();
 
   OpBuilder::InsertionGuard g(b);
   b.setInsertionPoint(lastOp);
 
-  auto lastAllShapeSizes = lastOp.createFlatListOfOperandDims(b, loc);
+  auto lastAllShapeSizes =
+      getAsValues(b, loc, lastOp.createFlatListOfOperandDims(b, loc));
 
   AffineMap lastShapeSizesToLoopsMap = lastOp.getShapesToLoopsMap();
   if (!lastShapeSizesToLoopsMap)
@@ -123,12 +124,11 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
 
   // iteratorTypes Attribute
   SmallVector<Attribute, 4> iteratorTypes;
-  iteratorTypes.push_back(lastOp.iterator_types().getValue()[lastAxis]);
+  iteratorTypes.push_back(
+      b.getStringAttr(lastOp.getIteratorTypesArray()[lastAxis]));
 
   // If interchangeVector is empty, use the identity. Build the permutation map
   // otherwise.
-  auto invPermutationMap =
-      AffineMap::getMultiDimIdentityMap(lastRank, b.getContext());
   // TODO support loop interchange later
 
   bool isParallel = true;
@@ -142,9 +142,20 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
 
   // 2. Create the tiled loops.
   SmallVector<Value, 8> lbsStorage, ubsStorage, stepsStorage;
-  unpackRanges(loopRanges, lbsStorage, ubsStorage, stepsStorage);
+  unpackRanges(b, loc, loopRanges, lbsStorage, ubsStorage, stepsStorage);
   ValueRange lbs(lbsStorage), ubs(ubsStorage), steps(stepsStorage);
   SmallVector<Value, 8> ivs(lbs.size());
+
+  auto getInputBufferOperands = [](LinalgOp linalgOp) {
+    OpOperandVector result;
+    int64_t numInputs = linalgOp.getNumDpsInputs();
+    result.reserve(numInputs);
+    llvm::transform(
+        linalgOp.getOperation()->getOpOperands().take_front(numInputs),
+        std::back_inserter(result),
+        [](OpOperand &opOperand) { return &opOperand; });
+    return result;
+  };
 
   auto tiledLoopBodyBuilder = [&](OpBuilder &b, Location loc,
                                   ValueRange loopIvs) {
@@ -153,13 +164,26 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
     // When an `interchangeVector` is present, it has been applied to the
     // loop ranges and the iterator types. Apply its inverse to the
     // resulting loop `ivs` to match the op definition.
-    SmallVector<Value, 4> interchangedIvs;
+    SmallVector<OpFoldResult, 4> interchangedIvs;
 
     // TODO support loop interchange later
     interchangedIvs.assign(ivs.begin(), ivs.end());
 
     // go through all ops
     for (auto &linalgOp : ts.ops) {
+
+      DestinationStyleOpInterface dstStyleOp =
+          cast<DestinationStyleOpInterface>(linalgOp.getOperation());
+
+      SmallVector<OpOperand *> outputBufferOperands, outputTensorOperands;
+      for (OpOperand *operand : dstStyleOp.getDpsInitOperands()) {
+        Type type = operand->get().getType();
+        if (type.isa<MemRefType>())
+          outputBufferOperands.push_back(operand);
+        if (type.isa<RankedTensorType>())
+          outputTensorOperands.push_back(operand);
+      }
+
       unsigned axis =
           linalgOp->getAttrOfType<IntegerAttr>(getScopeTilingAxisAttrName())
               .getInt();
@@ -167,17 +191,20 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
           linalgOp->getAttrOfType<IntegerAttr>(getScopeTilingRankAttrName())
               .getInt();
 
-      auto localAllShapeSizes = linalgOp.createFlatListOfOperandDims(b, loc);
+      auto localAllShapeSizes =
+          getAsValues(b, loc, linalgOp.createFlatListOfOperandDims(b, loc));
       AffineMap localShapeSizesToLoopsMap = linalgOp.getShapesToLoopsMap();
 
-      auto localSizeBounds = applyMapToValues(b, loc, localShapeSizesToLoopsMap,
-                                              localAllShapeSizes);
+      auto localSizeBoundsOfValues = applyMapToValues(
+          b, loc, localShapeSizesToLoopsMap, localAllShapeSizes);
+      SmallVector<OpFoldResult> localSizeBounds(localSizeBoundsOfValues.begin(),
+                                                localSizeBoundsOfValues.end());
 
       // get all values for now
       // TODO: relax this later
-      SmallVector<Value> valuesToTile = linalgOp.getInputAndOutputOperands();
+      SmallVector<Value> valuesToTile = linalgOp->getOperands();
 
-      SmallVector<Value, 4> tileSizes =
+      SmallVector<OpFoldResult, 4> tileSizes =
           createTileSize(b, loc, axis, rank, tileSize);
 
       SmallVector<Value, 4> localTiledOperands = makeTiledShapes(
@@ -185,7 +212,7 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
           localSizeBounds, /*omitPartialTileCheck=*/false);
 
       SmallVector<Type, 4> resultTensorTypes;
-      for (OpOperand *opOperand : linalgOp.getOutputTensorOperands()) {
+      for (OpOperand *opOperand : outputTensorOperands) {
         resultTensorTypes.push_back(
             localTiledOperands[opOperand->getOperandNumber()].getType());
       }
@@ -195,12 +222,12 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
       if (parallelizeReduction && isReduction(linalgOp)) {
         SmallVector<Value> intermediates;
         SmallVector<Value> outputs;
-        for (size_t i = linalgOp.getInputBufferOperands().size();
+        for (size_t i = getInputBufferOperands(linalgOp).size();
              i < localTiledOperands.size(); ++i) {
           outputs.push_back(localTiledOperands[i]); // record all one
           auto maybeValue = createAlloc(b, localTiledOperands[i]);
-          intermediates.push_back(maybeValue.getValue());
-          localTiledOperands[i] = maybeValue.getValue();
+          intermediates.push_back(maybeValue.value());
+          localTiledOperands[i] = maybeValue.value();
         }
 
         auto cloned =
@@ -215,7 +242,7 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
         auto maybeAlloc = createAtomicLinalgGeneric(
             b, loc, arith::AtomicRMWKind::addf, intermediates, outputs);
 
-        if (!maybeAlloc.hasValue())
+        if (!maybeAlloc.has_value())
           return;
       } else {
         auto cloned =
@@ -315,13 +342,13 @@ static bool isProducerValidforTileScope(
   }
 
   unsigned iterAxis;
-  int64_t numInputs = producer.getNumInputs();
+  int64_t numInputs = producer.getNumDpsInputs();
 
   SmallVector<AffineMap> affineMaps = llvm::to_vector<4>(
       producer.getIndexingMaps().getAsValueRange<AffineMapAttr>());
 
   if (opToIterAxisAndRank.count(op) == 0) {
-    auto producerOutView = producer.outputs()[0];
+    auto producerOutView = producer.getDpsInitOperand(0)->get();
     if (viewToDimAndOps.count(producerOutView) == 0) {
       // no fuse non-producer-consumer op
       return false;
@@ -330,16 +357,18 @@ static bool isProducerValidforTileScope(
     if (outDimIndex == DimProperty::NoDim)
       return false;
     auto maybeIterAxis = getIterAxis(affineMaps[numInputs], outDimIndex);
-    if (!maybeIterAxis.hasValue())
+    if (!maybeIterAxis.has_value())
       return false;
-    iterAxis = maybeIterAxis.getValue();
+    iterAxis = maybeIterAxis.value();
     opToIterAxisAndRank[op] = {iterAxis, affineMaps[numInputs].getNumDims()};
   } else {
     iterAxis = opToIterAxisAndRank[op].first;
   }
 
-  SmallVector<StringAttr> iterTypes =
-      llvm::to_vector<4>(producer.iterator_types().getAsRange<StringAttr>());
+  MLIRContext *ctx = op->getContext();
+  SmallVector<StringAttr> iterTypes = llvm::to_vector<4>(
+      llvm::map_range(producer.getIteratorTypesArray(),
+                      [=](StringRef s) { return StringAttr::get(ctx, s); }));
   // For now, avoid fusion along reduction iterator
   if (isReductionIterator(iterTypes[iterAxis]))
     return false;
@@ -348,7 +377,8 @@ static bool isProducerValidforTileScope(
 
   // insert producer's input
   for (int64_t i = 0; i < numInputs; ++i) {
-    updateViewToDimAndOps(viewToDimAndOps, producer.inputs()[i], producer,
+    updateViewToDimAndOps(viewToDimAndOps,
+                          producer.getDpsInputOperand(i)->get(), producer,
                           affineMaps[i], iterAxis, false /*performedReduce*/);
   }
 
@@ -373,9 +403,7 @@ static bool isConsumerValidforTileScope(
 
   SmallVector<AffineMap> affineMaps = llvm::to_vector<4>(
       consumer.getIndexingMaps().getAsValueRange<AffineMapAttr>());
-  int64_t numInputs = consumer.getNumInputs();
-
-  Optional<unsigned> maybeIterAxis = None;
+  int64_t numInputs = consumer.getNumDpsInputs();
   unsigned iterAxis;
 
   if (opToIterAxisAndRank.count(op) == 0) {
@@ -383,7 +411,7 @@ static bool isConsumerValidforTileScope(
     bool atLeastOne = false;
 
     for (int64_t i = 0; i < numInputs; ++i) {
-      auto input = consumer.inputs()[i];
+      auto input = consumer.getDpsInputOperand(i)->get();
       if (viewToDimProp.count(input) != 0) {
         int intDimIndex = viewToDimProp[input].dim;
 
@@ -391,11 +419,11 @@ static bool isConsumerValidforTileScope(
           return false;
         }
         auto inferredIterAxis = getIterAxis(affineMaps[i], intDimIndex);
-        if (!inferredIterAxis.hasValue())
+        if (!inferredIterAxis.has_value())
           continue;
         if (!atLeastOne) {
-          iterAxis = inferredIterAxis.getValue();
-        } else if (iterAxis != inferredIterAxis.getValue()) {
+          iterAxis = inferredIterAxis.value();
+        } else if (iterAxis != inferredIterAxis.value()) {
           return false;
         }
         atLeastOne = true;
@@ -411,22 +439,25 @@ static bool isConsumerValidforTileScope(
     iterAxis = opToIterAxisAndRank[op].first;
   }
 
-  SmallVector<StringAttr> iterTypes =
-      llvm::to_vector<4>(consumer.iterator_types().getAsRange<StringAttr>());
+  MLIRContext *ctx = op->getContext();
+  SmallVector<StringAttr> iterTypes = llvm::to_vector<4>(
+      llvm::map_range(consumer.getIteratorTypesArray(),
+                      [=](StringRef s) { return StringAttr::get(ctx, s); }));
 
   bool performedReduced = isReductionIterator(iterTypes[iterAxis]);
 
   // insert consumer's output
   {
-    updateViewToDimAndOps(viewToDimProp, consumer.outputs()[0], consumer,
-                          affineMaps[numInputs], iterAxis, performedReduced,
-                          true /*assigned*/);
+    updateViewToDimAndOps(viewToDimProp, consumer.getDpsInitOperand(0)->get(),
+                          consumer, affineMaps[numInputs], iterAxis,
+                          performedReduced, true /*assigned*/);
   }
 
   // insert consumer' other input
   for (int64_t i = 0; i < numInputs; ++i) {
-    updateViewToDimAndOps(viewToDimProp, consumer.inputs()[i], consumer,
-                          affineMaps[i], iterAxis, false /*performedReduced*/);
+    updateViewToDimAndOps(viewToDimProp, consumer.getDpsInputOperand(i)->get(),
+                          consumer, affineMaps[i], iterAxis,
+                          false /*performedReduced*/);
   }
 
   return true;
@@ -452,8 +483,10 @@ static void greedilyCreateTilingScopeFromAnchor(TileScope &ts,
   SmallVector<AffineMap> affineMaps = llvm::to_vector<4>(
       anchorOp.getIndexingMaps().getAsValueRange<AffineMapAttr>());
 
-  SmallVector<StringAttr> iterTypes =
-      llvm::to_vector<4>(anchorOp.iterator_types().getAsRange<StringAttr>());
+  MLIRContext *ctx = anchorOp.getContext();
+  SmallVector<StringAttr> iterTypes = llvm::to_vector<4>(
+      llvm::map_range(anchorOp.getIteratorTypesArray(),
+                      [=](StringRef s) { return StringAttr::get(ctx, s); }));
 
   // if iterAxis is out of bound, early terminate
   if (iterAxis >= iterTypes.size()) {
@@ -469,17 +502,18 @@ static void greedilyCreateTilingScopeFromAnchor(TileScope &ts,
   bool performedReduce = isReductionIterator(iterTypes[iterAxis]);
 
   // insert producer's input
-  int64_t numInputs = anchorOp.getNumInputs();
+  int64_t numInputs = anchorOp.getNumDpsInputs();
   for (int64_t i = 0; i < numInputs; ++i) {
-    updateViewToDimAndOps(viewToDimProp, anchorOp.inputs()[i], anchorOp,
-                          affineMaps[i], iterAxis, false /*performedReduce*/);
+    updateViewToDimAndOps(viewToDimProp, anchorOp.getDpsInputOperand(i)->get(),
+                          anchorOp, affineMaps[i], iterAxis,
+                          false /*performedReduce*/);
   }
 
-  int64_t numOutputs = anchorOp.getNumOutputs();
+  int64_t numOutputs = anchorOp.getNumDpsInits();
   for (int64_t i = 0; i < numOutputs; ++i) {
-    updateViewToDimAndOps(viewToDimProp, anchorOp.outputs()[i], anchorOp,
-                          affineMaps[numInputs + i], iterAxis, performedReduce,
-                          true /*assigned*/);
+    updateViewToDimAndOps(viewToDimProp, anchorOp.getDpsInitOperand(i)->get(),
+                          anchorOp, affineMaps[numInputs + i], iterAxis,
+                          performedReduce, true /*assigned*/);
   }
 
   // NOTE: use set here, instead of SmallSet, since we need ids to be sorted.
@@ -518,7 +552,6 @@ static void greedilyCreateTilingScopeFromAnchor(TileScope &ts,
   }
 
   // insert attr for scope tiling
-  auto ctx = anchorOp->getContext();
   for (auto id : determinedIds) {
     if (auto linalg = dyn_cast<LinalgOp>(ops[id])) {
 

@@ -28,7 +28,7 @@ namespace elementwise {
 bool isFusibleCandidate(Operation *op) {
   return isMhlo(op) &&
          (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-          op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
+          op->hasTrait<hlo::OpTrait::BroadcastingElementwise>() ||
           isMhloConstantLike(op) ||
           isa<mhlo::BroadcastInDimOp, mhlo::BroadcastOp, mhlo::ReshapeOp>(op));
 }
@@ -37,7 +37,7 @@ bool isFusibleStart(Operation *op) { return true; }
 
 bool isFusibleTrigger(Operation *op) {
   if (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-      op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
+      op->hasTrait<hlo::OpTrait::BroadcastingElementwise>() ||
       isa<mhlo::ReshapeOp>(op)) {
     return true;
   }
@@ -53,7 +53,7 @@ bool isFusibleTrigger(Operation *op) {
 
 bool isFusibleWith(Operation *target, Operation * /*start*/) {
   return target->hasTrait<::mlir::OpTrait::Elementwise>() ||
-         target->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
+         target->hasTrait<hlo::OpTrait::BroadcastingElementwise>() ||
          isMhloConstantLike(target) ||
          isa<mhlo::BroadcastInDimOp, mhlo::BroadcastOp, mhlo::ReshapeOp>(
              target);
@@ -61,7 +61,7 @@ bool isFusibleWith(Operation *target, Operation * /*start*/) {
 
 bool isValidSingleOp(Operation *op) {
   return op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-         op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>();
+         op->hasTrait<hlo::OpTrait::BroadcastingElementwise>();
 }
 
 static GenericFuserConfig config{
@@ -74,12 +74,11 @@ static GenericFuserConfig config{
 namespace matmul_epilogue {
 
 bool isFusibleCandidate(Operation *op) {
-  return isMhlo(op) &&
-         (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
-          op->hasTrait<mhlo::OpTrait::BroadcastingElementwise>() ||
-          isMhloConstantLike(op) ||
-          isa<mhlo::BroadcastInDimOp, mhlo::BroadcastOp, mhlo::ReshapeOp,
-              mhlo::DotOp>(op));
+  return isMhlo(op) && (op->hasTrait<::mlir::OpTrait::Elementwise>() ||
+                        op->hasTrait<hlo::OpTrait::BroadcastingElementwise>() ||
+                        isMhloConstantLike(op) ||
+                        isa<mhlo::BroadcastInDimOp, mhlo::BroadcastOp,
+                            mhlo::ReshapeOp, mhlo::DotOp>(op));
 }
 
 bool isFusibleStart(Operation *op) { return isa<mhlo::DotOp>(op); }

@@ -27,7 +27,7 @@ SmallVector<unsigned> getGreaterThanOneIdx(ArrayRef<int64_t> array) {
 
 SmallVector<bool> broadcastInDimHandleFlag(mhlo::BroadcastInDimOp op,
                                            int64_t rank) {
-  auto denseAttr = op.broadcast_dimensions();
+  auto denseAttr = op.getBroadcastDimensions();
   SmallVector<bool> res(rank, true);
   for (int64_t i = 0, e = denseAttr.getNumElements(); i < e; ++i)
     res[denseAttr.getValues<APInt>()[i].getSExtValue()] = false;
@@ -38,7 +38,7 @@ SmallVector<bool> reshapeHandleFlag(mhlo::ReshapeOp op, int64_t rank,
                                     ArrayRef<int64_t> oupShape,
                                     DimFlagAnalysis *analysis) {
   SmallVector<bool> res(rank, false);
-  Value inp = op.operand();
+  Value inp = op.getOperand();
   auto inpShapedType = inp.getType().dyn_cast<ShapedType>();
   if (!inpShapedType || !inpShapedType.hasRank()) {
     return res;

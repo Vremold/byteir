@@ -47,8 +47,8 @@ static void findLibDeviceFile(std::string &libdeviceFile) {
   // CUDA 11.5 in the corresponding system.
   auto cudaHome = llvm::sys::Process::GetEnv("CUDA_HOME");
   SmallVector<std::string, 2> defaultPaths;
-  if (cudaHome.hasValue()) {
-    defaultPaths.emplace_back(cudaHome.getValue());
+  if (cudaHome.has_value()) {
+    defaultPaths.emplace_back(cudaHome.value());
   } else {
     // try to get libdevice.bc from the default location for CUDA 11.5
     const char *cudaVer = "11.5";

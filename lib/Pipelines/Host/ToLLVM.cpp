@@ -14,7 +14,7 @@
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
-#include "mlir/Dialect/Arithmetic/Transforms/Passes.h"
+#include "mlir/Dialect/Arith/Transforms/Passes.h"
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
@@ -72,8 +72,8 @@ void mlir::createToLLVMPipeline(OpPassManager &pm) {
 
         pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
         pm.addPass(createCanonicalizerPass());
-        pm.addPass(arith::createArithmeticExpandOpsPass());
-        pm.addPass(createMemRefToLLVMPass());
+        pm.addPass(arith::createArithExpandOpsPass());
+        pm.addPass(createMemRefToLLVMConversionPass());
         pm.addPass(createConvertMathToLLVMPass());
         pm.addPass(createConvertFuncToLLVMPass());
         pm.addPass(createReconcileUnrealizedCastsPass());

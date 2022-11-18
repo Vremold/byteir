@@ -6,10 +6,6 @@
 #map3 = affine_map<(d0, d1) -> (d0 * 64 + d1)>
 #map4 = affine_map<(d0, d1) -> (d0 * 192 + d1)>
 #map5 = affine_map<(d0, d1) -> (d0 * 384 + d1)>
-#map6 = affine_map<(d0, d1) -> (d0 * 1024 + d1 * 2 + 2304)>
-#map7 = affine_map<(d0, d1) -> (d0 * 2048 + d1 * 2 + 3584)>
-#map8 = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1 * 2)>
-#map9 = affine_map<(d0, d1)[s0] -> (d0 * 2048 + s0 + d1 * 2)>
 
 // CHECK-LABEL: func.func @subview_no_canonical
 func.func @subview_no_canonical(%arg0: memref<128x64xf32>) {
@@ -124,19 +120,19 @@ func.func @many_contiguous(%arg0: memref<8192xi8>) {
   return
 }
 
-// CHECK-LABEL: func.func @subview_of_subview_non_one_stride
-func.func @subview_of_subview_non_one_stride(%input: memref<4x1024xf32>) -> memref<1x128xf32, #map7> {
-  %0 = memref.subview %input[2, 256] [2, 256] [1, 2] : memref<4x1024xf32> to memref<2x256xf32, #map6>
-  %1 = memref.subview %0[1, 128] [1, 128] [2, 1] : memref<2x256xf32, #map6> to memref<1x128xf32, #map7>
+// CHECK-LABEL: func @subview_of_subview_non_one_stride
+func.func @subview_of_subview_non_one_stride(%input: memref<4x1024xf32>) -> memref<1x128xf32, strided<[2048, 2], offset: 3584>> {
+  %0 = memref.subview %input[2, 256] [2, 256] [1, 2] : memref<4x1024xf32> to memref<2x256xf32, strided<[1024, 2], offset: 2304>>
+  %1 = memref.subview %0[1, 128] [1, 128] [2, 1] : memref<2x256xf32, strided<[1024, 2], offset: 2304>> to memref<1x128xf32, strided<[2048, 2], offset: 3584>>
 // CHECK:  memref.subview %arg0[3, 512] [1, 128] [2, 2]
-  return %1 : memref<1x128xf32, #map7>
+  return %1 : memref<1x128xf32, strided<[2048, 2], offset: 3584>>
 }
 
 // CHECK-LABEL: func.func @subview_of_subview_non_one_stride_dynamic_offset
-func.func @subview_of_subview_non_one_stride_dynamic_offset(%input: memref<4x1024xf32>, %offset_0 : index, %offset_1 : index) -> memref<1x128xf32, #map9> {
-  %0 = memref.subview %input[%offset_0, 256] [2, 256] [1, 2] : memref<4x1024xf32> to memref<2x256xf32, #map8>
-  %1 = memref.subview %0[%offset_1, 128] [1, 128] [2, 1] : memref<2x256xf32, #map8> to memref<1x128xf32, #map9>
+func.func @subview_of_subview_non_one_stride_dynamic_offset(%input: memref<4x1024xf32>, %offset_0 : index, %offset_1 : index) -> memref<1x128xf32, strided<[2048, 2], offset: ?>> {
+  %0 = memref.subview %input[%offset_0, 256] [2, 256] [1, 2] : memref<4x1024xf32> to memref<2x256xf32, strided<[1024, 2], offset: ?>>
+  %1 = memref.subview %0[%offset_1, 128] [1, 128] [2, 1] : memref<2x256xf32, strided<[1024, 2], offset: ?>> to memref<1x128xf32, strided<[2048, 2], offset: ?>>
 // CHECK: %0 = affine.apply
 // CHECK: memref.subview %arg0[%0, 512] [1, 128] [2, 2]
-  return %1 : memref<1x128xf32, #map9>
+  return %1 : memref<1x128xf32, strided<[2048, 2], offset: ?>>
 }

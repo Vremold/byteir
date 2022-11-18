@@ -27,7 +27,7 @@ LogicalResult MhloShapeAnalysis::inferResultShapesWithKnowledges(
     llvm::SmallVectorImpl<::mlir::ShapedTypeComponents> &results) {
   InferReturnTypeComponents inferFunc = nullptr;
   if (auto customCall = dyn_cast<mhlo::CustomCallOp>(op)) {
-    inferFunc = inferReturnTypeComponents(customCall.call_target_name());
+    inferFunc = inferReturnTypeComponents(customCall.getCallTargetName());
   } else {
     inferFunc = inferReturnTypeComponents(op->getName().getStringRef());
   }
@@ -74,7 +74,8 @@ LogicalResult MhloBoundedShapeAnalysis::inferResultShapesWithKnowledges(
     llvm::SmallVectorImpl<::mlir::ShapedTypeComponents> &results) {
   InferBoundedReturnTypeComponents inferFunc = nullptr;
   if (auto customCall = dyn_cast<mhlo::CustomCallOp>(op)) {
-    inferFunc = inferBoundedReturnTypeComponents(customCall.call_target_name());
+    inferFunc =
+        inferBoundedReturnTypeComponents(customCall.getCallTargetName());
   } else {
     inferFunc = inferBoundedReturnTypeComponents(op->getName().getStringRef());
   }
@@ -124,7 +125,8 @@ void MhloShapeValueAnalysis::visitOperation(
   TypeSwitch<Operation *>(op)
       .Case<mhlo::ComputeReshapeShapeOp>([&](Operation *op) {
         const ShapeValueLattice *shape = operands[1];
-        assert(!shape->isUninitialized() && "operand must be initialized");
+        assert(!shape->getValue().isUninitialized() &&
+               "operand must be initialized");
         ShapeValueLattice *lattice = results[0];
         Attribute attr = shape->getValue().getConstantValue();
         // in some cases, the shape in computeReshapeShapeOp is dense<[-1, x,

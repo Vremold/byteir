@@ -11,7 +11,7 @@ add_byteir_conversion_library(ByteIRToMhlo
 
   LINK_LIBS PUBLIC
   MhloDialect
-  MLIRArithmeticDialect
+  MLIRArithDialect
   MLIRIR
   )
 

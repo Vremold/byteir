@@ -73,7 +73,7 @@ void registerToPTXTranslation() {
       llvm::cl::init(O3), llvm::cl::cat(PTXCodeGenCat));
 
   TranslateFromMLIRRegistration reg(
-      "gen-ptx",
+      "gen-ptx", "generate ptx from mlir",
       [](ModuleOp module, raw_ostream &output) {
         return mlir::translateToPTX(module, output, outPrefix, codeGenOpt,
                                     gpuArch, dumpPtx, saveTemps, verbose);

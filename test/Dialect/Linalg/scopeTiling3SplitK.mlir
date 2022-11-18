@@ -12,7 +12,7 @@ func.func @matmul_2(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: 
   linalg.matmul {__byteir_scope_tile_anchor__} ins(%arg0, %arg1 : memref<128x64xf32>, memref<64x64xf32>) outs(%0 : memref<128x64xf32>)
   linalg.generic {indexing_maps = [#map0, #map0], iterator_types = ["parallel", "parallel"]} ins(%0 : memref<128x64xf32>) outs(%1 : memref<128x64xf32>){
   ^bb0(%arg4: f32, %arg5: f32):  // no predecessors
-    %3 = math.abs %arg4: f32
+    %3 = math.absf %arg4: f32
     linalg.yield %3 : f32
   }
   linalg.matmul ins(%1, %arg2 : memref<128x64xf32>, memref<64x64xf32>) outs(%arg3 : memref<128x64xf32>)

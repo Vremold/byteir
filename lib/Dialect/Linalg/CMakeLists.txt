@@ -1,6 +1,5 @@
 add_mlir_dialect_library(ByteIRLinalgPasses
   Transforms/LinalgDataPlace.cpp
-  Transforms/LinalgFuseReshape.cpp
   Transforms/LinalgPrefetch.cpp
   Transforms/LinalgScopeTiling.cpp
   Transforms/TilingUtils.cpp

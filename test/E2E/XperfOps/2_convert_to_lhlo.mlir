@@ -11,9 +11,9 @@ module  {
 }
 
 // CHECK-LABEL: func.func @main
-//  CHECK-NEXT: alloc
+//  CHECK-NEXT: memref.alloc
 //  CHECK-NEXT: lmhlo.custom_call
-//  CHECK-NEXT: alloc
-//  CHECK-NEXT: alloc
+//  CHECK-NEXT: memref.alloc
+//  CHECK-NEXT: memref.alloc
 //  CHECK-NEXT: lmhlo.custom_call
 //  CHECK-NEXT: return

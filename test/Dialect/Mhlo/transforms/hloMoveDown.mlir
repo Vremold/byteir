@@ -138,8 +138,8 @@ func.func @reshape_move_down_convert(%arg0: tensor<1x32xi32>) -> tensor<1x32x32x
 }
 // CHECK-LABEL: func.func @reshape_move_down_convert
 // CHECK-SAME: %[[ARG:[a-zA-Z0-9]+]]
-// CHECK-NEXT: %[[V0:.*]] = mhlo.convert(%[[ARG]]) : (tensor<1x32xi32>) -> tensor<1x32xf32>
-// CHECK-NEXT: %[[V1:.*]] = "mhlo.reshape"(%[[V0]]) : (tensor<1x32xf32>) -> tensor<1x1x32xf32>
+// CHECK-NEXT: %[[V0:.*]] = mhlo.convert %[[ARG]] : (tensor<1x32xi32>) -> tensor<1x32xf32>
+// CHECK-NEXT: %[[V1:.*]] = mhlo.reshape %[[V0]] : (tensor<1x32xf32>) -> tensor<1x1x32xf32>
 // CHECK-NEXT: %[[V2:.*]] = "mhlo.broadcast_in_dim"(%[[V1]])
 // CHECK-SAME: (tensor<1x1x32xf32>) -> tensor<1x32x32xf32>
 // CHECK-NEXT: return
@@ -284,7 +284,7 @@ func.func @broadcast_move_down_convert(%arg0 : tensor<32xi32>) -> tensor<4x32xf3
 }
 // CHECK-LABEL: func.func @broadcast_move_down_convert
 // CHECK-SAME: %[[ARG:[a-zA-Z0-9]+]]
-// CHECK-NEXT: %[[V0:.*]] = mhlo.convert(%[[ARG]]) : (tensor<32xi32>) -> tensor<32xf32>
+// CHECK-NEXT: %[[V0:.*]] = mhlo.convert %[[ARG]] : (tensor<32xi32>) -> tensor<32xf32>
 // CHECK-NEXT: %[[V1:.*]] = mhlo.abs %[[V0]] : tensor<32xf32>
 // CHECK-NEXT: %[[V2:.*]] = "mhlo.broadcast_in_dim"(%[[V1]])
 // CHECK-SAME: (tensor<32xf32>) -> tensor<4x32xf32>
@@ -462,7 +462,7 @@ func.func @slice_move_down_convert(%arg0 : tensor<1x64xf32>) -> (tensor<1x1xi32>
 
 // CHECK-LABEL: func.func @slice_move_down_convert
 // CHECK-SAME: %[[ARG:[a-zA-Z0-9]+]]
-// CHECK-NEXT: %[[V0:.*]] = mhlo.convert(%[[ARG]]) : (tensor<1x64xf32>) -> tensor<1x64xi32>
+// CHECK-NEXT: %[[V0:.*]] = mhlo.convert %[[ARG]] : (tensor<1x64xf32>) -> tensor<1x64xi32>
 // CHECK-NEXT: %[[V1:.*]] = "mhlo.slice"(%[[V0]])
 // CHECK-SAME: (tensor<1x64xi32>) -> tensor<1x1xi32>
 // CHECK-NEXT: %[[V2:.*]] = "mhlo.slice"(%[[V0]])

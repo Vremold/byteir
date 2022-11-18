@@ -22,15 +22,15 @@ void mlir::registerDotReifyReturnTypeShapes() {
       [](Operation *op, OpBuilder &builder, ValueRange operands,
          SmallVectorImpl<::mlir::Value> &reifiedReturnShapes) {
         auto dotOp = cast<mhlo::DotOp>(op);
-        auto lhsType = dotOp.lhs().getType().dyn_cast<ShapedType>();
-        auto rhsType = dotOp.rhs().getType().dyn_cast<ShapedType>();
+        auto lhsType = dotOp.getLhs().getType().dyn_cast<ShapedType>();
+        auto rhsType = dotOp.getRhs().getType().dyn_cast<ShapedType>();
         if (!lhsType || !rhsType || !lhsType.hasRank() || !rhsType.hasRank()) {
           return failure();
         }
 
         mhlo::DotOp::Adaptor adaptor(operands);
-        auto lhs = adaptor.lhs();
-        auto rhs = adaptor.rhs();
+        auto lhs = adaptor.getLhs();
+        auto rhs = adaptor.getRhs();
         SmallVector<Value> dimensions;
 
         // vector dot vector
@@ -68,7 +68,7 @@ void mlir::registerDotGeneralShapeConstraints() {
       [](Operation *op, OpBuilder &builder) {
         builder.setInsertionPointAfter(op);
         auto dotGeneral = cast<mhlo::DotGeneralOp>(op);
-        auto dimNumbers = dotGeneral.dot_dimension_numbers();
+        auto dimNumbers = dotGeneral.getDotDimensionNumbers();
 
         // batching dimensions match
         auto lhsBatchingDims = dimNumbers.getLhsBatchingDimensions();
@@ -77,9 +77,9 @@ void mlir::registerDotGeneralShapeConstraints() {
           auto lDim = lhsBatchingDims[i];
           auto rDim = rhsBatchingDims[i];
           Value lhsD = builder.create<tensor::DimOp>(op->getLoc(),
-                                                     dotGeneral.lhs(), lDim);
+                                                     dotGeneral.getLhs(), lDim);
           Value rhsD = builder.create<tensor::DimOp>(op->getLoc(),
-                                                     dotGeneral.rhs(), rDim);
+                                                     dotGeneral.getRhs(), rDim);
           builder.create<shape_ext::MeetOp>(op->getLoc(), lhsD, rhsD);
         }
 
@@ -90,9 +90,9 @@ void mlir::registerDotGeneralShapeConstraints() {
           auto lDim = lhsContractingDims[i];
           auto rDim = rhsContractingDims[i];
           Value lhsD = builder.create<tensor::DimOp>(op->getLoc(),
-                                                     dotGeneral.lhs(), lDim);
+                                                     dotGeneral.getLhs(), lDim);
           Value rhsD = builder.create<tensor::DimOp>(op->getLoc(),
-                                                     dotGeneral.rhs(), rDim);
+                                                     dotGeneral.getRhs(), rDim);
           builder.create<shape_ext::MeetOp>(op->getLoc(), lhsD, rhsD);
         }
         return success();
@@ -118,7 +118,7 @@ void mlir::registerDotGeneralInferReturnTypeComponents() {
         operands.getShape(0).getDims(lhsShape);
         operands.getShape(1).getDims(rhsShape);
 
-        auto dimNumbers = adaptor.dot_dimension_numbers();
+        auto dimNumbers = adaptor.getDotDimensionNumbers();
         SmallVector<int64_t> dimensions;
         for (const int64_t lhsDim : dimNumbers.getLhsBatchingDimensions()) {
           dimensions.push_back(lhsShape[lhsDim]);

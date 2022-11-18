@@ -62,7 +62,7 @@ func.func private @aten.max.321(%arg0: tensor<1x1x3xf32>) -> (tensor<1x1xf32>, t
     %14 = "mhlo.select"(%11, %12, %13) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
     "mhlo.return"(%10, %14) : (tensor<f32>, tensor<i32>) -> ()
   }
-  %7 = mhlo.convert(%6#1) : (tensor<1x1xi32>) -> tensor<1x1xi64>
+  %7 = mhlo.convert %6#1 : (tensor<1x1xi32>) -> tensor<1x1xi64>
   return %2, %7 : tensor<1x1xf32>, tensor<1x1xi64>
 }
 
@@ -96,7 +96,7 @@ func.func private @aten.max.2323(%arg0: tensor<1x1x3xf32>) -> tuple<tensor<1x1xf
     %14 = "mhlo.select"(%11, %12, %13) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
     "mhlo.return"(%10, %14) : (tensor<f32>, tensor<i32>) -> ()
   }
-  %7 = mhlo.convert(%6#1) : (tensor<1x1xi32>) -> tensor<1x1xi64>
+  %7 = mhlo.convert %6#1 : (tensor<1x1xi32>) -> tensor<1x1xi64>
   %8 = "mhlo.tuple"(%2, %7) {xla_shape = "(f32[1,1]{1,0}, s64[1,1]{1,0})"} : (tensor<1x1xf32>, tensor<1x1xi64>) -> tuple<tensor<1x1xf32>, tensor<1x1xi64>>
   return %8 : tuple<tensor<1x1xf32>, tensor<1x1xi64>>
 }

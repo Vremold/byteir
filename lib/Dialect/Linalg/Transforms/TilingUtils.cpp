@@ -10,7 +10,7 @@
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Affine/Utils.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -23,14 +23,17 @@ using namespace mlir::scf;
 
 /// Given a list of subview ranges, extract individual values for lower, upper
 /// bounds and steps and put them into the corresponding vectors.
-void mlir::unpackRanges(ArrayRef<Range> ranges, SmallVectorImpl<Value> &lbs,
+void mlir::unpackRanges(OpBuilder &builder, Location loc,
+                        ArrayRef<Range> ranges, SmallVectorImpl<Value> &lbs,
                         SmallVectorImpl<Value> &ubs,
                         SmallVectorImpl<Value> &steps) {
 
   for (Range range : ranges) {
-    lbs.emplace_back(range.offset);
-    ubs.emplace_back(range.size);
-    steps.emplace_back(range.stride);
+    lbs.emplace_back(
+        getValueOrCreateConstantIndexOp(builder, loc, range.offset));
+    ubs.emplace_back(getValueOrCreateConstantIndexOp(builder, loc, range.size));
+    steps.emplace_back(
+        getValueOrCreateConstantIndexOp(builder, loc, range.stride));
   }
 }
 
@@ -78,20 +81,20 @@ Optional<linalg::LinalgOp> mlir::createAtomicLinalgGeneric(
 
   // FIXME: only support all Ranks are equal now
   auto maybeRank = getRank(inputs.back());
-  if (!maybeRank.hasValue())
+  if (!maybeRank.has_value())
     return llvm::None;
-  auto rank = maybeRank.getValue();
+  auto rank = maybeRank.value();
 
   for (auto val : inputs) {
     auto anotherMaybeRank = getRank(val);
-    if (!anotherMaybeRank.hasValue() || rank != anotherMaybeRank.getValue()) {
+    if (!anotherMaybeRank.has_value() || rank != anotherMaybeRank.value()) {
       return llvm::None;
     }
   }
 
   for (auto val : outputs) {
     auto anotherMaybeRank = getRank(val);
-    if (!anotherMaybeRank.hasValue() || rank != anotherMaybeRank.getValue()) {
+    if (!anotherMaybeRank.has_value() || rank != anotherMaybeRank.value()) {
       return llvm::None;
     }
   }

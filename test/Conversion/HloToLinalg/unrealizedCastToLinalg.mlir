@@ -19,6 +19,8 @@ func.func @test_shift_right_logical(%arg0: tensor<17x128x768xui32>, %arg1: tenso
 // CHECK:  builtin.unrealized_conversion_cast
 // CHECK-NEXT:  builtin.unrealized_conversion_cast
 // CHECK-NEXT:  arith.shrui
+// CHECK-NEXT:  arith.cmpi ult
+// CHECK-NEXT:  arith.select
 // CHECK-NEXT:  builtin.unrealized_conversion_cast
 // CHECK-NEXT:  linalg.yield
 

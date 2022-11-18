@@ -14,6 +14,7 @@
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
+#include "mlir/Dialect/MemRef/Transforms/Passes.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
@@ -24,6 +25,7 @@ void mlir::createAffineOptPipeline(OpPassManager &pm) {
         pm.addNestedPass<func::FuncOp>(createConvertLinalgToAffineLoopsPass());
         pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
         pm.addNestedPass<func::FuncOp>(createSimplifyAffineStructuresPass());
+        pm.addPass(memref::createFoldMemRefAliasOpsPass());
         pm.addPass(createLowerAffinePass());
         pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
         addCleanUpPassPipeline(pm);

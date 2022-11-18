@@ -32,7 +32,7 @@ bool isStaticAllocation(Value value) {
 size_t getSizeInBytes(Value value) {
   MemRefType t = value.getType().cast<MemRefType>();
   auto sizeInBits = getSizeInBits(t);
-  assert(sizeInBits.hasValue());
+  assert(sizeInBits.has_value());
   return (sizeInBits.getValue() + 7) >> 3;
 }
 

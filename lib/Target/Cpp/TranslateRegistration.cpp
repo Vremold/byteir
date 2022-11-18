@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Target/Cpp/ToCpp.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/EmitC/IR/EmitC.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -42,7 +42,7 @@ void byteir::registerToCppTranslation() {
       llvm::cl::init(false), llvm::cl::cat(CppCat));
 
   TranslateFromMLIRRegistration reg(
-      "emit-cpp",
+      "emit-cpp", "translate from mlir to cpp",
       [](ModuleOp module, raw_ostream &output) {
         return byteir::translateToCpp(
             module, output,
@@ -50,7 +50,7 @@ void byteir::registerToCppTranslation() {
       },
       [](DialectRegistry &registry) {
         // clang-format off
-        registry.insert<arith::ArithmeticDialect,
+        registry.insert<arith::ArithDialect,
                         cf::ControlFlowDialect,
                         emitc::EmitCDialect,
                         func::FuncDialect,

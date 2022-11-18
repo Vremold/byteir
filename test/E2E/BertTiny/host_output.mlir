@@ -3,262 +3,262 @@
 // CHECK-LABEL: func.func @main
 module attributes {byre.container_module, gpu.container_module} {
   func.func @main(%arg0: memref<2x128xi64, "cuda"> {byre.argname = "Input0", byre.argtype = 1 : i32}, %arg1: memref<2x128xi64, "cuda"> {byre.argname = "Input1", byre.argtype = 1 : i32}, %arg2: memref<1x512xi64, "cuda"> {byre.argname = "Input2", byre.argtype = 1 : i32}, %arg3: memref<1x512xi64, "cuda"> {byre.argname = "Input3", byre.argtype = 1 : i32}, %arg4: memref<30522x128xf32, "cuda"> {byre.argname = "Input4", byre.argtype = 1 : i32}, %arg5: memref<2x128xf32, "cuda"> {byre.argname = "Input5", byre.argtype = 1 : i32}, %arg6: memref<512x128xf32, "cuda"> {byre.argname = "Input6", byre.argtype = 1 : i32}, %arg7: memref<128xf32, "cuda"> {byre.argname = "Input7", byre.argtype = 1 : i32}, %arg8: memref<128xf32, "cuda"> {byre.argname = "Input8", byre.argtype = 1 : i32}, %arg9: memref<128x128xf32, "cuda"> {byre.argname = "Input9", byre.argtype = 1 : i32}, %arg10: memref<128xf32, "cuda"> {byre.argname = "Input10", byre.argtype = 1 : i32}, %arg11: memref<128x128xf32, "cuda"> {byre.argname = "Input11", byre.argtype = 1 : i32}, %arg12: memref<128xf32, "cuda"> {byre.argname = "Input12", byre.argtype = 1 : i32}, %arg13: memref<128x128xf32, "cuda"> {byre.argname = "Input13", byre.argtype = 1 : i32}, %arg14: memref<128xf32, "cuda"> {byre.argname = "Input14", byre.argtype = 1 : i32}, %arg15: memref<128x128xf32, "cuda"> {byre.argname = "Input15", byre.argtype = 1 : i32}, %arg16: memref<128xf32, "cuda"> {byre.argname = "Input16", byre.argtype = 1 : i32}, %arg17: memref<128xf32, "cuda"> {byre.argname = "Input17", byre.argtype = 1 : i32}, %arg18: memref<128xf32, "cuda"> {byre.argname = "Input18", byre.argtype = 1 : i32}, %arg19: memref<512x128xf32, "cuda"> {byre.argname = "Input19", byre.argtype = 1 : i32}, %arg20: memref<512xf32, "cuda"> {byre.argname = "Input20", byre.argtype = 1 : i32}, %arg21: memref<128x512xf32, "cuda"> {byre.argname = "Input21", byre.argtype = 1 : i32}, %arg22: memref<128xf32, "cuda"> {byre.argname = "Input22", byre.argtype = 1 : i32}, %arg23: memref<128xf32, "cuda"> {byre.argname = "Input23", byre.argtype = 1 : i32}, %arg24: memref<128xf32, "cuda"> {byre.argname = "Input24", byre.argtype = 1 : i32}, %arg25: memref<128x128xf32, "cuda"> {byre.argname = "Input25", byre.argtype = 1 : i32}, %arg26: memref<128xf32, "cuda"> {byre.argname = "Input26", byre.argtype = 1 : i32}, %arg27: memref<128x128xf32, "cuda"> {byre.argname = "Input27", byre.argtype = 1 : i32}, %arg28: memref<128xf32, "cuda"> {byre.argname = "Input28", byre.argtype = 1 : i32}, %arg29: memref<128x128xf32, "cuda"> {byre.argname = "Input29", byre.argtype = 1 : i32}, %arg30: memref<128xf32, "cuda"> {byre.argname = "Input30", byre.argtype = 1 : i32}, %arg31: memref<128x128xf32, "cuda"> {byre.argname = "Input31", byre.argtype = 1 : i32}, %arg32: memref<128xf32, "cuda"> {byre.argname = "Input32", byre.argtype = 1 : i32}, %arg33: memref<128xf32, "cuda"> {byre.argname = "Input33", byre.argtype = 1 : i32}, %arg34: memref<128xf32, "cuda"> {byre.argname = "Input34", byre.argtype = 1 : i32}, %arg35: memref<512x128xf32, "cuda"> {byre.argname = "Input35", byre.argtype = 1 : i32}, %arg36: memref<512xf32, "cuda"> {byre.argname = "Input36", byre.argtype = 1 : i32}, %arg37: memref<128x512xf32, "cuda"> {byre.argname = "Input37", byre.argtype = 1 : i32}, %arg38: memref<128xf32, "cuda"> {byre.argname = "Input38", byre.argtype = 1 : i32}, %arg39: memref<128xf32, "cuda"> {byre.argname = "Input39", byre.argtype = 1 : i32}, %arg40: memref<128xf32, "cuda"> {byre.argname = "Input40", byre.argtype = 1 : i32}, %arg41: memref<128x128xf32, "cuda"> {byre.argname = "Input41", byre.argtype = 1 : i32}, %arg42: memref<128xf32, "cuda"> {byre.argname = "Input42", byre.argtype = 1 : i32}, %arg43: memref<128xf32, "cuda"> {byre.argname = "Input43", byre.argtype = 1 : i32}, %arg44: memref<128xf32, "cuda"> {byre.argname = "Input44", byre.argtype = 1 : i32}, %arg45: memref<30522xf32, "cuda"> {byre.argname = "Input45", byre.argtype = 1 : i32}, %arg46: memref<2x128x30522xf32, "cuda"> {byre.argname = "Output0", byre.argtype = 2 : i32}, %arg47: memref<f32, "cuda"> {byre.argname = "Output1", byre.argtype = 2 : i32}, %arg48: memref<30522x128xf32, "cuda"> {byre.argname = "Output2", byre.argtype = 2 : i32}, %arg49: memref<2x128xf32, "cuda"> {byre.argname = "Output3", byre.argtype = 2 : i32}, %arg50: memref<512x128xf32, "cuda"> {byre.argname = "Output4", byre.argtype = 2 : i32}, %arg51: memref<128xf32, "cuda"> {byre.argname = "Output5", byre.argtype = 2 : i32}, %arg52: memref<128xf32, "cuda"> {byre.argname = "Output6", byre.argtype = 2 : i32}, %arg53: memref<128x128xf32, "cuda"> {byre.argname = "Output7", byre.argtype = 2 : i32}, %arg54: memref<128xf32, "cuda"> {byre.argname = "Output8", byre.argtype = 2 : i32}, %arg55: memref<128x128xf32, "cuda"> {byre.argname = "Output9", byre.argtype = 2 : i32}, %arg56: memref<128xf32, "cuda"> {byre.argname = "Output10", byre.argtype = 2 : i32}, %arg57: memref<128x128xf32, "cuda"> {byre.argname = "Output11", byre.argtype = 2 : i32}, %arg58: memref<128xf32, "cuda"> {byre.argname = "Output12", byre.argtype = 2 : i32}, %arg59: memref<128x128xf32, "cuda"> {byre.argname = "Output13", byre.argtype = 2 : i32}, %arg60: memref<128xf32, "cuda"> {byre.argname = "Output14", byre.argtype = 2 : i32}, %arg61: memref<128xf32, "cuda"> {byre.argname = "Output15", byre.argtype = 2 : i32}, %arg62: memref<128xf32, "cuda"> {byre.argname = "Output16", byre.argtype = 2 : i32}, %arg63: memref<512x128xf32, "cuda"> {byre.argname = "Output17", byre.argtype = 2 : i32}, %arg64: memref<512xf32, "cuda"> {byre.argname = "Output18", byre.argtype = 2 : i32}, %arg65: memref<128x512xf32, "cuda"> {byre.argname = "Output19", byre.argtype = 2 : i32}, %arg66: memref<128xf32, "cuda"> {byre.argname = "Output20", byre.argtype = 2 : i32}, %arg67: memref<128xf32, "cuda"> {byre.argname = "Output21", byre.argtype = 2 : i32}, %arg68: memref<128xf32, "cuda"> {byre.argname = "Output22", byre.argtype = 2 : i32}, %arg69: memref<128x128xf32, "cuda"> {byre.argname = "Output23", byre.argtype = 2 : i32}, %arg70: memref<128xf32, "cuda"> {byre.argname = "Output24", byre.argtype = 2 : i32}, %arg71: memref<128x128xf32, "cuda"> {byre.argname = "Output25", byre.argtype = 2 : i32}, %arg72: memref<128xf32, "cuda"> {byre.argname = "Output26", byre.argtype = 2 : i32}, %arg73: memref<128x128xf32, "cuda"> {byre.argname = "Output27", byre.argtype = 2 : i32}, %arg74: memref<128xf32, "cuda"> {byre.argname = "Output28", byre.argtype = 2 : i32}, %arg75: memref<128x128xf32, "cuda"> {byre.argname = "Output29", byre.argtype = 2 : i32}, %arg76: memref<128xf32, "cuda"> {byre.argname = "Output30", byre.argtype = 2 : i32}, %arg77: memref<128xf32, "cuda"> {byre.argname = "Output31", byre.argtype = 2 : i32}, %arg78: memref<128xf32, "cuda"> {byre.argname = "Output32", byre.argtype = 2 : i32}, %arg79: memref<512x128xf32, "cuda"> {byre.argname = "Output33", byre.argtype = 2 : i32}, %arg80: memref<512xf32, "cuda"> {byre.argname = "Output34", byre.argtype = 2 : i32}, %arg81: memref<128x512xf32, "cuda"> {byre.argname = "Output35", byre.argtype = 2 : i32}, %arg82: memref<128xf32, "cuda"> {byre.argname = "Output36", byre.argtype = 2 : i32}, %arg83: memref<128xf32, "cuda"> {byre.argname = "Output37", byre.argtype = 2 : i32}, %arg84: memref<128xf32, "cuda"> {byre.argname = "Output38", byre.argtype = 2 : i32}, %arg85: memref<128x128xf32, "cuda"> {byre.argname = "Output39", byre.argtype = 2 : i32}, %arg86: memref<128xf32, "cuda"> {byre.argname = "Output40", byre.argtype = 2 : i32}, %arg87: memref<128xf32, "cuda"> {byre.argname = "Output41", byre.argtype = 2 : i32}, %arg88: memref<128xf32, "cuda"> {byre.argname = "Output42", byre.argtype = 2 : i32}, %arg89: memref<30522xf32, "cuda"> {byre.argname = "Output43", byre.argtype = 2 : i32}) attributes {byre.entry_point, device_file_name = "your_file"} {
-    %0 = memref.alloc() : memref<0xi8, "cuda">
-    %1 = memref.alloc() : memref<0xi8, "cuda">
-    %2 = memref.alloc() : memref<0xi8, "cuda">
-    %3 = memref.alloc() : memref<16xi8, "cuda">
-    %4 = memref.alloc() : memref<32xi8, "cuda">
-    %5 = memref.alloc() : memref<32xi8, "cuda">
-    %6 = memref.alloc() : memref<32xi8, "cuda">
-    %7 = memref.alloc() : memref<1024xi8, "cuda">
-    %8 = memref.alloc() : memref<1024xi8, "cuda">
-    %9 = memref.alloc() : memref<1024xi8, "cuda">
-    %10 = memref.alloc() : memref<1024xi8, "cuda">
-    %11 = memref.alloc() : memref<1024xi8, "cuda">
-    %12 = memref.alloc() : memref<1024xi8, "cuda">
-    %13 = memref.alloc() : memref<1024xi8, "cuda">
-    %14 = memref.alloc() : memref<1024xi8, "cuda">
-    %15 = memref.alloc() : memref<1024xi8, "cuda">
-    %16 = memref.alloc() : memref<1024xi8, "cuda">
-    %17 = memref.alloc() : memref<1024xi8, "cuda">
-    %18 = memref.alloc() : memref<1024xi8, "cuda">
-    %19 = memref.alloc() : memref<1024xi8, "cuda">
-    %20 = memref.alloc() : memref<1024xi8, "cuda">
-    %21 = memref.alloc() : memref<2048xi8, "cuda">
-    %22 = memref.alloc() : memref<2048xi8, "cuda">
-    %23 = memref.alloc() : memref<65536xi8, "cuda">
-    %24 = memref.alloc() : memref<65536xi8, "cuda">
-    %25 = memref.alloc() : memref<131072xi8, "cuda">
-    %26 = memref.alloc() : memref<131072xi8, "cuda">
-    %27 = memref.alloc() : memref<131072xi8, "cuda">
-    %28 = memref.alloc() : memref<131072xi8, "cuda">
-    %29 = memref.alloc() : memref<131072xi8, "cuda">
-    %30 = memref.alloc() : memref<131072xi8, "cuda">
-    %31 = memref.alloc() : memref<131072xi8, "cuda">
-    %32 = memref.alloc() : memref<131072xi8, "cuda">
-    %33 = memref.alloc() : memref<131072xi8, "cuda">
-    %34 = memref.alloc() : memref<131072xi8, "cuda">
-    %35 = memref.alloc() : memref<131072xi8, "cuda">
-    %36 = memref.alloc() : memref<131072xi8, "cuda">
-    %37 = memref.alloc() : memref<131072xi8, "cuda">
-    %38 = memref.alloc() : memref<131072xi8, "cuda">
-    %39 = memref.alloc() : memref<131072xi8, "cuda">
-    %40 = memref.alloc() : memref<131072xi8, "cuda">
-    %41 = memref.alloc() : memref<131072xi8, "cuda">
-    %42 = memref.alloc() : memref<131072xi8, "cuda">
-    %43 = memref.alloc() : memref<131072xi8, "cuda">
-    %44 = memref.alloc() : memref<131072xi8, "cuda">
-    %45 = memref.alloc() : memref<131072xi8, "cuda">
-    %46 = memref.alloc() : memref<262144xi8, "cuda">
-    %47 = memref.alloc() : memref<262144xi8, "cuda">
-    %48 = memref.alloc() : memref<524288xi8, "cuda">
-    %49 = memref.alloc() : memref<524288xi8, "cuda">
-    %50 = memref.alloc() : memref<524288xi8, "cuda">
-    %51 = memref.alloc() : memref<524288xi8, "cuda">
-    %52 = memref.alloc() : memref<31254528xi8, "cuda">
-    %53 = memref.alloc() : memref<31254528xi8, "cuda">
-    %54 = memref.alloc() : memref<31254528xi8, "cuda">
-    %55 = memref.alloc() : memref<31254528xi8, "cuda">
-    %56 = memref.alloc() : memref<31254528xi8, "cuda">
-    %57 = memref.alloc() : memref<512x128xf32, "cuda">
-    byre.compute @FillOp(%57) {device = "cuda", memory_effects = [2 : i32], value = dense<0.000000e+00> : tensor<512x128xf32>} : memref<512x128xf32, "cuda">
-    %58 = memref.alloc() : memref<2x128xf32, "cuda">
-    byre.compute @FillOp(%58) {device = "cuda", memory_effects = [2 : i32], value = dense<0.000000e+00> : tensor<2x128xf32>} : memref<2x128xf32, "cuda">
-    %59 = memref.alloc() : memref<2x128x128xf32, "cuda">
-    byre.compute @FillOp(%59) {device = "cuda", memory_effects = [2 : i32], value = dense<-0.000000e+00> : tensor<2x128x128xf32>} : memref<2x128x128xf32, "cuda">
-    %60 = "byre.alias"(%arg2) {device = "cuda", offset = 0 : i64} : (memref<1x512xi64, "cuda">) -> memref<128xi64, "cuda">
-    %61 = "byre.alias"(%arg3) {device = "cuda", offset = 0 : i64} : (memref<1x512xi64, "cuda">) -> memref<1x128xi64, "cuda">
-    %62 = "byre.alias"(%6) {device = "cuda", offset = 0 : i64} : (memref<32xi8, "cuda">) -> memref<256xi1, "cuda">
-    byre.compute @PTXOp(%arg1, %62) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [2 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown0", memory_effects = [1 : i32, 2 : i32]} : memref<2x128xi64, "cuda">, memref<256xi1, "cuda">
-    %63 = "byre.alias"(%arg1) {device = "cuda", offset = 0 : i64} : (memref<2x128xi64, "cuda">) -> memref<256xi64, "cuda">
-    %64 = "byre.alias"(%56) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256xui32, "cuda">
-    %65 = "byre.alias"(%22) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<256x1xi64, "cuda">
-    %66 = "byre.alias"(%4) {device = "cuda", offset = 0 : i64} : (memref<32xi8, "cuda">) -> memref<256xi1, "cuda">
-    byre.compute @PTXOp(%arg0, %64, %65, %66) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [2 : i32, 1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown1", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128xi64, "cuda">, memref<256xui32, "cuda">, memref<256x1xi64, "cuda">, memref<256xi1, "cuda">
-    %67 = "byre.alias"(%55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x128xf32, "cuda">
-    byre.compute @IndexSelectOpf32ui32f32(%arg4, %64, %67) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<30522x128xf32, "cuda">, memref<256xui32, "cuda">, memref<256x128xf32, "cuda">
-    %68 = "byre.alias"(%55) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<256xui32, "cuda">
-    %69 = "byre.alias"(%21) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<256x1xi64, "cuda">
-    %70 = "byre.alias"(%5) {device = "cuda", offset = 0 : i64} : (memref<32xi8, "cuda">) -> memref<256xi1, "cuda">
-    byre.compute @PTXOp(%60, %68, %69, %70) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown2", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<128xi64, "cuda">, memref<256xui32, "cuda">, memref<256x1xi64, "cuda">, memref<256xi1, "cuda">
-    %71 = "byre.alias"(%56) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x128xf32, "cuda">
-    byre.compute @IndexSelectOpf32ui32f32(%arg5, %68, %71) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128xf32, "cuda">, memref<256xui32, "cuda">, memref<256x128xf32, "cuda">
-    %72 = "byre.alias"(%55) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<128xui32, "cuda">
-    %73 = "byre.alias"(%19) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<128x1xi64, "cuda">
-    %74 = "byre.alias"(%3) {device = "cuda", offset = 0 : i64} : (memref<16xi8, "cuda">) -> memref<128xi1, "cuda">
-    byre.compute @PTXOp(%61, %72, %73, %74) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [2 : i32, 1 : i32, 1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown3", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<1x128xi64, "cuda">, memref<128xui32, "cuda">, memref<128x1xi64, "cuda">, memref<128xi1, "cuda">
-    %75 = "byre.alias"(%56) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<128x128xf32, "cuda">
-    byre.compute @IndexSelectOpf32ui32f32(%arg6, %72, %75) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<512x128xf32, "cuda">, memref<128xui32, "cuda">, memref<128x128xf32, "cuda">
-    %76 = "byre.alias"(%35) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @PTXOp(%67, %71, %75, %76) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [2 : i32, 2 : i32, 2 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown4", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<256x128xf32, "cuda">, memref<256x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %77 = "byre.alias"(%36) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %78 = "byre.alias"(%18) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %79 = "byre.alias"(%17) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    byre.compute @ftv4.layernorm(%76, %arg7, %arg8, %77, %78, %79) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    %80 = "byre.alias"(%37) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.linear_transpose(%77, %arg9, %arg10, %80) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    %81 = "byre.alias"(%38) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.linear_transpose(%77, %arg11, %arg12, %81) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    %82 = "byre.alias"(%55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
-    byre.compute @ftv4.matmul(%80, %81, %82) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">
-    %83 = "byre.alias"(%47) {device = "cuda", offset = 0 : i64} : (memref<262144xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
-    %84 = "byre.alias"(%56) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
-    %85 = "byre.alias"(%24) {device = "cuda", offset = 0 : i64} : (memref<65536xi8, "cuda">) -> memref<2x2x128x128xui8, "cuda">
-    byre.compute @ftv4.softmax(%82, %59, %83, %84, %85) {batch_first = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xui8, "cuda">
-    %86 = "byre.alias"(%39) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.linear_transpose(%77, %arg13, %arg14, %86) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    %87 = "byre.alias"(%56) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.matmul(%83, %86, %87) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    %88 = "byre.alias"(%40) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x2x64xf32, "cuda">
-    byre.compute @ftv4.transpose4d(%87, %88) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x2x64xf32, "cuda">
-    %89 = "byre.alias"(%40) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %90 = "byre.alias"(%56) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.linear(%89, %arg15, %arg16, %90) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %91 = "byre.alias"(%34) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %92 = "byre.alias"(%16) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %93 = "byre.alias"(%15) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %94 = "byre.alias"(%25) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_residual(%90, %arg17, %arg18, %77, %91, %92, %93, %94) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %95 = "byre.alias"(%49) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
-    %96 = "byre.alias"(%50) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
-    %97 = "byre.alias"(%2) {device = "cuda", offset = 0 : i64} : (memref<0xi8, "cuda">) -> memref<0xf32, "cuda">
-    byre.compute @ftv4.linear_gelu_dropout(%91, %arg19, %arg20, %95, %96, %97) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<0xf32, "cuda">
-    byre.compute @ftv4.linear(%95, %arg21, %arg22, %90) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %98 = "byre.alias"(%26) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %99 = "byre.alias"(%14) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %100 = "byre.alias"(%13) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %101 = "byre.alias"(%27) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_residual(%90, %arg23, %arg24, %91, %98, %99, %100, %101) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %102 = "byre.alias"(%28) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.linear_transpose(%98, %arg25, %arg26, %102) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    %103 = "byre.alias"(%29) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.linear_transpose(%98, %arg27, %arg28, %103) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.matmul(%102, %103, %82) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">
-    %104 = "byre.alias"(%46) {device = "cuda", offset = 0 : i64} : (memref<262144xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
-    %105 = "byre.alias"(%23) {device = "cuda", offset = 0 : i64} : (memref<65536xi8, "cuda">) -> memref<2x2x128x128xui8, "cuda">
-    byre.compute @ftv4.softmax(%82, %59, %104, %84, %105) {batch_first = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xui8, "cuda">
-    %106 = "byre.alias"(%30) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.linear_transpose(%98, %arg29, %arg30, %106) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.matmul(%104, %106, %87) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    %107 = "byre.alias"(%31) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x2x64xf32, "cuda">
-    byre.compute @ftv4.transpose4d(%87, %107) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x2x64xf32, "cuda">
-    %108 = "byre.alias"(%31) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.linear(%108, %arg31, %arg32, %90) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %109 = "byre.alias"(%32) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %110 = "byre.alias"(%12) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %111 = "byre.alias"(%20) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %112 = "byre.alias"(%33) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_residual(%90, %arg33, %arg34, %98, %109, %110, %111, %112) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %113 = "byre.alias"(%51) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
-    %114 = "byre.alias"(%48) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
-    %115 = "byre.alias"(%1) {device = "cuda", offset = 0 : i64} : (memref<0xi8, "cuda">) -> memref<0xf32, "cuda">
-    byre.compute @ftv4.linear_gelu_dropout(%109, %arg35, %arg36, %113, %114, %115) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<0xf32, "cuda">
-    byre.compute @ftv4.linear(%113, %arg37, %arg38, %90) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %116 = "byre.alias"(%42) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %117 = "byre.alias"(%11) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %118 = "byre.alias"(%10) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %119 = "byre.alias"(%43) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_residual(%90, %arg39, %arg40, %109, %116, %117, %118, %119) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %120 = "byre.alias"(%44) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %121 = "byre.alias"(%45) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %122 = "byre.alias"(%0) {device = "cuda", offset = 0 : i64} : (memref<0xi8, "cuda">) -> memref<0xf32, "cuda">
-    byre.compute @ftv4.linear_gelu_dropout(%116, %arg41, %arg42, %120, %121, %122) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<0xf32, "cuda">
-    %123 = "byre.alias"(%41) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %124 = "byre.alias"(%9) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    %125 = "byre.alias"(%8) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    byre.compute @ftv4.layernorm(%120, %arg43, %arg44, %123, %124, %125) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    %126 = "byre.alias"(%41) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<256x128xf32, "cuda">
-    %127 = "byre.alias"(%56) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
-    byre.compute @MatmulOpf32f32f32(%126, %arg4, %127) {device = "cuda", lhs_contracting_dimension = 1 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], rhs_contracting_dimension = 1 : i64} : memref<256x128xf32, "cuda">, memref<30522x128xf32, "cuda">, memref<256x30522xf32, "cuda">
-    byre.compute @PTXOp(%127, %arg45, %arg46) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [2 : i32, 1 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown5", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<30522xf32, "cuda">, memref<2x128x30522xf32, "cuda">
-    %128 = "byre.alias"(%arg46) {device = "cuda", offset = 0 : i64} : (memref<2x128x30522xf32, "cuda">) -> memref<256x30522xf32, "cuda">
-    %129 = "byre.alias"(%54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256xf32, "cuda">
-    byre.compute @ReduceMaxOpf32f32(%128, %129) {device = "cuda", dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<256xf32, "cuda">
-    %130 = "byre.alias"(%55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
-    byre.compute @PTXOp(%129, %128, %127, %130) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown6", memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32]} : memref<256xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">
-    byre.compute @ReduceSumOpf32f32(%130, %129) {device = "cuda", dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<256xf32, "cuda">
-    %131 = "byre.alias"(%7) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
-    byre.compute @PTXOp(%129, %131) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown7", memory_effects = [1 : i32, 2 : i32]} : memref<256xf32, "cuda">, memref<256xf32, "cuda">
-    %132 = "byre.alias"(%54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
-    %133 = "byre.alias"(%53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
-    %134 = "byre.alias"(%52) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
-    byre.compute @PTXOp(%131, %127, %63, %62, %130, %132, %133, %134) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown8", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<256xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256xi64, "cuda">, memref<256xi1, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">
-    %135 = "byre.alias"(%56) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<f32, "cuda">
-    byre.compute @ReduceSumOpf32f32(%132, %135) {device = "cuda", dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<f32, "cuda">
-    %136 = "byre.alias"(%56) {device = "cuda", offset = 4 : i64} : (memref<31254528xi8, "cuda">) -> memref<f32, "cuda">
-    byre.compute @ReduceSumOpf32f32(%130, %136) {device = "cuda", dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<f32, "cuda">
-    byre.compute @PTXOp(%135, %136, %arg47) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [0 : i32, 0 : i32, 0 : i32], device = "cuda", kernel_name = "Unknown9", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<f32, "cuda">, memref<f32, "cuda">, memref<f32, "cuda">
-    byre.compute @ReduceSumOpf32f32(%130, %135) {device = "cuda", dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<f32, "cuda">
-    %137 = "byre.alias"(%54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<f32, "cuda">
-    byre.compute @PTXOp(%135, %137) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [0 : i32, 0 : i32], device = "cuda", kernel_name = "Unknown10", memory_effects = [1 : i32, 2 : i32]} : memref<f32, "cuda">, memref<f32, "cuda">
-    byre.compute @PTXOp(%137, %133, %130) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [0 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown11", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<f32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">
-    byre.compute @ReduceSumOpf32f32(%130, %129) {device = "cuda", dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<256xf32, "cuda">
-    byre.compute @PTXOp(%129, %134, %130, %127) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown12", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<256xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">
-    %138 = "byre.alias"(%56) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x30522xf32, "cuda">
-    %139 = "byre.alias"(%55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<30522x128xf32, "cuda">
-    byre.compute @MatmulOpf32f32f32(%126, %127, %139) {device = "cuda", lhs_contracting_dimension = 0 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], output_transpose, rhs_contracting_dimension = 0 : i64} : memref<256x128xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<30522x128xf32, "cuda">
-    %140 = "byre.alias"(%55) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x128xf32, "cuda">
-    byre.compute @MatmulOpf32f32f32(%127, %arg4, %140) {device = "cuda", lhs_contracting_dimension = 1 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], rhs_contracting_dimension = 0 : i64} : memref<256x30522xf32, "cuda">, memref<30522x128xf32, "cuda">, memref<256x128xf32, "cuda">
-    %141 = "byre.alias"(%55) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    %142 = "byre.alias"(%54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_backward(%141, %120, %arg43, %124, %125, %142, %arg87, %arg88) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @ftv4.linear_gelu_dropout_backward(%142, %116, %arg41, %121, %122, %141, %arg85, %arg86) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<0xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    %143 = "byre.alias"(%53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_backward_residual(%141, %119, %arg39, %117, %118, %142, %arg83, %arg84, %143) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %144 = "byre.alias"(%55) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
-    byre.compute @ftv4.linear_backward(%142, %113, %arg37, %144, %arg81, %arg82) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @ftv4.linear_gelu_dropout_backward(%144, %109, %arg35, %114, %115, %142, %arg79, %arg80) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x512xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<0xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<512xf32, "cuda">
-    %145 = "byre.alias"(%52) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @PTXOp(%143, %142, %145) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown14", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    %146 = "byre.alias"(%51) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_backward_residual(%145, %112, %arg33, %110, %111, %141, %arg77, %arg78, %146) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.linear_backward(%141, %108, %arg31, %142, %arg75, %arg76) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    %147 = "byre.alias"(%54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x2x64xf32, "cuda">
-    %148 = "byre.alias"(%55) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.transpose4d_backward(%147, %148) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x128x2x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    %149 = "byre.alias"(%54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
-    %150 = "byre.alias"(%53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.matmul_backward(%148, %104, %106, %149, %150) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    %151 = "byre.alias"(%55) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
-    byre.compute @ftv4.softmax_backward(%149, %104, %105, %151) {device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xui8, "cuda">, memref<2x2x128x128xf32, "cuda">
-    %152 = "byre.alias"(%53) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    %153 = "byre.alias"(%52) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.matmul_backward(%151, %102, %103, %152, %153) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.linear_transpose_backward(%152, %98, %arg25, %142, %arg69, %arg70) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @ftv4.linear_transpose_backward(%150, %98, %arg29, %141, %arg73, %arg74) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    %154 = "byre.alias"(%55) {device = "cuda", offset = 15758336 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.linear_transpose_backward(%153, %98, %arg27, %154, %arg71, %arg72) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%146, %142, %141, %154, %143) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown15", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_backward_residual(%143, %101, %arg23, %99, %100, %142, %arg67, %arg68, %145) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.linear_backward(%142, %95, %arg21, %144, %arg65, %arg66) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @ftv4.linear_gelu_dropout_backward(%144, %91, %arg19, %96, %97, %142, %arg63, %arg64) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x512xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<0xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<512xf32, "cuda">
-    byre.compute @PTXOp(%145, %142, %141) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown16", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_backward_residual(%141, %94, %arg17, %92, %93, %142, %arg61, %arg62, %145) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.linear_backward(%142, %89, %arg15, %141, %arg59, %arg60) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    %155 = "byre.alias"(%55) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x2x64xf32, "cuda">
-    %156 = "byre.alias"(%54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.transpose4d_backward(%155, %156) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x128x2x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.matmul_backward(%156, %83, %86, %151, %150) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.softmax_backward(%151, %83, %85, %149) {device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xui8, "cuda">, memref<2x2x128x128xf32, "cuda">
-    %157 = "byre.alias"(%55) {device = "cuda", offset = 15758336 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.matmul_backward(%149, %80, %81, %157, %148) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
-    byre.compute @ftv4.linear_transpose_backward(%157, %77, %arg9, %142, %arg53, %arg54) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    %158 = "byre.alias"(%54) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.linear_transpose_backward(%150, %77, %arg13, %158, %arg57, %arg58) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    %159 = "byre.alias"(%54) {device = "cuda", offset = 262144 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.linear_transpose_backward(%148, %77, %arg11, %159, %arg55, %arg56) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
-    byre.compute @PTXOp(%145, %142, %158, %159, %141) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown17", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
-    byre.compute @ftv4.layernorm_backward(%141, %76, %arg7, %78, %79, %142, %arg51, %arg52) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
-    %160 = "byre.alias"(%54) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x128xf32, "cuda">
-    byre.compute @PTXOp(%66, %142, %70, %140, %160) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [1 : i32, 3 : i32, 1 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown18", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32]} : memref<256xi1, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xi1, "cuda">, memref<256x128xf32, "cuda">, memref<256x128xf32, "cuda">
-    byre.compute @IndexPutOpf32i64f32f32(%139, %65, %140, %arg48) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<30522x128xf32, "cuda">, memref<256x1xi64, "cuda">, memref<256x128xf32, "cuda">, memref<30522x128xf32, "cuda">
-    byre.compute @IndexPutOpf32i64f32f32(%58, %69, %160, %arg49) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128xf32, "cuda">, memref<256x1xi64, "cuda">, memref<256x128xf32, "cuda">, memref<2x128xf32, "cuda">
-    %161 = "byre.alias"(%53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<128x128xf32, "cuda">
-    byre.compute @ReduceSumOpf32f32(%142, %161) {device = "cuda", dimensions = dense<0> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">
-    %162 = "byre.alias"(%55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<128x128xf32, "cuda">
-    byre.compute @PTXOp(%74, %161, %162) {BlockSize.x = 128 : i32, GridSize.x = 128 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown19", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<128xi1, "cuda">, memref<128x128xf32, "cuda">, memref<128x128xf32, "cuda">
-    byre.compute @IndexPutOpf32i64f32f32(%57, %73, %162, %arg50) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<512x128xf32, "cuda">, memref<128x1xi64, "cuda">, memref<128x128xf32, "cuda">, memref<512x128xf32, "cuda">
-    byre.compute @ReduceSumOpf32f32(%138, %arg89) {device = "cuda", dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<2x128x30522xf32, "cuda">, memref<30522xf32, "cuda">
+    %alloc = memref.alloc() : memref<0xi8, "cuda">
+    %alloc_0 = memref.alloc() : memref<0xi8, "cuda">
+    %alloc_1 = memref.alloc() : memref<0xi8, "cuda">
+    %alloc_2 = memref.alloc() : memref<16xi8, "cuda">
+    %alloc_3 = memref.alloc() : memref<32xi8, "cuda">
+    %alloc_4 = memref.alloc() : memref<32xi8, "cuda">
+    %alloc_5 = memref.alloc() : memref<32xi8, "cuda">
+    %alloc_6 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_7 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_8 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_9 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_10 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_11 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_12 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_13 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_14 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_15 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_16 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_17 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_18 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_19 = memref.alloc() : memref<1024xi8, "cuda">
+    %alloc_20 = memref.alloc() : memref<2048xi8, "cuda">
+    %alloc_21 = memref.alloc() : memref<2048xi8, "cuda">
+    %alloc_22 = memref.alloc() : memref<65536xi8, "cuda">
+    %alloc_23 = memref.alloc() : memref<65536xi8, "cuda">
+    %alloc_24 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_25 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_26 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_27 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_28 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_29 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_30 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_31 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_32 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_33 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_34 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_35 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_36 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_37 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_38 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_39 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_40 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_41 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_42 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_43 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_44 = memref.alloc() : memref<131072xi8, "cuda">
+    %alloc_45 = memref.alloc() : memref<262144xi8, "cuda">
+    %alloc_46 = memref.alloc() : memref<262144xi8, "cuda">
+    %alloc_47 = memref.alloc() : memref<524288xi8, "cuda">
+    %alloc_48 = memref.alloc() : memref<524288xi8, "cuda">
+    %alloc_49 = memref.alloc() : memref<524288xi8, "cuda">
+    %alloc_50 = memref.alloc() : memref<524288xi8, "cuda">
+    %alloc_51 = memref.alloc() : memref<31254528xi8, "cuda">
+    %alloc_52 = memref.alloc() : memref<31254528xi8, "cuda">
+    %alloc_53 = memref.alloc() : memref<31254528xi8, "cuda">
+    %alloc_54 = memref.alloc() : memref<31254528xi8, "cuda">
+    %alloc_55 = memref.alloc() : memref<31254528xi8, "cuda">
+    %alloc_56 = memref.alloc() : memref<512x128xf32, "cuda">
+    byre.compute @FillOp(%alloc_56) {device = "cuda", memory_effects = [2 : i32], value = dense<0.000000e+00> : tensor<512x128xf32>} : memref<512x128xf32, "cuda">
+    %alloc_57 = memref.alloc() : memref<2x128xf32, "cuda">
+    byre.compute @FillOp(%alloc_57) {device = "cuda", memory_effects = [2 : i32], value = dense<0.000000e+00> : tensor<2x128xf32>} : memref<2x128xf32, "cuda">
+    %alloc_58 = memref.alloc() : memref<2x128x128xf32, "cuda">
+    byre.compute @FillOp(%alloc_58) {device = "cuda", memory_effects = [2 : i32], value = dense<-0.000000e+00> : tensor<2x128x128xf32>} : memref<2x128x128xf32, "cuda">
+    %0 = "byre.alias"(%arg2) {device = "cuda", offset = 0 : i64} : (memref<1x512xi64, "cuda">) -> memref<128xi64, "cuda">
+    %1 = "byre.alias"(%arg3) {device = "cuda", offset = 0 : i64} : (memref<1x512xi64, "cuda">) -> memref<1x128xi64, "cuda">
+    %2 = "byre.alias"(%alloc_5) {device = "cuda", offset = 0 : i64} : (memref<32xi8, "cuda">) -> memref<256xi1, "cuda">
+    byre.compute @PTXOp(%arg1, %2) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [2 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown0", memory_effects = [1 : i32, 2 : i32]} : memref<2x128xi64, "cuda">, memref<256xi1, "cuda">
+    %3 = "byre.alias"(%arg1) {device = "cuda", offset = 0 : i64} : (memref<2x128xi64, "cuda">) -> memref<256xi64, "cuda">
+    %4 = "byre.alias"(%alloc_55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256xui32, "cuda">
+    %5 = "byre.alias"(%alloc_21) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<256x1xi64, "cuda">
+    %6 = "byre.alias"(%alloc_3) {device = "cuda", offset = 0 : i64} : (memref<32xi8, "cuda">) -> memref<256xi1, "cuda">
+    byre.compute @PTXOp(%arg0, %4, %5, %6) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [2 : i32, 1 : i32, 2 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown1", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128xi64, "cuda">, memref<256xui32, "cuda">, memref<256x1xi64, "cuda">, memref<256xi1, "cuda">
+    %7 = "byre.alias"(%alloc_54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x128xf32, "cuda">
+    byre.compute @IndexSelectOpf32ui32f32(%arg4, %4, %7) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<30522x128xf32, "cuda">, memref<256xui32, "cuda">, memref<256x128xf32, "cuda">
+    %8 = "byre.alias"(%alloc_54) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<256xui32, "cuda">
+    %9 = "byre.alias"(%alloc_20) {device = "cuda", offset = 0 : i64} : (memref<2048xi8, "cuda">) -> memref<256x1xi64, "cuda">
+    %10 = "byre.alias"(%alloc_4) {device = "cuda", offset = 0 : i64} : (memref<32xi8, "cuda">) -> memref<256xi1, "cuda">
+    byre.compute @PTXOp(%0, %8, %9, %10) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32, 2 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown2", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<128xi64, "cuda">, memref<256xui32, "cuda">, memref<256x1xi64, "cuda">, memref<256xi1, "cuda">
+    %11 = "byre.alias"(%alloc_55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x128xf32, "cuda">
+    byre.compute @IndexSelectOpf32ui32f32(%arg5, %8, %11) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128xf32, "cuda">, memref<256xui32, "cuda">, memref<256x128xf32, "cuda">
+    %12 = "byre.alias"(%alloc_54) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<128xui32, "cuda">
+    %13 = "byre.alias"(%alloc_18) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<128x1xi64, "cuda">
+    %14 = "byre.alias"(%alloc_2) {device = "cuda", offset = 0 : i64} : (memref<16xi8, "cuda">) -> memref<128xi1, "cuda">
+    byre.compute @PTXOp(%1, %12, %13, %14) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [2 : i32, 1 : i32, 2 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown3", memory_effects = [1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<1x128xi64, "cuda">, memref<128xui32, "cuda">, memref<128x1xi64, "cuda">, memref<128xi1, "cuda">
+    %15 = "byre.alias"(%alloc_55) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<128x128xf32, "cuda">
+    byre.compute @IndexSelectOpf32ui32f32(%arg6, %12, %15) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<512x128xf32, "cuda">, memref<128xui32, "cuda">, memref<128x128xf32, "cuda">
+    %16 = "byre.alias"(%alloc_34) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @PTXOp(%7, %11, %15, %16) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [2 : i32, 2 : i32, 2 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown4", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<256x128xf32, "cuda">, memref<256x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %17 = "byre.alias"(%alloc_35) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %18 = "byre.alias"(%alloc_17) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %19 = "byre.alias"(%alloc_16) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @ftv4.layernorm(%16, %arg7, %arg8, %17, %18, %19) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    %20 = "byre.alias"(%alloc_36) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.linear_transpose(%17, %arg9, %arg10, %20) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    %21 = "byre.alias"(%alloc_37) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.linear_transpose(%17, %arg11, %arg12, %21) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    %22 = "byre.alias"(%alloc_54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
+    byre.compute @ftv4.matmul(%20, %21, %22) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">
+    %23 = "byre.alias"(%alloc_46) {device = "cuda", offset = 0 : i64} : (memref<262144xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
+    %24 = "byre.alias"(%alloc_55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
+    %25 = "byre.alias"(%alloc_23) {device = "cuda", offset = 0 : i64} : (memref<65536xi8, "cuda">) -> memref<2x2x128x128xui8, "cuda">
+    byre.compute @ftv4.softmax(%22, %alloc_58, %23, %24, %25) {batch_first = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xui8, "cuda">
+    %26 = "byre.alias"(%alloc_38) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.linear_transpose(%17, %arg13, %arg14, %26) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    %27 = "byre.alias"(%alloc_55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.matmul(%23, %26, %27) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    %28 = "byre.alias"(%alloc_39) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x2x64xf32, "cuda">
+    byre.compute @ftv4.transpose4d(%27, %28) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x2x64xf32, "cuda">
+    %29 = "byre.alias"(%alloc_39) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %30 = "byre.alias"(%alloc_55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.linear(%29, %arg15, %arg16, %30) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %31 = "byre.alias"(%alloc_33) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %32 = "byre.alias"(%alloc_15) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %33 = "byre.alias"(%alloc_14) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %34 = "byre.alias"(%alloc_24) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_residual(%30, %arg17, %arg18, %17, %31, %32, %33, %34) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %35 = "byre.alias"(%alloc_48) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
+    %36 = "byre.alias"(%alloc_49) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
+    %37 = "byre.alias"(%alloc_1) {device = "cuda", offset = 0 : i64} : (memref<0xi8, "cuda">) -> memref<0xf32, "cuda">
+    byre.compute @ftv4.linear_gelu_dropout(%31, %arg19, %arg20, %35, %36, %37) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<0xf32, "cuda">
+    byre.compute @ftv4.linear(%35, %arg21, %arg22, %30) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %38 = "byre.alias"(%alloc_25) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %39 = "byre.alias"(%alloc_13) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %40 = "byre.alias"(%alloc_12) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %41 = "byre.alias"(%alloc_26) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_residual(%30, %arg23, %arg24, %31, %38, %39, %40, %41) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %42 = "byre.alias"(%alloc_27) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.linear_transpose(%38, %arg25, %arg26, %42) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    %43 = "byre.alias"(%alloc_28) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.linear_transpose(%38, %arg27, %arg28, %43) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.matmul(%42, %43, %22) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">
+    %44 = "byre.alias"(%alloc_45) {device = "cuda", offset = 0 : i64} : (memref<262144xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
+    %45 = "byre.alias"(%alloc_22) {device = "cuda", offset = 0 : i64} : (memref<65536xi8, "cuda">) -> memref<2x2x128x128xui8, "cuda">
+    byre.compute @ftv4.softmax(%22, %alloc_58, %44, %24, %45) {batch_first = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xui8, "cuda">
+    %46 = "byre.alias"(%alloc_29) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.linear_transpose(%38, %arg29, %arg30, %46) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.matmul(%44, %46, %27) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    %47 = "byre.alias"(%alloc_30) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x2x64xf32, "cuda">
+    byre.compute @ftv4.transpose4d(%27, %47) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x2x64xf32, "cuda">
+    %48 = "byre.alias"(%alloc_30) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.linear(%48, %arg31, %arg32, %30) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %49 = "byre.alias"(%alloc_31) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %50 = "byre.alias"(%alloc_11) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %51 = "byre.alias"(%alloc_19) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %52 = "byre.alias"(%alloc_32) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_residual(%30, %arg33, %arg34, %38, %49, %50, %51, %52) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %53 = "byre.alias"(%alloc_50) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
+    %54 = "byre.alias"(%alloc_47) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
+    %55 = "byre.alias"(%alloc_0) {device = "cuda", offset = 0 : i64} : (memref<0xi8, "cuda">) -> memref<0xf32, "cuda">
+    byre.compute @ftv4.linear_gelu_dropout(%49, %arg35, %arg36, %53, %54, %55) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<0xf32, "cuda">
+    byre.compute @ftv4.linear(%53, %arg37, %arg38, %30) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %56 = "byre.alias"(%alloc_41) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %57 = "byre.alias"(%alloc_10) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %58 = "byre.alias"(%alloc_9) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %59 = "byre.alias"(%alloc_42) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_residual(%30, %arg39, %arg40, %49, %56, %57, %58, %59) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %60 = "byre.alias"(%alloc_43) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %61 = "byre.alias"(%alloc_44) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %62 = "byre.alias"(%alloc) {device = "cuda", offset = 0 : i64} : (memref<0xi8, "cuda">) -> memref<0xf32, "cuda">
+    byre.compute @ftv4.linear_gelu_dropout(%56, %arg41, %arg42, %60, %61, %62) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<0xf32, "cuda">
+    %63 = "byre.alias"(%alloc_40) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %64 = "byre.alias"(%alloc_8) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    %65 = "byre.alias"(%alloc_7) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @ftv4.layernorm(%60, %arg43, %arg44, %63, %64, %65) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    %66 = "byre.alias"(%alloc_40) {device = "cuda", offset = 0 : i64} : (memref<131072xi8, "cuda">) -> memref<256x128xf32, "cuda">
+    %67 = "byre.alias"(%alloc_55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
+    byre.compute @MatmulOpf32f32f32(%66, %arg4, %67) {device = "cuda", lhs_contracting_dimension = 1 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], rhs_contracting_dimension = 1 : i64} : memref<256x128xf32, "cuda">, memref<30522x128xf32, "cuda">, memref<256x30522xf32, "cuda">
+    byre.compute @PTXOp(%67, %arg45, %arg46) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [2 : i32, 1 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown5", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<30522xf32, "cuda">, memref<2x128x30522xf32, "cuda">
+    %68 = "byre.alias"(%arg46) {device = "cuda", offset = 0 : i64} : (memref<2x128x30522xf32, "cuda">) -> memref<256x30522xf32, "cuda">
+    %69 = "byre.alias"(%alloc_53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @ReduceMaxOpf32f32(%68, %69) {device = "cuda", dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<256xf32, "cuda">
+    %70 = "byre.alias"(%alloc_54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
+    byre.compute @PTXOp(%69, %68, %67, %70) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown6", memory_effects = [1 : i32, 1 : i32, 2 : i32, 2 : i32]} : memref<256xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">
+    byre.compute @ReduceSumOpf32f32(%70, %69) {device = "cuda", dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<256xf32, "cuda">
+    %71 = "byre.alias"(%alloc_6) {device = "cuda", offset = 0 : i64} : (memref<1024xi8, "cuda">) -> memref<256xf32, "cuda">
+    byre.compute @PTXOp(%69, %71) {BlockSize.x = 128 : i32, GridSize.x = 2 : i32, arg_ranks = [1 : i32, 1 : i32], device = "cuda", kernel_name = "Unknown7", memory_effects = [1 : i32, 2 : i32]} : memref<256xf32, "cuda">, memref<256xf32, "cuda">
+    %72 = "byre.alias"(%alloc_53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
+    %73 = "byre.alias"(%alloc_52) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
+    %74 = "byre.alias"(%alloc_51) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x30522xf32, "cuda">
+    byre.compute @PTXOp(%71, %67, %3, %2, %70, %72, %73, %74) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown8", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<256xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256xi64, "cuda">, memref<256xi1, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">
+    %75 = "byre.alias"(%alloc_55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<f32, "cuda">
+    byre.compute @ReduceSumOpf32f32(%72, %75) {device = "cuda", dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<f32, "cuda">
+    %76 = "byre.alias"(%alloc_55) {device = "cuda", offset = 4 : i64} : (memref<31254528xi8, "cuda">) -> memref<f32, "cuda">
+    byre.compute @ReduceSumOpf32f32(%70, %76) {device = "cuda", dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<f32, "cuda">
+    byre.compute @PTXOp(%75, %76, %arg47) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [0 : i32, 0 : i32, 0 : i32], device = "cuda", kernel_name = "Unknown9", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<f32, "cuda">, memref<f32, "cuda">, memref<f32, "cuda">
+    byre.compute @ReduceSumOpf32f32(%70, %75) {device = "cuda", dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<f32, "cuda">
+    %77 = "byre.alias"(%alloc_53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<f32, "cuda">
+    byre.compute @PTXOp(%75, %77) {BlockSize.x = 128 : i32, GridSize.x = 1 : i32, arg_ranks = [0 : i32, 0 : i32], device = "cuda", kernel_name = "Unknown10", memory_effects = [1 : i32, 2 : i32]} : memref<f32, "cuda">, memref<f32, "cuda">
+    byre.compute @PTXOp(%77, %73, %70) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [0 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown11", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<f32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">
+    byre.compute @ReduceSumOpf32f32(%70, %69) {device = "cuda", dimensions = dense<1> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<256x30522xf32, "cuda">, memref<256xf32, "cuda">
+    byre.compute @PTXOp(%69, %74, %70, %67) {BlockSize.x = 128 : i32, GridSize.x = 61044 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown12", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<256xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<256x30522xf32, "cuda">
+    %78 = "byre.alias"(%alloc_55) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x30522xf32, "cuda">
+    %79 = "byre.alias"(%alloc_54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<30522x128xf32, "cuda">
+    byre.compute @MatmulOpf32f32f32(%66, %67, %79) {device = "cuda", lhs_contracting_dimension = 0 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], output_transpose, rhs_contracting_dimension = 0 : i64} : memref<256x128xf32, "cuda">, memref<256x30522xf32, "cuda">, memref<30522x128xf32, "cuda">
+    %80 = "byre.alias"(%alloc_54) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x128xf32, "cuda">
+    byre.compute @MatmulOpf32f32f32(%67, %arg4, %80) {device = "cuda", lhs_contracting_dimension = 1 : i64, memory_effects = [1 : i32, 1 : i32, 2 : i32], rhs_contracting_dimension = 0 : i64} : memref<256x30522xf32, "cuda">, memref<30522x128xf32, "cuda">, memref<256x128xf32, "cuda">
+    %81 = "byre.alias"(%alloc_54) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    %82 = "byre.alias"(%alloc_53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_backward(%81, %60, %arg43, %64, %65, %82, %arg87, %arg88) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @ftv4.linear_gelu_dropout_backward(%82, %56, %arg41, %61, %62, %81, %arg85, %arg86) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<0xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    %83 = "byre.alias"(%alloc_52) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_backward_residual(%81, %59, %arg39, %57, %58, %82, %arg83, %arg84, %83) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %84 = "byre.alias"(%alloc_54) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x512xf32, "cuda">
+    byre.compute @ftv4.linear_backward(%82, %53, %arg37, %84, %arg81, %arg82) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @ftv4.linear_gelu_dropout_backward(%84, %49, %arg35, %54, %55, %82, %arg79, %arg80) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x512xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<0xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<512xf32, "cuda">
+    %85 = "byre.alias"(%alloc_51) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @PTXOp(%83, %82, %85) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown14", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    %86 = "byre.alias"(%alloc_50) {device = "cuda", offset = 0 : i64} : (memref<524288xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_backward_residual(%85, %52, %arg33, %50, %51, %81, %arg77, %arg78, %86) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.linear_backward(%81, %48, %arg31, %82, %arg75, %arg76) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    %87 = "byre.alias"(%alloc_53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x2x64xf32, "cuda">
+    %88 = "byre.alias"(%alloc_54) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.transpose4d_backward(%87, %88) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x128x2x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    %89 = "byre.alias"(%alloc_53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
+    %90 = "byre.alias"(%alloc_52) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.matmul_backward(%88, %44, %46, %89, %90) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    %91 = "byre.alias"(%alloc_54) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x128xf32, "cuda">
+    byre.compute @ftv4.softmax_backward(%89, %44, %45, %91) {device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xui8, "cuda">, memref<2x2x128x128xf32, "cuda">
+    %92 = "byre.alias"(%alloc_52) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    %93 = "byre.alias"(%alloc_51) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.matmul_backward(%91, %42, %43, %92, %93) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.linear_transpose_backward(%92, %38, %arg25, %82, %arg69, %arg70) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @ftv4.linear_transpose_backward(%90, %38, %arg29, %81, %arg73, %arg74) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    %94 = "byre.alias"(%alloc_54) {device = "cuda", offset = 15758336 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.linear_transpose_backward(%93, %38, %arg27, %94, %arg71, %arg72) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%86, %82, %81, %94, %83) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown15", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_backward_residual(%83, %41, %arg23, %39, %40, %82, %arg67, %arg68, %85) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.linear_backward(%82, %35, %arg21, %84, %arg65, %arg66) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<128x512xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @ftv4.linear_gelu_dropout_backward(%84, %31, %arg19, %36, %37, %82, %arg63, %arg64) {act_gelu = true, device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x512xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<2x128x512xf32, "cuda">, memref<0xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<512x128xf32, "cuda">, memref<512xf32, "cuda">
+    byre.compute @PTXOp(%85, %82, %81) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown16", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_backward_residual(%81, %34, %arg17, %32, %33, %82, %arg61, %arg62, %85) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.linear_backward(%82, %29, %arg15, %81, %arg59, %arg60) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    %95 = "byre.alias"(%alloc_54) {device = "cuda", offset = 15627264 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x2x64xf32, "cuda">
+    %96 = "byre.alias"(%alloc_53) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.transpose4d_backward(%95, %96) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", memory_effects = [1 : i32, 2 : i32]} : memref<2x128x2x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.matmul_backward(%96, %23, %26, %91, %90) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.000000e+00 : f32, transpose_a = false, transpose_b = false} : memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.softmax_backward(%91, %23, %25, %89) {device = "cuda", dropout_rate = 0.000000e+00 : f32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xf32, "cuda">, memref<2x2x128x128xui8, "cuda">, memref<2x2x128x128xf32, "cuda">
+    %97 = "byre.alias"(%alloc_54) {device = "cuda", offset = 15758336 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.matmul_backward(%89, %20, %21, %97, %88) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32], scale = 1.250000e-01 : f32, transpose_a = false, transpose_b = true} : memref<2x2x128x128xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">, memref<2x2x128x64xf32, "cuda">
+    byre.compute @ftv4.linear_transpose_backward(%97, %17, %arg9, %82, %arg53, %arg54) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    %98 = "byre.alias"(%alloc_53) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.linear_transpose_backward(%90, %17, %arg13, %98, %arg57, %arg58) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    %99 = "byre.alias"(%alloc_53) {device = "cuda", offset = 262144 : i64} : (memref<31254528xi8, "cuda">) -> memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.linear_transpose_backward(%88, %17, %arg11, %99, %arg55, %arg56) {device = "cuda", forward_transpose_type = "TRANSPOSE0213", head_num = 2 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x2x128x64xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">, memref<128xf32, "cuda">
+    byre.compute @PTXOp(%85, %82, %98, %99, %81) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [3 : i32, 3 : i32, 3 : i32, 3 : i32, 3 : i32], device = "cuda", kernel_name = "Unknown17", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">
+    byre.compute @ftv4.layernorm_backward(%81, %16, %arg7, %18, %19, %82, %arg51, %arg52) {device = "cuda", memory_effects = [1 : i32, 1 : i32, 1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<256xf32, "cuda">, memref<256xf32, "cuda">, memref<2x128x128xf32, "cuda">, memref<128xf32, "cuda">, memref<128xf32, "cuda">
+    %100 = "byre.alias"(%alloc_53) {device = "cuda", offset = 131072 : i64} : (memref<31254528xi8, "cuda">) -> memref<256x128xf32, "cuda">
+    byre.compute @PTXOp(%6, %82, %10, %80, %100) {BlockSize.x = 128 : i32, GridSize.x = 256 : i32, arg_ranks = [1 : i32, 3 : i32, 1 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown18", memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32, 2 : i32]} : memref<256xi1, "cuda">, memref<2x128x128xf32, "cuda">, memref<256xi1, "cuda">, memref<256x128xf32, "cuda">, memref<256x128xf32, "cuda">
+    byre.compute @IndexPutOpf32i64f32f32(%79, %5, %80, %arg48) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<30522x128xf32, "cuda">, memref<256x1xi64, "cuda">, memref<256x128xf32, "cuda">, memref<30522x128xf32, "cuda">
+    byre.compute @IndexPutOpf32i64f32f32(%alloc_57, %9, %100, %arg49) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<2x128xf32, "cuda">, memref<256x1xi64, "cuda">, memref<256x128xf32, "cuda">, memref<2x128xf32, "cuda">
+    %101 = "byre.alias"(%alloc_52) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<128x128xf32, "cuda">
+    byre.compute @ReduceSumOpf32f32(%82, %101) {device = "cuda", dimensions = dense<0> : tensor<1xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<2x128x128xf32, "cuda">, memref<128x128xf32, "cuda">
+    %102 = "byre.alias"(%alloc_54) {device = "cuda", offset = 0 : i64} : (memref<31254528xi8, "cuda">) -> memref<128x128xf32, "cuda">
+    byre.compute @PTXOp(%14, %101, %102) {BlockSize.x = 128 : i32, GridSize.x = 128 : i32, arg_ranks = [1 : i32, 2 : i32, 2 : i32], device = "cuda", kernel_name = "Unknown19", memory_effects = [1 : i32, 1 : i32, 2 : i32]} : memref<128xi1, "cuda">, memref<128x128xf32, "cuda">, memref<128x128xf32, "cuda">
+    byre.compute @IndexPutOpf32i64f32f32(%alloc_56, %13, %102, %arg50) {device = "cuda", dim = 0 : i32, memory_effects = [1 : i32, 1 : i32, 1 : i32, 2 : i32]} : memref<512x128xf32, "cuda">, memref<128x1xi64, "cuda">, memref<128x128xf32, "cuda">, memref<512x128xf32, "cuda">
+    byre.compute @ReduceSumOpf32f32(%78, %arg89) {device = "cuda", dimensions = dense<[0, 1]> : tensor<2xi64>, memory_effects = [1 : i32, 2 : i32]} : memref<2x128x30522xf32, "cuda">, memref<30522xf32, "cuda">
     return
   }
 }

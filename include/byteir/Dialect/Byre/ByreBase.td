@@ -175,12 +175,12 @@ def ByreInterface : OpInterface<"ByreOp"> {
 
   let extraClassDeclaration = [{
     // Retrieve the inputs of the byre op, return its operands directly if op is
-    // not inherited from MemoryEffectOpInterface or with NoSideEffect, else
+    // not inherited from MemoryEffectOpInterface or with Pure, else
     // only the operand with MemoryEffect::Read would be treated as input
     SmallVector<Value> getInputs();
 
     // Retrieve the outputs of the byre op, return its results directly if op is
-    // not inherited from MemoryEffectOpInterface or with NoSideEffect, else the
+    // not inherited from MemoryEffectOpInterface or with Pure, else the
     // operand with MemoryEffect::Write would be treated as output additionally
     SmallVector<Value> getOutputs();
   }];

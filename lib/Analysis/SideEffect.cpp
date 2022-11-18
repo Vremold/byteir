@@ -52,7 +52,7 @@ ArgSideEffectType ArgSideEffectAnalysis::getType(mlir::Operation *op,
   // if having MemoryEffectOpInterface, use it first
   if (auto opInter = dyn_cast<MemoryEffectOpInterface>(op)) {
     if (opInter.getEffectOnValue<MemoryEffects::Read>(op->getOperand(argOffset))
-            .hasValue()) {
+            .has_value()) {
       return ArgSideEffectType::kInput;
     }
     return ArgSideEffectType::kOutput;

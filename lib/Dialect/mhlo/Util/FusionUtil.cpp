@@ -145,7 +145,7 @@ mlir::createMhloFusionFromPattern(OpBuilder &b, ValueRange inputs,
   moveConsumer(pattern);
 
   FusionOp fusion = b.create<mhlo::FusionOp>(fusedLoc, outputTypes, inputs);
-  Region &region = fusion.fused_computation();
+  Region &region = fusion.getFusedComputation();
   region.push_back(new Block);
   Block &block = region.front();
 

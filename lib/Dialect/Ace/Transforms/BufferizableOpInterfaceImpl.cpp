@@ -27,7 +27,7 @@ struct ConstOpInterface
     auto constOp = cast<ace::ConstOp>(op);
 
     // Allocate outputs.
-    auto output = constOp.output();
+    auto output = constOp.getOutput();
     auto tensorType = output.getType().cast<RankedTensorType>();
     if (!tensorType)
       return failure();
@@ -42,7 +42,8 @@ struct ConstOpInterface
     Value outputBuffer = rewriter.create<bufferization::ToMemrefOp>(
         op->getLoc(), memrefType, *tensorAlloc);
 
-    rewriter.create<lace::ConstOp>(op->getLoc(), constOp.value(), outputBuffer);
+    rewriter.create<lace::ConstOp>(op->getLoc(), constOp.getValue(),
+                                   outputBuffer);
     bufferization::replaceOpWithBufferizedValues(rewriter, op, outputBuffer);
     return success();
   }
@@ -103,10 +104,10 @@ struct CustomCallOpInterface
 
     auto laceOp = rewriter.create<lace::CustomCallOp>(
         op->getLoc(), llvm::None, bufferArgs, op->getAttrs());
-    laceOp->setAttr(
-        laceOp.getOperandSegmentSizeAttr(),
-        rewriter.getI32VectorAttr({static_cast<int32_t>(op->getNumOperands()),
-                                   static_cast<int32_t>(op->getNumResults())}));
+    laceOp->setAttr(laceOp.getOperandSegmentSizeAttr(),
+                    rewriter.getDenseI32ArrayAttr(
+                        {static_cast<int32_t>(op->getNumOperands()),
+                         static_cast<int32_t>(op->getNumResults())}));
     bufferization::replaceOpWithBufferizedValues(
         rewriter, op, makeArrayRef(bufferArgs).slice(op->getNumOperands()));
     return success();

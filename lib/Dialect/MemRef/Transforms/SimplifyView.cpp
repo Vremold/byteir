@@ -21,8 +21,9 @@
 
 #include "byteir/Dialect/MemRef/Transforms/SimplifyView.h"
 #include "PassDetail.h"
+#include "byteir/Utils/MemUtils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/MemRef/Transforms/ComposeSubView.h"
@@ -70,7 +71,7 @@ struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
   LogicalResult matchAndRewrite(memref::SubViewOp op,
                                 PatternRewriter &rewriter) const override {
 
-    auto srcView = op.source().getDefiningOp<memref::ViewOp>();
+    auto srcView = op.getSource().getDefiningOp<memref::ViewOp>();
     if (!srcView)
       return failure();
 
@@ -85,7 +86,7 @@ struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
     }
 
     // only support ContiguousRowMajor
-    if (!isStaticShapeAndContiguousRowMajor(op.getType())) {
+    if (!isStaticShapeAndContiguousRowMajorEx(op.getType())) {
       return failure();
     }
 
@@ -113,17 +114,17 @@ struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
     }
 
     auto maybeInt = getLinearizeOffset(offsets, srcView.getType().getShape());
-    if (!maybeInt.hasValue())
+    if (!maybeInt.has_value())
       return failure();
 
     int64_t offsetInByte =
-        maybeInt.getValue() * getBytes(op.getType().getElementTypeBitWidth());
+        maybeInt.value() * getBytes(op.getType().getElementTypeBitWidth());
 
     auto lieanrizedOffset =
         rewriter.create<arith::ConstantIndexOp>(op.getLoc(), offsetInByte);
 
     auto newShift = rewriter.create<arith::AddIOp>(
-        op.getLoc(), srcView.byte_shift(), lieanrizedOffset.getResult());
+        op.getLoc(), srcView.getByteShift(), lieanrizedOffset.getResult());
 
     // New MemRefType
     auto newMemRefType = MemRefType::get(
@@ -131,7 +132,8 @@ struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
         MemRefLayoutAttrInterface{}, op.getType().getMemorySpace());
 
     rewriter.replaceOpWithNewOp<memref::ViewOp>(
-        op, newMemRefType, srcView.source(), newShift.getResult(), op.sizes());
+        op, newMemRefType, srcView.getSource(), newShift.getResult(),
+        op.sizes());
 
     return success();
   }
@@ -142,15 +144,16 @@ struct ComposeViewOfView : public OpRewritePattern<memref::ViewOp> {
 
   LogicalResult matchAndRewrite(memref::ViewOp op,
                                 PatternRewriter &rewriter) const override {
-    auto srcView = op.source().getDefiningOp<memref::ViewOp>();
+    auto srcView = op.getSource().getDefiningOp<memref::ViewOp>();
     if (!srcView)
       return failure();
 
-    auto newShift = rewriter.create<arith::AddIOp>(op.getLoc(), op.byte_shift(),
-                                                   srcView.byte_shift());
+    auto newShift = rewriter.create<arith::AddIOp>(
+        op.getLoc(), op.getByteShift(), srcView.getByteShift());
 
     rewriter.replaceOpWithNewOp<memref::ViewOp>(
-        op, op.getType(), srcView.source(), newShift.getResult(), op.sizes());
+        op, op.getType(), srcView.getSource(), newShift.getResult(),
+        op.getSizes());
 
     return success();
   }
@@ -170,7 +173,7 @@ struct ComposeSubViewOfSubView : public OpRewritePattern<memref::SubViewOp> {
     // produces the input of the op we're rewriting (for 'SubViewOp' the input
     // is called the "source" value). We can only combine them if both 'op' and
     // 'sourceOp' are 'SubViewOp'.
-    auto sourceOp = op.source().getDefiningOp<memref::SubViewOp>();
+    auto sourceOp = op.getSource().getDefiningOp<memref::SubViewOp>();
     if (!sourceOp)
       return failure();
 
@@ -257,7 +260,7 @@ struct ComposeSubViewOfSubView : public OpRewritePattern<memref::SubViewOp> {
 
     // This replaces 'op' but leaves 'sourceOp' alone; if it no longer has any
     // uses it can be removed by a (separate) dead code elimination pass.
-    rewriter.replaceOpWithNewOp<memref::SubViewOp>(op, sourceOp.source(),
+    rewriter.replaceOpWithNewOp<memref::SubViewOp>(op, sourceOp.getSource(),
                                                    offsets, sizes, strides);
     return success();
   }

@@ -108,8 +108,8 @@ void ConvertInsertionPass::runOnOperation() {
     for (unsigned i = 0; i < funcType.getNumInputs(); ++i) {
       auto oldTy = funcType.getInput(i);
       auto maybeTensor = collector->checkArg(func, i, true);
-      if (maybeTensor.hasValue()) {
-        argTypes.push_back(maybeTensor.getValue());
+      if (maybeTensor.has_value()) {
+        argTypes.push_back(maybeTensor.value());
       } else {
         argTypes.push_back(oldTy);
       }
@@ -119,8 +119,8 @@ void ConvertInsertionPass::runOnOperation() {
     for (unsigned i = 0; i < funcType.getNumResults(); ++i) {
       auto oldTy = funcType.getResult(i);
       auto maybeTensor = collector->checkArg(func, i, false);
-      if (maybeTensor.hasValue()) {
-        retTypes.push_back(maybeTensor.getValue());
+      if (maybeTensor.has_value()) {
+        retTypes.push_back(maybeTensor.value());
       } else {
         retTypes.push_back(oldTy);
       }

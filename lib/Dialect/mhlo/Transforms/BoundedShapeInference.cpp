@@ -128,7 +128,7 @@ struct BoundedShapeInferencePass
 
           ShapedType newType;
           if (auto lattice = solver.lookupState<ShapeLattice>(it.value())) {
-            if (!lattice->isUninitialized()) {
+            if (!lattice->getValue().isUninitialized()) {
               newType = lattice->getValue().getType();
             }
           }

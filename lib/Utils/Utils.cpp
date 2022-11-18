@@ -6,7 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Utils/Utils.h"
-#include "mlir/Dialect/Arithmetic/IR/Arithmetic.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -30,9 +30,9 @@ llvm::Optional<int64_t> mlir::getLiteralFromConstantLike(Value v) {
   // support DimOp for now
   if (auto dimOp = dyn_cast_or_null<memref::DimOp>(v.getDefiningOp())) {
     if (auto maybeIndex = dimOp.getConstantIndex()) {
-      if (maybeIndex.hasValue()) {
-        return dimOp.source().getType().dyn_cast<ShapedType>().getDimSize(
-            maybeIndex.getValue());
+      if (maybeIndex.has_value()) {
+        return dimOp.getSource().getType().dyn_cast<ShapedType>().getDimSize(
+            maybeIndex.value());
       }
     }
   }
@@ -42,8 +42,8 @@ llvm::Optional<int64_t> mlir::getLiteralFromConstantLike(Value v) {
 
 int64_t mlir::getLiteralFromConstantLike(Value v, int64_t defaultLit) {
   auto maybeI64 = getLiteralFromConstantLike(v);
-  if (maybeI64.hasValue())
-    return maybeI64.getValue();
+  if (maybeI64.has_value())
+    return maybeI64.value();
   return defaultLit;
 }
 

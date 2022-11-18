@@ -22,7 +22,7 @@ bool mlir::isMhlo(Operation *op) {
 
 bool mlir::isSplatMhloConstant(Operation *op) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstantOp>(op)) {
-    return constOp.value().isSplat();
+    return constOp.getValue().isSplat();
   }
   return false;
 }
@@ -45,7 +45,7 @@ bool mlir::isSplatMhloConstantValue(Operation *op, int64_t splat_val) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstantOp>(op)) {
     // only handle DenseFPElementsAttr for now
     // TODO extend it
-    if (auto denseIntE = constOp.value().dyn_cast<DenseIntElementsAttr>()) {
+    if (auto denseIntE = constOp.getValue().dyn_cast<DenseIntElementsAttr>()) {
       return isSplatValue(denseIntE, splat_val);
     }
   }
@@ -56,7 +56,7 @@ bool mlir::isSplatMhloConstantValue(Operation *op, double splat_val) {
   if (auto constOp = dyn_cast_or_null<mhlo::ConstantOp>(op)) {
     // only handle DenseFPElementsAttr for now
     // TODO extend it
-    if (auto denseFPE = constOp.value().dyn_cast<DenseFPElementsAttr>()) {
+    if (auto denseFPE = constOp.getValue().dyn_cast<DenseFPElementsAttr>()) {
       return isSplatValue(denseFPE, splat_val);
     }
   }
@@ -125,26 +125,26 @@ parsePoolLayout(size_t rank, const SmallVector<int64_t> &window_dimensions,
 }
 
 byteir::NamedLayout mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
-  auto base_dilations = op.base_dilationsAttr();
+  auto base_dilations = op.getBaseDilationsAttr();
   if (base_dilations && !isSplatValue(base_dilations, 1)) {
     assert(false && "expected base_dilations to be dense<1>");
   }
-  auto window_dilations = op.window_dilationsAttr();
+  auto window_dilations = op.getWindowDilationsAttr();
   if (window_dilations && !isSplatValue(window_dilations, 1)) {
     assert(false && "expected window_dilations to be dense<1>");
   }
 
-  SmallVector<int64_t> window_dimensions =
-      SmallVector<int64_t>(op.window_dimensions().getValues<int64_t>().begin(),
-                           op.window_dimensions().getValues<int64_t>().end());
+  SmallVector<int64_t> window_dimensions = SmallVector<int64_t>(
+      op.getWindowDimensions().getValues<int64_t>().begin(),
+      op.getWindowDimensions().getValues<int64_t>().end());
   size_t rank = window_dimensions.size();
   SmallVector<int64_t> strides(rank, 1);
-  if (auto strides_ = op.window_stridesAttr()) {
+  if (auto strides_ = op.getWindowStridesAttr()) {
     strides = SmallVector<int64_t>(strides_.getValues<int64_t>().begin(),
                                    strides_.getValues<int64_t>().end());
   }
   SmallVector<int64_t> padding(rank * 2, 0);
-  if (auto padding_ = op.paddingAttr()) {
+  if (auto padding_ = op.getPaddingAttr()) {
     padding = SmallVector<int64_t>(padding_.getValues<int64_t>().begin(),
                                    padding_.getValues<int64_t>().end());
   }
@@ -157,19 +157,19 @@ byteir::NamedLayout mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
 
 byteir::NamedLayout mlir::getPoolGradLayout(mlir::mhlo::SelectAndScatterOp op) {
   SmallVector<int64_t> window_dimensions;
-  if (auto window_dimensions_ = op.window_dimensionsAttr()) {
+  if (auto window_dimensions_ = op.getWindowDimensionsAttr()) {
     window_dimensions =
         SmallVector<int64_t>(window_dimensions_.getValues<int64_t>().begin(),
                              window_dimensions_.getValues<int64_t>().end());
   }
   size_t rank = window_dimensions.size();
   SmallVector<int64_t> strides(rank, 1);
-  if (auto window_strides = op.window_stridesAttr()) {
+  if (auto window_strides = op.getWindowStridesAttr()) {
     strides = SmallVector<int64_t>(window_strides.getValues<int64_t>().begin(),
                                    window_strides.getValues<int64_t>().end());
   }
   SmallVector<int64_t> padding(rank * 2, 0);
-  if (auto padding_ = op.paddingAttr()) {
+  if (auto padding_ = op.getPaddingAttr()) {
     padding = SmallVector<int64_t>(padding_.getValues<int64_t>().begin(),
                                    padding_.getValues<int64_t>().end());
   }

@@ -20,20 +20,5 @@ func.func @case0(%arg0: tensor<?x35xf32, {bounded_shape = [4, 35]}>, %arg1: tens
   return %5 : tensor<?x52xf32, {bounded_shape = [4, 52]}>
 }
 
-//CHECK-LABEL: func.func @case0(%arg0: tensor<?x35xf32, {bounded_shape = [4, 35]}>, %arg1: tensor<?x32xf32, {bounded_shape = [4, 32]}>, %arg2: tensor<?x52xf32, {bounded_shape = [4, 52]}>) -> tensor<?x52xf32, {bounded_shape = [4, 52]}> {
-//CHECK-NEXT:  %c0 = arith.constant 0 : index
-//CHECK-NEXT:  %c52 = arith.constant 52 : index
-//CHECK-NEXT:  %0 = tensor.dim %arg0, %c0 : tensor<?x35xf32, {bounded_shape = [4, 35]}>
-//CHECK-NEXT:  %1 = tensor.from_elements %0, %c52 : tensor<2xindex>
-//CHECK-NEXT:  %2 = tensor.dim %arg1, %c0 : tensor<?x32xf32, {bounded_shape = [4, 32]}>
-//CHECK-NEXT:  %3 = tensor.from_elements %2, %c52 : tensor<2xindex>
-//CHECK-NEXT:  "shape_ext.tie"(%arg2, %2) : (tensor<?x52xf32, {bounded_shape = [4, 52]}>, index) -> ()
-//CHECK-NEXT:  %4 = shape.cstr_broadcastable %1, %3 : tensor<2xindex>, tensor<2xindex>
-//CHECK-NEXT:  %5 = shape.broadcast %1, %3 : tensor<2xindex>, tensor<2xindex> -> tensor<2xindex>
-//CHECK-NEXT:  %6 = "mhlo.dynamic_broadcast_in_dim"(%arg2, %5) {broadcast_dimensions = dense<[0, 1]> : tensor<2xi64>} : (tensor<?x52xf32, {bounded_shape = [4, 52]}>, tensor<2xindex>) -> tensor<?x52xf32, {bounded_shape = [4, 52]}>
-//CHECK-NEXT:  %7 = tensor.extract %5[%c0] : tensor<2xindex>
-//CHECK-NEXT:  "shape_ext.tie"(%6, %7) : (tensor<?x52xf32, {bounded_shape = [4, 52]}>, index) -> ()
-//CHECK-NEXT:  %8 = mhlo.multiply %6, %arg2 : tensor<?x52xf32, {bounded_shape = [4, 52]}>
-//CHECK-NEXT:  "shape_ext.tie"(%8, %7) : (tensor<?x52xf32, {bounded_shape = [4, 52]}>, index) -> ()
-//CHECK-NEXT:  return %8 : tensor<?x52xf32, {bounded_shape = [4, 52]}>
-//CHECK-NEXT:}
+//CHECK-LABEL: func.func @case0
+//CHECK-NOT:  shape.assuming
