@@ -67,19 +67,6 @@ def ConvForwardFusion : Pass<"fuse-conv-forward", "mlir::func::FuncOp"> {
 //}
 
 //===----------------------------------------------------------------------===//
-// ConvertFuncToCustomCallTorchXLA 
-// tentative; will be removed after TorchXLA finalized
-//===----------------------------------------------------------------------===//
-
-def ConvertFuncToCustomCallTorchXLA : Pass<"convert-func-to-custom-torch-xla", "mlir::ModuleOp"> {
-  let summary = "Convert Func to CustomCall for XLA";
-  let constructor = "mlir::createConvertFuncToCustomCallTorchXLAPass()";
-  let dependentDialects = [
-    "mlir::mhlo::MhloDialect"
-  ];
-}
-
-//===----------------------------------------------------------------------===//
 // ConvertInsertion (for CallOps and FunOps now)  // No command-line
 //===----------------------------------------------------------------------===//
 

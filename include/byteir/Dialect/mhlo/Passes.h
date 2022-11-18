@@ -25,10 +25,6 @@
 #include "byteir/Dialect/mhlo/Transforms/ShapeReification.h"
 #include "byteir/Dialect/mhlo/Transforms/StaticShapeInference.h"
 
-// tentative
-// FIXME: remove it
-#include "byteir/Dialect/mhlo/Transforms/ConvertFuncToCustomCall/TorchXLA.h"
-
 namespace mlir {
 
 /// Generate the code for registering transforms passes.

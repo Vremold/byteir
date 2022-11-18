@@ -291,9 +291,7 @@ mlir::getConvLayout(mlir::mhlo::ConvDimensionNumbersAttr dimension_numbers) {
 template <typename T>
 void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
                                OpBuilder &rewriter) {
-  auto dimension_numbers =
-      conv_op->template getAttrOfType<mhlo::ConvDimensionNumbersAttr>(
-          "dimension_numbers");
+  auto dimension_numbers = conv_op.getDimensionNumbers();
   auto conv_layout = mlir::getConvLayout(dimension_numbers);
 
   auto input_layout = std::get<0>(conv_layout);
@@ -311,22 +309,22 @@ void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
   attrs.append("kernel_layout",
                rewriter.getStringAttr(byteir::stringifyEnum(kernel_layout)));
 
-  if (conv_op->hasAttr("window_strides")) {
-    attrs.append("window_strides", conv_op->getAttr("window_strides"));
+  if (conv_op.getWindowStrides().hasValue()) {
+    attrs.append("window_strides", conv_op.getWindowStridesAttr());
   }
-  if (conv_op->hasAttr("padding")) {
-    attrs.append("padding", conv_op->getAttr("padding"));
+  if (conv_op.getPadding().hasValue()) {
+    attrs.append("padding", conv_op.getPaddingAttr());
   }
-  if (conv_op->hasAttr("lhs_dilation")) {
-    attrs.append("lhs_dilation", conv_op->getAttr("lhs_dilation"));
+  if (conv_op.getLhsDilation().hasValue()) {
+    attrs.append("lhs_dilation", conv_op.getLhsDilationAttr());
   }
-  if (conv_op->hasAttr("rhs_dilation")) {
-    attrs.append("rhs_dilation", conv_op->getAttr("rhs_dilation"));
+  if (conv_op.getRhsDilation().hasValue()) {
+    attrs.append("rhs_dilation", conv_op.getRhsDilationAttr());
   }
-  attrs.append("feature_group_count", conv_op->getAttr("feature_group_count"));
-  attrs.append("batch_group_count", conv_op->getAttr("batch_group_count"));
-  if (conv_op->hasAttr("window_reversal")) {
-    attrs.append("window_reversal", conv_op->getAttr("window_reversal"));
+  attrs.append("feature_group_count", conv_op.getFeatureGroupCountAttr());
+  attrs.append("batch_group_count", conv_op.getBatchGroupCountAttr());
+  if (conv_op.getWindowReversal().hasValue()) {
+    attrs.append("window_reversal", conv_op.getWindowReversalAttr());
   }
 }
 
