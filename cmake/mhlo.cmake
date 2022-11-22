@@ -2,6 +2,9 @@ set(MHLO_BUILD_EMBEDDED ON)
 
 add_subdirectory(${REPO_ROOT_DIR}/external/mlir-hlo ${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo EXCLUDE_FROM_ALL)
 
+# FIXME: remove this when upstream fix
+target_link_libraries(MhloDialect PUBLIC StablehloTypeInference StablehloAssemblyFormat)
+
 include_directories(${REPO_ROOT_DIR}/external/mlir-hlo/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo/include)
 include_directories(${REPO_ROOT_DIR}/external/mlir-hlo/stablehlo)
