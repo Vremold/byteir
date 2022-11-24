@@ -9,6 +9,8 @@
 #define BYTEIR_CONVERSION_TOBYRE_H
 
 #include "mlir/Pass/Pass.h"
+#include "llvm/ADT/StringMap.h"
+#include "llvm/ADT/StringRef.h"
 #include <memory>
 
 namespace mlir {
@@ -22,8 +24,8 @@ class FuncOp;
 // Collect a set of patterns to convert ops from Lmhlo dialect to Byre dialect
 // Note: supportMap is a reference.
 void populateLmhloToByreConversionPatterns(
-    RewritePatternSet &patterns,
-    llvm::DenseMap<StringRef, StringRef> &supportMap, bool appendArgTypes);
+    RewritePatternSet &patterns, llvm::StringMap<StringRef> &supportMap,
+    bool appendArgTypes);
 
 void populateViewLikeToByreConversionPatterns(RewritePatternSet &patterns);
 

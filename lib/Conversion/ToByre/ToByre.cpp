@@ -1021,7 +1021,7 @@ struct ConvertLmhloToByrePass
 
   void runOnOperation() override;
 
-  llvm::DenseMap<StringRef, StringRef> lmhloSupportMap;
+  llvm::StringMap<StringRef> lmhloSupportMap;
 };
 
 static bool isFuncWithEntryPointPlaceholder(func::FuncOp func) {
@@ -1344,8 +1344,8 @@ void ConvertLmhloToByrePass::runOnOperation() {
 } // namespace
 
 void mlir::populateLmhloToByreConversionPatterns(
-    RewritePatternSet &patterns,
-    llvm::DenseMap<StringRef, StringRef> &supportMap, bool appendArgTypes) {
+    RewritePatternSet &patterns, llvm::StringMap<StringRef> &supportMap,
+    bool appendArgTypes) {
   // clang-format off
   // TODO move this from a file
   // TODO use MACRO trick to add patterns

@@ -13,7 +13,7 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/StringMap.h"
 
 #include "PassDetail.h"
 
@@ -25,9 +25,8 @@ namespace {
 
 template <typename OpTy>
 struct SingleOpPattern : public OpRewritePattern<OpTy> {
-  SingleOpPattern(MLIRContext *context,
-                  const llvm::DenseMap<StringRef, StringRef> &lut)
-      : OpRewritePattern<OpTy>(context), src_to_name_(lut) {}
+  SingleOpPattern(MLIRContext *context, const llvm::StringMap<StringRef> &lut)
+      : OpRewritePattern<OpTy>(context), srcToName(lut) {}
 
   LogicalResult matchAndRewrite(OpTy op,
                                 PatternRewriter &rewriter) const override {
@@ -48,8 +47,8 @@ struct SingleOpPattern : public OpRewritePattern<OpTy> {
     fusion->setAttr(byre::getByreForceComputeNameAttrName(),
                     UnitAttr::get(fusion.getContext()));
 
-    auto found = src_to_name_.find(op.getOperation()->getName().getStringRef());
-    if (found != src_to_name_.end()) {
+    auto found = srcToName.find(op.getOperation()->getName().getStringRef());
+    if (found != srcToName.end()) {
       fusion->setAttr(byre::getByreComputeName(),
                       rewriter.getStringAttr(found->second));
     }
@@ -57,7 +56,7 @@ struct SingleOpPattern : public OpRewritePattern<OpTy> {
     return success();
   }
 
-  const llvm::DenseMap<StringRef, StringRef> &src_to_name_;
+  const llvm::StringMap<StringRef> &srcToName;
 };
 
 struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
@@ -81,12 +80,12 @@ struct TrivialFusionPass : public TrivialFusionBase<TrivialFusionPass> {
     }
   }
 
-  llvm::DenseMap<StringRef, StringRef> mhloNameMap;
+  llvm::StringMap<StringRef> mhloNameMap;
 };
 } // namespace
 
-void mlir::populateTrivialFusionPattern(
-    RewritePatternSet &patterns, llvm::DenseMap<StringRef, StringRef> &lut) {
+void mlir::populateTrivialFusionPattern(RewritePatternSet &patterns,
+                                        llvm::StringMap<StringRef> &lut) {
   // FIXME: mhlo::RngNormalOp and RngUninformOp has been merged into RngOp.
   // patterns.add<SingleOpPattern<mhlo::RngBitGeneratorOp>,
   //              SingleOpPattern<mhlo::RngNormalOp>,

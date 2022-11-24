@@ -1,11 +1,11 @@
-//===- DynamicReshape.h ---------------------------------------*--- C++ -*-===//
+//===- ReshapeLike.cpp ----------------------------------------*--- C++ -*-===//
 //
 // Copyright (c) ByteDance Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Shape/ShapeExtOps.h"
+#include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"

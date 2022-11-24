@@ -7,6 +7,7 @@
 
 #include "byteir/Transforms/CanonicalizeExt.h"
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Transforms/CondCanonicalize.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
@@ -36,6 +37,8 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
     for (RegisteredOperationName op : context->getRegisteredOperations())
       op.getCanonicalizationPatterns(owningPatterns, context);
     mhlo::getCanonicalizationExtPatterns(owningPatterns, context);
+    // put conditional canonicalizer too
+    populateCondCanonicalizePatterns(owningPatterns);
 
     patterns = FrozenRewritePatternSet(std::move(owningPatterns),
                                        disabledPatterns, enabledPatterns);

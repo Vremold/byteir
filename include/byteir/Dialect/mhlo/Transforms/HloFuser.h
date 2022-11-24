@@ -9,6 +9,7 @@
 #define BYTEIR_DIALECT_MHLO_TRANSFORMS_HLOFUSER_H
 
 #include "mlir/Pass/Pass.h"
+#include "llvm/ADT/StringMap.h"
 #include <memory>
 #include <string>
 
@@ -56,9 +57,8 @@ void populateDotTransposeFusionPattern(RewritePatternSet &patterns);
 void populateIOConvertBatchNormPattern(RewritePatternSet &patterns);
 
 // fuse a single op into a fuseion pattern
-void populateTrivialFusionPattern(
-    RewritePatternSet &patterns,
-    llvm::DenseMap<StringRef, StringRef> &lut_name);
+void populateTrivialFusionPattern(RewritePatternSet &patterns,
+                                  llvm::StringMap<StringRef> &lut_name);
 
 std::unique_ptr<OperationPass<func::FuncOp>> createReduceFusionPass();
 

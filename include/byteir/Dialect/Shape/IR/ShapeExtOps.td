@@ -8,8 +8,7 @@
 #ifndef BYTEIR_SHAPE_EXT_OPS
 #define BYTEIR_SHAPE_EXT_OPS
 
-include "byteir/Dialect/Shape/ShapeExtBase.td"
-
+include "byteir/Dialect/Shape/IR/ShapeExtBase.td"
 
 // Base class for the operation in this dialect
 class ShapeExt_Op<string mnemonic, list<Trait> traits = []> :

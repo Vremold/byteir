@@ -6,7 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Shape/Transforms/ResolveShapeConstraint.h"
-#include "byteir/Dialect/Shape/ShapeExtOps.h"
+#include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"

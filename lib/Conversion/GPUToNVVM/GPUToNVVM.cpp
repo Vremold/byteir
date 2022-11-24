@@ -4,7 +4,6 @@
 // Licensed under the Apache License, Version 2.0
 //
 //===----------------------------------------------------------------------===//
-
 // Some code from LowerGpuOpsToNVVM in LLVM project
 // Original license:
 //

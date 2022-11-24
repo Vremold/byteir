@@ -20,18 +20,12 @@ namespace mlir {
 
 constexpr StringRef getAtomicKindAttrName() { return "__byteir_atomic_kind__"; }
 
-enum class LinalgScopeTilingLoopType {
-  SCFLoops = 0,
-  AffineLoops = 1,
-  TiledLoops = 2,
-};
-
 struct TileScope {
-  mlir::linalg::LinalgOp anchorOp;
+  Operation *anchorOp;
+  llvm::SmallVector<Operation *> ops;
 
-  llvm::SmallVector<mlir::linalg::LinalgOp> ops;
-
-  TileScope(mlir::linalg::LinalgOp op) : anchorOp(op) {}
+  TileScope() : anchorOp(nullptr) {}
+  explicit TileScope(Operation *op) : anchorOp(op) {}
 };
 
 // TODO maybe relax this

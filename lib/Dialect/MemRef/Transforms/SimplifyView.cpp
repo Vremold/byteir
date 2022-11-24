@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Some code is from ComposeSubView.cpp of LLVM project
+// Some code from ComposeSubView.cpp of LLVM project
 // Original license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.

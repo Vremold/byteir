@@ -22,6 +22,6 @@ mkdir build
 cd build
 cmake ../cmake/ -G Ninja -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_INSTALL_PATH=../llvm_build -DLLVM_EXTERNAL_LIT=$(which lit) \
-        -DCMAKE_INSTALL_PREFIX=../byteir_build
+        -DCMAKE_INSTALL_PREFIX=../byteir_build 
 
-cmake --build . --config Release --target all check-byteir install
+cmake --build . --config Release --target all check-byteir check-byteir-numerical install

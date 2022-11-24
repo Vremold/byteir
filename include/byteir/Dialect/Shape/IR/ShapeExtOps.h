@@ -5,16 +5,16 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef MLIR_DIALECT_SHAPE_SHAPEXTOPS_H
-#define MLIR_DIALECT_SHAPE_SHAPEXTOPS_H
+#ifndef BYTEIR_DIALECT_SHAPE_SHAPEEXTOPS_H
+#define BYTEIR_DIALECT_SHAPE_SHAPEEXTOPS_H
 
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Dialect.h"
 
-#include "byteir/Dialect/Shape/ShapeExtOpsDialect.h.inc"
+#include "byteir/Dialect/Shape/IR/ShapeExtOpsDialect.h.inc"
 
 #define GET_OP_CLASSES
-#include "byteir/Dialect/Shape/ShapeExtOps.h.inc"
+#include "byteir/Dialect/Shape/IR/ShapeExtOps.h.inc"
 
-#endif // MLIR_DIALECT_SHAPE_SHAPEXTOPS_H
+#endif // BYTEIR_DIALECT_SHAPE_SHAPEEXTOPS_H

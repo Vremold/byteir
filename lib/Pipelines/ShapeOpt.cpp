@@ -6,6 +6,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Pipelines/ShapeOpt.h"
+#include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Dialect/Shape/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Utils/PipelineUtils.h"

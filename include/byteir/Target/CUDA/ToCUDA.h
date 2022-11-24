@@ -5,7 +5,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Some code are CppEmitter.h and TranslateToCpp.cpp of LLVM
+// Some code comes from CppEmitter.h and TranslateToCpp.cpp of LLVM
 // Original license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.

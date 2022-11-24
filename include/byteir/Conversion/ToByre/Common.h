@@ -11,6 +11,7 @@
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Transforms/DialectConversion.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include <string>
 
@@ -46,8 +47,7 @@ replaceLmhloOpWithByreComputeOp(PatternRewriter &rewriter, OpTy op,
 template <typename SrcOpTy>
 class ConvertToByrePattern : public OpConversionPattern<SrcOpTy> {
 public:
-  ConvertToByrePattern(MLIRContext *ctx,
-                       const llvm::DenseMap<StringRef, StringRef> &lut,
+  ConvertToByrePattern(MLIRContext *ctx, const llvm::StringMap<StringRef> &lut,
                        bool appendTypes)
       : OpConversionPattern<SrcOpTy>(ctx), srcToCallee(lut),
         appendArgTypes(appendTypes) {}
@@ -71,16 +71,16 @@ public:
   }
 
 protected:
-  const llvm::DenseMap<StringRef, StringRef> &srcToCallee;
+  const llvm::StringMap<StringRef> &srcToCallee;
   bool appendArgTypes;
 };
 
 template <typename SrcOpTy>
 class ConvertToByrePatternWithAllAttrs : public OpConversionPattern<SrcOpTy> {
 public:
-  ConvertToByrePatternWithAllAttrs(
-      MLIRContext *ctx, const llvm::DenseMap<StringRef, StringRef> &lut,
-      bool appendTypes)
+  ConvertToByrePatternWithAllAttrs(MLIRContext *ctx,
+                                   const llvm::StringMap<StringRef> &lut,
+                                   bool appendTypes)
       : OpConversionPattern<SrcOpTy>(ctx), srcToCallee(lut),
         appendArgTypes(appendTypes) {}
 
@@ -103,7 +103,7 @@ public:
   }
 
 protected:
-  const llvm::DenseMap<StringRef, StringRef> &srcToCallee;
+  const llvm::StringMap<StringRef> &srcToCallee;
   bool appendArgTypes;
 };
 

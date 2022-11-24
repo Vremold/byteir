@@ -26,7 +26,6 @@ constexpr StringRef getTestRewriteFromAttrName() { return "test_rewrite_from"; }
 constexpr StringRef getTestRewriteToAttrName() { return "test_rewrite_to"; }
 
 constexpr StringRef getFuncArgAttrName() { return "arg"; }
-
 constexpr StringRef getFuncResultAttrName() { return "result"; }
 
 enum RearrangeKind {

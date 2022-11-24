@@ -10,6 +10,7 @@
 
 #include "mlir/Support/LogicalResult.h"
 #include "llvm/ADT/Optional.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace mlir {
 class Block;
@@ -17,6 +18,10 @@ class LoopLikeOpInterface;
 class OpBuilder;
 class Operation;
 class Value;
+
+constexpr StringRef getSCFForParallelAttrName() {
+  return "__byteir_parallel__";
+}
 
 namespace func {
 class FuncOp;

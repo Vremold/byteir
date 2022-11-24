@@ -30,6 +30,27 @@ def LinalgDataPlace : Pass<"linalg-data-place", "func::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// LinalgOpTiling
+//===----------------------------------------------------------------------===//
+
+def LinalgOpTiling : Pass<"linalg-op-tile", "func::FuncOp"> {
+  let summary = "Tile operations in the linalg and linalg-ext dialect";
+  let constructor = "mlir::createLinalgOpTilingPass()";
+  let dependentDialects = [
+    "AffineDialect",
+    "linalg::LinalgDialect",
+    "linalg_ext::LinalgExtDialect",
+    "memref::MemRefDialect",
+    "scf::SCFDialect"
+  ];
+  let options = [
+    ListOption<"tileSizes", "tile-sizes", "int64_t", "Tile sizes">,
+    Option<"loopType", "loop-type", "std::string", /*default=*/"\"scf\"",
+           "Specify the type of loops to generate: for, parallel">
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // LinalgPrefetch
 //===----------------------------------------------------------------------===//
 
@@ -64,10 +85,10 @@ def LinalgScopeTiling : Pass<"linalg-scope-tile", "func::FuncOp"> {
            "tile size">,
     Option<"parallelizeReduction", "par-reduce", "bool", /*default=*/"false",
             "force parallelize reduction">,	
-    Option<"loopType", "loop-type", "std::string", /*default=*/"\"for\"",
+    Option<"loopType", "loop-type", "std::string", /*default=*/"\"scf\"",
            "Specify the type of loops to generate: scf, affine, tiled_loop">,
-    Option<"distributionType", "distribution-type", "std::string", /*default=*/"",
-           "DistributionTypes (if loop-type=tiled_loop)">,
+    Option<"keepTag", "keep-tag", "bool", /*default=*/"false",
+           "keep tag">,	
   ];
 }
 

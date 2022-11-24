@@ -3,6 +3,7 @@
 // RUN: byteir-opt %s -linalg-scope-tile="axis=2 tile-size=2" -cse | FileCheck %s -check-prefix=AXIS2
 // RUN: byteir-opt %s -linalg-scope-tile="axis=1 tile-size=2 par-reduce" -cse | FileCheck %s -check-prefix=PARAXIS1
 // RUN: byteir-opt %s -linalg-scope-tile="axis=2 tile-size=2 par-reduce" -cse | FileCheck %s -check-prefix=PARAXIS2
+// XFAIL: *
 
 #map0 = affine_map<(d0, d1) -> (d0, d1)>
 

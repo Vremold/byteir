@@ -15,6 +15,7 @@ set(BYTEIR_LIBS
   ByteIRSCFPasses
   ByteIRTransforms
   ${byteir_conversion_libs}
+  MLIRLinalgTransformOps
 )
 
 if(BYTEIR_INCLUDE_TESTS)
@@ -22,6 +23,7 @@ if(BYTEIR_INCLUDE_TESTS)
     ByteIRTestAnalysis
     ByteIRTestInterface
     ByteIRTestTransformation
+    MLIRTestTransformDialect
     )
 endif()
 

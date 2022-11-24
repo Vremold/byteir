@@ -18,11 +18,13 @@
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Dialect/Byre/Passes.h"
 #include "byteir/Dialect/Lace/LaceDialect.h"
+#include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
 #include "byteir/Dialect/Linalg/Passes.h"
+#include "byteir/Dialect/Linalg/TransformOps/LinalgExtTransformOps.h"
 #include "byteir/Dialect/MemRef/Passes.h"
 #include "byteir/Dialect/SCF/Passes.h"
+#include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Dialect/Shape/Passes.h"
-#include "byteir/Dialect/Shape/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/InitAllPipelines.h"
 #include "byteir/Transforms/Passes.h"
@@ -73,6 +75,13 @@ void registerTestByreOpInterfacePass();
 } // namespace test
 } // namespace byteir
 
+namespace mlir {
+namespace test {
+void registerTestTransformDialectEraseSchedulePass();
+void registerTestTransformDialectInterpreterPass();
+} // namespace test
+} // namespace mlir
+
 #ifdef BYTEIR_INCLUDE_TESTS
 void registerTestPasses() {
   byteir::test::registerTestMhloCanonicalizeExtPass();
@@ -86,6 +95,8 @@ void registerTestPasses() {
   byteir::test::registerTestPrintSymbolicShapePass();
   byteir::test::registerTestPrintShapeAnalysisPass();
   byteir::test::registerTestByreOpInterfacePass();
+  mlir::test::registerTestTransformDialectEraseSchedulePass();
+  mlir::test::registerTestTransformDialectInterpreterPass();
 }
 #endif
 
@@ -128,6 +139,10 @@ int main(int argc, char **argv) {
   registry.insert<mlir::lace::LaceDialect>();
   registry.insert<mlir::lmhlo::LmhloDialect>();
   registry.insert<mlir::shape_ext::ShapeExtDialect>();
+  registry.insert<mlir::linalg_ext::LinalgExtDialect>();
+
+  // register extension
+  linalg_ext::registerTransformDialectExtension(registry);
 
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "ByteIR pass driver\n", registry,

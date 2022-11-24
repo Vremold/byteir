@@ -125,6 +125,7 @@ mlir::func::FuncOp getFuncOp(func::CallOp);
 bool hasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
                    llvm::ArrayRef<llvm::StringRef> filterAttrs);
 
+// add `attrs` into an operation
 void addAttrs(mlir::Operation *, llvm::ArrayRef<mlir::NamedAttribute> attrs);
 
 Optional<unsigned> findOperandIndex(mlir::Operation *, mlir::Value);

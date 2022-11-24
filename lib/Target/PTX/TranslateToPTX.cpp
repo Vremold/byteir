@@ -51,6 +51,7 @@ static void findLibDeviceFile(std::string &libdeviceFile) {
     defaultPaths.emplace_back(cudaHome.value());
   } else {
     // try to get libdevice.bc from the default location for CUDA 11.5
+    // FIXME change to an input with a default value
     const char *cudaVer = "11.5";
 #ifdef _WIN32
     defaultPaths.push_back(
@@ -61,7 +62,7 @@ static void findLibDeviceFile(std::string &libdeviceFile) {
     defaultPaths.push_back("/usr/local/cuda");
     defaultPaths.push_back(std::string("/usr/local/cuda-") + cudaVer);
 #else
-#error "Unsupported platform"
+    assert(0 && "Unsupported platform");
 #endif
   }
 
@@ -116,13 +117,13 @@ struct ptxGenerator {
   mlir::LogicalResult runMLIRPass(mlir::ModuleOp moduleOp,
                                   std::unique_ptr<mlir::Pass> pass,
                                   const llvm::Twine &outputName,
-                                  StringRef passName, bool save_output = true,
-                                  bool gpu_pass = false) {
+                                  StringRef passName, bool saveOutput = true,
+                                  bool gpuPass = false) {
     printVerbose("Start running pass " + passName + "\n");
     mlir::PassManager pm(moduleOp.getContext(),
                          OpPassManager::Nesting::Implicit);
     applyPassManagerCLOptions(pm);
-    if (gpu_pass) {
+    if (gpuPass) {
       auto &kernelPm = pm.nest<mlir::gpu::GPUModuleOp>();
       kernelPm.addPass(std::move(pass));
     } else {
@@ -134,7 +135,7 @@ struct ptxGenerator {
       return mlir::failure();
     }
 
-    if (saveTemps && save_output) {
+    if (saveTemps && saveOutput) {
       if (failed(dumpModuleOpToFile(moduleOp, outputName))) {
         llvm::errs() << "Failed to dump " << passName << " output\n";
         return mlir::failure();
@@ -152,8 +153,8 @@ struct ptxGenerator {
     if (failed(runMLIRPass(moduleOp, mlir::createStripDebugInfoPass(),
                            prefixName + ".dummy.mlir",
                            "createStripDebugInfoPass",
-                           /*save_output*/ false,
-                           /*gpu_pass*/ true))) {
+                           /*saveOutput*/ false,
+                           /*gpuPass*/ true))) {
       return mlir::failure();
     }
 
@@ -163,8 +164,8 @@ struct ptxGenerator {
                                nvptxTriple, gpuArch, ptxFeatures, ptxStr),
                            prefixName + ".gpuptx.mlir",
                            "createSerializeToPTXPass",
-                           /*save_output*/ true,
-                           /*gpu_pass*/ true))) {
+                           /*saveOutput*/ true,
+                           /*gpuPass*/ true))) {
       return mlir::failure();
     }
 
@@ -180,9 +181,6 @@ struct ptxGenerator {
     LLVMInitializeNVPTXTargetInfo();
     LLVMInitializeNVPTXTargetMC();
     LLVMInitializeNVPTXAsmPrinter();
-
-    // FIXME: this seems removed from upstream.
-    // mlir::initializeLLVMPasses();
   }
 
   LogicalResult generatePtx(ModuleOp moduleOp, const std::string &prefixName,

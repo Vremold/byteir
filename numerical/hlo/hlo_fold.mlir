@@ -1,6 +1,6 @@
 // RUN: byteir-opt %s -hlo-fold -o %t
 // RUN: FileCheck %s < %t
-// RUN: python3 numerical_test.py %s %t --decimal add_scatteradd_right:6,add_scatteradd_left:6
+// RUN: python3 %S/numerical_test.py %s %t --decimal add_scatteradd_right:6,add_scatteradd_left:6
 
 func.func @add_scatteradd_right(%arg0 : tensor<3022x128xf32>, %arg1 : tensor<256x1xi64>, %arg2 : tensor<256x128xf32>) -> tensor<3022x128xf32> {
     %0 = mhlo.constant dense<0.000000e+00> : tensor<3022x128xf32>

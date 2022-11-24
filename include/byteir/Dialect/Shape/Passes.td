@@ -10,7 +10,7 @@
 #define BYTEIR_SHAPE_PASSES
 
 include "mlir/Pass/PassBase.td"
-include "byteir/Dialect/Shape/ShapeExtBase.td"
+include "byteir/Dialect/Shape/IR/ShapeExtBase.td"
 
 //===----------------------------------------------------------------------===//
 // ResolveShapeConstraint

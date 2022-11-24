@@ -27,6 +27,10 @@ namespace linalg {
 class LinalgDialect;
 } // namespace linalg
 
+namespace linalg_ext {
+class LinalgExtDialect;
+} // namespace linalg_ext
+
 namespace memref {
 class MemRefDialect;
 } // namespace memref
