@@ -67,6 +67,10 @@ constexpr llvm::StringRef getLayerNormName() {
   return CUSTOM_CALL_NAME_PREFIX "layer_norm";
 }
 
+constexpr llvm::StringRef getL2NormName() {
+  return CUSTOM_CALL_NAME_PREFIX "l2_norm";
+}
+
 constexpr llvm::StringRef getDynamicPartitionName() {
   return TF_NAME_PREFIX "DynamicPartition";
 }
