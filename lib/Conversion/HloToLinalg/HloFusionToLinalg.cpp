@@ -77,9 +77,9 @@ struct HloFusionToLinalgPass
 
     target.addLegalOp<UnrealizedConversionCastOp>();
 
-    mhlo::RemoveSignTypeConverter type_converter;
+    auto typeConverter = createHloToLinalgTypeConverter();
 
-    mhlo::populateHloToLinalgConversionPattern(&ctx, type_converter, &patterns);
+    mhlo::populateHloToLinalgConversionPattern(&ctx, *typeConverter, &patterns);
     FrozenRewritePatternSet frozenPatterns(std::move(patterns));
     if (failed(applyPartialConversion(func, target, frozenPatterns))) {
       signalPassFailure();
