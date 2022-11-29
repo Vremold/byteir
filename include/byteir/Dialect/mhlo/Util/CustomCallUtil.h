@@ -71,6 +71,14 @@ constexpr llvm::StringRef getL2NormName() {
   return CUSTOM_CALL_NAME_PREFIX "l2_norm";
 }
 
+constexpr llvm::StringRef getOneHotName() {
+  return CUSTOM_CALL_NAME_PREFIX "one_hot";
+}
+
+constexpr llvm::StringRef getAddNName() {
+  return CUSTOM_CALL_NAME_PREFIX "addn";
+}
+
 constexpr llvm::StringRef getDynamicPartitionName() {
   return TF_NAME_PREFIX "DynamicPartition";
 }
