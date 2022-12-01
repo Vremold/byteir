@@ -1,4 +1,5 @@
 // RUN: byteir-opt %s -allow-unregistered-dialect -graph-clustering-by-device -canonicalize | FileCheck %s
+// RUN: byteir-opt %s -allow-unregistered-dialect -graph-clustering-by-device="dup-outputs" -canonicalize  | FileCheck %s --check-prefix DUPOUTPUTS
 
 module {
   func.func @contain_string(%arg0: tensor<1x1x!tf_type.string>, %arg1: tensor<1x10xf32>, %arg2: tensor<1x10xf32>) -> tensor<1x10xf32> {
@@ -85,12 +86,20 @@ module {
     return %0, %0 : tensor<1xi64>, tensor<1xi64>
   }
 // CHECK-LABEL:  func.func @duplicate_outputs
-// CHECK-NEXT:     %0:2 = call @duplicate_outputs_test() : () -> (tensor<1xi64>, tensor<1xi64>)
-// CHECK-NEXT:     return %0#0, %0#1 : tensor<1xi64>, tensor<1xi64>
+// CHECK-NEXT:     %0 = call @duplicate_outputs_test() : () -> tensor<1xi64>
+// CHECK-NEXT:     return %0, %0 : tensor<1xi64>, tensor<1xi64>
   
 // CHECK-LABEL:  func.func @duplicate_outputs_test
 // CHECK-NEXT:     %0 = mhlo.constant dense<1> : tensor<1xi64>
-// CHECK-NEXT:     return %0, %0 : tensor<1xi64>, tensor<1xi64>
+// CHECK-NEXT:     return %0 : tensor<1xi64>
+
+// DUPOUTPUTS-LABEL:  func.func @duplicate_outputs
+// DUPOUTPUTS-NEXT:     %0:2 = call @duplicate_outputs_test() : () -> (tensor<1xi64>, tensor<1xi64>)
+// DUPOUTPUTS-NEXT:     return %0#0, %0#1 : tensor<1xi64>, tensor<1xi64>
+
+// DUPOUTPUTS-LABEL:  func.func @duplicate_outputs_test
+// DUPOUTPUTS-NEXT:     %0 = mhlo.constant dense<1> : tensor<1xi64>
+// DUPOUTPUTS-NEXT:     return %0, %0 : tensor<1xi64>, tensor<1xi64>
 
 }
 

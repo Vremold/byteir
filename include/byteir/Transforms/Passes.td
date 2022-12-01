@@ -141,7 +141,7 @@ def GraphClusteringByDevice : Pass<"graph-clustering-by-device", "ModuleOp"> {
            "An anchor used to trigger specific pipeline.">,
     Option<"dupNonSplat", "dup-non-splat", "bool", /*default=*/"false",
            "duplicate a non-splat const if it is used by both host and device side.">,
-    Option<"dupOutputs", "dup-outputs", "bool", /*default=*/"true",
+    Option<"dupOutputs", "dup-outputs", "bool", /*default=*/"false",
            "duplicate a return value in the internal function if it is returned multiple times in main.">
   ];
 }

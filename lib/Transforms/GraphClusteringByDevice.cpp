@@ -247,12 +247,30 @@ void GraphClusteringByDevicePass::runOnOperation() {
   ModuleOp moduleOp = getOperation();
   MLIRContext *context = &getContext();
   SmallVector<func::FuncOp, 4> originalFuncs;
+  const auto isResultUsedByReturnOp =
+      [](Operation *op, llvm::SmallDenseSet<Value> &retValues) {
+        return llvm::any_of(op->getResults(), [&retValues](Value v) {
+          return retValues.count(v) > 0;
+        });
+      };
   for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
+    llvm::SmallDenseSet<Value> retValues;
+    for (const auto &operand : funcOp.front().back().getOperands()) {
+      retValues.insert(operand);
+    }
     for (auto &block : funcOp.getBlocks()) {
       if (dupNonSplat)
-        replicateDefiningOp(&block, isMhloConstantLike);
+        replicateDefiningOp(
+            &block, [&retValues, &isResultUsedByReturnOp](Operation *op) {
+              return !isResultUsedByReturnOp(op, retValues) &&
+                     isMhloConstantLike(op);
+            });
       else
-        replicateDefiningOp(&block, isSplatMhloConstantLike);
+        replicateDefiningOp(
+            &block, [&retValues, &isResultUsedByReturnOp](Operation *op) {
+              return !isResultUsedByReturnOp(op, retValues) &&
+                     isSplatMhloConstantLike(op);
+            });
     }
     originalFuncs.push_back(funcOp);
   }
