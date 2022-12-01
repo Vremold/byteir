@@ -34,6 +34,13 @@ module attributes {byre.container_module} {
 // CHECK:   return
 // CHECK: }
 
+  func.func @test_group_copy(%arg0 : memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1 : memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}, %arg2 : memref<200x?xf32> {byre.argtype = 1: i32, byre.argname = "C"}, %arg3 : memref<200x?xf32> {byre.argtype = 2: i32, byre.argname = "D"}) attributes {byre.entry_point} {
+    "byre.group_copy"(%arg0, %arg2, %arg1, %arg3) {} : (memref<100x?xf32>, memref<200x?xf32>, memref<100x?xf32>, memref<200x?xf32>) -> ()
+    return
+  }
+// CHECK-LABEL: func.func @test_group_copy
+// CHECK: "byre.group_copy"
+
   func.func @test_alias(%arg0 : memref<100x32xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1 : memref<100x32xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
     %0 = "byre.alias"(%arg0) {offset = 0: i64} : (memref<100x32xf32>) -> memref<100x32xf32>
     byre.compute @some_kernel(%0, %arg1) : memref<100x32xf32>, memref<100x32xf32>

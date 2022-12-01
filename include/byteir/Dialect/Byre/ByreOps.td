@@ -128,6 +128,21 @@ def Byre_CopyOp : Byre_Op<"copy",
   let hasVerifier = 1;
 }
 
+def Byre_GroupCopyOp : Byre_Op<"group_copy",
+    [HasParent<"func::FuncOp">, ByreInterface, SameVariadicOperandSize]> {
+  let summary = "group copy operation";
+  let description = [{ 
+    Copies data to from collective source memref to target memref .
+  }];
+
+  let arguments = (ins
+    Arg<Variadic<AnyStridedMemRef>, "", [MemRead]>:$source,
+    Arg<Variadic<AnyStridedMemRef>, "", [MemWrite]>:$target);
+
+  let hasCanonicalizer = 1;
+  let hasVerifier = 1;
+}
+
 def Byre_AliasOp
     : Byre_Op<"alias",
               [HasParent<"func::FuncOp">,

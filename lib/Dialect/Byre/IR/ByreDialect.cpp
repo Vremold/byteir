@@ -370,6 +370,55 @@ LogicalResult CopyOp::verify() {
 }
 
 //===----------------------------------------------------------------------===//
+// GroupCopyOp
+//===----------------------------------------------------------------------===/
+
+namespace {
+/// Remove copy operations that copy data with the same input and output
+struct EraseIdentityGroupCopyOp : public OpRewritePattern<GroupCopyOp> {
+  using OpRewritePattern<GroupCopyOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(GroupCopyOp op,
+                                PatternRewriter &rewriter) const override {
+    auto refs = op.getOperands();
+    auto array_size = refs.size() >> 1;
+    SmallVector<Value> srcRefs, dstRefs;
+    for (size_t i = 0; i < array_size; ++i) {
+      Value src = refs[i];
+      Value dst = refs[array_size + i];
+      if (src != dst) {
+        srcRefs.push_back(src);
+        dstRefs.push_back(dst);
+      }
+    }
+    if (srcRefs.size() == 0) {
+      rewriter.eraseOp(op);
+      return success();
+    }
+    if (srcRefs.size() == 1) {
+      rewriter.replaceOpWithNewOp<byre::CopyOp>(op, srcRefs[0], dstRefs[0]);
+      return success();
+    }
+    if (srcRefs.size() != array_size) {
+      rewriter.replaceOpWithNewOp<byre::GroupCopyOp>(
+          op, ArrayRef<Value>(srcRefs), ArrayRef<Value>(dstRefs));
+      return success();
+    }
+    return failure();
+  }
+};
+} // namespace
+
+void GroupCopyOp::getCanonicalizationPatterns(RewritePatternSet &results,
+                                              MLIRContext *context) {
+  results.add<EraseIdentityGroupCopyOp>(context);
+}
+
+LogicalResult GroupCopyOp::verify() {
+  return verifyOpInEntryPointFunc(this->getOperation());
+}
+
+//===----------------------------------------------------------------------===//
 // AliasOp
 //===----------------------------------------------------------------------===/
 
