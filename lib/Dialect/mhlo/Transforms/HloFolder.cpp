@@ -109,7 +109,7 @@ struct RemoveTrivialTorchIndexSelect
 
     auto indexShapedType = index.getType().dyn_cast<ShapedType>();
     auto inputShapedType = input.getType().dyn_cast<ShapedType>();
-    if (batchDims > 0 || indexShapedType.getRank() > 1 || !indexShapedType ||
+    if (batchDims > 0 || indexShapedType.getRank() != 1 || !indexShapedType ||
         !indexShapedType.hasStaticShape() || !inputShapedType ||
         !inputShapedType.hasStaticShape() ||
         indexShapedType.getShape()[0] != inputShapedType.getShape()[dim]) {

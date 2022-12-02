@@ -45,6 +45,14 @@ func.func @non_trivial_torch_index_select(%arg0: tensor<1x1024xf32>, %arg1: tens
 // CHECK-LABEL: func.func @non_trivial_torch_index_select
 // CHECK-NEXT: mhlo.torch_index_select
 
+func.func @non_trivial_torch_index_select_rank_zero(%arg0: tensor<2x16x16x49x32xf32>, %arg1: tensor<i64>) -> tensor<16x16x49x32xf32> {
+  %0 = "mhlo.torch_index_select"(%arg0, %arg1) {batch_dims = 0 : i64, dim = 0 : i64} : (tensor<2x16x16x49x32xf32>, tensor<i64>) -> tensor<16x16x49x32xf32>
+  return %0 : tensor<16x16x49x32xf32>
+}
+// CHECK-LABEL: func.func @non_trivial_torch_index_select_rank_zero
+// CHECK-NEXT: mhlo.torch_index_select
+// CHECK-NEXT: return
+
 func.func @pad_conv2d_NHWC(%arg0: tensor<1x3x3x1xf32>, %arg1: tensor<2x2x1x2xf32>) -> tensor<1x4x4x2xf32> {
   %0 = mhlo.constant dense<0.000000e+00> : tensor<f32>
   %1 = "mhlo.pad"(%arg0, %0) {edge_padding_high = dense<[0, 1, 1, 0]> : tensor<4xi64>, edge_padding_low = dense<[0, 1, 1, 0]> : tensor<4xi64>, interior_padding = dense<0> : tensor<4xi64>} : (tensor<1x3x3x1xf32>, tensor<f32>) -> tensor<1x5x5x1xf32>
