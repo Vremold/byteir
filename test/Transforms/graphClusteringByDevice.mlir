@@ -101,5 +101,21 @@ module {
 // DUPOUTPUTS-NEXT:     %0 = mhlo.constant dense<1> : tensor<1xi64>
 // DUPOUTPUTS-NEXT:     return %0, %0 : tensor<1xi64>, tensor<1xi64>
 
+  func.func @return_host_constant(%arg0: tensor<f32>) -> (tensor<f32>, tensor<f32>) {
+    %0 = "mhlo.constant"() {device = "host", value = dense<0.0000> : tensor<f32> } : () -> tensor<f32>
+    %1 = mhlo.add %arg0, %arg0 : tensor<f32>
+    return %0, %1 : tensor<f32>, tensor<f32>
+  }
+// CHECK-LABEL:  func.func @return_host_constant
+// CHECK-NEXT:     %0 = call @return_host_constant_host() : () -> tensor<f32>
+// CHECK-NEXT:     %1 = call @return_host_constant_test(%arg0) : (tensor<f32>) -> tensor<f32>
+// CHECK-NEXT:     return %0, %1 : tensor<f32>, tensor<f32>
+
+// CHECK-LABEL:  func.func @return_host_constant_host
+// CHECK-NEXT:     %0 = mhlo.constant {device = "host"} dense<0.000000e+00> : tensor<f32>
+
+// CHECK-LABEL:  func.func @return_host_constant_test
+// CHECK-NEXT:     %0 = mhlo.add %arg0, %arg0 : tensor<f32>
+
 }
 
