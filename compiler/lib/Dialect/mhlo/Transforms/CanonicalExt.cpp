@@ -12,6 +12,7 @@
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir-hlo/utils/convert_op_folder.h"
 #include "mlir/IR/Matchers.h"
+#include "mlir/IR/TypeUtilities.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
@@ -831,8 +832,8 @@ LogicalResult mlir::mhlo::foldTransposeNonSplat(mhlo::TransposeOp op,
 }
 
 LogicalResult
-mlir::mhlo::foldBeneficalLargeConvertOp(mhlo::ConvertOp op,
-                                        PatternRewriter &rewriter) {
+mlir::mhlo::foldBeneficialConstantConvertOp(mhlo::ConvertOp op,
+                                            PatternRewriter &rewriter) {
   if (!llvm::isa_and_nonnull<mhlo::ConstantOp>(
           op.getOperand().getDefiningOp())) {
     return failure();
@@ -871,6 +872,27 @@ mlir::mhlo::foldBeneficalLargeConvertOp(mhlo::ConvertOp op,
   return success();
 }
 
+LogicalResult mlir::mhlo::foldConsecutiveConvertOp(mhlo::ConvertOp op,
+                                                   PatternRewriter &rewriter) {
+  if (!llvm::isa_and_nonnull<mhlo::ConvertOp>(
+          op.getOperand().getDefiningOp())) {
+    return failure();
+  }
+  mhlo::ConvertOp firstConvert =
+      cast<mhlo::ConvertOp>(op.getOperand().getDefiningOp());
+  auto input = firstConvert.getOperand();
+  auto inputTy = getElementTypeOrSelf(input);
+  // fp64->fp32->fp16 to fp64->fp16 is not handled here because it's handled
+  // already by the upstream Only fold the case where two convert can be
+  // cancelled
+  if (inputTy == getElementTypeOrSelf(op.getResult())) {
+    // cancel second convert
+    rewriter.replaceOp(op, input);
+    return success();
+  }
+  return failure();
+}
+
 void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldBroadcastInDim);
   patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
@@ -886,7 +908,8 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldLargeCompareOp);
   patterns.add(mlir::mhlo::foldLargeConcatenate);
   patterns.add(mlir::mhlo::foldTransposeNonSplat);
-  patterns.add(mlir::mhlo::foldBeneficalLargeConvertOp);
+  patterns.add(mlir::mhlo::foldBeneficialConstantConvertOp);
+  patterns.add(mlir::mhlo::foldConsecutiveConvertOp);
 }
 
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,

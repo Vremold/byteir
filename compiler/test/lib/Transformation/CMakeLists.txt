@@ -3,6 +3,7 @@ add_mlir_library(ByteIRTestTransformation
   TestMhloCanonicalizeExt.cpp
   TestConvertFuncToCustomCall.cpp
   TestConvertInsertion.cpp
+  TestDTypeConversion.cpp
   TestFuncArgRearrangement.cpp
 
   EXCLUDE_FROM_LIBMLIR

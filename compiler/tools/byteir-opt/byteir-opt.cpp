@@ -65,6 +65,7 @@ void registerTestMhloCanonicalizeExtPass();
 void registerTestConvertFuncToCustomCallPass();
 void registerTestConvertInsertionPass();
 void registerTestCustomConvertPass();
+void registerTestDTypeConversionPass();
 void registerTestFuncArgRearrangementPass();
 void registerTestPrintArgSideEffectPass();
 void registerTestPrintLivenessPass();
@@ -88,6 +89,7 @@ void registerTestPasses() {
   byteir::test::registerTestConvertFuncToCustomCallPass();
   byteir::test::registerTestConvertInsertionPass();
   byteir::test::registerTestCustomConvertPass();
+  byteir::test::registerTestDTypeConversionPass();
   byteir::test::registerTestFuncArgRearrangementPass();
   byteir::test::registerTestPrintArgSideEffectPass();
   byteir::test::registerTestPrintLivenessPass();

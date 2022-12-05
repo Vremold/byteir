@@ -82,8 +82,11 @@ LogicalResult foldLargeConcatenate(mhlo::ConcatenateOp op,
 LogicalResult foldTransposeNonSplat(mhlo::TransposeOp op,
                                     PatternRewriter &rewriter);
 
-LogicalResult foldBeneficalLargeConvertOp(mhlo::ConvertOp op,
-                                          PatternRewriter &rewriter);
+LogicalResult foldBeneficialConstantConvertOp(mhlo::ConvertOp op,
+                                              PatternRewriter &rewriter);
+
+LogicalResult foldConsecutiveConvertOp(mhlo::ConvertOp op,
+                                       PatternRewriter &rewriter);
 
 LogicalResult foldLargeCompareOp(mhlo::CompareOp op, PatternRewriter &rewriter);
 
