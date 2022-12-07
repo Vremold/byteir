@@ -769,13 +769,9 @@ DenseElementsAttr foldTransposeHelper(mhlo::TransposeOp op,
 
   llvm::SmallVector<int64_t> strides(rank, 1);
   llvm::SmallVector<int64_t> outputStrides(rank, 1);
-  llvm::SmallVector<int64_t> outputPermutation(rank, -1);
   for (int64_t i = rank - 2; i >= 0; i--) {
     strides[i] = strides[i + 1] * inputShape[i + 1];
     outputStrides[i] = outputStrides[i + 1] * outputShape[i + 1];
-  }
-  for (int64_t i = 0; i < rank; i++) {
-    outputPermutation[permutation[i]] = i;
   }
 
   auto calculateOutputIndices = [&](int64_t index) -> SmallVector<int64_t> {
@@ -789,10 +785,10 @@ DenseElementsAttr foldTransposeHelper(mhlo::TransposeOp op,
 
   SmallVector<T> values;
   for (int64_t i = 0; i < outputType.getNumElements(); i++) {
-    auto indices = calculateOutputIndices(i);
+    auto outputIndices = calculateOutputIndices(i);
     int64_t inputIndex = 0;
     for (int64_t k = 0; k < rank; k++) {
-      inputIndex += indices[k] * strides[outputPermutation[k]];
+      inputIndex += outputIndices[k] * strides[permutation[k]];
     }
     values.push_back(*(valueAttr.getValues<T>().begin() + inputIndex));
   }
