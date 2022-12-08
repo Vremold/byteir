@@ -309,21 +309,21 @@ void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
   attrs.append("kernel_layout",
                rewriter.getStringAttr(byteir::stringifyEnum(kernel_layout)));
 
-  if (conv_op.getWindowStrides().hasValue()) {
+  if (conv_op.getWindowStrides().has_value()) {
     attrs.append("window_strides", conv_op.getWindowStridesAttr());
   }
-  if (conv_op.getPadding().hasValue()) {
+  if (conv_op.getPadding().has_value()) {
     attrs.append("padding", conv_op.getPaddingAttr());
   }
-  if (conv_op.getLhsDilation().hasValue()) {
+  if (conv_op.getLhsDilation().has_value()) {
     attrs.append("lhs_dilation", conv_op.getLhsDilationAttr());
   }
-  if (conv_op.getRhsDilation().hasValue()) {
+  if (conv_op.getRhsDilation().has_value()) {
     attrs.append("rhs_dilation", conv_op.getRhsDilationAttr());
   }
   attrs.append("feature_group_count", conv_op.getFeatureGroupCountAttr());
   attrs.append("batch_group_count", conv_op.getBatchGroupCountAttr());
-  if (conv_op.getWindowReversal().hasValue()) {
+  if (conv_op.getWindowReversal().has_value()) {
     attrs.append("window_reversal", conv_op.getWindowReversalAttr());
   }
 }

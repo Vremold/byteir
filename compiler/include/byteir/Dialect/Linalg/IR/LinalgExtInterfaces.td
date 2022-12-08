@@ -388,6 +388,36 @@ def LinalgExtInterface : OpInterface<"LinalgExtOp"> {
       }]
     >,
     //===------------------------------------------------------------------===//
+    // Rewriting-related interface methods.
+    //===------------------------------------------------------------------===//
+    InterfaceMethod<
+      /*desc=*/[{
+        Tiling consumer's operands, given a fused op (a fused vserion of `this`),
+        a result offset, a operand 
+      }],
+      /*retTy=*/"LogicalResult",
+      /*methodName=*/"isValidTiling",
+      /*args=*/(ins "Operation *": $tiled),
+      /*methodBody=*/"",
+      /*defaultImplementation=*/[{
+        return success();
+      }]
+    >,
+    InterfaceMethod<
+      /*desc=*/[{
+        Rewrting consumer's operands, given a fused op (a fused vserion of `this`),
+        a result offset, a operand 
+      }],
+      /*retTy=*/"LogicalResult",
+      /*methodName=*/"correctTiledConsumerOps",
+      /*args=*/(ins "OpBuilder &":$b, "Operation *": $fused, 
+                    "int64_t": $offset),
+      /*methodBody=*/"",
+      /*defaultImplementation=*/[{
+        return success();
+      }]
+    >,
+    //===------------------------------------------------------------------===//
     // Other interface methods.
     //===------------------------------------------------------------------===//
     InterfaceMethod<

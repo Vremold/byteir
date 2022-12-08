@@ -23,10 +23,6 @@ namespace func {
 class FuncOp;
 } // namespace func
 
-constexpr StringRef getDuplicateArgAttrName() {
-  return "__byteir_duplicate_arg__";
-}
-
 // abstract base class of FuncArgRearranger
 class FuncArgRearrangerBase {
 public:

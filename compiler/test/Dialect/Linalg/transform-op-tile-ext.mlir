@@ -3,7 +3,7 @@
 transform.sequence failures(propagate) {
 ^bb0(%arg1: !pdl.operation):
   %0 = transform.structured.match ops{["linalg.matmul"]} in %arg1
-  %1, %loops:3 = transform.structured.tile_ext %0 [4, 4, 4]
+  %1, %loops:3 = transform.structured.tile_ext %0 [2, 4, 8] {interchange = [2, 1, 0], other}
 }
 
 // CHECK-LABEL: func @tile_linalg_matmul(
@@ -17,12 +17,12 @@ func.func @tile_linalg_matmul(
 //      CHECK: %[[TD0:.*]] = scf.for {{.*}} to {{.*}} step {{.*}} iter_args(%[[TC0:.*]] = %[[TC]]) -> (tensor<128x128xf32>) {
 //      CHECK:   %[[TD1:.*]] = scf.for {{.*}} to {{.*}} step {{.*}} iter_args(%[[TC1:.*]] = %[[TC0]]) -> (tensor<128x128xf32>) {
 //      CHECK:     %[[TD2:.*]] = scf.for {{.*}} to {{.*}} step {{.*}} iter_args(%[[TC2:.*]] = %[[TC1]]) -> (tensor<128x128xf32>) {
-//      CHECK:       %[[sTA:.*]] = tensor.extract_slice %[[TA]][{{.*}}] : tensor<128x128xf32> to tensor<4x4xf32>
-//      CHECK:       %[[sTB:.*]] = tensor.extract_slice %[[TB]][{{.*}}] : tensor<128x128xf32> to tensor<4x4xf32>
-//      CHECK:       %[[sTC:.*]] = tensor.extract_slice %[[TC2]][{{.*}}] : tensor<128x128xf32> to tensor<4x4xf32>
-//      CHECK:       %[[sTD:.*]] = linalg.matmul ins(%[[sTA]], %[[sTB]] : tensor<4x4xf32>, tensor<4x4xf32>)
-// CHECK-SAME:                                   outs(%[[sTC]] : tensor<4x4xf32>)  -> tensor<4x4xf32>
-//      CHECK:       %[[TD:.*]] = tensor.insert_slice %[[sTD]] into %[[TC2]][{{.*}}]  : tensor<4x4xf32> into tensor<128x128xf32>
+//      CHECK:       %[[sTA:.*]] = tensor.extract_slice %[[TA]][{{.*}}] : tensor<128x128xf32> to tensor<2x8xf32>
+//      CHECK:       %[[sTB:.*]] = tensor.extract_slice %[[TB]][{{.*}}] : tensor<128x128xf32> to tensor<8x4xf32>
+//      CHECK:       %[[sTC:.*]] = tensor.extract_slice %[[TC2]][{{.*}}] : tensor<128x128xf32> to tensor<2x4xf32>
+//      CHECK:       %[[sTD:.*]] = linalg.matmul ins(%[[sTA]], %[[sTB]] : tensor<2x8xf32>, tensor<8x4xf32>)
+// CHECK-SAME:                                   outs(%[[sTC]] : tensor<2x4xf32>)  -> tensor<2x4xf32>
+//      CHECK:       %[[TD:.*]] = tensor.insert_slice %[[sTD]] into %[[TC2]][{{.*}}]  : tensor<2x4xf32> into tensor<128x128xf32>
 //      CHECK:       scf.yield %[[TD]] : tensor<128x128xf32>
 //      CHECK:     scf.yield %[[TD2]] : tensor<128x128xf32>
 //      CHECK:   scf.yield %[[TD1]] : tensor<128x128xf32>
@@ -39,25 +39,46 @@ func.func @tile_linalg_matmul(
 transform.sequence failures(propagate) {
 ^bb0(%arg0: !pdl.operation):
   %0 = transform.structured.match ops{["linalg_ext.softmax"]} in %arg0
-  %tiled_linalg_op, %loops:2 = transform.structured.tile_ext %0 [2, 4] 
+  %1, %loop = transform.structured.tile_ext %0 [4] 
 }
 
 func.func @softmax_tensor(%arg0: tensor<1024x64xf32>) -> (tensor<1024x64xf32>) {
   %0 = tensor.empty() : tensor<1024x64xf32>
-  %1 = tensor.empty() : tensor<64xf32>
-  %2 = tensor.empty() : tensor<64xf32>
-  %3 = tensor.empty() : tensor<64xf32>
+  %1 = tensor.empty() : tensor<1024xf32>
+  %2 = tensor.empty() : tensor<1024xf32>
+  %3 = tensor.empty() : tensor<1024xf32>
   %4:4 = linalg_ext.softmax
-    dimension(0) 
-    ins(%arg0 : tensor<1024x64xf32>) outs(%0, %1, %2, %3 : tensor<1024x64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>) : tensor<1024x64xf32>, tensor<64xf32>, tensor<64xf32>, tensor<64xf32>
+    dimension(1) 
+    ins(%arg0 : tensor<1024x64xf32>) outs(%0, %1, %2, %3 : tensor<1024x64xf32>, tensor<1024xf32>, tensor<1024xf32>, tensor<1024xf32>) : tensor<1024x64xf32>, tensor<1024xf32>, tensor<1024xf32>, tensor<1024xf32>
   return %4#0 : tensor<1024x64xf32>
 }
-//CHECK-LABEL: func.func @softmax_tensor
+// CHECK-LABEL: func @softmax_tensor
+// CHECK: scf.for
+// CHECK:   linalg_ext.softmax
+// CHECK:   scf.yield
+// CHECK: }
+
+// -----
+
+transform.sequence failures(propagate) {
+^bb0(%arg0: !pdl.operation):
+  %0 = transform.structured.match ops{["linalg_ext.softmax"]} in %arg0
+  %1, %loops = transform.structured.tile_ext %0 [4] 
+}
+
+func.func @softmax_memref(%arg0: memref<1024x64xf32>) -> (memref<1024x64xf32>) {
+  %0 = memref.alloc() : memref<1024x64xf32>
+  %1 = memref.alloc() : memref<1024xf32>
+  %2 = memref.alloc() : memref<1024xf32>
+  %3 = memref.alloc() : memref<1024xf32>
+  linalg_ext.softmax
+    {__internal_linalg_transform__ = "__byteir_tile__"}
+    dimension(1)
+    ins(%arg0 : memref<1024x64xf32>) outs(%0, %1, %2, %3 : memref<1024x64xf32>, memref<1024xf32>, memref<1024xf32>, memref<1024xf32>)
+  return %0 : memref<1024x64xf32>
+}
+//CHECK-LABEL: func.func @softmax_memref
 //CHECK: scf.for
-//CHECK:   scf.for
-//CHECK:     linalg_ext.softmax
-//CHECK:     scf.yield
-//CHECK:   } {__byteir_parallel__}
-//CHECK:   scf.yield
-//CHECK: } 
+//CHECK:   linalg_ext.softmax
+//CHECK: }
 //CHECK: return

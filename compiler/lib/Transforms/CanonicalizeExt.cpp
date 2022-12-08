@@ -32,10 +32,12 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
 
   LogicalResult initialize(MLIRContext *context) override {
     RewritePatternSet owningPatterns(context);
+
     for (auto *dialect : context->getLoadedDialects())
       dialect->getCanonicalizationPatterns(owningPatterns);
     for (RegisteredOperationName op : context->getRegisteredOperations())
       op.getCanonicalizationPatterns(owningPatterns, context);
+
     mhlo::getCanonicalizationExtPatterns(owningPatterns, context);
     // put conditional canonicalizer too
     populateCondCanonicalizePatterns(owningPatterns);
@@ -53,7 +55,9 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
     // Side effect is only an attribute of CustomCallOp, not an interface. It
     // should be specially handled.
     std::vector<Operation *> allNestedOps;
-    operation->walk([&](Operation *op) { allNestedOps.push_back(op); });
+    // Note using preOrder since we use reverse iterator later.
+    operation->walk<WalkOrder::PreOrder>(
+        [&](Operation *op) { allNestedOps.push_back(op); });
     for (auto it = allNestedOps.rbegin(); it != allNestedOps.rend(); ++it) {
       Operation *op = *it;
       if (!op->use_empty())
@@ -62,8 +66,9 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
         op->erase();
       } else {
         auto customOp = llvm::dyn_cast<mhlo::CustomCallOp>(op);
-        if (customOp && !customOp.getHasSideEffect())
+        if (customOp && !customOp.getHasSideEffect()) {
           op->erase();
+        }
       }
     }
 

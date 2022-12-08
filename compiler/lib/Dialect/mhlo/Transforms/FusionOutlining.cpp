@@ -90,7 +90,7 @@ static func::FuncOp createOutlinedFuncOp(mhlo::FusionOp fusionOp,
 
       opBuilder.setInsertionPoint(op);
       auto clonedDefOp = opBuilder.clone(*defOp);
-      auto resIdx = findResultIndex(defOp, val).getValue();
+      auto resIdx = findResultIndex(defOp, val).value();
 
       op->replaceUsesOfWith(val, clonedDefOp->getResult(resIdx));
       opSet.insert(clonedDefOp);

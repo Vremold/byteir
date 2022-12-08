@@ -168,8 +168,8 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
       ElementsAttr oldConstAttr =
           input.getDefiningOp<mhlo::ConstantOp>().getValue();
       auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, resultType);
-      auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-          op->getLoc(), newConstAttr.getValue());
+      auto newConstOp =
+          rewriter.create<mhlo::ConstantOp>(op->getLoc(), newConstAttr.value());
       bvm.map(input, newConstOp.getOutput());
     }
 

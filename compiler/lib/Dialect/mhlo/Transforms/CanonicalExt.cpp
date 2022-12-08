@@ -650,7 +650,7 @@ LogicalResult mlir::mhlo::simplifyDynamicConvToConv(mhlo::DynamicConvOp op,
       llvm::map_range(dPaddingAttr.getValues<APInt>(),
                       [&](APInt i) { return i.getSExtValue(); }));
   if (op.getPadding().has_value()) {
-    DenseIntElementsAttr paddingAttr = op.getPadding().getValue();
+    DenseIntElementsAttr paddingAttr = op.getPadding().value();
     assert(paddingAttr.size() == static_cast<int64_t>(spatialDim * 2));
 
     for (const auto &it : llvm::enumerate(paddingAttr.getValues<int64_t>())) {

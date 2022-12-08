@@ -33,7 +33,7 @@ size_t getSizeInBytes(Value value) {
   MemRefType t = value.getType().cast<MemRefType>();
   auto sizeInBits = getSizeInBits(t);
   assert(sizeInBits.has_value());
-  return (sizeInBits.getValue() + 7) >> 3;
+  return (sizeInBits.value() + 7) >> 3;
 }
 
 struct Event {

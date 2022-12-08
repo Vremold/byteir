@@ -1,4 +1,3 @@
 add_subdirectory(byteir-opt)
 add_subdirectory(byteir-stat)
 add_subdirectory(byteir-translate)
-add_subdirectory(textloader)

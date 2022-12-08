@@ -50,6 +50,34 @@ Operation *mlir::leastProperlyPostDominantUse(Value val,
   return curPos;
 }
 
+// return least ProperlyDominant among a set of Operations
+Operation *mlir::leastProperlyDominantOp(ArrayRef<Operation *> ops,
+                                         DominanceInfo &domInfo) {
+  if (ops.empty())
+    return nullptr;
+  Operation *curPos = ops.front();
+  for (auto op : ops) {
+    if (domInfo.properlyDominates(op, curPos)) {
+      curPos = op;
+    }
+  }
+  return curPos;
+}
+
+// return least ProperlyPostDominant among a set of Operations
+Operation *mlir::leastProperlyPostDominantOp(ArrayRef<Operation *> ops,
+                                             PostDominanceInfo &postDomInfo) {
+  if (ops.empty())
+    return nullptr;
+  Operation *curPos = ops.front();
+  for (auto op : ops) {
+    if (postDomInfo.properlyPostDominates(op, curPos)) {
+      curPos = op;
+    }
+  }
+  return curPos;
+}
+
 // return Operation Hoist Up within a Block of op
 Operation *mlir::findHoistUpInBlock(Operation *op, DominanceInfo &domInfo) {
   Operation *curPos = &(op->getBlock()->front());
@@ -162,5 +190,39 @@ void mlir::hoistDownOpsInFuncLike(FunctionOpInterface funclike,
 
   for (auto &block : funclike.getBlocks()) {
     hoistDownOpsInBlock(&block, postDomInfo, checkFunc);
+  }
+}
+
+void mlir::hostUpOpAndDefs(Operation *op, Operation *target,
+                           DominanceInfo &domInfo) {
+  if (op == nullptr || target == nullptr) {
+    return;
+  }
+
+  for (auto val : op->getOperands()) {
+    if (auto defOp = val.getDefiningOp()) {
+      hostUpOpAndDefs(defOp, target, domInfo);
+    }
+  }
+
+  // only move if not dominates
+  if (!domInfo.dominates(op, target)) {
+    op->moveBefore(target);
+  }
+}
+
+void mlir::hostDownOpAndUsers(Operation *op, Operation *target,
+                              PostDominanceInfo &postDomInfo) {
+  if (op == nullptr || target == nullptr) {
+    return;
+  }
+
+  for (auto user : op->getUsers()) {
+    hostDownOpAndUsers(user, target, postDomInfo);
+  }
+
+  // only move if not postDominates
+  if (!postDomInfo.postDominates(op, target)) {
+    op->moveAfter(target);
   }
 }

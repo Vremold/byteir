@@ -80,7 +80,7 @@ template <typename OpTy> struct DivOfArgFolder : public OpRewritePattern<OpTy> {
   };
 };
 
-// Fold away ForOp iter arguments when having __byteir_parallel__ attribute
+// Fold away ForOp iter arguments when having `__byteir_parallel__` attribute
 struct ByteIRParallelForOpIterArgsFolder : public OpRewritePattern<scf::ForOp> {
   using OpRewritePattern<scf::ForOp>::OpRewritePattern;
 
@@ -105,6 +105,7 @@ struct ByteIRParallelForOpIterArgsFolder : public OpRewritePattern<scf::ForOp> {
                              )) {
       std::get<1>(it).replaceAllUsesWith(std::get<0>(it));
     }
+
     return success();
   }
 };

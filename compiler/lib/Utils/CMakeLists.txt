@@ -1,4 +1,5 @@
 add_mlir_library(ByteIRUtils
+  AffineUtils.cpp
   AttrUtils.cpp
   FuncUtils.cpp
   Hoist.cpp

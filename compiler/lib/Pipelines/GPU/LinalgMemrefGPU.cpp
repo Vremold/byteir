@@ -58,10 +58,12 @@ struct MatmulEpilogueGPUPipelinePreprocessPass
       if (collection.empty())
         return;
 
-      auto ctx = m.getContext();
+// FIXME tentatively disable this
+#if 0
       for (auto op : collection) {
         op->setAttr(getScopeTilingAnchorAttrName(), UnitAttr::get(ctx));
       }
+#endif
     }
   }
 };

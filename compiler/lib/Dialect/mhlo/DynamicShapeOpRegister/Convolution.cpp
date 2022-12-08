@@ -251,7 +251,7 @@ void mlir::registerConvolutionInferReturnTypeComponents() {
          ValueShapeRange operands, DictionaryAttr attrs, RegionRange regions,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         mhlo::ConvolutionOp::Adaptor adaptor(operands, attrs, regions);
-        Location loc = location.getValueOr(UnknownLoc::get(context));
+        Location loc = location.value_or(UnknownLoc::get(context));
 
         if (failed(adaptor.verify(loc))) {
           LLVM_DEBUG(llvm::dbgs() << loc << ": conv op verify failed\n");

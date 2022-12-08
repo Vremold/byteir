@@ -258,7 +258,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
             input.getDefiningOp<mhlo::ConstantOp>().getValue();
         auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
         auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-            op->getLoc(), newConstAttr.getValue());
+            op->getLoc(), newConstAttr.value());
         bvm.map(input, newConstOp.getOutput());
       }
 
@@ -392,7 +392,7 @@ struct BroadcastMoveDownPattern
             input.getDefiningOp<mhlo::ConstantOp>().getValue();
         auto newConstAttr = cloneSplatElementsAttr(oldConstAttr, operandType);
         auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-            op->getLoc(), newConstAttr.getValue());
+            op->getLoc(), newConstAttr.value());
         bvm.map(input, newConstOp.getOutput());
       }
 

@@ -8,8 +8,12 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TILING_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_TILING_H
 
+#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
 #include "mlir/Dialect/Linalg/Utils/Utils.h"
+#include "mlir/Dialect/SCF/Transforms/TileUsingInterface.h"
+#include "mlir/Interfaces/TilingInterface.h"
 #include "mlir/Pass/Pass.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include <memory>
 
@@ -18,19 +22,48 @@ namespace func {
 class FuncOp;
 } // namespace func
 
-// tiling attr names
-constexpr StringRef getScopeTilingAnchorAttrName() {
-  return "__byteir_scope_tile_anchor__";
+namespace linalg_ext {
+
+constexpr StringRef getLinalgExtTileAttrName() { return "__byteir_tile__"; }
+
+constexpr StringRef getLinalgExtTileAndFuseAttrName() {
+  return "__byteir_tile_and_fuse_";
 }
 
-// TODO change the following to a struct attr
-constexpr StringRef getScopeTilingAxisAttrName() {
-  return "__byteir_scope_tile_axis__";
-}
+/// Base rewrite pattern to tile and distribute operations that implement the
+/// `TiledOpInterface`.
+/// Base pattern for tiling TiledOpInterfaceOps.
+struct TilingInterfaceBaseTilingPattern
+    : public OpInterfaceRewritePattern<TilingInterface> {
+  TilingInterfaceBaseTilingPattern(
+      MLIRContext *context, scf::SCFTilingOptions options,
+      LinalgTransformationFilter filter = LinalgTransformationFilter(),
+      PatternBenefit benefit = 1)
+      : OpInterfaceRewritePattern(context, benefit), filter(filter),
+        options(options) {}
 
-constexpr StringRef getScopeTilingRankAttrName() {
-  return "__byteir_scope_tile_rank__";
-}
+  LogicalResult matchAndRewriteBase(TilingInterface tilableOp,
+                                    PatternRewriter &rewriter,
+                                    scf::SCFTilingResult &result) const;
+
+private:
+  /// LinalgTransformMarker handles special attribute manipulations.
+  LinalgTransformationFilter filter;
+  /// Options to control tiling;
+  scf::SCFTilingOptions options;
+};
+
+struct TilingInterfaceTilingPattern : public TilingInterfaceBaseTilingPattern {
+  TilingInterfaceTilingPattern(
+      MLIRContext *context, scf::SCFTilingOptions options,
+      LinalgTransformationFilter filter = LinalgTransformationFilter(),
+      PatternBenefit benefit = 1)
+      : TilingInterfaceBaseTilingPattern(context, options, filter, benefit) {}
+
+  LogicalResult matchAndRewrite(TilingInterface tilableOp,
+                                PatternRewriter &rewriter) const;
+};
+} // namespace linalg_ext
 
 std::unique_ptr<OperationPass<func::FuncOp>>
 createLinalgOpTilingPass(ArrayRef<int64_t> tileSizes = {},

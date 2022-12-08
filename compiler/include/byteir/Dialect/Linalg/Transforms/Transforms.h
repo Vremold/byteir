@@ -8,12 +8,54 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
 
-#include "mlir/Dialect/Linalg/Transforms/Transforms.h"
-#include "mlir/Dialect/Linalg/Utils/Utils.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/Dialect/SCF/Transforms/TileUsingInterface.h"
+#include "mlir/Dialect/Utils/StructuredOpsUtils.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/PatternMatch.h"
 #include "mlir/Interfaces/TilingInterface.h"
+#include "mlir/Support/LogicalResult.h"
+#include "llvm/ADT/ArrayRef.h"
 
 namespace mlir {
+namespace scf {
+/// tileConsumerAndFuseProducerUsingSCFForOpExt is an enhanced version
+/// tileConsumerAndFuseProducerGreedilyUsingSCFForOp.
+FailureOr<scf::SCFTileAndFuseResult>
+tileConsumerAndFuseProducerUsingSCFForOpExt(
+    RewriterBase &rewriter, TilingInterface consumer,
+    const scf::SCFTileAndFuseOptions &options);
+
+void labelTileLoopType(Operation *op, ArrayRef<scf::ForOp> loops);
+
+LogicalResult isValidTiling(Operation *tiled);
+} // namespace scf
+
 namespace linalg_ext {
+
+/// return a list of utils::IteratorType for a given op
+/// and list of scf::ForOp loops
+///
+/// ```mlir
+/// Example 1:
+/// scf.for %iv_m      // m_loop
+///   scf.for %iv_k    // k_loop
+///     scf.for %iv_n  // n_loop
+///       extract_slice_A
+///       extract_slice_B
+///       extract_slice_C
+///       %0 = linalg.matmul ins (extract_slice_A, extract_slice_B)
+///                          outs(extract_slice_C)
+/// ```
+/// loops = [m_loop, k_loop, n_loop], op = linalg.matmul
+/// return [parallel, reduction, parallel]
+///
+FailureOr<llvm::SmallVector<llvm::Optional<utils::IteratorType>>>
+getLoopIteratorTypes(Operation *op, ArrayRef<scf::ForOp> loops);
+
+void mergeLoopIteratorTypes(
+    llvm::SmallVector<llvm::Optional<utils::IteratorType>> &from,
+    llvm::SmallVector<llvm::Optional<utils::IteratorType>> &to);
 
 // LinalgTransforms and LinalgTransformationFilter will be deprecated soon
 struct LinalgTransforms {
@@ -74,54 +116,6 @@ private:
   /// When set to true, if the attribute is not set, it will be treated as
   /// a match. Default is false.
   bool matchByDefault;
-};
-
-/// Structure to represent the result of tiling operation.
-struct TiledOp {
-  /// Tiled op.
-  Operation *op;
-  /// Loops generated during tiling.
-  SmallVector<Operation *> loops;
-  /// Values that are replacements for the untiled operations.
-  SmallVector<Value> results;
-};
-
-/// Main entry point for tiling LinalgExtOps using TiledOpInterface.
-FailureOr<TiledOp> tileLinalgExtOp(RewriterBase &b, TilingInterface tilableOp,
-                                   const linalg::LinalgTilingOptions &options);
-
-/// Base rewrite pattern to tile and distribute operations that implement the
-/// `TiledOpInterface`.
-/// Base pattern for tiling TiledOpInterfaceOps.
-struct TilingInterfaceBaseTilingPattern
-    : public OpInterfaceRewritePattern<TilingInterface> {
-  TilingInterfaceBaseTilingPattern(
-      MLIRContext *context, linalg::LinalgTilingOptions options,
-      LinalgTransformationFilter filter = LinalgTransformationFilter(),
-      PatternBenefit benefit = 1)
-      : OpInterfaceRewritePattern(context, benefit), filter(filter),
-        options(options) {}
-
-  LogicalResult matchAndRewriteBase(TilingInterface tilableOp,
-                                    PatternRewriter &rewriter,
-                                    TiledOp &result) const;
-
-private:
-  /// LinalgTransformMarker handles special attribute manipulations.
-  LinalgTransformationFilter filter;
-  /// Options to control tiling;
-  linalg::LinalgTilingOptions options;
-};
-
-struct TilingInterfaceTilingPattern : public TilingInterfaceBaseTilingPattern {
-  TilingInterfaceTilingPattern(
-      MLIRContext *context, linalg::LinalgTilingOptions options,
-      LinalgTransformationFilter filter = LinalgTransformationFilter(),
-      PatternBenefit benefit = 1)
-      : TilingInterfaceBaseTilingPattern(context, options, filter, benefit) {}
-
-  LogicalResult matchAndRewrite(TilingInterface tilableOp,
-                                PatternRewriter &rewriter) const;
 };
 
 } // namespace linalg_ext

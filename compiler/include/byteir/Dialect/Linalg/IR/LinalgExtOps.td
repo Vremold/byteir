@@ -17,7 +17,6 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/Interfaces/TilingInterface.td"
 include "mlir/Interfaces/ViewLikeInterface.td"
 
-
 // Base class for the operation in this dialect
 class LinalgExt_BaseOp<string mnemonic, list<Trait> traits = []> :
     Op<LinalgExt_Dialect, mnemonic, traits> {
@@ -72,9 +71,12 @@ def LinalgExt_YieldOp : LinalgExt_BaseOp<"yield", [Pure, ReturnLike, Terminator]
 //===----------------------------------------------------------------------===//
 
 def LinalgExt_SoftmaxOp : LinalgExt_Op<"softmax",
-    [DeclareOpInterfaceMethods<LinalgExtInterface>,
+    [DeclareOpInterfaceMethods<LinalgExtInterface, 
+        ["isValidTiling",
+         "correctTiledConsumerOps"]>,
      DeclareOpInterfaceMethods<TilingInterface,
-        ["getIterationDomain",
+        ["generateResultTileValue",
+         "getIterationDomain",
          "getLoopIteratorTypes",
          "getResultTilePosition", 
          "getTiledImplementation"]>]> {
@@ -83,7 +85,7 @@ def LinalgExt_SoftmaxOp : LinalgExt_Op<"softmax",
   let description = [{
     Computes softmax along a given dimension.
     Tensor:
-      [result, scale, max, accum] = softmax {dimension} ins(data) outs(result, scale, max, accum);
+      [result, max, accum, scale] = softmax {dimension} ins(data) outs(result, max, accum, scale);
     Memeref
       softmax {dimension} ins(data) outs(result, scale, max, accum)
     Computation: 
@@ -117,13 +119,13 @@ def LinalgExt_SoftmaxOp : LinalgExt_Op<"softmax",
     Value output() {
       return getOutputOperand(0)->get();
     }
-    Value scale() {
+    Value max() {
       return getOutputOperand(1)->get();
     }
-    Value max() {
+    Value accumulator() {
       return getOutputOperand(2)->get();
     }
-    Value accumulator() {
+    Value scale() {
       return getOutputOperand(3)->get();
     }
     ShapedType getOperandType() {
@@ -132,7 +134,56 @@ def LinalgExt_SoftmaxOp : LinalgExt_Op<"softmax",
     int64_t getOperandRank() {
       return getOperandType().getRank();
     }
+  }];
 
+}
+
+
+def LinalgExt_DiagOp : LinalgExt_Op<"diag", 
+    [DeclareOpInterfaceMethods<LinalgExtInterface>]> {
+
+  let summary = "Diag Op";
+  let description = [{
+    diag(x) presents a diag matrix from a vector.
+    it is an intermediate op for softmax's fusion
+  }];
+
+  let arguments = (ins
+      Variadic<AnyRankedTensorOrMemRefType>:$inputs,
+      Variadic<AnyRankedTensorOrMemRefType>:$outputs
+  );
+
+  let results = (outs Variadic<AnyRankedTensor>:$results);
+
+  let assemblyFormat = [{
+    attr-dict 
+    (`ins` `(` $inputs^ `:` type($inputs) `)`)?
+    (`outs` `(` $outputs^ `:` type($outputs) `)`)?
+    (`:` type($results)^)?
+  }];
+  let hasFolder = 1;
+
+  let builders = [
+    OpBuilder<(ins "Value":$input, "Value":$output), [{
+      build($_builder, $_state, {output.getType()}, {input}, {output});
+    }]> 
+  ];
+
+  let extraClassDeclaration = extraLinalgExtOpClassDeclaration # [{
+    Value input() {
+      return getInputOperand(0)->get();
+    }
+    Value output() {
+      return getOutputOperand(0)->get();
+    }
+    ShapedType getOperandType() {
+      return output().getType().cast<ShapedType>();
+    }
+    int64_t getOperandRank() {
+      return getOperandType().getRank();
+    }
+
+    static Type getDiagType(ShapedType type);
   }];
 
 }
@@ -140,7 +191,8 @@ def LinalgExt_SoftmaxOp : LinalgExt_Op<"softmax",
 def LinalgExt_ScanOp : LinalgExt_Op<"scan",
     [DeclareOpInterfaceMethods<LinalgExtInterface>,
      DeclareOpInterfaceMethods<TilingInterface,
-      ["getIterationDomain",
+      ["generateResultTileValue",
+       "getIterationDomain",
        "getLoopIteratorTypes",
        "getResultTilePosition",
        "getTiledImplementation"]>]> {
@@ -194,7 +246,8 @@ def LinalgExt_ScanOp : LinalgExt_Op<"scan",
 def LinalgExt_CustomOp : LinalgExt_Op<"custom",
     [DeclareOpInterfaceMethods<LinalgExtInterface>,
      DeclareOpInterfaceMethods<TilingInterface,
-        ["getIterationDomain",
+        ["generateResultTileValue",
+         "getIterationDomain",
          "getLoopIteratorTypes",
          "getResultTilePosition", 
          "getTiledImplementation"]>,
