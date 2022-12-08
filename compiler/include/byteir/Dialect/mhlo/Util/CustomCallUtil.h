@@ -63,6 +63,14 @@ constexpr llvm::StringRef getAddNName() {
   return CUSTOM_CALL_NAME_PREFIX "addn";
 }
 
+constexpr llvm::StringRef getQuantizeName() {
+  return CUSTOM_CALL_NAME_PREFIX "quantize";
+}
+
+constexpr llvm::StringRef getDequantizeName() {
+  return CUSTOM_CALL_NAME_PREFIX "dequantize";
+}
+
 constexpr llvm::StringRef getDynamicPartitionName() {
   return TF_NAME_PREFIX "DynamicPartition";
 }
