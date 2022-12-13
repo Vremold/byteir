@@ -19,6 +19,9 @@
 namespace mlir {
 
 constexpr StringRef getAtomicKindAttrName() { return "__byteir_atomic_kind__"; }
+constexpr StringRef getTilingAnnotationPrefix() {
+  return "__byteir_device_tiling__";
+}
 
 struct TileScope {
   Operation *anchorOp;

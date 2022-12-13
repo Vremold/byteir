@@ -39,6 +39,10 @@ namespace scf {
 class SCFDialect;
 } // namespace scf
 
+namespace transform {
+class TransformDialect;
+} // namespace transform
+
 #define GEN_PASS_CLASSES
 #include "byteir/Dialect/Linalg/Passes.h.inc"
 
