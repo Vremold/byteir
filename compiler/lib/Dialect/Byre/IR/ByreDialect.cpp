@@ -396,7 +396,13 @@ struct EraseIdentityGroupCopyOp : public OpRewritePattern<GroupCopyOp> {
       return success();
     }
     if (srcRefs.size() == 1) {
-      rewriter.replaceOpWithNewOp<byre::CopyOp>(op, srcRefs[0], dstRefs[0]);
+      std::string groupCallee =
+          op->getAttrOfType<::mlir::StringAttr>("callee").getValue().str();
+      // naming convention: group copy callee ends with '_array'
+      std::string newCallee = groupCallee.substr(0, groupCallee.size() - 6);
+      auto new_op =
+          rewriter.replaceOpWithNewOp<byre::CopyOp>(op, srcRefs[0], dstRefs[0]);
+      new_op->setAttr("callee", StringAttr::get(getContext(), newCallee));
       return success();
     }
     if (srcRefs.size() != array_size) {
@@ -415,6 +421,15 @@ void GroupCopyOp::getCanonicalizationPatterns(RewritePatternSet &results,
 }
 
 LogicalResult GroupCopyOp::verify() {
+  // check if callee ends with '_array' suffix
+  auto calleeAttr =
+      this->getOperation()->getAttrOfType<::mlir::StringAttr>("callee");
+  if (!calleeAttr)
+    return this->emitError("lacking callee");
+  std::string calleeStr = calleeAttr.getValue().str();
+  size_t len = calleeStr.size();
+  if (len < 6 || calleeStr.find("_array", len - 6) == std::string::npos)
+    return this->emitError("invalid callee");
   return verifyOpInEntryPointFunc(this->getOperation());
 }
 

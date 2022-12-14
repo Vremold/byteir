@@ -26,8 +26,8 @@ module attributes {byre.container_module} {
 
   func.func @test_group_copy(%arg0 : memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1 : memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}, %arg2 : memref<200x?xf32> {byre.argtype = 1: i32, byre.argname = "C"}, %arg3 : memref<200x?xf32> {byre.argtype = 2: i32, byre.argname = "D"}) attributes {byre.entry_point} {
 // CHECK-LABEL: func.func @test_group_copy
-    "byre.group_copy"(%arg0, %arg2, %arg1, %arg2) {} : (memref<100x?xf32>, memref<200x?xf32>, memref<100x?xf32>, memref<200x?xf32>) -> ()
-// CHECK-NEXT: byre.copy(%arg0, %arg1)
+    "byre.group_copy"(%arg0, %arg2, %arg1, %arg2) {callee = "d2h_array"} : (memref<100x?xf32>, memref<200x?xf32>, memref<100x?xf32>, memref<200x?xf32>) -> ()
+// CHECK-NEXT: byre.copy(%arg0, %arg1) {callee = "d2h"}
     return
   }
 }
