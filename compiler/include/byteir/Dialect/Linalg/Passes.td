@@ -30,6 +30,25 @@ def LinalgDataPlace : Pass<"linalg-data-place", "func::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// LinalgElementwiseFusionExt
+//===----------------------------------------------------------------------===//
+
+def LinalgElementwiseFusionExt : Pass<"linalg-fuse-elementwise-ext"> {
+  let summary = "Extension of elementwise fusion on tensors";
+  let constructor = "mlir::createLinalgElementwiseFusionExtPass()";
+  let dependentDialects = [
+    "AffineDialect", 
+    "linalg::LinalgDialect", 
+    "linalg_ext::LinalgExtDialect",
+    "memref::MemRefDialect"
+  ];
+  let options = [
+    Option<"enableSharedInput", "shared-input", "bool", /*default=*/"false",
+           "enable shared input fusion">,	
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // LinalgOpTiling
 //===----------------------------------------------------------------------===//
 

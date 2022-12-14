@@ -100,7 +100,6 @@ Value createCopyInputArg(Operation *op, Value oldArg, MemRefType dstMemrefTy,
   auto newArg = newAlloc.getResult();
   b.create<memref::CopyOp>(loc, oldArg, newArg);
 
-  auto dstSpaceAttr = dstMemrefTy.getMemorySpace();
   CopyType_t copyKey = {oldArg, desiredSpaceAttr};
   copyPairToCopyTargets.try_emplace(copyKey, newArg);
   return newArg;
@@ -306,7 +305,6 @@ void updateFuncReturnTypes(
 
         if (isFuncNotCompatiableWithSpace(anotherFunc, spaceAttr)) {
           // insert a CopyFrom after the CallOp
-          FunctionType privateFuncType = anotherFunc.getFunctionType();
           auto retMemrefTy = retType.dyn_cast<MemRefType>();
           CopyType_t copyKey = {ret, retMemrefTy.getMemorySpace()};
 
@@ -499,7 +497,6 @@ struct SetAllSpacePass : public SetAllSpaceBase<SetAllSpacePass> {
 
     // rewrite FunctionType
     for (auto it : funcToArgTypes) {
-      FunctionType funcType = it.first.getFunctionType();
       it.first.setType(
           FunctionType::get(ctx, it.second.first, it.second.second));
     }

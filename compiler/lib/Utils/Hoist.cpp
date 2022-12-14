@@ -123,6 +123,16 @@ Operation *mlir::findHoistDownInBlock(Operation *op,
   return curPos;
 }
 
+void mlir::hoistUpOpInBlock(Operation *op, DominanceInfo &domInfo) {
+  auto pos = findHoistUpInBlock(op, domInfo);
+  op->moveAfter(pos);
+}
+
+void mlir::hoistDownOpInBlock(Operation *op, PostDominanceInfo &postDomInfo) {
+  auto pos = findHoistDownInBlock(op, postDomInfo);
+  op->moveBefore(pos);
+}
+
 // hoist up ops in a given Block
 void mlir::hoistUpOpsInBlock(Block *block, DominanceInfo &domInfo,
                              std::function<bool(Operation *)> checkFunc) {
@@ -193,15 +203,15 @@ void mlir::hoistDownOpsInFuncLike(FunctionOpInterface funclike,
   }
 }
 
-void mlir::hostUpOpAndDefs(Operation *op, Operation *target,
-                           DominanceInfo &domInfo) {
+void mlir::hoistUpOpAndDefs(Operation *op, Operation *target,
+                            DominanceInfo &domInfo) {
   if (op == nullptr || target == nullptr) {
     return;
   }
 
   for (auto val : op->getOperands()) {
     if (auto defOp = val.getDefiningOp()) {
-      hostUpOpAndDefs(defOp, target, domInfo);
+      hoistUpOpAndDefs(defOp, target, domInfo);
     }
   }
 
@@ -211,18 +221,27 @@ void mlir::hostUpOpAndDefs(Operation *op, Operation *target,
   }
 }
 
-void mlir::hostDownOpAndUsers(Operation *op, Operation *target,
-                              PostDominanceInfo &postDomInfo) {
+void mlir::hoistDownOpAndUsers(Operation *op, Operation *target,
+                               PostDominanceInfo &postDomInfo) {
   if (op == nullptr || target == nullptr) {
     return;
   }
 
   for (auto user : op->getUsers()) {
-    hostDownOpAndUsers(user, target, postDomInfo);
+    hoistDownOpAndUsers(user, target, postDomInfo);
   }
 
   // only move if not postDominates
   if (!postDomInfo.postDominates(op, target)) {
     op->moveAfter(target);
+  }
+}
+
+void mlir::hoistDownDescendantUsers(Value val, PostDominanceInfo &postDomInfo) {
+  for (auto user : val.getUsers()) {
+    for (auto result : user->getResults())
+      hoistDownDescendantUsers(result, postDomInfo);
+
+    hoistDownOpInBlock(user, postDomInfo);
   }
 }

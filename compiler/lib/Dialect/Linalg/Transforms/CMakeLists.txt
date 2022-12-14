@@ -1,4 +1,5 @@
 add_mlir_dialect_library(ByteIRLinalgPasses
+  FuseElementwise.cpp
   LinalgDataPlace.cpp
   LinalgPrefetch.cpp
   Tiling.cpp

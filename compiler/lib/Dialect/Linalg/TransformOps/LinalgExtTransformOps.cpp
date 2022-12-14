@@ -160,7 +160,7 @@ static LogicalResult applyTilingToAll(
       auto lastDef = leastProperlyPostDominantOp(replacementDefs.getArrayRef(),
                                                  postDomInfo);
       for (auto user : unfusedUser) {
-        hostDownOpAndUsers(user, lastDef, postDomInfo);
+        hoistDownOpAndUsers(user, lastDef, postDomInfo);
       }
 
       rewriter.replaceOp(toReplace, replacements);

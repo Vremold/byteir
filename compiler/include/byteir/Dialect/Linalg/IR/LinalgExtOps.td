@@ -66,6 +66,28 @@ def LinalgExt_YieldOp : LinalgExt_BaseOp<"yield", [Pure, ReturnLike, Terminator]
   let assemblyFormat = "attr-dict ($operands^ `:` type($operands))?";
 }
 
+def LinalgExt_AliasOp : LinalgExt_BaseOp<"alias", [Pure]> {
+  let summary = "LinalgExt alias op";
+  let description = [{
+    `linalg_ext.alias` is a special op  to represent alias in basic block
+    It will be resolved in a special rewrite pattern. 
+    It won't be removed in the regular canonicalizer.
+  }];
+
+  let arguments = (ins AnyType:$operand);
+  let results = (outs AnyType:$result);
+
+  let builders = [
+    OpBuilder<(ins "Value":$operand), [{
+      build($_builder, $_state, operand.getType(), operand);
+    }]> 
+  ];
+
+  let hasVerifier = 1;
+
+  let assemblyFormat = " `(` $operand `:` type($operand) `)` attr-dict `:` type($result)";
+}
+
 //===----------------------------------------------------------------------===//
 // Advanced ops
 //===----------------------------------------------------------------------===//

@@ -151,6 +151,18 @@ OpFoldResult mlir::linalg_ext::getDim(OpBuilder &builder, Location loc, Value v,
 }
 
 //////////////////////////////
+// AliasOp
+//////////////////////////////
+
+mlir::LogicalResult mlir::linalg_ext::AliasOp::verify() {
+  auto op = getOperation();
+  if (op->getOperand(0).getType() != op->getResult(0).getType()) {
+    return op->emitOpError("expected same type of operand and result");
+  }
+  return success();
+}
+
+//////////////////////////////
 // CustomOp
 //////////////////////////////
 

@@ -14,6 +14,7 @@ add_mlir_library(ByteIRTransforms
   RewriteOpToStdCall.cpp
   SetArgShape.cpp
   SetSpace.cpp
+  Utils.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Transforms

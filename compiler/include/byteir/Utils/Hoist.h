@@ -88,6 +88,12 @@ Operation *findHoistUpInBlock(Operation *op, DominanceInfo &domInfo);
 // return Operation Hoist Down within a Block of op
 Operation *findHoistDownInBlock(Operation *op, PostDominanceInfo &postDomInfo);
 
+// hoist up an op in its Block
+void hoistUpOpInBlock(Operation *op, DominanceInfo &domInfo);
+
+// hoist down an op in its Block
+void hoistDownOpInBlock(Operation *op, PostDominanceInfo &postDomInfo);
+
 // hoist up ops in a given Block
 void hoistUpOpsInBlock(Block *block, DominanceInfo &domInfo,
                        std::function<bool(Operation *)> checkFunc);
@@ -126,7 +132,7 @@ void hoistDownOpsInFuncLike(FunctionOpInterface funclike,
 /// op(val2, val3)
 /// target
 /// ```
-void hostUpOpAndDefs(Operation *op, Operation *target, DominanceInfo &domInfo);
+void hoistUpOpAndDefs(Operation *op, Operation *target, DominanceInfo &domInfo);
 
 /// hoist down op and responding users to target
 /// ```mlir
@@ -146,8 +152,10 @@ void hostUpOpAndDefs(Operation *op, Operation *target, DominanceInfo &domInfo);
 /// val3 = user2(val2)
 /// val3 = user2(val1)
 /// ```
-void hostDownOpAndUsers(Operation *op, Operation *target,
-                        PostDominanceInfo &postDomInfo);
+void hoistDownOpAndUsers(Operation *op, Operation *target,
+                         PostDominanceInfo &postDomInfo);
+
+void hoistDownDescendantUsers(Value val, PostDominanceInfo &postDomInfo);
 
 } // namespace mlir
 
