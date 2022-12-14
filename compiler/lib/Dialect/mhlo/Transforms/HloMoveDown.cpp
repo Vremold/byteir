@@ -469,12 +469,19 @@ struct BroadcastBinaryMoveDownPattern
     bvm.map(lhs, lhs.getOperand());
     bvm.map(rhs, rhs.getOperand());
 
+    auto maybeResultTypes =
+        mixTypes(/*cloneFromElementTypes*/ consumer->getResultTypes(),
+                 /*cloneFromShapes*/ op->getOperandTypes());
+
+    // maybeResultTypes should always have value
+    assert(maybeResultTypes.has_value());
+
     rewriter.setInsertionPoint(consumer);
     auto newProducer = cloneAndReplaceResultTypes(rewriter, consumer, bvm,
-                                                  op->getOperandTypes());
+                                                  maybeResultTypes.value());
 
     rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
-        consumer, op.getType(), newProducer->getResult(0),
+        consumer, consumer->getResultTypes(), newProducer->getResult(0),
         op.getBroadcastDimensions());
 
     return success();

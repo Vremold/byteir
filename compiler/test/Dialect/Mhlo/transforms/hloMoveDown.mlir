@@ -300,6 +300,20 @@ func.func @broadcast_binary_same(%arg0 : tensor<32xf32>) -> tensor<4x32xf32> {
 // CHECK-NEXT: mhlo.broadcast_in_dim
 // CHECK-NEXT: return
 
+func.func @broadcast_move_down_binary_with_dtype_alter(%arg0 : tensor<32xf32>, %arg1 : tensor<32xf32>) -> tensor<4x32xi1> {
+    %0 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<32xf32>) -> tensor<4x32xf32>
+    %1 = "mhlo.broadcast_in_dim"(%arg1) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<32xf32>) -> tensor<4x32xf32>
+    %2 = "mhlo.compare"(%0, %1) {comparison_direction = #mhlo<comparison_direction EQ>} : (tensor<4x32xf32>, tensor<4x32xf32>) -> tensor<4x32xi1>
+    return %2 : tensor<4x32xi1>
+}
+// CHECK-LABEL: func.func @broadcast_move_down_binary_with_dtype_alter
+// CHECK-SAME: (%[[ARG0:[a-zA-Z0-9]+]]: tensor<32xf32>, %[[ARG1:[a-zA-Z0-9]+]]: tensor<32xf32>)
+// CHECK-NEXT: %[[V0:.*]] = mhlo.compare  EQ, %[[ARG0]], %[[ARG1]]
+// CHECK-SAME: (tensor<32xf32>, tensor<32xf32>) -> tensor<32xi1>
+// CHECK-NEXT: %[[V1:.*]] = "mhlo.broadcast_in_dim"(%[[V0]])
+// CHECK-SAME: (tensor<32xi1>) -> tensor<4x32xi1>
+// CHECK-NEXT: return
+
  func.func @broadcast_move_down_binary_splat_const(%arg0 : tensor<32xf32>) -> tensor<4x32xf32> {
      %0 = mhlo.constant dense<1.000000e+00> : tensor<4x32xf32>
      %1 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<32xf32>) -> tensor<4x32xf32>
