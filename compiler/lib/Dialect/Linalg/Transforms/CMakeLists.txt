@@ -14,6 +14,7 @@ add_mlir_dialect_library(ByteIRLinalgPasses
 
   DEPENDS
   ByteIRLinalgPassIncGen
+  MLIRLinalgExtTransformOpsIncGen
   ByteIRUtils
   MLIRDestinationStyleOpInterface
   MLIRLinalgExt
