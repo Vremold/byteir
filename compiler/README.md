@@ -1,8 +1,6 @@
-# ByteIR
+# The ByteIR Compiler
 
-ByteIR is an MLIR-based compiler for CPU/GPU/ASIC.
-It is an umbrella repo for all related IRs and passes.
-
+The ByteIR Compiler is an MLIR-based compiler for CPU/GPU/ASIC.
 
 ## IRs (Dialects)
 
@@ -16,9 +14,7 @@ ByRE is a runtime IR for the ByteIR runtime.
 An external dialect from https://github.com/tensorflow/mlir-hlo.
 
 ## Dependency 
-***LLVM/MLIR***: https://code.byted.org/byteir/llvm-build, current llvm commit id: 74fb770de9399d7258a8eda974c93610cfde698e
-
-***mhlo_tools***: https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.2-cp37-cp37m-linux_x86_64.whl
+***LLVM/MLIR***: https://github.com/llvm/llvm-project, current llvm commit id: 74fb770de9399d7258a8eda974c93610cfde698e
 
 ***Python*** (for python binding): minimum version is 3.6, requiring numpy and pybind11 installed.
 

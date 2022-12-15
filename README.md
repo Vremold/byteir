@@ -1,13 +1,20 @@
-## ByteIR
+# The ByteIR Project
 
-ByteIR monorepo including compiler/runtime/frontends
+The ByteIR Project is a ByteDance compilation solution for Deep Learning.
 
-### [Compiler](compiler/README.md)
+ByteIR includes compiler/runtime/frontends
 
-ByteIR is an MLIR-based compiler for CPU/GPU/ASIC.
+## [Compiler](compiler/README.md)
 
-### [Runtime](runtime/README.md)
+ByteIR Compiler is an MLIR-based compiler for CPU/GPU/ASIC.
+
+## [Runtime](runtime/README.md)
 
 ByteIR Runtime is a common Runtime mainly serving both existing kernels and ByteIR compiler generated kernels.
 
-### (TODO) [LICENSE](LICENSE)
+## [Frontends](frontends/README.md)
+
+ByteIR Frontends includes Tensorflow, PyTorch, and ONNX.
+
+
+## [LICENSE](LICENSE)

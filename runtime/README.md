@@ -2,15 +2,12 @@
 
 ByteIR Runtime is a common Runtime mainly serving both existing kernels and ByteIR compiler generated kernels.
 
-***Berne*** is the tentative codename of ByteIR Runtime.
-
 
 ## Dependency 
 
 ***LLVM/MLIR*** https://code.byted.org/byteir/llvm-project
 
-***ByteIR ByRE dialect***  https://code.byted.org/byteir/byteir
-
+***ByteIR ByRE dialect***  https://github.com/bytedance/byteir/compiler
 
 ## Build
 ### Linux/Mac
@@ -55,4 +52,3 @@ cd build
 ./bin/brt_test_all
 ```
 
-## License (TODO)
