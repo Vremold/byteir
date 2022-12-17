@@ -65,3 +65,14 @@ func.func @fold_large_compare() -> tensor<1x3x3x128x64xi1> {
 }
 // CHECK-LABEL: @fold_large_compare
 // CHECK-NOT:  mhlo.compare
+
+func.func @fold_clamp() -> tensor<5xi64> {
+  %1 = mhlo.constant dense<[-1, 100, 200, 0, 149]> : tensor<5xi64>
+  %2 = mhlo.constant dense<149> : tensor<i64>
+  %3 = mhlo.constant dense<0> : tensor<i64>
+  %4 = mhlo.clamp %3, %1, %2 : (tensor<i64>, tensor<5xi64>, tensor<i64>) -> tensor<5xi64>
+  return %4 : tensor<5xi64>
+}
+// CHECK-LABEL: fold_clamp
+// CHECK: mhlo.constant dense<[0, 100, 149, 0, 149]> : tensor<5xi64>
+// CHECK-NOT: mhlo.clamp

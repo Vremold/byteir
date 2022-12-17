@@ -33,6 +33,7 @@ LogicalResult foldShapeBroadcast(shape::BroadcastOp op,
 } // namespace shape
 
 namespace mhlo {
+class ClampOp;
 class ConvertOp;
 class CompareOp;
 class TransposeOp;
@@ -72,6 +73,8 @@ LogicalResult foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
 // fold binary op with large constant op
 template <typename Op, template <typename> typename Func>
 LogicalResult foldLargeBinaryOp(Op op, PatternRewriter &rewriter);
+
+LogicalResult foldLargeClampOp(mhlo::ClampOp op, PatternRewriter &rewriter);
 
 // mhlo.dynamic_conv => mhlo.convolution canonicalization
 LogicalResult simplifyDynamicConvToConv(mhlo::DynamicConvOp op,

@@ -51,6 +51,7 @@ func.func @fold_large_constant_binary_op() -> tensor<2xf32> {
   %2 = mhlo.add %0, %1 : tensor<2xf32>
   return %2 : tensor<2xf32>
 }
+// CHECK-LABEL: fold_large_constant_binary_op
 // CHECK-NOT: mhlo.add
 // CHECK: mhlo.constant dense<[1.000000e+00, 2.000000e+00]>
 
@@ -79,6 +80,7 @@ func.func @canonicalize_dynamic_conv_case0(%1212: tensor<?x10x19x4xf16>, %85: te
   %1214 = "mhlo.dynamic_conv"(%1212, %85, %cst_1) {batch_group_count = 1 : i64, dimension_numbers = #mhlo.conv<[b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f]>, feature_group_count = 1 : i64, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : (tensor<?x10x19x4xf16>, tensor<5x7x4x12xf16>, tensor<4xi32>) -> tensor<?x6x13x12xf16>
   return %1214 : tensor<?x6x13x12xf16>
 }
+// CHECK-LABEL: canonicalize_dynamic_conv_case0
 // CHECK-NOT:  mhlo.dynamic_conv
 // CHECK:  mhlo.convolution(%arg0, %arg1) dim_numbers = [b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f], window = {stride = [1, 1], pad = {{\[}}[0, 0], [0, 0]{{\]}}, rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<?x10x19x4xf16>, tensor<5x7x4x12xf16>) -> tensor<?x6x13x12xf16>
 
@@ -87,6 +89,7 @@ func.func @canonicalize_dynamic_conv_case1(%1212: tensor<?x10x19x4xf16>, %85: te
   %1214 = "mhlo.dynamic_conv"(%1212, %85, %cst_1) {batch_group_count = 1 : i64, dimension_numbers = #mhlo.conv<[b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f]>, feature_group_count = 1 : i64, rhs_dilation = dense<1> : tensor<2xi64>, window_strides = dense<1> : tensor<2xi64>} : (tensor<?x10x19x4xf16>, tensor<5x7x4x12xf16>, tensor<4xi32>) -> tensor<?x8x15x12xf16>
   return %1214 : tensor<?x8x15x12xf16>
 }
+// CHECK-LABEL: canonicalize_dynamic_conv_case1
 // CHECK-NOT: mhlo.dynamic_conv
 // CHECK:  mhlo.convolution(%arg0, %arg1) dim_numbers = [b, 0, 1, f]x[0, 1, i, o]->[b, 0, 1, f], window = {stride = [1, 1], pad = {{\[}}[1, 1], [1, 1]{{\]}}, rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<?x10x19x4xf16>, tensor<5x7x4x12xf16>) -> tensor<?x8x15x12xf16>
 
@@ -96,6 +99,7 @@ func.func @concat_const_folding_with_dup_value() -> tensor<3x2xi64> {
   %3 = "mhlo.concatenate"(%0, %1, %1) {dimension = 0 : i64} : (tensor<1x2xi64>, tensor<1x2xi64>, tensor<1x2xi64>) -> tensor<3x2xi64>
   return %3 : tensor<3x2xi64>
 }
+// CHECK-LABEL: concat_const_folding_with_dup_value
 // CHECK: %0 = mhlo.constant dense<{{\[}}[1, 1], [2, 3], [2, 3]{{\]}}> : tensor<3x2xi64>
 // CHECK: return %0 : tensor<3x2xi64>
 
@@ -106,6 +110,7 @@ func.func @const_const_folding_case1(%arg0: tensor<1x2xi64>) -> tensor<5x2xi64> 
   %4 = "mhlo.concatenate"(%0, %1, %arg0, %2, %2) {dimension = 0 : i64} : (tensor<1x2xi64>, tensor<1x2xi64>, tensor<1x2xi64>, tensor<1x2xi64>, tensor<1x2xi64>) -> tensor<5x2xi64>
   return %4 : tensor<5x2xi64>
 }
+// CHECK-LABEL: const_const_folding_case1
 // CHECK:  %0 = mhlo.constant dense<{{\[}}[1, 1], [2, 3]{{\]}}> : tensor<2x2xi64>
 // CHECK:  %1 = mhlo.constant dense<{{\[}}[3, 4], [3, 4]{{\]}}> : tensor<2x2xi64>
 
@@ -114,5 +119,17 @@ func.func @canonicalize_const_broadcast() -> tensor<1x10x2xi64> {
   %1 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<[0, 2]> : tensor<2xi64>} : (tensor<1x2xi64>) -> (tensor<1x10x2xi64>)
   return %1 : tensor<1x10x2xi64>
 }
+// CHECK-LABEL: canonicalize_const_broadcast
 // CHECK: %[[V0:.*]] = mhlo.constant dense<[2, 3]> : tensor<2xi64>
 // CHECK: "mhlo.broadcast_in_dim"(%[[V0]]) {broadcast_dimensions = dense<2> : tensor<1xi64>} : (tensor<2xi64>) -> tensor<1x10x2xi64>
+
+func.func @fold_clamp() -> tensor<5xi64> {
+  %1 = mhlo.constant dense<[-1, 100, 200, 0, 149]> : tensor<5xi64>
+  %2 = mhlo.constant dense<149> : tensor<i64>
+  %3 = mhlo.constant dense<0> : tensor<i64>
+  %4 = mhlo.clamp %3, %1, %2 : (tensor<i64>, tensor<5xi64>, tensor<i64>) -> tensor<5xi64>
+  return %4 : tensor<5xi64>
+}
+// CHECK-LABEL: fold_clamp
+// CHECK: mhlo.constant dense<[0, 100, 149, 0, 149]> : tensor<5xi64>
+// CHECK-NOT: mhlo.clamp
