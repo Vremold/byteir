@@ -14,7 +14,6 @@
 #include "byteir/Conversion/LmhloToLace/LmhloToLace.h"
 #include "byteir/Conversion/LmhloToMemref/LmhloToMemref.h"
 #include "byteir/Conversion/ToAce/MhloToAce.h"
-#include "byteir/Conversion/ToAce/UnregisteredToAce.h"
 #include "byteir/Conversion/ToByre/ToByre.h"
 #include "byteir/Conversion/ToGPU/ToGPU.h"
 #include "byteir/Conversion/ToHlo/ArithToMhlo.h"

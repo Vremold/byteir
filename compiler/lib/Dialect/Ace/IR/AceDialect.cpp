@@ -68,17 +68,3 @@ void AceDialect::initialize() {
 OpFoldResult mlir::ace::ConstOp::fold(ArrayRef<Attribute>) {
   return getValue();
 }
-
-//===----------------------------------------------------------------------===//
-// OpaqueOp
-//===----------------------------------------------------------------------===//
-
-Block *mlir::ace::OpaqueOp::addEntryBlock() {
-  assert(getBody().empty() && "opaqueOp already has an entry block");
-  auto *entry = new Block();
-  getBody().push_back(entry);
-  for (auto type : getOperandTypes()) {
-    entry->addArgument(type, /*Location*/ getLoc());
-  }
-  return entry;
-}

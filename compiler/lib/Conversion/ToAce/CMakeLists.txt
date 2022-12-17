@@ -4,7 +4,6 @@ add_public_tablegen_target(MhloToAceActivationPatternIncGen)
 
 add_byteir_conversion_library(ByteIRToAce
   MhloToAce.cpp
-  UnregisteredToAce.cpp
 
   DEPENDS
   ByteIRConversionPassIncGen

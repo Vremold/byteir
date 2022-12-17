@@ -131,14 +131,6 @@ def ConvertFuncToGPU : Pass<"convert-func-to-gpu", "ModuleOp"> {
 // ToAce
 //===----------------------------------------------------------------------===//
 
-def ConvertUnregisteredToAce : Pass<"convert-unregistered-to-ace", "func::FuncOp"> {
-  let summary = "Convert unregistered op to Ace Op.";
-  let constructor = "mlir::createConvertUnregisteredToAcePass()";
-  let dependentDialects = [
-    "mlir::ace::AceDialect",
-  ];
-}
-
 def ConvertMhloToAce : Pass<"convert-mhlo-to-ace", "func::FuncOp"> {
   let summary = "Fuse mhlo ops to coarse ace ops.";
   let constructor = "mlir::createConvertMhloToAcePass()";

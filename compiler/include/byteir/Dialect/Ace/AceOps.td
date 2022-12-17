@@ -71,47 +71,6 @@ def Ace_ActivateOp : Ace_Op<"activate", [Pure]> {
 }
 
 
-def Ace_ReturnOp : Ace_Op<"return", [Pure, Terminator]> {
-  let summary = [{
-    The `ace.return` operation terminates a region and returns values.
-  }];
-
-  let arguments = (ins
-    Variadic<AnyTensor>:$results
-  );
-}
-
-
-def Ace_OpaqueOp : Ace_Op<"opaque", [SingleBlockImplicitTerminator<"ReturnOp">]> {
-  let summary = "Wraps ops that could not be lower to mhlo.";
-
-  let description = [{ 
-    Example:
-    ```mlir
-    %0 = "ace.opaque"(%arg0, %arg1) ( {
-    ^bb0(%arg2: tensor<2x4xf32>, %arg3: tensor<2x4xf32>):
-      %3 = "tf.Add"(%arg2, %arg3) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
-      "ace.return"(%3) : (tensor<2x4xf32>) -> ()
-    }) : (tensor<2x4xf32>, tensor<2x4xf32>) -> tensor<2x4xf32>
-    ```
-  }];
-
-  let regions = (region SizedRegion<1>:$body);
-
-  let arguments = (ins
-    Variadic<AnyTensor>:$inputs
-  );
-
-  let results = (outs
-    Variadic<AnyTensor>:$outputs
-  );
-
-  let extraClassDeclaration = [{
-    Block* addEntryBlock();
-  }];
-
-}
-
 def Ace_CustomCallOp : Ace_Op<"custom_call", [Pure]> {
   let summary = "CustomCall operator";
 
