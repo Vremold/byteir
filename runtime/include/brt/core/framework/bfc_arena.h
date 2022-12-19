@@ -15,9 +15,13 @@ limitations under the License.
 // Portions Copyright (c) Microsoft Corporation
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #pragma once
+
+#include "brt/core/common/common.h"
+#include "brt/core/framework/arena.h"
+#include "brt/core/framework/brt_mutex.h"
 #include <algorithm>
 #include <array>
 #include <assert.h>
@@ -26,10 +30,6 @@ limitations under the License.
 #include <mutex>
 #include <sstream>
 #include <vector>
-
-#include "arena.h"
-#include "brt/core/common/common.h"
-#include "brt/core/framework/brt_mutex.h"
 
 #if defined(PLATFORM_WINDOWS)
 #include <intrin.h>

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #include "brt/core/framework/allocator.h"
 #include "brt/core/framework/arena.h"

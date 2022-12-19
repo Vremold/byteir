@@ -1,7 +1,7 @@
 // Copyright (c) Megvii Inc.
 // Licensed under the Apache License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #include "./reduction.h"
 #include "./reduction_helper.h"

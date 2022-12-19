@@ -1,10 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #pragma once
 
+#include "brt/core/common/common.h"
+#include "brt/core/common/logging/capture.h"
+#include "brt/core/common/logging/macros.h"
+#include "brt/core/common/logging/severity.h"
 #include <atomic>
 #include <chrono>
 #include <climits>
@@ -12,11 +16,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-
-#include "brt/core/common/common.h"
-#include "brt/core/common/logging/capture.h"
-#include "brt/core/common/logging/macros.h"
-#include "brt/core/common/logging/severity.h"
 
 /*
 

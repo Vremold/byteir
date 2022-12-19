@@ -5,14 +5,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+// TODO remove this before opnesource
+
+#include "backends/cuda/providers/default/ftv4/models.h"
 #include "brt/backends/cuda/device/cuda_allocator.h"
 #include "brt/backends/cuda/providers/default/cuda_provider.h"
 #include "brt/core/common/status.h"
 #include "brt/core/session/request_context.h"
 #include "brt/core/session/session.h"
 #include "brt/test/common/cuda/util.h"
-//#include "brt/test/provider/cuda/ftv4/models.h"
-#include "backends/cuda/providers/default/ftv4/models.h"
 #include "gtest/gtest.h"
 #include <cstdlib>
 #include <cuda_runtime.h>

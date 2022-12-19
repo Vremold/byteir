@@ -16,10 +16,14 @@
 // Portions Copyright (c) Microsoft Corporation
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #pragma once
 
+#include "brt/core/common/code_location.h"
+#include "brt/core/common/exceptions.h"
+#include "brt/core/common/make_string.h"
+#include "brt/core/common/status.h"
 #include <algorithm>
 #include <chrono>
 #include <climits>
@@ -33,11 +37,6 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-
-#include "brt/core/common/code_location.h"
-#include "brt/core/common/exceptions.h"
-#include "brt/core/common/make_string.h"
-#include "brt/core/common/status.h"
 
 namespace brt {
 

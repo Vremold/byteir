@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 # ============================================================================
-# Modifications Copyright (c) ByteDance.
+# Modification Copyright 2022 ByteDance Ltd. and/or its affiliates. 
 
 file(GLOB onnxruntime_session_srcs CONFIGURE_DEPENDS
     "${ONNXRUNTIME_INCLUDE_DIR}/core/session/*.h"

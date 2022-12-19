@@ -1,19 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #pragma once
 
+#include "brt/core/common/code_location.h"
+#include "brt/core/common/common.h"
 #include <algorithm>
 #include <exception>
 #include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include "brt/core/common/code_location.h"
-#include "brt/core/common/common.h"
 
 namespace brt {
 

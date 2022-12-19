@@ -1,11 +1,11 @@
 // Copyright (c) Megvii Inc.
 // Licensed under the Apache License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #pragma once
 
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
 
 namespace brt {
 namespace cuda {

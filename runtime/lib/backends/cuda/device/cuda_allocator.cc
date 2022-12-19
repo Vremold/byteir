@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #include "brt/backends/cuda/device/cuda_allocator.h"
 #include "brt/core/common/common.h"
 #include "brt/core/framework/arena.h"
 #include "brt/core/framework/bfc_arena.h"
 #include "brt/core/session/session.h"
-
 #include <cuda_runtime.h>
 
 using namespace brt;

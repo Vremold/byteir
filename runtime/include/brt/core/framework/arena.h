@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #pragma once
 
-#include <string>
-
 #include "allocator.h"
 #include "brt/core/common/common.h"
+#include <string>
 
 namespace brt {
 // The interface for arena which manage memory allocations

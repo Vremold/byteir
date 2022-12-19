@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
-#include <ctime>
-#include <exception>
-#include <utility>
+#include "brt/core/common/logging/logging.h"
 
 #include "brt/core/common/exceptions.h"
 #include "brt/core/common/logging/isink.h"
-#include "brt/core/common/logging/logging.h"
+#include <ctime>
+#include <exception>
+#include <utility>
 
 #ifdef _WIN32
 #include <Windows.h>

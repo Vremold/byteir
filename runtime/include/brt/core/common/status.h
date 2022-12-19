@@ -12,7 +12,7 @@ limitations under the License.
 // Portions Copyright (c) Microsoft.
 // Licensed under the MIT License.
 // ===========================================================================
-// Modifications Copyright (c) ByteDance.
+// Modification Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #pragma once
 
