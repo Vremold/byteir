@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Modification Copyright (c) ByteDance Inc. All rights reserved.
+# Modification Copyright 2022 ByteDance Ltd. and/or its affiliates. 
 
 find_package(MLIR REQUIRED CONFIG)
 

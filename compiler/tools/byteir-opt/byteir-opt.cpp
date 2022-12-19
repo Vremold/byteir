@@ -9,7 +9,7 @@
 // Main entry function for byteir-opt for when built as standalone binary.
 //
 //===----------------------------------------------------------------------===//
-// Modifications Copyright (c) ByteDance.
+// Modifications Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #include "byteir/Conversion/Passes.h"
 #include "byteir/Dialect/Ace/AceDialect.h"

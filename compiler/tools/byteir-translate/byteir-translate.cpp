@@ -9,7 +9,7 @@
 // Main entry function for byteir-translate for when built as standalone binary.
 //
 //===----------------------------------------------------------------------===//
-// Modifications Copyright (c) ByteDance.
+// Modifications Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #include "byteir/Target/CUDA/ToCUDA.h"
 #include "byteir/Target/Cpp/ToCpp.h"

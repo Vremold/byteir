@@ -1,12 +1,22 @@
 //===- MhloToAceActivationPattern.td --------------------------------------===//
 //
-// Copyright (c) ByteDance Inc. All rights reserved.
-// Licensed under the Apache License, Version 2.0
+// Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef MHLO_TO_ACE_ACTIVATION_PATTERN
-#define MHLO_TO_ACE_ACTIVATION_PATTERN
+#ifndef BYTEIR_CONVERSION_TOACE_MHLO_TO_ACE_ACTIVATION_PATTERN
+#define BYTEIR_CONVERSION_TOACE_MHLO_TO_ACE_ACTIVATION_PATTERN
 
 
 include "byteir/Dialect/Ace/AceOps.td"
@@ -60,4 +70,4 @@ def MhloToAceLeakyReluPattern : Pat<
     (NativeCodeCall<"{$_builder.getNamedAttr(\"alpha\", value2.cast<DenseFPElementsAttr>().getSplatValue<FloatAttr>())}">)),
   [(AttrIsZero:$value1), (FPDenseSplatValue:$value2)]>;
 
-#endif // MHLO_TO_ACE_ACTIVATION_PATTERN
+#endif // BYTEIR_CONVERSION_TOACE_MHLO_TO_ACE_ACTIVATION_PATTERN

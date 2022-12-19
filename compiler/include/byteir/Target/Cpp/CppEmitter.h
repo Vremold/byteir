@@ -9,7 +9,7 @@
 // This file defines C++ emitter code using the EmitC dialect.
 //
 //===----------------------------------------------------------------------===//
-// Modifications Copyright (c) ByteDance.
+// Modifications Copyright 2022 ByteDance Ltd. and/or its affiliates.
 
 #ifndef BYTEIR_TARGET_CPP_CPPEMITTER_H
 #define BYTEIR_TARGET_CPP_CPPEMITTER_H
