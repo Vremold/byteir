@@ -10,8 +10,6 @@ The ByteIR Compiler is an MLIR-based compiler for CPU/GPU/ASIC.
 ## Build
 ### Linux/Mac 
 ```bash
-python3 -m pip install -r requirements.txt
-
 mkdir /path_to_byteir/build
 cd /path_to_byteir/build/
 

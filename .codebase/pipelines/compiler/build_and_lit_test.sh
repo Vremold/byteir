@@ -18,7 +18,7 @@ OUT_DIR="$BUILD_DIR/artifact"
 source $CUR_DIR/../common.sh
 prepare_for_build
 
-python3 -m pip install -r $PROJ_DIR/requirements.txt
+python3 -m pip install -r $PROJ_DIR/numerical/requirements.txt
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
