@@ -44,10 +44,6 @@ class DynamicConvOp;
 class DynamicGatherOp;
 class ReshapeOp;
 
-Optional<Attribute> createBroadcastedDenseElementAttr(
-    DenseElementsAttr originAttr, ArrayRef<int64_t> originShape,
-    ShapedType newType, ArrayRef<int64_t> broadcastDims);
-
 // Most of these will push back to upstream
 // So this file only includes patterns, not a pass.
 

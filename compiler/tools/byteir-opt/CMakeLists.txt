@@ -23,6 +23,7 @@ if(BYTEIR_INCLUDE_TESTS)
     ByteIRTestAnalysis
     ByteIRTestInterface
     ByteIRTestTransformation
+    ByteIRTestUtils
     MLIRTestTransformDialect
     )
 endif()

@@ -94,11 +94,14 @@ template <typename Op> bool mlir::isBlockSingleOp(Block *block) {
   return false;
 }
 
+// instantiate
 template bool mlir::isBlockSingleOp<mhlo::AddOp>(Block *);
 template bool mlir::isBlockSingleOp<mhlo::MaxOp>(Block *);
 template bool mlir::isBlockSingleOp<mhlo::MinOp>(Block *);
 
-static byteir::NamedLayout
+namespace {
+
+byteir::NamedLayout
 parsePoolLayout(size_t rank, const SmallVector<int64_t> &window_dimensions,
                 const SmallVector<int64_t> &strides,
                 const SmallVector<int64_t> &padding) {
@@ -123,6 +126,8 @@ parsePoolLayout(size_t rank, const SmallVector<int64_t> &window_dimensions,
   }
   return layout;
 }
+
+} // namespace
 
 byteir::NamedLayout mlir::getPoolLayout(mlir::mhlo::ReduceWindowOp op) {
   auto base_dilations = op.getBaseDilationsAttr();
@@ -328,9 +333,108 @@ void mlir::handleConvAttribute(NamedAttrList &attrs, T conv_op,
   }
 }
 
+// instantiate
 template void mlir::handleConvAttribute<mhlo::ConvolutionOp>(
     NamedAttrList &, mhlo::ConvolutionOp, OpBuilder &);
 template void mlir::handleConvAttribute<lmhlo::ConvolutionOp>(
     NamedAttrList &, lmhlo::ConvolutionOp, OpBuilder &);
 
-#undef UNKNOWN_LAYOUT
+namespace {
+
+// this function copied from mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
+DenseElementsAttr reshape(DenseElementsAttr attr, ShapedType newType) {
+  // TODO(b/232866626): DenseElementsAttr::reshape is broken for bool splats.
+  // Once that ticket is fixed, we can remove this conditional.
+  if (attr.isSplat() && newType.getElementType().isInteger(/*width=*/1)) {
+    auto splatValue = attr.getValues<bool>()[0];
+    return DenseElementsAttr::get(newType, {splatValue});
+  }
+  return attr.reshape(newType);
+}
+
+template <typename ValType>
+Attribute
+createBroadcastedDenseElementsAttrImpl(DenseElementsAttr originAttr,
+                                       ShapedType newType,
+                                       ArrayRef<int64_t> broadcastDims) {
+  SmallVector<ValType> originValues{originAttr.getValues<ValType>().begin(),
+                                    originAttr.getValues<ValType>().end()};
+  SmallVector<ValType> newValues;
+  newValues.reserve(newType.getNumElements());
+
+  auto getStrides = [](ArrayRef<int64_t> shape) {
+    SmallVector<int64_t> strides(shape.size(), 1);
+    for (int64_t i = strides.size() - 2; i >= 0; --i) {
+      strides[i] = strides[i + 1] * shape[i + 1];
+    }
+    return strides;
+  };
+  SmallVector<int64_t> originStrides =
+      getStrides(originAttr.getType().getShape());
+  auto outShape = newType.getShape();
+  SmallVector<int64_t> outStrides = getStrides(outShape);
+  SmallVector<int64_t> dimMapping(newType.getRank(), -1);
+  for (size_t i = 0; i < broadcastDims.size(); ++i) {
+    dimMapping[broadcastDims[i]] = i;
+  }
+
+  // return the original index and increment current index by 1.
+  auto indexIncrement = [&](SmallVector<int64_t> &curIndex) {
+    int64_t originIndex = 0;
+    for (size_t i = 0; i < curIndex.size(); ++i) {
+      if (dimMapping[i] >= 0) {
+        originIndex += originStrides[dimMapping[i]] * curIndex[i];
+      }
+    }
+
+    for (int64_t i = curIndex.size() - 1; i >= 0; --i) {
+      curIndex[i] = (curIndex[i] + 1) % outShape[i];
+      if (curIndex[i] != 0)
+        break;
+    }
+
+    return originIndex;
+  };
+
+  SmallVector<int64_t> curIndex(outShape.size(), 0);
+  for (int64_t i = 0; i < newType.getNumElements(); ++i) {
+    int64_t originIndex = indexIncrement(curIndex);
+    newValues.push_back(originValues[originIndex]);
+  }
+  return DenseElementsAttr::get(newType, newValues);
+}
+
+} // namespace
+
+Optional<Attribute>
+mlir::createBroadcastedDenseElementsAttr(DenseElementsAttr originAttr,
+                                         ShapedType newType,
+                                         ArrayRef<int64_t> broadcastDims) {
+  // deduce originAttr's dimension which == 1
+  ShapedType valueType = originAttr.getType();
+  llvm::SmallVector<int64_t> newBroadcastDims;
+  if (llvm::any_of(valueType.getShape(),
+                   [](int64_t dim) { return dim == 1; })) {
+    llvm::SmallVector<int64_t> newValueShape;
+    for (unsigned i = 0, e = valueType.getRank(); i < e; ++i) {
+      if (valueType.getDimSize(i) != 1) {
+        newValueShape.push_back(valueType.getDimSize(i));
+        newBroadcastDims.push_back(broadcastDims[i]);
+      }
+    }
+    auto newValueType =
+        RankedTensorType::get(newValueShape, valueType.getElementType());
+    originAttr = reshape(originAttr, newValueType);
+  } else {
+    newBroadcastDims = llvm::to_vector(broadcastDims);
+  }
+
+  if (valueType.getElementType().isa<FloatType>()) {
+    return createBroadcastedDenseElementsAttrImpl<APFloat>(originAttr, newType,
+                                                           newBroadcastDims);
+  } else if (valueType.getElementType().isa<IntegerType>()) {
+    return createBroadcastedDenseElementsAttrImpl<APInt>(originAttr, newType,
+                                                         newBroadcastDims);
+  }
+  return None;
+}

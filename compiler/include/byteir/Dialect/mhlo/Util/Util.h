@@ -98,6 +98,11 @@ getConvLayout(mhlo::ConvDimensionNumbersAttr dimension_numbers);
 template <typename T>
 void handleConvAttribute(NamedAttrList &attrs, T conv_op, OpBuilder &rewriter);
 
+Optional<Attribute>
+createBroadcastedDenseElementsAttr(DenseElementsAttr originAttr,
+                                   ShapedType newType,
+                                   ArrayRef<int64_t> broadcastDims);
+
 } // namespace mlir
 
 #endif // BYTEIR_DIALECT_MHLO_UTIL_UTIL_H

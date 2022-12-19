@@ -32,74 +32,6 @@ using namespace llvm;
 using namespace mlir;
 using namespace mlir::mhlo;
 
-namespace {
-
-template <typename ValType>
-Attribute createBroadcastedDenseElementAttrImpl(
-    DenseElementsAttr originAttr, ArrayRef<int64_t> originShape,
-    ShapedType newType, ArrayRef<int64_t> broadcastDims) {
-  SmallVector<ValType> originValues{originAttr.getValues<ValType>().begin(),
-                                    originAttr.getValues<ValType>().end()};
-  SmallVector<ValType> newValues;
-  newValues.reserve(newType.getNumElements());
-  ArrayRef<int64_t> outShape = newType.getShape();
-
-  auto getStrides = [](ArrayRef<int64_t> shape) {
-    SmallVector<int64_t> strides(shape.size(), 1);
-    for (int64_t i = strides.size() - 2; i >= 0; --i) {
-      strides[i] = strides[i + 1] * shape[i + 1];
-    }
-    return strides;
-  };
-  SmallVector<int64_t> originStrides = getStrides(originShape);
-  SmallVector<int64_t> outStrides = getStrides(outShape);
-  SmallVector<int64_t> dimMapping(outShape.size(), -1);
-  for (size_t i = 0; i < broadcastDims.size(); ++i) {
-    dimMapping[broadcastDims[i]] = i;
-  }
-
-  // return the original index and increment current index by 1.
-  auto indexIncrement = [&](SmallVector<int64_t> &curIndex) {
-    int64_t originIndex = 0;
-    for (size_t i = 0; i < curIndex.size(); ++i) {
-      if (dimMapping[i] >= 0) {
-        originIndex += originStrides[dimMapping[i]] * curIndex[i];
-      }
-    }
-
-    for (int64_t i = curIndex.size() - 1; i >= 0; --i) {
-      curIndex[i] = (curIndex[i] + 1) % outShape[i];
-      if (curIndex[i] != 0)
-        break;
-    }
-
-    return originIndex;
-  };
-
-  SmallVector<int64_t> curIndex(outShape.size(), 0);
-  for (int64_t i = 0; i < newType.getNumElements(); ++i) {
-    int64_t originIndex = indexIncrement(curIndex);
-    newValues.push_back(originValues[originIndex]);
-  }
-  return DenseElementsAttr::get(newType, newValues);
-}
-
-} // namespace
-
-Optional<Attribute> mlir::mhlo::createBroadcastedDenseElementAttr(
-    DenseElementsAttr originAttr, ArrayRef<int64_t> originShape,
-    ShapedType newType, ArrayRef<int64_t> broadcastDims) {
-  Type elemType = originAttr.getElementType();
-  if (elemType.isa<FloatType>()) {
-    return createBroadcastedDenseElementAttrImpl<APFloat>(
-        originAttr, originShape, newType, broadcastDims);
-  } else if (elemType.isa<IntegerType>()) {
-    return createBroadcastedDenseElementAttrImpl<APInt>(originAttr, originShape,
-                                                        newType, broadcastDims);
-  }
-  return None;
-}
-
 // FIXME: this pattern should move to shape dialect
 LogicalResult mlir::shape::foldShapeBroadcast(shape::BroadcastOp op,
                                               PatternRewriter &rewriter) {
@@ -209,12 +141,10 @@ LogicalResult mlir::mhlo::foldBroadcastInDim(BroadcastInDimOp op,
   if (!inpType.hasStaticShape() || !outputType.hasStaticShape())
     return failure();
 
-  SmallVector<int64_t> broadcastDims;
-  for (auto v : op.getBroadcastDimensions()) {
-    broadcastDims.push_back(v.getSExtValue());
-  }
-  auto newAttr = createBroadcastedDenseElementAttr(
-      originAttr, inpType.getShape(), outputType, broadcastDims);
+  auto broadcastDims =
+      llvm::to_vector(op.getBroadcastDimensions().getValues<int64_t>());
+  auto newAttr =
+      createBroadcastedDenseElementsAttr(originAttr, outputType, broadcastDims);
   if (!newAttr.has_value())
     return failure();
 
