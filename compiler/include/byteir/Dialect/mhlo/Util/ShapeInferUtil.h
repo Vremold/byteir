@@ -36,7 +36,8 @@ constexpr StringRef getBoundedShapeDenseAttrName() {
 // This could be used for both bounded shape inference and static shape
 // inference. Return failure if a shape mismatch occurs.
 LogicalResult runShapeInference(func::FuncOp funcOp,
-                                bool isBoundedShapeInfer = false);
+                                bool isBoundedShapeInfer = false,
+                                bool overrideOldShape = false);
 
 //===----------------------------------------------------------------------===//
 // ReifyReturnTypeShapes Registration

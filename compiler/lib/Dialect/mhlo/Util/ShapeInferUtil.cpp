@@ -34,7 +34,8 @@ namespace {
 using ResultShapes = SmallVector<ArrayRef<int64_t>, 1>;
 
 LogicalResult checkAndSetTypes(Operation *op,
-                               const ResultShapes &inferredShapes) {
+                               const ResultShapes &inferredShapes,
+                               bool overrideOldShape = false) {
   auto results = op->getResults();
 
   // check
@@ -45,7 +46,8 @@ LogicalResult checkAndSetTypes(Operation *op,
       continue;
     auto inferredShape = std::get<1>(it);
 
-    if (resultShape.getRank() != int64_t(inferredShape.size())) {
+    if (!overrideOldShape &&
+        resultShape.getRank() != int64_t(inferredShape.size())) {
       op->emitError()
           << "Found rank mismatch during shape inferring, previous is "
           << resultShape.getRank() << ", inferred is " << inferredShape.size()
@@ -56,7 +58,7 @@ LogicalResult checkAndSetTypes(Operation *op,
     for (auto dimIt : llvm::zip(resultShape.getShape(), inferredShape)) {
       int64_t lDim = std::get<0>(dimIt);
       int64_t rDim = std::get<1>(dimIt);
-      if (lDim > 0 && rDim > 0 && lDim != rDim) {
+      if (!overrideOldShape && lDim > 0 && rDim > 0 && lDim != rDim) {
         op->emitError()
             << "Found dimension mismatch during shape inferring, previous is "
             << lDim << ", inferred is " << rDim << "\n";
@@ -107,7 +109,9 @@ LogicalResult inferBoundedShapeUsingRegistry(Operation *op) {
   return checkAndSetTypes(op, resultShapes);
 }
 
-LogicalResult inferShapeUsingSameOperandsAndResultShapeTrait(Operation *op) {
+LogicalResult
+inferShapeUsingSameOperandsAndResultShapeTrait(Operation *op,
+                                               bool overrideOldShape) {
   Type staticShapedType = nullptr;
   for (Type t : op->getOperandTypes()) {
     if (auto shape_type = t.dyn_cast<ShapedType>()) {
@@ -130,11 +134,12 @@ LogicalResult inferShapeUsingSameOperandsAndResultShapeTrait(Operation *op) {
 
   ResultShapes resultShapes(op->getNumResults(),
                             staticShapedType.cast<ShapedType>().getShape());
-  return checkAndSetTypes(op, resultShapes);
+  return checkAndSetTypes(op, resultShapes, overrideOldShape);
 }
 
 LogicalResult
-inferShapeUsingInferShapedTypeOpInterface(InferShapedTypeOpInterface op) {
+inferShapeUsingInferShapedTypeOpInterface(InferShapedTypeOpInterface op,
+                                          bool overrideOldShape) {
   SmallVector<ShapedTypeComponents> resultShapeComps;
   SmallVector<Value> operands = llvm::to_vector(op->getOperands());
   ValueShapeRange operandsShapeRange(operands);
@@ -152,11 +157,12 @@ inferShapeUsingInferShapedTypeOpInterface(InferShapedTypeOpInterface op) {
         return comp.getDims();
       }));
 
-  auto ret = checkAndSetTypes(op, resultShapes);
+  auto ret = checkAndSetTypes(op, resultShapes, overrideOldShape);
   return ret;
 }
 
-LogicalResult inferShapeUsingInferTypeOpInterface(InferTypeOpInterface op) {
+LogicalResult inferShapeUsingInferTypeOpInterface(InferTypeOpInterface op,
+                                                  bool overrideOldShape) {
   SmallVector<Type> resultShapeTypes;
   LogicalResult inferStatus = op.inferReturnTypes(
       op->getContext(), op->getLoc(), op->getOperands(),
@@ -176,7 +182,7 @@ LogicalResult inferShapeUsingInferTypeOpInterface(InferTypeOpInterface op) {
           return shape.getShape();
         return ArrayRef<int64_t>(llvm::None);
       }));
-  return checkAndSetTypes(op, resultShapes);
+  return checkAndSetTypes(op, resultShapes, overrideOldShape);
 }
 
 bool isShape(Operation *op) {
@@ -195,7 +201,8 @@ bool isArith(Operation *op) {
 }
 
 LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer,
-                                DenseMap<Value, Attribute> &foldMap) {
+                                DenseMap<Value, Attribute> &foldMap,
+                                bool overrideOldShape) {
 
   if (isBoundedShapeInfer && (isShape(op) || isTensor(op) || isArith(op))) {
     // skip the inference in shape dialect and tensor dialect
@@ -234,20 +241,21 @@ LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer,
              failed(inferBoundedShapeUsingRegistry(op))) {
     return failure();
   } else if (op->hasTrait<OpTrait::SameOperandsAndResultShape>() &&
-             succeeded(inferShapeUsingSameOperandsAndResultShapeTrait(op))) {
+             failed(inferShapeUsingSameOperandsAndResultShapeTrait(
+                 op, overrideOldShape))) {
     // Note: some ops has InferShapedTypeOpInterface but it will return
     // failure() directly in the implementation, therefore
     // SameOperandsAndResultShape trait should be checked before checking
     // InferShapedTypeOpInterface
-    return success();
+    return failure();
   } else if (dyn_cast<InferShapedTypeOpInterface>(op) &&
-             succeeded(inferShapeUsingInferShapedTypeOpInterface(
-                 dyn_cast<InferShapedTypeOpInterface>(op)))) {
-    return success();
+             failed(inferShapeUsingInferShapedTypeOpInterface(
+                 dyn_cast<InferShapedTypeOpInterface>(op), overrideOldShape))) {
+    return failure();
   } else if (dyn_cast<InferTypeOpInterface>(op) &&
-             succeeded(inferShapeUsingInferTypeOpInterface(
-                 dyn_cast<InferTypeOpInterface>(op)))) {
-    return success();
+             failed(inferShapeUsingInferTypeOpInterface(
+                 dyn_cast<InferTypeOpInterface>(op), overrideOldShape))) {
+    return failure();
   }
   return success();
 }
@@ -260,12 +268,14 @@ LogicalResult inferResultShapes(Operation *op, bool isBoundedShapeInfer,
 
 // TODO: supported nested function call
 LogicalResult mlir::runShapeInference(func::FuncOp funcOp,
-                                      bool isBoundedShapeInfer) {
+                                      bool isBoundedShapeInfer,
+                                      bool overrideOldShape) {
   DenseMap<Value, Attribute> foldMap;
   bool interrupted =
       funcOp
           ->walk([&](Operation *op) {
-            if (failed(inferResultShapes(op, isBoundedShapeInfer, foldMap))) {
+            if (failed(inferResultShapes(op, isBoundedShapeInfer, foldMap,
+                                         overrideOldShape))) {
               return WalkResult::interrupt();
             }
             return WalkResult::advance();

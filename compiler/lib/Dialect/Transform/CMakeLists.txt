@@ -1,0 +1,16 @@
+add_mlir_dialect_library(ByteIRTransformPasses
+  Transforms/ApplyTransformDialectAndErase.cpp
+
+  ADDITIONAL_HEADER_DIRS
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Transform
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Transform/Transforms
+
+  DEPENDS
+  ByteIRTransformPassIncGen
+
+  LINK_LIBS PUBLIC
+  MLIRIR
+  MLIRPass
+  MLIRPDLDialect
+  MLIRTransformDialect
+)

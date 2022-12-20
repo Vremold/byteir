@@ -25,6 +25,7 @@
 #include "byteir/Dialect/SCF/Passes.h"
 #include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Dialect/Shape/Passes.h"
+#include "byteir/Dialect/Transform/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/InitAllPipelines.h"
 #include "byteir/Transforms/Passes.h"
@@ -124,6 +125,7 @@ int main(int argc, char **argv) {
   registerByteIRMhloPassesExt();
   registerByteIRSCFPasses();
   registerByteIRShapePasses();
+  registerByteIRTransformPasses();
 
   registerAllByteIRCommonPipelines();
   registerAllByteIRGPUPipelines();

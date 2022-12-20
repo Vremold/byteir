@@ -13,6 +13,7 @@ set(BYTEIR_LIBS
   ByteIRMhloPasses
   ByteIRPipelines
   ByteIRSCFPasses
+  ByteIRTransformPasses
   ByteIRTransforms
   ${byteir_conversion_libs}
   MLIRLinalgTransformOps
