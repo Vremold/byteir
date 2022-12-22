@@ -18,7 +18,7 @@
 #include "byteir/Dialect/mhlo/Transforms/HloFolder.h"
 
 #include "byteir/Dialect/mhlo/Analysis/DimFromBroadcast.h"
-#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Dialect/mhlo/Transforms/CanonicalizeExt.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"

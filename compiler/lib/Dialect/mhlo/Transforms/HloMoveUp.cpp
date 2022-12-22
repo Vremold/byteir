@@ -18,7 +18,7 @@
 #include "byteir/Dialect/mhlo/Transforms/HloMove.h"
 
 #include "byteir/Dialect/Byre/Common.h"
-#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Dialect/mhlo/Transforms/CanonicalizeExt.h"
 #include "byteir/Dialect/mhlo/Transforms/MoveCommon.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/AttrUtils.h"

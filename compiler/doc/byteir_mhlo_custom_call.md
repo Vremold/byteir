@@ -50,7 +50,7 @@ Further needed infomation for a given coarse-grained op are encoded in a diction
   - weight: Optional\<Tensor>
   - bias: Optional\<Tensor>
 - Attrs
-  - epsilon: F32Attr
+  - epsilon: F64Attr
   - axis: I64ArrayAttr
 - Results(1 or 3):
   - output: Tensor 
@@ -61,7 +61,7 @@ Further needed infomation for a given coarse-grained op are encoded in a diction
 - Operands:
   - input: Tensor
 - Attrs
-  - epsilon: F32Attr
+  - epsilon: F64Attr
   - axis: I64ArrayAttr
 - Results:
   - output: Tensor
@@ -95,7 +95,7 @@ Further needed infomation for a given coarse-grained op are encoded in a diction
   - input: Tensor
 - Attr:
   - approximate: str
-    - none (erf)
+    - none / erf
     - tanh
 - Results:
   - output: Tensor

@@ -17,7 +17,7 @@
 
 #include "byteir/Transforms/CanonicalizeExt.h"
 
-#include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Dialect/mhlo/Transforms/CanonicalizeExt.h"
 #include "byteir/Transforms/CondCanonicalize.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir/IR/MLIRContext.h"
