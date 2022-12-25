@@ -133,3 +133,11 @@ func.func @fold_clamp() -> tensor<5xi64> {
 // CHECK-LABEL: fold_clamp
 // CHECK: mhlo.constant dense<[0, 100, 149, 0, 149]> : tensor<5xi64>
 // CHECK-NOT: mhlo.clamp
+
+func.func @simplify_byteir_addn(%arg0: tensor<150x768xf16>, %arg1: tensor<150x768xf16>) -> tensor<150x768xf16> {
+  %0 = "mhlo.custom_call"(%arg0, %arg1) {api_version = 1 : i32, backend_config = "", byteir_attrs = {_grappler_ArithmeticOptimizer_AddOpsRewriteStage = true}, call_target_name = "byteir.addn", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<150x768xf16>, tensor<150x768xf16>) -> tensor<150x768xf16>
+  return %0 : tensor<150x768xf16>
+}
+// CHECK-LABEL: simplify_byteir_addn
+// CHECK-NOT: mhlo.custom_call
+// CHECK: mhlo.add

@@ -46,6 +46,7 @@ namespace mhlo {
 class ClampOp;
 class ConvertOp;
 class CompareOp;
+class CustomCallOp;
 class TransposeOp;
 class BroadcastInDimOp;
 class ConcatenateOp;
@@ -102,8 +103,12 @@ LogicalResult foldConsecutiveConvertOp(mhlo::ConvertOp op,
 LogicalResult foldLargeCompareOp(mhlo::CompareOp op, PatternRewriter &rewriter);
 
 // const + broadcast_in_dim => const + broadcast_in_dim
-LogicalResult CanonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
+LogicalResult canonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
                                               PatternRewriter &rewriter);
+
+// simplify byteir.addn => mhlo.add
+LogicalResult simplifyByteIRAddNToAdd(mhlo::CustomCallOp op,
+                                      PatternRewriter &rewriter);
 
 // broadcast_in_dim + reshape => broadcast_in_dim
 LogicalResult foldReshapeBroadcastInDim(mhlo::ReshapeOp op,

@@ -16,6 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/CanonicalExt.h"
+#include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "byteir/Utils/Utils.h"
@@ -889,7 +890,7 @@ DenseElementsAttr reshape(DenseElementsAttr attr, ShapedType newType) {
 } // namespace
 
 LogicalResult
-mlir::mhlo::CanonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
+mlir::mhlo::canonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
                                             PatternRewriter &rewriter) {
   auto constOp = op.getOperand().getDefiningOp<mhlo::ConstantOp>();
   if (!constOp) {
@@ -921,6 +922,20 @@ mlir::mhlo::CanonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
   return success();
 }
 
+LogicalResult mlir::mhlo::simplifyByteIRAddNToAdd(mhlo::CustomCallOp op,
+                                                  PatternRewriter &rewriter) {
+  if (op.getCallTargetName() != getAddNName()) {
+    return failure();
+  }
+  if (op.getNumOperands() == 2) {
+    mhlo::AddOp addOp = rewriter.create<mhlo::AddOp>(
+        op->getLoc(), op.getResultTypes(), op.getOperands());
+    rewriter.replaceOp(op, addOp.getResult());
+    return success();
+  }
+  return failure();
+}
+
 void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldBroadcastInDim);
   patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
@@ -939,7 +954,8 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldTransposeNonSplat);
   patterns.add(mlir::mhlo::foldBeneficialConstantConvertOp);
   patterns.add(mlir::mhlo::foldConsecutiveConvertOp);
-  patterns.add(mlir::mhlo::CanonicalizeBroadcastInDimConst);
+  patterns.add(mlir::mhlo::canonicalizeBroadcastInDimConst);
+  patterns.add(mlir::mhlo::simplifyByteIRAddNToAdd);
 }
 
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,
