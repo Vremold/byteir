@@ -22,8 +22,6 @@
 // TODO make the following to another header file
 #include "brt/backends/cuda/providers/default/codegen/op_registration.h"
 #include "brt/backends/cuda/providers/default/copy/op_registration.h"
-#include "brt/backends/cuda/providers/default/ftv3/bert_transformer.h"
-#include "brt/backends/cuda/providers/default/ftv4/faster_transformer.h"
 #include "brt/backends/cuda/providers/default/indexing/op_registration.h"
 #include "brt/backends/cuda/providers/default/math/op_registration.h"
 #include "brt/backends/cuda/providers/default/normalization/op_registration.h"
@@ -45,10 +43,8 @@ namespace {
 // clang-format off
 BRT_STATIC_KERNEL_REGISTRATION(
     DeviceKind::CUDA, ProviderType::BRT, [](KernelRegistry *registry) {
-      cuda::RegisterBertTransformerOp(registry);
       cuda::RegisterCodegenOps(registry);
       cuda::RegisterCopyOps(registry);
-      cuda::RegisterFasterTransformerOps(registry);
       cuda::RegisterIndexingOps(registry);
       cuda::RegisterMathOps(registry);
       cuda::RegisterNormalizationOps(registry);

@@ -6,10 +6,6 @@ include_directories("${CUTLASS_ROOT}/tools/util/include")
 # CUDA provide
 file(GLOB_RECURSE brt_cuda_provider_srcs CONFIGURE_DEPENDS
   "${BRT_INCLUDE_DIR}/brt/backends/cuda/providers/default/*.h"
-  "${BRT_INCLUDE_DIR}/fastertransformer_v3/includes/*.h"
-  "${BRT_INCLUDE_DIR}/fastertransformer_v3/includes/*.cuh"
-  "${BRT_INCLUDE_DIR}/fastertransformer_v4/includes/*.h"
-  "${BRT_INCLUDE_DIR}/fastertransformer_v4/includes/*.cuh"
   "${LIB_ROOT}/backends/cuda/providers/default/*.h"
   "${LIB_ROOT}/backends/cuda/providers/default/*.cc"
   "${LIB_ROOT}/backends/cuda/providers/default/*.cu"

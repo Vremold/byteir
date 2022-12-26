@@ -123,9 +123,6 @@ const void *CreateAliasThenIndexPut(brt::ir::ByREBuilder &byre_builder,
 // always cuda
 const void *CreatePTXAddOp(brt::ir::ByREBuilder &byre_builder);
 
-// ftv3 // always cuda
-const void *CreateBertTransformer(brt::ir::ByREBuilder &byre_builder);
-
 const void *CreateTFWhereOp(brt::ir::ByREBuilder &byre_builder,
                             DTypeEnum input_dtype,
                             const std::vector<int64_t> &shape);

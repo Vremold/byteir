@@ -13,7 +13,6 @@ set(brt_test_common_src_patterns
 )
 
 if(brt_USE_CUDA)
-  #list(APPEND brt_test_common_src_patterns "${TEST_SRC_DIR}/include/backends/cuda/providers/default/ftv4/*.h")
   list(APPEND brt_test_common_src_patterns "${TEST_SRC_DIR}/include/brt/test/common/cuda/*.h")
 endif()
 
@@ -76,8 +75,6 @@ if(brt_USE_CUDA)
   "${TEST_SRC_DIR}/backends/cuda/providers/default/*.h"
   "${TEST_SRC_DIR}/backends/cuda/providers/default/kernel/*.cc"
   "${TEST_SRC_DIR}/backends/cuda/providers/default/kernel/*.h"
-  "${TEST_SRC_DIR}/backends/cuda/providers/default/ftv4/*.cc"
-  "${TEST_SRC_DIR}/backends/cuda/providers/default/ftv4/*.h"
   "${TEST_SRC_DIR}/backends/cuda/providers/default/e2e/*.cc"
   "${TEST_SRC_DIR}/backends/cuda/providers/default/e2e/*.h"
   )
