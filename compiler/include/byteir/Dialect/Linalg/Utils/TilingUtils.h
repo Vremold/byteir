@@ -15,8 +15,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
-#define BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
+#ifndef BYTEIR_DIALECT_LINALG_UTILS_TILINGUTILS_H
+#define BYTEIR_DIALECT_LINALG_UTILS_TILINGUTILS_H
 
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Arith/Utils/Utils.h"
@@ -70,4 +70,4 @@ createAtomicLinalgGeneric(OpBuilder &b, Location loc, arith::AtomicRMWKind kind,
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
+#endif // BYTEIR_DIALECT_LINALG_UTILS_TILINGUTILS_H

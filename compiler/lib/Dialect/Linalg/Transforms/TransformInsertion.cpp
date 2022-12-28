@@ -18,7 +18,7 @@
 #include "byteir/Dialect/Linalg/Transforms/TransformInsertion.h"
 
 #include "byteir/Dialect/Linalg/TransformOps/LinalgExtTransformOps.h"
-#include "byteir/Dialect/Linalg/Transforms/TilingUtils.h"
+#include "byteir/Dialect/Linalg/Utils/TilingUtils.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"

@@ -6,10 +6,10 @@ add_mlir_dialect_library(MLIRLinalgExtTransformOps
 
   DEPENDS
   MLIRLinalgExtTransformOpsIncGen
-  ByteIRLinalgPasses
+  ByteIRLinalgUtils
 
   LINK_LIBS PUBLIC
-  ByteIRLinalgPasses
+  ByteIRLinalgUtils
   MLIRAffineDialect
   MLIRArithDialect
   MLIRIR

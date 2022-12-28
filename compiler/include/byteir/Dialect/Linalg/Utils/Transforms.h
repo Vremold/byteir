@@ -31,8 +31,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
-#define BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
+#ifndef BYTEIR_DIALECT_LINALG_UTILS_TRANSFORMS_H
+#define BYTEIR_DIALECT_LINALG_UTILS_TRANSFORMS_H
 
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Transforms/TileUsingInterface.h"
@@ -147,4 +147,4 @@ private:
 } // namespace linalg_ext
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
+#endif // BYTEIR_DIALECT_LINALG_UTILS_TRANSFORMS_H

@@ -25,7 +25,7 @@
 
 #include "byteir/Dialect/Linalg/Transforms/Tiling.h"
 
-#include "byteir/Dialect/Linalg/Transforms/TilingUtils.h"
+#include "byteir/Dialect/Linalg/Utils/TilingUtils.h"
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
 #include "byteir/Utils/Hoist.h"

@@ -18,7 +18,7 @@
 #include "byteir/Dialect/Linalg/Transforms/Tiling.h"
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
-#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
+#include "byteir/Dialect/Linalg/Utils/Transforms.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"

@@ -31,7 +31,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
+#include "byteir/Dialect/Linalg/Utils/Transforms.h"
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
 #include "byteir/Utils/AffineUtils.h"
@@ -43,8 +43,6 @@
 #include "mlir/Dialect/Utils/IndexingUtils.h"
 #include "mlir/IR/Matchers.h"
 #include "llvm/ADT/SmallPtrSet.h"
-
-#include "PassDetail.h"
 
 using namespace llvm;
 using namespace mlir;

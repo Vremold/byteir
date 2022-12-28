@@ -15,7 +15,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Linalg/Transforms/TilingUtils.h"
+#include "byteir/Dialect/Linalg/Utils/TilingUtils.h"
 #include "byteir/Utils/MemUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"

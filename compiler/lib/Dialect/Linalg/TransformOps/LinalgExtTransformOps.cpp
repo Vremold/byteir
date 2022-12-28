@@ -26,7 +26,7 @@
 #include "byteir/Dialect/Linalg/TransformOps/LinalgExtTransformOps.h"
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
-#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
+#include "byteir/Dialect/Linalg/Utils/Transforms.h"
 #include "byteir/Utils/Hoist.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/AsmParser/AsmParser.h"

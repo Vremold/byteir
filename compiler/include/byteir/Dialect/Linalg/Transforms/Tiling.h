@@ -26,7 +26,7 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TILING_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_TILING_H
 
-#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
+#include "byteir/Dialect/Linalg/Utils/Transforms.h"
 #include "mlir/Dialect/Linalg/Utils/Utils.h"
 #include "mlir/Dialect/SCF/Transforms/TileUsingInterface.h"
 #include "mlir/Interfaces/TilingInterface.h"

@@ -5,8 +5,6 @@ add_mlir_dialect_library(ByteIRLinalgPasses
   Tiling.cpp
   TransformInsertion.cpp
   ScopeTiling.cpp
-  TilingUtils.cpp
-  Transforms.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Linalg
@@ -14,7 +12,7 @@ add_mlir_dialect_library(ByteIRLinalgPasses
 
   DEPENDS
   ByteIRLinalgPassIncGen
-  MLIRLinalgExtTransformOpsIncGen
+  MLIRLinalgExtTransformOps
   ByteIRUtils
   MLIRDestinationStyleOpInterface
   MLIRLinalgExt
@@ -25,6 +23,7 @@ add_mlir_dialect_library(ByteIRLinalgPasses
   MLIRIR
   MLIRAffineDialect
   MLIRDestinationStyleOpInterface
+  MLIRLinalgExtTransformOps
   MLIRTensorDialect
   MLIRSCFDialect
   MLIRLinalgDialect
