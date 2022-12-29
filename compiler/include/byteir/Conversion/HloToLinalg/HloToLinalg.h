@@ -31,7 +31,8 @@ void populateUnrealizedCastToLinalgConversionPattern(
     MLIRContext *context, RewritePatternSet &patterns);
 
 std::unique_ptr<OperationPass<func::FuncOp>>
-createHloFusionToLinalgPass(llvm::StringRef anchorTag = "");
+createHloFusionToLinalgPass(llvm::StringRef anchorTag = "",
+                            bool enablePrimitiveOps = false);
 
 std::unique_ptr<OperationPass<func::FuncOp>> createUnrealizedCastToLinalgPass();
 

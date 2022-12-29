@@ -59,8 +59,10 @@ namespace {
 struct HloFusionToLinalgPass
     : public HloFusionToLinalgBase<HloFusionToLinalgPass> {
 
-  HloFusionToLinalgPass(StringRef tag) : HloFusionToLinalgBase() {
+  HloFusionToLinalgPass(StringRef tag, bool enablePrimitiveOps)
+      : HloFusionToLinalgBase() {
     anchorTag = tag.str();
+    this->enablePrimitiveOps = enablePrimitiveOps;
   }
 
   void getDependentDialects(DialectRegistry &registry) const final {
@@ -89,7 +91,8 @@ struct HloFusionToLinalgPass
 
     auto typeConverter = createHloToLinalgTypeConverter();
 
-    mhlo::populateHloToLinalgConversionPattern(&ctx, *typeConverter, &patterns);
+    mhlo::populateHloToLinalgConversionPattern(&ctx, *typeConverter, &patterns,
+                                               enablePrimitiveOps);
     FrozenRewritePatternSet frozenPatterns(std::move(patterns));
     if (failed(applyPartialConversion(func, target, frozenPatterns))) {
       signalPassFailure();
@@ -100,6 +103,7 @@ struct HloFusionToLinalgPass
 } // namespace
 
 std::unique_ptr<OperationPass<func::FuncOp>>
-mlir::createHloFusionToLinalgPass(llvm::StringRef anchorTag) {
-  return std::make_unique<HloFusionToLinalgPass>(anchorTag);
+mlir::createHloFusionToLinalgPass(llvm::StringRef anchorTag,
+                                  bool enablePrimitiveOps) {
+  return std::make_unique<HloFusionToLinalgPass>(anchorTag, enablePrimitiveOps);
 }

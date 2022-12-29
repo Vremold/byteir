@@ -69,6 +69,10 @@ def HloFusionToLinalg : Pass<"hlo-fusion-to-linalg", "func::FuncOp"> {
     Option<"anchorTag", "anchor-tag", "std::string",
             /*default=*/"",
             "Optional unitAttr tag be applied the fused ops">,
+    Option<"enablePrimitiveOps", "enable-primitive-ops", "bool",
+            /*default=*/"false",
+            "Lower to primitive Linalg ops (map, reduce and "
+            "transpose) when possible, instead of linalg.generic">
   ];
 }
 
