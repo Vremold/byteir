@@ -59,7 +59,7 @@ func.func @fuse_element_static(%arg0: tensor<512x128xf32>, %arg1: tensor<512x128
   %c512 = arith.constant 512 : index
   %c0 = arith.constant 0 : index
   %c32 = arith.constant 32 : index
-  %0 = linalg.elemwise_unary ...
+  %0 = linalg.elemwise_unary ...  // duplicate elemwise_unary
   %1 = scf.for %arg2 = %c0 to %c512 step %c32 iter_args(%arg3 = %arg1) -> (tensor<512x128xf32>) {
     %2 = scf.for %arg4 = %c0 to %c128 step %c32 iter_args(%arg5 = %arg3) -> (tensor<512x128xf32>) {
       ...
@@ -99,10 +99,75 @@ func.func @fuse_element_static(%arg0: tensor<512x128xf32>, %arg1: tensor<512x128
 ***Elementwise fusion transformation*** is enhanced
 * to support intermediates as outputs within a fusion,
 * to support both producer-consumer fusion and input-sharing fusion,
-* to support both map fusion by automatically converting a map to a genric op.
+* to support map fusion by automatically converting map ops to generic ops.
 
 
-## Op Extension
+Here shows the difference when there is an input-sharing fusion
+```
+// input.mlir
+#map = affine_map<(d0, d1) -> (d0, d1)>
+func.func @input_sharing(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>, %arg2: tensor<?x?xf32>) -> (tensor<?x?xf32>, tensor<?x?xf32>) {
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %dim = tensor.dim %arg0, %c0 : tensor<?x?xf32>
+  %dim_0 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
+  %0 = tensor.empty(%dim, %dim_0) : tensor<?x?xf32>
+  %1 = linalg.generic {indexing_maps = [#map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%0 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %in_1: f32, %out: f32):
+    %3 = arith.addf %in, %in_1 : f32
+    linalg.yield %3 : f32
+  } -> tensor<?x?xf32>
+  %2 = linalg.generic {indexing_maps = [#map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg2 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%0 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %in_1: f32, %out: f32):
+    %3 = arith.mulf %in, %in_1 : f32
+    linalg.yield %3 : f32
+  } -> tensor<?x?xf32>
+  return %1, %2 : tensor<?x?xf32>, tensor<?x?xf32>
+}
+
+// result after linalg-fuse-elementwise-ops, unchanged
+func.func @input_sharing(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>, %arg2: tensor<?x?xf32>) -> (tensor<?x?xf32>, tensor<?x?xf32>) {
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %dim = tensor.dim %arg0, %c0 : tensor<?x?xf32>
+  %dim_0 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
+  %0 = tensor.empty(%dim, %dim_0) : tensor<?x?xf32>
+  %1 = linalg.generic {indexing_maps = [#map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%0 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %in_1: f32, %out: f32):
+    %3 = arith.addf %in, %in_1 : f32
+    linalg.yield %3 : f32
+  } -> tensor<?x?xf32>
+  %2 = linalg.generic {indexing_maps = [#map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg2 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%0 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %in_1: f32, %out: f32):
+    %3 = arith.mulf %in, %in_1 : f32
+    linalg.yield %3 : f32
+  } -> tensor<?x?xf32>
+  return %1, %2 : tensor<?x?xf32>, tensor<?x?xf32>
+}
+
+// result after linalg-fuse-elementwise-ext="shared-input"
+func.func @input_sharing(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>, %arg2: tensor<?x?xf32>) -> (tensor<?x?xf32>, tensor<?x?xf32>) {
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %dim = tensor.dim %arg0, %c0 : tensor<?x?xf32>
+  %dim_0 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
+  %0 = tensor.empty(%dim, %dim_0) : tensor<?x?xf32>
+  %1:2 = linalg.generic {indexing_maps = [#map, #map, #map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1, %arg2 : tensor<?x?xf32>, tensor<?x?xf32>, tensor<?x?xf32>) outs(%0, %0 : tensor<?x?xf32>, tensor<?x?xf32>) {
+  ^bb0(%in: f32, %in_1: f32, %in_2: f32, %out: f32, %out_3: f32):
+    %2 = arith.addf %in, %in_1 : f32
+    %3 = arith.mulf %in, %in_2 : f32
+    linalg.yield %2, %3 : f32, f32
+  } -> (tensor<?x?xf32>, tensor<?x?xf32>)
+  return %1#0, %1#1 : tensor<?x?xf32>, tensor<?x?xf32>
+}
+```
+
+## Linalg-ext Op Extension
+
+### Alias Op
+
+### Diag Op
+
 ### Softmax Op
 
 #### Flash attention using Softmax

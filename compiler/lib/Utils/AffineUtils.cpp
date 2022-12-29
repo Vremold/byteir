@@ -30,9 +30,13 @@ using namespace mlir;
  **/
 FailureOr<unsigned> mlir::getIterAxisFromDim(AffineMap affineMap,
                                              unsigned dimIndex) {
+  if (!affineMap.isProjectedPermutation())
+    return failure();
+
   AffineMap invMap = inverseAndBroadcastProjectedPermutation(affineMap);
   if (invMap.isEmpty())
     return failure();
+
   auto invComposed =
       invMap.compose(createOneHot(invMap.getNumInputs(), dimIndex));
   auto iterAxes = getAllIndicesForNonZeros(invComposed);
