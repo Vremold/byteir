@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-// Some code from LinalgTiling.cpp of LLVM
+// Some code comes from LinalgTiling.cpp in LLVM project
 // Original license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -25,9 +25,8 @@
 
 #include "byteir/Dialect/Linalg/Transforms/Tiling.h"
 
-#include "byteir/Dialect/Linalg/Utils/TilingUtils.h"
-
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
+#include "byteir/Dialect/Linalg/Transforms/TilingUtils.h"
 #include "byteir/Utils/Hoist.h"
 #include "byteir/Utils/MemUtils.h"
 #include "byteir/Utils/Utils.h"

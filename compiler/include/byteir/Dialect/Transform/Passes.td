@@ -20,10 +20,31 @@
 
 include "mlir/Pass/PassBase.td"
 
+//===----------------------------------------------------------------------===//
+// ApplyTransformDialectAndErase
+//===----------------------------------------------------------------------===//
+
 def ApplyTransformDialectAndErase : Pass<"apply-transform-dialect-and-erase", "ModuleOp"> {
   let summary = "Apply transform dialect operations one by one, and erase these"
                 "operations after they are applied.";
   let constructor = "mlir::createApplyTransformDialectAndErasePass()";
+}
+
+//===----------------------------------------------------------------------===//
+// TransformInsertion
+//===----------------------------------------------------------------------===//
+
+def TransformInsertion : Pass<"transform-insertion", "ModuleOp"> {
+  let summary = "Insert transform IR to device functions.";
+  let constructor = "mlir::createTransformInsertionPass()";
+  let options = [
+    Option<"funcAnchorAttr", "func-anchor", "std::string",
+            /*default=*/"",
+            "An optional Unit attribute anchoring on target functions.">,
+    Option<"matchPrefix", "match-prefix", "std::string",
+            /*default=*/"",
+            "An optional match prefix attribute on target ops.">,
+  ];
 }
 
 #endif // BYTEIR_DIALECT_TRANSFORM_PASSES

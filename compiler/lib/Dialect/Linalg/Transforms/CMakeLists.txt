@@ -3,8 +3,9 @@ add_mlir_dialect_library(ByteIRLinalgPasses
   LinalgDataPlace.cpp
   LinalgPrefetch.cpp
   Tiling.cpp
-  TransformInsertion.cpp
   ScopeTiling.cpp
+  Transforms.cpp
+  TilingUtils.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/Linalg
@@ -12,7 +13,7 @@ add_mlir_dialect_library(ByteIRLinalgPasses
 
   DEPENDS
   ByteIRLinalgPassIncGen
-  MLIRLinalgExtTransformOps
+  MLIRLinalgExtTransformOpsIncGen
   ByteIRUtils
   MLIRDestinationStyleOpInterface
   MLIRLinalgExt
@@ -23,7 +24,6 @@ add_mlir_dialect_library(ByteIRLinalgPasses
   MLIRIR
   MLIRAffineDialect
   MLIRDestinationStyleOpInterface
-  MLIRLinalgExtTransformOps
   MLIRTensorDialect
   MLIRSCFDialect
   MLIRLinalgDialect

@@ -237,3 +237,64 @@ func.func @shared_input(%arg0: tensor<?x?xf32>, %arg1 : tensor<?x?xf32>, %arg2 :
     } -> tensor<?x?xf32>
   return %4, %5 : tensor<?x?xf32>, tensor<?x?xf32>
 }
+
+// -----
+
+#map0 = affine_map<(d0, d1) -> (d0, d1)>
+
+// CHECK-LABEL: @generic_with_map
+func.func @generic_with_map(%arg0: tensor<?x?xf32>, %arg1 : tensor<?x?xf32>, %arg2 : tensor<?x?xf32>) -> tensor<?x?xf32>
+{
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %0 = tensor.dim %arg0, %c0 : tensor<?x?xf32>
+  %1 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
+  %2 = tensor.empty(%0, %1) : tensor<?x?xf32>
+  %3 = linalg.generic {indexing_maps = [#map0, #map0, #map0], iterator_types = ["parallel", "parallel"]}
+      ins(%arg0, %arg1 : tensor<?x?xf32>, tensor<?x?xf32>)
+      outs(%2 : tensor<?x?xf32>) {
+    ^bb0(%arg3: f32, %arg4: f32, %arg5: f32):       
+      %4 = arith.addf %arg3, %arg4 : f32
+      linalg.yield %4 : f32
+  } -> tensor<?x?xf32>
+// CHECK: linalg.generic {
+  %4 = linalg.map
+      ins(%3, %arg2: tensor<?x?xf32>, tensor<?x?xf32>)
+      outs(%2:tensor<?x?xf32>)
+    // CHECK: ^{{[a-zA-Z0-9_]*}}
+    // CHECK-SAME: [[ARG0:%[a-zA-Z0-9_]*]]
+    // CHECK-SAME: [[ARG1:%[a-zA-Z0-9_]*]]
+    // CHECK-SAME: [[ARG2:%[a-zA-Z0-9_]*]]
+      (%lhs_elem: f32, %rhs_elem: f32) {
+    // CHECK: [[T1:%[a-zA-Z0-9_]*]] = arith.addf [[ARG0]], [[ARG1]]
+    // CHECK-NOT: linalg.yield
+    // CHECK: [[T2:%[a-zA-Z0-9_]*]] = arith.mulf [[T1]], [[ARG2]]
+    // CHECK: linalg.yield [[T2]]  
+        %6 = arith.mulf %lhs_elem, %rhs_elem: f32
+        linalg.yield %6: f32
+      }
+  return %4 : tensor<?x?xf32>
+}
+
+// -----
+
+// CHECK-LABEL: @single_map
+func.func @single_map(%arg0: tensor<?x?xf32>, %arg1 : tensor<?x?xf32>, %arg2 : tensor<?x?xf32>) -> tensor<?x?xf32>
+{
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %0 = tensor.dim %arg0, %c0 : tensor<?x?xf32>
+  %1 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
+  %2 = tensor.empty(%0, %1) : tensor<?x?xf32>
+// CHECK-NOT: linalg.map
+// CHECK: linalg.generic
+  %4 = linalg.map
+      ins(%arg0, %arg1: tensor<?x?xf32>, tensor<?x?xf32>)
+      outs(%2:tensor<?x?xf32>)
+      (%lhs_elem: f32, %rhs_elem: f32) {
+  
+        %6 = arith.mulf %lhs_elem, %rhs_elem: f32
+        linalg.yield %6: f32
+      }
+  return %4 : tensor<?x?xf32>
+}

@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-// Some code from legalize_to_linalg.cc in TensorFlow
+// Some code comes from legalize_to_linalg.cc in TensorFlow
 // Original license:
 //
 // Copyright 2019 The TensorFlow Authors. All Rights Reserved.

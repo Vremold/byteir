@@ -28,3 +28,30 @@ transform.sequence failures(propagate) {
   %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [4, 8], tile_interchange = [1, 0]}
   transform.structured.tile_label %1 
 }
+
+// -----
+
+// CHECK-LABEL: func.func @fuse_elementwise_dynamic_of_intermediate
+func.func @fuse_elementwise_dynamic_of_intermediate(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>) -> tensor<?x?xf32> {
+  // CHECK-DAG: %[[C1:.+]] = arith.constant 1 : index
+  // CHECK-DAG: %[[C0:.+]] = arith.constant 0 : index
+  // CHECK: %[[T0:.*]] = linalg.elemwise_unary
+  // CHECK-DAG: %[[D1:.*]] = tensor.dim %[[T0]], %[[C1]] : tensor<?x?xf32>
+  // CHECK-DAG: %[[D0:.*]] = tensor.dim %[[T0]], %[[C0]] : tensor<?x?xf32>
+  // CHECK: %[[RES:.*]] = scf.for
+  // CHECK:    scf.for
+  // CHECK:       linalg.elemwise_unary
+  // CHECK:       linalg.elemwise_binary
+  // CHECK: return %[[RES]]
+  %0 = linalg.elemwise_unary ins(%arg0 : tensor<?x?xf32>)
+                             outs(%arg1: tensor<?x?xf32>) -> tensor<?x?xf32>
+  %1 = linalg.elemwise_binary ins(%0, %arg0 : tensor<?x?xf32>, tensor<?x?xf32>)
+                             outs(%arg1: tensor<?x?xf32>) -> tensor<?x?xf32>
+  return %1 : tensor<?x?xf32>
+}
+
+transform.sequence failures(propagate) {
+^bb1(%arg1: !pdl.operation):
+  %0 = transform.structured.match ops{["linalg.elemwise_binary"]} in %arg1
+  %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [32, 32], tile_interchange = [0, 1]}
+}

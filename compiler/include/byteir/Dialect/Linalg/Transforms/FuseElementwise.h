@@ -23,27 +23,6 @@
 #include <memory>
 
 namespace mlir {
-class DominanceInfo;
-class PostDominanceInfo;
-
-namespace linalg {
-
-// TODO: maybe move the following to transform.h
-bool isProducerElementwiseOpFusable(OpOperand *consumerOpOperand);
-
-void populateElementwiseOpsProducerConsumerFusionPatterns(
-    RewritePatternSet &patterns,
-    const linalg::ControlFusionFn &controlElementwiseOpFusion,
-    DominanceInfo &dom, PostDominanceInfo &post);
-
-} // namespace linalg
-
-namespace linalg_ext {
-void populateInsertLinalgExtAliasForSharedInputFusionPatterns(
-    RewritePatternSet &patterns, DominanceInfo &dom);
-
-void populateRemoveLinalgExtAliasPattern(RewritePatternSet &patterns);
-} // namespace linalg_ext
 
 std::unique_ptr<Pass>
 createLinalgElementwiseFusionExtPass(bool enableSharedInput = false);

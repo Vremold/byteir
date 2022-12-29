@@ -27,7 +27,6 @@ transform.sequence failures(propagate) {
   transform.structured.tile_label %1
 }
 
-
 // -----
 
 // CHECK-LABEL: func @softmax_tensor

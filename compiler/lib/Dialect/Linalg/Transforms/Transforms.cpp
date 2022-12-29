@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-// Some code from Tiling.cpp of IREE
+// Some code comes from Tiling.cpp in IREE project
 // Original license:
 //
 // Licensed under the Apache License v2.0 with LLVM Exceptions.
@@ -22,7 +22,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
-// Some code from TileUsingInterface.cpp of LLVM project
+// Some code comes from TileUsingInterface.cpp and Generalization.cpp
+// in LLVM project
 // Original license:
 //
 // Licensed under the Apache License v2.0 with LLVM Exceptions.
@@ -31,7 +32,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Linalg/Utils/Transforms.h"
+#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
 #include "byteir/Utils/AffineUtils.h"
@@ -51,6 +52,61 @@ using namespace mlir::linalg_ext;
 using namespace mlir::scf;
 
 using IteratorTypes = llvm::SmallVector<llvm::Optional<utils::IteratorType>>;
+
+//===----------------------------------------------------------------------===//
+// populateMapOpToGenericPattern
+//===----------------------------------------------------------------------===//
+
+namespace {
+
+/// Patterns to rewrite a map a generic op
+class MapOpToGenericOp : public OpRewritePattern<linalg::MapOp> {
+public:
+  MapOpToGenericOp(MLIRContext *context, PatternBenefit benefit = 1)
+      : OpRewritePattern<linalg::MapOp>(context, benefit) {}
+
+  LogicalResult matchAndRewrite(linalg::MapOp mapOp,
+                                PatternRewriter &rewriter) const override {
+    // MapOp currently has no RegionBuilder,
+    // so cannot directly call linalg::generalizeNamedOp
+    // TODO: change code back to calling generalizeNamedOp,
+    //       if upstream starting support MapOp's generalization.
+    auto linalgOp = cast<linalg::LinalgOp>(mapOp.getOperation());
+    SmallVector<Value> inputs = linalgOp.getDpsInputOperands();
+    SmallVector<Value> outputs = linalgOp.getDpsInitOperands();
+    SmallVector<AffineMap> indexingMaps = linalgOp.getIndexingMapsArray();
+    SmallVector<StringRef> iterators = linalgOp.getIteratorTypesArray();
+    SmallVector<Type> resultTypes = linalgOp.hasTensorSemantics()
+                                        ? TypeRange(ValueRange(outputs))
+                                        : TypeRange{};
+    GenericOp genericOp =
+        rewriter.create<GenericOp>(linalgOp.getLoc(), resultTypes, inputs,
+                                   outputs, indexingMaps, iterators);
+
+    // Inline mapOp's bb into genericOp
+    rewriter.inlineRegionBefore(linalgOp->getRegion(0), genericOp.getRegion(),
+                                genericOp.getRegion().begin());
+
+    // Add output addArgument,
+    // since genericOp's bb supports output argument, but mapOp's bb doesn't.
+    auto block = genericOp.getBlock();
+    auto loc = genericOp.getLoc();
+    for (auto output : outputs) {
+      block->addArgument(output.getType().cast<ShapedType>().getElementType(),
+                         loc);
+    }
+
+    rewriter.replaceOp(linalgOp, genericOp->getResults());
+    return success();
+  }
+};
+
+} // namespace
+
+void mlir::linalg::populateMapOpToGenericPattern(RewritePatternSet &patterns) {
+  auto *context = patterns.getContext();
+  patterns.add<MapOpToGenericOp>(context);
+}
 
 //===----------------------------------------------------------------------===//
 // mergeLoopIteratorTypes

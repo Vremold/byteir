@@ -14,8 +14,7 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-
-// Some code comes from CppEmitter.h and TranslateToCpp.cpp of LLVM
+// Some code comes from CppEmitter.h and TranslateToCpp.cpp in LLVM project
 // Original license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.

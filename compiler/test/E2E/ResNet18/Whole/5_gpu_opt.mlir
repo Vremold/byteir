@@ -1,6 +1,7 @@
 // RUN: byteir-opt %s -gpu-opt | FileCheck %s
 
 // CHECK-LABEL: func.func @main
+
 module @IrToMhlo.2452 {
   func.func private @Unknown0(%arg0: memref<4x3x224x224xf32>) -> memref<4x3x224x224xf16> attributes {__byteir_elementwise_fusion__} {
     %c0 = arith.constant 0 : index
@@ -966,6 +967,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x64x112x112xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x112x112xi1>
     scf.for %arg1 = %c0 to %c3211264 step %c1 {
       %0 = arith.remsi %arg1, %c112 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -999,43 +1001,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x64x112x112xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x64x112x112xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x112x112xi1>
-    scf.for %arg1 = %c0 to %c3211264 step %c1 {
-      %0 = arith.remsi %arg1, %c112 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c112 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c112 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c112 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c112 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c112 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c64 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c64 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c64 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x64x112x112xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x64x112x112xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x64x112x112xi1>
     }
     return %alloc, %alloc_0 : memref<4x64x112x112xf16>, memref<4x64x112x112xi1>
   }
@@ -1059,6 +1027,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xi1>
     scf.for %arg1 = %c0 to %c802816 step %c1 {
       %0 = arith.remsi %arg1, %c56 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1092,43 +1061,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x64x56x56xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x64x56x56xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xi1>
-    scf.for %arg1 = %c0 to %c802816 step %c1 {
-      %0 = arith.remsi %arg1, %c56 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c56 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c56 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c56 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c56 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c56 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c64 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c64 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c64 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x64x56x56xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x64x56x56xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x64x56x56xi1>
     }
     return %alloc, %alloc_0 : memref<4x64x56x56xf16>, memref<4x64x56x56xi1>
   }
@@ -1152,6 +1087,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xi1>
     scf.for %arg2 = %c0 to %c802816 step %c1 {
       %0 = arith.remsi %arg2, %c56 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1187,43 +1123,9 @@ module @IrToMhlo.2452 {
       %31 = memref.load %arg1[%29, %23, %13, %3] : memref<4x64x56x56xf16>
       %32 = arith.addf %30, %31 : f16
       %33 = arith.maxf %32, %cst : f16
+      %34 = arith.cmpf ogt, %33, %cst : f16
       memref.store %33, %alloc[%29, %23, %13, %3] : memref<4x64x56x56xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xi1>
-    scf.for %arg2 = %c0 to %c802816 step %c1 {
-      %0 = arith.remsi %arg2, %c56 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c56 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c56 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c56 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c56 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c56 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c64 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c64 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c64 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x64x56x56xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x64x56x56xi1>
+      memref.store %34, %alloc_0[%29, %23, %13, %3] : memref<4x64x56x56xi1>
     }
     return %alloc, %alloc_0 : memref<4x64x56x56xf16>, memref<4x64x56x56xi1>
   }
@@ -1247,6 +1149,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xi1>
     scf.for %arg1 = %c0 to %c802816 step %c1 {
       %0 = arith.remsi %arg1, %c56 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1280,43 +1183,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x64x56x56xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x64x56x56xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xi1>
-    scf.for %arg1 = %c0 to %c802816 step %c1 {
-      %0 = arith.remsi %arg1, %c56 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c56 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c56 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c56 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c56 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c56 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c64 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c64 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c64 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x64x56x56xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x64x56x56xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x64x56x56xi1>
     }
     return %alloc, %alloc_0 : memref<4x64x56x56xf16>, memref<4x64x56x56xi1>
   }
@@ -1340,6 +1209,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xi1>
     scf.for %arg2 = %c0 to %c802816 step %c1 {
       %0 = arith.remsi %arg2, %c56 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1375,43 +1245,9 @@ module @IrToMhlo.2452 {
       %31 = memref.load %arg1[%29, %23, %13, %3] : memref<4x64x56x56xf16>
       %32 = arith.addf %30, %31 : f16
       %33 = arith.maxf %32, %cst : f16
+      %34 = arith.cmpf ogt, %33, %cst : f16
       memref.store %33, %alloc[%29, %23, %13, %3] : memref<4x64x56x56xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x64x56x56xi1>
-    scf.for %arg2 = %c0 to %c802816 step %c1 {
-      %0 = arith.remsi %arg2, %c56 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c56 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c56 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c56 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c56 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c56 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c64 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c64 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c64 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x64x56x56xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x64x56x56xi1>
+      memref.store %34, %alloc_0[%29, %23, %13, %3] : memref<4x64x56x56xi1>
     }
     return %alloc, %alloc_0 : memref<4x64x56x56xf16>, memref<4x64x56x56xi1>
   }
@@ -1446,6 +1282,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xi1>
     scf.for %arg1 = %c0 to %c401408 step %c1 {
       %0 = arith.remsi %arg1, %c28 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1479,43 +1316,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x128x28x28xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x128x28x28xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xi1>
-    scf.for %arg1 = %c0 to %c401408 step %c1 {
-      %0 = arith.remsi %arg1, %c28 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c28 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c28 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c28 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c28 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c28 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c128 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c128 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c128 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x128x28x28xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x128x28x28xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x128x28x28xi1>
     }
     return %alloc, %alloc_0 : memref<4x128x28x28xf16>, memref<4x128x28x28xi1>
   }
@@ -1539,6 +1342,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xi1>
     scf.for %arg2 = %c0 to %c401408 step %c1 {
       %0 = arith.remsi %arg2, %c28 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1574,43 +1378,9 @@ module @IrToMhlo.2452 {
       %31 = memref.load %arg1[%29, %23, %13, %3] : memref<4x128x28x28xf16>
       %32 = arith.addf %30, %31 : f16
       %33 = arith.maxf %32, %cst : f16
+      %34 = arith.cmpf ogt, %33, %cst : f16
       memref.store %33, %alloc[%29, %23, %13, %3] : memref<4x128x28x28xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xi1>
-    scf.for %arg2 = %c0 to %c401408 step %c1 {
-      %0 = arith.remsi %arg2, %c28 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c28 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c28 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c28 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c28 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c28 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c128 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c128 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c128 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x128x28x28xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x128x28x28xi1>
+      memref.store %34, %alloc_0[%29, %23, %13, %3] : memref<4x128x28x28xi1>
     }
     return %alloc, %alloc_0 : memref<4x128x28x28xf16>, memref<4x128x28x28xi1>
   }
@@ -1634,6 +1404,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xi1>
     scf.for %arg1 = %c0 to %c401408 step %c1 {
       %0 = arith.remsi %arg1, %c28 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1667,43 +1438,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x128x28x28xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x128x28x28xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xi1>
-    scf.for %arg1 = %c0 to %c401408 step %c1 {
-      %0 = arith.remsi %arg1, %c28 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c28 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c28 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c28 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c28 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c28 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c128 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c128 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c128 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x128x28x28xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x128x28x28xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x128x28x28xi1>
     }
     return %alloc, %alloc_0 : memref<4x128x28x28xf16>, memref<4x128x28x28xi1>
   }
@@ -1727,6 +1464,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xi1>
     scf.for %arg2 = %c0 to %c401408 step %c1 {
       %0 = arith.remsi %arg2, %c28 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1762,43 +1500,9 @@ module @IrToMhlo.2452 {
       %31 = memref.load %arg1[%29, %23, %13, %3] : memref<4x128x28x28xf16>
       %32 = arith.addf %30, %31 : f16
       %33 = arith.maxf %32, %cst : f16
+      %34 = arith.cmpf ogt, %33, %cst : f16
       memref.store %33, %alloc[%29, %23, %13, %3] : memref<4x128x28x28xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x128x28x28xi1>
-    scf.for %arg2 = %c0 to %c401408 step %c1 {
-      %0 = arith.remsi %arg2, %c28 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c28 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c28 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c28 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c28 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c28 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c128 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c128 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c128 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x128x28x28xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x128x28x28xi1>
+      memref.store %34, %alloc_0[%29, %23, %13, %3] : memref<4x128x28x28xi1>
     }
     return %alloc, %alloc_0 : memref<4x128x28x28xf16>, memref<4x128x28x28xi1>
   }
@@ -1833,6 +1537,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xi1>
     scf.for %arg1 = %c0 to %c200704 step %c1 {
       %0 = arith.remsi %arg1, %c14 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1866,43 +1571,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x256x14x14xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x256x14x14xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xi1>
-    scf.for %arg1 = %c0 to %c200704 step %c1 {
-      %0 = arith.remsi %arg1, %c14 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c14 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c14 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c14 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c14 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c14 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c256 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c256 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c256 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x256x14x14xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x256x14x14xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x256x14x14xi1>
     }
     return %alloc, %alloc_0 : memref<4x256x14x14xf16>, memref<4x256x14x14xi1>
   }
@@ -1926,6 +1597,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xi1>
     scf.for %arg2 = %c0 to %c200704 step %c1 {
       %0 = arith.remsi %arg2, %c14 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1961,43 +1633,9 @@ module @IrToMhlo.2452 {
       %31 = memref.load %arg1[%29, %23, %13, %3] : memref<4x256x14x14xf16>
       %32 = arith.addf %30, %31 : f16
       %33 = arith.maxf %32, %cst : f16
+      %34 = arith.cmpf ogt, %33, %cst : f16
       memref.store %33, %alloc[%29, %23, %13, %3] : memref<4x256x14x14xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xi1>
-    scf.for %arg2 = %c0 to %c200704 step %c1 {
-      %0 = arith.remsi %arg2, %c14 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c14 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c14 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c14 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c14 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c14 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c256 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c256 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c256 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x256x14x14xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x256x14x14xi1>
+      memref.store %34, %alloc_0[%29, %23, %13, %3] : memref<4x256x14x14xi1>
     }
     return %alloc, %alloc_0 : memref<4x256x14x14xf16>, memref<4x256x14x14xi1>
   }
@@ -2021,6 +1659,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xi1>
     scf.for %arg1 = %c0 to %c200704 step %c1 {
       %0 = arith.remsi %arg1, %c14 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -2054,43 +1693,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x256x14x14xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x256x14x14xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xi1>
-    scf.for %arg1 = %c0 to %c200704 step %c1 {
-      %0 = arith.remsi %arg1, %c14 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c14 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c14 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c14 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c14 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c14 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c256 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c256 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c256 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x256x14x14xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x256x14x14xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x256x14x14xi1>
     }
     return %alloc, %alloc_0 : memref<4x256x14x14xf16>, memref<4x256x14x14xi1>
   }
@@ -2114,6 +1719,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xi1>
     scf.for %arg2 = %c0 to %c200704 step %c1 {
       %0 = arith.remsi %arg2, %c14 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -2149,43 +1755,9 @@ module @IrToMhlo.2452 {
       %31 = memref.load %arg1[%29, %23, %13, %3] : memref<4x256x14x14xf16>
       %32 = arith.addf %30, %31 : f16
       %33 = arith.maxf %32, %cst : f16
+      %34 = arith.cmpf ogt, %33, %cst : f16
       memref.store %33, %alloc[%29, %23, %13, %3] : memref<4x256x14x14xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x256x14x14xi1>
-    scf.for %arg2 = %c0 to %c200704 step %c1 {
-      %0 = arith.remsi %arg2, %c14 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c14 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c14 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c14 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c14 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c14 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c256 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c256 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c256 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x256x14x14xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x256x14x14xi1>
+      memref.store %34, %alloc_0[%29, %23, %13, %3] : memref<4x256x14x14xi1>
     }
     return %alloc, %alloc_0 : memref<4x256x14x14xf16>, memref<4x256x14x14xi1>
   }
@@ -2220,6 +1792,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xi1>
     scf.for %arg1 = %c0 to %c100352 step %c1 {
       %0 = arith.remsi %arg1, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -2253,43 +1826,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x512x7x7xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x512x7x7xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xi1>
-    scf.for %arg1 = %c0 to %c100352 step %c1 {
-      %0 = arith.remsi %arg1, %c7 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c7 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c7 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c7 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c7 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c7 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c512 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c512 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c512 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x512x7x7xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x512x7x7xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x512x7x7xi1>
     }
     return %alloc, %alloc_0 : memref<4x512x7x7xf16>, memref<4x512x7x7xi1>
   }
@@ -2313,6 +1852,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xi1>
     scf.for %arg2 = %c0 to %c100352 step %c1 {
       %0 = arith.remsi %arg2, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -2348,43 +1888,9 @@ module @IrToMhlo.2452 {
       %31 = memref.load %arg1[%29, %23, %13, %3] : memref<4x512x7x7xf16>
       %32 = arith.addf %30, %31 : f16
       %33 = arith.maxf %32, %cst : f16
+      %34 = arith.cmpf ogt, %33, %cst : f16
       memref.store %33, %alloc[%29, %23, %13, %3] : memref<4x512x7x7xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xi1>
-    scf.for %arg2 = %c0 to %c100352 step %c1 {
-      %0 = arith.remsi %arg2, %c7 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c7 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c7 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c7 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c7 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c7 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c512 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c512 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c512 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x512x7x7xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x512x7x7xi1>
+      memref.store %34, %alloc_0[%29, %23, %13, %3] : memref<4x512x7x7xi1>
     }
     return %alloc, %alloc_0 : memref<4x512x7x7xf16>, memref<4x512x7x7xi1>
   }
@@ -2408,6 +1914,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xi1>
     scf.for %arg1 = %c0 to %c100352 step %c1 {
       %0 = arith.remsi %arg1, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -2441,43 +1948,9 @@ module @IrToMhlo.2452 {
       %29 = arith.select %24, %28, %27 : index
       %30 = memref.load %arg0[%29, %23, %13, %3] : memref<4x512x7x7xf16>
       %31 = arith.maxf %30, %cst : f16
+      %32 = arith.cmpf ogt, %31, %cst : f16
       memref.store %31, %alloc[%29, %23, %13, %3] : memref<4x512x7x7xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xi1>
-    scf.for %arg1 = %c0 to %c100352 step %c1 {
-      %0 = arith.remsi %arg1, %c7 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c7 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg1, %c0 : index
-      %5 = arith.subi %c-1, %arg1 : index
-      %6 = arith.select %4, %5, %arg1 : index
-      %7 = arith.divsi %6, %c7 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c7 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c7 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c7 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c512 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c512 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c512 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x512x7x7xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x512x7x7xi1>
+      memref.store %32, %alloc_0[%29, %23, %13, %3] : memref<4x512x7x7xi1>
     }
     return %alloc, %alloc_0 : memref<4x512x7x7xf16>, memref<4x512x7x7xi1>
   }
@@ -2501,6 +1974,7 @@ module @IrToMhlo.2452 {
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xi1>
     scf.for %arg2 = %c0 to %c100352 step %c1 {
       %0 = arith.remsi %arg2, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -2536,43 +2010,9 @@ module @IrToMhlo.2452 {
       %31 = memref.load %arg1[%29, %23, %13, %3] : memref<4x512x7x7xf16>
       %32 = arith.addf %30, %31 : f16
       %33 = arith.maxf %32, %cst : f16
+      %34 = arith.cmpf ogt, %33, %cst : f16
       memref.store %33, %alloc[%29, %23, %13, %3] : memref<4x512x7x7xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x512x7x7xi1>
-    scf.for %arg2 = %c0 to %c100352 step %c1 {
-      %0 = arith.remsi %arg2, %c7 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c7 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c7 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = arith.remsi %9, %c7 : index
-      %11 = arith.cmpi slt, %10, %c0 : index
-      %12 = arith.addi %10, %c7 : index
-      %13 = arith.select %11, %12, %10 : index
-      %14 = arith.cmpi slt, %9, %c0 : index
-      %15 = arith.subi %c-1, %9 : index
-      %16 = arith.select %14, %15, %9 : index
-      %17 = arith.divsi %16, %c7 : index
-      %18 = arith.subi %c-1, %17 : index
-      %19 = arith.select %14, %18, %17 : index
-      %20 = arith.remsi %19, %c512 : index
-      %21 = arith.cmpi slt, %20, %c0 : index
-      %22 = arith.addi %20, %c512 : index
-      %23 = arith.select %21, %22, %20 : index
-      %24 = arith.cmpi slt, %19, %c0 : index
-      %25 = arith.subi %c-1, %19 : index
-      %26 = arith.select %24, %25, %19 : index
-      %27 = arith.divsi %26, %c512 : index
-      %28 = arith.subi %c-1, %27 : index
-      %29 = arith.select %24, %28, %27 : index
-      %30 = memref.load %alloc[%29, %23, %13, %3] : memref<4x512x7x7xf16>
-      %31 = arith.cmpf ogt, %30, %cst : f16
-      memref.store %31, %alloc_0[%29, %23, %13, %3] : memref<4x512x7x7xi1>
+      memref.store %34, %alloc_0[%29, %23, %13, %3] : memref<4x512x7x7xi1>
     }
     return %alloc, %alloc_0 : memref<4x512x7x7xf16>, memref<4x512x7x7xi1>
   }
@@ -2633,6 +2073,7 @@ module @IrToMhlo.2452 {
     %c1000 = arith.constant 1000 : index
     %c-1 = arith.constant -1 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x1000xf16>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x1000xf16>
     scf.for %arg2 = %c0 to %c4000 step %c1 {
       %0 = arith.remsi %arg2, %c1000 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -2647,23 +2088,9 @@ module @IrToMhlo.2452 {
       %10 = memref.load %arg1[%9, %3] : memref<4x1000xf16>
       %11 = memref.load %arg0[%9] : memref<4xf16>
       %12 = arith.subf %10, %11 : f16
+      %13 = math.exp %12 : f16
       memref.store %12, %alloc[%9, %3] : memref<4x1000xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x1000xf16>
-    scf.for %arg2 = %c0 to %c4000 step %c1 {
-      %0 = arith.remsi %arg2, %c1000 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c1000 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg2, %c0 : index
-      %5 = arith.subi %c-1, %arg2 : index
-      %6 = arith.select %4, %5, %arg2 : index
-      %7 = arith.divsi %6, %c1000 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = memref.load %alloc[%9, %3] : memref<4x1000xf16>
-      %11 = math.exp %10 : f16
-      memref.store %11, %alloc_0[%9, %3] : memref<4x1000xf16>
+      memref.store %13, %alloc_0[%9, %3] : memref<4x1000xf16>
     }
     return %alloc, %alloc_0 : memref<4x1000xf16>, memref<4x1000xf16>
   }
@@ -2686,42 +2113,7 @@ module @IrToMhlo.2452 {
     %c1000 = arith.constant 1000 : index
     %c-1 = arith.constant -1 : index
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<4x1000xf16>
-    scf.for %arg5 = %c0 to %c4000 step %c1 {
-      %0 = arith.remsi %arg5, %c1000 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c1000 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg5, %c0 : index
-      %5 = arith.subi %c-1, %arg5 : index
-      %6 = arith.select %4, %5, %arg5 : index
-      %7 = arith.divsi %6, %c1000 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = memref.load %arg1[%9, %3] : memref<4x1000xf16>
-      %11 = memref.load %arg0[%9] : memref<4xf16>
-      %12 = arith.subf %10, %11 : f16
-      memref.store %12, %alloc[%9, %3] : memref<4x1000xf16>
-    }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x1000xf16>
-    scf.for %arg5 = %c0 to %c4000 step %c1 {
-      %0 = arith.remsi %arg5, %c1000 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c1000 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg5, %c0 : index
-      %5 = arith.subi %c-1, %arg5 : index
-      %6 = arith.select %4, %5, %arg5 : index
-      %7 = arith.divsi %6, %c1000 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = memref.load %arg3[%9, %3] : memref<4x1000xf16>
-      %11 = memref.load %alloc[%9, %3] : memref<4x1000xf16>
-      %12 = memref.load %arg2[%9] : memref<4xf16>
-      %13 = math.exp %11 : f16
-      %14 = arith.mulf %13, %12 : f16
-      %15 = arith.subf %10, %14 : f16
-      memref.store %15, %alloc_0[%9, %3] : memref<4x1000xf16>
-    }
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<4x1000xf32>
     %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<4x1000xf32>
     scf.for %arg5 = %c0 to %c4000 step %c1 {
       %0 = arith.remsi %arg5, %c1000 : index
@@ -2734,29 +2126,23 @@ module @IrToMhlo.2452 {
       %7 = arith.divsi %6, %c1000 : index
       %8 = arith.subi %c-1, %7 : index
       %9 = arith.select %4, %8, %7 : index
-      %10 = memref.load %alloc[%9, %3] : memref<4x1000xf16>
-      %11 = memref.load %arg4[%9, %3] : memref<4x1000xf32>
-      %12 = arith.extf %10 : f16 to f32
-      %13 = arith.mulf %12, %11 : f32
-      memref.store %13, %alloc_1[%9, %3] : memref<4x1000xf32>
+      %10 = memref.load %arg3[%9, %3] : memref<4x1000xf16>
+      %11 = memref.load %arg1[%9, %3] : memref<4x1000xf16>
+      %12 = memref.load %arg0[%9] : memref<4xf16>
+      %13 = memref.load %arg2[%9] : memref<4xf16>
+      %14 = memref.load %arg4[%9, %3] : memref<4x1000xf32>
+      %15 = arith.subf %11, %12 : f16
+      %16 = math.exp %15 : f16
+      %17 = arith.mulf %16, %13 : f16
+      %18 = arith.subf %10, %17 : f16
+      %19 = arith.extf %15 : f16 to f32
+      %20 = arith.mulf %19, %14 : f32
+      %21 = arith.extf %18 : f16 to f32
+      memref.store %18, %alloc[%9, %3] : memref<4x1000xf16>
+      memref.store %20, %alloc_0[%9, %3] : memref<4x1000xf32>
+      memref.store %21, %alloc_1[%9, %3] : memref<4x1000xf32>
     }
-    %alloc_2 = memref.alloc() {alignment = 128 : i64} : memref<4x1000xf32>
-    scf.for %arg5 = %c0 to %c4000 step %c1 {
-      %0 = arith.remsi %arg5, %c1000 : index
-      %1 = arith.cmpi slt, %0, %c0 : index
-      %2 = arith.addi %0, %c1000 : index
-      %3 = arith.select %1, %2, %0 : index
-      %4 = arith.cmpi slt, %arg5, %c0 : index
-      %5 = arith.subi %c-1, %arg5 : index
-      %6 = arith.select %4, %5, %arg5 : index
-      %7 = arith.divsi %6, %c1000 : index
-      %8 = arith.subi %c-1, %7 : index
-      %9 = arith.select %4, %8, %7 : index
-      %10 = memref.load %alloc_0[%9, %3] : memref<4x1000xf16>
-      %11 = arith.extf %10 : f16 to f32
-      memref.store %11, %alloc_2[%9, %3] : memref<4x1000xf32>
-    }
-    return %alloc_0, %alloc_1, %alloc_2 : memref<4x1000xf16>, memref<4x1000xf32>, memref<4x1000xf32>
+    return %alloc, %alloc_0, %alloc_1 : memref<4x1000xf16>, memref<4x1000xf32>, memref<4x1000xf32>
   }
   func.func private @Unknown66(%arg0: memref<4x512xf16>, %arg1: memref<4x512x7x7xi1>) -> memref<4x512x7x7xf16> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f16

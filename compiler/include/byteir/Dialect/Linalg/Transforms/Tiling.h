@@ -26,7 +26,7 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TILING_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_TILING_H
 
-#include "byteir/Dialect/Linalg/Utils/Transforms.h"
+#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
 #include "mlir/Dialect/Linalg/Utils/Utils.h"
 #include "mlir/Dialect/SCF/Transforms/TileUsingInterface.h"
 #include "mlir/Interfaces/TilingInterface.h"
@@ -43,10 +43,6 @@ class FuncOp;
 namespace linalg_ext {
 
 constexpr StringRef getLinalgExtTileAttrName() { return "__byteir_tile__"; }
-
-constexpr StringRef getLinalgExtTileAndFuseAttrName() {
-  return "__byteir_tile_and_fuse_";
-}
 
 /// Base rewrite pattern to tile and distribute operations that implement the
 /// `TiledOpInterface`.

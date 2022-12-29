@@ -1,123 +1,103 @@
 // RUN: byteir-opt %s -affine-opt | FileCheck %s
 
 // CHECK-LABEL: func.func @main
-#map = affine_map<(d0) -> (d0)>
-#map1 = affine_map<(d0, d1) -> (d0, d1)>
-#map2 = affine_map<(d0, d1) -> (d1)>
-#map3 = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
-#map4 = affine_map<(d0, d1, d2) -> (d1, d2)>
-#map5 = affine_map<(d0, d1, d2) -> (d2)>
-#map6 = affine_map<(d0, d1) -> (d0)>
+
+#map = affine_map<(d0, d1) -> (d0, d1)>
+#map1 = affine_map<(d0, d1) -> (d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
+#map3 = affine_map<(d0, d1, d2) -> (d1, d2)>
+#map4 = affine_map<(d0, d1, d2) -> (d2)>
+#map5 = affine_map<(d0, d1) -> (d0)>
+#map6 = affine_map<(d0) -> (d0)>
 #map7 = affine_map<() -> ()>
 #map8 = affine_map<(d0, d1) -> ()>
+#map9 = affine_map<(d0, d1, d2) -> (d0, d1)>
 module {
   func.func private @Unknown0(%arg0: memref<2x128xi64>) -> (memref<256xi64>, memref<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %c-100_i64 = arith.constant -100 : i64
     %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<2x128xi64> into memref<256xi64>
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xi1>
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel"]} ins(%collapse_shape : memref<256xi64>) outs(%alloc : memref<256xi1>) {
+    %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128xi1>
+    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<2x128xi64>) outs(%alloc : memref<2x128xi1>) {
     ^bb0(%in: i64, %out: i1):
       %0 = arith.cmpi ne, %in, %c-100_i64 : i64
       linalg.yield %0 : i1
     }
-    return %collapse_shape, %alloc : memref<256xi64>, memref<256xi1>
+    %collapse_shape_0 = memref.collapse_shape %alloc [[0, 1]] : memref<2x128xi1> into memref<256xi1>
+    return %collapse_shape, %collapse_shape_0 : memref<256xi64>, memref<256xi1>
   }
   func.func private @Unknown1(%arg0: memref<2x128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %c0_i64 = arith.constant 0 : i64
     %c30522_i64 = arith.constant 30522 : i64
-    %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<2x128xi64> into memref<256xi64>
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xui32>
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel"]} ins(%collapse_shape : memref<256xi64>) outs(%alloc : memref<256xui32>) {
-    ^bb0(%in: i64, %out: ui32):
+    %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128xui32>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<2x128xi64>
+    %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<2x128xi1>
+    linalg.generic {indexing_maps = [#map, #map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<2x128xi64>) outs(%alloc, %alloc_0, %alloc_1 : memref<2x128xui32>, memref<2x128xi64>, memref<2x128xi1>) {
+    ^bb0(%in: i64, %out: ui32, %out_4: i64, %out_5: i1):
       %0 = arith.trunci %in : i64 to i32
       %1 = builtin.unrealized_conversion_cast %0 : i32 to ui32
-      linalg.yield %1 : ui32
+      %2 = arith.addi %in, %c30522_i64 : i64
+      %3 = arith.cmpi slt, %in, %c0_i64 : i64
+      %4 = arith.select %3, %2, %in : i64
+      %5 = arith.cmpi ne, %in, %c0_i64 : i64
+      linalg.yield %1, %4, %5 : ui32, i64, i1
     }
-    %expand_shape = memref.expand_shape %collapse_shape [[0, 1]] : memref<256xi64> into memref<256x1xi64>
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<256x1xi64>
-    linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%expand_shape : memref<256x1xi64>) outs(%alloc_0 : memref<256x1xi64>) {
-    ^bb0(%in: i64, %out: i64):
-      %0 = arith.addi %in, %c30522_i64 : i64
-      %1 = arith.cmpi slt, %in, %c0_i64 : i64
-      %2 = arith.select %1, %0, %in : i64
-      linalg.yield %2 : i64
-    }
-    %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<256xi1>
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel"]} ins(%collapse_shape : memref<256xi64>) outs(%alloc_1 : memref<256xi1>) {
-    ^bb0(%in: i64, %out: i1):
-      %0 = arith.cmpi ne, %in, %c0_i64 : i64
-      linalg.yield %0 : i1
-    }
-    return %alloc, %alloc_0, %alloc_1 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
+    %collapse_shape = memref.collapse_shape %alloc_1 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
+    %collapse_shape_2 = memref.collapse_shape %alloc [[0, 1]] : memref<2x128xui32> into memref<256xui32>
+    %collapse_shape_3 = memref.collapse_shape %alloc_0 [[0, 1]] : memref<2x128xi64> into memref<256xi64>
+    %expand_shape = memref.expand_shape %collapse_shape_3 [[0, 1]] : memref<256xi64> into memref<256x1xi64>
+    return %collapse_shape_2, %expand_shape, %collapse_shape : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
   }
   func.func private @Unknown2(%arg0: memref<128xi64>) -> (memref<256xui32>, memref<256x1xi64>, memref<256xi1>) attributes {__byteir_elementwise_fusion__} {
     %c-1_i64 = arith.constant -1 : i64
     %c0_i64 = arith.constant 0 : i64
     %c2_i64 = arith.constant 2 : i64
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128xi64>
-    linalg.generic {indexing_maps = [#map2, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<128xi64>) outs(%alloc : memref<2x128xi64>) {
-    ^bb0(%in: i64, %out: i64):
-      linalg.yield %in : i64
-    }
-    %collapse_shape = memref.collapse_shape %alloc [[0, 1]] : memref<2x128xi64> into memref<256xi64>
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<256xui32>
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel"]} ins(%collapse_shape : memref<256xi64>) outs(%alloc_0 : memref<256xui32>) {
-    ^bb0(%in: i64, %out: ui32):
-      %0 = arith.trunci %in : i64 to i32
-      %1 = builtin.unrealized_conversion_cast %0 : i32 to ui32
-      linalg.yield %1 : ui32
-    }
-    %expand_shape = memref.expand_shape %collapse_shape [[0, 1]] : memref<256xi64> into memref<256x1xi64>
-    %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<256x1xi64>
-    linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%expand_shape : memref<256x1xi64>) outs(%alloc_1 : memref<256x1xi64>) {
-    ^bb0(%in: i64, %out: i64):
+    %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128xui32>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<2x128xi64>
+    %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<2x128xi1>
+    linalg.generic {indexing_maps = [#map1, #map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<128xi64>) outs(%alloc, %alloc_0, %alloc_1 : memref<2x128xui32>, memref<2x128xi64>, memref<2x128xi1>) {
+    ^bb0(%in: i64, %out: ui32, %out_4: i64, %out_5: i1):
       %0 = arith.addi %in, %c2_i64 : i64
-      %1 = arith.cmpi slt, %in, %c0_i64 : i64
-      %2 = arith.select %1, %0, %in : i64
-      linalg.yield %2 : i64
+      %1 = arith.trunci %in : i64 to i32
+      %2 = builtin.unrealized_conversion_cast %1 : i32 to ui32
+      %3 = arith.cmpi slt, %in, %c0_i64 : i64
+      %4 = arith.select %3, %0, %in : i64
+      %5 = arith.cmpi ne, %in, %c-1_i64 : i64
+      linalg.yield %2, %4, %5 : ui32, i64, i1
     }
-    %alloc_2 = memref.alloc() {alignment = 128 : i64} : memref<256xi1>
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel"]} ins(%collapse_shape : memref<256xi64>) outs(%alloc_2 : memref<256xi1>) {
-    ^bb0(%in: i64, %out: i1):
-      %0 = arith.cmpi ne, %in, %c-1_i64 : i64
-      linalg.yield %0 : i1
-    }
-    return %alloc_0, %alloc_1, %alloc_2 : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
+    %collapse_shape = memref.collapse_shape %alloc_1 [[0, 1]] : memref<2x128xi1> into memref<256xi1>
+    %collapse_shape_2 = memref.collapse_shape %alloc [[0, 1]] : memref<2x128xui32> into memref<256xui32>
+    %collapse_shape_3 = memref.collapse_shape %alloc_0 [[0, 1]] : memref<2x128xi64> into memref<256xi64>
+    %expand_shape = memref.expand_shape %collapse_shape_3 [[0, 1]] : memref<256xi64> into memref<256x1xi64>
+    return %collapse_shape_2, %expand_shape, %collapse_shape : memref<256xui32>, memref<256x1xi64>, memref<256xi1>
   }
   func.func private @Unknown3(%arg0: memref<1x128xi64>) -> (memref<128xui32>, memref<128x1xi64>, memref<128xi1>) attributes {__byteir_elementwise_fusion__} {
     %c-1_i64 = arith.constant -1 : i64
     %c0_i64 = arith.constant 0 : i64
     %c512_i64 = arith.constant 512 : i64
-    %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<1x128xi64> into memref<128xi64>
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xui32>
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel"]} ins(%collapse_shape : memref<128xi64>) outs(%alloc : memref<128xui32>) {
-    ^bb0(%in: i64, %out: ui32):
+    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x128xui32>
+    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<1x128xi64>
+    %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<1x128xi1>
+    linalg.generic {indexing_maps = [#map, #map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<1x128xi64>) outs(%alloc, %alloc_0, %alloc_1 : memref<1x128xui32>, memref<1x128xi64>, memref<1x128xi1>) {
+    ^bb0(%in: i64, %out: ui32, %out_4: i64, %out_5: i1):
       %0 = arith.trunci %in : i64 to i32
       %1 = builtin.unrealized_conversion_cast %0 : i32 to ui32
-      linalg.yield %1 : ui32
+      %2 = arith.addi %in, %c512_i64 : i64
+      %3 = arith.cmpi slt, %in, %c0_i64 : i64
+      %4 = arith.select %3, %2, %in : i64
+      %5 = arith.cmpi ne, %in, %c-1_i64 : i64
+      linalg.yield %1, %4, %5 : ui32, i64, i1
     }
-    %expand_shape = memref.expand_shape %collapse_shape [[0, 1]] : memref<128xi64> into memref<128x1xi64>
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<128x1xi64>
-    linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%expand_shape : memref<128x1xi64>) outs(%alloc_0 : memref<128x1xi64>) {
-    ^bb0(%in: i64, %out: i64):
-      %0 = arith.addi %in, %c512_i64 : i64
-      %1 = arith.cmpi slt, %in, %c0_i64 : i64
-      %2 = arith.select %1, %0, %in : i64
-      linalg.yield %2 : i64
-    }
-    %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<128xi1>
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel"]} ins(%collapse_shape : memref<128xi64>) outs(%alloc_1 : memref<128xi1>) {
-    ^bb0(%in: i64, %out: i1):
-      %0 = arith.cmpi ne, %in, %c-1_i64 : i64
-      linalg.yield %0 : i1
-    }
-    return %alloc, %alloc_0, %alloc_1 : memref<128xui32>, memref<128x1xi64>, memref<128xi1>
+    %collapse_shape = memref.collapse_shape %alloc_1 [[0, 1]] : memref<1x128xi1> into memref<128xi1>
+    %collapse_shape_2 = memref.collapse_shape %alloc [[0, 1]] : memref<1x128xui32> into memref<128xui32>
+    %collapse_shape_3 = memref.collapse_shape %alloc_0 [[0, 1]] : memref<1x128xi64> into memref<128xi64>
+    %expand_shape = memref.expand_shape %collapse_shape_3 [[0, 1]] : memref<128xi64> into memref<128x1xi64>
+    return %collapse_shape_2, %expand_shape, %collapse_shape : memref<128xui32>, memref<128x1xi64>, memref<128xi1>
   }
   func.func private @Unknown4(%arg0: memref<256x128xf32>, %arg1: memref<256x128xf32>, %arg2: memref<128x128xf32>) -> memref<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %expand_shape = memref.expand_shape %arg0 [[0, 1], [2]] : memref<256x128xf32> into memref<2x128x128xf32>
     %expand_shape_0 = memref.expand_shape %arg1 [[0, 1], [2]] : memref<256x128xf32> into memref<2x128x128xf32>
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128x128xf32>
-    linalg.generic {indexing_maps = [#map3, #map3, #map4, #map3], iterator_types = ["parallel", "parallel", "parallel"]} ins(%expand_shape, %expand_shape_0, %arg2 : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
+    linalg.generic {indexing_maps = [#map2, #map2, #map3, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%expand_shape, %expand_shape_0, %arg2 : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
     ^bb0(%in: f32, %in_1: f32, %in_2: f32, %out: f32):
       %0 = arith.addf %in, %in_1 : f32
       %1 = arith.addf %0, %in_2 : f32
@@ -128,7 +108,7 @@ module {
   func.func private @Unknown5(%arg0: memref<256x30522xf32>, %arg1: memref<30522xf32>) -> (memref<2x128x30522xf32>, memref<256x30522xf32>) attributes {__byteir_elementwise_fusion__} {
     %expand_shape = memref.expand_shape %arg0 [[0, 1], [2]] : memref<256x30522xf32> into memref<2x128x30522xf32>
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128x30522xf32>
-    linalg.generic {indexing_maps = [#map3, #map5, #map3], iterator_types = ["parallel", "parallel", "parallel"]} ins(%expand_shape, %arg1 : memref<2x128x30522xf32>, memref<30522xf32>) outs(%alloc : memref<2x128x30522xf32>) {
+    linalg.generic {indexing_maps = [#map2, #map4, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%expand_shape, %arg1 : memref<2x128x30522xf32>, memref<30522xf32>) outs(%alloc : memref<2x128x30522xf32>) {
     ^bb0(%in: f32, %in_0: f32, %out: f32):
       %0 = arith.addf %in, %in_0 : f32
       linalg.yield %0 : f32
@@ -138,22 +118,18 @@ module {
   }
   func.func private @Unknown6(%arg0: memref<256xf32>, %arg1: memref<256x30522xf32>) -> (memref<256x30522xf32>, memref<256x30522xf32>) attributes {__byteir_elementwise_fusion__} {
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map6, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg1, %arg0 : memref<256x30522xf32>, memref<256xf32>) outs(%alloc : memref<256x30522xf32>) {
-    ^bb0(%in: f32, %in_1: f32, %out: f32):
-      %0 = arith.subf %in, %in_1 : f32
-      linalg.yield %0 : f32
-    }
     %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%alloc : memref<256x30522xf32>) outs(%alloc_0 : memref<256x30522xf32>) {
-    ^bb0(%in: f32, %out: f32):
-      %0 = math.exp %in : f32
-      linalg.yield %0 : f32
+    linalg.generic {indexing_maps = [#map, #map5, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg1, %arg0 : memref<256x30522xf32>, memref<256xf32>) outs(%alloc, %alloc_0 : memref<256x30522xf32>, memref<256x30522xf32>) {
+    ^bb0(%in: f32, %in_1: f32, %out: f32, %out_2: f32):
+      %0 = arith.subf %in, %in_1 : f32
+      %1 = math.exp %0 : f32
+      linalg.yield %0, %1 : f32, f32
     }
     return %alloc, %alloc_0 : memref<256x30522xf32>, memref<256x30522xf32>
   }
   func.func private @Unknown7(%arg0: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel"]} ins(%arg0 : memref<256xf32>) outs(%alloc : memref<256xf32>) {
+    linalg.generic {indexing_maps = [#map6, #map6], iterator_types = ["parallel"]} ins(%arg0 : memref<256xf32>) outs(%alloc : memref<256xf32>) {
     ^bb0(%in: f32, %out: f32):
       %0 = math.log %in : f32
       linalg.yield %0 : f32
@@ -164,55 +140,28 @@ module {
     %cst = arith.constant 0.000000e+00 : f32
     %cst_0 = arith.constant 1.000000e+00 : f32
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map6, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg1, %arg0 : memref<256x30522xf32>, memref<256xf32>) outs(%alloc : memref<256x30522xf32>) {
-    ^bb0(%in: f32, %in_7: f32, %out: f32):
-      %0 = arith.subf %in, %in_7 : f32
-      linalg.yield %0 : f32
-    }
     %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map6, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg2 : memref<256xi64>) outs(%alloc_1 : memref<256x30522xf32>) {
-    ^bb0(%in: i64, %out: f32):
+    %alloc_2 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
+    %alloc_3 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
+    linalg.generic {indexing_maps = [#map5, #map5, #map, #map5, #map, #map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg3, %arg2, %arg1, %arg0 : memref<256xi1>, memref<256xi64>, memref<256x30522xf32>, memref<256xf32>) outs(%alloc, %alloc_1, %alloc_2, %alloc_3 : memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>) {
+    ^bb0(%in: i1, %in_4: i64, %in_5: f32, %in_6: f32, %out: f32, %out_7: f32, %out_8: f32, %out_9: f32):
       %0 = linalg.index 1 : index
       %1 = arith.index_cast %0 : index to i64
-      %2 = arith.cmpi eq, %in, %1 : i64
+      %2 = arith.cmpi eq, %in_4, %1 : i64
       %3 = arith.select %2, %cst_0, %cst : f32
-      linalg.yield %3 : f32
+      %4 = arith.select %in, %cst_0, %cst : f32
+      %5 = arith.mulf %4, %3 : f32
+      %6 = arith.subf %in_5, %in_6 : f32
+      %7 = arith.negf %3  : f32
+      %8 = arith.mulf %7, %6 : f32
+      %9 = arith.cmpf une, %3, %cst_0 : f32
+      %10 = arith.select %9, %cst, %8 : f32
+      %11 = arith.mulf %10, %5 : f32
+      %12 = arith.mulf %7, %5 : f32
+      %13 = math.exp %6 : f32
+      linalg.yield %5, %11, %12, %13 : f32, f32, f32, f32
     }
-    %alloc_2 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%alloc_1 : memref<256x30522xf32>) outs(%alloc_2 : memref<256x30522xf32>) {
-    ^bb0(%in: f32, %out: f32):
-      %0 = arith.negf %in  : f32
-      linalg.yield %0 : f32
-    }
-    %alloc_3 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map6, #map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg3, %alloc_1 : memref<256xi1>, memref<256x30522xf32>) outs(%alloc_3 : memref<256x30522xf32>) {
-    ^bb0(%in: i1, %in_7: f32, %out: f32):
-      %0 = arith.select %in, %cst_0, %cst : f32
-      %1 = arith.mulf %0, %in_7 : f32
-      linalg.yield %1 : f32
-    }
-    %alloc_4 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map1, #map1, #map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%alloc_1, %alloc_2, %alloc, %alloc_3 : memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>) outs(%alloc_4 : memref<256x30522xf32>) {
-    ^bb0(%in: f32, %in_7: f32, %in_8: f32, %in_9: f32, %out: f32):
-      %0 = arith.mulf %in_7, %in_8 : f32
-      %1 = arith.cmpf une, %in, %cst_0 : f32
-      %2 = arith.select %1, %cst, %0 : f32
-      %3 = arith.mulf %2, %in_9 : f32
-      linalg.yield %3 : f32
-    }
-    %alloc_5 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%alloc_2, %alloc_3 : memref<256x30522xf32>, memref<256x30522xf32>) outs(%alloc_5 : memref<256x30522xf32>) {
-    ^bb0(%in: f32, %in_7: f32, %out: f32):
-      %0 = arith.mulf %in, %in_7 : f32
-      linalg.yield %0 : f32
-    }
-    %alloc_6 = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%alloc : memref<256x30522xf32>) outs(%alloc_6 : memref<256x30522xf32>) {
-    ^bb0(%in: f32, %out: f32):
-      %0 = math.exp %in : f32
-      linalg.yield %0 : f32
-    }
-    return %alloc_3, %alloc_4, %alloc_5, %alloc_6 : memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
+    return %alloc, %alloc_1, %alloc_2, %alloc_3 : memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>, memref<256x30522xf32>
   }
   func.func private @Unknown9(%arg0: memref<f32>, %arg1: memref<f32>) -> memref<f32> attributes {__byteir_elementwise_fusion__} {
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<f32>
@@ -237,7 +186,7 @@ module {
   }
   func.func private @Unknown11(%arg0: memref<f32>, %arg1: memref<256x30522xf32>) -> memref<256x30522xf32> attributes {__byteir_elementwise_fusion__} {
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map8, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg1, %arg0 : memref<256x30522xf32>, memref<f32>) outs(%alloc : memref<256x30522xf32>) {
+    linalg.generic {indexing_maps = [#map, #map8, #map], iterator_types = ["parallel", "parallel"]} ins(%arg1, %arg0 : memref<256x30522xf32>, memref<f32>) outs(%alloc : memref<256x30522xf32>) {
     ^bb0(%in: f32, %in_0: f32, %out: f32):
       %0 = arith.divf %in, %in_0 : f32
       linalg.yield %0 : f32
@@ -245,15 +194,18 @@ module {
     return %alloc : memref<256x30522xf32>
   }
   func.func private @Unknown12(%arg0: memref<256xf32>, %arg1: memref<256x30522xf32>, %arg2: memref<256x30522xf32>) -> (memref<256x30522xf32>, memref<2x128x30522xf32>) attributes {__byteir_elementwise_fusion__} {
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x30522xf32>
-    linalg.generic {indexing_maps = [#map1, #map1, #map6, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg2, %arg1, %arg0 : memref<256x30522xf32>, memref<256x30522xf32>, memref<256xf32>) outs(%alloc : memref<256x30522xf32>) {
-    ^bb0(%in: f32, %in_0: f32, %in_1: f32, %out: f32):
-      %0 = arith.mulf %in_0, %in_1 : f32
+    %expand_shape = memref.expand_shape %arg2 [[0, 1], [2]] : memref<256x30522xf32> into memref<2x128x30522xf32>
+    %expand_shape_0 = memref.expand_shape %arg1 [[0, 1], [2]] : memref<256x30522xf32> into memref<2x128x30522xf32>
+    %expand_shape_1 = memref.expand_shape %arg0 [[0, 1]] : memref<256xf32> into memref<2x128xf32>
+    %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128x30522xf32>
+    linalg.generic {indexing_maps = [#map2, #map2, #map9, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%expand_shape, %expand_shape_0, %expand_shape_1 : memref<2x128x30522xf32>, memref<2x128x30522xf32>, memref<2x128xf32>) outs(%alloc : memref<2x128x30522xf32>) {
+    ^bb0(%in: f32, %in_2: f32, %in_3: f32, %out: f32):
+      %0 = arith.mulf %in_2, %in_3 : f32
       %1 = arith.subf %in, %0 : f32
       linalg.yield %1 : f32
     }
-    %expand_shape = memref.expand_shape %alloc [[0, 1], [2]] : memref<256x30522xf32> into memref<2x128x30522xf32>
-    return %alloc, %expand_shape : memref<256x30522xf32>, memref<2x128x30522xf32>
+    %collapse_shape = memref.collapse_shape %alloc [[0, 1], [2]] : memref<2x128x30522xf32> into memref<256x30522xf32>
+    return %collapse_shape, %alloc : memref<256x30522xf32>, memref<2x128x30522xf32>
   }
   func.func private @MatmulOp13(%arg0: memref<256x128xf32>, %arg1: memref<256x30522xf32>) -> memref<30522x128xf32> attributes {__byre__lhs_contracting_dimension = 0 : i64, __byre__output_transpose, __byre__rhs_contracting_dimension = 0 : i64, byre_compute_name = "MatmulOp"} {
     %alloc = memref.alloc() : memref<128x30522xf32>
@@ -264,7 +216,7 @@ module {
   }
   func.func private @Unknown14(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128x128xf32>
-    linalg.generic {indexing_maps = [#map3, #map3, #map3], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
+    linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
     ^bb0(%in: f32, %in_0: f32, %out: f32):
       %0 = arith.addf %in, %in_0 : f32
       linalg.yield %0 : f32
@@ -273,7 +225,7 @@ module {
   }
   func.func private @Unknown15(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128x128xf32>
-    linalg.generic {indexing_maps = [#map3, #map3, #map3, #map3, #map3], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
+    linalg.generic {indexing_maps = [#map2, #map2, #map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
     ^bb0(%in: f32, %in_0: f32, %in_1: f32, %in_2: f32, %out: f32):
       %0 = arith.addf %in, %in_0 : f32
       %1 = arith.addf %0, %in_1 : f32
@@ -284,7 +236,7 @@ module {
   }
   func.func private @Unknown16(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128x128xf32>
-    linalg.generic {indexing_maps = [#map3, #map3, #map3], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
+    linalg.generic {indexing_maps = [#map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1 : memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
     ^bb0(%in: f32, %in_0: f32, %out: f32):
       %0 = arith.addf %in, %in_0 : f32
       linalg.yield %0 : f32
@@ -293,7 +245,7 @@ module {
   }
   func.func private @Unknown17(%arg0: memref<2x128x128xf32>, %arg1: memref<2x128x128xf32>, %arg2: memref<2x128x128xf32>, %arg3: memref<2x128x128xf32>) -> memref<2x128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128x128xf32>
-    linalg.generic {indexing_maps = [#map3, #map3, #map3, #map3, #map3], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
+    linalg.generic {indexing_maps = [#map2, #map2, #map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>, memref<2x128x128xf32>) outs(%alloc : memref<2x128x128xf32>) {
     ^bb0(%in: f32, %in_0: f32, %in_1: f32, %in_2: f32, %out: f32):
       %0 = arith.addf %in, %in_0 : f32
       %1 = arith.addf %0, %in_1 : f32
@@ -304,25 +256,24 @@ module {
   }
   func.func private @Unknown18(%arg0: memref<256xi1>, %arg1: memref<2x128x128xf32>, %arg2: memref<256xi1>) -> (memref<256x128xf32>, memref<256x128xf32>) attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f32
-    %collapse_shape = memref.collapse_shape %arg1 [[0, 1], [2]] : memref<2x128x128xf32> into memref<256x128xf32>
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x128xf32>
-    linalg.generic {indexing_maps = [#map6, #map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0, %collapse_shape : memref<256xi1>, memref<256x128xf32>) outs(%alloc : memref<256x128xf32>) {
-    ^bb0(%in: i1, %in_1: f32, %out: f32):
-      %0 = arith.select %in, %in_1, %cst : f32
-      linalg.yield %0 : f32
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] : memref<256xi1> into memref<2x128xi1>
+    %expand_shape_0 = memref.expand_shape %arg2 [[0, 1]] : memref<256xi1> into memref<2x128xi1>
+    %alloc = memref.alloc() {alignment = 128 : i64} : memref<2x128x128xf32>
+    %alloc_1 = memref.alloc() {alignment = 128 : i64} : memref<2x128x128xf32>
+    linalg.generic {indexing_maps = [#map9, #map9, #map2, #map2, #map2], iterator_types = ["parallel", "parallel", "parallel"]} ins(%expand_shape_0, %expand_shape, %arg1 : memref<2x128xi1>, memref<2x128xi1>, memref<2x128x128xf32>) outs(%alloc, %alloc_1 : memref<2x128x128xf32>, memref<2x128x128xf32>) {
+    ^bb0(%in: i1, %in_3: i1, %in_4: f32, %out: f32, %out_5: f32):
+      %0 = arith.select %in_3, %in_4, %cst : f32
+      %1 = arith.select %in, %in_4, %cst : f32
+      linalg.yield %0, %1 : f32, f32
     }
-    %alloc_0 = memref.alloc() {alignment = 128 : i64} : memref<256x128xf32>
-    linalg.generic {indexing_maps = [#map6, #map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg2, %collapse_shape : memref<256xi1>, memref<256x128xf32>) outs(%alloc_0 : memref<256x128xf32>) {
-    ^bb0(%in: i1, %in_1: f32, %out: f32):
-      %0 = arith.select %in, %in_1, %cst : f32
-      linalg.yield %0 : f32
-    }
-    return %alloc, %alloc_0 : memref<256x128xf32>, memref<256x128xf32>
+    %collapse_shape = memref.collapse_shape %alloc_1 [[0, 1], [2]] : memref<2x128x128xf32> into memref<256x128xf32>
+    %collapse_shape_2 = memref.collapse_shape %alloc [[0, 1], [2]] : memref<2x128x128xf32> into memref<256x128xf32>
+    return %collapse_shape_2, %collapse_shape : memref<256x128xf32>, memref<256x128xf32>
   }
   func.func private @Unknown19(%arg0: memref<128xi1>, %arg1: memref<128x128xf32>) -> memref<128x128xf32> attributes {__byteir_elementwise_fusion__} {
     %cst = arith.constant 0.000000e+00 : f32
     %alloc = memref.alloc() {alignment = 128 : i64} : memref<128x128xf32>
-    linalg.generic {indexing_maps = [#map6, #map1, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1 : memref<128xi1>, memref<128x128xf32>) outs(%alloc : memref<128x128xf32>) {
+    linalg.generic {indexing_maps = [#map5, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1 : memref<128xi1>, memref<128x128xf32>) outs(%alloc : memref<128x128xf32>) {
     ^bb0(%in: i1, %in_0: f32, %out: f32):
       %0 = arith.select %in, %in_0, %cst : f32
       linalg.yield %0 : f32

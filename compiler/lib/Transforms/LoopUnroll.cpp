@@ -14,6 +14,14 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
+// Some code comes from TestLoopUnrolling.cpp in LLVM project
+// Original license:
+//
+// Licensed under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
 
 #include "byteir/Transforms/LoopUnroll.h"
 #include "byteir/Utils/LoopUtils.h"
@@ -32,7 +40,6 @@ using namespace mlir::memref;
 
 namespace {
 
-// some code is from Mlir's TestLoopUnrolling
 static unsigned getNestingDepth(Operation *op) {
   Operation *currOp = op;
   unsigned depth = 0;

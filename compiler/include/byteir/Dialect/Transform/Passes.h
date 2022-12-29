@@ -19,6 +19,7 @@
 #define BYTEIR_DIALECT_TRANSFORM_PASSES_H
 
 #include "byteir/Dialect/Transform/Transforms/ApplyTransformDialectAndErase.h"
+#include "byteir/Dialect/Transform/Transforms/TransformInsertion.h"
 
 namespace mlir {
 

@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-// Some code from LowerGpuOpsToNVVMOps.cpp in LLVM project
+// Some code comes from LowerGpuOpsToNVVMOps.cpp in LLVM project
 // Original license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.

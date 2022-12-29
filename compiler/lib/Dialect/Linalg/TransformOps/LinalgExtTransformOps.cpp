@@ -26,7 +26,7 @@
 #include "byteir/Dialect/Linalg/TransformOps/LinalgExtTransformOps.h"
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
-#include "byteir/Dialect/Linalg/Utils/Transforms.h"
+#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
 #include "byteir/Utils/Hoist.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/AsmParser/AsmParser.h"
@@ -136,6 +136,7 @@ static LogicalResult applyTilingToAll(
     if (failed(tiledResults))
       return failure();
 
+    auto domInfo = DominanceInfo(target->getParentOfType<func::FuncOp>());
     auto postDomInfo =
         PostDominanceInfo(target->getParentOfType<func::FuncOp>());
 
@@ -158,6 +159,7 @@ static LogicalResult applyTilingToAll(
           replacements.push_back(it->getSecond()); // replaced
         }
 
+        // collect unfusedUser
         for (auto user : res.getUsers()) {
           if (opsToReplace.contains(user))
             continue;
@@ -174,13 +176,22 @@ static LogicalResult applyTilingToAll(
         }
       }
 
-      auto lastDef = leastProperlyPostDominantOp(replacementDefs.getArrayRef(),
-                                                 postDomInfo);
       for (auto user : unfusedUser) {
-        hoistDownOpAndUsers(user, lastDef, postDomInfo);
+        hoistDownDescendantUsers(user, postDomInfo);
       }
 
-      rewriter.replaceOp(toReplace, replacements);
+      auto allowReplacement = [&](OpOperand &use) {
+        for (auto replaceVal : replacements) {
+          if (auto def = replaceVal.getDefiningOp()) {
+            if (!domInfo.dominates(def, use.getOwner())) {
+              return false;
+            }
+          }
+        }
+        return true;
+      };
+
+      rewriter.replaceOpWithIf(toReplace, replacements, allowReplacement);
     }
 
     // Report back the relevant handles to the transform op.

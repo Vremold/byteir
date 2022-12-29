@@ -31,9 +31,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_LINALG_UTILS_TRANSFORMS_H
-#define BYTEIR_DIALECT_LINALG_UTILS_TRANSFORMS_H
+#ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
+#define BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
 
+#include "mlir/Dialect/Linalg/Transforms/Transforms.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Transforms/TileUsingInterface.h"
 #include "mlir/Dialect/Utils/StructuredOpsUtils.h"
@@ -44,6 +45,9 @@
 #include "llvm/ADT/ArrayRef.h"
 
 namespace mlir {
+class DominanceInfo;
+class PostDominanceInfo;
+
 namespace scf {
 /// tileConsumerAndFuseProducerUsingSCFForOpExt is an enhanced version
 /// tileConsumerAndFuseProducerGreedilyUsingSCFForOp.
@@ -57,7 +61,30 @@ void labelTileLoopType(Operation *op, ArrayRef<scf::ForOp> loops);
 LogicalResult isValidTiling(Operation *tiled);
 } // namespace scf
 
+namespace linalg {
+
+bool isProducerElementwiseOpFusable(OpOperand *consumerOpOperand);
+
+/// Rewrite a fusion pattern of an elementwise consumer with elementwise
+/// producers
+void populateElementwiseOpsProducerConsumerFusionPatterns(
+    RewritePatternSet &patterns,
+    const linalg::ControlFusionFn &controlElementwiseOpFusion,
+    DominanceInfo &dom, PostDominanceInfo &post);
+
+/// Rewrite linalg::MapOp to linalg::GenericOp
+void populateMapOpToGenericPattern(RewritePatternSet &patterns);
+
+} // namespace linalg
+
 namespace linalg_ext {
+
+/// Insert linalg_ext::AliasOp for a shared input to help fusion
+void populateInsertLinalgExtAliasForSharedInputFusionPatterns(
+    RewritePatternSet &patterns, DominanceInfo &dom);
+
+/// Remove linalg_ext::AliasOp by replacing it with its input
+void populateRemoveLinalgExtAliasPattern(RewritePatternSet &patterns);
 
 /// return a list of utils::IteratorType for a given op
 /// and list of scf::ForOp loops
@@ -147,4 +174,4 @@ private:
 } // namespace linalg_ext
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_LINALG_UTILS_TRANSFORMS_H
+#endif // BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H

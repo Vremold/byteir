@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-// Some code from buffer_packing.cc of TensorFlow
+// Some code comes from buffer_packing.cc in TensorFlow
 // Original license:
 // Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 //

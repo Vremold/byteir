@@ -15,18 +15,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMINSERTION_H
-#define BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMINSERTION_H
+#ifndef BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_TRANSFORMINSERTION_H
+#define BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_TRANSFORMINSERTION_H
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
+#include <string>
 
 namespace mlir {
 class ModuleOp;
 
-std::unique_ptr<OperationPass<ModuleOp>> createTransformInsertionPass(
-    std::string deviceAnchorName = "__byteir_tiling_test__");
+std::unique_ptr<OperationPass<ModuleOp>>
+createTransformInsertionPass(const std::string &funcAnchor = "",
+                             const std::string &matchPrefix = "unknown");
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMINSERTION_H
+#endif // BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_TRANSFORMINSERTION_H

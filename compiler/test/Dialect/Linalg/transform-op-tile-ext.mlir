@@ -72,7 +72,6 @@ func.func @softmax_memref(%arg0: memref<1024x64xf32>) -> (memref<1024x64xf32>) {
   %2 = memref.alloc() : memref<1024xf32>
   %3 = memref.alloc() : memref<1024xf32>
   linalg_ext.softmax
-    {__internal_linalg_transform__ = "__byteir_tile__"}
     dimension(1)
     ins(%arg0 : memref<1024x64xf32>) outs(%0, %1, %2, %3 : memref<1024x64xf32>, memref<1024xf32>, memref<1024xf32>, memref<1024xf32>)
   return %0 : memref<1024x64xf32>
@@ -80,5 +79,30 @@ func.func @softmax_memref(%arg0: memref<1024x64xf32>) -> (memref<1024x64xf32>) {
 //CHECK-LABEL: func.func @softmax_memref
 //CHECK: scf.for
 //CHECK:   linalg_ext.softmax
+//CHECK: }
+//CHECK: return
+
+// -----
+
+transform.sequence failures(propagate) {
+^bb0(%arg0: !pdl.operation):
+  %0 = transform.structured.match attributes{"__root__"} in %arg0
+  %1, %loops = transform.structured.tile_ext %0 [4] 
+}
+
+func.func @map_binary(%lhs: tensor<64xf32>, %rhs: tensor<64xf32>,
+                      %init: tensor<64xf32>) -> tensor<64xf32> {
+   %add = linalg.map
+          ins(%lhs, %rhs: tensor<64xf32>, tensor<64xf32>)
+          outs(%init:tensor<64xf32>)  {__root__}
+          (%lhs_elem: f32, %rhs_elem: f32) {
+            %0 = arith.addf %lhs_elem, %rhs_elem: f32
+            linalg.yield %0: f32
+          }
+  func.return %add : tensor<64xf32>
+}
+//CHECK-LABEL: func.func @map_binary
+//CHECK: scf.for
+//CHECK:   linalg.map
 //CHECK: }
 //CHECK: return

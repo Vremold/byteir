@@ -121,18 +121,4 @@ def LinalgScopeTiling : Pass<"linalg-scope-tile", "func::FuncOp"> {
   ];
 }
 
-//===----------------------------------------------------------------------===//
-// TransformInsertion
-//===----------------------------------------------------------------------===//
-
-def TransformInsertion : Pass<"transform-insertion", "ModuleOp"> {
-  let summary = "Insert transform IR to device functions.";
-  let constructor = "mlir::createTransformInsertionPass()";
-  let options = [
-    Option<"deviceAnchorName", "device-anchor-name", "std::string",
-            /*default=*/"",
-            "Used to specify the device functions needed to be tiled.">
-  ];
-}
-
 #endif // BYTEIR_DIALECT_LINALG_PASSES

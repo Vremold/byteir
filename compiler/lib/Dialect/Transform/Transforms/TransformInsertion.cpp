@@ -15,10 +15,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Linalg/Transforms/TransformInsertion.h"
+#include "byteir/Dialect/Transform/Transforms/TransformInsertion.h"
 
 #include "byteir/Dialect/Linalg/TransformOps/LinalgExtTransformOps.h"
-#include "byteir/Dialect/Linalg/Utils/TilingUtils.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -54,9 +53,10 @@ struct TilingMetadata {
 struct TransformInsertionPass
     : public TransformInsertionBase<TransformInsertionPass> {
 
-  explicit TransformInsertionPass(std::string deviceAnchorName)
+  TransformInsertionPass(const std::string &anchor, const std::string &prefix)
       : TransformInsertionBase<TransformInsertionPass>() {
-    this->deviceAnchorName = deviceAnchorName;
+    this->funcAnchorAttr = anchor;
+    this->matchPrefix = prefix;
   }
 
   void runOnOperation() override;
@@ -67,7 +67,8 @@ struct TransformInsertionPass
   }
 };
 
-llvm::Optional<TilingMetadata> getTilingMetadata(Value value) {
+llvm::Optional<TilingMetadata> getTilingMetadata(Value value,
+                                                 const std::string &prefix) {
   if (!value.getDefiningOp())
     return llvm::None;
 
@@ -75,20 +76,20 @@ llvm::Optional<TilingMetadata> getTilingMetadata(Value value) {
   TilingMetadata metadata;
   metadata.tileSizes = {1};
   metadata.tileInterchange = {};
-  metadata.annotation =
-      getTilingAnnotationPrefix().str() + std::to_string(tilingCount);
+  metadata.annotation = prefix + std::to_string(tilingCount);
   tilingCount++;
   return metadata;
 }
 
-void InsertTransformIR(func::FuncOp funcOp, OpBuilder &b) {
+// TODO maybe move to public
+void InsertTransformIR(func::FuncOp funcOp, OpBuilder &b, StringRef prefix) {
   Operation *retOp = funcOp.getBody().front().getTerminator();
   MLIRContext *ctx = b.getContext();
 
   // only support 1 output for now
   assert(retOp->getNumOperands() == 1);
   Value operand = retOp->getOperand(0);
-  auto tilingMetadata = getTilingMetadata(operand);
+  auto tilingMetadata = getTilingMetadata(operand, prefix.str());
   if (!tilingMetadata.has_value())
     return;
 
@@ -126,15 +127,17 @@ void TransformInsertionPass::runOnOperation() {
   OpBuilder builder = OpBuilder::atBlockEnd(m.getBody());
   for (auto funcOp : m.getOps<func::FuncOp>()) {
     // only tile on device functions
-    if (deviceAnchorName != "" && !funcOp->hasAttr(this->deviceAnchorName))
+    if (!funcAnchorAttr.empty() && !funcOp->hasAttr(funcAnchorAttr)) {
       continue;
-    InsertTransformIR(funcOp, builder);
+    }
+    InsertTransformIR(funcOp, builder, matchPrefix);
   }
 }
 
 } // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createTransformInsertionPass(std::string deviceAnchorName) {
-  return std::make_unique<TransformInsertionPass>(deviceAnchorName);
+mlir::createTransformInsertionPass(const std::string &funcAnchor,
+                                   const std::string &matchPrefix) {
+  return std::make_unique<TransformInsertionPass>(funcAnchor, matchPrefix);
 }

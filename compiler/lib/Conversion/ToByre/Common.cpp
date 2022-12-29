@@ -14,6 +14,14 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
+// Some code comes from AsmPrinter.cpp in LLVM project
+// Orignal license:
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/ToByre/Common.h"
 #include "llvm/ADT/TypeSwitch.h"
@@ -23,7 +31,6 @@ using namespace llvm;
 
 namespace {
 
-// some code from llvm's AsmPrinter
 void appendElementTypeToString(Type type, std::string &out) {
   llvm::TypeSwitch<Type>(type)
       .Case<IndexType>([&](Type) { out += "index"; })

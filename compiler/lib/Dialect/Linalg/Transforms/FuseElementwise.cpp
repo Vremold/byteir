@@ -26,6 +26,7 @@
 #include "byteir/Dialect/Linalg/Transforms/FuseElementwise.h"
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
+#include "byteir/Dialect/Linalg/Transforms/Transforms.h"
 #include "byteir/Utils/Hoist.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -286,7 +287,9 @@ static void populateCommonPatterns(RewritePatternSet &patterns,
                                    DominanceInfo &domInfo,
                                    PostDominanceInfo &postDomInfo) {
   populateFoldReshapeOpsByExpansionPatterns(patterns, controlFn);
-  populateFoldReshapeOpsByExpansionPatterns(patterns, controlFn);
+
+  // convert a MapOp-to-GenericOp pattern to extend fusion possibility
+  populateMapOpToGenericPattern(patterns);
 
   // General canonicalization patterns.
   AffineApplyOp::getCanonicalizationPatterns(patterns, context);

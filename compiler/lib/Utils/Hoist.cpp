@@ -23,8 +23,25 @@
 
 using namespace mlir;
 
-// return least ProperlyDominant use or def
-// Note: val must be refOp's operand
+/// return least ProperlyDominant use or def.
+/// aka return the last def or use berfore refOp
+/// Note: val must be one of refOp's operands
+/// Case 1
+///```mlir
+///  val = def
+///  refOp(val)
+/// ```
+///  return def
+///
+/// Case 2
+///```mlir
+///  val = def
+///  anotherUser1(val)
+///  anotherUser2(val)
+///  refOp(val)
+///  anotherUser3(val)
+/// ```
+///  return anotherUser2
 Operation *mlir::leastProperlyDominantUseOrDef(Value val,
                                                DominanceInfo &domInfo,
                                                Operation *refOp) {
@@ -42,19 +59,34 @@ Operation *mlir::leastProperlyDominantUseOrDef(Value val,
   return curPos;
 }
 
-// return least ProperlyDominant use or def
-Operation *mlir::leastProperlyPostDominantUse(Value val,
-                                              PostDominanceInfo &postDomInfo,
-                                              Operation *refOp) {
-
+/// return least ProperlyPostDominant use
+/// aka return first use after refOp
+/// Note: val must be one of refOp's operands or results
+/// Case 1
+///```mlir
+///  val = refOp(...)
+///  user1(val)
+///  user2(val)
+/// ```
+///  return user1
+Operation *mlir::leastProperlyPostDominantUseInBlock(
+    Value val, PostDominanceInfo &postDomInfo, Operation *refOp) {
   Operation *curPos = nullptr;
   for (Operation *user : val.getUsers()) {
     bool isCurPosProperPostDominates =
         curPos != nullptr ? postDomInfo.properlyPostDominates(curPos, user)
                           : true;
-    if (isCurPosProperPostDominates &&
-        postDomInfo.properlyPostDominates(user, refOp)) {
-      curPos = user;
+    auto curUserOp = user;
+    while (curUserOp != nullptr) {
+      if (postDomInfo.properlyPostDominates(curUserOp, refOp)) {
+        break;
+      }
+      // if not check getParentOp
+      curUserOp = curUserOp->getParentOp();
+    }
+
+    if (isCurPosProperPostDominates && curUserOp != nullptr) {
+      curPos = curUserOp;
     }
   }
   return curPos;
@@ -93,8 +125,8 @@ Operation *mlir::findHoistUpInBlock(Operation *op, DominanceInfo &domInfo) {
   Operation *curPos = &(op->getBlock()->front());
   for (auto val : op->getOperands()) {
     Operation *leastDominant = leastProperlyDominantUseOrDef(val, domInfo, op);
-    // skip nullptr
-    if (leastDominant == nullptr)
+    // skip nullptr, or not in the same block
+    if (leastDominant == nullptr || leastDominant->getBlock() != op->getBlock())
       continue;
 
     if (domInfo.properlyDominates(curPos, leastDominant)) {
@@ -105,15 +137,17 @@ Operation *mlir::findHoistUpInBlock(Operation *op, DominanceInfo &domInfo) {
   return curPos;
 }
 
+// return Operation Hoist down within a Block of op
 Operation *mlir::findHoistDownInBlock(Operation *op,
                                       PostDominanceInfo &postDomInfo) {
   Operation *curPos = op->getBlock()->getTerminator();
-
   // check all results
   for (auto val : op->getResults()) {
     Operation *leastPostDominant =
-        leastProperlyPostDominantUse(val, postDomInfo, op);
-    if (leastPostDominant == nullptr)
+        leastProperlyPostDominantUseInBlock(val, postDomInfo, op);
+
+    if (leastPostDominant == nullptr ||
+        leastPostDominant->getBlock() != op->getBlock())
       continue;
     if (postDomInfo.properlyPostDominates(curPos, leastPostDominant)) {
       curPos = leastPostDominant;
@@ -122,7 +156,7 @@ Operation *mlir::findHoistDownInBlock(Operation *op,
 
   for (auto val : op->getOperands()) {
     Operation *leastPostDominant =
-        leastProperlyPostDominantUse(val, postDomInfo, op);
+        leastProperlyPostDominantUseInBlock(val, postDomInfo, op);
     if (leastPostDominant == nullptr)
       continue;
     if (postDomInfo.properlyPostDominates(curPos, leastPostDominant)) {
@@ -254,4 +288,13 @@ void mlir::hoistDownDescendantUsers(Value val, PostDominanceInfo &postDomInfo) {
 
     hoistDownOpInBlock(user, postDomInfo);
   }
+}
+
+void mlir::hoistDownDescendantUsers(Operation *user,
+                                    PostDominanceInfo &postDomInfo) {
+  for (auto res : user->getResults()) {
+    hoistDownDescendantUsers(res, postDomInfo);
+  }
+
+  hoistDownOpInBlock(user, postDomInfo);
 }

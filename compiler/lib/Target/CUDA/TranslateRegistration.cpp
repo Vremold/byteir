@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-// Some code from TranslateRegistration.cpp of LLVM
+// Some code comes from TranslateRegistration.cpp in LLVM project
 // Original license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -43,7 +43,6 @@ using namespace mlir;
 // CUDA registration
 //===----------------------------------------------------------------------===//
 
-// some code from mlir's registerToCppTranslation
 void byteir::registerToCUDATranslation() {
   static llvm::cl::OptionCategory CudaCat("CUDA-Emitter",
                                           "CUDA-Emitter options");

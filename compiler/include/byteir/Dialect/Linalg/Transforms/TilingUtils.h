@@ -15,8 +15,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_LINALG_UTILS_TILINGUTILS_H
-#define BYTEIR_DIALECT_LINALG_UTILS_TILINGUTILS_H
+#ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
+#define BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H
 
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Arith/Utils/Utils.h"
@@ -29,9 +29,6 @@
 namespace mlir {
 
 constexpr StringRef getAtomicKindAttrName() { return "__byteir_atomic_kind__"; }
-constexpr StringRef getTilingAnnotationPrefix() {
-  return "__byteir_device_tiling__";
-}
 
 struct TileScope {
   Operation *anchorOp;
@@ -70,4 +67,4 @@ createAtomicLinalgGeneric(OpBuilder &b, Location loc, arith::AtomicRMWKind kind,
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_LINALG_UTILS_TILINGUTILS_H
+#endif // BYTEIR_DIALECT_LINALG_TRANSFORMS_TILINGUTILS_H

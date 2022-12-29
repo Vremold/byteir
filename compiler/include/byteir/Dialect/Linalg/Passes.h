@@ -22,7 +22,6 @@
 #include "byteir/Dialect/Linalg/Transforms/LinalgDataPlace.h"
 #include "byteir/Dialect/Linalg/Transforms/LinalgPrefetch.h"
 #include "byteir/Dialect/Linalg/Transforms/Tiling.h"
-#include "byteir/Dialect/Linalg/Transforms/TransformInsertion.h"
 
 namespace mlir {
 

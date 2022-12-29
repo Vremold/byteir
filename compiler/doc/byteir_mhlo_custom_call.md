@@ -11,24 +11,24 @@ ByteIR implements this conversion in frontends, instead of puting it to ByteIR c
 ### Need of coarse-grained ops
 
 Introduction of coarse-grained ops can provide several benefits as follows, 
-* It simplifies pattern-matching processes during rewriting regardless of optimization or lowering.
-* It allows high-level information to be encoded with coase-grained ops, helping optimization.
-* It provides intuitive mapping from frontends to IR, helping debuggability.
-* It provides flexible control, since coarse-grained ops can be easily decomposed to fine-grained ops, the other way around is much harder.
+* it simplifies pattern-matching processes during rewriting regardless of optimization or lowering;
+* it allows high-level information to be encoded with coase-grained ops, helping optimization;
+* it provides intuitive mapping from frontends to IR, helping debuggability;
+* it provides flexible control, since coarse-grained ops can be easily decomposed to fine-grained ops, the other way around is much harder.
 
 ### Implementation of reusing mhlo custom call
 
 Reusing mhlo custom call with a ByteIR prefix in `call_target_name` can provide several benefits as follows,
-* The original IR is still legal and well-defined without introducing additional new dialect or defining new ops in tablegen.
-* It provides backward support for all existing passes or pattern-matching, not breaking anything.
-* With a proper definition, an unrecognized coarse-grained op can be eaisly mapping to a custom library or be decomposed into fine-grained ops.
+* the original IR is still legal and well-defined without introducing additional new dialect or defining new ops in tablegen;
+* it provides backward support for all existing passes or pattern-matching, not breaking anything;
+* with a proper definition, an unrecognized coarse-grained op can be eaisly mapping to a custom library or be decomposed into fine-grained ops.
 
 ### Implementation coarse-grained op conversion in frontends
 
 Implementing coarse-grained op conversion in frontends can provide several benefits as follows,
-* It avoids N-to-1 rewriting happening in ByteIR compiler, and putting corresponding rewriting to each own frontend provides much cleaner implementation. 
-* Different frontends might already define their own dialect providing coarse-grained ops, making this conversion trivial and intuitive. 
-* It isolates effects caused by existing frontends graph optimzations, which might change among differnt versions of each frontends.
+* it avoids N-to-1 rewriting happening in ByteIR compiler, and putting corresponding rewriting to each own frontend provides much cleaner implementation;
+* different frontends might already define their own dialect providing coarse-grained ops, making this conversion trivial and intuitive;
+* it isolates effects caused by existing frontends graph optimzations, which might change among differnt versions of each frontends.
 
 
 ## Addtional op definition

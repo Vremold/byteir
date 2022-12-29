@@ -32,13 +32,14 @@ class PostDominanceInfo;
 
 /// return least ProperlyDominant use or def.
 /// aka return the last def or use berfore refOp
+/// Note: return nullptr if there is no def.
 /// Note: val must be one of refOp's operands
 /// Case 1
 ///```mlir
 ///  val = def
 ///  refOp(val)
 /// ```
-///  return def
+/// return def
 ///
 /// Case 2
 ///```mlir
@@ -48,12 +49,21 @@ class PostDominanceInfo;
 ///  refOp(val)
 ///  anotherUser3(val)
 /// ```
-///  return anotherUser2
+/// return anotherUser2
+///
+/// Case 3
+///```mlir
+///  val is from arg
+///  refOp(val)
+///  anotherUser3(val)
+/// ```
+/// return nullptr
 Operation *leastProperlyDominantUseOrDef(Value val, DominanceInfo &domInfo,
                                          Operation *refOp);
 
-/// return least ProperlyPostDominant use
-/// aka return the last use after refOp
+/// return least leastProperlyPostDominantUseInBlock use
+/// aka return the first use after refOp
+/// Note: return nullptr if there is no user.
 /// Note: val must be one of refOp's operands or results
 /// Case 1
 ///```mlir
@@ -61,10 +71,26 @@ Operation *leastProperlyDominantUseOrDef(Value val, DominanceInfo &domInfo,
 ///  user1(val)
 ///  user2(val)
 /// ```
-///  return user1
-Operation *leastProperlyPostDominantUse(Value val,
-                                        PostDominanceInfo &postDomInfo,
-                                        Operation *refOp);
+/// return user1
+///
+/// Case 2
+///```mlir
+///  val = refOp(...)
+///  br1 {
+///    user1(val);
+///  }
+/// ```
+/// return br1
+///
+/// Case 3
+///```mlir
+///  val = refOp(...)
+///  no_more_use ...
+/// ```
+/// return nullptr
+Operation *leastProperlyPostDominantUseInBlock(Value val,
+                                               PostDominanceInfo &postDomInfo,
+                                               Operation *refOp);
 
 /// return least ProperlyDominant among a set of Operations
 /// aka return the first-defined op in ops
@@ -165,7 +191,11 @@ void hoistUpOpAndDefs(Operation *op, Operation *target, DominanceInfo &domInfo);
 void hoistDownOpAndUsers(Operation *op, Operation *target,
                          PostDominanceInfo &postDomInfo);
 
+// try to hoist down descendant users of a val
 void hoistDownDescendantUsers(Value val, PostDominanceInfo &postDomInfo);
+
+// try to hoist down a user and its descendants
+void hoistDownDescendantUsers(Operation *op, PostDominanceInfo &postDomInfo);
 
 } // namespace mlir
 

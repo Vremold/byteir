@@ -336,6 +336,53 @@ transform.sequence failures(propagate) {
 
 // -----
 
+// CHECK-LABEL: func.func @fuse_fork_map
+func.func @fuse_fork_map(%arg0: tensor<1024x512xf32>, %arg1: tensor<1024x512xf32>, %arg2: tensor<1024x512xf32>) -> tensor<1024x512xf32> {
+// CHECK: scf.for
+// CHECK:   scf.for
+// CHECK:     linalg.map
+// CHECK:     linalg.map
+// CHECK:     linalg.map
+// CHECK:     scf.yield
+// CHECK:   } {__byteir_parallel__}
+// CHECK:   scf.yield
+// CHECK: } {__byteir_parallel__}
+  %0 = tensor.empty() : tensor<1024x512xf32>
+  %1 = tensor.empty() : tensor<1024x512xf32>
+  %2 = tensor.empty() : tensor<1024x512xf32>
+  %3 = linalg.map
+      ins(%arg0, %arg1: tensor<1024x512xf32>, tensor<1024x512xf32>)
+      outs(%0:tensor<1024x512xf32>)
+      (%lhs_elem: f32, %rhs_elem: f32) {
+        %6 = arith.addf %lhs_elem, %rhs_elem: f32
+        linalg.yield %6: f32
+      }
+  %4 = linalg.map
+      ins(%arg1, %arg2: tensor<1024x512xf32>, tensor<1024x512xf32>)
+      outs(%1:tensor<1024x512xf32>)
+      (%lhs_elem: f32, %rhs_elem: f32) {
+        %6 = arith.mulf %lhs_elem, %rhs_elem: f32
+        linalg.yield %6: f32
+      }
+  %5 = linalg.map
+      ins(%3, %4: tensor<1024x512xf32>, tensor<1024x512xf32>)
+      outs(%2:tensor<1024x512xf32>)  {__root__} 
+      (%lhs_elem: f32, %rhs_elem: f32) {
+        %6 = arith.addf %lhs_elem, %rhs_elem: f32
+        linalg.yield %6: f32
+      }
+  return %5: tensor<1024x512xf32>
+}
+
+transform.sequence failures(propagate) {
+^bb1(%arg1: !pdl.operation):
+  %0 = transform.structured.match attributes{"__root__"} in %arg1
+  %1, %loops:2 = transform.structured.fuse %0 {tile_sizes = [4, 8], tile_interchange = [1, 0]}
+  transform.structured.tile_label %1 
+}
+
+// -----
+
 // CHECK-LABEL: func.func @fuse_2_add_sharing_add
 func.func @fuse_2_add_sharing_add(%arg0: tensor<1024x512xf32>, %arg1: tensor<1024x512xf32>, %arg2: tensor<1024x512xf32>, %arg3: tensor<1024x512xf32>) -> (tensor<1024x512xf32>,tensor<1024x512xf32>) {
 // CHECK: scf.for

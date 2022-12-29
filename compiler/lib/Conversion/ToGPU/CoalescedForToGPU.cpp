@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-// Some code from SCFTOGPU.cpp of LLVM project
+// Some code comes from SCFTOGPU.cpp in LLVM project
 // Orignal license:
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
