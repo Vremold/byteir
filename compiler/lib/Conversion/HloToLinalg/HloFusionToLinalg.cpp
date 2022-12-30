@@ -41,11 +41,13 @@
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
+#include "mlir/Dialect/Linalg/Utils/Utils.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Transforms/DialectConversion.h"
 
 #include "../PassDetail.h"
@@ -55,6 +57,215 @@ using namespace mlir::linalg;
 using namespace mlir::mhlo;
 
 namespace {
+
+/// Code below is copied from legalize_to_linalg.cc
+/// Remove this when upstream supports general float type reduce pattern
+
+bool isSplatValue(DenseIntElementsAttr attr, uint64_t value) {
+  return attr.isSplat() && attr.getSplatValue<uint64_t>() == value;
+}
+
+struct ReduceWindowOpConversion
+    : public OpConversionPattern<mhlo::ReduceWindowOp> {
+  using OpConversionPattern<mhlo::ReduceWindowOp>::OpConversionPattern;
+
+  /// mhlo.reduce_window is mapped to a linalg.pooling operation. The type of
+  /// the pooling is determined based on the body of the reduce window
+  /// operation. This class enumerates the different variants.
+  enum class PoolingType {
+    kInvalid,
+    k2DMin,
+    k3DMin,
+    k2DMax,
+    k3DMax,
+    k2DAdd,
+    k3DAdd,
+  };
+
+  static PoolingType getPoolingType(mhlo::ReduceWindowOp reduceOp,
+                                    int resultIndex) {
+    auto rank =
+        reduceOp.getResultTypes()[resultIndex].cast<ShapedType>().getRank();
+    if (Operation *op = reduceOp.getReductionOp(resultIndex)) {
+      if (isa<mhlo::MinOp>(*op) && rank == 4)
+        return PoolingType::k2DMin;
+      if (isa<mhlo::MinOp>(*op) && rank == 5)
+        return PoolingType::k3DMin;
+      if (isa<mhlo::MaxOp>(*op) && rank == 4)
+        return PoolingType::k2DMax;
+      if (isa<mhlo::MaxOp>(*op) && rank == 5)
+        return PoolingType::k3DMax;
+      if (isa<mhlo::AddOp>(*op) && rank == 4)
+        return PoolingType::k2DAdd;
+      if (isa<mhlo::AddOp>(*op) && rank == 5)
+        return PoolingType::k3DAdd;
+    }
+    return PoolingType::kInvalid;
+  }
+
+  LogicalResult
+  matchAndRewrite(mhlo::ReduceWindowOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    auto loc = op.getLoc();
+    int rank = op.getResultTypes()[0].cast<ShapedType>().getRank();
+    if (rank != 4 && rank != 5) {
+      return rewriter.notifyMatchFailure(
+          op, "expected NHWC/NDHWC pooling-based op");
+    }
+
+    if (op.getPadding() && !isSplatValue(*op.getPadding(), 0)) {
+      return rewriter.notifyMatchFailure(op, "require paddings are all zero");
+    }
+
+    if (op.getBaseDilations() && !isSplatValue(*op.getBaseDilations(), 1)) {
+      return rewriter.notifyMatchFailure(op, "expected undilated base");
+    }
+
+    int lastDim = rank - 1;
+    SmallVector<int64_t, 2> fakeWindowShapes;
+    for (int i = 1; i < lastDim; ++i) {
+      fakeWindowShapes.push_back(
+          op.getWindowDimensions().getValues<int64_t>()[i]);
+    }
+
+    if (op.getWindowStrides() &&
+        (op.getWindowStrides().value().getValues<int64_t>()[0] != 1 ||
+         op.getWindowStrides().value().getValues<int64_t>()[lastDim] != 1)) {
+      return rewriter.notifyMatchFailure(
+          op, "expected window_strides to be [1,x,y,(z),1]");
+    }
+    if (op.getWindowDimensions() &&
+        (op.getWindowDimensions().getValues<int64_t>()[0] != 1 ||
+         op.getWindowDimensions().getValues<int64_t>()[lastDim] != 1)) {
+      return rewriter.notifyMatchFailure(
+          op, "expected window_dimensions to be [1,x,y,(z),1]");
+    }
+
+    Attribute strides;
+    SmallVector<int64_t> vec;
+    if (op.getWindowStridesAttr()) {
+      for (int i = 1; i < lastDim; ++i) {
+        vec.push_back(op.getWindowStrides().value().getValues<int64_t>()[i]);
+      }
+    } else {
+      vec.assign(rank - 2, 1);
+    }
+    strides = rewriter.getI64VectorAttr(vec);
+
+    Attribute dilations;
+    vec.clear();
+    if (op.getWindowDilations()) {
+      for (int i = 1; i < lastDim; ++i) {
+        vec.push_back(op.getWindowDilations().value().getValues<int64_t>()[i]);
+      }
+    } else {
+      vec.assign(rank - 2, 1);
+    }
+    dilations = rewriter.getI64VectorAttr(vec);
+
+    SmallVector<Value> poolingOps;
+
+    ValueRange operands = adaptor.getInputs();
+    ValueRange initValues = adaptor.getInitValues();
+    for (auto it : llvm::zip(op.getResults(), operands, initValues)) {
+      OpResult result = std::get<0>(it);
+      Value input = std::get<1>(it);
+      Value initValue = std::get<2>(it);
+      auto resultType = result.getType().cast<ShapedType>();
+      if (!input.getType()
+               .cast<ShapedType>()
+               .getElementType()
+               .isa<FloatType>()) {
+        return rewriter.notifyMatchFailure(op,
+                                           "expected element type to be float");
+      }
+
+      // Create a fake window dimension.
+      auto fakeWindowDims = rewriter.create<tensor::EmptyOp>(
+          loc, fakeWindowShapes, resultType.getElementType());
+
+      SmallVector<Value> resultDynamicDims;
+      for (auto &en : llvm::enumerate(resultType.getShape())) {
+        if (en.value() != ShapedType::kDynamicSize)
+          continue;
+        Value dimSize = rewriter.create<tensor::DimOp>(loc, input, en.index());
+        if (en.index() == 0 || static_cast<int64_t>(en.index()) == rank - 1) {
+          // batch dims and channel dims can be derived from input dims
+          // directly.
+          resultDynamicDims.push_back(dimSize);
+        } else {
+          auto i = en.index() - 1;
+          auto stride =
+              strides.cast<DenseIntElementsAttr>().getValues<int64_t>()[i];
+          auto dilation =
+              dilations.cast<DenseIntElementsAttr>().getValues<int64_t>()[i];
+          // let j = i * stride
+          // output[i] = reduce( input[j, j + window_size * dilation) )
+          Value offset = rewriter.create<arith::ConstantIndexOp>(
+              loc, fakeWindowShapes[i] * dilation);
+          dimSize = rewriter.create<arith::SubIOp>(loc, dimSize, offset);
+          dimSize = rewriter.create<arith::DivUIOp>(
+              loc, dimSize,
+              rewriter.create<arith::ConstantIndexOp>(loc, stride));
+          dimSize = rewriter.create<arith::AddIOp>(
+              loc, dimSize, rewriter.create<arith::ConstantIndexOp>(loc, 1));
+          resultDynamicDims.push_back(dimSize);
+        }
+      }
+      Value emptyTensor = rewriter.create<tensor::EmptyOp>(
+          loc, resultType.getShape(), resultType.getElementType(),
+          resultDynamicDims);
+
+      initValue = rewriter.create<tensor::ExtractOp>(loc, initValue);
+      Value filledInitTensor =
+          rewriter.create<linalg::FillOp>(loc, initValue, emptyTensor)
+              .getResult(0);
+      auto createOp = [&](auto *typePtr) -> linalg::LinalgOp {
+        return cast<linalg::LinalgOp>(
+            rewriter
+                .create<std::remove_pointer_t<decltype(typePtr)>>(
+                    loc, ArrayRef<Type>{resultType},
+                    ValueRange{input, fakeWindowDims.getResult()},
+                    filledInitTensor, strides, dilations,
+                    linalg::getPrunedAttributeList(op))
+                .getOperation());
+      };
+      linalg::LinalgOp poolingOp;
+      PoolingType poolingType = getPoolingType(op, result.getResultNumber());
+      switch (poolingType) {
+      case PoolingType::k2DMin: {
+        poolingOp = createOp(static_cast<linalg::PoolingNhwcMinOp *>(nullptr));
+        break;
+      }
+      case PoolingType::k3DMin: {
+        poolingOp = createOp(static_cast<linalg::PoolingNdhwcMinOp *>(nullptr));
+        break;
+      }
+      case PoolingType::k2DMax: {
+        poolingOp = createOp(static_cast<linalg::PoolingNhwcMaxOp *>(nullptr));
+        break;
+      }
+      case PoolingType::k3DMax: {
+        poolingOp = createOp(static_cast<linalg::PoolingNdhwcMaxOp *>(nullptr));
+        break;
+      }
+      case PoolingType::k2DAdd: {
+        poolingOp = createOp(static_cast<linalg::PoolingNhwcSumOp *>(nullptr));
+        break;
+      }
+      case PoolingType::k3DAdd: {
+        poolingOp = createOp(static_cast<linalg::PoolingNdhwcSumOp *>(nullptr));
+        break;
+      }
+      case PoolingType::kInvalid:
+        return rewriter.notifyMatchFailure(op, "unknown reduction operation");
+      }
+      poolingOps.push_back(poolingOp->getResult(0));
+    }
+    rewriter.replaceOp(op, poolingOps);
+    return success();
+  }
+};
 
 struct HloFusionToLinalgPass
     : public HloFusionToLinalgBase<HloFusionToLinalgPass> {
@@ -93,6 +304,8 @@ struct HloFusionToLinalgPass
 
     mhlo::populateHloToLinalgConversionPattern(&ctx, *typeConverter, &patterns,
                                                enablePrimitiveOps);
+    patterns.add<ReduceWindowOpConversion>(*typeConverter, &ctx,
+                                           PatternBenefit(2));
     FrozenRewritePatternSet frozenPatterns(std::move(patterns));
     if (failed(applyPartialConversion(func, target, frozenPatterns))) {
       signalPassFailure();
