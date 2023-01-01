@@ -66,7 +66,7 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       return failure();
     }
 
-    SmallDenseSet<Operation *> users;
+    llvm::SetVector<Operation *> users;
     for (auto user : value.getUsers()) {
       // skip checked user
       if (users.contains(user))
@@ -113,7 +113,7 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
     // process user
     for (auto user : users) {
       BlockAndValueMapping bvm;
-      SmallDenseSet<Value> constInputs;
+      llvm::SetVector<Value> constInputs;
       for (auto operand : user->getOperands()) {
         if (operand == value) {
           if (!bvm.contains(value)) {
@@ -179,7 +179,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       return failure();
     }
 
-    SmallDenseSet<Value> reshapeInsertOperands;
+    llvm::SetVector<Value> reshapeInsertOperands;
     const auto isStaticArg = [](Value value) {
       if (!value || value.getDefiningOp() != nullptr) {
         return false;
@@ -188,7 +188,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       return inputTy && inputTy.hasStaticShape();
     };
 
-    SmallDenseSet<Operation *> users;
+    llvm::SetVector<Operation *> users;
     for (auto user : value.getUsers()) {
       // skip checked user
       if (users.contains(user))
@@ -243,8 +243,8 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
     // process user
     for (auto user : users) {
       BlockAndValueMapping bvm;
-      SmallDenseSet<Value> constInputs;
-      SmallDenseSet<Value> insertedReshapeInputs;
+      llvm::SetVector<Value> constInputs;
+      llvm::SetVector<Value> insertedReshapeInputs;
       for (auto operand : user->getOperands()) {
         if (operand == value) {
           if (!bvm.contains(value)) {
@@ -334,7 +334,7 @@ struct BroadcastMoveDownPattern
       return failure();
     }
 
-    SmallDenseSet<Operation *> users;
+    llvm::SetVector<Operation *> users;
     for (auto user : value.getUsers()) {
       // skip checked user
       if (users.contains(user))
@@ -381,7 +381,7 @@ struct BroadcastMoveDownPattern
     // process user
     for (auto user : users) {
       BlockAndValueMapping bvm;
-      SmallDenseSet<Value> constInputs;
+      llvm::SetVector<Value> constInputs;
       for (auto operand : user->getOperands()) {
         if (operand == value) {
           if (!bvm.contains(value)) {
