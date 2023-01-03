@@ -43,7 +43,6 @@
 #include "mlir/Dialect/Transform/IR/TransformInterfaces.h"
 #include "mlir/IR/Dominance.h"
 #include "mlir/Interfaces/TilingInterface.h"
-#include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Debug.h"
@@ -124,7 +123,13 @@ static LogicalResult applyTilingToAll(
   for (unsigned int i = 0; i < numLoops; ++i)
     loopOps[i].reserve(payloadOps.size());
 
+  auto ctx = transformOp->getContext();
+  RewritePatternSet patterns(ctx);
+  ForOp::getCanonicalizationPatterns(patterns, ctx);
+  FrozenRewritePatternSet frozenPatterns(std::move(patterns));
+
   for (Operation *target : payloadOps) {
+    auto funcOp = target->getParentOfType<func::FuncOp>();
     auto tilingInterfaceOp = dyn_cast<TilingInterface>(target);
     if (!tilingInterfaceOp)
       return transformOp->emitError("only TilingInterface ops are supported");
@@ -183,7 +188,7 @@ static LogicalResult applyTilingToAll(
       auto allowReplacement = [&](OpOperand &use) {
         for (auto replaceVal : replacements) {
           if (auto def = replaceVal.getDefiningOp()) {
-            if (!domInfo.dominates(def, use.getOwner())) {
+            if (!domInfo.properlyDominates(def, use.getOwner())) {
               return false;
             }
           }
@@ -259,8 +264,10 @@ transform::FuseExtOp::apply(mlir::transform::TransformResults &transformResults,
           -> FailureOr<scf::SCFTileAndFuseResult> {
         SimpleRewriter rewriter(getContext());
         return tileConsumerAndFuseProducerUsingSCFForOpExt(
-            rewriter, tilingInterfaceOp, tileAndFuseOptions);
+            rewriter, tilingInterfaceOp, tileAndFuseOptions,
+            /*simplifyLoopIter*/ true);
       });
+
   return DiagnosedSilenceableFailure(result);
 }
 

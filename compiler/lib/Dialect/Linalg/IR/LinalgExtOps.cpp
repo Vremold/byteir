@@ -720,6 +720,21 @@ LogicalResult mlir::linalg_ext::SoftmaxOp::correctTiledConsumerOps(
   return success();
 }
 
+bool mlir::linalg_ext::SoftmaxOp::isResultCleanable(int64_t number,
+                                                    bool hasOneOrZeroUse,
+                                                    bool allParallel) {
+  assert(number < 4);
+
+  if (number == 0) {
+    return hasOneOrZeroUse;
+  } else if (number == 3) {
+    return true;
+  } else if (number == 1 || number == 2) {
+    return allParallel;
+  }
+  return false;
+}
+
 FailureOr<Value> mlir::linalg_ext::SoftmaxOp::generateResultTileValue(
     OpBuilder &b, unsigned resultNumber, ArrayRef<OpFoldResult> offsets,
     ArrayRef<OpFoldResult> sizes) {

@@ -20,8 +20,35 @@
 
 using namespace mlir;
 
+namespace {
+
+// a high-complexity bruteforce full search
+FailureOr<unsigned> getIterAxisFromDimForwardFullSearch(AffineMap affineMap,
+                                                        unsigned dimIndex) {
+  SmallVector<unsigned> iterAxes;
+  for (unsigned i = 0; i < affineMap.getNumInputs(); ++i) {
+    auto composed =
+        affineMap.compose(createOneHot(affineMap.getNumInputs(), i));
+
+    auto dims = getAllIndicesForNonZeros(composed);
+
+    // no support all-to-1 or non mapping
+    if (dims.size() == 1 && dims[0] == dimIndex) {
+      iterAxes.push_back(i);
+    }
+  }
+
+  // no support all-to-1 or non mapping
+  if (iterAxes.size() != 1) {
+    return failure();
+  }
+  return iterAxes[0];
+}
+
+} // namespace
+
 /**
- * find iteration index through dim and inversePermutation
+ * find iteration index through dim and inverseMap
  * E.g. if affineMap = (d0, d1, d2)-> (d0, d2), dim = 1
  * Then invMap = (d0, d1)->(d0, 0, d1)
  *      oneHot = (0, 1)
@@ -30,10 +57,16 @@ using namespace mlir;
  **/
 FailureOr<unsigned> mlir::getIterAxisFromDim(AffineMap affineMap,
                                              unsigned dimIndex) {
-  if (!affineMap.isProjectedPermutation())
-    return failure();
+  AffineMap invMap;
+  if (affineMap.isProjectedPermutation()) {
+    invMap = inverseAndBroadcastProjectedPermutation(affineMap);
+  } else if (affineMap.isPermutation()) {
+    invMap = inversePermutation(affineMap);
+  } else {
+    // if no invMap, we do forward full search
+    return getIterAxisFromDimForwardFullSearch(affineMap, dimIndex);
+  }
 
-  AffineMap invMap = inverseAndBroadcastProjectedPermutation(affineMap);
   if (invMap.isEmpty())
     return failure();
 

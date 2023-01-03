@@ -21,8 +21,10 @@
 #include "byteir/Dialect/Ace/Passes.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Transforms/passes.h"
+#include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Linalg/Passes.h"
+#include "mlir/Dialect/SCF/Transforms/Passes.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Transforms/Passes.h"
 
@@ -33,9 +35,12 @@ void mlir::createByteIRTotalBufferizePipeline(OpPassManager &pm) {
       [](OpPassManager &pm) {
         pm.addPass(createConvertHloToLHloPass());
         pm.addPass(createCSEPass());
+        pm.addNestedPass<func::FuncOp>(
+            bufferization::createEmptyTensorToAllocTensorPass());
         pm.addNestedPass<func::FuncOp>(createAceBufferizePass());
-        pm.addNestedPass<func::FuncOp>(createLinalgBufferizePass());
+        pm.addNestedPass<func::FuncOp>(createSCFBufferizePass());
         pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
+        pm.addNestedPass<func::FuncOp>(createLinalgBufferizePass());
         addCleanUpPassPipeline(pm);
         // clean-up possible redudant copy-removal from bufferization
         // TODO: enable it after fixing crash

@@ -54,11 +54,15 @@ namespace scf {
 FailureOr<scf::SCFTileAndFuseResult>
 tileConsumerAndFuseProducerUsingSCFForOpExt(
     RewriterBase &rewriter, TilingInterface consumer,
-    const scf::SCFTileAndFuseOptions &options);
+    const scf::SCFTileAndFuseOptions &options, bool simplifyLoopIter = true);
 
 void labelTileLoopType(Operation *op, ArrayRef<scf::ForOp> loops);
 
 LogicalResult isValidTiling(Operation *tiled);
+
+bool checkCleanable(Operation *op, int64_t resultNumber, bool hasOneOrZeroUse,
+                    bool allParallel);
+
 } // namespace scf
 
 namespace linalg {

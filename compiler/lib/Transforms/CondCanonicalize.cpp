@@ -90,36 +90,6 @@ template <typename OpTy> struct DivOfArgFolder : public OpRewritePattern<OpTy> {
   };
 };
 
-// Fold away ForOp iter arguments when having `__byteir_parallel__` attribute
-struct ByteIRParallelForOpIterArgsFolder : public OpRewritePattern<scf::ForOp> {
-  using OpRewritePattern<scf::ForOp>::OpRewritePattern;
-
-  LogicalResult matchAndRewrite(scf::ForOp forOp,
-                                PatternRewriter &rewriter) const final {
-
-    if (!forOp->hasAttr(getSCFForParallelAttrName())) {
-      return failure();
-    }
-
-    if (llvm::all_of(forOp.getRegionIterArgs(),
-                     [](Value val) { return val.use_empty(); })) {
-      return failure();
-    }
-
-    // replace args with operands
-    // meaning that it removes loop carry.
-    // Later, iter arguments will be futher removed
-    // by ForOpIterArgsFolder (in Canonicalizer)
-    for (auto it : llvm::zip(forOp.getIterOperands(),  // iter from outside
-                             forOp.getRegionIterArgs() // iter inside region
-                             )) {
-      std::get<1>(it).replaceAllUsesWith(std::get<0>(it));
-    }
-
-    return success();
-  }
-};
-
 struct CondCanonicalizePass
     : public CondCanonicalizeBase<CondCanonicalizePass> {
   CondCanonicalizePass() : CondCanonicalizeBase() {}
@@ -144,8 +114,7 @@ struct CondCanonicalizePass
 void mlir::populateCondCanonicalizePatterns(RewritePatternSet &patterns) {
   MLIRContext *ctx = patterns.getContext();
   // clang-format off
-  patterns.add<ByteIRParallelForOpIterArgsFolder,
-               DivOfArgFolder<arith::DivSIOp>, 
+  patterns.add<DivOfArgFolder<arith::DivSIOp>, 
                DivOfArgFolder<arith::DivUIOp>,
                RemOfArgFolder<arith::RemSIOp>, 
                RemOfArgFolder<arith::RemUIOp>>(ctx);

@@ -423,7 +423,7 @@ def LinalgExtInterface : OpInterface<"LinalgExtOp"> {
     >,
     InterfaceMethod<
       /*desc=*/[{
-        Rewrting consumer's operands, given a fused op (a fused vserion of `this`),
+        Rewriting consumer's operands, given a fused op (a fused vserion of `this`),
         a result offset, a operand 
       }],
       /*retTy=*/"LogicalResult",
@@ -433,6 +433,18 @@ def LinalgExtInterface : OpInterface<"LinalgExtOp"> {
       /*methodBody=*/"",
       /*defaultImplementation=*/[{
         return success();
+      }]
+    >,
+    InterfaceMethod<
+      /*desc=*/[{
+        Returning whether results are cleanable
+      }],
+      /*retTy=*/"bool",
+      /*methodName=*/"isResultCleanable",
+      /*args=*/(ins "int64_t": $number, "bool": $hasOneOrZeroUse, "bool": $allParallel),
+      /*methodBody=*/"",
+      /*defaultImplementation=*/[{
+        return false;
       }]
     >,
     //===------------------------------------------------------------------===//
