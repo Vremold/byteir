@@ -231,6 +231,23 @@ def LoopUnroll : Pass<"unroll", "mlir::func::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// InsertUniqueId
+//===----------------------------------------------------------------------===//
+
+def InsertUniqueId : Pass<"insert-unique-id", "ModuleOp"> {
+  let summary = "Insert unique ids (operation name + id) for operations.";
+  let constructor = "mlir::createByteIRInsertUniqueIdPass()";
+  let options = [
+    Option<"anchorAttr", "anchor-attr", "std::string",
+            /*default=*/"",
+            "An optional attribute anchoring on target functions.">,
+    Option<"eraseId", "erase-id", "bool",
+            /*default=*/"false",
+            "Remove unique ids.">
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // Remove func body
 //===----------------------------------------------------------------------===//
 def RemoveFuncBody: Pass<"remove-func-body", "mlir::func::FuncOp"> {
