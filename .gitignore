@@ -27,6 +27,7 @@ build/
 # prebuilt llvm in CI
 llvm_install*
 llvm_build/
+llvm_build_rtti/
 
 # byteir artifact in CI
 byre_install*

@@ -1,0 +1,17 @@
+name: Release onnx-frontend
+trigger: 
+  manual:
+jobs: 
+  release:
+    name: Release onnx-frontend
+    # runs-on:
+    #   spec: m1.8xlarge
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:main
+    working-directory: byteir/onnx-frontend
+    envs:
+      TOS_ACCESS_KEY: ${{TOS_ACCESS_KEY}}
+      TOS_BUCKET: ${{TOS_BUCKET}}
+    steps:
+      - name: Build and release onnx-frontend
+        commands:
+          - bash .codebase/pipelines/frontends/onnx-frontend/release.sh

@@ -13,3 +13,6 @@
 [submodule "external/pybind11"]
 	path = external/pybind11
 	url = https://github.com/pybind/pybind11.git
+[submodule "frontends/onnx-frontend/third_party/onnx-mlir"]
+	path = frontends/onnx-frontend/third_party/onnx-mlir
+	url = git@code.byted.org:byteir/onnx-mlir.git
