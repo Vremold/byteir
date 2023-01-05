@@ -1,0 +1,243 @@
+diff --git a/tensorflow/BUILD b/tensorflow/BUILD
+index 46879082f93..74feb536936 100644
+--- a/tensorflow/BUILD
++++ b/tensorflow/BUILD
+@@ -104,7 +104,7 @@ PACKAGE_STATIC_DEPS = [
+ 
+ package(
+     # copybara:uncomment default_applicable_licenses = [":license"],
+-    default_visibility = [":internal"],
++    default_visibility = ["//visibility:public"],
+ )
+ 
+ # copybara:uncomment_begin
+diff --git a/tensorflow/c/eager/BUILD b/tensorflow/c/eager/BUILD
+index c1aeb831bce..7b926634412 100644
+--- a/tensorflow/c/eager/BUILD
++++ b/tensorflow/c/eager/BUILD
+@@ -142,7 +142,7 @@ cc_library(
+         "c_api_experimental.h",
+         "c_api_internal.h",
+     ],
+-    visibility = ["//tensorflow:internal"],
++    visibility = ["//visibility:public"],
+     deps = [
+         ":c_api",
+         ":tfe_cancellation_manager_internal",
+diff --git a/tensorflow/compiler/mlir/BUILD b/tensorflow/compiler/mlir/BUILD
+index 42c78ff6143..a372d6ff4b5 100644
+--- a/tensorflow/compiler/mlir/BUILD
++++ b/tensorflow/compiler/mlir/BUILD
+@@ -102,10 +102,6 @@ cc_library(
+ 
+ cc_library(
+     name = "passes",
+-    visibility = [
+-        ":__subpackages__",
+-        "//tensorflow/python:__subpackages__",
+-    ],
+     deps = [
+         "@llvm-project//mlir:AffineDialect",
+         "@llvm-project//mlir:QuantOps",
+diff --git a/tensorflow/compiler/mlir/lite/BUILD b/tensorflow/compiler/mlir/lite/BUILD
+index 1840df2b1fc..0127356b38e 100644
+--- a/tensorflow/compiler/mlir/lite/BUILD
++++ b/tensorflow/compiler/mlir/lite/BUILD
+@@ -7,9 +7,7 @@ load("@llvm-project//mlir:tblgen.bzl", "gentbl_cc_library", "td_library")
+ package(
+     default_visibility = [
+         # TODO(jpienaar): Make the visibility more restrictive.
+-        ":friends",
+-        "//tensorflow/lite/experimental/tf_runtime:__subpackages__",
+-        "//tensorflow/lite/testing:__subpackages__",
++        "//visibility:public",
+     ],
+     licenses = ["notice"],
+ )
+diff --git a/tensorflow/compiler/mlir/tensorflow/BUILD b/tensorflow/compiler/mlir/tensorflow/BUILD
+index 44102734392..71854d40ff2 100644
+--- a/tensorflow/compiler/mlir/tensorflow/BUILD
++++ b/tensorflow/compiler/mlir/tensorflow/BUILD
+@@ -1415,7 +1415,7 @@ cc_library(
+ 
+ cc_library(
+     name = "tensorflow_test_passes",
+-    testonly = True,  # Ensure alwayslink does not leak in the codebase.
++    # testonly = True,  # Ensure alwayslink does not leak in the codebase.
+     srcs = [
+         "transforms/init_text_file_to_import_test_pass.cc",
+         "transforms/initialize_variables_in_session_init_test_pass.cc",
+@@ -1918,7 +1918,7 @@ cc_library(
+     name = "error_util",
+     srcs = ["utils/error_util.cc"],
+     hdrs = ["utils/error_util.h"],
+-    visibility = ["//tensorflow:__subpackages__"],
++    visibility = ["//visibility:public"],
+     deps = [
+         "//tensorflow/compiler/xla/mlir/utils:error_util",
+         "//tensorflow/core/platform:errors",
+@@ -2217,7 +2217,7 @@ cc_library(
+ 
+ cc_library(
+     name = "tf_xla_mlir_translate",
+-    testonly = True,  # Ensure alwayslink does not leak in the codebase.
++    # testonly = True,  # Ensure alwayslink does not leak in the codebase.
+     srcs = ["utils/tf_xla_mlir_translate.cc"],
+     deps = [
+         ":compile_mlir_util",
+diff --git a/tensorflow/compiler/mlir/tools/kernel_gen/ir/BUILD b/tensorflow/compiler/mlir/tools/kernel_gen/ir/BUILD
+index abddd366b56..f33b7c7eaf6 100644
+--- a/tensorflow/compiler/mlir/tools/kernel_gen/ir/BUILD
++++ b/tensorflow/compiler/mlir/tools/kernel_gen/ir/BUILD
+@@ -4,9 +4,7 @@ load("//tensorflow:tensorflow.default.bzl", "get_compatible_with_cloud")
+ 
+ package(
+     default_visibility = [
+-        "//tensorflow/compiler/mlir/tools/kernel_gen:friends",
+-        # Allow visibility from the mlir language server.
+-        "//learning/brain/mlir/mlir_lsp_server:__pkg__",
++        "//visibility:public",
+     ],
+     licenses = ["notice"],
+ )
+diff --git a/tensorflow/compiler/mlir/tosa/BUILD b/tensorflow/compiler/mlir/tosa/BUILD
+index 935d6d08bf8..f85e01a2876 100644
+--- a/tensorflow/compiler/mlir/tosa/BUILD
++++ b/tensorflow/compiler/mlir/tosa/BUILD
+@@ -8,7 +8,7 @@ load("@llvm-project//mlir:tblgen.bzl", "gentbl_cc_library")
+ 
+ # TODO: Tighten visibility once targets are at the right granularity.
+ package(
+-    default_visibility = [":internal"],
++    default_visibility = ["//visibility:public"],
+     licenses = ["notice"],
+ )
+ 
+@@ -133,7 +133,6 @@ cc_library(
+         "transforms/passes.h",
+     ],
+     compatible_with = get_compatible_with_cloud(),
+-    visibility = [":friends"],
+     deps = [
+         ":legalize_common",
+         ":passes_header",
+@@ -186,7 +185,6 @@ cc_library(
+         "transforms/passes.h",
+     ],
+     compatible_with = get_compatible_with_cloud(),
+-    visibility = [":friends"],
+     deps = [
+         ":legalize_common",
+         ":passes_header",
+@@ -217,7 +215,6 @@ cc_library(
+         "transforms/passes.h",
+     ],
+     compatible_with = get_compatible_with_cloud(),
+-    visibility = [":friends"],
+     deps = [
+         ":legalize_common",
+         ":passes_header",
+diff --git a/tensorflow/compiler/tf2xla/BUILD b/tensorflow/compiler/tf2xla/BUILD
+index eefde262851..9d6dd5a770b 100644
+--- a/tensorflow/compiler/tf2xla/BUILD
++++ b/tensorflow/compiler/tf2xla/BUILD
+@@ -20,7 +20,7 @@ load("@local_config_rocm//rocm:build_defs.bzl", "if_rocm_is_configured")
+ load("//tensorflow/compiler/xla/service/cpu:build_defs.bzl", "runtime_copts")
+ 
+ package(
+-    default_visibility = [":internal"],
++    default_visibility = ["//visibility:public"],
+     licenses = ["notice"],
+ )
+ 
+@@ -629,7 +629,6 @@ cc_library(
+     hdrs = [
+         "xla_helpers.h",
+     ],
+-    visibility = [":friends"],
+     deps = [
+         ":common",
+         ":host_compute_metadata_proto_cc",
+@@ -711,7 +710,6 @@ cc_library(
+         "shape_util.h",
+         "type_util.h",
+     ],
+-    visibility = [":friends"],
+     deps = [
+         "//tensorflow/compiler/xla:literal",
+         "//tensorflow/compiler/xla:shape_util",
+diff --git a/tensorflow/compiler/xla/service/BUILD b/tensorflow/compiler/xla/service/BUILD
+index 7ca4b3bf21e..b3403064ade 100644
+--- a/tensorflow/compiler/xla/service/BUILD
++++ b/tensorflow/compiler/xla/service/BUILD
+@@ -23,7 +23,7 @@ load("//tensorflow/compiler/xla/stream_executor:build_defs.bzl", "if_gpu_is_conf
+ load("@local_config_cuda//cuda:build_defs.bzl", "if_cuda")
+ 
+ package(
+-    default_visibility = [":friends"],
++    default_visibility = ["//visibility:public"],
+     licenses = ["notice"],
+ )
+ 
+diff --git a/tensorflow/core/BUILD b/tensorflow/core/BUILD
+index 794902e9b53..a580a7ea016 100644
+--- a/tensorflow/core/BUILD
++++ b/tensorflow/core/BUILD
+@@ -113,11 +113,7 @@ load(
+ )
+ 
+ package(
+-    default_visibility = [
+-        ":dependency_whitelist",
+-        "//tensorflow:internal",
+-        "//tensorflow_models:__subpackages__",
+-    ],
++    default_visibility = ["//visibility:public"],
+     features = if_google([
+         "-layering_check",
+         "-parse_headers",
+diff --git a/tensorflow/core/common_runtime/BUILD b/tensorflow/core/common_runtime/BUILD
+index 77e86d90f9c..c4f3d743c0a 100644
+--- a/tensorflow/core/common_runtime/BUILD
++++ b/tensorflow/core/common_runtime/BUILD
+@@ -42,7 +42,7 @@ default_package_visibility = [
+ ]
+ 
+ package(
+-    default_visibility = default_package_visibility,
++    default_visibility = ["//visibility:public"],
+     features = if_google(
+         [
+             "-layering_check",
+diff --git a/tensorflow/core/grappler/optimizers/data/BUILD b/tensorflow/core/grappler/optimizers/data/BUILD
+index 23ce869be60..8d4ca552b15 100644
+--- a/tensorflow/core/grappler/optimizers/data/BUILD
++++ b/tensorflow/core/grappler/optimizers/data/BUILD
+@@ -3,13 +3,7 @@ load("//tensorflow:tensorflow.bzl", "tf_cc_test")
+ load("//tensorflow/core/platform:build_config.bzl", "tf_protos_all")
+ 
+ package(
+-    default_visibility = [
+-        "//tensorflow/core/data:__pkg__",
+-        "//tensorflow/core/data/service:__pkg__",
+-        "//tensorflow/core/grappler/optimizers/data:__subpackages__",
+-        "//tensorflow/core/kernels/data:__pkg__",
+-        "//tensorflow/core/kernels/data/experimental:__pkg__",
+-    ],
++    default_visibility = ["//visibility:public"],
+     licenses = ["notice"],
+ )
+ 
+diff --git a/tensorflow/stream_executor/lib/BUILD b/tensorflow/stream_executor/lib/BUILD
+index 1c64ae62fa8..567d1ee06c3 100644
+--- a/tensorflow/stream_executor/lib/BUILD
++++ b/tensorflow/stream_executor/lib/BUILD
+@@ -4,7 +4,7 @@ load("//tensorflow/compiler/xla/stream_executor:build_defs.bzl", "stream_executo
+ load("//tensorflow/core/platform:build_config_root.bzl", "if_static")
+ 
+ package(
+-    default_visibility = [":friends"],
++    default_visibility = ["//visibility:public"],
+     licenses = ["notice"],
+ )
+ 

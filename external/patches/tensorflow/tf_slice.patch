@@ -1,0 +1,19 @@
+diff --git a/tensorflow/compiler/mlir/xla/transforms/legalize_tf.cc b/tensorflow/compiler/mlir/xla/transforms/legalize_tf.cc
+index 2c71300e256..a27e5ce6e03 100644
+--- a/tensorflow/compiler/mlir/xla/transforms/legalize_tf.cc
++++ b/tensorflow/compiler/mlir/xla/transforms/legalize_tf.cc
+@@ -3086,10 +3086,10 @@ class ConvertSliceOpDynamic : public OpRewritePattern<TF::SliceOp> {
+     }
+     // TODO(disc): remove static shape check once folding/canonicalization func
+     // added
+-    DenseIntElementsAttr size_attr;
+-    if (matchPattern(op.size(), m_Constant(&size_attr))) {
+-      return failure();
+-    }
++    // DenseIntElementsAttr size_attr;
++    // if (matchPattern(op.size(), m_Constant(&size_attr))) {
++    //   return failure();
++    // }
+ 
+     int rank = begin_type.getDimSize(0);
+     auto shape_scalar_type = begin_type.getElementType();

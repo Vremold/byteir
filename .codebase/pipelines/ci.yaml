@@ -5,6 +5,8 @@
 #  |
 #  Compiler build and check
 #  |
+#  TF-Frontend build
+#  |
 #  +--------+---------+
 #  |        |         |
 #  BRT_CPU  BRT_CUDA  BRT_AsanCheck
@@ -42,6 +44,17 @@ jobs:
         inputs:
           name: byre_install
           path: ./compiler/build/artifact
+  tf_frontend_build:
+    name: tf-frontend CI
+    runs-on: 
+      spec: m1.4xlarge
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v1
+    working-directory: byteir/byteir
+    depends: [byteir_check_format]
+    steps:
+      - name: Build TF-Frontend
+        commands:
+          - bash .codebase/pipelines/frontends/tf-frontend/build.sh
   brt_check_cpu:
     name: BRT cpu test
     image: hub.byted.org/arnold/byteir_cuda:v1

@@ -16,3 +16,6 @@
 [submodule "frontends/onnx-frontend/third_party/onnx-mlir"]
 	path = frontends/onnx-frontend/third_party/onnx-mlir
 	url = git@code.byted.org:byteir/onnx-mlir.git
+[submodule "external/tensorflow"]
+	path = external/tensorflow
+	url = https://github.com/tensorflow/tensorflow.git

@@ -2,7 +2,7 @@ function prepare_for_build() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
-  git submodule update --init --recursive
+  git -c submodule."external/tensorflow".update=none submodule update --init --recursive
   unset http_proxy; unset https_proxy
 
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
