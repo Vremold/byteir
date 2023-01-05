@@ -1,0 +1,23 @@
+##################################################
+#         ByteIR TF-Frontend CI pipeline
+##################################################
+
+name: TF-Frontend CI
+trigger:
+  change:
+    paths:
+      - "frontends/tf-frontend/**"
+      - ".codebase/pipelines/tf_frontend_ci.yaml"
+      - ".codebase/pipelines/frontends/tf-frontend/**"
+  manual:
+jobs:
+  tf_frontend_build:
+    name: tf frontend CI
+    runs-on: 
+      spec: m1.8xlarge
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v1
+    working-directory: byteir/byteir
+    steps:
+      - name: Build TF-Frontend
+        commands:
+          - bash .codebase/pipelines/frontends/tf-frontend/build.sh

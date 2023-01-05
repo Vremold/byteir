@@ -64,7 +64,7 @@ llvm_config.config.substitutions.append(
 llvm_config.with_environment('PATH', config.llvm_tools_dir, append_path=True)
 
 tool_dirs = config.mlir_tf_tools_dirs + [
-    config.mlir_tools_dir, config.llvm_tools_dir, os.path.dirname(os.path.realpath(__file__))
+    config.mlir_tools_dir, config.llvm_tools_dir
 ]
 tool_names = [
     'tf-ext-opt'

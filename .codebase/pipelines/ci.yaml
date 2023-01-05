@@ -5,8 +5,6 @@
 #  |
 #  Compiler build and check
 #  |
-#  TF-Frontend build
-#  |
 #  +--------+---------+
 #  |        |         |
 #  BRT_CPU  BRT_CUDA  BRT_AsanCheck
@@ -22,7 +20,7 @@ trigger:
 jobs:
   byteir_check_format:
     name: byteir format check
-    image: hub.byted.org/arnold/byteir_cuda:v1
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v1
     working-directory: byteir/byteir
     steps:
       - name: Run clang format check
@@ -31,7 +29,7 @@ jobs:
   byteir_compiler_build_and_test:
     name: byteir compiler CI
     runs-on:
-      spec: m1.4xlarge
+      spec: m1.8xlarge
     image: hub.byted.org/arnold/byteir_cuda:v1
     working-directory: byteir/byteir
     depends: [byteir_check_format]
@@ -44,17 +42,6 @@ jobs:
         inputs:
           name: byre_install
           path: ./compiler/build/artifact
-  tf_frontend_build:
-    name: tf-frontend CI
-    runs-on: 
-      spec: m1.4xlarge
-    image: hub.byted.org/arnold/data.aml.byteir_cpu:v1
-    working-directory: byteir/byteir
-    depends: [byteir_check_format]
-    steps:
-      - name: Build TF-Frontend
-        commands:
-          - bash .codebase/pipelines/frontends/tf-frontend/build.sh
   brt_check_cpu:
     name: BRT cpu test
     image: hub.byted.org/arnold/byteir_cuda:v1
@@ -100,14 +87,3 @@ jobs:
       - name: Build and test BRT with asan
         commands:
           - bash .codebase/pipelines/runtime/build_and_test.sh --cuda --asan
-  onnx_frontend_check:
-    name: ONNX frontend test
-    # runs-on:
-    #   spec: m1.8xlarge
-    image: hub.byted.org/arnold/data.aml.byteir_cpu:main
-    working-directory: byteir/byteir
-    depends: [byteir_check_format]
-    steps:
-      - name: Build and test onnx-frontend
-        commands:
-          - bash .codebase/pipelines/frontends/onnx-frontend/build_and_test.sh

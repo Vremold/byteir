@@ -1,0 +1,23 @@
+##################################################
+#         ByteIR ONNX-Frontend CI pipeline
+##################################################
+
+name: ONNX-Frontend CI
+trigger:
+  change:
+    paths:
+      - "frontends/onnx-frontend/**"
+      - ".codebase/pipelines/onnx_frontend_ci.yaml"
+      - ".codebase/pipelines/frontends/onnx-frontend/**"
+  manual:
+jobs:
+  onnx_frontend_check:
+    name: onnx frontend CI
+    runs-on:
+      spec: m1.8xlarge
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v1
+    working-directory: byteir/byteir
+    steps:
+      - name: Build and test onnx-frontend
+        commands:
+          - bash .codebase/pipelines/frontends/onnx-frontend/build_and_test.sh
