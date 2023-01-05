@@ -40,7 +40,7 @@ func.func @test_layer_norm(%arg0: tensor<2x4x3xf32>) -> tensor<2x4x3xf32> {
 // CHECK-LABEL:  @test_layer_norm(%arg0: tensor<2x4x3xf32>) -> tensor<2x4x3xf32> {
 // CHECK-NEXT:   %0 = "onnx.Constant"() {value = dense<[1.500000e-01, 2.000000e-01, 2.500000e-01]> : tensor<3xf32>} : () -> tensor<3xf32>
 // CHECK-NEXT:   %1 = "onnx.Constant"() {value = dense<[1.000000e+00, 2.000000e+00, 3.000000e+00]> : tensor<3xf32>} : () -> tensor<3xf32>
-// CHECK-NEXT:   %2 = "mhlo.custom_call"(%arg0, %0, %1) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [2], epsilon = 9.99999974E-6 : f32}, call_target_name = "byteir.layer_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<2x4x3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<2x4x3xf32>
+// CHECK-NEXT:   %2 = "mhlo.custom_call"(%arg0, %0, %1) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [2], epsilon = 9.9999997473787516E-6 : f64}, call_target_name = "byteir.layer_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<2x4x3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<2x4x3xf32>
 // CHECK-NEXT:   return %2 : tensor<2x4x3xf32>
 }
 
@@ -89,7 +89,7 @@ func.func @test_l2_norm(%267: tensor<16x128xf32>) -> tensor<16x128xf32> {
   return %271 : tensor<16x128xf32>
 // CHECK-LABEL:  @test_l2_norm
 // CHECK-SAME:   ([[PARAM_0_:%.+]]: tensor<16x128xf32>) -> tensor<16x128xf32> {
-// CHECK-NEXT:   [[VAR_0_:%.+]] = "mhlo.custom_call"([[PARAM_0_]]) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [1], epsilon = 9.99999996E-13 : f32}, call_target_name = "byteir.l2_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<16x128xf32>) -> tensor<16x128xf32>
+// CHECK-NEXT:   [[VAR_0_:%.+]] = "mhlo.custom_call"([[PARAM_0_]]) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [1], epsilon = 9.999999960041972E-13 : f64}, call_target_name = "byteir.l2_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<16x128xf32>) -> tensor<16x128xf32>
 // CHECK-NEXT:   return [[VAR_0_]] : tensor<16x128xf32>
 }
 

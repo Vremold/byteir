@@ -12,4 +12,4 @@ set -x
 set -e
 # Build onnx-frontend and test it
 of_build
-of_release
+of_upload

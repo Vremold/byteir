@@ -140,9 +140,9 @@ Value createL2Norm(PatternRewriter &rewriter, Location loc, Value input,
   if (axis < 0) {
     axis = inputType.getRank() + axis;
   }
-  float epsilon =
+  double epsilon =
       (*epsilon_attr.dyn_cast<DenseElementsAttr>().getValues<APFloat>().begin())
-          .convertToFloat();
+          .convertToDouble();
   assert(0 < epsilon && epsilon < 1e-7 && "epsilon out of range for L2Norm");
 
   std::string call_target_name = getL2NormNameWithPrefix();
@@ -153,7 +153,7 @@ Value createL2Norm(PatternRewriter &rewriter, Location loc, Value input,
       rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
       nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
   DictionaryAttrWrapper attrs(rewriter.getContext());
-  attrs.setAttr("epsilon", rewriter.getF32FloatAttr(epsilon));
+  attrs.setAttr("epsilon", rewriter.getF64FloatAttr(epsilon));
   attrs.setAttr("axis", rewriter.getI64ArrayAttr({axis}));
   customCallOp->setAttr(BYTEIR_ATTRS, getCleanAttr(attrs));
 
@@ -274,7 +274,7 @@ struct RewriteGelu : public OpRewritePattern<ONNXMulOp> {
 //===----------------------------------------------------------------------===//
 // Fuse LayerNorm Pattern
 //===----------------------------------------------------------------------===//
-SmallVector<Value> likeLayerNormPattern(ONNXAddOp lastAddOp, float &eps,
+SmallVector<Value> likeLayerNormPattern(ONNXAddOp lastAddOp, double &eps,
                                         int64_t &axis) {
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(mulOp,
                                       getOnePossibleOp<ONNXMulOp>(lastAddOp));
@@ -312,7 +312,7 @@ SmallVector<Value> likeLayerNormPattern(ONNXAddOp lastAddOp, float &eps,
   if (epsValue.getNumElements() != 1) {
     return {};
   }
-  eps = *epsValue.getValues<float>().begin();
+  eps = (*epsValue.getValues<APFloat>().begin()).convertToDouble();
   // get axis
   ArrayAttr axisAttrs = reduceMeanOp.axesAttr();
   ArrayAttr firstAxisAttrs = firstReduceMeanOp.axesAttr();
@@ -337,7 +337,7 @@ struct RewriteLayerNorm : public OpRewritePattern<ONNXAddOp> {
   LogicalResult matchAndRewrite(ONNXAddOp op,
                                 PatternRewriter &rewriter) const override {
     ONNXAddOp lastAddOp = cast<ONNXAddOp>(op);
-    float eps;
+    double eps;
     int64_t axis;
     auto args = likeLayerNormPattern(lastAddOp, eps, axis);
     if (args.size() != 3) {
@@ -365,7 +365,7 @@ struct RewriteLayerNorm : public OpRewritePattern<ONNXAddOp> {
         rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
         nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
     DictionaryAttrWrapper attrs(op->getContext());
-    attrs.setAttr("epsilon", rewriter.getF32FloatAttr(eps));
+    attrs.setAttr("epsilon", rewriter.getF64FloatAttr(eps));
     attrs.setAttr("axis", rewriter.getI64ArrayAttr({axis}));
     customCallOp->setAttr(BYTEIR_ATTRS, getCleanAttr(attrs));
 
