@@ -27,10 +27,14 @@ class FuncOp;
 } // namespace func
 
 constexpr StringRef getByteIRUnorllAttrName() { return "__byteir_unroll__"; }
+constexpr StringRef getByteIRLoopIdxAttrName() {
+  return "__byteir_loop_step__";
+}
 
 std::unique_ptr<OperationPass<func::FuncOp>>
 createByteIRLoopUnrollPass(unsigned factor = 2, bool upTo = false,
-                           bool full = false, int depth = -1);
+                           bool full = false, int depth = -1,
+                           bool unrollAll = false, bool annotateIdx = false);
 
 } // namespace mlir
 

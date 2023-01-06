@@ -227,6 +227,10 @@ def LoopUnroll : Pass<"unroll", "mlir::func::FuncOp"> {
            "Fully unroll loops">,
     Option<"depth", "depth", "int", /*default=*/"-1",
            "Loop depth, a negative number implies disabling">,
+    Option<"unrollAll", "unroll-all", "bool", /*default=*/"false",
+           "Unroll all loops">,
+    Option<"annotateIdx", "annotate-idx", "bool", /*default=*/"false",
+           "Annotate ops with step and total steps when unrolling. Annotation works with multiple unrollings if loop structures remains unchanged.">,
   ];
 }
 

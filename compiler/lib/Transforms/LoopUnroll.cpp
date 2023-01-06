@@ -78,16 +78,20 @@ void collectCandidateLoops(func::FuncOp func,
 }
 
 void unrollLoop(LoopLikeOpInterface loop, unsigned unrollFactor,
-                bool unrollUpToFactor, bool unrollFull) {
+                bool unrollUpToFactor, bool unrollFull, bool annotation) {
   if (auto *forOp = dyn_cast<scf::ForOp>(&loop)) {
     if (unrollUpToFactor) {
-      (void)loopUnrollUpToFactor(*forOp, unrollFactor);
+      (void)loopUnrollUpToFactor(*forOp, unrollFactor,
+                                 annotation ? getByteIRLoopIdxAttrName() : "");
     } else if (unrollFull) {
-      (void)loopUnrollFull(*forOp);
+      (void)loopUnrollFull(*forOp,
+                           annotation ? getByteIRLoopIdxAttrName() : "");
     } else {
-      (void)loopUnrollByFactor(*forOp, unrollFactor);
+      (void)loopUnrollByFactor(*forOp, unrollFactor,
+                               annotation ? getByteIRLoopIdxAttrName() : "");
     }
   } else if (auto *forOp = dyn_cast<AffineForOp>(&loop)) {
+    assert(!annotation && "Affine loop unrolling with annotation TBD");
     if (unrollUpToFactor) {
       (void)loopUnrollUpToFactor(*forOp, unrollFactor);
     } else if (unrollFull) {
@@ -99,12 +103,15 @@ void unrollLoop(LoopLikeOpInterface loop, unsigned unrollFactor,
 }
 
 struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
-  LoopUnrollPass(unsigned factor, bool upTo, bool full, int depth)
+  LoopUnrollPass(unsigned factor, bool upTo, bool full, int depth,
+                 bool unrollAll, bool annotateIdx)
       : LoopUnrollBase() {
     this->unrollFactor = factor;
     this->unrollUpToFactor = upTo;
     this->unrollFull = full;
     this->depth = depth;
+    this->unrollAll = upTo;
+    this->annotateIdx = annotateIdx;
   }
 
   void runOnOperation() override {
@@ -114,10 +121,19 @@ struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
     func::FuncOp func = getOperation();
     SmallVector<LoopLikeOpInterface, 4> loops;
 
-    collectCandidateLoops(func, loops, depth);
+    if (!unrollAll) {
+      collectCandidateLoops(func, loops, depth);
 
-    for (auto loop : loops) {
-      unrollLoop(loop, unrollFactor, unrollUpToFactor, unrollFull);
+      for (auto loop : loops) {
+        unrollLoop(loop, unrollFactor, unrollUpToFactor, unrollFull,
+                   annotateIdx);
+      }
+    } else {
+      // innermost to outermost
+      func->walk([&](LoopLikeOpInterface loop) {
+        unrollLoop(loop, unrollFactor, unrollUpToFactor, unrollFull,
+                   annotateIdx);
+      });
     }
   }
 };
@@ -125,6 +141,7 @@ struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
 
 std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createByteIRLoopUnrollPass(unsigned factor, bool upTo, bool full,
-                                 int depth) {
-  return std::make_unique<LoopUnrollPass>(factor, upTo, full, depth);
+                                 int depth, bool unrollAll, bool annotateIdx) {
+  return std::make_unique<LoopUnrollPass>(factor, upTo, full, depth, unrollAll,
+                                          annotateIdx);
 }

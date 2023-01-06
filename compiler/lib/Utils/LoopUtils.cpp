@@ -23,6 +23,8 @@
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Utils/Utils.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include <cassert>
 
 using namespace llvm;
 using namespace mlir;
@@ -286,19 +288,46 @@ mlir::createTrivialSCFForIfHaveNone(func::FuncOp funcOp) {
   return loop;
 }
 
-LogicalResult mlir::loopUnrollFull(scf::ForOp forOp) {
+LogicalResult mlir::loopUnrollFull(scf::ForOp forOp, StringRef annotationAttr) {
   auto mayBeConstantCount = getConstantTripCount(forOp);
   if (!mayBeConstantCount.has_value())
     return failure();
-  return loopUnrollByFactor(forOp, mayBeConstantCount.value());
+  return loopUnrollByFactor(forOp, mayBeConstantCount.value(), annotationAttr);
 }
 
 LogicalResult mlir::loopUnrollUpToFactor(scf::ForOp forOp,
-                                         uint64_t unrollFactor) {
+                                         uint64_t unrollFactor,
+                                         StringRef annotationAttr) {
   auto mayBeConstantCount = getConstantTripCount(forOp);
   if (mayBeConstantCount.has_value() &&
       mayBeConstantCount.value() <= unrollFactor) {
-    return loopUnrollByFactor(forOp, mayBeConstantCount.value());
+    return loopUnrollByFactor(forOp, mayBeConstantCount.value(),
+                              annotationAttr);
   }
-  return loopUnrollByFactor(forOp, unrollFactor);
+  return loopUnrollByFactor(forOp, unrollFactor, annotationAttr);
+}
+
+LogicalResult mlir::loopUnrollByFactor(scf::ForOp forOp, uint64_t unrollFactor,
+                                       StringRef annotationAttr) {
+  if (!annotationAttr.empty()) {
+    auto factorAttrName = getLoopUnrollStepAttrName();
+    auto annotateFn = [unrollFactor, annotationAttr,
+                       factorAttrName](unsigned i, Operation *op, OpBuilder b) {
+      if (op->hasAttr(annotationAttr)) {
+        assert(op->hasAttr(factorAttrName));
+        int oriIdx = op->getAttrOfType<IntegerAttr>(annotationAttr).getInt();
+        int oldFactor = op->getAttrOfType<IntegerAttr>(factorAttrName).getInt();
+        op->setAttr(annotationAttr,
+                    b.getI32IntegerAttr(oriIdx + i * oldFactor));
+        op->setAttr(factorAttrName,
+                    b.getI32IntegerAttr(unrollFactor * oldFactor));
+      } else {
+        op->setAttr(annotationAttr, b.getI32IntegerAttr(i));
+        op->setAttr(factorAttrName, b.getI32IntegerAttr(unrollFactor));
+      }
+    };
+    return loopUnrollByFactor(forOp, unrollFactor, annotateFn);
+  } else {
+    return loopUnrollByFactor(forOp, unrollFactor);
+  }
 }

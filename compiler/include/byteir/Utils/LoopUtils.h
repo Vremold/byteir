@@ -33,6 +33,10 @@ constexpr StringRef getSCFForParallelAttrName() {
   return "__byteir_parallel__";
 }
 
+constexpr StringRef getLoopUnrollStepAttrName() {
+  return "__byteir_loop_total_step__";
+}
+
 namespace func {
 class FuncOp;
 } // namespace func
@@ -98,10 +102,13 @@ void gatherLoopsWithDepth(func::FuncOp func, unsigned depth,
 // if FuncOp is trivally empty return None.
 llvm::Optional<scf::ForOp> createTrivialSCFForIfHaveNone(func::FuncOp);
 
-LogicalResult loopUnrollFull(scf::ForOp forOp);
+LogicalResult loopUnrollFull(scf::ForOp forOp, StringRef annotationAttr);
 
-LogicalResult loopUnrollUpToFactor(scf::ForOp forOp, uint64_t unrollFactor);
+LogicalResult loopUnrollUpToFactor(scf::ForOp forOp, uint64_t unrollFactor,
+                                   StringRef annotationAttr);
 
+LogicalResult loopUnrollByFactor(scf::ForOp forOp, uint64_t unrollFactor,
+                                 StringRef annotationAttr);
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_LOOPUTILS_H
