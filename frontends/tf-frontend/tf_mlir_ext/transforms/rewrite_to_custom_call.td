@@ -185,6 +185,44 @@ def RewriteLayerNormSwapMul : Pat<
    (SameTwoValuesOrAttrs $mean_input, $mean_input_1),
    (OneRank $gama_attr), (OneRank $beta_attr)]>;
 
+def RewriteLayerNormSwapSquarediff : Pat<
+  (TF_AddV2Op
+    (TF_MulOp
+      (TF_MulOp:$mul_after_rsqrt
+        (TF_RsqrtOp
+          (TF_AddV2Op
+            (TF_MeanOp
+              (TF_SquaredDifferenceOp
+                (TF_MeanOp:$mean_input
+                  $input,
+                  (TF_ConstOp:$axis $axis_attr),
+                  $keep_dims_0
+                ),
+                $input
+              ),
+              $axis_1,
+              $keep_dims_1
+            ),
+            (TF_ConstOp $epsilon_attr)
+          )
+        ),
+        (TF_ConstOp:$gama $gama_attr)
+      ),
+      $input
+    ),
+    (TF_SubOp
+      (TF_ConstOp:$beta $beta_attr),
+      (TF_MulOp $mul_after_rsqrt_1, $mean_input_1)
+    )
+  ),
+  (NativeCodeCall<"createLayerNorm($_builder, $_loc, $0, $1, $2, $3, $4)"> $input, $gama, $beta, $epsilon_attr, $axis_attr),
+  [(OneSize $epsilon_attr), (OneSize $axis_attr),
+   (TrueBoolAttr $keep_dims_0), (TrueBoolAttr $keep_dims_1),
+   (SameTwoValuesOrAttrs $axis, $axis_1),
+   (SameTwoValuesOrAttrs $mul_after_rsqrt, $mul_after_rsqrt_1),
+   (SameTwoValuesOrAttrs $mean_input, $mean_input_1),
+   (OneRank $gama_attr), (OneRank $beta_attr)]>;
+
 def RewriteLayerNorm_V2 : Pat<
   (TF_AddV2Op
     (TF_MulOp

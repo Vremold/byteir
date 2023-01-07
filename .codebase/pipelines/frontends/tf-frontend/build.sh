@@ -29,7 +29,7 @@ git apply ../patches/tensorflow/grappler.patch
 popd
 
 pushd $PROJ_DIR
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r tf_mlir_ext/numerical/requirements.txt
 bazel --output_user_root=./build build //tools:tf-frontend //tools:tf-ext-opt
 bazel --output_user_root=./build test //tf_mlir_ext/tests:all //tf_mlir_ext/numerical:all --java_runtime_version=remotejdk_11
 popd

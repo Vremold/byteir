@@ -231,6 +231,27 @@ func.func @layer_norm_swap_mul(%arg0: tensor<1x16x3xf32>) -> tensor<1x16x3xf32> 
 // CHECK: mhlo.custom_call
 // CHECK-SAME: "byteir.layer_norm"
 
+func.func @layer_norm_swap_squarediff(%arg0: tensor<256x4xf32>) -> tensor<256x4xf32> {
+  %cst_136 = "tf.Const"() {value = dense<1> : tensor<1xi32>} : () -> tensor<1xi32>
+  %cst_400 = "tf.Const"() {value = dense<9.99999996E-13> : tensor<f32>} : () -> tensor<f32>
+  %cst_395 = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517, 0.4000000]> : tensor<4xf32>} : () -> tensor<4xf32>
+  %cst_396 = "tf.Const"() {value = dense<[0.445568085, 0.45303449, 3.227140e-01, 0.4000000]> : tensor<4xf32>} : () -> tensor<4xf32>
+  %0 = "tf.Mean"(%arg0, %cst_136) {device = "", keep_dims = true} : (tensor<256x4xf32>, tensor<1xi32>) -> tensor<256x1xf32>
+  %1 = "tf.SquaredDifference"(%0, %arg0) {device = ""} : (tensor<256x1xf32>, tensor<256x4xf32>) -> tensor<256x4xf32>
+  %2 = "tf.Mean"(%1, %cst_136) {device = "", keep_dims = true} : (tensor<256x4xf32>, tensor<1xi32>) -> tensor<256x1xf32>
+  %3 = "tf.AddV2"(%2, %cst_400) {device = ""} : (tensor<256x1xf32>, tensor<f32>) -> tensor<256x1xf32>
+  %4 = "tf.Rsqrt"(%3) {device = ""} : (tensor<256x1xf32>) -> tensor<256x1xf32>
+  %5 = "tf.Mul"(%4, %cst_395) {device = ""} : (tensor<256x1xf32>, tensor<4xf32>) -> tensor<256x4xf32>
+  %6 = "tf.Mul"(%5, %arg0) {device = ""} : (tensor<256x4xf32>, tensor<256x4xf32>) -> tensor<256x4xf32>
+  %7 = "tf.Mul"(%5, %0) {device = ""} : (tensor<256x4xf32>, tensor<256x1xf32>) -> tensor<256x4xf32>
+  %8 = "tf.Sub"(%cst_396, %7) {device = ""} : (tensor<4xf32>, tensor<256x4xf32>) -> tensor<256x4xf32>
+  %9 = "tf.AddV2"(%6, %8) {device = ""} : (tensor<256x4xf32>, tensor<256x4xf32>) -> tensor<256x4xf32>
+  return %9 : tensor<256x4xf32>
+}
+// CHECK-LABEL: @layer_norm_swap_squarediff
+// CHECK: mhlo.custom_call
+// CHECK-SAME: "byteir.layer_norm"
+
 func.func @layer_norm_V2(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %cst = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
   %cst_0 = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517]> : tensor<3xf32>} : () -> tensor<3xf32>
