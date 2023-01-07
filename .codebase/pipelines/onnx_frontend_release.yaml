@@ -4,8 +4,8 @@ trigger:
 jobs: 
   release:
     name: Release onnx-frontend
-    # runs-on:
-    #   spec: m1.8xlarge
+    runs-on:
+      spec: m1.8xlarge
     image: hub.byted.org/arnold/data.aml.byteir_cpu:main
     working-directory: byteir/onnx-frontend
     envs:

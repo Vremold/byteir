@@ -2,7 +2,7 @@
 
 set -e
 
-CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 # path to byteir root
 ROOT_PROJ_DIR="$CUR_DIR/../../.."
 # path to byteir/compiler
@@ -15,8 +15,8 @@ INSTALL_DIR="$BUILD_DIR/byre_install"
 # dir to ci artifact
 OUT_DIR="$BUILD_DIR/artifact"
 
-source $CUR_DIR/../common.sh
-prepare_for_build
+source $CUR_DIR/../prepare.sh
+prepare_for_compiler
 
 python3 -m pip install -r $PROJ_DIR/numerical/requirements.txt
 

@@ -9,6 +9,8 @@ trigger:
       - "frontends/tf-frontend/**"
       - ".codebase/pipelines/tf_frontend_ci.yaml"
       - ".codebase/pipelines/frontends/tf-frontend/**"
+      - "compiler/include/byteir/Dialect/Ace/**"
+      - "compiler/lib/Dialect/Ace/**"
   manual:
 jobs:
   tf_frontend_build:

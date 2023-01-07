@@ -24,7 +24,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 # path to byteir root
 ROOT_PROJ_DIR="$CUR_DIR/../../.."
 # path to byteir/runtime
@@ -53,8 +53,8 @@ BRT_ENABLE_ASAN=${BRT_ENABLE_ASAN:-OFF}
 BRT_ENABLE_PYTHON_BINDINGS=${BRT_ENABLE_PYTHON_BINDINGS:-OFF}
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
 
-source $CUR_DIR/../common.sh
-prepare_for_build
+source $CUR_DIR/../prepare.sh
+prepare_for_runtime
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"

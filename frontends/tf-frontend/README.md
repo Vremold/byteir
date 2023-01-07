@@ -31,8 +31,6 @@ bazel build //tools:tf-frontend //tools:tf-ext-opt
 ## Run Lit Test
 
 ```shell
-python3 -m pip install -i https://bytedpypi.byted.org/simple/ torch~=1.12.0
-python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.0-cp37-cp37m-linux_x86_64.whl
 bazel --output_user_root=./build test //tf_mlir_ext/tests:all --java_runtime_version=remotejdk_11
 ```
 
