@@ -7,7 +7,6 @@ echo "ONNX_FRONTEND_ROOT = $ONNX_FRONTEND_ROOT"
 
 function of_envsetup() {
   set -x
-  set -e
   pushd $ONNX_FRONTEND_ROOT
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118'
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118'
@@ -44,21 +43,16 @@ function of_envsetup() {
   # init submodule
   echo "Initializing Submodules"
   cd $ONNX_FRONTEND_ROOT
-  git submodule update --init --recursive
+  git submodule update --init --recursive third_party/onnx-mlir
 
-  # # download onnx files for testing
-  # cd $ONNX_FRONTEND_ROOT/..
-  # apt-get install -y git-lfs
-  # git lfs install --force --skip-smudge
-  # if [ ! -d bdaimodels ]; then
-  #   git clone git@code.byted.org:yuanhangjian/bdaimodelsv2.git bdaimodels
-  # fi
-  # cd bdaimodels
-  # git lfs pull --include onnx/onnx_frontend/
+  # trying to apply a patch of commits to onnx-mlir
+  ONNX_MLIR_ROOT=$ONNX_FRONTEND_ROOT/third_party/onnx-mlir
+  cd $ONNX_MLIR_ROOT
+  echo "Applying a patch of commits to onnx-mlir"
+  git am --whitespace=nowarn ../patches/onnx-mlir-custom-commits.patch
 
   unset http_proxy; unset https_proxy
   popd
-  set +e
   set +x
   echo "Done"
 }
@@ -67,15 +61,6 @@ function of_build() {
   pushd $ONNX_FRONTEND_ROOT
   LLVM_BUILD_HOME=$BYTEIR_ROOT/llvm_build_rtti
   LLVM_LIT_PATH="$(which lit)"
-  ONNX_MLIR_ROOT=$ONNX_FRONTEND_ROOT/third_party/onnx-mlir
-
-  cd $ONNX_MLIR_ROOT
-  if [[ $(git diff src/Transform/ONNX/ShapeInferencePass.cpp) ]]; then
-      echo "Patch already applied to ShapeInferenPass.cpp"
-  else
-      echo "Applying a patch to ShapeInferecePass.cpp"
-      git apply $ONNX_FRONTEND_ROOT/third_party/patches/ShapeInferencePass.patch
-  fi
 
   if [ ! -d ${ONNX_FRONTEND_ROOT}/build ]; then
     mkdir ${ONNX_FRONTEND_ROOT}/build
@@ -98,18 +83,7 @@ function of_build() {
 
 function of_test_lit() {
   pushd $ONNX_FRONTEND_ROOT
-  ONNX_MLIR_ROOT=$ONNX_FRONTEND_ROOT/third_party/onnx-mlir
-
-  cd $ONNX_MLIR_ROOT
-  if [[ $(git diff src/Transform/ONNX/ShapeInferencePass.cpp) ]]; then
-      echo "Patch already applied to ShapeInferenPass.cpp"
-  else
-      echo "Applying a patch to ShapeInferecePass.cpp"
-      git apply ../patches/ShapeInferencePass.patch
-  fi
-
   cd ${ONNX_FRONTEND_ROOT}/build
-
   cmake --build . --target check-of-lit
   popd
 }
