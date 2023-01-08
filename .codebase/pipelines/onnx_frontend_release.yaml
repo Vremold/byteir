@@ -14,4 +14,5 @@ jobs:
     steps:
       - name: Build and release onnx-frontend
         commands:
-          - bash .codebase/pipelines/frontends/onnx-frontend/release.sh
+          - bash .codebase/pipelines/frontends/onnx-frontend/build_and_test.sh
+          - bash .codebase/pipelines/frontends/onnx-frontend/upload_to_tos.sh

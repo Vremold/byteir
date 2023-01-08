@@ -14,9 +14,9 @@ function download_llvm_prebuilt() {
 function prepare_for_compiler() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
+  export no_proxy='*.byted.org'
   git submodule update --init --recursive external/mlir-hlo
-  unset http_proxy; unset https_proxy
+  unset http_proxy; unset https_proxy; unset no_proxy
 
   download_llvm_prebuilt
 }
@@ -24,9 +24,9 @@ function prepare_for_compiler() {
 function prepare_for_runtime() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
+  export no_proxy='*.byted.org'
   git submodule update --init --recursive external/mlir-hlo external/cutlass external/date external/googletest external/pybind11
-  unset http_proxy; unset https_proxy
+  unset http_proxy; unset https_proxy; unset no_proxy
 
   download_llvm_prebuilt
 }
@@ -34,9 +34,9 @@ function prepare_for_runtime() {
 function prepare_for_onnx_frontend() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
+  export no_proxy='*.byted.org'
   git submodule update --init --recursive frontends/onnx-frontend/third_party/onnx-mlir
-  unset http_proxy; unset https_proxy
+  unset http_proxy; unset https_proxy; unset no_proxy
 
   download_llvm_prebuilt
 }
