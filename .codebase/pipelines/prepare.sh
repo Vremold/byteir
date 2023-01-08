@@ -31,14 +31,6 @@ function prepare_for_runtime() {
   download_llvm_prebuilt
 }
 
-function prepare_for_tf_frontend() {
-  export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export no_proxy='mirrors.byted.org,apt.byted.org,bytedpypi.byted.org'
-  git submodule update --init --recursive external/tensorflow
-  unset http_proxy; unset https_proxy
-}
-
 function prepare_for_onnx_frontend() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';

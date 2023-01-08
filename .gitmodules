@@ -13,9 +13,9 @@
 [submodule "external/pybind11"]
 	path = external/pybind11
 	url = https://github.com/pybind/pybind11.git
-[submodule "external/tensorflow"]
-	path = external/tensorflow
-	url = https://github.com/tensorflow/tensorflow.git
 [submodule "frontends/onnx-frontend/third_party/onnx-mlir"]
 	path = frontends/onnx-frontend/third_party/onnx-mlir
 	url = https://github.com/onnx/onnx-mlir.git
+[submodule "frontends/tf-frontend/external/tensorflow"]
+	path = frontends/tf-frontend/external/tensorflow
+	url = https://github.com/tensorflow/tensorflow.git

@@ -34,7 +34,7 @@ td_library(
     ],
     compatible_with = get_compatible_with_cloud(),
     visibility = ["//visibility:private"],
-    includes = ["../../../../external/tensorflow"], # fix tensorflow_ops_td_files's `includes`
+    includes = ["../../external/tensorflow"], # patch tensorflow_ops_td_files's `includes`
     deps = [
         "@org_tensorflow//tensorflow/compiler/mlir/tensorflow:tensorflow_ops_td_files",
         "@org_tensorflow//tensorflow/compiler/xla/mlir_hlo:hlo_ops_td_files",

@@ -1,6 +1,6 @@
 local_repository(
     name = "org_tensorflow",
-    path = "../../external/tensorflow",
+    path = "./external/tensorflow",
 )
 
 load("@org_tensorflow//tensorflow:workspace3.bzl", "tf_workspace3")

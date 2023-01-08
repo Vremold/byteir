@@ -1,1 +1,1 @@
-../../external/tensorflow/.bazelrc
+./external/tensorflow/.bazelrc

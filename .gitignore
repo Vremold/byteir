@@ -24,6 +24,9 @@
 # Nested build directory
 build/
 
+# bazel
+**/bazel*
+
 # prebuilt llvm in CI
 llvm_install*
 llvm_build/
