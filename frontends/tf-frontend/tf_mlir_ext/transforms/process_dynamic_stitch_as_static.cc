@@ -73,12 +73,17 @@ private:
 SmallDenseSet<Operation *> findOpBfs(const SmallVector<Operation *> &ops,
                                      StringRef name) {
   SmallDenseSet<Operation *> res;
+  SmallDenseSet<Operation *> visited;
   std::queue<Operation *> q;
   for (Operation *op : ops)
     q.push(op);
   while (q.size() > 0) {
     Operation *top = q.front();
     q.pop();
+    if (visited.count(top)) {
+      continue;
+    }
+    visited.insert(top);
     if (top->getName().getStringRef() == name) {
       res.insert(top);
       continue;
