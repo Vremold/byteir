@@ -26,15 +26,10 @@ export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
 export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
 export no_proxy='*.byted.org'
 
-apt-get update
-apt-get install protobuf-compiler -y
-
 # For "git am"
 git config --global user.email "you@example.com"
 git config --global user.name "Your Name"
 
-# To stop pip version warning
-python3 -m pip install --upgrade pip
 # install python dependency
 python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.6-cp37-cp37m-linux_x86_64.whl
 python3 -m pip install -r $PROJ_DIR/requirements.txt
@@ -59,7 +54,7 @@ cmake "-H$PROJ_DIR" \
       -DCMAKE_BUILD_TYPE=Release \
       -DLLVM_EXTERNAL_LIT=$(which lit)
 
-cmake --build "$PROJ_DIR/build" --config Release --target onnx-frontend --target onnx-frontend-opt --target check-of-lit
+cmake --build "$PROJ_DIR/build" --config Release --target onnx-frontend onnx-frontend-opt check-of-lit
 
 function of_test_models() {
   pushd $PROJ_DIR

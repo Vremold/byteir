@@ -22,4 +22,4 @@ jobs:
     steps:
       - name: Build TF-Frontend
         commands:
-          - bash .codebase/pipelines/frontends/tf-frontend/build.sh
+          - bash .codebase/pipelines/frontends/tf-frontend/build_and_test.sh

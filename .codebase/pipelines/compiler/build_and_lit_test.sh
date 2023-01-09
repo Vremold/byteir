@@ -30,7 +30,8 @@ cmake "-H$PROJ_DIR/cmake" \
       -DLLVM_EXTERNAL_LIT=$(which lit) \
       -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR"
 
-cmake --build "$BUILD_DIR" --config Release --target all check-byteir check-byteir-numerical install
+cmake --build "$BUILD_DIR" --config Release --target all check-byteir install
+cmake --build "$BUILD_DIR" --target check-byteir-numerical
 
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"

@@ -30,13 +30,3 @@ function prepare_for_runtime() {
 
   download_llvm_prebuilt
 }
-
-function prepare_for_onnx_frontend() {
-  export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export no_proxy='*.byted.org'
-  git submodule update --init --recursive frontends/onnx-frontend/third_party/onnx-mlir
-  unset http_proxy; unset https_proxy; unset no_proxy
-
-  download_llvm_prebuilt
-}

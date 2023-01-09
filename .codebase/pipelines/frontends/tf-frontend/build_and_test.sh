@@ -37,7 +37,8 @@ popd
 pushd $PROJ_DIR
 python3 -m pip install -r tf_mlir_ext/numerical/requirements.txt
 $PROJ_DIR/bazel --output_user_root=./build build //tools:tf-frontend //tools:tf-ext-opt
-$PROJ_DIR/bazel --output_user_root=./build test //tf_mlir_ext/tests:all //tf_mlir_ext/numerical:all --java_runtime_version=remotejdk_11
+$PROJ_DIR/bazel --output_user_root=./build test //tf_mlir_ext/tests:all --java_runtime_version=remotejdk_11
+$PROJ_DIR/bazel --output_user_root=./build test //tf_mlir_ext/numerical:all --java_runtime_version=remotejdk_11
 popd
 
 unset http_proxy; unset https_proxy; unset no_proxy
