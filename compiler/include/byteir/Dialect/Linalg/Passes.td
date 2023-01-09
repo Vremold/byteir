@@ -25,6 +25,22 @@ include "mlir/Pass/PassBase.td"
 // LinalgDataPlace
 //===----------------------------------------------------------------------===//
 
+def LinalgExtBufferize : Pass<"linalg-ext-bufferize", "func::FuncOp"> {
+  let summary = "Bufferize the linalg-ext and linalg dialect";
+  let constructor = "mlir::createLinalgExtBufferizePass()";
+  let dependentDialects = [
+    "AffineDialect",
+    "bufferization::BufferizationDialect",
+    "linalg::LinalgDialect",
+    "linalg_ext::LinalgExtDialect",
+    "memref::MemRefDialect",
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// LinalgDataPlace
+//===----------------------------------------------------------------------===//
+
 def LinalgDataPlace : Pass<"linalg-data-place", "func::FuncOp"> {
   let summary = "Data-Place Linalg's buffer to a local buffer with space";
   let constructor = "mlir::createLinalgDataPlacePass()";

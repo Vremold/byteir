@@ -18,7 +18,7 @@
 #include "byteir/Pipelines/HloOpt.h"
 
 #include "byteir/Dialect/mhlo/Passes.h"
-#include "byteir/Utils/PipelineUtils.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
@@ -72,7 +72,7 @@ void createHloOptPipelineImpl(OpPassManager &pm, const std::string &entryFunc,
   pm.addPass(createInlinerPass());
   pm.addPass(createCanonicalizerPass());
 
-  addCleanUpPassPipeline(pm);
+  addCleanUpExtPassPipeline(pm);
 
   // generic folding
   pm.addNestedPass<func::FuncOp>(createHloFolderPass());
@@ -83,7 +83,7 @@ void createHloOptPipelineImpl(OpPassManager &pm, const std::string &entryFunc,
   // rewrite with constraint
   pm.addNestedPass<func::FuncOp>(createRewriteWithConstraintPass());
 
-  addCleanUpPassPipeline(pm);
+  addCleanUpExtPassPipeline(pm);
 
   // add fusion patterns
   if (target == "CPU") {

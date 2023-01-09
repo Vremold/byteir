@@ -19,7 +19,7 @@
 #define BYTEIR_DIALECT_MEMREF_PASSES_H
 
 #include "byteir/Dialect/MemRef/Transforms/ApplyMemRefAffineLayout.h"
-#include "byteir/Dialect/MemRef/Transforms/ReifyAlloc.h"
+#include "byteir/Dialect/MemRef/Transforms/RemoveCopy.h"
 #include "byteir/Dialect/MemRef/Transforms/SimplifyView.h"
 
 namespace mlir {

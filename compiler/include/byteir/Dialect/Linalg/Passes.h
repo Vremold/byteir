@@ -18,6 +18,7 @@
 #ifndef BYTEIR_DIALECT_LINALG_PASSES_H
 #define BYTEIR_DIALECT_LINALG_PASSES_H
 
+#include "byteir/Dialect/Linalg/Transforms/Bufferize.h"
 #include "byteir/Dialect/Linalg/Transforms/FuseElementwise.h"
 #include "byteir/Dialect/Linalg/Transforms/LinalgDataPlace.h"
 #include "byteir/Dialect/Linalg/Transforms/LinalgPrefetch.h"

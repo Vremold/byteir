@@ -7,10 +7,9 @@ add_mlir_library(ByteIRHostPipelines
 
   LINK_LIBS PUBLIC
   MLIRIR
-
   MLIRFuncDialect
-
   ByteIRToLLVM
+  ByteIRPipelineCommon
   MLIRArithTransforms
   MLIRBufferizationTransforms
   MLIRFuncToLLVM

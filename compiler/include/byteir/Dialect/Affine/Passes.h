@@ -15,8 +15,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_AFFINE_PASSES_H
-#define BYTEIR_AFFINE_PASSES_H
+#ifndef BYTEIR_DIALECT_AFFINE_PASSES_H
+#define BYTEIR_DIALECT_AFFINE_PASSES_H
 
 #include "byteir/Dialect/Affine/Transforms/AffineLoopFusionEx.h"
 #include "byteir/Dialect/Affine/Transforms/InsertTrivialAffineLoop.h"
@@ -30,4 +30,4 @@ namespace mlir {
 
 } // namespace mlir
 
-#endif // BYTEIR_AFFINE_PASSES_H
+#endif // BYTEIR_DIALECT_AFFINE_PASSES_H

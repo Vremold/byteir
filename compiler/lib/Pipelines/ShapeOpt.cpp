@@ -20,7 +20,7 @@
 #include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Dialect/Shape/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
-#include "byteir/Utils/PipelineUtils.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
@@ -33,7 +33,7 @@ void mlir::createShapeOptPipeline(OpPassManager &pm) {
         pm.addPass(createInsertTieShapePass());
         pm.addPass(createInsertShapeConstraintPass());
         pm.addPass(createByteIRShapeReificationPass());
-        addCleanUpPassPipeline(pm);
+        addCleanUpExtPassPipeline(pm);
         pm.addPass(createResolveShapeConstraintPass());
         pm.addPass(createBoundedShapeInferencePass());
         pm.addPass(createCanonicalizerPass());

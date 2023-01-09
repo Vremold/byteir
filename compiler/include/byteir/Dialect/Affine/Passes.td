@@ -16,8 +16,8 @@
 //===----------------------------------------------------------------------===//
 
 
-#ifndef BYTEIR_AFFINE_PASSES
-#define BYTEIR_AFFINE_PASSES
+#ifndef BYTEIR_DIALECT_AFFINE_PASSES
+#define BYTEIR_DIALECT_AFFINE_PASSES
 
 include "mlir/Pass/PassBase.td"
 
@@ -61,4 +61,4 @@ def AffineLoopFusionEx : Pass<"affine-loop-fusion-ex", "func::FuncOp"> {
   ];
 }
 
-#endif // BYTEIR_AFFINE_PASSES
+#endif // BYTEIR_DIALECT_AFFINE_PASSES

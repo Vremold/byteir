@@ -18,7 +18,7 @@
 #include "byteir/Pipelines/Host/HostOpt.h"
 
 #include "byteir/Conversion/ToLLVM/ToLLVM.h"
-#include "byteir/Utils/PipelineUtils.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 

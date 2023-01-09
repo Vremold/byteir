@@ -1,4 +1,4 @@
-//===- ReifyAlloc.h -------------------------------------------*--- C++ -*-===//
+//===- Bufferize.h --------------------------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +15,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_MEMREF_TRANSFORMS_REIFYALLOC_H
-#define BYTEIR_DIALECT_MEMREF_TRANSFORMS_REIFYALLOC_H
+#ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_BUFFERIZE_H
+#define BYTEIR_DIALECT_LINALG_TRANSFORMS_BUFFERIZE_H
 
-#include "mlir/IR/OperationSupport.h"
 #include "mlir/Pass/Pass.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/SmallVector.h"
 #include <memory>
 
 namespace mlir {
@@ -29,18 +26,8 @@ namespace func {
 class FuncOp;
 } // namespace func
 
-class RewritePatternSet;
-
-// return shape and operands for an alloc-like op
-void reifyAllocLikeShapeAndOperands(ArrayRef<int64_t> oldShape,
-                                    ValueRange oldOperands,
-                                    SmallVectorImpl<int64_t> &newShape,
-                                    SmallVectorImpl<Value> &newOperands);
-
-void populateReifyAllocLikePatterns(RewritePatternSet &patterns);
-
-std::unique_ptr<OperationPass<func::FuncOp>> createReifyAllocPass();
+std::unique_ptr<OperationPass<func::FuncOp>> createLinalgExtBufferizePass();
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_MEMREF_TRANSFORMS_REIFYALLOC_H
+#endif // BYTEIR_DIALECT_LINALG_TRANSFORMS_BUFFERIZE_H

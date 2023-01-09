@@ -15,8 +15,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_MEMREF_UTILS_SIMPLIFYVIEW_H
-#define BYTEIR_DIALECT_MEMREF_UTILS_SIMPLIFYVIEW_H
+#ifndef BYTEIR_DIALECT_MEMREF_UTILS_LAYOUT_H
+#define BYTEIR_DIALECT_MEMREF_UTILS_LAYOUT_H
 
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -72,4 +72,4 @@ llvm::Optional<llvm::StringRef> getLayoutName(mlir::Value val);
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_MEMREF_UTILS_SIMPLIFYVIEW_H
+#endif // BYTEIR_DIALECT_MEMREF_UTILS_LAYOUT_H

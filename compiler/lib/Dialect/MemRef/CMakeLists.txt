@@ -1,8 +1,9 @@
 add_mlir_dialect_library(ByteIRMemRefPasses
   Transforms/ApplyMemRefAffineLayout.cpp
-  Transforms/ReifyAlloc.cpp
+  Transforms/RemoveCopy.cpp
   Transforms/SimplifyView.cpp
   Utils/Layout.cpp
+  Utils/MemEffect.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/MemRef
@@ -17,6 +18,7 @@ add_mlir_dialect_library(ByteIRMemRefPasses
   ByteIRUtils
   MLIRIR
   MLIRAffineDialect
+  MLIRAnalysis
   MLIRMemRefDialect
   MLIRMemRefTransforms
   MLIRSupport

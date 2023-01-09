@@ -19,8 +19,8 @@
 
 #include "byteir/Dialect/Affine/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "byteir/Transforms/Passes.h"
-#include "byteir/Utils/PipelineUtils.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/Passes.h"
@@ -39,7 +39,7 @@ void mlir::createAffineOptPipeline(OpPassManager &pm) {
         pm.addPass(memref::createFoldMemRefAliasOpsPass());
         pm.addPass(createLowerAffinePass());
         pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
-        addCleanUpPassPipeline(pm);
+        addCleanUpExtPassPipeline(pm);
       },
       pm);
 }

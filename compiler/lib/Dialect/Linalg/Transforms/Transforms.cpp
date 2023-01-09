@@ -192,17 +192,17 @@ LogicalResult mlir::scf::isValidTiling(Operation *tiled) {
 }
 
 //===----------------------------------------------------------------------===//
-// checkCleanable
+// isResultLoopInvariant
 //===----------------------------------------------------------------------===//
 
-bool mlir::scf::checkCleanable(Operation *op, int64_t resultNumber,
-                               bool hasOneOrZeroUse, bool allParallel) {
+bool mlir::scf::isResultLoopInvariant(Operation *op, int64_t resultNumber,
+                                      bool hasOneOrZeroUse, bool allParallel) {
   if (op == nullptr)
     return false;
 
   if (auto linalgExtOp = dyn_cast<linalg_ext::LinalgExtOp>(op)) {
-    return linalgExtOp.isResultCleanable(resultNumber, hasOneOrZeroUse,
-                                         allParallel);
+    return linalgExtOp.isResultLoopInvariant(resultNumber, hasOneOrZeroUse,
+                                             allParallel);
   } else if (isa<linalg::LinalgOp>(op)) {
     return hasOneOrZeroUse && allParallel;
   }
@@ -314,6 +314,7 @@ mlir::linalg_ext::getLoopIteratorTypes(Operation *op,
                         ? utils::IteratorType::parallel
                         : tilingLoopIterType[iterAxis.value()];
       auto loopIdx = loopIV2Idx[argVal];
+
       if (retIterTys[loopIdx].has_value()) {
         if (retIterTys[loopIdx].value() != iterTy) {
           // detect more than one LoopIterType
@@ -330,10 +331,50 @@ mlir::linalg_ext::getLoopIteratorTypes(Operation *op,
 }
 
 //===----------------------------------------------------------------------===//
+// isValidFusibleProducerOp
+//===----------------------------------------------------------------------===//
+
+LogicalResult scf::isValidFusibleProducerOp(OpOperand &consumer,
+                                            Operation *fusibleProducerOp) {
+  if (auto linalgExtConsumerOp = dyn_cast<LinalgExtOp>(consumer.getOwner())) {
+    if (failed(linalgExtConsumerOp.isValidTiledProducerOp(
+            fusibleProducerOp, consumer.getOperandNumber()))) {
+      return failure();
+    }
+  } else if (auto linalgConsumerOp = dyn_cast<LinalgOp>(consumer.getOwner())) {
+    auto tiledOp = cast<TilingInterface>(consumer.getOwner());
+    if (involveReduction(*consumer.getOwner(),
+                         linalgConsumerOp.getIndexingMapsArray(),
+                         tiledOp.getLoopIteratorTypes())) {
+      // if there is a reduction and init shouldn't be fused
+      // [FIXME] (lwc) this might overkill
+      if (consumer.getOperandNumber() >= linalgConsumerOp.getNumDpsInputs()) {
+        return failure();
+      }
+    }
+  }
+  return success();
+}
+
+//===----------------------------------------------------------------------===//
 // tileConsumerAndFuseProducerUsingSCFForOpExt
 //===----------------------------------------------------------------------===//
 
 namespace {
+
+// confirm whether a fusion valid through `makeValidTiledConsumerOps`, and
+// `isValidFusibleProducerOp`
+LogicalResult confirmValidFusion(OpBuilder &b, OpResult unFusedProducer,
+                                 Operation *fusedProducerOp,
+                                 tensor::ExtractSliceOp slice) {
+  Operation *unFusedProducerOp = unFusedProducer.getOwner();
+  if (auto linalgExtUnfused = dyn_cast<LinalgExtOp>(unFusedProducerOp)) {
+    return linalgExtUnfused.makeValidTiledConsumerOps(
+        b, fusedProducerOp, unFusedProducer.getResultNumber());
+  }
+
+  return success();
+}
 
 /// Return the untiled producer whose slice is used in a tiled consumer. The
 /// method traverses the tile loop nest (`loops`) if needed, and returns the
@@ -586,13 +627,6 @@ static void getProducerAndConsumerTensorSlices(
   }
 }
 
-// check effective use, but skip dimOp from dynamic
-static bool hasOneOrZeroEffectiveUse(Value val) {
-  auto effectiveUseCnt = llvm::count_if(
-      val.getUsers(), [](Operation *op) { return !isa<tensor::DimOp>(op); });
-  return effectiveUseCnt <= 1;
-}
-
 } // namespace
 
 FailureOr<scf::SCFTileAndFuseResult>
@@ -644,27 +678,32 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
   //    effectively tiles + fuses the operations.
   auto addCandidateSlices = [](Operation *fusedOp,
                                std::deque<tensor::ExtractSliceOp> &candidates) {
-    for (Value operand : fusedOp->getOperands())
-      if (auto sliceOp = operand.getDefiningOp<tensor::ExtractSliceOp>())
+    for (auto &opOperand : fusedOp->getOpOperands()) {
+      if (failed(isValidFusibleProducerOp(opOperand, fusedOp))) {
+        continue;
+      }
+
+      if (auto sliceOp =
+              opOperand.get().getDefiningOp<tensor::ExtractSliceOp>()) {
         candidates.push_back(sliceOp);
+      }
+    }
   };
 
   std::deque<tensor::ExtractSliceOp> candidates;
   addCandidateSlices(tileAndFuseResult.tiledAndFusedOps.back(), candidates);
   OpBuilder::InsertionGuard g(rewriter);
   while (!candidates.empty()) {
-
     // 2a. Traverse the slices in BFS fashion.
     tensor::ExtractSliceOp candidateSliceOp = candidates.front();
-
     candidates.pop_front();
 
     // 2b. Get the producer of the source (potentially walking through
     // `iter_args` of nested `scf.for`)
-    auto [fusableProducer, destinationIterArg] =
+    auto [fusibleProducer, destinationIterArg] =
         getUntiledProducerFromSliceSource(&candidateSliceOp->getOpOperand(0),
                                           tileAndFuseResult.loops);
-    if (!fusableProducer) {
+    if (!fusibleProducer) {
       continue;
     }
 
@@ -673,19 +712,16 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
 
     FailureOr<Value> fusedProducerValue =
         tensor::replaceExtractSliceWithTiledProducer(rewriter, candidateSliceOp,
-                                                     fusableProducer);
+                                                     fusibleProducer);
 
     if (failed(fusedProducerValue)) {
       continue;
     }
 
-    Operation *unFusedProducerOp = fusableProducer.getOwner();
     Operation *fusedProducerOp = fusedProducerValue->getDefiningOp();
-    if (auto linalgExtUnfused = dyn_cast<LinalgExtOp>(unFusedProducerOp)) {
-      if (failed(linalgExtUnfused.correctTiledConsumerOps(
-              rewriter, fusedProducerOp, fusableProducer.getResultNumber()))) {
-        return failure();
-      }
+    if (failed(confirmValidFusion(rewriter, fusibleProducer, fusedProducerOp,
+                                  candidateSliceOp))) {
+      continue;
     }
 
     rewriter.replaceOp(candidateSliceOp, fusedProducerValue.value());
@@ -693,15 +729,15 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
     // Always create result slices here
     // Later in step 3, we will remove redundant ones
     if (failed(createResultSlices(
-            rewriter, fusableProducer.getOwner(), fusedProducerOp,
+            rewriter, fusibleProducer.getOwner(), fusedProducerOp,
             candidateSliceOp, tileAndFuseResult.loops,
             tileAndFuseResult.replacements, destinationIterArg))) {
       continue;
     }
 
     // put fused one in tileAndFuseResult
-    if (!tileAndFuseResult.fusedProducers.contains(fusableProducer.getOwner()))
-      tileAndFuseResult.fusedProducers.insert(fusableProducer.getOwner());
+    if (!tileAndFuseResult.fusedProducers.contains(fusibleProducer.getOwner()))
+      tileAndFuseResult.fusedProducers.insert(fusibleProducer.getOwner());
 
     // 2d. The operands of the fused producer might themselved be slices of
     //     values produced by operations that implement the `TilingInterface`.
@@ -765,12 +801,12 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
           *destinationIterArg.value());
     }
     if (iterArgNumber) {
-      int64_t resultNumber = fusableProducer.getResultNumber();
+      int64_t resultNumber = fusibleProducer.getResultNumber();
       if (auto dstOp = dyn_cast<DestinationStyleOpInterface>(
-              fusableProducer.getOwner())) {
+              fusibleProducer.getOwner())) {
         outerMostLoop.setIterArg(
             iterArgNumber.value(),
-            dstOp.getTiedOpOperand(fusableProducer)->get());
+            dstOp.getTiedOpOperand(fusibleProducer)->get());
       }
 
       if (auto dstOp = fusedProducerValue
@@ -781,9 +817,10 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
             innerMostLoop.getRegionIterArgs()[iterArgNumber.value()]);
       }
     }
-  }
 
-  // 3. clean loops args and unused loop carries
+  } // while (!candidates.empty())
+
+  // 3. clean up loops args and unused loop carries
 
   // collect all iterArgToOperand for quick access later
   // iterArgToOperand as mapping from Loop's RegionIterArgs to IterOperands
@@ -799,7 +836,6 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
   // check getLoopIteratorTypes for each fusedOp
   // if parallel, corresponding getRegionIterArgs will be simplified
   unsigned resultOffset = 0;
-
   for (const auto &en : llvm::enumerate(tileAndFuseResult.tiledAndFusedOps)) {
     auto fusedOp = en.value();
     bool isConsumer = en.index() == 0;
@@ -821,7 +857,6 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
     // get all producer and consumer slices' op and value
     getProducerAndConsumerTensorSlices(fusedOp, iterArgToOperand, opCollection,
                                        valCollection);
-
     assert(tileAndFuseResult.loops.size() > 0);
     for (unsigned i = 0; i < unfusedOp->getNumResults(); ++i) {
       auto result = unfusedOp->getResult(i);
@@ -834,7 +869,7 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
 
       bool hasOneOrZeroUseForExtract = effectiveUseCnt <= 1;
 
-      auto findParallel = [&](size_t loopCnt) {
+      auto confirmAllParallel = [&](size_t loopCnt) {
         bool allParallel = true;
         for (size_t idx = 0; idx <= loopCnt; ++idx) {
           auto &maybeIterTy = loopIterTypes.value()[idx];
@@ -852,12 +887,12 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
 
         auto &forOp = tileAndFuseResult.loops[loopIdx];
 
-        bool allParallel = findParallel(loopIdx);
+        bool confirmedAllParallel = confirmAllParallel(loopIdx);
 
         auto iterArg = forOp.getRegionIterArg(resultOffset + i);
         auto iterOperand = forOp.getIterOperands()[resultOffset + i];
-
-        if (checkCleanable(unfusedOp, i, hasOneOrZeroUseGeneral, allParallel)) {
+        if (isResultLoopInvariant(unfusedOp, i, hasOneOrZeroUseGeneral,
+                                  confirmedAllParallel)) {
           iterArg.replaceUsesWithIf(iterOperand, [&](OpOperand &use) {
             return (opCollection.contains(use.getOwner()) ||
                     valCollection.contains(use.get()));
@@ -865,8 +900,8 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
         }
 
         if (simplifyLoopIter &&
-            checkCleanable(unfusedOp, i, hasOneOrZeroUseForExtract,
-                           allParallel)) {
+            isResultLoopInvariant(unfusedOp, i, hasOneOrZeroUseForExtract,
+                                  confirmedAllParallel)) {
           iterArg.replaceUsesWithIf(iterOperand, [&](OpOperand &use) {
             return isa<tensor::ExtractSliceOp>(use.getOwner());
           });

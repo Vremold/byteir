@@ -1,3 +1,4 @@
+add_subdirectory(Common)
 add_subdirectory(GPU)
 add_subdirectory(Host)
 
@@ -19,6 +20,7 @@ add_mlir_library(ByteIRPipelines
   ByteIRGPUPipelines
   ByteIRHostPipelines
   ByteIRMhloPasses
+  ByteIRPipelineCommon
   ByteIRShapePasses
   ByteIRLinalgPasses
   ByteIRTransforms
@@ -27,6 +29,7 @@ add_mlir_library(ByteIRPipelines
   LINK_LIBS PUBLIC
   ByteIRGPUPipelines
   ByteIRHostPipelines
+  ByteIRPipelineCommon
   ByteIRUtils
   MLIRIR
   MLIRTransforms

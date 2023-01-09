@@ -21,7 +21,7 @@
 #include "byteir/Dialect/Linalg/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Dialect/mhlo/Transforms/HloFuser.h"
-#include "byteir/Utils/PipelineUtils.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "mlir-hlo/Transforms/passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Transforms/Passes.h"
@@ -83,7 +83,7 @@ void createMatmulEpilogueGPUPipelineImpl(OpPassManager &pm,
                                          const std::string &target) {
   pm.addPass(std::make_unique<MatmulEpilogueGPUPipelinePreprocessPass>());
   pm.addNestedPass<func::FuncOp>(createLinalgScopeTilingPass(0, 2));
-  addCleanUpPassPipeline(pm);
+  addCleanUpExtPassPipeline(pm);
 }
 
 } // namespace

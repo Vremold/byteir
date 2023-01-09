@@ -1,13 +1,10 @@
-add_mlir_library(ByteIRGPUPipelines
-  GPUOpt.cpp
-  LinalgMemrefGPU.cpp
-  NVVMCodegen.cpp
+add_mlir_library(ByteIRPipelineCommon
+  Utils.cpp
 
   ADDITIONAL_HEADER_DIRS
-  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Pipelines/GPU
+  ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Pipelines/Common
 
   DEPENDS
-  ByteIRPipelineCommon
   ByteIRTransforms
   ByteIRUtils
   MhloDialect
@@ -15,10 +12,8 @@ add_mlir_library(ByteIRGPUPipelines
 
   LINK_LIBS PUBLIC
   ByteIRLinalgPasses
-  ByteIRPipelineCommon
   ByteIRUtils
   ByteIRSCFPasses
-  ByteIRToPTX
   MLIRIR
   MLIRTransforms
 )

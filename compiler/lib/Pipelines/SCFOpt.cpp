@@ -18,8 +18,8 @@
 #include "byteir/Pipelines/SCFOpt.h"
 
 #include "byteir/Dialect/mhlo/Passes.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "byteir/Transforms/Passes.h"
-#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"
@@ -38,7 +38,7 @@ void mlir::createSCFOptPipeline(OpPassManager &pm) {
         pm.addPass(createLowerAffinePass());
         pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
         pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
-        addCleanUpPassPipeline(pm);
+        addCleanUpExtPassPipeline(pm);
       },
       pm);
 }

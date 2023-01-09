@@ -378,6 +378,18 @@ def LinalgExtInterface : OpInterface<"LinalgExtOp"> {
         return {};
       }]
     >,
+      InterfaceMethod<
+      /*desc=*/[{
+        Return whether operand is a read
+      }],
+      /*retTy=*/"bool",
+      /*methodName=*/"isOperandRead",
+      /*args=*/(ins "unsigned":$number),
+      /*methodBody=*/"",
+      /*defaultImplementation=*/[{
+        return number < getNumInputs();
+      }]
+    >,
     //===------------------------------------------------------------------===//
     // Non input and output operands handling
     //===------------------------------------------------------------------===//
@@ -423,13 +435,12 @@ def LinalgExtInterface : OpInterface<"LinalgExtOp"> {
     >,
     InterfaceMethod<
       /*desc=*/[{
-        Rewriting consumer's operands, given a fused op (a fused vserion of `this`),
-        a result offset, a operand 
+        Return whether a producer op is valid with this op (as a consumer). 
       }],
       /*retTy=*/"LogicalResult",
-      /*methodName=*/"correctTiledConsumerOps",
-      /*args=*/(ins "OpBuilder &":$b, "Operation *": $fused, 
-                    "int64_t": $offset),
+      /*methodName=*/"isValidTiledProducerOp",
+      /*args=*/(ins "Operation *": $fusedProducer, 
+                    "unsigned": $consumerOperandNumber),
       /*methodBody=*/"",
       /*defaultImplementation=*/[{
         return success();
@@ -437,10 +448,26 @@ def LinalgExtInterface : OpInterface<"LinalgExtOp"> {
     >,
     InterfaceMethod<
       /*desc=*/[{
-        Returning whether results are cleanable
+        Return whether fused consumer ops are valid with this op (as an unfused producer) 
+        through this function. 
+        If so, modify it whether it is needed and return a success. 
+        If not, directly return a failure. 
+      }],
+      /*retTy=*/"LogicalResult",
+      /*methodName=*/"makeValidTiledConsumerOps",
+      /*args=*/(ins "OpBuilder &":$b, "Operation *": $fusedProducer, 
+                    "unsigned": $producerResultNumber),
+      /*methodBody=*/"",
+      /*defaultImplementation=*/[{
+        return success();
+      }]
+    >,
+    InterfaceMethod<
+      /*desc=*/[{
+        Return whether result is loop invariant during tiling
       }],
       /*retTy=*/"bool",
-      /*methodName=*/"isResultCleanable",
+      /*methodName=*/"isResultLoopInvariant",
       /*args=*/(ins "int64_t": $number, "bool": $hasOneOrZeroUse, "bool": $allParallel),
       /*methodBody=*/"",
       /*defaultImplementation=*/[{

@@ -48,6 +48,9 @@ Value getDimValue(OpBuilder &builder, Location loc, Value v, int64_t dim);
 /// `dim`. If the shape is constant, returns the shape as an `IntegerAttr`.
 OpFoldResult getDim(OpBuilder &builder, Location loc, Value v, int64_t dim);
 
+bool involveReduction(Operation &tiled, ArrayRef<mlir::AffineMap> indexingMaps,
+                      ArrayRef<utils::IteratorType> loopIteratorTypes);
+
 } // namespace linalg_ext
 } // namespace mlir
 

@@ -19,13 +19,16 @@
 
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
 #include "byteir/Dialect/Ace/Passes.h"
-#include "byteir/Utils/PipelineUtils.h"
+#include "byteir/Dialect/Linalg/Passes.h"
+#include "byteir/Dialect/MemRef/Passes.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "mlir-hlo/Transforms/passes.h"
+#include "mlir/Dialect/Arith/Transforms/Passes.h"
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Dialect/SCF/Transforms/Passes.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
+#include "mlir/Dialect/Vector/Transforms/Passes.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
@@ -38,13 +41,18 @@ void mlir::createByteIRTotalBufferizePipeline(OpPassManager &pm) {
         pm.addNestedPass<func::FuncOp>(
             bufferization::createEmptyTensorToAllocTensorPass());
         pm.addNestedPass<func::FuncOp>(createAceBufferizePass());
+        pm.addNestedPass<func::FuncOp>(arith::createArithBufferizePass());
         pm.addNestedPass<func::FuncOp>(createSCFBufferizePass());
+        pm.addNestedPass<func::FuncOp>(vector::createVectorBufferizePass());
+        pm.addNestedPass<func::FuncOp>(createLinalgExtBufferizePass());
         pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
-        pm.addNestedPass<func::FuncOp>(createLinalgBufferizePass());
-        addCleanUpPassPipeline(pm);
-        // clean-up possible redudant copy-removal from bufferization
-        // TODO: enable it after fixing crash
-        // pm.addNestedPass<func::FuncOp>(createCopyRemovalPass());
+        addCleanUpExtPassPipeline(pm);
+
+        // clean-up possible redudant copy from bufferization
+        pm.addNestedPass<func::FuncOp>(createRemoveCopyPass());
+        addCleanUpExtPassPipeline(pm);
+        pm.addNestedPass<func::FuncOp>(createRemoveCopyPass());
+        addCleanUpExtPassPipeline(pm);
       },
       pm);
 }

@@ -96,26 +96,6 @@ static AffineMap getMultiDimIdentityMapWithSkip(unsigned numDims, unsigned skip,
                         context);
 }
 
-static void getEffectsImpl(
-    SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
-        &effects,
-    ValueRange results, ValueRange inputBuffers, ValueRange outputBuffers) {
-  for (Value value : results) {
-    effects.emplace_back(MemoryEffects::Allocate::get(), value,
-                         SideEffects::DefaultResource::get());
-  }
-  for (Value value : inputBuffers) {
-    effects.emplace_back(MemoryEffects::Read::get(), value,
-                         SideEffects::DefaultResource::get());
-  }
-  for (Value value : outputBuffers) {
-    effects.emplace_back(MemoryEffects::Read::get(), value,
-                         SideEffects::DefaultResource::get());
-    effects.emplace_back(MemoryEffects::Write::get(), value,
-                         SideEffects::DefaultResource::get());
-  }
-}
-
 /// Returns a memref.subview or a tensor.extract_slice based on the type of the
 /// `source`.
 static Value getSlice(OpBuilder &b, Location loc, Value source,
@@ -158,6 +138,52 @@ OpFoldResult mlir::linalg_ext::getDim(OpBuilder &builder, Location loc, Value v,
     return getDimValue(builder, loc, v, dim);
   }
   return builder.getI64IntegerAttr(t.getDimSize(dim));
+}
+
+/// Return whether if involved iterAxes includes dim,
+bool mlir::linalg_ext::involveReduction(
+    Operation &tiled, ArrayRef<mlir::AffineMap> indexingMaps,
+    ArrayRef<utils::IteratorType> loopIteratorTypes) {
+  for (const auto &en : llvm::enumerate(tiled.getOperands())) {
+    llvm::SmallVector<::mlir::OpFoldResult, 4> mixedOffsets;
+
+    if (auto sliceOp = en.value().getDefiningOp<tensor::ExtractSliceOp>()) {
+      mixedOffsets = sliceOp.getMixedOffsets();
+    } else if (auto subviewOp = en.value().getDefiningOp<memref::SubViewOp>()) {
+      mixedOffsets = subviewOp.getMixedOffsets();
+    } else {
+      continue;
+    }
+
+    auto indexingMap = indexingMaps[en.index()];
+    for (const auto &en2 : llvm::enumerate(mixedOffsets)) {
+      auto value = en2.value().dyn_cast<Value>();
+      if (!value) {
+        // since not a value, it implies not a loop arg
+        continue;
+      }
+
+      auto iterArg = value.dyn_cast<BlockArgument>();
+      if (!iterArg || !isa<scf::ForOp>(iterArg.getOwner()->getParentOp())) {
+        // since not a BlockArgument or owner is a loop,
+        // it implies not a loop arg
+        continue;
+      }
+
+      FailureOr<unsigned> iterAxis =
+          getIterAxisFromDim(indexingMap, en2.index());
+
+      if (failed(iterAxis)) {
+        continue;
+      }
+
+      if (loopIteratorTypes[iterAxis.value()] ==
+          utils::IteratorType::reduction) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 //////////////////////////////
@@ -432,51 +458,6 @@ LogicalResult mlir::linalg_ext::ScanOp::getResultTilePosition(
 //////////////////////////////
 
 namespace {
-/// Return success if involved iterAxes includes dim,
-/// Return failure otherwise
-/// TODO move this to public
-bool involveReduction(Operation &op, ArrayRef<mlir::AffineMap> indexingMaps,
-                      ArrayRef<utils::IteratorType> loopIteratorTypes) {
-  for (const auto &en : llvm::enumerate(op.getOperands())) {
-    llvm::SmallVector<::mlir::OpFoldResult, 4> mixedOffsets;
-
-    if (auto sliceOp = en.value().getDefiningOp<tensor::ExtractSliceOp>()) {
-      mixedOffsets = sliceOp.getMixedOffsets();
-    } else if (auto subviewOp = en.value().getDefiningOp<memref::SubViewOp>()) {
-      mixedOffsets = subviewOp.getMixedOffsets();
-    } else {
-      continue;
-    }
-
-    auto indexingMap = indexingMaps[en.index()];
-    for (const auto &en2 : llvm::enumerate(mixedOffsets)) {
-      auto value = en2.value().dyn_cast<Value>();
-      if (!value) {
-        // since not a value, it implies not a loop arg
-        continue;
-      }
-
-      auto iterArg = value.dyn_cast<BlockArgument>();
-      if (!iterArg || !isa<scf::ForOp>(iterArg.getOwner()->getParentOp())) {
-        // since not a BlockArgument or owner is a loop,
-        // it implies not a loop arg
-        continue;
-      }
-
-      FailureOr<unsigned> iterAxis =
-          getIterAxisFromDim(indexingMap, en2.index());
-
-      if (failed(iterAxis))
-        continue;
-
-      if (loopIteratorTypes[iterAxis.value()] ==
-          utils::IteratorType::reduction) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
 mlir::LogicalResult validSoftmaxConsumer(Operation *op) {
   if (op == nullptr)
@@ -505,12 +486,16 @@ Value getSoftmaxScaleDiagMatmul(OpBuilder &b, mlir::Location loc,
         b.create<linalg_ext::DiagOp>(loc, scale, scaleEmpty.getResult());
     auto consumerEmpty =
         b.create<tensor::EmptyOp>(loc, consumerTensorTy, ValueRange{});
+    Value zeroVal = b.createOrFold<arith::ConstantOp>(
+        loc, b.getZeroAttr(consumerTensorTy.getElementType()));
+    auto filledTensor = b.create<linalg::FillOp>(loc, ValueRange{zeroVal},
+                                                 ValueRange{consumerEmpty});
 
     SmallVector<Value> scaleMatmulInputs;
     scaleMatmulInputs.push_back(diag->getResult(0));
     scaleMatmulInputs.push_back(consumerOutput);
     auto scaleMatmul = b.create<linalg::MatmulOp>(loc, scaleMatmulInputs,
-                                                  consumerEmpty->getResults());
+                                                  filledTensor->getResults());
 
     return scaleMatmul->getResult(0);
   }
@@ -518,12 +503,12 @@ Value getSoftmaxScaleDiagMatmul(OpBuilder &b, mlir::Location loc,
   return Value();
 }
 
-void rewriteSoftmaxFusedConsumer(OpBuilder &b, SoftmaxOp fused, int64_t offset,
+void rewriteSoftmaxFusedConsumer(OpBuilder &b, SoftmaxOp fused, Value result,
                                  Operation *consumer) {
   if (consumer == nullptr)
     return;
 
-  auto result = fused.getResult(offset);
+  // auto result = fused.getResult(resultNumber);
   b.setInsertionPoint(consumer);
   auto loc = consumer->getLoc();
   if (auto linaglOp = dyn_cast<linalg::LinalgOp>(consumer)) {
@@ -538,15 +523,14 @@ void rewriteSoftmaxFusedConsumer(OpBuilder &b, SoftmaxOp fused, int64_t offset,
 }
 
 void rewriteSoftmaxFusedConsumers(OpBuilder &b, Operation *unfused,
-                                  SoftmaxOp fused, int64_t offset) {
+                                  SoftmaxOp fused, Value result) {
   if (unfused == nullptr)
     return;
 
-  auto result = unfused->getResult(offset);
   for (auto user : result.getUsers()) {
     if (auto sliceOp = dyn_cast<tensor::ExtractSliceOp>(user)) {
       for (auto sliceUser : sliceOp.getResult().getUsers()) {
-        rewriteSoftmaxFusedConsumer(b, fused, offset, sliceUser);
+        rewriteSoftmaxFusedConsumer(b, fused, result, sliceUser);
       }
     }
   }
@@ -569,14 +553,15 @@ mlir::LogicalResult validSoftmaxFusedConsumer(Operation *op) {
 
 /// This is too conservative
 /// TODO extend this
-mlir::LogicalResult checkSoftmaxConsumers(Operation *unfused, int64_t offset) {
+mlir::LogicalResult checkSoftmaxConsumer(Operation *unfused,
+                                         unsigned resultNumber) {
 
   if (unfused == nullptr)
     return failure();
 
-  // particular result given an offset
+  // particular result given an resultNumber
   for (const auto &opResult : unfused->getOpResults()) {
-    if (opResult.getResultNumber() == offset) {
+    if (opResult.getResultNumber() == resultNumber) {
       if (useCount(opResult) != 2) {
         // 2 as 1 consumer before fused and 1 from fused but not replaced value
         // this might be too conservative
@@ -596,7 +581,7 @@ mlir::LogicalResult checkSoftmaxConsumers(Operation *unfused, int64_t offset) {
       }
     } else {
       if (useCount(opResult) != 0) {
-        // this might be too conservative
+        // FIXME: (lwc) this might be too conservative
         return failure();
       }
     } // if opResult.getResultNumber() == offset
@@ -696,33 +681,58 @@ LogicalResult mlir::linalg_ext::SoftmaxOp::isValidTiling(Operation *tiled) {
   return success();
 }
 
-LogicalResult mlir::linalg_ext::SoftmaxOp::correctTiledConsumerOps(
-    OpBuilder &b, Operation *fused, int64_t offset) {
-  if (fused == nullptr)
+LogicalResult mlir::linalg_ext::SoftmaxOp::isValidTiledProducerOp(
+    Operation * /*fusibleProducer*/, unsigned consumerOperandNumber) {
+
+  if (involveReduction(*getOperation(), getIndexingMapsArray(),
+                       getLoopIteratorTypes())) {
+    // if `2` as max, and `3` as accumulator,
+    // return failure when it is reduction
+    if (consumerOperandNumber == 2 || consumerOperandNumber == 3) {
+      return failure();
+    }
+  }
+  return success();
+}
+
+LogicalResult mlir::linalg_ext::SoftmaxOp::makeValidTiledConsumerOps(
+    OpBuilder &b, Operation *fusedProducerOp, unsigned producerResultNumber) {
+  if (fusedProducerOp == nullptr)
     return failure();
 
-  // check involving getDimension axis
-  if (!involveReduction(*fused, getIndexingMapsArray(),
+  // check whehther involveReduction
+  if (!involveReduction(*fusedProducerOp, getIndexingMapsArray(),
                         getLoopIteratorTypes())) {
-    return failure();
+    // if not reduction, directly return a success without modifying anything
+    return success();
   }
 
   auto op = getOperation();
   // check consumer
-  if (failed(checkSoftmaxConsumers(op, offset))) {
+  if (failed(checkSoftmaxConsumer(op, producerResultNumber))) {
     return failure();
   }
 
   // rewrite all fused consumers
-  auto fusedSoftmax = cast<SoftmaxOp>(fused);
-  rewriteSoftmaxFusedConsumers(b, op, fusedSoftmax, offset);
+  auto fusedSoftmax = cast<SoftmaxOp>(fusedProducerOp);
+  rewriteSoftmaxFusedConsumers(b, op, fusedSoftmax,
+                               op->getResult(producerResultNumber));
 
   return success();
 }
 
-bool mlir::linalg_ext::SoftmaxOp::isResultCleanable(int64_t number,
-                                                    bool hasOneOrZeroUse,
-                                                    bool allParallel) {
+bool mlir::linalg_ext::SoftmaxOp::isOperandRead(unsigned number) {
+  if (number == 0 || number == 2 || number == 3) {
+    // input and max, accumulator
+    return true;
+  }
+  // output and scale
+  return false;
+}
+
+bool mlir::linalg_ext::SoftmaxOp::isResultLoopInvariant(int64_t number,
+                                                        bool hasOneOrZeroUse,
+                                                        bool allLoopParallel) {
   assert(number < 4);
 
   if (number == 0) {
@@ -730,7 +740,7 @@ bool mlir::linalg_ext::SoftmaxOp::isResultCleanable(int64_t number,
   } else if (number == 3) {
     return true;
   } else if (number == 1 || number == 2) {
-    return allParallel;
+    return allLoopParallel;
   }
   return false;
 }
@@ -809,6 +819,7 @@ ArrayAttr mlir::linalg_ext::SoftmaxOp::getIndexingMaps() {
 
 SmallVector<Range> mlir::linalg_ext::SoftmaxOp::getIterationDomain(
     class mlir::OpBuilder &builder) {
+
   Location loc = getLoc();
   Value zero = builder.create<arith::ConstantIndexOp>(loc, 0);
   Value one = builder.create<arith::ConstantIndexOp>(loc, 1);
@@ -933,14 +944,40 @@ LogicalResult mlir::linalg_ext::SoftmaxOp::getResultTilePosition(
   return failure();
 }
 
+namespace {
+static void getEffectsImpl(
+    LinalgExtOp linalgExtOp,
+    SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>
+        &effects,
+    ValueRange results, OpOperandVector inputBuffers,
+    OpOperandVector outputBuffers) {
+  for (Value value : results) {
+    effects.emplace_back(MemoryEffects::Allocate::get(), value,
+                         SideEffects::DefaultResource::get());
+  }
+  for (auto opOperand : inputBuffers) {
+    effects.emplace_back(MemoryEffects::Read::get(), opOperand->get(),
+                         SideEffects::DefaultResource::get());
+  }
+  for (auto opOperand : outputBuffers) {
+    Value value = opOperand->get();
+    if (linalgExtOp.isOperandRead(opOperand->getOperandNumber())) {
+      effects.emplace_back(MemoryEffects::Read::get(), value,
+                           SideEffects::DefaultResource::get());
+    }
+    effects.emplace_back(MemoryEffects::Write::get(), value,
+                         SideEffects::DefaultResource::get());
+  }
+}
+} // namespace
+
 #define DEFINE_OP_GET_EFFECTS(OP_NAME)                                         \
   void OP_NAME::getEffects(                                                    \
       SmallVectorImpl<SideEffects::EffectInstance<MemoryEffects::Effect>>      \
           &effects) {                                                          \
-    SmallVector<Value> inputBuffers = getInputBufferOperands();                \
-    SmallVector<Value> outputBuffers = getOutputBufferOperands();              \
-    getEffectsImpl(effects, getOperation()->getResults(), inputBuffers,        \
-                   outputBuffers);                                             \
+    auto linalgExtOp = cast<LinalgExtOp>(getOperation());                      \
+    getEffectsImpl(linalgExtOp, effects, getOperation()->getResults(),         \
+                   getInputBufferOperands(), getOutputBufferOperands());       \
   }
 
 DEFINE_OP_GET_EFFECTS(CustomOp)
@@ -1035,7 +1072,6 @@ struct FoldTensorCastOp : public OpInterfaceRewritePattern<LinalgExtOp> {
     return success();
   }
 };
-
 } // namespace
 
 void mlir::linalg_ext::LinalgExtDialect::getCanonicalizationPatterns(

@@ -29,6 +29,10 @@ namespace arith {
 class ArithDialect;
 } // namespace arith
 
+namespace bufferization {
+class BufferizationDialect;
+} // namespace bufferization
+
 namespace func {
 class FuncOp;
 } // namespace func

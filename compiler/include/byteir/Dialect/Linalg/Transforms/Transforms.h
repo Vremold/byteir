@@ -60,8 +60,11 @@ void labelTileLoopType(Operation *op, ArrayRef<scf::ForOp> loops);
 
 LogicalResult isValidTiling(Operation *tiled);
 
-bool checkCleanable(Operation *op, int64_t resultNumber, bool hasOneOrZeroUse,
-                    bool allParallel);
+LogicalResult isValidFusibleProducerOp(OpOperand &consumer,
+                                       Operation *fusibleProducerOp);
+
+bool isResultLoopInvariant(Operation *op, int64_t resultNumber,
+                           bool hasOneOrZeroUse, bool allParallel);
 
 } // namespace scf
 

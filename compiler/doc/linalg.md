@@ -159,15 +159,114 @@ func.func @input_sharing(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>, %arg2: 
 ## Linalg-ext Op Extension
 ### Alias Op
 Linalg-ext alias op is introduced as an auxiliary op to help input-sharing fusion. 
-Alias op is not a structured op, and has no interface like `LoopIteratorType`. 
-Alias op typically happens internally within a pass, and happens in a generic op.
+It happens internally within a pass, and typically in a generic op. 
+It would not be eliminated in a canonicalizer, and it is only removed through `populateRemoveLinalgExtAliasPattern`.
+Note Alias op is not a structured op, and has no interface like `LoopIteratorType`. 
 
 ### Diag Op
+Linalg-ext diag op is introduced to present a diagonal matrix.
+It is a structured op, but currently only used as an output IR, often operating with a matmul.
+Depending on backends, a matmul with a diag op typically can be rewritten into
+1. a matmul with a reduced-load matrix
+2. a sparse matmul
+3. an elementwise mul with a broadcast
+
+Spec:
+- Operands:
+  - input: Tensor with a shape of N
+- Inits/Results:
+  - output: Tensor with a shape of N x N
 
 ### Softmax Op
+Linalg-ext softmax op is introduced to present a softmax pattern
+It is a structured op.
 
-#### Flash attention using Softmax
+Spec:
+- Operands:
+  - input: Tensor with a dim of N
+- Attrs
+  - dimension: I64ArrayAttr
+- Inits/Results:
+  - output: Tensor with a dim of N, ```output_result = exp(input - max_result) / accumulator_result```
+  - max: Tensor with a dim of N - 1, ```max_result = max(max(input, dimension), max_init)```
+  - accumulator: Tensor with a dim of N - 1, ```accumulator_result = accumulator_init * exp(max_init - max_result) + sum(exp(input - max_result), dimension)```
+  - scale: Tensor with a dim of N - 1, ```scale_result = accumulator_init * exp(max_init - max_result) / accumulator_result```
 
+Here, Operand `1`, max is defined as ```max_result = max(max(input, dimension), max_init)```. 
+Basically, it is a `reduce_max` of `input` along a dimension `dimension` with a initial value `max_init`.
+Operand `2`, accumulator is defined as ```accumulator_result = accumulator_init * exp(max_init - max_result) + sum(exp(input - max_result), dimension)```
+Basically, it is a `reduce_sum` of `exp(input - max_result)` along a dimension `dimension` with a initial value `accumulator_init * exp(max_init - max_result)`.
+Operand `3`, scale is defined as ```scale_result = accumulator_init * exp(max_init - max_result) / accumulator_result```.
+Finally, Operand `0`, output is defined as ```output_result = exp(input - max_result) / accumulator_result```. 
 
+#### Flash attention example
+Here, we demonstrate how to reach [flash attention](https://arxiv.org/abs/2205.14135) in a regular self attention.
+In ByteIR, flash attention can be reached from a regular self attention presenting in linalg or linalg-ext ops, such as `matmul` and `softmax`, through just linalg-ext `fuse transformation` of  with proper tiling parameters, proper `tile_sizes` to fully utilize on-chip memory and `tile_interchange` of [2, 1, 0].
 
+```
+// input.mlir
+func.func @dot_attention(%arg0: tensor<1024x32xf32>, %arg1: tensor<32x512xf32>, %arg2: tensor<512x32xf32>) -> tensor<1024x32xf32> {
+  %cst = arith.constant 0.000000e+00 : f32
+  %cst_0 = arith.constant 0xFF800000 : f32
+  %0 = tensor.empty() : tensor<1024x512xf32>
+  %1 = tensor.empty() : tensor<1024x32xf32>
+  %2 = tensor.empty() : tensor<1024x512xf32>
+  %3 = tensor.empty() : tensor<1024xf32>
+  %4 = tensor.empty() : tensor<1024xf32>
+  %5 = tensor.empty() : tensor<1024xf32>
+  %6 = linalg.fill ins(%cst_0 : f32) outs(%3 : tensor<1024xf32>) -> tensor<1024xf32>
+  %7 = linalg.fill ins(%cst : f32) outs(%0 : tensor<1024x512xf32>) -> tensor<1024x512xf32>
+  %8 = linalg.fill ins(%cst : f32) outs(%1 : tensor<1024x32xf32>) -> tensor<1024x32xf32>
+  %9 = linalg.fill ins(%cst : f32) outs(%4 : tensor<1024xf32>) -> tensor<1024xf32>
+  %10 = linalg.matmul ins(%arg0, %arg1 : tensor<1024x32xf32>, tensor<32x512xf32>) outs(%7 : tensor<1024x512xf32>) -> tensor<1024x512xf32>
+  %11:4 = linalg_ext.softmax dimension(1) ins(%10 : tensor<1024x512xf32>) outs(%2, %6, %9, %5 : tensor<1024x512xf32>, tensor<1024xf32>, tensor<1024xf32>, tensor<1024xf32>) : tensor<1024x512xf32>, tensor<1024xf32>, tensor<1024xf32>, tensor<1024xf32>
+  %12 = linalg.matmul {__root__} ins(%11#0, %arg2 : tensor<1024x512xf32>, tensor<512x32xf32>) outs(%8 : tensor<1024x32xf32>) -> tensor<1024x32xf32>
+  return %12 : tensor<1024x32xf32>
+}
 
+// result after transform.structured.fuse_ext {tile_interchange = [2, 1, 0], tile_sizes = [4, 0, 8]}
+func.func @dot_attention(%arg0: tensor<1024x32xf32>, %arg1: tensor<32x512xf32>, %arg2: tensor<512x32xf32>) -> tensor<1024x32xf32> {
+  %c1024 = arith.constant 1024 : index
+  %c512 = arith.constant 512 : index
+  %c0 = arith.constant 0 : index
+  %cst = arith.constant 0.000000e+00 : f32
+  %cst_0 = arith.constant 0xFF800000 : f32
+  %c4 = arith.constant 4 : index
+  %c8 = arith.constant 8 : index
+  %0 = tensor.empty() : tensor<1024x32xf32>
+  %1 = tensor.empty() : tensor<1024xf32>
+  %2 = tensor.empty() : tensor<1024xf32>
+  %3 = linalg.fill ins(%cst_0 : f32) outs(%1 : tensor<1024xf32>) -> tensor<1024xf32>
+  %4 = linalg.fill ins(%cst : f32) outs(%0 : tensor<1024x32xf32>) -> tensor<1024x32xf32>
+  %5 = linalg.fill ins(%cst : f32) outs(%2 : tensor<1024xf32>) -> tensor<1024xf32>
+  %6:3 = scf.for %arg3 = %c0 to %c512 step %c8 iter_args(%arg4 = %4, %arg5 = %3, %arg6 = %5) -> (tensor<1024x32xf32>, tensor<1024xf32>, tensor<1024xf32>) {
+    %7:3 = scf.for %arg7 = %c0 to %c1024 step %c4 iter_args(%arg8 = %arg4, %arg9 = %arg5, %arg10 = %arg6) -> (tensor<1024x32xf32>, tensor<1024xf32>, tensor<1024xf32>) {
+      %extracted_slice = tensor.extract_slice %arg0[%arg7, 0] [4, 32] [1, 1] : tensor<1024x32xf32> to tensor<4x32xf32>
+      %extracted_slice_1 = tensor.extract_slice %arg1[0, %arg3] [32, 8] [1, 1] : tensor<32x512xf32> to tensor<32x8xf32>
+      %8 = tensor.empty() : tensor<4x8xf32>
+      %9 = linalg.fill ins(%cst : f32) outs(%8 : tensor<4x8xf32>) -> tensor<4x8xf32>
+      %10 = linalg.matmul ins(%extracted_slice, %extracted_slice_1 : tensor<4x32xf32>, tensor<32x8xf32>) outs(%9 : tensor<4x8xf32>) -> tensor<4x8xf32>
+      %11 = tensor.empty() : tensor<4x8xf32>
+      %extracted_slice_2 = tensor.extract_slice %arg9[%arg7] [4] [1] : tensor<1024xf32> to tensor<4xf32>
+      %extracted_slice_3 = tensor.extract_slice %arg10[%arg7] [4] [1] : tensor<1024xf32> to tensor<4xf32>
+      %12 = tensor.empty() : tensor<4xf32>
+      %13:4 = linalg_ext.softmax dimension(1) ins(%10 : tensor<4x8xf32>) outs(%11, %extracted_slice_2, %extracted_slice_3, %12 : tensor<4x8xf32>, tensor<4xf32>, tensor<4xf32>, tensor<4xf32>) : tensor<4x8xf32>, tensor<4xf32>, tensor<4xf32>, tensor<4xf32>
+      %extracted_slice_4 = tensor.extract_slice %arg2[%arg3, 0] [8, 32] [1, 1] : tensor<512x32xf32> to tensor<8x32xf32>
+      %extracted_slice_5 = tensor.extract_slice %arg8[%arg7, 0] [4, 32] [1, 1] : tensor<1024x32xf32> to tensor<4x32xf32>
+      %14 = tensor.empty() : tensor<4x4xf32>
+      %15 = linalg_ext.diag ins(%13#3 : tensor<4xf32>) outs(%14 : tensor<4x4xf32>) : tensor<4x4xf32>
+      %16 = tensor.empty() : tensor<4x32xf32>
+      %17 = linalg.fill ins(%cst : f32) outs(%16 : tensor<4x32xf32>) -> tensor<4x32xf32>
+      %18 = linalg.matmul ins(%15, %extracted_slice_5 : tensor<4x4xf32>, tensor<4x32xf32>) outs(%17 : tensor<4x32xf32>) -> tensor<4x32xf32>
+      %19 = linalg.matmul {__root__} ins(%13#0, %extracted_slice_4 : tensor<4x8xf32>, tensor<8x32xf32>) outs(%18 : tensor<4x32xf32>) -> tensor<4x32xf32>
+      %inserted_slice = tensor.insert_slice %19 into %arg8[%arg7, 0] [4, 32] [1, 1] : tensor<4x32xf32> into tensor<1024x32xf32>
+      %inserted_slice_6 = tensor.insert_slice %13#1 into %arg9[%arg7] [4] [1] : tensor<4xf32> into tensor<1024xf32>
+      %inserted_slice_7 = tensor.insert_slice %13#2 into %arg10[%arg7] [4] [1] : tensor<4xf32> into tensor<1024xf32>
+      scf.yield %inserted_slice, %inserted_slice_6, %inserted_slice_7 : tensor<1024x32xf32>, tensor<1024xf32>, tensor<1024xf32>
+    }
+    scf.yield %7#0, %7#1, %7#2 : tensor<1024x32xf32>, tensor<1024xf32>, tensor<1024xf32>
+  }
+  return %6#0 : tensor<1024x32xf32>
+}
+
+```

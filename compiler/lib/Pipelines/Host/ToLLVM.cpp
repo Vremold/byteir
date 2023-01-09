@@ -18,7 +18,7 @@
 #include "byteir/Pipelines/Host/ToLLVM.h"
 
 #include "byteir/Conversion/ToLLVM/ToLLVM.h"
-#include "byteir/Utils/PipelineUtils.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
 #include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"

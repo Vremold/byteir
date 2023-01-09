@@ -18,8 +18,8 @@
 #include "byteir/Pipelines/ByreHost.h"
 
 #include "byteir/Dialect/Byre/ByreDialect.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "byteir/Transforms/Passes.h"
-#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 

@@ -2,7 +2,6 @@
 
 #map = affine_map<(d0, d1)[s0] -> (d0 * 64 + s0 + d1)>
 
-
 func.func private @matmul_tiled_1(%arg0: memref<128x64xf32>, %arg1: memref<64x64xf32>, %arg2: memref<128x64xf32>) attributes {__byteir_to_gpu__} {
   %c0 = arith.constant 0 : index
   %c8 = arith.constant 8 : index

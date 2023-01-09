@@ -22,8 +22,8 @@
 #include "byteir/Dialect/Affine/Passes.h"
 #include "byteir/Dialect/SCF/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
+#include "byteir/Pipelines/Common/Utils.h"
 #include "byteir/Transforms/Passes.h"
-#include "byteir/Utils/PipelineUtils.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/GPU/Transforms/Passes.h"
@@ -70,14 +70,14 @@ void createGPUOptPipelineImpl(OpPassManager &pm, const std::string &target) {
 
   pm.addPass(createConvertFuncToGPUPass(/*bs=*/{128, 1, 1}));
 
-  addCleanUpPassPipeline(pm);
+  addCleanUpExtPassPipeline(pm);
   pm.addNestedPass<func::FuncOp>(createGenPTXConfigPass());
 
   // soft-deprecated the following, since LoopFusionPass is buggy
   /*
   pm.addNestedPass<func::FuncOp>(createRewriteAffineToMemrefPass());
   pm.addNestedPass<func::FuncOp>(createCoalescedForToGPULaunchPass(128));
-  addCleanUpPassPipeline(pm);
+  addCleanUpExtPassPipeline(pm);
   pm.addPass(createLowerAffinePass());
   pm.addPass(createGpuLauchSinkIndexComputationsPass());
   pm.addPass(createGpuKernelOutliningPass());

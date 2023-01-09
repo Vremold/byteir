@@ -30,14 +30,16 @@ def ApplyMemRefAffineLayout : Pass<"apply-memref-affine-layout", "func::FuncOp">
   let constructor = "mlir::createApplyMemRefAffineLayoutPass()";
 }
 
-
 //===----------------------------------------------------------------------===//
-// Reify Alloc (deprecated, using canonicalize instead) 
+// RemoveCopy
 //===----------------------------------------------------------------------===//
 
-def ReifyAlloc : Pass<"reify-alloc", "func::FuncOp"> {
-  let summary = "Reify Alloc after constant folding (deprecated using canonicalize instead)";
-  let constructor = "mlir::createReifyAllocPass()";
+def RemoveCopy : Pass<"remove-copy", "func::FuncOp"> {
+  let summary = "Remove copy";
+  let constructor = "mlir::createRemoveCopyPass()";
+  let dependentDialects = [
+    "memref::MemRefDialect"
+  ];
 }
 
 //===----------------------------------------------------------------------===//
