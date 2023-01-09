@@ -1,0 +1,942 @@
+diff --git a/src/Conversion/ONNXToMhlo/CMakeLists.txt b/src/Conversion/ONNXToMhlo/CMakeLists.txt
+index 018a2904..5d9bcedb 100644
+--- a/src/Conversion/ONNXToMhlo/CMakeLists.txt
++++ b/src/Conversion/ONNXToMhlo/CMakeLists.txt
+@@ -25,11 +25,13 @@ add_onnx_mlir_library(OMONNXToMhlo
+   ConvertONNXToMhlo.cpp
+   ONNXToMhloCommon.cpp
+ 
++  Math/Clip.cpp
+   Math/Elementwise.cpp
+   Math/Gemm.cpp
+   Math/MatMul.cpp
+   Math/Reduction.cpp
+   NN/Conv.cpp
++  NN/ConvTranspose.cpp
+   NN/Normalization.cpp
+   NN/Pooling.cpp
+   Tensor/ArgMax.cpp
+diff --git a/src/Conversion/ONNXToMhlo/ConvertONNXToMhlo.cpp b/src/Conversion/ONNXToMhlo/ConvertONNXToMhlo.cpp
+index 28140cfa..ad631a17 100644
+--- a/src/Conversion/ONNXToMhlo/ConvertONNXToMhlo.cpp
++++ b/src/Conversion/ONNXToMhlo/ConvertONNXToMhlo.cpp
+@@ -22,12 +22,14 @@ namespace onnx_mlir {
+ void populateONNXToMhloConversionPattern(
+     RewritePatternSet &patterns, MLIRContext *ctx) {
+   // Math
++  populateLoweringONNXClipOpToMhloPattern(patterns, ctx);
+   populateLoweringONNXElementwiseOpToMhloPattern(patterns, ctx);
+   populateLoweringONNXGemmOpToMhloPattern(patterns, ctx);
+   populateLoweringONNXMatMulOpToMhloPattern(patterns, ctx);
+   populateLoweringONNXReductionOpToMhloPattern(patterns, ctx);
+   // Neural network
+   populateLoweringONNXConvOpToMhloPattern(patterns, ctx);
++  populateLoweringONNXConvTransposeOpToMhloPattern(patterns, ctx);
+   populateLoweringONNXNormalizationOpToMhloPattern(patterns, ctx);
+   populateLoweringONNXPoolingOpToMhloPattern(patterns, ctx);
+   // Tensor
+diff --git a/src/Conversion/ONNXToMhlo/Math/Clip.cpp b/src/Conversion/ONNXToMhlo/Math/Clip.cpp
+new file mode 100644
+index 00000000..0589c1eb
+--- /dev/null
++++ b/src/Conversion/ONNXToMhlo/Math/Clip.cpp
+@@ -0,0 +1,119 @@
++/*
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++//===----------------- Clip.cpp - Lowering Clip Op ------------------------===//
++//
++// Copyright 2022
++//
++// =============================================================================
++//
++// This file lowers the ONNX Clip Operator to Mhlo dialect.
++//
++//===----------------------------------------------------------------------===//
++
++#include "src/Conversion/ONNXToMhlo/ONNXToMhloCommon.hpp"
++#include "src/Dialect/ONNX/ONNXOps/ShapeHelper.hpp"
++#include "src/Support/TypeUtilities.hpp"
++
++using namespace mlir;
++
++namespace onnx_mlir {
++
++//===----------------------------------------------------------------------===//
++// Scalar unary ops for lowering ONNXClipOp
++//===----------------------------------------------------------------------===//
++
++struct ONNXClipOpLoweringToMhlo : public ConversionPattern {
++  ONNXClipOpLoweringToMhlo(MLIRContext *ctx)
++      : ConversionPattern(ONNXClipOp::getOperationName(), 1, ctx) {}
++
++  Attribute getLowestAttrByType(
++      ConversionPatternRewriter &rewriter, Type type) const {
++    Attribute constant = nullptr;
++    TypeSwitch<Type>(type)
++        .Case<FloatType>([&](FloatType type) {
++          auto &semantics = type.getFloatSemantics();
++          constant = rewriter.getFloatAttr(
++              type, APFloat::getLargest(semantics, /*negative=*/true));
++        })
++        .Case<IntegerType>([&](IntegerType type) {
++          unsigned width = type.getWidth();
++          bool isBool = (width == 1);
++          if (type.isUnsigned() || isBool)
++            constant = rewriter.getIntegerAttr(type, APInt::getMinValue(width));
++          else
++            constant =
++                rewriter.getIntegerAttr(type, APInt::getSignedMinValue(width));
++        })
++        .Default([](Type) { llvm_unreachable("unsupported element type"); });
++    assert(constant != nullptr && "Expecting valid constant value");
++    return constant;
++  }
++
++  Attribute getMaxAttrByType(
++      ConversionPatternRewriter &rewriter, Type type) const {
++    Attribute constant = nullptr;
++    TypeSwitch<Type>(type)
++        .Case<FloatType>([&](FloatType type) {
++          auto &semantics = type.getFloatSemantics();
++          constant = rewriter.getFloatAttr(
++              type, APFloat::getLargest(semantics, /*negative=*/false));
++        })
++        .Case<IntegerType>([&](IntegerType type) {
++          unsigned width = type.getWidth();
++          bool isBool = (width == 1);
++          if (type.isUnsigned() || isBool)
++            constant = rewriter.getIntegerAttr(type, APInt::getMaxValue(width));
++          else
++            constant =
++                rewriter.getIntegerAttr(type, APInt::getSignedMaxValue(width));
++        })
++        .Default([](Type) { llvm_unreachable("unsupported element type"); });
++    assert(constant != nullptr && "Expecting valid constant value");
++    return constant;
++  }
++
++  LogicalResult matchAndRewrite(Operation *op, ArrayRef<Value> operands,
++      ConversionPatternRewriter &rewriter) const final {
++    Location loc = op->getLoc();
++    ONNXClipOp clipOp = cast<ONNXClipOp>(op);
++
++    ONNXClipOpAdaptor operandAdaptor(operands);
++    ONNXClipOpShapeHelper shapeHelper(&clipOp);
++    auto shapeComputed = shapeHelper.computeShape(operandAdaptor);
++    assert(succeeded(shapeComputed) && "Could not compute output shape");
++
++    Value input = operandAdaptor.input();
++    Value min = operandAdaptor.min();
++    Value max = operandAdaptor.max();
++
++    Type outputType = *op->result_type_begin();
++    assert(isRankedShapedType(outputType) && "Expected Ranked ShapedType");
++    ShapedType outputShapedType = outputType.cast<ShapedType>();
++    Type elemType = outputShapedType.getElementType();
++
++    if (min.getType().isa<NoneType>()) {
++      min = rewriter.create<mhlo::ConstantOp>(
++          loc, DenseElementsAttr::get(mlir::RankedTensorType::get({}, elemType),
++                   getLowestAttrByType(rewriter, elemType)));
++    }
++    if (max.getType().isa<NoneType>()) {
++      max = rewriter.create<mhlo::ConstantOp>(
++          loc, DenseElementsAttr::get(mlir::RankedTensorType::get({}, elemType),
++                   getMaxAttrByType(rewriter, elemType)));
++    }
++
++    Value result =
++        rewriter.create<mhlo::ClampOp>(loc, outputType, min, input, max);
++    rewriter.replaceOp(op, result);
++    return success();
++  }
++};
++
++void populateLoweringONNXClipOpToMhloPattern(
++    RewritePatternSet &patterns, MLIRContext *ctx) {
++  patterns.insert<ONNXClipOpLoweringToMhlo>(ctx);
++}
++
++} // namespace onnx_mlir
+diff --git a/src/Conversion/ONNXToMhlo/Math/Elementwise.cpp b/src/Conversion/ONNXToMhlo/Math/Elementwise.cpp
+index 1c3d275b..67497fd5 100644
+--- a/src/Conversion/ONNXToMhlo/Math/Elementwise.cpp
++++ b/src/Conversion/ONNXToMhlo/Math/Elementwise.cpp
+@@ -55,6 +55,16 @@ struct MhloDialectOp<ONNXExpOp> {
+   using Op = mhlo::ExpOp;
+ };
+ 
++template <>
++struct MhloDialectOp<ONNXLogOp> {
++  using Op = mhlo::LogOp;
++};
++
++template <>
++struct MhloDialectOp<ONNXMaxOp> {
++  using Op = mhlo::MaxOp;
++};
++
+ template <>
+ struct MhloDialectOp<ONNXMulOp> {
+   using Op = mhlo::MulOp;
+@@ -80,6 +90,11 @@ struct MhloDialectOp<ONNXSubOp> {
+   using Op = mhlo::SubtractOp;
+ };
+ 
++template <>
++struct MhloDialectOp<ONNXTanhOp> {
++  using Op = mhlo::TanhOp;
++};
++
+ namespace {
+ 
+ template <typename ONNXOp>
+@@ -160,6 +175,34 @@ struct ONNXElementwiseUnaryOpLoweringToMhlo<ONNXReluOp>
+   }
+ };
+ 
++// ONNXLeakyReluOp(x) = alpha * x if x < 0 else x.
++template <>
++struct ONNXElementwiseUnaryOpLoweringToMhlo<ONNXLeakyReluOp>
++    : public ConversionPattern {
++  ONNXElementwiseUnaryOpLoweringToMhlo(MLIRContext *ctx)
++      : ConversionPattern(ONNXLeakyReluOp::getOperationName(), 1, ctx) {}
++  LogicalResult matchAndRewrite(Operation *op, ArrayRef<Value> operands,
++      ConversionPatternRewriter &rewriter) const final {
++    Location loc = op->getLoc();
++    ONNXLeakyReluOpAdaptor adaptor(operands, op->getAttrDictionary());
++    Value inp = adaptor.X();
++    llvm::APFloat alpha = adaptor.alpha();
++    ShapedType inpType = inp.getType().dyn_cast_or_null<ShapedType>();
++    if (inpType == nullptr)
++      return failure();
++    Type resultType = *op->result_type_begin();
++    Value alphaVal = getShapedFloat(loc, rewriter, alpha, inp);
++    Value leakyActivationVal = rewriter.create<mhlo::MulOp>(loc, inp, alphaVal);
++    Value broadcastedZero = getShapedZero(loc, rewriter, inp);
++    Value compareGtZero = rewriter.create<mhlo::CompareOp>(
++        loc, inp, broadcastedZero, mhlo::ComparisonDirection::GT);
++    Value resultOp = rewriter.create<mhlo::SelectOp>(
++        loc, resultType, compareGtZero, inp, leakyActivationVal);
++    rewriter.replaceOp(op, resultOp);
++    return success();
++  }
++};
++
+ template <>
+ struct ONNXElementwiseUnaryOpLoweringToMhlo<ONNXCastOp>
+     : public ConversionPattern {
+@@ -268,9 +311,12 @@ void populateLoweringONNXElementwiseOpToMhloPattern(
+       ONNXElementwiseUnaryOpLoweringToMhlo<ONNXCeilOp>,
+       ONNXElementwiseUnaryOpLoweringToMhlo<ONNXCosOp>,
+       ONNXElementwiseUnaryOpLoweringToMhlo<ONNXExpOp>,
++      ONNXElementwiseUnaryOpLoweringToMhlo<ONNXLeakyReluOp>,
++      ONNXElementwiseUnaryOpLoweringToMhlo<ONNXLogOp>,
+       ONNXElementwiseUnaryOpLoweringToMhlo<ONNXSigmoidOp>,
+       ONNXElementwiseUnaryOpLoweringToMhlo<ONNXSqrtOp>,
+       ONNXElementwiseUnaryOpLoweringToMhlo<ONNXReluOp>,
++      ONNXElementwiseUnaryOpLoweringToMhlo<ONNXTanhOp>,
+       ONNXElementwiseCompareBinaryOpLoweringToMhlo<ONNXEqualOp>,
+       ONNXElementwiseCompareBinaryOpLoweringToMhlo<ONNXGreaterOp>,
+       ONNXElementwiseCompareBinaryOpLoweringToMhlo<ONNXGreaterOrEqualOp>,
+@@ -280,6 +326,7 @@ void populateLoweringONNXElementwiseOpToMhloPattern(
+       ONNXElementwiseVariadicOpLoweringToMhlo<ONNXAddOp>,
+       ONNXElementwiseVariadicOpLoweringToMhlo<ONNXAndOp>,
+       ONNXElementwiseVariadicOpLoweringToMhlo<ONNXDivOp>,
++      ONNXElementwiseVariadicOpLoweringToMhlo<ONNXMaxOp>,
+       ONNXElementwiseVariadicOpLoweringToMhlo<ONNXMulOp>,
+       ONNXElementwiseVariadicOpLoweringToMhlo<ONNXSubOp>>(ctx);
+ }
+diff --git a/src/Conversion/ONNXToMhlo/NN/ConvTranspose.cpp b/src/Conversion/ONNXToMhlo/NN/ConvTranspose.cpp
+new file mode 100644
+index 00000000..e83f45b5
+--- /dev/null
++++ b/src/Conversion/ONNXToMhlo/NN/ConvTranspose.cpp
+@@ -0,0 +1,216 @@
++/*
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++//===----------- ConvTranspose.cpp - Lowering ConvTranspose Op ------------===//
++//
++// Copyright 2022
++//
++// =============================================================================
++//
++// This file lowers ONNX ConvTranspose Operators to Mhlo dialect.
++//
++//===----------------------------------------------------------------------===//
++
++#include "src/Conversion/ONNXToMhlo/ONNXToMhloCommon.hpp"
++#include "src/Dialect/ONNX/ONNXOps/ShapeHelper.hpp"
++#include "src/Support/TypeUtilities.hpp"
++
++using namespace mlir;
++
++namespace onnx_mlir {
++
++namespace {
++
++struct ONNXConvTransposeOpLoweringToMhlo : public ConversionPattern {
++  ONNXConvTransposeOpLoweringToMhlo(MLIRContext *ctx)
++      : ConversionPattern(
++            mlir::ONNXConvTransposeOp::getOperationName(), 1, ctx) {}
++
++  Value reshapeFilter(ConversionPatternRewriter &rewriter, Location loc,
++      Value filterOperand, int64_t groupNum, int rank) const {
++    assert(isRankedShapedType(filterOperand.getType()) &&
++           "Expected Ranked ShapedType");
++    ShapedType filterType = filterOperand.getType().cast<ShapedType>();
++    assert(filterType.hasStaticShape() && "Expected static shape for filter");
++    ArrayRef<int64_t> filterShape = filterType.getShape();
++    Type elemType = filterType.getElementType();
++
++    // 1. [IC, OC//G, H, W, ...] => [G, IC//G, OC//G, H, W, ...]
++    SmallVector<int64_t> newFilterShape(filterShape.begin(), filterShape.end());
++    newFilterShape[0] /= groupNum;
++    newFilterShape.insert(newFilterShape.begin(), groupNum);
++    filterOperand = rewriter.create<mhlo::ReshapeOp>(
++        loc, RankedTensorType::get(newFilterShape, elemType), filterOperand);
++
++    // 2. [G, IC//G, OC//G, H, W, ...] => [G, OC//G, IC//G, H, W, ...]
++    llvm::SmallVector<int64_t> transposeDims(rank + 1);
++    for (int64_t i = 0; i <= rank; i++)
++      transposeDims[i] = i;
++    std::swap(transposeDims[1], transposeDims[2]);
++    filterOperand = rewriter.create<mhlo::TransposeOp>(
++        loc, filterOperand, rewriter.getI64TensorAttr(transposeDims));
++
++    // 3. [G, OC//G, IC//G, H, W, ...] => [OC, IC//G, H, W, ...]
++    std::swap(newFilterShape[1], newFilterShape[2]);
++    newFilterShape.erase(newFilterShape.begin());
++    newFilterShape[0] *= groupNum;
++    filterOperand = rewriter.create<mhlo::ReshapeOp>(
++        loc, RankedTensorType::get(newFilterShape, elemType), filterOperand);
++
++    return filterOperand;
++  }
++
++  LogicalResult matchAndRewrite(Operation *op, ArrayRef<Value> operands,
++      ConversionPatternRewriter &rewriter) const final {
++
++    ONNXConvTransposeOpAdaptor operandAdaptor(
++        operands, op->getAttrDictionary());
++    ONNXConvTransposeOp convOp = llvm::dyn_cast<ONNXConvTransposeOp>(op);
++    Location loc = op->getLoc();
++
++    ONNXConvTransposeOpShapeHelper shapeHelper(&convOp);
++    LogicalResult shapecomputed = shapeHelper.computeShape(operandAdaptor);
++    assert(succeeded(shapecomputed) && "Could not compute output shape");
++
++    llvm::SmallVector<IndexExpr, 2> kernelShape = shapeHelper.kernelShape;
++    llvm::SmallVector<int64_t, 2> strides = shapeHelper.strides;
++    llvm::SmallVector<int64_t, 2> dilations = shapeHelper.dilations;
++    llvm::SmallVector<int64_t, 2> outputPadding = shapeHelper.outputPadding;
++    bool needHandleOutputPadding = std::any_of(outputPadding.begin(),
++        outputPadding.end(), [](int64_t i) { return i != 0; });
++    DimsExpr outputDims = shapeHelper.dimsForOutput();
++    int64_t outputRank = shapeHelper.dimsForOutput().size();
++
++    Value inputOperand = operandAdaptor.X();
++    Value filterOperand = operandAdaptor.W();
++    Value biasOperand = operandAdaptor.B();
++    bool hasBias = !biasOperand.getType().isa<NoneType>();
++    int64_t groupNum = convOp.group();
++
++    assert(isRankedShapedType(inputOperand.getType()) &&
++           "Expected Ranked ShapedType");
++    ShapedType inputType = inputOperand.getType().cast<ShapedType>();
++    Type elemType = inputType.getElementType();
++    // Onnx Input is NCHW
++    int64_t spatialOffset = 2;
++    int64_t rank = inputType.getRank();
++    assert(rank == outputRank && "Input/Output rank should be equal");
++    int64_t kernelSize = kernelShape.size();
++
++    Type outputType = *op->result_type_begin();
++    Type convOutputType = outputType;
++    if (needHandleOutputPadding) {
++      assert(isRankedShapedType(outputType) && "Expected Ranked ShapedType");
++      auto finalShape = outputType.cast<ShapedType>().getShape();
++      SmallVector<int64_t> convOutputShape(
++          finalShape.begin(), finalShape.end());
++      for (int i = spatialOffset; i < rank; ++i) {
++        if (finalShape[i] == ShapedType::kDynamicSize)
++          continue;
++        convOutputShape[i] = finalShape[i] - outputPadding[i - 2];
++      }
++      convOutputType = RankedTensorType::get(convOutputShape, elemType);
++    }
++
++    SmallVector<int64_t> spatialDimensions;
++    for (int64_t i = spatialOffset; i < rank; i++) {
++      spatialDimensions.push_back(i);
++    }
++    SmallVector<int64_t> kernelDimensions;
++    for (int64_t i = spatialOffset; i < spatialOffset + kernelSize; i++) {
++      kernelDimensions.push_back(i);
++    }
++
++    // paddings
++    DimsExpr pads = shapeHelper.pads;
++    int64_t spatialRank = rank - spatialOffset;
++    SmallVector<int64_t> flattenPaddings;
++    // currently only support static spatial dims
++    if (!IndexExpr::isLiteral(kernelShape) || !IndexExpr::isLiteral(pads))
++      return failure();
++    for (int64_t i = 0; i < spatialRank; i++) {
++      flattenPaddings.push_back(
++          dilations[i] * (kernelShape[i].getLiteral() - 1) -
++          pads[i].getLiteral());
++      flattenPaddings.push_back(
++          dilations[i] * (kernelShape[i].getLiteral() - 1) -
++          pads[i + spatialRank].getLiteral());
++    }
++
++    mhlo::ConvDimensionNumbersAttr dimension_numbers =
++        mhlo::ConvDimensionNumbersAttr::get(rewriter.getContext(), 0, 1,
++            spatialDimensions, 1, 0, kernelDimensions, 0, 1, spatialDimensions);
++
++    // Reverse and transpose filterOperand
++    filterOperand = rewriter.create<mhlo::ReverseOp>(
++        loc, filterOperand, rewriter.getI64TensorAttr(spatialDimensions));
++    if (groupNum > 1)
++      filterOperand =
++          reshapeFilter(rewriter, loc, filterOperand, groupNum, rank);
++    else {
++      // Transpose filterOperand from [i, o, ...] to [o, i, ...]
++      llvm::SmallVector<int64_t> transposeDims(rank);
++      for (int64_t i = 0; i < rank; i++)
++        transposeDims[i] = i;
++      std::swap(transposeDims[0], transposeDims[1]);
++      filterOperand = rewriter.create<mhlo::TransposeOp>(
++          loc, filterOperand, rewriter.getI64TensorAttr(transposeDims));
++    }
++
++    Value convResult = rewriter.create<mhlo::ConvolutionOp>(loc, convOutputType,
++        inputOperand, filterOperand,
++        rewriter.getI64VectorAttr(SmallVector<int64_t>(spatialRank, 1)),
++        DenseIntElementsAttr::get(
++            RankedTensorType::get({spatialRank, 2}, rewriter.getI64Type()),
++            flattenPaddings),
++        rewriter.getI64VectorAttr(strides),
++        rewriter.getI64VectorAttr(dilations), nullptr, dimension_numbers,
++        groupNum, 1, nullptr);
++
++    Value padResult;
++    if (!needHandleOutputPadding) {
++      padResult = convResult;
++    } else {
++      SmallVector<int64_t> edgePaddingLowVec(rank, 0);
++      SmallVector<int64_t> edgePaddingHighVec(rank, 0);
++      SmallVector<int64_t> interiorPaddingVec(rank, 0);
++      std::copy(outputPadding.begin(), outputPadding.end(),
++          edgePaddingHighVec.begin() + 2);
++      Value zeroPaddingValue = rewriter.create<mhlo::ConstantOp>(
++          loc, DenseElementsAttr::get(mlir::RankedTensorType::get({}, elemType),
++                   rewriter.getZeroAttr(elemType)));
++      mlir::DenseIntElementsAttr edgePaddingLow =
++          rewriter.getI64VectorAttr(edgePaddingLowVec);
++      mlir::DenseIntElementsAttr edgePaddingHigh =
++          rewriter.getI64VectorAttr(edgePaddingHighVec);
++      mlir::DenseIntElementsAttr interiorPadding =
++          rewriter.getI64VectorAttr(interiorPaddingVec);
++      padResult = rewriter.create<mhlo::PadOp>(loc, outputType, convResult,
++          zeroPaddingValue, edgePaddingLow, edgePaddingHigh, interiorPadding);
++    }
++
++    Value addBiasResult;
++    if (!hasBias) {
++      addBiasResult = padResult;
++    } else {
++      Value finalB;
++      Value resultShape = rewriter.create<shape::ShapeOfOp>(loc, padResult);
++      finalB = rewriter.create<mhlo::DynamicBroadcastInDimOp>(loc, outputType,
++          biasOperand, resultShape, rewriter.getI64TensorAttr({1}));
++      addBiasResult = rewriter.create<mhlo::AddOp>(loc, padResult, finalB);
++    }
++
++    rewriter.replaceOp(op, addBiasResult);
++    return success();
++  }
++};
++
++} // namespace
++
++void populateLoweringONNXConvTransposeOpToMhloPattern(
++    RewritePatternSet &patterns, MLIRContext *ctx) {
++  patterns.insert<ONNXConvTransposeOpLoweringToMhlo>(ctx);
++}
++
++} // namespace onnx_mlir
+diff --git a/src/Conversion/ONNXToMhlo/NN/Pooling.cpp b/src/Conversion/ONNXToMhlo/NN/Pooling.cpp
+index f57371a0..63d99a7b 100644
+--- a/src/Conversion/ONNXToMhlo/NN/Pooling.cpp
++++ b/src/Conversion/ONNXToMhlo/NN/Pooling.cpp
+@@ -21,6 +21,27 @@ namespace onnx_mlir {
+ 
+ namespace {
+ 
++static Value createInitialValueForPoolingOp(
++    Operation *op, Type elemType, ConversionPatternRewriter &rewriter) {
++  Location loc = op->getLoc();
++  if (isa<ONNXMaxPoolSingleOutOp>(op)) {
++    // returns negative infinity
++    return rewriter.create<mhlo::ConstantOp>(
++        loc, rewriter.getFloatAttr(elemType,
++                 APFloat::getInf(elemType.cast<FloatType>().getFloatSemantics(),
++                     /*isNegative=*/true)));
++  }
++  if (isa<ONNXAveragePoolOp>(op)) {
++    // returns negative infinity
++    return rewriter.create<mhlo::ConstantOp>(loc,
++        rewriter.getFloatAttr(elemType,
++            APFloat::getZero(elemType.cast<FloatType>().getFloatSemantics(),
++                /*isNegative=*/false)));
++  }
++  op->emitError("unimplemented lowering for onnx pooling op\n");
++  return nullptr;
++}
++
+ // Builds body for reduce op by using the template binary op as the
+ // reducer op.
+ template <typename Op>
+@@ -37,7 +58,7 @@ void buildReduceBody(Type elementType, Region *body, OpBuilder *builder) {
+ }
+ 
+ template <typename Op>
+-void buildReduceBodyFor(Type elementType, Region *body, OpBuilder *builder) {}
++void buildReduceBodyFor(Type elementType, Region *body, OpBuilder *builder);
+ 
+ template <>
+ void buildReduceBodyFor<ONNXMaxPoolSingleOutOp>(
+@@ -45,6 +66,12 @@ void buildReduceBodyFor<ONNXMaxPoolSingleOutOp>(
+   buildReduceBody<mhlo::MaxOp>(elementType, body, builder);
+ }
+ 
++template <>
++void buildReduceBodyFor<ONNXAveragePoolOp>(
++    Type elementType, Region *body, OpBuilder *builder) {
++  buildReduceBody<mhlo::AddOp>(elementType, body, builder);
++}
++
+ static DenseIntElementsAttr getDenseIntElementsAttr(
+     SmallVectorImpl<int64_t> &values, Builder *builder) {
+   return DenseIntElementsAttr::get(
+@@ -107,10 +134,9 @@ struct ONNXPoolOpLoweringToMhlo : public ConversionPattern {
+     int64_t rank = inputType.getRank();
+     int64_t ceilMode = poolOp.ceil_mode();
+ 
+-    Value negInfinity = rewriter.create<mhlo::ConstantOp>(
+-        loc, rewriter.getFloatAttr(elemType,
+-                 APFloat::getInf(elemType.cast<FloatType>().getFloatSemantics(),
+-                     /*isNegative=*/true)));
++    Value initVal = createInitialValueForPoolingOp(op, elemType, rewriter);
++    if (initVal == nullptr)
++      return failure();
+ 
+     // paddings
+     llvm::SmallVector<IndexExpr, 4> pads = shapeHelper.pads;
+@@ -139,7 +165,7 @@ struct ONNXPoolOpLoweringToMhlo : public ConversionPattern {
+     padVector(dilations, spatialOffset, 1);
+     mhlo::ReduceWindowOp reduce =
+         rewriter.create<mhlo::ReduceWindowOp>(loc, outputType, inputOperand,
+-            negInfinity, getKernelAttr(kernelShape, &rewriter, spatialOffset),
++            initVal, getKernelAttr(kernelShape, &rewriter, spatialOffset),
+             getDenseIntElementsAttr(strides, &rewriter),
+             /*base_dilations=*/DenseIntElementsAttr(),
+             /*window_dilations=*/getDenseIntElementsAttr(dilations, &rewriter),
+@@ -147,7 +173,42 @@ struct ONNXPoolOpLoweringToMhlo : public ConversionPattern {
+                 RankedTensorType::get({rank, 2}, rewriter.getI64Type()),
+                 flattenPaddings));
+     buildReduceBodyFor<PoolOp>(elemType, &reduce.getBody(), &rewriter);
+-    rewriter.replaceOp(op, reduce->getResults());
++
++    if (isa<ONNXAveragePoolOp>(op)) {
++      Value reduceResult = reduce.getResult(0);
++      int64_t countIncludePad =
++          llvm::cast<ONNXAveragePoolOp>(op).count_include_pad();
++      if (countIncludePad) {
++        // Use kernel size as the divisor
++        int64_t kernelSize = 1;
++        for (int64_t i = 0; i < spatialRank; i++) {
++          kernelSize *= kernelShape[i].getLiteral();
++        }
++        Value divisor = getShapedFloat(loc, rewriter, kernelSize, reduceResult);
++        Value divResult = rewriter.create<mhlo::DivOp>(
++            loc, outputType, reduceResult, divisor);
++        rewriter.replaceOp(op, divResult);
++      } else {
++        // Use another mhlo.ReduceWindowOp to get the divisor
++        Value one = getShapedFloat(loc, rewriter, 1.0, inputOperand);
++        mhlo::ReduceWindowOp reduceDivisor =
++            rewriter.create<mhlo::ReduceWindowOp>(loc, outputType, one, initVal,
++                getKernelAttr(kernelShape, &rewriter, spatialOffset),
++                getDenseIntElementsAttr(strides, &rewriter),
++                /*base_dilations=*/DenseIntElementsAttr(),
++                /*window_dilations=*/getDenseIntElementsAttr(dilations, &rewriter),
++                DenseIntElementsAttr::get(
++                    RankedTensorType::get({rank, 2}, rewriter.getI64Type()),
++                    flattenPaddings));
++        buildReduceBodyFor<ONNXAveragePoolOp>(
++            elemType, &reduceDivisor.getBody(), &rewriter);
++        Value divResult = rewriter.create<mhlo::DivOp>(
++            loc, outputType, reduceResult, reduceDivisor.getResult(0));
++        rewriter.replaceOp(op, divResult);
++      }
++    } else {
++      rewriter.replaceOp(op, reduce->getResults());
++    }
+     return success();
+   }
+ };
+@@ -158,6 +219,8 @@ void populateLoweringONNXPoolingOpToMhloPattern(
+     RewritePatternSet &patterns, MLIRContext *ctx) {
+   patterns.insert<ONNXPoolOpLoweringToMhlo<ONNXMaxPoolSingleOutOp,
+       ONNXMaxPoolSingleOutOpAdaptor, ONNXMaxPoolSingleOutOpShapeHelper>>(ctx);
++  patterns.insert<ONNXPoolOpLoweringToMhlo<ONNXAveragePoolOp,
++      ONNXAveragePoolOpAdaptor, ONNXAveragePoolOpShapeHelper>>(ctx);
+ }
+ 
+ } // namespace onnx_mlir
+diff --git a/src/Conversion/ONNXToMhlo/ONNXToMhloCommon.hpp b/src/Conversion/ONNXToMhlo/ONNXToMhloCommon.hpp
+index 2076323d..c27de18b 100644
+--- a/src/Conversion/ONNXToMhlo/ONNXToMhloCommon.hpp
++++ b/src/Conversion/ONNXToMhlo/ONNXToMhloCommon.hpp
+@@ -115,6 +115,8 @@ llvm::SmallVector<Value, 4> getBroadcastedOperands(
+     ConversionPatternRewriter &rewriter, Location loc, int64_t outputRank);
+ 
+ // `Math` directory methods:
++void populateLoweringONNXClipOpToMhloPattern(
++    RewritePatternSet &, MLIRContext *);
+ void populateLoweringONNXElementwiseOpToMhloPattern(
+     RewritePatternSet &, MLIRContext *);
+ void populateLoweringONNXGemmOpToMhloPattern(
+@@ -126,6 +128,8 @@ void populateLoweringONNXReductionOpToMhloPattern(
+ // `NN` directory methods:
+ void populateLoweringONNXConvOpToMhloPattern(
+     RewritePatternSet &, MLIRContext *);
++void populateLoweringONNXConvTransposeOpToMhloPattern(
++    RewritePatternSet &, MLIRContext *);
+ void populateLoweringONNXNormalizationOpToMhloPattern(
+     RewritePatternSet &, MLIRContext *);
+ void populateLoweringONNXPoolingOpToMhloPattern(
+diff --git a/src/Dialect/ONNX/ONNXOps/NN/Conv.cpp b/src/Dialect/ONNX/ONNXOps/NN/Conv.cpp
+index 2efca418..06a519f7 100644
+--- a/src/Dialect/ONNX/ONNXOps/NN/Conv.cpp
++++ b/src/Dialect/ONNX/ONNXOps/NN/Conv.cpp
+@@ -330,6 +330,132 @@ LogicalResult ONNXConvOpShapeHelper::computeShape(
+       op->kernel_shape(), op->pads(), op->strides(), op->dilations());
+ }
+ 
++ONNXConvTransposeOpShapeHelper::ONNXConvTransposeOpShapeHelper(
++    ONNXConvTransposeOp *newOp, IndexExprScope *inScope)
++    : ONNXOpShapeHelper<ONNXConvTransposeOp>(
++          newOp, newOp->getOperation()->getNumResults(), inScope) {}
++
++ONNXConvTransposeOpShapeHelper::ONNXConvTransposeOpShapeHelper(
++    ONNXConvTransposeOp *newOp, OpBuilder *rewriter,
++    ArrayValueIndexCapture::GetDenseVal fGetDenseVal,
++    ArrayValueIndexCapture::LoadVal fLoadVal, IndexExprScope *inScope)
++    : ONNXOpShapeHelper<ONNXConvTransposeOp>(newOp,
++          newOp->getOperation()->getNumResults(), rewriter, fGetDenseVal,
++          fLoadVal, inScope) {}
++
++LogicalResult ONNXConvTransposeOpShapeHelper::computeShape(
++    ONNXConvTransposeOpAdaptor operandAdaptor) {
++  Value filterValue = operandAdaptor.W();
++  Optional<ArrayAttr> kernelShapeOpt = op->kernel_shape();
++  Optional<ArrayAttr> padOpt = op->pads();
++  Optional<ArrayAttr> strideOpt = op->strides();
++  Optional<ArrayAttr> dilationOpt = op->dilations();
++  Optional<ArrayAttr> outputPaddingOpt = op->output_padding();
++  Optional<ArrayAttr> outputShapeOpt = op->output_shape();
++  int64_t groupNum = op->group();
++  llvm::StringRef autoPad = op->auto_pad();
++
++  // Shape inference indicated by passing a null rewriter pointer.
++  // Basic information.
++  Value xValue = (Value)operandAdaptor.X();
++  int64_t rank = xValue.getType().cast<ShapedType>().getRank();
++  int64_t spatialOffset = 2;
++  int64_t spatialRank = rank - spatialOffset;
++
++  MemRefBoundsIndexCapture XBounds(operandAdaptor.X());
++  MemRefBoundsIndexCapture WBounds(filterValue);
++
++  // Fill the stride, dilation, kernel.
++  for (int i = 0; i < spatialRank; ++i) {
++    // Strides, default 1.
++    strides.emplace_back(
++        strideOpt.has_value() ? ArrayAttrIntVal(strideOpt, i) : 1);
++    // Dilations, default 1.
++    dilations.emplace_back(
++        dilationOpt.has_value() ? ArrayAttrIntVal(dilationOpt, i) : 1);
++    // Kernel shape from attribute, default from Weight's spatial dims.
++    if (kernelShapeOpt.has_value()) {
++      kernelShape.emplace_back(
++          LiteralIndexExpr(ArrayAttrIntVal(kernelShapeOpt, i)));
++    } else {
++      kernelShape.emplace_back(WBounds.getSymbol(i + spatialOffset));
++    }
++    // Output Padding, default 0.
++    outputPadding.emplace_back(outputPaddingOpt.has_value()
++                                   ? ArrayAttrIntVal(outputPaddingOpt, i)
++                                   : 0);
++  }
++  // Pads, at this stage a given compile-time literal or default 0.
++  for (int i = 0; i < 2 * spatialRank; ++i) {
++    int64_t p = padOpt.has_value() ? ArrayAttrIntVal(padOpt, i) : 0;
++    pads.emplace_back(LiteralIndexExpr(p));
++  }
++
++  // Handle output size: start by inserting batch size and output channels.
++  DimsExpr outputDims;
++  outputDims.emplace_back(XBounds.getDim(0));
++  outputDims.emplace_back(
++      WBounds.getDim(1) *
++      LiteralIndexExpr(groupNum)); // CO may be different from CI.
++
++  LiteralIndexExpr zeroIE(0);
++  LiteralIndexExpr oneIE(1);
++  for (int i = 0; i < spatialRank; ++i) {
++    IndexExpr I = XBounds.getDim(i + spatialOffset);
++    IndexExpr K = kernelShape[i];
++    LiteralIndexExpr d(dilations[i]);
++    LiteralIndexExpr s(strides[i]);
++    LiteralIndexExpr outPad(outputPadding[i]);
++
++    IndexExpr t0 = K - oneIE;
++    IndexExpr kdTerm = t0 * d + oneIE; // (k - 1) * d + 1
++    IndexExpr t1 = I - oneIE;
++    if (outputShapeOpt.has_value()) {
++      // Set output dim
++      LiteralIndexExpr O(ArrayAttrIntVal(outputShapeOpt, i));
++      outputDims.emplace_back(O);
++      // Set pads
++      // P = max(0, s * (I - 1) + outPad + ((K - 1) * d + 1) - O);
++      IndexExpr pSum = IndexExpr::max(zeroIE, s * t1 + outPad + kdTerm - O);
++      IndexExpr pSmall = pSum.floorDiv(2);
++      if (autoPad == "SAME_UPPER") {
++        pads[i] = pSmall;
++        pads[i + spatialRank] = pSum - pSmall;
++      } else if (autoPad == "NOTSET" || autoPad == "VALID" ||
++                 autoPad == "SAME_LOWER") {
++        pads[i] = pSum - pSmall;
++        pads[i + spatialRank] = pSmall;
++      } else {
++        return op->emitError("auto_pad of unknown/unsupported value");
++      }
++    } else {
++      // Set pads
++      IndexExpr pSum;
++      if (autoPad == "NOTSET") {
++        pSum = pads[i] + pads[i + spatialRank]; // Sum both pads.
++        // pads already set, nothing more to do.
++      } else if (autoPad == "VALID") {
++        pSum = zeroIE;
++        pads[i] = zeroIE;
++        pads[i + spatialRank] = zeroIE;
++      } else if (autoPad == "SAME_UPPER" || autoPad == "SAME_LOWER") {
++        return op->emitError(
++            "auto_pad of SAME_UPPER/SAME_LOWER not unsupported yet");
++      } else {
++        return op->emitError("auto_pad of unknown/unsupported value");
++      }
++      // Set output dim
++      // O = s * (I - 1) + outPad + ((K - 1) * d + 1) - P
++      IndexExpr O = s * t1 + outPad + kdTerm - pSum;
++      outputDims.emplace_back(O); // Set output dim
++    }
++  }
++
++  // Set type for the first output.
++  dimsForOutput() = outputDims;
++  return success();
++}
++
+ } // namespace onnx_mlir
+ 
+ //===----------------------------------------------------------------------===//
+@@ -490,7 +616,7 @@ static void insertConvTransposePads(SmallVectorImpl<int64_t> &inferedPads,
+   inferedPads.resize(spatialRank * 2);
+   for (unsigned int i = 0; i < spatialRank; ++i) {
+     auto inputSize = xShape[spatialOffset + i];
+-    auto outputSize = ArrayAttrIntVal(outputShapeOpt, spatialOffset + i);
++    auto outputSize = ArrayAttrIntVal(outputShapeOpt, i);
+     auto kernelSize = ArrayAttrIntVal(kernelShape, i);
+     if (dilationsOpt.has_value())
+       dilationVal = ArrayAttrIntVal(dilationsOpt, i);
+@@ -614,37 +740,32 @@ LogicalResult ONNXConvTransposeOp::inferShapes(
+   auto stridesOpt = strides();
+   auto padsOpt = pads();
+   auto outputPads = output_padding();
+-  auto outputShape = output_shape();
++  auto outputShape = output_shape();  // spatial dimensions only
++
+   llvm::SmallVector<int64_t, 4> outputShapeFinal;
++  // First two output dimensions consist of the number of batches and the
++  // number of kernels being applied.
++  // Insert batch size.
++  outputShapeFinal.emplace_back(xShape[0]);
++  // Insert number of filters being applied (number of output channels *
++  // groups).
++  outputShapeFinal.emplace_back(outChannels);
+ 
++  // Compute and insert spatial dims for outputShapeFinal.
+   if (outputShape.has_value()) {
+-    if (xShape[0] != ArrayAttrIntVal(outputShape, 0)) {
+-      return emitOpError("mismatch in batch size");
+-    }
+-    if (outChannels != ArrayAttrIntVal(outputShape, 1)) {
+-      return emitOpError("mismatch in output channel size");
+-    }
+     SmallVector<int64_t, 4> inferedPads;
+     // Determine padding values based on output shape.
+     auto autoPad = auto_pad();
+     insertConvTransposePads(inferedPads, autoPad, xShape, kernelShape, padsOpt,
+         stridesOpt, outputPads, outputShape, dilationsOpt);
+     padsAttr(builder.getI64ArrayAttr(inferedPads));
+-    for (uint64_t i = 0; i < xShape.size(); ++i) {
++    auto spatialRank = ArrayAttrSize(kernelShape);
++    for (uint64_t i = 0; i < spatialRank; ++i) {
+       outputShapeFinal.emplace_back(ArrayAttrIntVal(outputShape, i));
+     }
+   } else {
+-    // First two output dimensions consist of the number of batches and the
+-    // number of kernels being applied.
+-    // Insert batch size.
+-    outputShapeFinal.emplace_back(xShape[0]);
+-    // Insert number of filters being applied (number of output channels *
+-    // groups).
+-    outputShapeFinal.emplace_back(outChannels);
+-    // Compute and insert spatial dims.
+     insertConvTransposeSpatialDim(outputShapeFinal, xShape, kernelShape,
+         padsOpt, stridesOpt, outputPads, outputShape, dilationsOpt);
+-    output_shapeAttr(builder.getI64ArrayAttr(outputShapeFinal));
+   }
+   getResult().setType(
+       RankedTensorType::get(outputShapeFinal, xTy.getElementType()));
+diff --git a/src/Dialect/ONNX/ONNXOps/ShapeHelper.cpp b/src/Dialect/ONNX/ONNXOps/ShapeHelper.cpp
+index 0c92556c..354c4805 100644
+--- a/src/Dialect/ONNX/ONNXOps/ShapeHelper.cpp
++++ b/src/Dialect/ONNX/ONNXOps/ShapeHelper.cpp
+@@ -539,6 +539,7 @@ template struct ONNXOpShapeHelper<ONNXCompressOp>;
+ template struct ONNXOpShapeHelper<ONNXConcatOp>;
+ template struct ONNXOpShapeHelper<ONNXConcatShapeTransposeOp>;
+ template struct ONNXOpShapeHelper<ONNXConvOp>;
++template struct ONNXOpShapeHelper<ONNXConvTransposeOp>;
+ template struct ONNXOpShapeHelper<ONNXDepthToSpaceOp>;
+ template struct ONNXOpShapeHelper<ONNXExpandOp>;
+ template struct ONNXOpShapeHelper<ONNXFlattenOp>;
+diff --git a/src/Dialect/ONNX/ONNXOps/ShapeHelper.hpp b/src/Dialect/ONNX/ONNXOps/ShapeHelper.hpp
+index 00a56e9d..e0f01656 100644
+--- a/src/Dialect/ONNX/ONNXOps/ShapeHelper.hpp
++++ b/src/Dialect/ONNX/ONNXOps/ShapeHelper.hpp
+@@ -407,6 +407,27 @@ struct ONNXRoiAlignOpShapeHelper
+   llvm::SmallVector<IndexExpr, 1> batchIndicesDims; // Dim of batch_indices.
+ };
+ 
++// Shape for ONNXConvTransposeOp
++struct ONNXConvTransposeOpShapeHelper
++    : public ONNXOpShapeHelper<mlir::ONNXConvTransposeOp> {
++  ONNXConvTransposeOpShapeHelper(
++      mlir::ONNXConvTransposeOp *newOp, IndexExprScope *inScope = nullptr);
++  ONNXConvTransposeOpShapeHelper(mlir::ONNXConvTransposeOp *newOp,
++      mlir::OpBuilder *rewriter,
++      ArrayValueIndexCapture::GetDenseVal fGetDenseVal,
++      ArrayValueIndexCapture::LoadVal fLoadVal,
++      IndexExprScope *inScope = nullptr);
++  mlir::LogicalResult computeShape(
++      mlir::ONNXConvTransposeOpAdaptor operandAdaptor);
++  // Additional data for ConvTransposeOp.
++  // Values set by Compute.
++  llvm::SmallVector<IndexExpr, 2> kernelShape;
++  llvm::SmallVector<IndexExpr, 4> pads;
++  llvm::SmallVector<int64_t, 2> strides;
++  llvm::SmallVector<int64_t, 2> dilations;
++  llvm::SmallVector<int64_t, 2> outputPadding;
++};
++
+ #define DECLARE_POOL_SHAPE_HELPER(OpName)                                      \
+   class OpName##ShapeHelper : public ONNXGenericPoolShapeHelper<mlir::OpName,  \
+                                   mlir::OpName##Adaptor> {                     \
+diff --git a/src/Transform/ONNX/ConstProp.td b/src/Transform/ONNX/ConstProp.td
+index f3f61599..44a34739 100644
+--- a/src/Transform/ONNX/ConstProp.td
++++ b/src/Transform/ONNX/ConstProp.td
+@@ -396,7 +396,7 @@ def SliceofConst :  Pat<
+     (CreateSliceOfConst $resOp, $input),
+     [(IsFromDenseONNXConstantOp:$input), (IsFromTrueDenseONNXConstantOp:$starts),
+      (IsFromTrueDenseONNXConstantOp:$ends), (IsFromTrueDenseONNXConstantOpOrNone:$axes),
+-     (IsFromTrueDenseONNXConstantOpOrNone:$steps)]>;
++     (IsFromTrueDenseONNXConstantOpOrNone:$steps), (HasStaticShape:$resOp)]>;
+ 
+ //===----------------------------------------------------------------------===//
+ // Patterns to enable opportunities with Concat operations.
+diff --git a/test/mlir/onnx/onnx_shape_inference.mlir b/test/mlir/onnx/onnx_shape_inference.mlir
+index ebd03b80..e8746089 100644
+--- a/test/mlir/onnx/onnx_shape_inference.mlir
++++ b/test/mlir/onnx/onnx_shape_inference.mlir
+@@ -490,7 +490,7 @@ func.func @test_conv_transpose_1(%arg0 : tensor<1x64x36x48xf32>, %arg1 : tensor<
+ 
+   // CHECK-LABEL: test_conv_transpose_1
+   // CHECK: [[CST:%.+]] = "onnx.NoValue"() {value} : () -> none  
+-  // CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, [[CST]]) {auto_pad = "NOTSET", dilations = [1, 1], group = 1 : si64, kernel_shape = [2, 2], output_shape = [1, 1, 72, 96], pads = [0, 0, 0, 0], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<1x1x72x96xf32>
++  // CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, [[CST]]) {auto_pad = "NOTSET", dilations = [1, 1], group = 1 : si64, kernel_shape = [2, 2], pads = [0, 0, 0, 0], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<1x1x72x96xf32>
+   // CHECK: return [[RES_ATTR]] : tensor<1x1x72x96xf32>
+ }
+ 
+@@ -501,7 +501,7 @@ func.func @test_conv_transpose_2(%arg0 : tensor<1x64x36x48xf32>, %arg1 : tensor<
+ 
+   // CHECK-LABEL: test_conv_transpose_2
+   // CHECK: [[CST:%.+]] = "onnx.NoValue"() {value} : () -> none  
+-  // CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, [[CST]]) {auto_pad = "NOTSET", dilations = [1, 1], group = 64 : si64, kernel_shape = [2, 2], output_shape = [1, 64, 72, 96], pads = [0, 0, 0, 0], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<1x64x72x96xf32>
++  // CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, [[CST]]) {auto_pad = "NOTSET", dilations = [1, 1], group = 64 : si64, kernel_shape = [2, 2], pads = [0, 0, 0, 0], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<1x64x72x96xf32>
+   // CHECK: return [[RES_ATTR]] : tensor<1x64x72x96xf32>
+ }
+ 
+@@ -514,7 +514,7 @@ func.func @test_conv_transpose_3(%arg0: tensor<1x1x3x3xf32>, %arg1: tensor<1x2x3
+ 
+ // CHECK-LABEL: test_conv_transpose_3
+ // CHECK: [[CST:%.+]] = "onnx.NoValue"() {value} : () -> none
+-// CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, %0) {auto_pad = "NOTSET", dilations = [1, 1], group = 1 : si64, kernel_shape = [3, 3], output_padding = [1, 1], output_shape = [1, 2, 10, 8], pads = [0, 0, 0, 0], strides = [3, 2]} : (tensor<1x1x3x3xf32>, tensor<1x2x3x3xf32>, none) -> tensor<1x2x10x8xf32>
++// CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, %0) {auto_pad = "NOTSET", dilations = [1, 1], group = 1 : si64, kernel_shape = [3, 3], output_padding = [1, 1], pads = [0, 0, 0, 0], strides = [3, 2]} : (tensor<1x1x3x3xf32>, tensor<1x2x3x3xf32>, none) -> tensor<1x2x10x8xf32>
+ // CHECK: return [[RES_ATTR]] : tensor<1x2x10x8xf32>
+ }
+ 
+@@ -527,7 +527,7 @@ func.func @test_conv_transpose_4(%arg0: tensor<1x1x3x3xf32>, %arg1: tensor<1x2x3
+ 
+ // CHECK-LABEL: test_conv_transpose_4
+ // CHECK: [[CST:%.+]] = "onnx.NoValue"() {value} : () -> none
+-// CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, %0) {auto_pad = "NOTSET", dilations = [1, 1], group = 1 : si64, kernel_shape = [3, 3], output_shape = [1, 2, 7, 3], pads = [1, 2, 1, 2], strides = [3, 2]} : (tensor<1x1x3x3xf32>, tensor<1x2x3x3xf32>, none) -> tensor<1x2x7x3xf32>
++// CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, %0) {auto_pad = "NOTSET", dilations = [1, 1], group = 1 : si64, kernel_shape = [3, 3], pads = [1, 2, 1, 2], strides = [3, 2]} : (tensor<1x1x3x3xf32>, tensor<1x2x3x3xf32>, none) -> tensor<1x2x7x3xf32>
+ // CHECK: return [[RES_ATTR]] : tensor<1x2x7x3xf32>
+ }
+ 
+@@ -540,7 +540,7 @@ func.func @test_conv_transpose_pads(%arg0 : tensor<1x64x36x48xf32>, %arg1 : tens
+ 
+   // CHECK-LABEL: test_conv_transpose_pads
+   // CHECK: [[CST:%.+]] = "onnx.NoValue"() {value} : () -> none
+-  // CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, [[CST]]) {auto_pad = "NOTSET", dilations = [1, 1], group = 64 : si64, kernel_shape = [2, 2], output_shape = [1, 64, 72, 94], pads = [0, 1, 0, 1], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<1x64x72x94xf32>
++  // CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, [[CST]]) {auto_pad = "NOTSET", dilations = [1, 1], group = 64 : si64, kernel_shape = [2, 2], pads = [0, 1, 0, 1], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<1x64x72x94xf32>
+   // CHECK: return [[RES_ATTR]] : tensor<1x64x72x94xf32>
+ }
+ 
+@@ -548,12 +548,12 @@ func.func @test_conv_transpose_pads(%arg0 : tensor<1x64x36x48xf32>, %arg1 : tens
+ 
+ func.func @test_conv_transpose_output_shape(%arg0 : tensor<1x64x36x48xf32>, %arg1 : tensor<64x1x2x2xf32>) -> tensor<*xf32> {
+   %cst = "onnx.NoValue"() {value} : () -> none
+-  %0 = "onnx.ConvTranspose"(%arg0, %arg1, %cst) {dilations = [1, 1], group = 64 : si64, kernel_shape = [2, 2], output_shape = [1, 64, 72, 94], pads = [0, 0, 0, 0], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<*xf32>
++  %0 = "onnx.ConvTranspose"(%arg0, %arg1, %cst) {dilations = [1, 1], group = 64 : si64, kernel_shape = [2, 2], output_shape = [72, 94], pads = [0, 0, 0, 0], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<*xf32>
+   "func.return"(%0) : (tensor<*xf32>) -> ()
+ 
+   // CHECK-LABEL: test_conv_transpose_output_shape
+   // CHECK: [[CST:%.+]] = "onnx.NoValue"() {value} : () -> none
+-  // CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, [[CST]]) {auto_pad = "NOTSET", dilations = [1, 1], group = 64 : si64, kernel_shape = [2, 2], output_shape = [1, 64, 72, 94], pads = [0, 1, 0, 1], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<1x64x72x94xf32>
++  // CHECK-NEXT: [[RES_ATTR:%.+]] = "onnx.ConvTranspose"(%arg0, %arg1, [[CST]]) {auto_pad = "NOTSET", dilations = [1, 1], group = 64 : si64, kernel_shape = [2, 2], output_shape = [72, 94], pads = [0, 1, 0, 1], strides = [2, 2]} : (tensor<1x64x36x48xf32>, tensor<64x1x2x2xf32>, none) -> tensor<1x64x72x94xf32>
+   // CHECK: return [[RES_ATTR]] : tensor<1x64x72x94xf32>
+ }
+ 

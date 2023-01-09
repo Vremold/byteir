@@ -13,6 +13,7 @@ function download_llvm_prebuilt() {
   fi
 }
 
+set -x
 set -e
 
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
@@ -26,17 +27,15 @@ export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
 export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
 export no_proxy='*.byted.org'
 
-# For "git am"
-git config --global user.email "you@example.com"
-git config --global user.name "Your Name"
-
 # install python dependency
 python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.6-cp37-cp37m-linux_x86_64.whl
 python3 -m pip install -r $PROJ_DIR/requirements.txt
 
 git submodule update --init --recursive $PROJ_DIR/third_party/onnx-mlir
 pushd $PROJ_DIR/third_party/onnx-mlir
-git am --whitespace=nowarn ../patches/onnx-mlir-custom-commits.patch
+git apply ../patches/ClipAvgpoolConvtransposeElementwise.patch
+git apply ../patches/Pad.patch
+git apply ../patches/ShapeInference.patch
 popd
 
 download_llvm_prebuilt
@@ -59,14 +58,7 @@ cmake --build "$PROJ_DIR/build" --config Release --target onnx-frontend onnx-fro
 function of_test_models() {
   pushd $PROJ_DIR
   export TF_ENABLE_ONEDNN_OPTS=0
-
-  python3 -m pytest "$PROJ_DIR/test/ops/" -s
-
-  if [ -d "${ROOT_PROJ_DIR}/../bdaimodels" ]; then
-    python3 -m pytest "$PROJ_DIR/test/models/" -s
-  fi
-
-  unset TF_ENABLE_ONEDNN_OPTS
+  python3 -m pytest "$PROJ_DIR/test/" -s
   popd
 }
 
