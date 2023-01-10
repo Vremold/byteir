@@ -18,6 +18,7 @@
 #ifndef BYTEIR_CONVERSION_HLOTOLINALG_H
 #define BYTEIR_CONVERSION_HLOTOLINALG_H
 
+#include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
 #include "mlir/Pass/Pass.h"
 #include <memory>
 #include <string>
@@ -29,6 +30,9 @@ class FuncOp;
 
 void populateUnrealizedCastToLinalgConversionPattern(
     MLIRContext *context, RewritePatternSet &patterns);
+
+void populateHloToLinalgExtConversionPattern(MLIRContext *context,
+                                             RewritePatternSet &patterns);
 
 std::unique_ptr<OperationPass<func::FuncOp>>
 createHloFusionToLinalgPass(llvm::StringRef anchorTag = "",

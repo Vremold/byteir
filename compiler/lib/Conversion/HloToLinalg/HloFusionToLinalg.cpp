@@ -33,6 +33,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
+#include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
 #include "mlir-hlo/Dialect/mhlo/transforms/type_conversion.h"
@@ -267,6 +268,83 @@ struct ReduceWindowOpConversion
   }
 };
 
+class SoftmaxCustomCallConverter
+    : public OpConversionPattern<mhlo::CustomCallOp> {
+public:
+  using OpConversionPattern<mhlo::CustomCallOp>::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(mhlo::CustomCallOp op, mhlo::CustomCallOp::Adaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const final {
+    if (op.getCallTargetName() != getSoftmaxName())
+      return failure();
+
+    auto attr = op->getAttrOfType<DictionaryAttr>(getCustomCallAttrName());
+    auto axisAttr = attr.getAs<IntegerAttr>("axis");
+    assert(axisAttr && "Softmax custom call axis attribute not found.");
+
+    int axis = axisAttr.getInt();
+    rewriter.setInsertionPoint(op);
+    auto resultType =
+        op->getResult(0).getType().dyn_cast_or_null<RankedTensorType>();
+    assert(resultType && "Dynamic shape not supported yet.");
+
+    SmallVector<int64_t> sizes;
+    sizes.reserve(resultType.getRank() - 1);
+    for (int i = 0; i < resultType.getRank(); i++) {
+      if (i != axis)
+        sizes.push_back(resultType.getShape()[i]);
+    }
+
+    auto loc = op->getLoc();
+
+    assert(resultType.getElementType().isIntOrFloat());
+    Value zeroCst;
+    Value negInf;
+    if (IntegerType intType =
+            resultType.getElementType().dyn_cast<IntegerType>()) {
+      zeroCst = rewriter.create<mlir::arith::ConstantIntOp>(loc, 0,
+                                                            intType.getWidth());
+      negInf = rewriter.create<mlir::arith::ConstantIntOp>(
+          loc, APInt::getSignedMinValue(intType.getWidth()).getSExtValue(),
+          intType.getWidth());
+    }
+
+    if (FloatType floatType =
+            resultType.getElementType().dyn_cast<FloatType>()) {
+      zeroCst = rewriter.create<mlir::arith::ConstantFloatOp>(
+          loc, APFloat::getZero(floatType.getFloatSemantics()), floatType);
+      negInf = rewriter.create<mlir::arith::ConstantFloatOp>(
+          loc, APFloat::getInf(floatType.getFloatSemantics(), true), floatType);
+    }
+
+    auto output = rewriter.create<tensor::EmptyOp>(loc, resultType.getShape(),
+                                                   resultType.getElementType());
+    auto max = rewriter.create<tensor::EmptyOp>(loc, sizes,
+                                                resultType.getElementType());
+    auto accum = rewriter.create<tensor::EmptyOp>(loc, sizes,
+                                                  resultType.getElementType());
+    auto scale = rewriter.create<tensor::EmptyOp>(loc, sizes,
+                                                  resultType.getElementType());
+
+    Value filledMax =
+        rewriter.create<linalg::FillOp>(loc, negInf, max.getResult())
+            .getResult(0);
+    Value filledAccum =
+        rewriter.create<linalg::FillOp>(loc, zeroCst, accum.getResult())
+            .getResult(0);
+
+    auto softmax = rewriter.create<linalg_ext::SoftmaxOp>(
+        loc,
+        TypeRange{output.getResult().getType(), max.getResult().getType(),
+                  accum.getResult().getType(), scale.getResult().getType()},
+        op->getOperands(), ValueRange{output, filledMax, filledAccum, scale},
+        axisAttr);
+    rewriter.replaceOp(op, softmax.getResult(0));
+    return success();
+  }
+};
+
 struct HloFusionToLinalgPass
     : public HloFusionToLinalgBase<HloFusionToLinalgPass> {
 
@@ -277,8 +355,9 @@ struct HloFusionToLinalgPass
   }
 
   void getDependentDialects(DialectRegistry &registry) const final {
-    registry.insert<linalg::LinalgDialect, scf::SCFDialect, math::MathDialect,
-                    memref::MemRefDialect, shape::ShapeDialect>();
+    registry.insert<linalg::LinalgDialect, linalg_ext::LinalgExtDialect,
+                    scf::SCFDialect, math::MathDialect, memref::MemRefDialect,
+                    shape::ShapeDialect>();
   }
 
   void runOnOperation() final {
@@ -293,10 +372,10 @@ struct HloFusionToLinalgPass
     MLIRContext &ctx = getContext();
     RewritePatternSet patterns(&ctx);
     ConversionTarget target(ctx);
-    target.addLegalDialect<arith::ArithDialect, cf::ControlFlowDialect,
-                           func::FuncDialect, linalg::LinalgDialect,
-                           math::MathDialect, tensor::TensorDialect,
-                           scf::SCFDialect, shape::ShapeDialect>();
+    target.addLegalDialect<
+        arith::ArithDialect, cf::ControlFlowDialect, func::FuncDialect,
+        linalg::LinalgDialect, math::MathDialect, tensor::TensorDialect,
+        scf::SCFDialect, shape::ShapeDialect, linalg_ext::LinalgExtDialect>();
 
     target.addLegalOp<UnrealizedConversionCastOp>();
 
@@ -306,6 +385,8 @@ struct HloFusionToLinalgPass
                                                enablePrimitiveOps);
     patterns.add<ReduceWindowOpConversion>(*typeConverter, &ctx,
                                            PatternBenefit(2));
+
+    populateHloToLinalgExtConversionPattern(&ctx, patterns);
     FrozenRewritePatternSet frozenPatterns(std::move(patterns));
     if (failed(applyPartialConversion(func, target, frozenPatterns))) {
       signalPassFailure();
@@ -314,6 +395,11 @@ struct HloFusionToLinalgPass
 };
 
 } // namespace
+
+void mlir::populateHloToLinalgExtConversionPattern(
+    MLIRContext *context, RewritePatternSet &patterns) {
+  patterns.add<SoftmaxCustomCallConverter>(context);
+}
 
 std::unique_ptr<OperationPass<func::FuncOp>>
 mlir::createHloFusionToLinalgPass(llvm::StringRef anchorTag,

@@ -54,3 +54,20 @@ func.func @bad_case_0(%arg0: tensor<1x1xi64>) -> tensor<1x1xi32> {
   %9 = mhlo.reshape %8 : (tensor<1xi32>) -> tensor<1x1xi32>
   return %9 : tensor<1x1xi32>
 }
+
+// NOTAG-LABEL: func.func @softmax
+func.func @softmax(%arg0: tensor<128x16x1024x1024xf32>) -> tensor<128x16x1024x1024xf32> {
+  %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = 3 : i64}, call_target_name = "byteir.softmax", called_computations = [], has_side_effect = false} : (tensor<128x16x1024x1024xf32>) -> tensor<128x16x1024x1024xf32>
+  return %0 : tensor<128x16x1024x1024xf32>
+}
+// NOTAG-SAME: (%[[ARG0:.*]]: tensor<128x16x1024x1024xf32>) -> tensor<128x16x1024x1024xf32> {
+// NOTAG: %[[CST0:.*]] = arith.constant 0.000000e+00 : f32
+// NOTAG: %[[CSTINF:.*]] = arith.constant 0xFF800000 : f32
+// NOTAG: %[[OUT:.*]] = tensor.empty() : tensor<128x16x1024x1024xf32>
+// NOTAG: %[[MAX:.*]] = tensor.empty() : tensor<128x16x1024xf32>
+// NOTAG: %[[ACCUM:.*]] = tensor.empty() : tensor<128x16x1024xf32>
+// NOTAG: %[[SCALE:.*]] = tensor.empty() : tensor<128x16x1024xf32>
+// NOTAG: %[[FILLMAX:.*]] = linalg.fill ins(%[[CSTINF]] : f32) outs(%[[MAX]]
+// NOTAG: %[[FILLACCUM:.*]] = linalg.fill ins(%[[CST0]] : f32) outs(%[[ACCUM]]
+// NOTAG: linalg_ext.softmax dimension(3)
+// NOTAG-SAME: ins(%[[ARG0]] : tensor<128x16x1024x1024xf32>) outs(%[[OUT]], %[[FILLMAX]], %[[FILLACCUM]], %[[SCALE]]

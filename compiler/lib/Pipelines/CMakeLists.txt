@@ -23,6 +23,7 @@ add_mlir_library(ByteIRPipelines
   ByteIRPipelineCommon
   ByteIRShapePasses
   ByteIRLinalgPasses
+  ByteIRMemRefPasses
   ByteIRTransforms
   ByteIRUtils
 
@@ -40,6 +41,7 @@ add_mlir_library(ByteIRPipelines
   ByteIRMhloPasses
   ByteIRShapePasses
   ByteIRLinalgPasses
+  ByteIRMemRefPasses
   ByteIRToByre
   ByteIRToGPU
   ByteIRHloToLinalg

@@ -41,7 +41,7 @@ void mlir::createByteIRTotalBufferizePipeline(OpPassManager &pm) {
         pm.addNestedPass<func::FuncOp>(
             bufferization::createEmptyTensorToAllocTensorPass());
         pm.addNestedPass<func::FuncOp>(createAceBufferizePass());
-        pm.addNestedPass<func::FuncOp>(arith::createArithBufferizePass());
+        pm.addPass(arith::createArithBufferizePass());
         pm.addNestedPass<func::FuncOp>(createSCFBufferizePass());
         pm.addNestedPass<func::FuncOp>(vector::createVectorBufferizePass());
         pm.addNestedPass<func::FuncOp>(createLinalgExtBufferizePass());
