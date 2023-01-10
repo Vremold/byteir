@@ -1,0 +1,18 @@
+name: Release tf-frontend
+trigger: 
+  manual:
+jobs: 
+  release:
+    name: Release tf-frontend
+    runs-on:
+      spec: m1.8xlarge
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v4
+    working-directory: byteir/tf-frontend
+    envs:
+      TOS_ACCESS_KEY: ${{TOS_ACCESS_KEY}}
+      TOS_BUCKET: ${{TOS_BUCKET}}
+    steps:
+      - name: Build and release tf-frontend
+        commands:
+          - bash .codebase/pipelines/frontends/tf-frontend/build_and_test.sh
+          - bash .codebase/pipelines/frontends/tf-frontend/upload_to_tos.sh
