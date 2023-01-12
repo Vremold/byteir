@@ -280,12 +280,11 @@ void mlir::linalg_ext::populateRemoveLinalgExtAliasPattern(
 }
 
 namespace {
-
 static void populateCommonPatterns(RewritePatternSet &patterns,
-                                   MLIRContext *context,
                                    const ControlFusionFn &controlFn,
                                    DominanceInfo &domInfo,
                                    PostDominanceInfo &postDomInfo) {
+  MLIRContext *context = patterns.getContext();
   populateFoldReshapeOpsByExpansionPatterns(patterns, controlFn);
 
   // convert a MapOp-to-GenericOp pattern to extend fusion possibility
@@ -326,14 +325,16 @@ struct LinalgElementwiseFusionExtPass
     auto &domInfo = getAnalysis<DominanceInfo>();
     auto &postDomInfo = getAnalysis<PostDominanceInfo>();
 
+    // simplify Tensor DimOp first
+    simplifyTensorDimOpUsedInLinalgWithinOp(*op);
+
     // do producer-consumer fusion first
     {
       RewritePatternSet patterns(context);
       // Add elementwise op fusion patterns.
       populateElementwiseOpsProducerConsumerFusionPatterns(
           patterns, controlFn, domInfo, postDomInfo);
-      populateCommonPatterns(patterns, context, controlFn, domInfo,
-                             postDomInfo);
+      populateCommonPatterns(patterns, controlFn, domInfo, postDomInfo);
 
       // Use TopDownTraversal for compile time reasons
       GreedyRewriteConfig grc;
@@ -363,7 +364,7 @@ struct LinalgElementwiseFusionExtPass
       // Add elementwise op fusion patterns.
       populateElementwiseOpsProducerConsumerFusionPatterns(
           patterns, alwayTrueControlFn, domInfo, postDomInfo);
-      populateCommonPatterns(patterns, context, alwayTrueControlFn, domInfo,
+      populateCommonPatterns(patterns, alwayTrueControlFn, domInfo,
                              postDomInfo);
 
       // Use TopDownTraversal for compile time reasons
@@ -382,6 +383,9 @@ struct LinalgElementwiseFusionExtPass
       (void)applyPatternsAndFoldGreedily(op->getRegions(), std::move(patterns),
                                          grc);
     }
+
+    // simplify Tensor DimOp in the end too
+    simplifyTensorDimOpUsedInLinalgWithinOp(*op);
   }
 
   ControlFusionFn controlFn;

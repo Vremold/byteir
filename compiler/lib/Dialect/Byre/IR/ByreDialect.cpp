@@ -48,6 +48,7 @@ using namespace mlir::byre;
 // Common Utilities
 //===----------------------------------------------------------------------===//
 
+namespace {
 /// This is a common class used for patterns of the form
 /// ```
 ///    someop(memrefcast(%src)) -> someop(%src)
@@ -82,6 +83,7 @@ static bool validEntryFuncArgType(EntryFuncArgType argType) {
          argType == EntryFuncArgType::Output ||
          argType == EntryFuncArgType::Weight;
 }
+} // namespace
 
 //===----------------------------------------------------------------------===//
 // ByreDialect

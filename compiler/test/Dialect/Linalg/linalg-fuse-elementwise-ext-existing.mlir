@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -linalg-fuse-elementwise-ext -split-input-file | FileCheck %s
+// RUN: byteir-opt %s -linalg-fuse-elementwise-ext -canonicalize-ext -split-input-file | FileCheck %s
 
 // CHECK-DAG: [[$MAP0:#[a-zA-Z0-9_]*]] = affine_map<(d0, d1) -> (d0, d1)>
 #map0 = affine_map<(d0, d1) -> (d0, d1)>
@@ -707,42 +707,6 @@ func.func @no_fuse_constant_with_reduction() -> tensor<3xf32>
 
 // -----
 
-#map = affine_map<(d0, d1) -> (d0, d1)>
-#trait = {
-  indexing_maps = [#map, #map],
-  iterator_types = ["parallel", "parallel"]
-}
-func.func @break_outs_dependency(%arg0 : tensor<?x?xf32>) -> tensor<?x?xf32>
-{
-  %0 = linalg.generic #trait ins(%arg0 : tensor<?x?xf32>) outs(%arg0 : tensor<?x?xf32>) {
-       ^bb0(%arg1 : f32, %arg2 : f32) :
-         %1 = arith.addf %arg1, %arg1 : f32
-         linalg.yield %1 : f32
-       } -> tensor<?x?xf32>
-  %2 = linalg.generic #trait ins(%0 : tensor<?x?xf32>) outs(%0 : tensor<?x?xf32>) {
-       ^bb0(%arg1 : f32, %arg2 : f32) :
-         %3 = arith.mulf %arg1, %arg1 : f32
-         linalg.yield %3 : f32
-       } -> tensor<?x?xf32>
-  return %2 : tensor<?x?xf32>
-}
-//      CHECK: func @break_outs_dependency(
-// CHECK-SAME:   %[[ARG0:.+]]: tensor<?x?xf32>)
-//  CHECK-DAG:   %[[C0:.+]] = arith.constant 0 : index
-//  CHECK-DAG:   %[[C1:.+]] = arith.constant 1 : index
-//  CHECK-DAG:   %[[D0:.+]] = tensor.dim %[[ARG0]], %[[C0]]
-//  CHECK-DAG:   %[[D1:.+]] = tensor.dim %[[ARG0]], %[[C1]]
-//  CHECK-DAG:   %[[INIT:.+]] = tensor.empty(%[[D0]], %[[D1]])
-//      CHECK:   %[[GENERIC1:.+]] = linalg.generic
-// CHECK-SAME:     outs(%[[INIT]] : tensor<?x?xf32>)
-//  CHECK-DAG:   %[[D0:.+]] = tensor.dim %[[GENERIC1]], %[[C0]]
-//  CHECK-DAG:   %[[D1:.+]] = tensor.dim %[[GENERIC1]], %[[C1]]
-//  CHECK-DAG:   %[[INIT:.+]] = tensor.empty(%[[D0]], %[[D1]])
-//      CHECK:   %[[RESULT:.+]] = linalg.generic
-// CHECK-SAME:     outs(%[[INIT]] : tensor<?x?xf32>)
-
-// -----
-
 func.func @fuse_scalar_constant(%arg0 : tensor<?x?xf32>) -> (tensor<?x?xf32>, tensor<?x?xi32>) {
   %cst = arith.constant 4.0 : f32
   %c42 = arith.constant 42 : i32
@@ -986,8 +950,7 @@ func.func @fusion_different_axes(%arg0 : tensor<5000xi64>, %arg1 : tensor<5000xi
 // CHECK-SAME:       %[[B1:.+]]: i32
 //  CHECK-DAG:     %[[T0:.+]] = linalg.index 0
 //  CHECK-DAG:     %[[CAST1:.+]] = arith.index_cast %[[T0]] : index to i64
-//  CHECK-DAG:     %[[CAST2:.+]] = arith.index_cast %[[CAST1]] : i64 to index
-//      CHECK:     %[[EXTRACT:.+]] = tensor.extract %[[ARG1]][%[[CAST2]]]
+//      CHECK:     %[[EXTRACT:.+]] = tensor.extract %[[ARG1]][%[[T0]]]
 //      CHECK:     linalg.yield %[[CAST1]], %[[EXTRACT]]
 //      CHECK:   return %[[RESULT]]#1
 

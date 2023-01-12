@@ -65,19 +65,16 @@ def FuseExtOp : Op<Transform_Dialect, "structured.fuse_ext",
   let hasVerifier = 1;
 }
 
-def TileLabelOp : Op<Transform_Dialect, "structured.tile_label",
+def TileLoopHintOp : Op<Transform_Dialect, "structured.tile_loop_hint",
        [DeclareOpInterfaceMethods<TransformOpInterface>,
         DeclareOpInterfaceMethods<MemoryEffectsOpInterface>]> {
   let description = [{
-    this is a tile annotation
+    this is a tile annotation labeling whether a loop parallel
   }];
 
   let arguments = (ins PDL_Operation:$target);
 
   let hasCustomAssemblyFormat = 1;
-
-  let extraClassDeclaration = [{
-  }];
 }
 
 def TileExtOp : Op<Transform_Dialect, "structured.tile_ext",

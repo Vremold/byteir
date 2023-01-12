@@ -181,7 +181,6 @@ def LinalgExt_SoftmaxOp : LinalgExt_Op<"softmax",
 
 }
 
-
 def LinalgExt_DiagOp : LinalgExt_Op<"diag", 
     [DeclareOpInterfaceMethods<LinalgExtInterface>]> {
 
@@ -232,7 +231,10 @@ def LinalgExt_DiagOp : LinalgExt_Op<"diag",
 }
 
 def LinalgExt_ScanOp : LinalgExt_Op<"scan",
-    [DeclareOpInterfaceMethods<LinalgExtInterface>,
+    [DeclareOpInterfaceMethods<LinalgExtInterface,
+      ["isValidTiledProducerOp",
+       "isResultLoopInvariant",
+       "isOperandRead"]>,
      DeclareOpInterfaceMethods<TilingInterface,
       ["generateResultTileValue",
        "getIterationDomain",
@@ -282,6 +284,69 @@ def LinalgExt_ScanOp : LinalgExt_Op<"scan",
     }
     int64_t getOperandRank() {
       return getOperandType().getRank();
+    }
+  }];
+}
+
+def LinalgExt_TopkOp : LinalgExt_Op<"topk",
+    [DeclareOpInterfaceMethods<LinalgExtInterface,
+      ["isValidTiledProducerOp",
+       "isResultLoopInvariant",
+       "isOperandRead"]>,
+     DeclareOpInterfaceMethods<TilingInterface,
+      ["generateResultTileValue",
+       "getIterationDomain",
+       "getLoopIteratorTypes",
+       "getResultTilePosition",
+       "getTiledImplementation"]>]> {
+  let summary = "topk operator";
+  let description = [{
+    Computes the topk along a given dimension.
+  }];
+
+  let arguments = (ins Variadic<AnyShaped>:$inputs,
+                       Variadic<AnyShaped>:$outputs,
+                       I64Attr:$dimension
+  );
+
+  let builders = [
+    OpBuilder<(ins "ValueRange":$inputs, "ValueRange":$outputs,
+      CArg<"int64_t", "0">:$dimension)>
+  ];
+
+  let results = (outs Variadic<AnyRankedTensor>:$results);
+  let regions = (region AnyRegion:$region);
+  let hasFolder = 1;
+  let assemblyFormat = [{
+    attr-dict
+    `dimension` `(` $dimension `)`
+    `ins` `(` $inputs `:` type($inputs) `)`
+    `outs` `(` $outputs `:` type($outputs) `)`
+    $region (`->` type($results)^)?
+  }];
+
+  let extraClassDeclaration = extraLinalgExtOpClassDeclaration # [{
+    Value values() {
+      return getInputOperand(0)->get();
+    }
+    Optional<Value> indices() {
+      if (getNumInputs() < 2) {
+        return {};
+      } else {
+        return getInputOperand(1)->get();
+      }
+    }
+    Value outputValues() {
+      return getOutputOperand(0)->get();
+    }
+    Value outputIndices() {
+      return getOutputOperand(1)->get();
+    }
+    ShapedType getInputType() {
+      return values().getType().cast<ShapedType>();
+    }
+    int64_t getInputRank() {
+      return getInputType().getRank();
     }
   }];
 }

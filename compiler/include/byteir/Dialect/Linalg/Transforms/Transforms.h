@@ -117,6 +117,12 @@ void mergeLoopIteratorTypes(
     llvm::SmallVector<llvm::Optional<utils::IteratorType>> &from,
     llvm::SmallVector<llvm::Optional<utils::IteratorType>> &to);
 
+// Simplify a dimOp of linalg and linalg-ext
+LogicalResult simplifyTensorDimOpUsedInLinalg(RewriterBase &rewriter,
+                                              Operation *op);
+
+void simplifyTensorDimOpUsedInLinalgWithinOp(Operation &op);
+
 // LinalgTransforms and LinalgTransformationFilter will be deprecated soon
 struct LinalgTransforms {
   static const StringLiteral kLinalgTransformMarker;

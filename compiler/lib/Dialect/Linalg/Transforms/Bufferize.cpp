@@ -39,8 +39,6 @@
 #include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/Operation.h"
 
-#include <iostream>
-
 namespace mlir {
 #define GEN_PASS_DEF_LINALGEXTBUFFERIZE
 #include "byteir/Dialect/Linalg/Passes.h.inc"

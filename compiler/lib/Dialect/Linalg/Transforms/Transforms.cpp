@@ -139,6 +139,158 @@ void mlir::linalg_ext::mergeLoopIteratorTypes(
 }
 
 //===----------------------------------------------------------------------===//
+// simplifyLinalgOp
+//===----------------------------------------------------------------------===//
+
+namespace {
+
+/// A simple pattern rewriter that implements no special logic.
+class SimpleRewriter : public PatternRewriter {
+public:
+  SimpleRewriter(MLIRContext *context) : PatternRewriter(context) {}
+};
+
+// return getIndexingMapsArray if an op having getIndexingMapsArray
+FailureOr<llvm::SmallVector<AffineMap>> getIndexingMapsArray(Operation *op) {
+  if (auto linalgOp = dyn_cast<linalg::LinalgOp>(op)) {
+    return linalgOp.getIndexingMapsArray();
+  } else if (auto linalgExtOp = dyn_cast<linalg_ext::LinalgExtOp>(op)) {
+    return linalgExtOp.getIndexingMapsArray();
+  }
+  return failure();
+}
+
+LogicalResult
+replaceTensorDim(RewriterBase &rewriter, tensor::DimOp dimOp, size_t offset,
+                 AffineMap concatMap,
+                 llvm::DenseMap<AffineExpr, std::tuple<Value, int64_t>>
+                     &exprToTensorAndDim) {
+
+  auto maybeConstIndex = dimOp.getConstantIndex();
+  if (!maybeConstIndex.has_value())
+    return failure();
+  unsigned exprOffset = offset + maybeConstIndex.value();
+  auto affineExpr = concatMap.getResult(exprOffset);
+  assert(exprToTensorAndDim.count(affineExpr) > 0);
+
+  auto [source, dimIdx] = exprToTensorAndDim[affineExpr];
+
+  // check whether it map to itself
+  // if so, no need to replace
+  if (source == dimOp.getShapedValue() && maybeConstIndex.value() == dimIdx) {
+    return failure();
+  }
+
+  // create a new DimdOp
+  rewriter.setInsertionPoint(dimOp);
+  rewriter.replaceOpWithNewOp<tensor::DimOp>(dimOp, source, dimIdx);
+  return success();
+}
+} // namespace
+
+LogicalResult
+mlir::linalg_ext::simplifyTensorDimOpUsedInLinalg(RewriterBase &rewriter,
+                                                  Operation *op) {
+  auto mayIndexingMapArray = getIndexingMapsArray(op);
+  if (failed(mayIndexingMapArray)) {
+    return failure();
+  }
+
+  AffineMap concatMap = concatAffineMaps(mayIndexingMapArray.value());
+  DenseMap<AffineExpr, std::tuple<Value, int64_t>> exprToTensorAndDim;
+
+  unsigned offset = 0;
+  auto updateExprToTensorAndDim = [&](Value tensor, int64_t dim) {
+    auto resultExpr = concatMap.getResult(offset);
+    if (exprToTensorAndDim.count(resultExpr) == 0) {
+      exprToTensorAndDim[resultExpr] = std::make_tuple(tensor, dim);
+    }
+  };
+
+  // preprocessing Tensors
+  if (auto dstOp = dyn_cast<DestinationStyleOpInterface>(op)) {
+    for (auto opOperand : dstOp.getDpsInputOperands()) {
+      auto tensor = opOperand->get();
+      if (auto shapeTy = tensor.getType().dyn_cast<ShapedType>()) {
+        for (int64_t d = 0; d < shapeTy.getRank(); ++d) {
+          updateExprToTensorAndDim(tensor, d);
+          offset++;
+        }
+      }
+    }
+
+    for (auto opOperand : dstOp.getDpsInitOperands()) {
+      auto tensor = opOperand->get();
+      if (auto shapeTy = tensor.getType().dyn_cast<ShapedType>()) {
+        for (auto d = 0; d < shapeTy.getRank(); ++d) {
+          updateExprToTensorAndDim(tensor, d);
+          offset++;
+        }
+      }
+    }
+  }
+
+  offset = 0;
+  bool isSucceeded = false;
+  auto applyReplaceTensorDim = [&](tensor::DimOp dimOp, unsigned rank) {
+    return replaceTensorDim(rewriter, dimOp, offset, concatMap,
+                            exprToTensorAndDim);
+  };
+
+  auto applyReplaceTensorDimAndUpdateOffset = [&](Value tensor) {
+    if (auto shapeTy = tensor.getType().dyn_cast<ShapedType>()) {
+      unsigned rank = shapeTy.getRank();
+      for (auto user : tensor.getUsers()) {
+        if (auto dimOp = dyn_cast<tensor::DimOp>(user)) {
+          if (succeeded(replaceTensorDim(rewriter, dimOp, offset, concatMap,
+                                         exprToTensorAndDim))) {
+            isSucceeded = true;
+          }
+        }
+      }
+      offset += rank;
+    }
+  };
+
+  // now replace all
+  if (auto dstOp = dyn_cast<DestinationStyleOpInterface>(op)) {
+    for (auto opOperand : dstOp.getDpsInputOperands()) {
+      auto tensor = opOperand->get();
+      applyReplaceTensorDimAndUpdateOffset(tensor);
+    }
+
+    unsigned inputOffset = offset;
+
+    for (auto opOperand : dstOp.getDpsInitOperands()) {
+      auto tensor = opOperand->get();
+      applyReplaceTensorDimAndUpdateOffset(tensor);
+    }
+
+    offset = inputOffset;
+    for (auto tensor : op->getResults()) {
+      applyReplaceTensorDimAndUpdateOffset(tensor);
+    }
+  }
+
+  return success(isSucceeded);
+}
+
+void mlir::linalg_ext::simplifyTensorDimOpUsedInLinalgWithinOp(Operation &op) {
+  SimpleRewriter rewriter(op.getContext());
+  SmallVector<Operation *> linalgOps;
+  op.walk([&](Operation *inner) {
+    if (isa<linalg::LinalgOp, linalg_ext::LinalgExtOp>(inner)) {
+      linalgOps.push_back(inner);
+    }
+  });
+
+  // reverse order
+  for (auto it = linalgOps.rbegin(); it < linalgOps.rend(); ++it) {
+    (void)simplifyTensorDimOpUsedInLinalg(rewriter, *it);
+  }
+}
+
+//===----------------------------------------------------------------------===//
 // labelTileLoopType
 //===----------------------------------------------------------------------===//
 
@@ -215,16 +367,6 @@ bool mlir::scf::isResultLoopInvariant(Operation *op, int64_t resultNumber,
 //===----------------------------------------------------------------------===//
 
 namespace {
-
-// return getIndexingMapsArray if an op having getIndexingMapsArray
-FailureOr<llvm::SmallVector<AffineMap>> getIndexingMapsArray(Operation *op) {
-  if (auto linalgOp = dyn_cast<linalg::LinalgOp>(op)) {
-    return linalgOp.getIndexingMapsArray();
-  } else if (auto linalgExtOp = dyn_cast<linalg_ext::LinalgExtOp>(op)) {
-    return linalgExtOp.getIndexingMapsArray();
-  }
-  return failure();
-}
 
 bool isNewValue(Value val) {
   if (auto def = val.getDefiningOp()) {

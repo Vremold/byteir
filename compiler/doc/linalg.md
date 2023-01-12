@@ -34,9 +34,58 @@ Note this tile label transformation also work with existing linalg tile and fuse
 
 ***Fuse transformation*** is enhanced
 * to support linalg-ext ops,
-* to support intermediates as outputs within a fusion.
+* to correctly support tiling along a reduction axis, 
+* to support intermediates as outputs within a fusion,
+* to support intermediate tensor dim simplification.
 
 Here shows the difference when there is an intermediate as as output.
+```
+// input.mlir
+func.func @tiled_matmul(%arg0: tensor<128x128xf32>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> {
+  %cst = arith.constant 0.000000e+00 : f32
+  %0 = tensor.empty() : tensor<128x128xf32>
+  %1 = linalg.fill ins(%cst : f32) outs(%0 : tensor<128x128xf32>) -> tensor<128x128xf32>
+  %2 = linalg.matmul ins(%arg0, %arg1 : tensor<128x128xf32>, tensor<128x128xf32>) outs(%1 : tensor<128x128xf32>) -> tensor<128x128xf32>
+  return %2 : tensor<128x128xf32>
+}
+
+// result after transform.structured.fuse, wrong tiling result
+func.func @tile_matmul(%arg0: tensor<128x128xf32>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> {
+  %c128 = arith.constant 128 : index
+  %c0 = arith.constant 0 : index
+  %c8 = arith.constant 8 : index
+  %cst = arith.constant 0.000000e+00 : f32
+  %0 = tensor.empty() : tensor<128x128xf32>
+  %1 = scf.for %arg2 = %c0 to %c128 step %c8 iter_args(%arg3 = %0) -> (tensor<128x128xf32>) {
+    %extracted_slice = tensor.extract_slice %arg0[0, %arg2] [128, 8] [1, 1] : tensor<128x128xf32> to tensor<128x8xf32>
+    %extracted_slice_0 = tensor.extract_slice %arg1[%arg2, 0] [8, 128] [1, 1] : tensor<128x128xf32> to tensor<8x128xf32>
+    %2 = linalg.fill ins(%cst : f32) outs(%arg3 : tensor<128x128xf32>) -> tensor<128x128xf32>   // shouldn't fill to zero every step
+    %3 = linalg.matmul ins(%extracted_slice, %extracted_slice_0 : tensor<128x8xf32>, tensor<8x128xf32>) outs(%2 : tensor<128x128xf32>) -> tensor<128x128xf32>
+    scf.yield %3 : tensor<128x128xf32>
+  }
+  return %1 : tensor<128x128xf32>
+}
+
+// result after transform.structured.fuse_ext
+func.func @tile_matmul(%arg0: tensor<128x128xf32>, %arg1: tensor<128x128xf32>) -> tensor<128x128xf32> {
+  %c128 = arith.constant 128 : index
+  %c0 = arith.constant 0 : index
+  %c8 = arith.constant 8 : index
+  %cst = arith.constant 0.000000e+00 : f32
+  %0 = tensor.empty() : tensor<128x128xf32>
+  %1 = linalg.fill ins(%cst : f32) outs(%0 : tensor<128x128xf32>) -> tensor<128x128xf32>
+  %2 = scf.for %arg2 = %c0 to %c128 step %c8 iter_args(%arg3 = %1) -> (tensor<128x128xf32>) {
+    %extracted_slice = tensor.extract_slice %arg0[0, %arg2] [128, 8] [1, 1] : tensor<128x128xf32> to tensor<128x8xf32>
+    %extracted_slice_0 = tensor.extract_slice %arg1[%arg2, 0] [8, 128] [1, 1] : tensor<128x128xf32> to tensor<8x128xf32>
+    %3 = linalg.matmul ins(%extracted_slice, %extracted_slice_0 : tensor<128x8xf32>, tensor<8x128xf32>) outs(%arg3 : tensor<128x128xf32>) -> tensor<128x128xf32>
+    scf.yield %3 : tensor<128x128xf32>
+  }
+  return %2 : tensor<128x128xf32>
+}
+
+```
+
+Here shows the difference when tiling along a reduction axis.
 ```
 // input.mlir
 func.func @fuse_element(%arg0: tensor<512x128xf32>, %arg1: tensor<512x128xf32>) -> (tensor<512x128xf32>, tensor<512x128xf32>) {
@@ -93,6 +142,7 @@ func.func @fuse_element_static(%arg0: tensor<512x128xf32>, %arg1: tensor<512x128
 ***Elementwise fusion transformation*** is enhanced
 * to support intermediates as outputs within a fusion,
 * to support both producer-consumer fusion and input-sharing fusion,
+* to support intermediate tensor dim simplification,
 * to support map fusion by automatically converting map ops to generic ops.
 
 
@@ -156,6 +206,65 @@ func.func @input_sharing(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>, %arg2: 
 }
 ```
 
+Here shows the difference bewteen support of intermediate tensor dim simplification..
+```
+// input.mlir
+#map = affine_map<(d0, d1) -> (d0, d1)>
+func.func @may_more_break_outs_dependency(%arg0: tensor<?x?xf32>) -> tensor<?x?xf32> {
+  %0 = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<?x?xf32>) outs(%arg0 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %out: f32):
+    %2 = arith.addf %in, %in : f32
+    linalg.yield %2 : f32
+  } -> tensor<?x?xf32>
+  %1 = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%0 : tensor<?x?xf32>) outs(%0 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %out: f32):
+    %2 = arith.mulf %in, %in : f32
+    linalg.yield %2 : f32
+  } -> tensor<?x?xf32>
+  return %1 : tensor<?x?xf32>
+}
+
+// result after linalg-fuse-elementwise-ops, no fusion
+func.func @may_more_break_outs_dependency(%arg0: tensor<?x?xf32>) -> tensor<?x?xf32> {
+  %c0 = arith.constant 0 : index
+  %c1 = arith.constant 1 : index
+  %dim = tensor.dim %arg0, %c0 : tensor<?x?xf32>
+  %dim_0 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
+  %0 = tensor.empty(%dim, %dim_0) : tensor<?x?xf32>
+  %1 = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<?x?xf32>) outs(%0 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %out: f32):
+    %4 = arith.addf %in, %in : f32
+    linalg.yield %4 : f32
+  } -> tensor<?x?xf32>
+  %dim_1 = tensor.dim %1, %c0 : tensor<?x?xf32>
+  %dim_2 = tensor.dim %1, %c1 : tensor<?x?xf32>
+  %2 = tensor.empty(%dim_1, %dim_2) : tensor<?x?xf32>
+  %3 = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%1 : tensor<?x?xf32>) outs(%2 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %out: f32):
+    %4 = arith.mulf %in, %in : f32
+    linalg.yield %4 : f32
+  } -> tensor<?x?xf32>
+  return %3 : tensor<?x?xf32>
+}
+
+// result after linalg-fuse-elementwise-ext, perfect fusion
+func.func @may_more_break_outs_dependency(%arg0: tensor<?x?xf32>) -> tensor<?x?xf32> {
+  %c1 = arith.constant 1 : index
+  %c0 = arith.constant 0 : index
+  %dim = tensor.dim %arg0, %c0 : tensor<?x?xf32>
+  %dim_0 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
+  %0 = tensor.empty(%dim, %dim_0) : tensor<?x?xf32>
+  %1 = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<?x?xf32>) outs(%0 : tensor<?x?xf32>) {
+  ^bb0(%in: f32, %out: f32):
+    %2 = arith.addf %in, %in : f32
+    %3 = arith.mulf %2, %2 : f32
+    linalg.yield %3 : f32
+  } -> tensor<?x?xf32>
+  return %1 : tensor<?x?xf32>
+}
+
+```
+
 ## Linalg-ext Op Extension
 ### Alias Op
 Linalg-ext alias op is introduced as an auxiliary op to help input-sharing fusion. 
@@ -176,6 +285,21 @@ Spec:
   - input: Tensor with a shape of N
 - Inits/Results:
   - output: Tensor with a shape of N x N
+
+### Scan Op
+Linalg-ext scan op is introduced to present a scan, prefix sum, or `cumsum` pattern
+It is a structured op.
+
+Spec:
+- Operands:
+  - input: Tensor with a dim of N
+- Attrs
+  - dimension: I64ArrayAttr
+  - inclusivie: BoolAttr
+- Inits/Results:
+  - output: Tensor with a dim of N
+  - accumulator: Tensor with a dim of N - 1
+
 
 ### Softmax Op
 Linalg-ext softmax op is introduced to present a softmax pattern
@@ -270,3 +394,17 @@ func.func @dot_attention(%arg0: tensor<1024x32xf32>, %arg1: tensor<32x512xf32>, 
 }
 
 ```
+
+### Topk Op
+Linalg-ext topk op is introduced to present a topk pattern
+It is a structured op.
+
+Spec:
+- Operands:
+  - input_values: Tensor with a dim of N
+  - input_indices: Optional Tensor with a dim of N
+- Attrs
+  - dimension: I64ArrayAttr
+- Inits/Results:
+  - output_values: Tensor with a dim of N
+  - output_indices: Tensor with a dim of N

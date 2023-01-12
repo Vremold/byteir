@@ -130,6 +130,9 @@ static LogicalResult applyTilingToAll(
 
   for (Operation *target : payloadOps) {
     auto funcOp = target->getParentOfType<func::FuncOp>();
+
+    // simplify tensor::DimOp
+    simplifyTensorDimOpUsedInLinalgWithinOp(*funcOp.getOperation());
     auto tilingInterfaceOp = dyn_cast<TilingInterface>(target);
     if (!tilingInterfaceOp)
       return transformOp->emitError("only TilingInterface ops are supported");
@@ -197,6 +200,9 @@ static LogicalResult applyTilingToAll(
       };
 
       rewriter.replaceOpWithIf(toReplace, replacements, allowReplacement);
+
+      // simplify tensor::DimOp
+      simplifyTensorDimOpUsedInLinalgWithinOp(*funcOp.getOperation());
     }
 
     // Report back the relevant handles to the transform op.
@@ -206,7 +212,7 @@ static LogicalResult applyTilingToAll(
            "failed");
     for (unsigned int i = 0; i < numLoops; ++i)
       loopOps[i].push_back(tiledResults->loops[i]);
-  }
+  } // for (Operation *target : payloadOps)
 
   transformResults.set(transformOp->getOpResult(0), tiledLinalgOps);
   for (unsigned int i = 0; i < numLoops; ++i)
@@ -297,14 +303,13 @@ LogicalResult transform::FuseExtOp::verify() {
 }
 
 //===----------------------------------------------------------------------===//
-// TileLabelOp
+// TileLoopHintOp
 //===----------------------------------------------------------------------===//
 
 DiagnosedSilenceableFailure
-transform::TileLabelOp::apply(TransformResults &transformResults,
-                              TransformState &state) {
+transform::TileLoopHintOp::apply(TransformResults &transformResults,
+                                 TransformState &state) {
   ArrayRef<Operation *> targets = state.getPayloadOps(getTarget());
-
   for (auto op : targets) {
     if (!isa<TilingInterface>(op)) {
       DiagnosedSilenceableFailure diag =
@@ -335,31 +340,29 @@ transform::TileLabelOp::apply(TransformResults &transformResults,
 
     labelTileLoopType(op, loops);
   }
-
   return DiagnosedSilenceableFailure::success();
 }
 
-ParseResult transform::TileLabelOp::parse(OpAsmParser &parser,
-                                          OperationState &result) {
+ParseResult transform::TileLoopHintOp::parse(OpAsmParser &parser,
+                                             OperationState &result) {
   OpAsmParser::UnresolvedOperand target;
   auto pdlOperationType = pdl::OperationType::get(parser.getContext());
   if (parser.parseOperand(target) ||
       parser.resolveOperand(target, pdlOperationType, result.operands) ||
       parser.parseOptionalAttrDict(result.attributes))
     return ParseResult::failure();
-
   return success();
 }
 
-void TileLabelOp::print(OpAsmPrinter &p) {
+void TileLoopHintOp::print(OpAsmPrinter &p) {
   p << ' ' << getTarget();
   p.printOptionalAttrDict((*this)->getAttrs());
 }
 
-void transform::TileLabelOp::getEffects(
+void transform::TileLoopHintOp::getEffects(
     SmallVectorImpl<MemoryEffects::EffectInstance> &effects) {
-  consumesHandle(getTarget(), effects);
-  modifiesPayload(effects);
+  onlyReadsHandle(getTarget(), effects);
+  onlyReadsPayload(effects);
 }
 
 //===----------------------------------------------------------------------===//

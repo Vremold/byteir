@@ -24,7 +24,7 @@ transform.sequence failures(propagate) {
 ^bb0(%arg0: !pdl.operation):
   %0 = transform.structured.match ops{["linalg.matmul"]} in %arg0
   %1, %loops:3 = transform.structured.tile_ext %0 [2, 4, 8] {interchange = [2, 1, 0]}
-  transform.structured.tile_label %1
+  transform.structured.tile_loop_hint %1
 }
 
 // -----
@@ -50,7 +50,7 @@ transform.sequence failures(propagate) {
 ^bb0(%arg0: !pdl.operation):
   %0 = transform.structured.match ops{["linalg_ext.softmax"]} in %arg0
   %1, %loop = transform.structured.tile_ext %0 [4] 
-  transform.structured.tile_label %1
+  transform.structured.tile_loop_hint %1
 }
 
 // -----
@@ -75,6 +75,6 @@ transform.sequence failures(propagate) {
 ^bb0(%arg0: !pdl.operation):
   %0 = transform.structured.match ops{["linalg_ext.softmax"]} in %arg0
   %1, %loops = transform.structured.tile_ext %0 [4] 
-  transform.structured.tile_label %1 
+  transform.structured.tile_loop_hint %1 
 }
 

@@ -138,3 +138,66 @@ func.func @alias_in_generic(%arg0: tensor<?x?xf32>) -> (tensor<?x?xf32>) {
 //CHECK-LABEL: func.func @alias_in_generic
 //CHECK: linalg.generic 
 //CHECK: linalg_ext.alias
+
+func.func @topk_tensor(%input_values: tensor<1024x64xf32>, %input_indices: tensor<1024x64xi32>) -> (tensor<1024x3xf32>, tensor<1024x3xi32>) {
+  %out_values = tensor.empty() : tensor<1024x3xf32>
+  %out_indices = tensor.empty() : tensor<1024x3xi32>
+  %0:2 = linalg_ext.topk
+        dimension(1)
+        ins(%input_values, %input_indices : tensor<1024x64xf32> , tensor<1024x64xi32>)
+        outs(%out_values, %out_indices : tensor<1024x3xf32>, tensor<1024x3xi32>) {
+        ^bb0(%arg0: f32, %arg1: f32):  // no predecessors
+          %0 = arith.cmpf ogt, %arg0, %arg1 : f32
+          linalg_ext.yield %0 : i1
+        } -> tensor<1024x3xf32>, tensor<1024x3xi32>
+  return %0#0, %0#1 : tensor<1024x3xf32>, tensor<1024x3xi32>
+}
+//CHECK-LABEL: func.func @topk_tensor
+//CHECK: linalg_ext.topk
+
+func.func @topk_memref(%input_values: memref<1024x64xf32>, %input_indices: memref<1024x64xi32>) -> (memref<1024x3xf32>, memref<1024x3xi32>) {
+  %out_values = memref.alloc() : memref<1024x3xf32>
+  %out_indices = memref.alloc() : memref<1024x3xi32>
+  linalg_ext.topk
+    dimension(1)
+    ins(%input_values, %input_indices : memref<1024x64xf32> , memref<1024x64xi32>)
+    outs(%out_values, %out_indices : memref<1024x3xf32>, memref<1024x3xi32>) {
+    ^bb0(%arg0: f32, %arg1: f32):  // no predecessors
+      %0 = arith.cmpf ogt, %arg0, %arg1 : f32
+      linalg_ext.yield %0 : i1
+    }
+  return %out_values, %out_indices : memref<1024x3xf32>, memref<1024x3xi32>
+}
+//CHECK-LABEL: func.func @topk_memref
+//CHECK: linalg_ext.topk
+
+func.func @topk_tensor_optional(%input_values: tensor<1024x64xf32>) -> (tensor<1024x3xf32>, tensor<1024x3xi32>) {
+  %out_values = tensor.empty() : tensor<1024x3xf32>
+  %out_indices = tensor.empty() : tensor<1024x3xi32>
+  %0:2 = linalg_ext.topk
+        dimension(1)
+        ins(%input_values : tensor<1024x64xf32>)
+        outs(%out_values, %out_indices : tensor<1024x3xf32>, tensor<1024x3xi32>) {
+        ^bb0(%arg0: f32, %arg1: f32):  // no predecessors
+          %0 = arith.cmpf ogt, %arg0, %arg1 : f32
+          linalg_ext.yield %0 : i1
+        } -> tensor<1024x3xf32>, tensor<1024x3xi32>
+  return %0#0, %0#1 : tensor<1024x3xf32>, tensor<1024x3xi32>
+}
+//CHECK-LABEL: func.func @topk_tensor_optional
+//CHECK: linalg_ext.topk
+
+
+func.func @topk_tensor_dynamic(%input_values: tensor<?x?xf32>, %input_indices: tensor<?x?xi32>, %out_values: tensor<?x?xf32>, %out_indices: tensor<?x?xi32>) -> (tensor<?x?xf32>, tensor<?x?xi32>) {
+  %0:2 = linalg_ext.topk
+        dimension(1)
+        ins(%input_values, %input_indices : tensor<?x?xf32> , tensor<?x?xi32>)
+        outs(%out_values, %out_indices : tensor<?x?xf32>, tensor<?x?xi32>) {
+        ^bb0(%arg0: f32, %arg1: f32):  // no predecessors
+          %0 = arith.cmpf ogt, %arg0, %arg1 : f32
+          linalg_ext.yield %0 : i1
+        } -> tensor<?x?xf32>, tensor<?x?xi32>
+  return %0#0, %0#1 : tensor<?x?xf32>, tensor<?x?xi32>
+}
+//CHECK-LABEL: func.func @topk_tensor_dynamic
+//CHECK: linalg_ext.topk
