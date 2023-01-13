@@ -110,7 +110,7 @@ struct LoopUnrollPass : public LoopUnrollBase<LoopUnrollPass> {
     this->unrollUpToFactor = upTo;
     this->unrollFull = full;
     this->depth = depth;
-    this->unrollAll = upTo;
+    this->unrollAll = unrollAll;
     this->annotateIdx = annotateIdx;
   }
 
