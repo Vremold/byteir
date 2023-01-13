@@ -35,6 +35,7 @@ llvm_build_rtti/
 # byteir artifact in CI
 byre_install*
 byre_install/
+onnx_frontend_download/
 
 # Local Test
 local_test*
