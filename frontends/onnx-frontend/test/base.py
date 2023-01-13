@@ -25,6 +25,7 @@ CUSTOM_CALL_OPS = [
     "l2_norm",
     "quantize",
     "dequantize",
+    "softmax",
 ]
 class TestBase:
     def setup_base(self, tmpdir_factory, dir):

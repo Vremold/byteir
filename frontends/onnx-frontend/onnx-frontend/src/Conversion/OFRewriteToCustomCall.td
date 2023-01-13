@@ -57,4 +57,11 @@ def RewriteDequantize : Pat<
   (NativeCodeCall<"createQuantizeDequantize<ONNXDequantizeLinearOp>($_builder, $_loc, $0, $1, $2, $3, $4)"> $input, $scale, $zero_point, $axis_attr, $output),
   []>;
 
+//===----------------------------------------------------------------------===//
+// Softmax Pattern
+//===----------------------------------------------------------------------===//
+def RewriteSoftmax : Pat<
+  (ONNXSoftmaxOp $input, $axis_attr),
+  (NativeCodeCall<"createSoftmax($_builder, $_loc, $0, $1)"> $input, $axis_attr)>;
+
 #endif // ONNX_FRONTEND_SRC_CONVERSION_OF_CUSTOM_CALL_TD

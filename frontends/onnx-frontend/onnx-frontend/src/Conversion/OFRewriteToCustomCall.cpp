@@ -35,7 +35,8 @@ namespace {
     func(l2_norm, L2Norm)          \
     func(layer_norm, LayerNorm)    \
     func(quantize, Quantize)       \
-    func(gelu, Gelu)
+    func(gelu, Gelu)               \
+    func(softmax, Softmax)
 
 #define GEN_FUNCNAME(call_target_name, func_name)                            \
   constexpr const char *get##func_name##NameWithPrefix() {                   \
@@ -197,6 +198,35 @@ Value createQuantizeDequantize(PatternRewriter &rewriter, Location loc,
     // per-channel quantization
     attrs.setAttr("axis", rewriter.getI64IntegerAttr(axis));
   }
+  customCallOp->setAttr(BYTEIR_ATTRS, getCleanAttr(attrs));
+
+  return customCallOp.getResults()[0];
+}
+
+//===----------------------------------------------------------------------===//
+// Softmax
+//===----------------------------------------------------------------------===//
+Value createSoftmax(PatternRewriter &rewriter, Location loc, Value input,
+                    IntegerAttr axis_attr) {
+  RankedTensorType inputType =
+      input.getType().dyn_cast_or_null<RankedTensorType>();
+  assert(inputType != nullptr && "Softmax input type must be ranked");
+
+  int64_t axis = axis_attr.getSInt();
+  // canonicalize axis to be positive
+  if (axis < 0) {
+    axis = inputType.getRank() + axis;
+  }
+
+  std::string call_target_name = getSoftmaxNameWithPrefix();
+  mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
+      loc, llvm::ArrayRef<Type>{inputType}, llvm::ArrayRef<Value>{input},
+      call_target_name, false, "",
+      mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
+      nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+  DictionaryAttrWrapper attrs(rewriter.getContext());
+  attrs.setAttr("axis", rewriter.getI64IntegerAttr(axis));
   customCallOp->setAttr(BYTEIR_ATTRS, getCleanAttr(attrs));
 
   return customCallOp.getResults()[0];
@@ -460,6 +490,8 @@ struct OFRewriteToCustomCallPass
         std::make_unique<RewriteQuantize>(context));
     validOpSet[getDequantizeName()].emplace_back(
         std::make_unique<RewriteDequantize>(context));
+    validOpSet[getSoftmaxName()].emplace_back(
+        std::make_unique<RewriteSoftmax>(context));
     validOpSet[getGeluName()].emplace_back(
         std::make_unique<RewriteGelu>(context, 7));
     validOpSet[getLayerNormName()].emplace_back(

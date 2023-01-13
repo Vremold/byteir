@@ -11,7 +11,7 @@ PROJ_DIR="$ROOT_PROJ_DIR/frontends/onnx-frontend"
 
 function of_upload() {
   pushd $PROJ_DIR
-  ONNX_FRONTEND_DOWNLOAD=$ROOT_PROJ_DIR/onnx_frontend_download
+  ONNX_FRONTEND_DOWNLOAD=$PROJ_DIR/onnx_frontend_download
 
   if [ -d ${ONNX_FRONTEND_DOWNLOAD} ]; then
     rm -rf ${ONNX_FRONTEND_DOWNLOAD}
