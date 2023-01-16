@@ -47,7 +47,7 @@ struct RewriteFuncAttrToByteIRPass
           entryFunction.get("inputs").cast<StringAttr>().getValue();
       StringRef outputs =
           entryFunction.get("outputs").cast<StringAttr>().getValue();
-      // TODO(lyq): handle "controls" attribute、
+      // TODO(lyq): handle "controls" attribute
       SmallVector<StringRef> inputsName;
       inputs.split(inputsName, ",");
       SmallVector<StringRef> outputsName;
@@ -70,6 +70,9 @@ struct RewriteFuncAttrToByteIRPass
       funcOp->setAttr("byteir.entry_point",
                       builder.getDictionaryAttr(byteirAttrs));
       funcOp->removeAttr("tf.entry_function");
+
+      // remove argument attributes
+      funcOp->removeAttr("arg_attrs");
     }
   }
 };
