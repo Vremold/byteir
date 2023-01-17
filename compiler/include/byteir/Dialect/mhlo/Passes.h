@@ -32,6 +32,7 @@
 #include "byteir/Dialect/mhlo/Transforms/HloTransposeDotToDotGeneral.h"
 #include "byteir/Dialect/mhlo/Transforms/InsertShapeConstraint.h"
 #include "byteir/Dialect/mhlo/Transforms/LayoutTransformation.h"
+#include "byteir/Dialect/mhlo/Transforms/MatmulLayoutTransform.h"
 #include "byteir/Dialect/mhlo/Transforms/RewriteWithConstraint.h"
 #include "byteir/Dialect/mhlo/Transforms/ShapeReification.h"
 #include "byteir/Dialect/mhlo/Transforms/StaticShapeInference.h"

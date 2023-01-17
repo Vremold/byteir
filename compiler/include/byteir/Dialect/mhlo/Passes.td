@@ -170,6 +170,21 @@ def IOConvertFusion : Pass<"fuse-io-convert", "mlir::func::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// MatmulLayoutTransform
+//===----------------------------------------------------------------------===//
+
+def MatmulLayoutTransform: Pass<"matmul-layout-transform", "mlir::func::FuncOp"> {
+  let summary = "Transform matmul layout to a specific one.";
+  let constructor = "mlir::createMatmulLayoutTransformPass()";
+  let options = [
+    Option<"transposeConstantOnly", "transpose-const-only", "bool", /*default=*/"true",
+           "Only insert transpose op for constants if set true">,
+    Option<"targetLayout", "target-layout", "std::string", /*default=*/"",
+           "Target Layout">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
 // HloMoveDown
 //===----------------------------------------------------------------------===//
 
