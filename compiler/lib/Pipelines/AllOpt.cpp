@@ -46,7 +46,9 @@ void createByteIRAllOptPipelineImpl(OpPassManager &pm,
   linalgTensorOptOptions.target = target;
   createLinalgTensorOptPipeline(pm, linalgTensorOptOptions);
 
-  createByteIRTotalBufferizePipeline(pm);
+  ByteIRTotalBufferizeOptions totalBufferizeOptions;
+  totalBufferizeOptions.target = target;
+  createByteIRTotalBufferizePipeline(pm, totalBufferizeOptions);
 
   createAffineOptPipeline(pm);
   // optional, alternative to affine-opt

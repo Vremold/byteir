@@ -23,10 +23,19 @@
 
 namespace mlir {
 
-void createByteIRTotalBufferizePipeline(OpPassManager &pm);
+struct ByteIRTotalBufferizeOptions
+    : public PassPipelineOptions<ByteIRTotalBufferizeOptions> {
+  Option<std::string> target{
+      *this, "target",
+      llvm::cl::desc("An optional attribute to specify target."),
+      llvm::cl::init("")};
+};
+
+void createByteIRTotalBufferizePipeline(
+    OpPassManager &pm, const ByteIRTotalBufferizeOptions &options);
 
 inline void registerByteIRTotalBufferizePipeline() {
-  PassPipelineRegistration<>(
+  PassPipelineRegistration<ByteIRTotalBufferizeOptions>(
       "byteir-total-bufferize",
       "Performs all bufferization, including mhlo to lmhlo",
       createByteIRTotalBufferizePipeline);

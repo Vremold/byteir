@@ -33,9 +33,10 @@
 
 using namespace mlir;
 
-void mlir::createByteIRTotalBufferizePipeline(OpPassManager &pm) {
+void mlir::createByteIRTotalBufferizePipeline(
+    OpPassManager &pm, const ByteIRTotalBufferizeOptions &options) {
   invokeOpPassPipelineBuilder(
-      [](OpPassManager &pm) {
+      [&](OpPassManager &pm) {
         pm.addPass(createConvertHloToLHloPass());
         pm.addPass(createCSEPass());
         pm.addNestedPass<func::FuncOp>(
@@ -48,11 +49,14 @@ void mlir::createByteIRTotalBufferizePipeline(OpPassManager &pm) {
         pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
         addCleanUpExtPassPipeline(pm);
 
-        // clean-up possible redudant copy from bufferization
-        pm.addNestedPass<func::FuncOp>(createRemoveCopyPass());
-        addCleanUpExtPassPipeline(pm);
-        pm.addNestedPass<func::FuncOp>(createRemoveCopyPass());
-        addCleanUpExtPassPipeline(pm);
+        // clean-up possible redundant copy from bufferization
+        if (options.target != "CPU") {
+          // TODO: move this into createRemoveCopyPass
+          pm.addNestedPass<func::FuncOp>(createRemoveCopyPass());
+          addCleanUpExtPassPipeline(pm);
+          pm.addNestedPass<func::FuncOp>(createRemoveCopyPass());
+          addCleanUpExtPassPipeline(pm);
+        }
       },
       pm);
 }
