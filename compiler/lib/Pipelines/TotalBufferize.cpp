@@ -42,7 +42,10 @@ void mlir::createByteIRTotalBufferizePipeline(
         pm.addNestedPass<func::FuncOp>(
             bufferization::createEmptyTensorToAllocTensorPass());
         pm.addNestedPass<func::FuncOp>(createAceBufferizePass());
-        pm.addPass(arith::createArithBufferizePass());
+        if (options.target != "CPU") {
+          // TODO: add this back when arith.cst rewrite to linalg.fill
+          pm.addPass(arith::createArithBufferizePass());
+        }
         pm.addNestedPass<func::FuncOp>(createSCFBufferizePass());
         pm.addNestedPass<func::FuncOp>(vector::createVectorBufferizePass());
         pm.addNestedPass<func::FuncOp>(createLinalgExtBufferizePass());

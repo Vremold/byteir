@@ -42,6 +42,13 @@ LogicalResult foldShapeBroadcast(shape::BroadcastOp op,
                                  PatternRewriter &rewriter);
 } // namespace shape
 
+namespace func {
+class CallOp;
+
+// remove empty function call
+LogicalResult removeEmptyFuncCall(func::CallOp op, PatternRewriter &rewriter);
+} // namespace func
+
 namespace mhlo {
 class ClampOp;
 class ConvertOp;

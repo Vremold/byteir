@@ -141,3 +141,14 @@ func.func @simplify_byteir_addn(%arg0: tensor<150x768xf16>, %arg1: tensor<150x76
 // CHECK-LABEL: simplify_byteir_addn
 // CHECK-NOT: mhlo.custom_call
 // CHECK: mhlo.add
+
+func.func @remove_empty(%arg0: tensor<150x768xf16>) -> tensor<150x768xf16> {
+  call @empty() : () -> ()
+  return %arg0 : tensor<150x768xf16>
+}
+func.func private @empty() {
+  return
+}
+// CHECK-LABEL: remove_empty
+// CHECK-NOT: call @empty
+// CHECK-NOT: func.func private @empty

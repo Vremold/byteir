@@ -22,8 +22,10 @@
 #include "byteir/Utils/Utils.h"
 #include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
 #include "mlir-hlo/utils/convert_op_folder.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/TypeUtilities.h"
+#include "mlir/Support/LogicalResult.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
@@ -936,6 +938,24 @@ LogicalResult mlir::mhlo::simplifyByteIRAddNToAdd(mhlo::CustomCallOp op,
   return failure();
 }
 
+LogicalResult mlir::func::removeEmptyFuncCall(func::CallOp op,
+                                              PatternRewriter &rewriter) {
+  if (op->getNumResults() == 0 && op.getNumOperands() == 0) {
+    // remove call op if it doesn't have any input or output.
+    auto funcOp = getFuncOp(op);
+    size_t numNonReturnOp = 0;
+    for (auto &op : funcOp.getBody().front().without_terminator()) {
+      numNonReturnOp += isa<ReturnOp>(op) ? 0 : 1;
+    }
+    if (numNonReturnOp == 0) {
+      rewriter.eraseOp(funcOp);
+      rewriter.eraseOp(op);
+      return success();
+    }
+  }
+  return failure();
+}
+
 void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldBroadcastInDim);
   patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
@@ -956,6 +976,7 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldConsecutiveConvertOp);
   patterns.add(mlir::mhlo::canonicalizeBroadcastInDimConst);
   patterns.add(mlir::mhlo::simplifyByteIRAddNToAdd);
+  patterns.add(mlir::func::removeEmptyFuncCall);
 }
 
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,
