@@ -1,37 +1,8 @@
 // RUN: byteir-translate %s -gen-ptx -dump-ptx | FileCheck %s
 
 // CHECK-LABEL: .visible .entry Unknown
-
 module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
   gpu.module @unified {
-    llvm.func @Unknown166(%arg0: !llvm.ptr<f32>, %arg1: !llvm.ptr<f32>, %arg2: i64, %arg3: i64, %arg4: i64, %arg5: !llvm.ptr<f32>, %arg6: !llvm.ptr<f32>, %arg7: i64, %arg8: i64, %arg9: i64) attributes {gpu.kernel, nvvm.kernel} {
-      %0 = llvm.mlir.undef : !llvm.struct<(ptr<f32>, ptr<f32>, i64, array<1 x i64>, array<1 x i64>)>
-      %1 = llvm.insertvalue %arg0, %0[0] : !llvm.struct<(ptr<f32>, ptr<f32>, i64, array<1 x i64>, array<1 x i64>)> 
-      %2 = llvm.insertvalue %arg1, %1[1] : !llvm.struct<(ptr<f32>, ptr<f32>, i64, array<1 x i64>, array<1 x i64>)> 
-      %3 = llvm.insertvalue %arg5, %0[0] : !llvm.struct<(ptr<f32>, ptr<f32>, i64, array<1 x i64>, array<1 x i64>)> 
-      %4 = llvm.insertvalue %arg6, %3[1] : !llvm.struct<(ptr<f32>, ptr<f32>, i64, array<1 x i64>, array<1 x i64>)> 
-      %5 = llvm.mlir.constant(1000 : index) : i64
-      %6 = nvvm.read.ptx.sreg.ctaid.x : i32
-      %7 = llvm.sext %6 : i32 to i64
-      %8 = nvvm.read.ptx.sreg.ntid.x : i32
-      %9 = llvm.sext %8 : i32 to i64
-      %10 = nvvm.read.ptx.sreg.tid.x : i32
-      %11 = llvm.sext %10 : i32 to i64
-      %12 = llvm.mul %9, %7  : i64
-      %13 = llvm.add %11, %12  : i64
-      %14 = llvm.icmp "slt" %13, %5 : i64
-      llvm.cond_br %14, ^bb1, ^bb2
-    ^bb1:  // pred: ^bb0
-      %15 = llvm.getelementptr %arg1[%13] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      %16 = llvm.load %15 : !llvm.ptr<f32>
-      %17 = llvm.fptrunc %16 : f32 to f16
-      %18 = llvm.fpext %17 : f16 to f32
-      %19 = llvm.getelementptr %arg6[%13] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
-      llvm.store %18, %19 : !llvm.ptr<f32>
-      llvm.br ^bb2
-    ^bb2:  // 2 preds: ^bb0, ^bb1
-      llvm.return
-    }
     llvm.func @Unknown165(%arg0: !llvm.ptr<f16>, %arg1: !llvm.ptr<f16>, %arg2: i64, %arg3: i64, %arg4: i64, %arg5: i64, %arg6: i64, %arg7: !llvm.ptr<f32>, %arg8: !llvm.ptr<f32>, %arg9: i64, %arg10: i64, %arg11: i64, %arg12: i64, %arg13: i64) attributes {gpu.kernel, nvvm.kernel} {
       %0 = llvm.mlir.undef : !llvm.struct<(ptr<f16>, ptr<f16>, i64, array<2 x i64>, array<2 x i64>)>
       %1 = llvm.insertvalue %arg0, %0[0] : !llvm.struct<(ptr<f16>, ptr<f16>, i64, array<2 x i64>, array<2 x i64>)> 
@@ -3347,8 +3318,8 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %20 = llvm.insertvalue %arg22, %19[3, 1] : !llvm.struct<(ptr<f16>, ptr<f16>, i64, array<4 x i64>, array<4 x i64>)> 
       %21 = llvm.insertvalue %arg26, %20[4, 1] : !llvm.struct<(ptr<f16>, ptr<f16>, i64, array<4 x i64>, array<4 x i64>)> 
       %22 = llvm.insertvalue %arg23, %21[3, 2] : !llvm.struct<(ptr<f16>, ptr<f16>, i64, array<4 x i64>, array<4 x i64>)> 
-      %23 = llvm.mlir.constant(0.000000e+00 : f16) : f16
-      %24 = llvm.mlir.constant(4.900000e+01 : f16) : f16
+      %23 = llvm.mlir.constant(4.900000e+01 : f16) : f16
+      %24 = llvm.mlir.constant(0.000000e+00 : f16) : f16
       %25 = llvm.mlir.constant(0 : index) : i64
       %26 = llvm.mlir.constant(100352 : index) : i64
       %27 = llvm.mlir.constant(7 : index) : i64
@@ -3409,8 +3380,8 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %80 = llvm.add %79, %62  : i64
       %81 = llvm.getelementptr %arg1[%80] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %82 = llvm.load %81 : !llvm.ptr<f16>
-      %83 = llvm.fdiv %82, %24  : f16
-      %84 = llvm.select %78, %83, %23 : i1, f16
+      %83 = llvm.fdiv %82, %23  : f16
+      %84 = llvm.select %78, %83, %24 : i1, f16
       %85 = llvm.getelementptr %arg19[%76] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %84, %85 : !llvm.ptr<f16>
       llvm.br ^bb2
@@ -3788,7 +3759,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %89 = llvm.getelementptr %arg12[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %90 = llvm.load %89 : !llvm.ptr<f16>
       %91 = llvm.fadd %88, %90  : f16
-      %92 = "llvm.intr.maxnum"(%91, %34) : (f16, f16) -> f16
+      %92 = llvm.intr.maxnum(%91, %34)  : (f16, f16) -> f16
       %93 = llvm.fcmp "ogt" %92, %34 : f16
       %94 = llvm.getelementptr %arg23[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %92, %94 : !llvm.ptr<f16>
@@ -3882,7 +3853,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>
@@ -3987,7 +3958,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %89 = llvm.getelementptr %arg12[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %90 = llvm.load %89 : !llvm.ptr<f16>
       %91 = llvm.fadd %88, %90  : f16
-      %92 = "llvm.intr.maxnum"(%91, %34) : (f16, f16) -> f16
+      %92 = llvm.intr.maxnum(%91, %34)  : (f16, f16) -> f16
       %93 = llvm.fcmp "ogt" %92, %34 : f16
       %94 = llvm.getelementptr %arg23[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %92, %94 : !llvm.ptr<f16>
@@ -4081,7 +4052,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>
@@ -4186,7 +4157,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %89 = llvm.getelementptr %arg12[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %90 = llvm.load %89 : !llvm.ptr<f16>
       %91 = llvm.fadd %88, %90  : f16
-      %92 = "llvm.intr.maxnum"(%91, %34) : (f16, f16) -> f16
+      %92 = llvm.intr.maxnum(%91, %34)  : (f16, f16) -> f16
       %93 = llvm.fcmp "ogt" %92, %34 : f16
       %94 = llvm.getelementptr %arg23[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %92, %94 : !llvm.ptr<f16>
@@ -4280,7 +4251,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>
@@ -4385,7 +4356,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %89 = llvm.getelementptr %arg12[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %90 = llvm.load %89 : !llvm.ptr<f16>
       %91 = llvm.fadd %88, %90  : f16
-      %92 = "llvm.intr.maxnum"(%91, %34) : (f16, f16) -> f16
+      %92 = llvm.intr.maxnum(%91, %34)  : (f16, f16) -> f16
       %93 = llvm.fcmp "ogt" %92, %34 : f16
       %94 = llvm.getelementptr %arg23[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %92, %94 : !llvm.ptr<f16>
@@ -4479,7 +4450,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>
@@ -4584,7 +4555,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %89 = llvm.getelementptr %arg12[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %90 = llvm.load %89 : !llvm.ptr<f16>
       %91 = llvm.fadd %88, %90  : f16
-      %92 = "llvm.intr.maxnum"(%91, %34) : (f16, f16) -> f16
+      %92 = llvm.intr.maxnum(%91, %34)  : (f16, f16) -> f16
       %93 = llvm.fcmp "ogt" %92, %34 : f16
       %94 = llvm.getelementptr %arg23[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %92, %94 : !llvm.ptr<f16>
@@ -4678,7 +4649,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>
@@ -4783,7 +4754,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %89 = llvm.getelementptr %arg12[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %90 = llvm.load %89 : !llvm.ptr<f16>
       %91 = llvm.fadd %88, %90  : f16
-      %92 = "llvm.intr.maxnum"(%91, %34) : (f16, f16) -> f16
+      %92 = llvm.intr.maxnum(%91, %34)  : (f16, f16) -> f16
       %93 = llvm.fcmp "ogt" %92, %34 : f16
       %94 = llvm.getelementptr %arg23[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %92, %94 : !llvm.ptr<f16>
@@ -4877,7 +4848,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>
@@ -4982,7 +4953,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %89 = llvm.getelementptr %arg12[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %90 = llvm.load %89 : !llvm.ptr<f16>
       %91 = llvm.fadd %88, %90  : f16
-      %92 = "llvm.intr.maxnum"(%91, %34) : (f16, f16) -> f16
+      %92 = llvm.intr.maxnum(%91, %34)  : (f16, f16) -> f16
       %93 = llvm.fcmp "ogt" %92, %34 : f16
       %94 = llvm.getelementptr %arg23[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %92, %94 : !llvm.ptr<f16>
@@ -5076,7 +5047,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>
@@ -5181,7 +5152,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %89 = llvm.getelementptr %arg12[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %90 = llvm.load %89 : !llvm.ptr<f16>
       %91 = llvm.fadd %88, %90  : f16
-      %92 = "llvm.intr.maxnum"(%91, %34) : (f16, f16) -> f16
+      %92 = llvm.intr.maxnum(%91, %34)  : (f16, f16) -> f16
       %93 = llvm.fcmp "ogt" %92, %34 : f16
       %94 = llvm.getelementptr %arg23[%86] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %92, %94 : !llvm.ptr<f16>
@@ -5275,7 +5246,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>
@@ -5369,7 +5340,7 @@ module @IrToMhlo.2452 attributes {byre.container_module, gpu.container_module} {
       %78 = llvm.add %77, %44  : i64
       %79 = llvm.getelementptr %arg1[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       %80 = llvm.load %79 : !llvm.ptr<f16>
-      %81 = "llvm.intr.maxnum"(%80, %26) : (f16, f16) -> f16
+      %81 = llvm.intr.maxnum(%80, %26)  : (f16, f16) -> f16
       %82 = llvm.fcmp "ogt" %81, %26 : f16
       %83 = llvm.getelementptr %arg12[%78] : (!llvm.ptr<f16>, i64) -> !llvm.ptr<f16>
       llvm.store %81, %83 : !llvm.ptr<f16>

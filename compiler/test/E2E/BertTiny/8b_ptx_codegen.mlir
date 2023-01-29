@@ -1,7 +1,6 @@
 // RUN: byteir-translate %s -gen-ptx -dump-ptx | FileCheck %s
 
 // CHECK-LABEL: .visible .entry Unknown
-
 module attributes {byre.container_module, gpu.container_module} {
   gpu.module @unified {
     llvm.func @Unknown19(%arg0: !llvm.ptr<i1>, %arg1: !llvm.ptr<i1>, %arg2: i64, %arg3: i64, %arg4: i64, %arg5: !llvm.ptr<f32>, %arg6: !llvm.ptr<f32>, %arg7: i64, %arg8: i64, %arg9: i64, %arg10: i64, %arg11: i64, %arg12: !llvm.ptr<f32>, %arg13: !llvm.ptr<f32>, %arg14: i64, %arg15: i64, %arg16: i64, %arg17: i64, %arg18: i64) attributes {gpu.kernel, nvvm.kernel} {
@@ -589,8 +588,8 @@ module attributes {byre.container_module, gpu.container_module} {
     }
     llvm.func @Unknown10(%arg0: !llvm.ptr<f32>, %arg1: !llvm.ptr<f32>, %arg2: i64, %arg3: !llvm.ptr<f32>, %arg4: !llvm.ptr<f32>, %arg5: i64) attributes {gpu.kernel, nvvm.kernel} {
       %0 = llvm.mlir.undef : !llvm.struct<(ptr<f32>, ptr<f32>, i64)>
-      %1 = llvm.mlir.constant(1.000000e+00 : f32) : f32
-      %2 = llvm.mlir.constant(0.000000e+00 : f32) : f32
+      %1 = llvm.mlir.constant(0.000000e+00 : f32) : f32
+      %2 = llvm.mlir.constant(1.000000e+00 : f32) : f32
       %3 = llvm.mlir.constant(1 : index) : i64
       %4 = nvvm.read.ptx.sreg.ctaid.x : i32
       %5 = llvm.sext %4 : i32 to i64
@@ -604,8 +603,8 @@ module attributes {byre.container_module, gpu.container_module} {
       llvm.cond_br %12, ^bb1, ^bb2
     ^bb1:  // pred: ^bb0
       %13 = llvm.load %arg1 : !llvm.ptr<f32>
-      %14 = llvm.fcmp "une" %13, %2 : f32
-      %15 = llvm.select %14, %13, %1 : i1, f32
+      %14 = llvm.fcmp "une" %13, %1 : f32
+      %15 = llvm.select %14, %13, %2 : i1, f32
       llvm.store %15, %arg4 : !llvm.ptr<f32>
       llvm.br ^bb2
     ^bb2:  // 2 preds: ^bb0, ^bb1
@@ -665,8 +664,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %27 = llvm.insertvalue %arg44, %26[1] : !llvm.struct<(ptr<f32>, ptr<f32>, i64, array<2 x i64>, array<2 x i64>)> 
       %28 = llvm.insertvalue %arg45, %27[2] : !llvm.struct<(ptr<f32>, ptr<f32>, i64, array<2 x i64>, array<2 x i64>)> 
       %29 = llvm.insertvalue %arg46, %28[3, 0] : !llvm.struct<(ptr<f32>, ptr<f32>, i64, array<2 x i64>, array<2 x i64>)> 
-      %30 = llvm.mlir.constant(1.000000e+00 : f32) : f32
-      %31 = llvm.mlir.constant(0.000000e+00 : f32) : f32
+      %30 = llvm.mlir.constant(0.000000e+00 : f32) : f32
+      %31 = llvm.mlir.constant(1.000000e+00 : f32) : f32
       %32 = llvm.mlir.constant(0 : index) : i64
       %33 = llvm.mlir.constant(7813632 : index) : i64
       %34 = llvm.mlir.constant(30522 : index) : i64
@@ -703,14 +702,14 @@ module attributes {byre.container_module, gpu.container_module} {
       %63 = llvm.getelementptr %arg1[%54] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
       %64 = llvm.load %63 : !llvm.ptr<f32>
       %65 = llvm.icmp "eq" %58, %48 : i64
-      %66 = llvm.select %65, %30, %31 : i1, f32
-      %67 = llvm.select %56, %30, %31 : i1, f32
+      %66 = llvm.select %65, %31, %30 : i1, f32
+      %67 = llvm.select %56, %31, %30 : i1, f32
       %68 = llvm.fmul %67, %66  : f32
       %69 = llvm.fsub %62, %64  : f32
       %70 = llvm.fneg %66  : f32
       %71 = llvm.fmul %70, %69  : f32
-      %72 = llvm.fcmp "une" %66, %30 : f32
-      %73 = llvm.select %72, %31, %71 : i1, f32
+      %72 = llvm.fcmp "une" %66, %31 : f32
+      %73 = llvm.select %72, %30, %71 : i1, f32
       %74 = llvm.fmul %73, %68  : f32
       %75 = llvm.fmul %70, %68  : f32
       %76 = llvm.call @__nv_expf(%69) : (f32) -> f32
@@ -984,8 +983,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %16 = llvm.insertvalue %arg22, %15[1] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
       %17 = llvm.insertvalue %arg23, %16[2] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
       %18 = llvm.insertvalue %arg24, %17[3, 0] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
-      %19 = llvm.mlir.constant(512 : i64) : i64
-      %20 = llvm.mlir.constant(0 : i64) : i64
+      %19 = llvm.mlir.constant(0 : i64) : i64
+      %20 = llvm.mlir.constant(512 : i64) : i64
       %21 = llvm.mlir.constant(-1 : i64) : i64
       %22 = llvm.mlir.constant(0 : index) : i64
       %23 = llvm.mlir.constant(128 : index) : i64
@@ -1008,8 +1007,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %38 = llvm.getelementptr %arg1[%37] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
       %39 = llvm.load %38 : !llvm.ptr<i64>
       %40 = llvm.trunc %39 : i64 to i32
-      %41 = llvm.add %39, %19  : i64
-      %42 = llvm.icmp "slt" %39, %20 : i64
+      %41 = llvm.add %39, %20  : i64
+      %42 = llvm.icmp "slt" %39, %19 : i64
       %43 = llvm.select %42, %41, %39 : i1, i64
       %44 = llvm.icmp "ne" %39, %21 : i64
       %45 = llvm.getelementptr %arg8[%37] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
@@ -1041,8 +1040,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %15 = llvm.insertvalue %arg20, %14[1] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
       %16 = llvm.insertvalue %arg21, %15[2] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
       %17 = llvm.insertvalue %arg22, %16[3, 0] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
-      %18 = llvm.mlir.constant(2 : i64) : i64
-      %19 = llvm.mlir.constant(0 : i64) : i64
+      %18 = llvm.mlir.constant(0 : i64) : i64
+      %19 = llvm.mlir.constant(2 : i64) : i64
       %20 = llvm.mlir.constant(-1 : i64) : i64
       %21 = llvm.mlir.constant(0 : index) : i64
       %22 = llvm.mlir.constant(256 : index) : i64
@@ -1071,9 +1070,9 @@ module attributes {byre.container_module, gpu.container_module} {
       %43 = llvm.select %38, %42, %41 : i1, i64
       %44 = llvm.getelementptr %arg1[%37] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
       %45 = llvm.load %44 : !llvm.ptr<i64>
-      %46 = llvm.add %45, %18  : i64
+      %46 = llvm.add %45, %19  : i64
       %47 = llvm.trunc %45 : i64 to i32
-      %48 = llvm.icmp "slt" %45, %19 : i64
+      %48 = llvm.icmp "slt" %45, %18 : i64
       %49 = llvm.select %48, %46, %45 : i1, i64
       %50 = llvm.icmp "ne" %45, %20 : i64
       %51 = llvm.mul %43, %23  : i64
@@ -1108,8 +1107,8 @@ module attributes {byre.container_module, gpu.container_module} {
       %16 = llvm.insertvalue %arg22, %15[1] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
       %17 = llvm.insertvalue %arg23, %16[2] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
       %18 = llvm.insertvalue %arg24, %17[3, 0] : !llvm.struct<(ptr<i1>, ptr<i1>, i64, array<2 x i64>, array<2 x i64>)> 
-      %19 = llvm.mlir.constant(30522 : i64) : i64
-      %20 = llvm.mlir.constant(0 : i64) : i64
+      %19 = llvm.mlir.constant(0 : i64) : i64
+      %20 = llvm.mlir.constant(30522 : i64) : i64
       %21 = llvm.mlir.constant(0 : index) : i64
       %22 = llvm.mlir.constant(256 : index) : i64
       %23 = llvm.mlir.constant(128 : index) : i64
@@ -1140,10 +1139,10 @@ module attributes {byre.container_module, gpu.container_module} {
       %46 = llvm.getelementptr %arg1[%45] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>
       %47 = llvm.load %46 : !llvm.ptr<i64>
       %48 = llvm.trunc %47 : i64 to i32
-      %49 = llvm.add %47, %19  : i64
-      %50 = llvm.icmp "slt" %47, %20 : i64
+      %49 = llvm.add %47, %20  : i64
+      %50 = llvm.icmp "slt" %47, %19 : i64
       %51 = llvm.select %50, %49, %47 : i1, i64
-      %52 = llvm.icmp "ne" %47, %20 : i64
+      %52 = llvm.icmp "ne" %47, %19 : i64
       %53 = llvm.getelementptr %arg8[%45] : (!llvm.ptr<i32>, i64) -> !llvm.ptr<i32>
       llvm.store %48, %53 : !llvm.ptr<i32>
       %54 = llvm.getelementptr %arg15[%45] : (!llvm.ptr<i64>, i64) -> !llvm.ptr<i64>

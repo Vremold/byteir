@@ -9,7 +9,7 @@ module {
     %c224 = arith.constant 224 : index
     %c-1 = arith.constant -1 : index
     %c3 = arith.constant 3 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x3x224x224xf16>
+    %alloc = memref.alloc() : memref<1x3x224x224xf16>
     scf.for %arg1 = %c0 to %c150528 step %c1 {
       %0 = arith.remsi %arg1, %c224 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -54,7 +54,7 @@ module {
     %c7 = arith.constant 7 : index
     %c-1 = arith.constant -1 : index
     %c3 = arith.constant 3 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64x3x7x7xf16>
+    %alloc = memref.alloc() : memref<64x3x7x7xf16>
     scf.for %arg1 = %c0 to %c9408 step %c1 {
       %0 = arith.remsi %arg1, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -111,7 +111,7 @@ module {
     %c112 = arith.constant 112 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x64x112x112xf16>
+    %alloc = memref.alloc() : memref<1x64x112x112xf16>
     scf.for %arg1 = %c0 to %c802816 step %c1 {
       %0 = arith.remsi %arg1, %c112 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -156,7 +156,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64x64x3x3xf16>
+    %alloc = memref.alloc() : memref<64x64x3x3xf16>
     scf.for %arg1 = %c0 to %c36864 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -213,7 +213,7 @@ module {
     %c56 = arith.constant 56 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
+    %alloc = memref.alloc() : memref<1x64x56x56xf16>
     scf.for %arg1 = %c0 to %c200704 step %c1 {
       %0 = arith.remsi %arg1, %c56 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -258,7 +258,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64x64x3x3xf16>
+    %alloc = memref.alloc() : memref<64x64x3x3xf16>
     scf.for %arg1 = %c0 to %c36864 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -315,7 +315,7 @@ module {
     %c56 = arith.constant 56 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
+    %alloc = memref.alloc() : memref<1x64x56x56xf16>
     scf.for %arg2 = %c0 to %c200704 step %c1 {
       %0 = arith.remsi %arg2, %c56 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -362,7 +362,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64x64x3x3xf16>
+    %alloc = memref.alloc() : memref<64x64x3x3xf16>
     scf.for %arg1 = %c0 to %c36864 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -419,7 +419,7 @@ module {
     %c56 = arith.constant 56 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
+    %alloc = memref.alloc() : memref<1x64x56x56xf16>
     scf.for %arg1 = %c0 to %c200704 step %c1 {
       %0 = arith.remsi %arg1, %c56 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -464,7 +464,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64x64x3x3xf16>
+    %alloc = memref.alloc() : memref<64x64x3x3xf16>
     scf.for %arg1 = %c0 to %c36864 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -521,7 +521,7 @@ module {
     %c56 = arith.constant 56 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x64x56x56xf16>
+    %alloc = memref.alloc() : memref<1x64x56x56xf16>
     scf.for %arg2 = %c0 to %c200704 step %c1 {
       %0 = arith.remsi %arg2, %c56 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -567,7 +567,7 @@ module {
     %c1 = arith.constant 1 : index
     %c64 = arith.constant 64 : index
     %c-1 = arith.constant -1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128x64x1x1xf16>
+    %alloc = memref.alloc() : memref<128x64x1x1xf16>
     scf.for %arg1 = %c0 to %c8192 step %c1 {
       %0 = arith.remsi %arg1, %c64 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -603,7 +603,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c64 = arith.constant 64 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128x64x3x3xf16>
+    %alloc = memref.alloc() : memref<128x64x3x3xf16>
     scf.for %arg1 = %c0 to %c73728 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -660,7 +660,7 @@ module {
     %c28 = arith.constant 28 : index
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x128x28x28xf16>
+    %alloc = memref.alloc() : memref<1x128x28x28xf16>
     scf.for %arg1 = %c0 to %c100352 step %c1 {
       %0 = arith.remsi %arg1, %c28 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -705,7 +705,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128x128x3x3xf16>
+    %alloc = memref.alloc() : memref<128x128x3x3xf16>
     scf.for %arg1 = %c0 to %c147456 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -762,7 +762,7 @@ module {
     %c28 = arith.constant 28 : index
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x128x28x28xf16>
+    %alloc = memref.alloc() : memref<1x128x28x28xf16>
     scf.for %arg2 = %c0 to %c100352 step %c1 {
       %0 = arith.remsi %arg2, %c28 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -809,7 +809,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128x128x3x3xf16>
+    %alloc = memref.alloc() : memref<128x128x3x3xf16>
     scf.for %arg1 = %c0 to %c147456 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -866,7 +866,7 @@ module {
     %c28 = arith.constant 28 : index
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x128x28x28xf16>
+    %alloc = memref.alloc() : memref<1x128x28x28xf16>
     scf.for %arg1 = %c0 to %c100352 step %c1 {
       %0 = arith.remsi %arg1, %c28 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -911,7 +911,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128x128x3x3xf16>
+    %alloc = memref.alloc() : memref<128x128x3x3xf16>
     scf.for %arg1 = %c0 to %c147456 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -968,7 +968,7 @@ module {
     %c28 = arith.constant 28 : index
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x128x28x28xf16>
+    %alloc = memref.alloc() : memref<1x128x28x28xf16>
     scf.for %arg2 = %c0 to %c100352 step %c1 {
       %0 = arith.remsi %arg2, %c28 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1014,7 +1014,7 @@ module {
     %c1 = arith.constant 1 : index
     %c128 = arith.constant 128 : index
     %c-1 = arith.constant -1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x128x1x1xf16>
+    %alloc = memref.alloc() : memref<256x128x1x1xf16>
     scf.for %arg1 = %c0 to %c32768 step %c1 {
       %0 = arith.remsi %arg1, %c128 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1050,7 +1050,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c128 = arith.constant 128 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x128x3x3xf16>
+    %alloc = memref.alloc() : memref<256x128x3x3xf16>
     scf.for %arg1 = %c0 to %c294912 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1107,7 +1107,7 @@ module {
     %c14 = arith.constant 14 : index
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x256x14x14xf16>
+    %alloc = memref.alloc() : memref<1x256x14x14xf16>
     scf.for %arg1 = %c0 to %c50176 step %c1 {
       %0 = arith.remsi %arg1, %c14 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1152,7 +1152,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x256x3x3xf16>
+    %alloc = memref.alloc() : memref<256x256x3x3xf16>
     scf.for %arg1 = %c0 to %c589824 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1209,7 +1209,7 @@ module {
     %c14 = arith.constant 14 : index
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x256x14x14xf16>
+    %alloc = memref.alloc() : memref<1x256x14x14xf16>
     scf.for %arg2 = %c0 to %c50176 step %c1 {
       %0 = arith.remsi %arg2, %c14 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1256,7 +1256,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x256x3x3xf16>
+    %alloc = memref.alloc() : memref<256x256x3x3xf16>
     scf.for %arg1 = %c0 to %c589824 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1313,7 +1313,7 @@ module {
     %c14 = arith.constant 14 : index
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x256x14x14xf16>
+    %alloc = memref.alloc() : memref<1x256x14x14xf16>
     scf.for %arg1 = %c0 to %c50176 step %c1 {
       %0 = arith.remsi %arg1, %c14 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1358,7 +1358,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256x256x3x3xf16>
+    %alloc = memref.alloc() : memref<256x256x3x3xf16>
     scf.for %arg1 = %c0 to %c589824 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1415,7 +1415,7 @@ module {
     %c14 = arith.constant 14 : index
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x256x14x14xf16>
+    %alloc = memref.alloc() : memref<1x256x14x14xf16>
     scf.for %arg2 = %c0 to %c50176 step %c1 {
       %0 = arith.remsi %arg2, %c14 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1461,7 +1461,7 @@ module {
     %c1 = arith.constant 1 : index
     %c256 = arith.constant 256 : index
     %c-1 = arith.constant -1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512x256x1x1xf16>
+    %alloc = memref.alloc() : memref<512x256x1x1xf16>
     scf.for %arg1 = %c0 to %c131072 step %c1 {
       %0 = arith.remsi %arg1, %c256 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1497,7 +1497,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c256 = arith.constant 256 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512x256x3x3xf16>
+    %alloc = memref.alloc() : memref<512x256x3x3xf16>
     scf.for %arg1 = %c0 to %c1179648 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1554,7 +1554,7 @@ module {
     %c7 = arith.constant 7 : index
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x512x7x7xf16>
+    %alloc = memref.alloc() : memref<1x512x7x7xf16>
     scf.for %arg1 = %c0 to %c25088 step %c1 {
       %0 = arith.remsi %arg1, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1599,7 +1599,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512x512x3x3xf16>
+    %alloc = memref.alloc() : memref<512x512x3x3xf16>
     scf.for %arg1 = %c0 to %c2359296 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1656,7 +1656,7 @@ module {
     %c7 = arith.constant 7 : index
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x512x7x7xf16>
+    %alloc = memref.alloc() : memref<1x512x7x7xf16>
     scf.for %arg2 = %c0 to %c25088 step %c1 {
       %0 = arith.remsi %arg2, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1703,7 +1703,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512x512x3x3xf16>
+    %alloc = memref.alloc() : memref<512x512x3x3xf16>
     scf.for %arg1 = %c0 to %c2359296 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1760,7 +1760,7 @@ module {
     %c7 = arith.constant 7 : index
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x512x7x7xf16>
+    %alloc = memref.alloc() : memref<1x512x7x7xf16>
     scf.for %arg1 = %c0 to %c25088 step %c1 {
       %0 = arith.remsi %arg1, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1805,7 +1805,7 @@ module {
     %c3 = arith.constant 3 : index
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512x512x3x3xf16>
+    %alloc = memref.alloc() : memref<512x512x3x3xf16>
     scf.for %arg1 = %c0 to %c2359296 step %c1 {
       %0 = arith.remsi %arg1, %c3 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1862,7 +1862,7 @@ module {
     %c7 = arith.constant 7 : index
     %c-1 = arith.constant -1 : index
     %c512 = arith.constant 512 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x512x7x7xf16>
+    %alloc = memref.alloc() : memref<1x512x7x7xf16>
     scf.for %arg2 = %c0 to %c25088 step %c1 {
       %0 = arith.remsi %arg2, %c7 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1907,7 +1907,7 @@ module {
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x512xf16>
+    %alloc = memref.alloc() : memref<1x512xf16>
     scf.for %arg1 = %c0 to %c512 step %c1 {
       %0 = arith.cmpi slt, %arg1, %c0 : index
       %1 = arith.addi %arg1, %c512 : index
@@ -1924,7 +1924,7 @@ module {
     %c1 = arith.constant 1 : index
     %c512 = arith.constant 512 : index
     %c-1 = arith.constant -1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1000x512xf16>
+    %alloc = memref.alloc() : memref<1000x512xf16>
     scf.for %arg1 = %c0 to %c512000 step %c1 {
       %0 = arith.remsi %arg1, %c512 : index
       %1 = arith.cmpi slt, %0, %c0 : index
@@ -1946,7 +1946,7 @@ module {
     %c0 = arith.constant 0 : index
     %c1000 = arith.constant 1000 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<1x1000xf16>
+    %alloc = memref.alloc() : memref<1x1000xf16>
     scf.for %arg2 = %c0 to %c1000 step %c1 {
       %0 = arith.cmpi slt, %arg2, %c0 : index
       %1 = arith.addi %arg2, %c1000 : index
@@ -1960,680 +1960,680 @@ module {
     return %alloc : memref<1x1000xf16>
   }
   func.func private @Unknown61(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown62(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown63(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown64(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown65(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown66(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown67(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown68(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown69(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown70(%arg0: memref<64xf32>, %arg1: memref<64xf32>) -> memref<64xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c64 = arith.constant 64 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<64xf32>
+    %alloc = memref.alloc() : memref<64xf32>
     scf.for %arg2 = %c0 to %c64 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<64xf32>
       %1 = memref.load %arg1[%arg2] : memref<64xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<64xf32>
     }
     return %alloc : memref<64xf32>
   }
   func.func private @Unknown71(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown72(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown73(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown74(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown75(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown76(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown77(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown78(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown79(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown80(%arg0: memref<128xf32>, %arg1: memref<128xf32>) -> memref<128xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c128 = arith.constant 128 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<128xf32>
+    %alloc = memref.alloc() : memref<128xf32>
     scf.for %arg2 = %c0 to %c128 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<128xf32>
       %1 = memref.load %arg1[%arg2] : memref<128xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<128xf32>
     }
     return %alloc : memref<128xf32>
   }
   func.func private @Unknown81(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown82(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown83(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown84(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown85(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown86(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown87(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown88(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown89(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown90(%arg0: memref<256xf32>, %arg1: memref<256xf32>) -> memref<256xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c256 = arith.constant 256 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<256xf32>
+    %alloc = memref.alloc() : memref<256xf32>
     scf.for %arg2 = %c0 to %c256 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<256xf32>
       %1 = memref.load %arg1[%arg2] : memref<256xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<256xf32>
     }
     return %alloc : memref<256xf32>
   }
   func.func private @Unknown91(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown92(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown93(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown94(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown95(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown96(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown97(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown98(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown99(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
     return %alloc : memref<512xf32>
   }
   func.func private @Unknown100(%arg0: memref<512xf32>, %arg1: memref<512xf32>) -> memref<512xf32> attributes {__byteir_elementwise_fusion__} {
-    %cst = arith.constant 0.899999976 : f32
-    %cst_0 = arith.constant 1.000000e-01 : f32
+    %cst = arith.constant 1.000000e-01 : f32
+    %cst_0 = arith.constant 0.899999976 : f32
     %c0 = arith.constant 0 : index
     %c512 = arith.constant 512 : index
     %c1 = arith.constant 1 : index
-    %alloc = memref.alloc() {alignment = 128 : i64} : memref<512xf32>
+    %alloc = memref.alloc() : memref<512xf32>
     scf.for %arg2 = %c0 to %c512 step %c1 {
       %0 = memref.load %arg0[%arg2] : memref<512xf32>
       %1 = memref.load %arg1[%arg2] : memref<512xf32>
-      %2 = arith.mulf %1, %cst : f32
-      %3 = arith.mulf %0, %cst_0 : f32
+      %2 = arith.mulf %1, %cst_0 : f32
+      %3 = arith.mulf %0, %cst : f32
       %4 = arith.addf %3, %2 : f32
       memref.store %4, %alloc[%arg2] : memref<512xf32>
     }
