@@ -52,7 +52,7 @@ struct TieWithConst : public OpRewritePattern<shape_ext::TieOp> {
     SmallVector<Value> keepedDims;
 
     auto findNextDynamicDim = [&shape](auto it) {
-      return std::find(it, shape.end(), ShapedType::kDynamicSize);
+      return std::find(it, shape.end(), ShapedType::kDynamic);
     };
 
     auto shpIt = findNextDynamicDim(shape.begin());
@@ -105,7 +105,7 @@ LogicalResult mlir::shape_ext::TieOp::verify() {
     return emitError() << "The value's type should be RankedTensorType";
   auto numDynShape =
       llvm::count_if(rankedTensorType.getShape(), [](int64_t dimSize) {
-        return dimSize == ShapedType::kDynamicSize;
+        return dimSize == ShapedType::kDynamic;
       });
   if (size_t(numDynShape) != getDims().size())
     return emitError() << "The number of tie's dims and the dynamic size of "

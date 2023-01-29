@@ -24,8 +24,10 @@ add_byteir_translation_library(ByteIRTargetPTX
   MLIRTransformUtils
   MLIRTranslateLib
   MLIRGPUTransformOps
+  MLIRAffineTransformOps
   MLIRLinalgTransformOps
   MLIRMemRefTransformOps
+  MLIRVectorTransformOps
   MLIRSCFTransformOps
   MLIRBufferizationTransformOps
   MLIRShapeOpsTransforms

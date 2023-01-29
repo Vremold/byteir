@@ -148,7 +148,7 @@ void CoalescedAffineLoopToGpuConverter::createLaunch(AffineForOp forOp,
   // Insert terminator
   builder.setInsertionPointToEnd(&launchOp.getBody().front());
   auto terminatorLoc = launchOp.getBody().front().back().getLoc();
-  builder.create<gpu::TerminatorOp>(terminatorLoc, llvm::None);
+  builder.create<gpu::TerminatorOp>(terminatorLoc, std::nullopt);
 
   forOp.erase();
 }

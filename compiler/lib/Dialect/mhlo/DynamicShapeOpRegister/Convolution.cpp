@@ -21,10 +21,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
 #include "llvm/Support/Debug.h"
+#include <optional>
 
 #define DEBUG_TYPE "dynamic-shape-op-register"
 
@@ -35,7 +36,7 @@ namespace {
 
 // Convert a 1D dense int64 attribute to a list of values.
 SmallVector<int64_t>
-convertDenseIntAttr(llvm::Optional<mlir::DenseIntElementsAttr> optionalAttr) {
+convertDenseIntAttr(std::optional<mlir::DenseIntElementsAttr> optionalAttr) {
   if (!optionalAttr.has_value())
     return SmallVector<int64_t>{};
 
@@ -46,7 +47,7 @@ convertDenseIntAttr(llvm::Optional<mlir::DenseIntElementsAttr> optionalAttr) {
 
 // Convert a 1D or Nx2 dense int64 attribute to a list of tuples.
 FailureOr<SmallVector<std::pair<int64_t, int64_t>>>
-convertNx2Attribute(llvm::Optional<mlir::DenseIntElementsAttr> optionalAttr,
+convertNx2Attribute(std::optional<mlir::DenseIntElementsAttr> optionalAttr,
                     Location loc) {
   if (!optionalAttr.has_value())
     return SmallVector<std::pair<int64_t, int64_t>>{};
@@ -83,7 +84,7 @@ convertNx2Attribute(llvm::Optional<mlir::DenseIntElementsAttr> optionalAttr,
 
 // Check if the dimension size is dynamic.
 inline static bool isDynamicDimSize(int64_t val) {
-  return val == ShapedType::kDynamicSize;
+  return val == ShapedType::kDynamic;
 }
 
 // If a window with the given bound in some dimension is dilated with the given
@@ -236,7 +237,7 @@ inferWindowOutputShape(const ArrayRef<int64_t> baseShape,
   SmallVector<int64_t> outputDimensions(window.size());
   for (size_t i = 0; i < window.size(); ++i) {
     if (isDynamicDimSize(baseShape[i]) || isDynamicDimSize(window[i].size)) {
-      outputDimensions[i] = ShapedType::kDynamicSize;
+      outputDimensions[i] = ShapedType::kDynamic;
     } else {
       const auto &dim = window[i];
 
@@ -257,7 +258,7 @@ inferWindowOutputShape(const ArrayRef<int64_t> baseShape,
 void mlir::registerConvolutionInferReturnTypeComponents() {
   static InferReturnTypeComponentsRegistration shapeRegister(
       mhlo::ConvolutionOp::getOperationName(),
-      [](MLIRContext *context, Optional<Location> location,
+      [](MLIRContext *context, std::optional<Location> location,
          ValueShapeRange operands, DictionaryAttr attrs, RegionRange regions,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         mhlo::ConvolutionOp::Adaptor adaptor(operands, attrs, regions);
@@ -299,8 +300,7 @@ void mlir::registerConvolutionInferReturnTypeComponents() {
         SmallVector<WindowDimension> window = *windowOrErr;
 
         const int64_t dataRank = lhsType.getRank();
-        SmallVector<int64_t> outputDimensions(dataRank,
-                                              ShapedType::kDynamicSize);
+        SmallVector<int64_t> outputDimensions(dataRank, ShapedType::kDynamic);
 
         SmallVector<int64_t> lhsShape;
         SmallVector<int64_t> rhsShape;
@@ -334,7 +334,7 @@ void mlir::registerConvolutionInferReturnTypeComponents() {
         outputDimensions[adaptor.getDimensionNumbers()
                              .getOutputBatchDimension()] =
             isDynamicDimSize(inputBatch)
-                ? ShapedType::kDynamicSize
+                ? ShapedType::kDynamic
                 : inputBatch / adaptor.getBatchGroupCount();
         outputDimensions[adaptor.getDimensionNumbers()
                              .getOutputFeatureDimension()] =

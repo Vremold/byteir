@@ -495,7 +495,7 @@ const Shape StaticBRTExecutionPlan::GetStaticShape(size_t idx) {
   BRT_ENFORCE(idx < graph_info_.tensors.size());
   mlir::Value value =
       mlir::Value::getFromOpaquePointer(graph_info_.tensors[idx]);
-  llvm::Optional<llvm::ArrayRef<int64_t>> maybeShape =
+  std::optional<llvm::ArrayRef<int64_t>> maybeShape =
       brt::ir::GetStaticShape(value);
   return maybeShape.value();
 }

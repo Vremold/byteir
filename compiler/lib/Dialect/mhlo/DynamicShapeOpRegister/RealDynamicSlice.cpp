@@ -17,7 +17,7 @@
 
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/Matchers.h"
@@ -32,8 +32,8 @@ using namespace mlir;
 void mlir::registerRealDynamicSliceInferReturnTypeComponents() {
   static InferReturnTypeComponentsRegistration shapeRegister(
       mhlo::RealDynamicSliceOp::getOperationName(),
-      [](MLIRContext *context, Optional<Location> loc, ValueShapeRange operands,
-         DictionaryAttr attrs, RegionRange regions,
+      [](MLIRContext *context, std::optional<Location> loc,
+         ValueShapeRange operands, DictionaryAttr attrs, RegionRange regions,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         mhlo::RealDynamicSliceOp::Adaptor adaptor(operands, attrs, regions);
 

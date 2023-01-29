@@ -95,8 +95,8 @@ bufferizeDestinationStyleOpInterface(RewriterBase &rewriter,
   // Clone the op, but use the new operands. Move the existing block into the
   // new op. Since the new op does not have any tensor results, it does not
   // return anything.
-  auto newOp = cast<DestinationStyleOpInterface>(op.cloneWithoutRegions(
-      rewriter, op.getLoc(), /*resultTypes=*/TypeRange{}, newOperands));
+  auto newOp = cast<DestinationStyleOpInterface>(cloneWithoutRegions(
+      rewriter, op, /*newResultTypes=*/TypeRange{}, newOperands));
 
   if (op->getNumRegions() == 1) {
     rewriter.inlineRegionBefore(op->getRegion(0), newOp->getRegion(0),

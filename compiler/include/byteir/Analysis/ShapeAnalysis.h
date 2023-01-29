@@ -38,9 +38,10 @@ namespace shape_analysis {
 ///
 /// This class could also be called "dataflow facts", "lattice value", etc.
 struct ValueKnowledge {
-  ValueKnowledge() : hasError(false), hasRank(false), dtype(None) {}
+  ValueKnowledge() : hasError(false), hasRank(false), dtype(std::nullopt) {}
+
   ValueKnowledge(bool hasRank, llvm::ArrayRef<int64_t> newSizes,
-                 Optional<Type> dtype)
+                 std::optional<Type> dtype)
       : hasError(false), hasRank(hasRank), dtype(dtype) {
     sizes.reserve(newSizes.size());
     for (auto size : newSizes)
@@ -67,8 +68,8 @@ struct ValueKnowledge {
 
   Type getType() const {
     if (hasRank)
-      return RankedTensorType::get(llvm::makeArrayRef(sizes), dtype.value());
-    return UnrankedTensorType::get(dtype.value());
+      return RankedTensorType::get(llvm::makeArrayRef(sizes), *dtype);
+    return UnrankedTensorType::get(*dtype);
   }
 
   bool operator==(const ValueKnowledge &rhs) const {
@@ -88,12 +89,12 @@ struct ValueKnowledge {
   // Whether the value has known rank.
   bool hasRank;
   // If `hasRank`, the sizes along each rank. Unknown sizes are represented as
-  // `ShapedType::kDynamicSize`.
+  // `ShapedType::kDynamic`.
   llvm::SmallVector<int64_t> sizes;
   // The dtype of a tensor.
   // This is equal to nullptr if we don't know that it is a specific concrete
   // type. The ValueKnowledge object is isUninitialized if dtype is None.
-  Optional<Type> dtype;
+  std::optional<Type> dtype;
 };
 
 struct ValueTypeModificatoinRAII {

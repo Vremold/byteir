@@ -18,13 +18,13 @@
 #ifndef BYTEIR_CONVERSION_TOHLO_ARITH_TO_MHLO_PATTERN
 #define BYTEIR_CONVERSION_TOHLO_ARITH_TO_MHLO_PATTERN
 
-include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.td"
+include "mhlo/IR/hlo_ops.td"
 include "mlir/Dialect/Arith/IR/ArithOps.td"
 
 def ArithToMhloConstOpPattern : Pat<
   (Arith_ConstantOp:$output $value),
-  (HLO_ConstantOp $value),
-  [(HLO_Tensor $output)]>;
+  (MHLO_ConstantOp $value),
+  [(MHLO_Tensor $output)]>;
 
 
 #endif // BYTEIR_CONVERSION_TOHLO_ARITH_TO_MHLO_PATTERN

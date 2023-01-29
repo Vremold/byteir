@@ -21,6 +21,7 @@ limitations under the License.
 #include "mlir/Dialect/Bufferization/Transforms/BufferUtils.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Value.h"
+#include <optional>
 #include <vector>
 
 namespace byteir {
@@ -110,29 +111,29 @@ public:
 
   /// Returns the index of the first operation that uses the given value or an
   /// empty Optional if the value has no uses.
-  llvm::Optional<size_t> getFirstUseIndex(mlir::Value value) const {
+  std::optional<size_t> getFirstUseIndex(mlir::Value value) const {
     auto &intervals = useIntervalMap.find(value)->second;
     if (intervals.empty())
-      return llvm::None;
+      return std::nullopt;
     return intervals.begin()->start;
   }
 
   /// Returns the UseInterval::Vector of the given value.
-  llvm::Optional<const UseInterval::Vector *>
+  std::optional<const UseInterval::Vector *>
   getUserangeInterval(mlir::Value value) const {
     auto intervals = useIntervalMap.find(value);
     if (intervals == useIntervalMap.end())
-      return llvm::None;
+      return std::nullopt;
     return &intervals->second;
   }
 
   /// Returns an UsePositionList* of the given value or an empty Optional
   /// if the value has no uses.
-  llvm::Optional<const UsePositionList *>
+  std::optional<const UsePositionList *>
   getUserangePositions(mlir::Value value) const {
     auto usePosition = usePositionMap.find(value);
     if (usePosition == usePositionMap.end() || usePosition->second.empty())
-      return llvm::None;
+      return std::nullopt;
     return &usePosition->second;
   }
 

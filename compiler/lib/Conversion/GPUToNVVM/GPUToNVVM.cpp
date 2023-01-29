@@ -189,10 +189,10 @@ struct GPUToNVVMExtPass : public GPUToNVVMExtBase<GPUToNVVMExtPass> {
     // memory allocations as local `alloca`s in the default address space. This
     // converter drops the private memory space to support the use case above.
     LLVMTypeConverter converter(m.getContext(), options);
-    converter.addConversion([&](MemRefType type) -> Optional<Type> {
+    converter.addConversion([&](MemRefType type) -> llvm::Optional<Type> {
       if (type.getMemorySpaceAsInt() !=
           gpu::GPUDialect::getPrivateAddressSpace())
-        return llvm::None;
+        return std::nullopt;
       return converter.convertType(MemRefType::Builder(type).setMemorySpace(0));
     });
     // Lowering for MMAMatrixType.

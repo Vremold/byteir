@@ -21,7 +21,7 @@
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "byteir/Utils/TypeUtils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Analysis/DataFlow/ConstantPropagationAnalysis.h"
 #include "mlir/Analysis/DataFlow/DeadCodeAnalysis.h"
 #include "mlir/IR/BlockAndValueMapping.h"
@@ -132,28 +132,29 @@ struct BoundedShapeInferencePass
         return signalPassFailure();
 
       funcOp->walk([&](Operation *op) {
-        for (auto &&it : llvm::enumerate(op->getResults())) {
-          auto originalType = it.value().getType().dyn_cast<ShapedType>();
+        for (auto &&it : op->getResults()) {
+          auto originalType = it.getType().dyn_cast<ShapedType>();
           if (!originalType || originalType.hasStaticShape())
             continue;
 
           ShapedType newType;
-          if (auto lattice = solver.lookupState<ShapeLattice>(it.value())) {
-            if (!lattice->getValue().isUninitialized()) {
+          if (auto lattice = solver.lookupState<ShapeLattice>(it)) {
+            if (!lattice->getValue().isUninitialized())
               newType = lattice->getValue().getType();
-            }
           }
+
           if (!newType || !newType.hasRank())
             continue;
 
-          auto tx = it.value().getType().dyn_cast<RankedTensorType>();
+          auto tx = it.getType().dyn_cast<RankedTensorType>();
+
           ArrayRef<int64_t> shape = newType.getShape();
           OpBuilder builder(op);
           if (tx) {
             auto typeWithEncoding = appendTensorEncodingAttr(
                 tx, builder.getNamedAttr(getBoundedShapeAttrName(),
                                          builder.getI64ArrayAttr(shape)));
-            it.value().setType(typeWithEncoding);
+            it.setType(typeWithEncoding);
           }
         }
         if (isa<func::ReturnOp>(op)) {

@@ -18,7 +18,7 @@ git submodule update -f $PROJ_DIR/external/tensorflow
 # configure bazel
 BAZEL_VERSION=$(cat $PROJ_DIR/external/tensorflow/.bazelversion)
 if [ ! -f "bazel-$BAZEL_VERSION-linux-x86_64" ]; then
-  wget https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/bazel-$BAZEL_VERSION-linux-x86_64
+  wget https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/bazel-$BAZEL_VERSION-linux-x86_64 -q
 fi
 cp bazel-$BAZEL_VERSION-linux-x86_64 $PROJ_DIR/bazel -f
 chmod +x $PROJ_DIR/bazel
@@ -35,7 +35,7 @@ popd
 
 # build and test
 pushd $PROJ_DIR
-python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.6-cp37-cp37m-linux_x86_64.whl
+python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.7-cp37-cp37m-linux_x86_64.whl
 $PROJ_DIR/bazel --output_user_root=./build build //tools:tf-frontend //tools:tf-ext-opt
 $PROJ_DIR/bazel --output_user_root=./build test //tf_mlir_ext/tests:all --java_runtime_version=remotejdk_11
 $PROJ_DIR/bazel --output_user_root=./build test //tf_mlir_ext/numerical:all --java_runtime_version=remotejdk_11

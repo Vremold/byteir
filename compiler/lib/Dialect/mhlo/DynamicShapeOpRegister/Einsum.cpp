@@ -17,7 +17,7 @@
 
 #include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
 #include "llvm/ADT/Sequence.h"
@@ -25,6 +25,8 @@
 #define DEBUG_TYPE "dynamic-shape-op-register"
 
 using namespace mlir;
+
+#define K_INITIAL -999
 
 namespace {
 
@@ -229,7 +231,7 @@ LogicalResult einsumParseOuptutInfo(Operation *op, EinsumParseContext *ctx) {
   // Start index of ellipsis dimensions in the permuted shape
   int64_t ellIndex = 0;
   bool foundEll = false;
-  llvm::SmallVector<int64_t> labelPermIndex(kTotalLabels, -1);
+  llvm::SmallVector<int64_t> labelPermIndex(kTotalLabels, K_INITIAL);
 
   if (ctx->isImplicit) {
     // Implicit output is ellipsis (...) + labels seen only once
@@ -277,9 +279,10 @@ LogicalResult einsumParseOuptutInfo(Operation *op, EinsumParseContext *ctx) {
         }
         const auto index = einsumLabelToIndex(label);
 
-        if (!(ctx->labelCount[index] > 0 && labelPermIndex[index] == -1)) {
+        if (!(ctx->labelCount[index] > 0 &&
+              labelPermIndex[index] == K_INITIAL)) {
           llvm::errs() << "einsum: output subscript " << label
-                       << (labelPermIndex[index] > -1
+                       << (labelPermIndex[index] > K_INITIAL
                                ? " appears more than once in the output\n"
                                : " does not appear in the equation for any "
                                  "input operand\n");
@@ -303,7 +306,7 @@ LogicalResult einsumParseOuptutInfo(Operation *op, EinsumParseContext *ctx) {
   // Add contraction labels (labels not present in output)
   for (const auto label : llvm::iota_range<uint8_t>(0, kTotalLabels,
                                                     /*Inclusive=*/false)) {
-    if (ctx->labelCount[label] > 0 && labelPermIndex[label] == -1) {
+    if (ctx->labelCount[label] > 0 && labelPermIndex[label] == K_INITIAL) {
       labelPermIndex[label] = permIndex++;
     }
   }
@@ -321,8 +324,8 @@ LogicalResult einsumParseOperandsPermuteInfo(Operation *op,
   llvm::SmallVector<llvm::SmallVector<int64_t>> permuteDim(ctx->numOps);
   for (const auto i :
        llvm::iota_range<int>(0, ctx->numOps, /*Inclusive=*/false)) {
-    llvm::SmallVector<int64_t> permShape(ctx->totalSize, -1);
-    llvm::SmallVector<int64_t> labelDim(kTotalLabels, -1);
+    llvm::SmallVector<int64_t> permShape(ctx->totalSize, K_INITIAL);
+    llvm::SmallVector<int64_t> labelDim(kTotalLabels, K_INITIAL);
 
     // const auto operand = op->getOperand(i);
     const auto &labels = ctx->opLabels[i];
@@ -342,7 +345,7 @@ LogicalResult einsumParseOperandsPermuteInfo(Operation *op,
              llvm::iota_range<int>(0, ctx->ellNumDim, /*Inclusive=*/false)) {
           permShape[ctx->ellIndex + k] = j++;
         }
-      } else if (labelDim[label] != -1) {
+      } else if (labelDim[label] != K_INITIAL) {
         llvm::errs() << "einsum: subscript " << einsumIndexToLabel(label)
                      << " is repeated for operand, which is not supported to "
                         "insert shape constraints\n";
@@ -404,7 +407,7 @@ void mlir::registerEinsumShapeConstraints() {
          llvm::iota_range<int>(0, ctx.totalSize, /*Inclusive=*/false)) {
       // the index of operand whose #dim-th dimension size is used for
       // shape_ext.meet with all other operands and result
-      int baseOperandIndex = -1;
+      int baseOperandIndex = K_INITIAL;
 
       for (const auto i :
            llvm::iota_range<int>(0, ctx.numOps, /*Inclusive=*/false)) {
@@ -415,7 +418,7 @@ void mlir::registerEinsumShapeConstraints() {
           continue;
         }
         const auto dimSize = getDimSize(operand, originDim);
-        if (baseOperandIndex == -1 || dimSize > 0) {
+        if (baseOperandIndex == K_INITIAL || dimSize > 0) {
           baseOperandIndex = i;
         }
       }

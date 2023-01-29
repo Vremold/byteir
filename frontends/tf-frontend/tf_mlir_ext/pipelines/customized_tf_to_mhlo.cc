@@ -34,8 +34,8 @@
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
+#include "mhlo/IR/hlo_ops.h"
+#include "mhlo/transforms/passes.h"
 #include "stablehlo/dialect/ChloOps.h"
 
 #include "tensorflow/compiler/mlir/lite/transforms/passes.h"

@@ -22,9 +22,9 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
 #include <functional>
+#include <optional>
 
 // ByteIR Layout goes through attribute (StringAttr)
 // The attribute's key can be gotten through getLayoutAttributeName.
@@ -36,19 +36,19 @@ namespace mlir {
 class OpBuilder;
 class Value;
 
-llvm::Optional<mlir::AffineMap> createDefaultAffineMap(MLIRContext *ctx,
-                                                       mlir::MemRefType memref);
+std::optional<mlir::AffineMap> createDefaultAffineMap(MLIRContext *ctx,
+                                                      mlir::MemRefType memref);
 
 struct AffineLayoutSpec {
-  std::function<llvm::Optional<mlir::AffineMap>(mlir::MLIRContext *,
-                                                mlir::MemRefType)>
+  std::function<std::optional<mlir::AffineMap>(mlir::MLIRContext *,
+                                               mlir::MemRefType)>
       createAffineMap;
 
   AffineLayoutSpec()
       : createAffineMap(
-            [](MLIRContext *, mlir::MemRefType) { return llvm::None; }) {}
+            [](MLIRContext *, mlir::MemRefType) { return std::nullopt; }) {}
 
-  AffineLayoutSpec(std::function<llvm::Optional<mlir::AffineMap>(
+  AffineLayoutSpec(std::function<std::optional<mlir::AffineMap>(
                        mlir::MLIRContext *, mlir::MemRefType)>
                        func)
       : createAffineMap(func) {}
@@ -68,7 +68,7 @@ inline llvm::StringRef getFuncArgLayoutAttrName() { return "layout.name"; }
 
 inline llvm::StringRef getLayoutAttributeName() { return "layout"; }
 
-llvm::Optional<llvm::StringRef> getLayoutName(mlir::Value val);
+std::optional<llvm::StringRef> getLayoutName(mlir::Value val);
 
 } // namespace mlir
 

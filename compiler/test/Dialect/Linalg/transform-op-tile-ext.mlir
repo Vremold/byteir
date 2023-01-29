@@ -3,7 +3,7 @@
 transform.sequence failures(propagate) {
 ^bb0(%arg1: !pdl.operation):
   %0 = transform.structured.match ops{["linalg.matmul"]} in %arg1
-  %1, %loops:3 = transform.structured.tile_ext %0 [2, 4, 8] {interchange = [2, 1, 0], other}
+  %1, %loops:3 = transform.structured.tile_ext %0 [2, 4, 8] {interchange = [2, 1, 0]}
 }
 
 // CHECK-LABEL: func @tile_linalg_matmul(

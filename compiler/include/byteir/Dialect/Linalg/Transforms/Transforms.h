@@ -110,12 +110,12 @@ void populateRemoveLinalgExtAliasPattern(RewritePatternSet &patterns);
 /// loops = [m_loop, k_loop, n_loop], op = linalg.matmul
 /// return [parallel, reduction, parallel]
 ///
-FailureOr<llvm::SmallVector<llvm::Optional<utils::IteratorType>>>
+FailureOr<llvm::SmallVector<std::optional<utils::IteratorType>>>
 getLoopIteratorTypes(Operation *op, ArrayRef<scf::ForOp> loops);
 
 void mergeLoopIteratorTypes(
-    llvm::SmallVector<llvm::Optional<utils::IteratorType>> &from,
-    llvm::SmallVector<llvm::Optional<utils::IteratorType>> &to);
+    llvm::SmallVector<std::optional<utils::IteratorType>> &from,
+    llvm::SmallVector<std::optional<utils::IteratorType>> &to);
 
 // Simplify a dimOp of linalg and linalg-ext
 LogicalResult simplifyTensorDimOpUsedInLinalg(RewriterBase &rewriter,
@@ -140,11 +140,11 @@ struct LinalgTransformationFilter {
 
   explicit LinalgTransformationFilter(
       ArrayRef<StringAttr> matchDisjunction = {},
-      Optional<StringAttr> replacement = None);
+      std::optional<StringAttr> replacement = std::nullopt);
 
   explicit LinalgTransformationFilter(
       const FilterFunction &f, ArrayRef<StringAttr> matchDisjunction = {},
-      Optional<StringAttr> replacement = None);
+      std::optional<StringAttr> replacement = std::nullopt);
 
   LinalgTransformationFilter(LinalgTransformationFilter &&) = default;
   LinalgTransformationFilter(const LinalgTransformationFilter &) = default;
@@ -178,7 +178,7 @@ struct LinalgTransformationFilter {
 private:
   SmallVector<FilterFunction> filters;
   SmallVector<StringAttr> matchDisjunction;
-  Optional<StringAttr> replacement;
+  std::optional<StringAttr> replacement;
   /// When set to true, if the attribute is not set, it will be treated as
   /// a match. Default is false.
   bool matchByDefault;

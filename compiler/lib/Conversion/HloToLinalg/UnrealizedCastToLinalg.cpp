@@ -61,7 +61,7 @@ static SmallVector<Value, 2> extractDynamicSizes(OpBuilder &b, Location loc,
     return {};
   SmallVector<Value, 2> dynSizes(tensor_type.getRank());
   for (auto &en : llvm::enumerate(tensor_type.getShape())) {
-    if (en.value() != ShapedType::kDynamicSize)
+    if (en.value() != ShapedType::kDynamic)
       continue;
     // If a shape tensor is present extract from there.
     if (shape_tensor) {
@@ -89,15 +89,15 @@ static Value getInitTensor(OpBuilder &b, Location loc, ShapedType type,
 /// Returns an ArrayAttr that contains `nLoops` attributes. All the attributes
 /// are "parallel" except the last `nReduction` elements, where are "reduction"
 /// attributes.
-static SmallVector<StringRef, 3>
+static SmallVector<utils::IteratorType, 3>
 getParallelAndReductionIterators(unsigned nLoops, unsigned nReduction) {
-  SmallVector<StringRef, 3> res(nLoops - nReduction,
-                                getParallelIteratorTypeName());
-  res.append(nReduction, getReductionIteratorTypeName());
+  SmallVector<utils::IteratorType, 3> res(nLoops - nReduction,
+                                          utils::IteratorType::parallel);
+  res.append(nReduction, utils::IteratorType::reduction);
   return res;
 }
 
-static SmallVector<StringRef, 3>
+static SmallVector<utils::IteratorType, 3>
 getNParallelLoopsAttrs(unsigned nParallelLoops) {
   return getParallelAndReductionIterators(nParallelLoops, 0);
 }

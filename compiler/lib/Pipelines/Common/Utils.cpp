@@ -21,8 +21,11 @@
 
 using namespace mlir;
 
-void mlir::addCleanUpExtPassPipeline(OpPassManager &pm) {
+void mlir::addCleanUpExtPassPipeline(OpPassManager &pm, bool isModuleOp) {
   pm.addPass(createCSEPass());
   pm.addPass(createSCCPPass());
   pm.addPass(createCanonicalizeExtPass());
+  if (isModuleOp) {
+    pm.addPass(createSymbolDCEPass());
+  }
 }

@@ -17,7 +17,7 @@
 
 #include "tf_mlir_ext/transforms/mhlo_legalize_tf_ext.h"
 
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -131,14 +131,14 @@ public:
     }
 
     Location loc = op.getLoc();
-    Value input = op.input();
+    Value input = op.getInput();
     if (!dims_to_reverse.empty())
       input = rewriter.create<mhlo::ReverseOp>(
-          loc, input_ty, op.input(),
+          loc, input_ty, op.getInput(),
           GetI64ElementsAttr(dims_to_reverse, &rewriter));
 
     if (has_dynamic_shape) {
-      if (op.new_axis_mask() != 0 || op.shrink_axis_mask() != 0) {
+      if (op.getNewAxisMask() != 0 || op.getShrinkAxisMask() != 0) {
         return rewriter.notifyMatchFailure(
             op, "dynamic shape input does not support new_axis or shrink_axis");
       }
@@ -151,7 +151,7 @@ public:
         if (ShapedType::isDynamic(input_shape[i])) {
           begin_indices_dyn.push_back(
               rewriter.create<arith::ConstantIndexOp>(loc, 0));
-          Value dim_i = rewriter.create<tensor::DimOp>(loc, op.input(), i);
+          Value dim_i = rewriter.create<tensor::DimOp>(loc, op.getInput(), i);
           end_indices_dyn.push_back(dim_i);
           strides_dyn.push_back(
               rewriter.create<arith::ConstantIndexOp>(loc, hlo_strides[i]));
@@ -181,7 +181,8 @@ public:
                                 index_ty),
           strides_dyn);
       rewriter.replaceOpWithNewOp<mhlo::RealDynamicSliceOp>(
-          op, op.getType(), op.input(), begin_value, end_value, stride_value);
+          op, op.getType(), op.getInput(), begin_value, end_value,
+          stride_value);
       // Reshape slice result so that the shape is updated depending on
       // 'new_axis_mask' or 'shrink_axis_mask' attributes.
     } else {
@@ -193,7 +194,7 @@ public:
 
   LogicalResult matchAndRewrite(TF::StridedSliceOp op,
                                 PatternRewriter &rewriter) const override {
-    auto input_ty = op.input().getType().dyn_cast<RankedTensorType>();
+    auto input_ty = op.getInput().getType().dyn_cast<RankedTensorType>();
     auto result_ty = op.getType().dyn_cast<RankedTensorType>();
 
     if (input_ty.hasStaticShape() || result_ty.hasStaticShape())
@@ -202,8 +203,8 @@ public:
 
     DenseIntElementsAttr sparse_begin_attr, sparse_end_attr;
 
-    if (!matchPattern(op.begin(), m_Constant(&sparse_begin_attr)) ||
-        !matchPattern(op.end(), m_Constant(&sparse_end_attr))) {
+    if (!matchPattern(op.getBegin(), m_Constant(&sparse_begin_attr)) ||
+        !matchPattern(op.getEnd(), m_Constant(&sparse_end_attr))) {
       // skip dynamic begin
       return rewriter.notifyMatchFailure(op, "unknown begin not supported");
     }
@@ -437,12 +438,12 @@ protected:
     // when it is possible to derive indices based on mask attributes.
     DenseIntElementsAttr sparse_begin_attr, sparse_end_attr,
         sparse_strides_attr;
-    if (!matchPattern(op.begin(), m_Constant(&sparse_begin_attr)) ||
-        !matchPattern(op.end(), m_Constant(&sparse_end_attr)) ||
-        !matchPattern(op.strides(), m_Constant(&sparse_strides_attr)))
+    if (!matchPattern(op.getBegin(), m_Constant(&sparse_begin_attr)) ||
+        !matchPattern(op.getEnd(), m_Constant(&sparse_end_attr)) ||
+        !matchPattern(op.getStrides(), m_Constant(&sparse_strides_attr)))
       return false;
 
-    auto input_ty = op.input().getType().dyn_cast<RankedTensorType>();
+    auto input_ty = op.getInput().getType().dyn_cast<RankedTensorType>();
     // if (!input_ty || !input_ty.hasStaticShape()) return false;
     if (!input_ty)
       return false;
@@ -458,9 +459,10 @@ protected:
       sparse_strides.push_back(stride.getSExtValue());
 
     return CalculateSlicedShapeFromSparseIndices(
-        input_shape, sparse_begin, sparse_end, sparse_strides, op.begin_mask(),
-        op.end_mask(), op.ellipsis_mask(), op.new_axis_mask(),
-        op.shrink_axis_mask(), slice_begin, slice_end, slice_stride);
+        input_shape, sparse_begin, sparse_end, sparse_strides,
+        op.getBeginMask(), op.getEndMask(), op.getEllipsisMask(),
+        op.getNewAxisMask(), op.getShrinkAxisMask(), slice_begin, slice_end,
+        slice_stride);
   }
 };
 

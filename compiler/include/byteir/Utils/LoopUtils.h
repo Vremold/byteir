@@ -19,8 +19,8 @@
 #define BYTEIR_UTILS_LOOPUTILS_H
 
 #include "mlir/Support/LogicalResult.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
+#include <optional>
 
 namespace mlir {
 class Block;
@@ -87,20 +87,20 @@ void setLoopLowerBound(OpBuilder &b, LoopLikeOpInterface looplike, Value lb);
 void addLoopLowerBound(OpBuilder &b, LoopLikeOpInterface looplike, Value val);
 
 // Return ConstantTripCount for a looplike
-// Return None, if not applicable.
-llvm::Optional<uint64_t> getConstantTripCount(LoopLikeOpInterface looplike,
-                                              int64_t stepMultiplier = 1);
+// return std::nullopt, if not applicable.
+std::optional<uint64_t> getConstantTripCount(LoopLikeOpInterface looplike,
+                                             int64_t stepMultiplier = 1);
 // Return ConstantTripCount for a ForOp
-// Return None, if not applicable.
-llvm::Optional<uint64_t> getConstantTripCount(scf::ForOp forOp,
-                                              int64_t stepMultiplier = 1);
+// return std::nullopt, if not applicable.
+std::optional<uint64_t> getConstantTripCount(scf::ForOp forOp,
+                                             int64_t stepMultiplier = 1);
 
 void gatherLoopsWithDepth(func::FuncOp func, unsigned depth,
                           SmallVectorImpl<Operation *> &collector);
 
 // create a scf::ForOp(0, 1, 1) if possible
-// if FuncOp is trivally empty return None.
-llvm::Optional<scf::ForOp> createTrivialSCFForIfHaveNone(func::FuncOp);
+// if FuncOp is trivally empty return std::nullopt.
+std::optional<scf::ForOp> createTrivialSCFForIfHaveNone(func::FuncOp);
 
 LogicalResult loopUnrollFull(scf::ForOp forOp, StringRef annotationAttr);
 

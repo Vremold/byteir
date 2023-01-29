@@ -28,8 +28,9 @@ using namespace llvm;
 namespace mlir {
 namespace function_interface_impl {
 // llvm upstream insertFunctionArgument cannot handle inserting multiple args
+
 static inline void
-insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
+insertFunctionArgumentsEx(FunctionOpInterface op, ArrayRef<unsigned> argIndices,
                           TypeRange argTypes, ArrayRef<DictionaryAttr> argAttrs,
                           ArrayRef<Location> argLocs, unsigned originalNumArgs,
                           Type newType) {
@@ -46,7 +47,7 @@ insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
   Block &entry = op->getRegion(0).front();
 
   // Update the argument attributes of the function.
-  auto oldArgAttrs = op->getAttrOfType<ArrayAttr>(getArgDictAttrName());
+  ArrayAttr oldArgAttrs = op.getArgAttrsAttr();
   if (oldArgAttrs || !argAttrs.empty()) {
     SmallVector<DictionaryAttr, 4> newArgAttrs;
     newArgAttrs.reserve(originalNumArgs + argIndices.size());
@@ -71,7 +72,7 @@ insertFunctionArgumentsEx(Operation *op, ArrayRef<unsigned> argIndices,
   }
 
   // Update the function type and any entry block arguments.
-  op->setAttr(getTypeAttrName(), TypeAttr::get(newType));
+  op.setFunctionTypeAttr(TypeAttr::get(newType));
   for (unsigned i = 0, e = argIndices.size(); i < e; ++i)
     entry.insertArgument(argIndices[i], argTypes[i],
                          argLocs.empty() ? op->getLoc() : argLocs[i]);
@@ -111,11 +112,13 @@ static inline void replicateFuncOpResultSigature(func::FuncOp funcOp) {
     NamedAttrList attrList = funcOp.getResultAttrs(i);
     resultAttrs.push_back(attrList.getDictionary(funcOp->getContext()));
   }
-  funcOp->removeAttr(function_interface_impl::getResultDictAttrName());
+
+  auto funcInterface = cast<FunctionOpInterface>(funcOp.getOperation());
+  funcInterface.removeResAttrsAttr();
 
   mlir::function_interface_impl::insertFunctionArgumentsEx(
-      funcOp, relocatedIndices, oldFuncType.getResults(), resultAttrs, {},
-      origianlSize, newFuncType);
+      funcInterface, relocatedIndices, oldFuncType.getResults(), resultAttrs,
+      {}, origianlSize, newFuncType);
   //  Note the FuncOp's member function seems buggy. Use the above
   //  instread. funcOp.insertArguments(relocatedIndices,
   //  oldFuncType.getResults(), {},
@@ -218,9 +221,10 @@ void mlir::relocateFuncOpConstantLike(
   mlir::FunctionType newFuncType =
       opBuilder.getFunctionType(newInputTypes, {} /*results*/);
 
+  auto funcInterface = cast<FunctionOpInterface>(funcOp.getOperation());
   mlir::function_interface_impl::insertFunctionArgumentsEx(
-      funcOp, relocatedIndices, relocatedTypes, correspondingArgAttrs, {},
-      origianlSize, newFuncType);
+      funcInterface, relocatedIndices, relocatedTypes, correspondingArgAttrs,
+      {}, origianlSize, newFuncType);
 
   unsigned idx = 0;
   for (auto val : consantLikeValues) {

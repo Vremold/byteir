@@ -19,7 +19,7 @@
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtOps.h"
 #include "byteir/Transforms/CanonicalizeExt.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
@@ -62,6 +62,7 @@ transform_ext::CleanupOp::apply(mlir::transform::TransformResults & /* result*/,
   pm.addPass(createCSEPass());
   pm.addPass(createSCCPPass());
   pm.addPass(createCanonicalizeExtPass());
+  pm.addPass(createSymbolDCEPass());
 
   if (failed(pm.run(state.getTopLevel())))
     return DiagnosedSilenceableFailure::definiteFailure();

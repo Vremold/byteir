@@ -18,7 +18,7 @@
 #include "byteir/Dialect/mhlo/Transforms/FuncArgRearrangement.h"
 #include "byteir/Utils/PipelineUtils.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include <utility> // pair
@@ -143,7 +143,7 @@ static Type packLastInferType(ArrayRef<Type> types) {
 
     SmallVector<int64_t> packShape(firstShape.begin(), firstShape.end());
 
-    if (packShape.back() == ShapedType::kDynamicSize) {
+    if (packShape.back() == ShapedType::kDynamic) {
       return firstTy;
     }
 
@@ -157,10 +157,10 @@ static Type packLastInferType(ArrayRef<Type> types) {
         }
 
         // accumulate last
-        if (curShape.back() != ShapedType::kDynamicSize) {
+        if (curShape.back() != ShapedType::kDynamic) {
           packShape.back() += curShape.back();
         } else {
-          packShape.back() = ShapedType::kDynamicSize;
+          packShape.back() = ShapedType::kDynamic;
         }
       } else {
         return Type();
@@ -180,8 +180,8 @@ static TensorType reshape2DLast(TensorType tensorTy) {
   int64_t last = 1;
 
   for (size_t i = 1; i < shape.size(); ++i) {
-    if (shape[i] == ShapedType::kDynamicSize) {
-      last = ShapedType::kDynamicSize;
+    if (shape[i] == ShapedType::kDynamic) {
+      last = ShapedType::kDynamic;
       break;
     }
     last *= shape[i];
@@ -197,7 +197,7 @@ static Type reshapeAndPackLastInferType(ArrayRef<Type> types) {
   if (auto firstTensorTy = firstTy.dyn_cast<TensorType>()) {
 
     auto reshapedFirstTy = reshape2DLast(firstTensorTy);
-    if (reshapedFirstTy.getShape().back() == ShapedType::kDynamicSize) {
+    if (reshapedFirstTy.getShape().back() == ShapedType::kDynamic) {
       return reshapedFirstTy;
     }
 
@@ -214,7 +214,7 @@ static Type reshapeAndPackLastInferType(ArrayRef<Type> types) {
           return Type();
         }
 
-        if (reshapedCurShape.back() == ShapedType::kDynamicSize) {
+        if (reshapedCurShape.back() == ShapedType::kDynamic) {
           return reshapedFirstTy;
         } else {
           packShape[1] += reshapedCurShape[1];
@@ -415,9 +415,10 @@ public:
   }
 
   func::FuncOp getOrCreateNewFunc(OpBuilder &b) override {
-    auto newFunc =
-        b.create<func::FuncOp>(funcOp->getLoc(), funcOp.getSymName(),
-                               newFuncType, funcOp.getSymVisibilityAttr());
+    auto newFunc = b.create<func::FuncOp>(
+        funcOp->getLoc(), funcOp.getSymName(), newFuncType,
+        funcOp.getSymVisibilityAttr(),
+        /*arg_attrs*/ ArrayAttr{}, /*res_attrs*/ ArrayAttr{});
     // for unit test
     auto ctx = funcOp.getContext();
     if (funcOp->hasAttr(getTestRewriteFromAttrName())) {

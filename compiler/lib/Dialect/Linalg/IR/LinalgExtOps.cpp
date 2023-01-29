@@ -226,8 +226,7 @@ bool mlir::linalg_ext::involveReduction(
         continue;
       }
 
-      if (loopIteratorTypes[iterAxis.value()] ==
-          utils::IteratorType::reduction) {
+      if (loopIteratorTypes[*iterAxis] == utils::IteratorType::reduction) {
         return true;
       }
     }
@@ -368,8 +367,8 @@ mlir::LogicalResult mlir::linalg_ext::ScanOp::verify() {
   }
   if (llvm::any_of(llvm::zip(expectedAccumulatorShape, accumulatorShape),
                    [](std::tuple<int64_t, int64_t> s) {
-                     return std::get<0>(s) != ShapedType::kDynamicSize &&
-                            std::get<1>(s) != ShapedType::kDynamicSize &&
+                     return std::get<0>(s) != ShapedType::kDynamic &&
+                            std::get<1>(s) != ShapedType::kDynamic &&
                             std::get<0>(s) != std::get<1>(s);
                    })) {
     return op->emitOpError("incompatible input/accumulator shapes");
@@ -383,8 +382,8 @@ mlir::LogicalResult mlir::linalg_ext::ScanOp::verify() {
   }
   if (llvm::any_of(llvm::zip(inputShapes, outputShapes),
                    [](std::tuple<int64_t, int64_t> s) {
-                     return std::get<0>(s) != ShapedType::kDynamicSize &&
-                            std::get<1>(s) != ShapedType::kDynamicSize &&
+                     return std::get<0>(s) != ShapedType::kDynamic &&
+                            std::get<1>(s) != ShapedType::kDynamic &&
                             std::get<0>(s) != std::get<1>(s);
                    })) {
     return op->emitOpError("incompatible input/output shapes");
@@ -477,8 +476,8 @@ mlir::linalg_ext::ScanOp::getTiledImplementation(OpBuilder &builder,
     resultTypes.push_back(tiledOperands[2].getType());
   }
 
-  Operation *tiledScanOp = cast<DestinationStyleOpInterface>(getOperation())
-                               .clone(builder, loc, resultTypes, tiledOperands);
+  Operation *tiledScanOp =
+      mlir::clone(builder, getOperation(), resultTypes, tiledOperands);
   return {tiledScanOp};
 }
 
@@ -728,10 +727,10 @@ mlir::LogicalResult mlir::linalg_ext::SoftmaxOp::verify() {
   if (llvm::any_of(
           llvm::zip(expectedShape, maxShape, accumulatorShape, scaleShape),
           [](std::tuple<int64_t, int64_t, int64_t, int64_t> s) {
-            return std::get<0>(s) != ShapedType::kDynamicSize &&
-                   std::get<1>(s) != ShapedType::kDynamicSize &&
-                   std::get<2>(s) != ShapedType::kDynamicSize &&
-                   std::get<3>(s) != ShapedType::kDynamicSize &&
+            return std::get<0>(s) != ShapedType::kDynamic &&
+                   std::get<1>(s) != ShapedType::kDynamic &&
+                   std::get<2>(s) != ShapedType::kDynamic &&
+                   std::get<3>(s) != ShapedType::kDynamic &&
                    std::get<0>(s) != std::get<1>(s) &&
                    std::get<0>(s) != std::get<2>(s) &&
                    std::get<0>(s) != std::get<3>(s);
@@ -750,8 +749,8 @@ mlir::LogicalResult mlir::linalg_ext::SoftmaxOp::verify() {
 
   if (llvm::any_of(llvm::zip(inputShapes, outputShapes),
                    [](std::tuple<int64_t, int64_t> s) {
-                     return std::get<0>(s) != ShapedType::kDynamicSize &&
-                            std::get<1>(s) != ShapedType::kDynamicSize &&
+                     return std::get<0>(s) != ShapedType::kDynamic &&
+                            std::get<1>(s) != ShapedType::kDynamic &&
                             std::get<0>(s) != std::get<1>(s);
                    })) {
     return op->emitOpError("incompatible input/output shapes");
@@ -969,8 +968,7 @@ SmallVector<Operation *> mlir::linalg_ext::SoftmaxOp::getTiledImplementation(
   }
 
   Operation *tiledSoftmaxOp =
-      cast<DestinationStyleOpInterface>(getOperation())
-          .clone(builder, loc, resultTypes, tiledOperands);
+      mlir::clone(builder, getOperation(), resultTypes, tiledOperands);
   return {tiledSoftmaxOp};
 }
 
@@ -1100,8 +1098,8 @@ mlir::linalg_ext::TopkOp::getTiledImplementation(OpBuilder &builder,
     resultTypes.push_back(tiledOperands[tiledOperands.size() - 1].getType());
   }
 
-  Operation *tiledTopkOp = cast<DestinationStyleOpInterface>(getOperation())
-                               .clone(builder, loc, resultTypes, tiledOperands);
+  Operation *tiledTopkOp =
+      mlir::clone(builder, getOperation(), resultTypes, tiledOperands);
 
   return {tiledTopkOp};
 }

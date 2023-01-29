@@ -24,7 +24,7 @@
 #include "byteir/Pipelines/Common/Utils.h"
 #include "byteir/Transforms/Passes.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
+#include "lhlo/IR/lhlo_ops.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;

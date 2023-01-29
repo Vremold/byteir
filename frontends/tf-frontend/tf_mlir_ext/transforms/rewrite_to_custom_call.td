@@ -19,7 +19,7 @@
 #define REWRITE_TO_CUSTOM_CALL_PATTERN
 
 include "tensorflow/compiler/mlir/tensorflow/ir/tf_ops.td"
-include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.td"
+include "mhlo/IR/hlo_ops.td"
 
 def OneSize : Constraint<CPred<"$0.size() == 1">, "one size">;
 def TrueBoolAttr : Constraint<CPred<"$0.getValue() == true">, "this BoolAttr should be true">;

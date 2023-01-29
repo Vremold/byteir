@@ -11,8 +11,8 @@ func.func @test_to_mhlo_custom_call(%arg0 : tensor<?xi1>) -> tensor<?x1xi64> {
   func.return %0 : tensor<?x1xi64>
 }
 // CHECK:  mhlo.custom_call
+// CHECK-SAME: @tf.Where
 // CHECK-SAME: byteir_attrs = {}
-// CHECK-SAME: call_target_name = "tf.Where"
 
 func.func @test_string_to_ace_custom_call(%arg0: tensor<2x!tf_type.string>) ->  tensor<2x!tf_type.string> {
   %0 = "tf.StaticRegexReplace"(%arg0) {_XlaCompile = false, _XlaScope = "jit_scope_0", _XlaSeparateCompiledGradients = false, device = "/device:CPU:0", pattern = "[ \\t\\n\\r\\p{Zs}]", replace_global = true, rewrite = " "} : (tensor<2x!tf_type.string>) -> tensor<2x!tf_type.string>
@@ -28,8 +28,8 @@ func.func @test_dynamic_partition(%1: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> 
   func.return %2#0, %2#1 : tensor<?x4xf32>, tensor<?x4xf32>
 }
 // CHECK:  mhlo.custom_call
+// CHECK-SAME: @tf.DynamicPartition
 // CHECK-SAME: byteir_attrs = {num_partitions = 2 : i64}
-// CHECK-SAME: call_target_name = "tf.DynamicPartition"
 
 func.func @test_remove_print(%arg0: tensor<1x1xf32>) -> tensor<1x1xf32> {
   %0 = "tf.Print"(%arg0, %arg0) {first_n = 10 : i64, message = "preds:", summarize = 20 : i64} : (tensor<1x1xf32>, tensor<1x1xf32>) -> tensor<1x1xf32>

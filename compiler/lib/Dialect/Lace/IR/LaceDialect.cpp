@@ -43,8 +43,8 @@ void LaceDialect::initialize() {
 //===----------------------------------------------------------------------===//
 LogicalResult ReshapeOp::verify() {
   // FIXME: only identify layout is supported now
-  auto sourceMemRef = source().getType().cast<MemRefType>();
-  auto targetMemRef = target().getType().cast<MemRefType>();
+  auto sourceMemRef = getSource().getType().cast<MemRefType>();
+  auto targetMemRef = getTarget().getType().cast<MemRefType>();
 
   if (!sourceMemRef.getLayout().isIdentity() ||
       !targetMemRef.getLayout().isIdentity())
@@ -65,16 +65,16 @@ struct Wrapper {
   operator int64_t() { return v; }
   int64_t v;
 };
+
 Wrapper operator+(Wrapper a, int64_t b) {
-  if (ShapedType::isDynamicStrideOrOffset(a) ||
-      ShapedType::isDynamicStrideOrOffset(b))
-    return Wrapper(ShapedType::kDynamicStrideOrOffset);
+  if (ShapedType::isDynamic(a) || ShapedType::isDynamic(b))
+    return Wrapper(ShapedType::kDynamic);
   return Wrapper(a.v + b);
 }
+
 Wrapper operator*(Wrapper a, int64_t b) {
-  if (ShapedType::isDynamicStrideOrOffset(a) ||
-      ShapedType::isDynamicStrideOrOffset(b))
-    return Wrapper(ShapedType::kDynamicStrideOrOffset);
+  if (ShapedType::isDynamic(a) || ShapedType::isDynamic(b))
+    return Wrapper(ShapedType::kDynamic);
   return Wrapper(a.v * b);
 }
 } // namespace saturated_arith
@@ -82,8 +82,8 @@ Wrapper operator*(Wrapper a, int64_t b) {
 
 LogicalResult SliceOp::verify() {
   // FIXME: only identify layout is supported now
-  auto sourceMemRef = source().getType().cast<MemRefType>();
-  auto targetMemRef = target().getType().cast<MemRefType>();
+  auto sourceMemRef = getSource().getType().cast<MemRefType>();
+  auto targetMemRef = getTarget().getType().cast<MemRefType>();
 
   if (!sourceMemRef.getLayout().isIdentity() ||
       !targetMemRef.getLayout().isIdentity())
@@ -92,13 +92,13 @@ LogicalResult SliceOp::verify() {
 
   // check whether target memref could be treated as a sub-memref on the source
   // memref
-  SmallVector<int64_t> startIndices, limitIndices, strides_;
-  getValuesFromDenseIntElementsAttr(start_indices(), startIndices);
-  getValuesFromDenseIntElementsAttr(limit_indices(), limitIndices);
-  getValuesFromDenseIntElementsAttr(strides(), strides_);
+  SmallVector<int64_t> startIndices, limitIndices, strides;
+  getValuesFromDenseIntElementsAttr(getStartIndices(), startIndices);
+  getValuesFromDenseIntElementsAttr(getLimitIndices(), limitIndices);
+  getValuesFromDenseIntElementsAttr(getStrides(), strides);
 
   if (!SliceOp::isValid(sourceMemRef, targetMemRef, startIndices, limitIndices,
-                        strides_))
+                        strides))
     return getOperation()->emitError()
            << "Invalid memref type of lace.slice op";
 
@@ -155,11 +155,11 @@ static MemRefType inferResultTypeOfSlice(MemRefType sourceMemRefType,
 }
 
 int64_t lace::SliceOp::getOffsetElem() {
-  auto sourceMemRef = source().getType().cast<MemRefType>();
+  auto sourceMemRef = getSource().getType().cast<MemRefType>();
   SmallVector<int64_t> startIndices, limitIndices, strides;
-  getValuesFromDenseIntElementsAttr(start_indices(), startIndices);
-  getValuesFromDenseIntElementsAttr(limit_indices(), limitIndices);
-  getValuesFromDenseIntElementsAttr(this->strides(), strides);
+  getValuesFromDenseIntElementsAttr(getStartIndices(), startIndices);
+  getValuesFromDenseIntElementsAttr(getLimitIndices(), limitIndices);
+  getValuesFromDenseIntElementsAttr(getStrides(), strides);
   auto targetMemRef =
       inferResultTypeOfSlice(sourceMemRef, startIndices, limitIndices, strides);
   int64_t offset;

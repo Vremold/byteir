@@ -16,7 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/ConvertInsertion.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "llvm/ADT/StringRef.h"
@@ -119,7 +119,7 @@ void ConvertInsertionPass::runOnOperation() {
       auto oldTy = funcType.getInput(i);
       auto maybeTensor = collector->checkArg(func, i, true);
       if (maybeTensor.has_value()) {
-        argTypes.push_back(maybeTensor.value());
+        argTypes.push_back(*maybeTensor);
       } else {
         argTypes.push_back(oldTy);
       }
@@ -130,7 +130,7 @@ void ConvertInsertionPass::runOnOperation() {
       auto oldTy = funcType.getResult(i);
       auto maybeTensor = collector->checkArg(func, i, false);
       if (maybeTensor.has_value()) {
-        retTypes.push_back(maybeTensor.value());
+        retTypes.push_back(*maybeTensor);
       } else {
         retTypes.push_back(oldTy);
       }
@@ -176,7 +176,7 @@ bool mlir::ConvertOnlyCheckElementType::checkFunc(func::FuncOp func) {
   return func->hasAttr(anchorAttr);
 }
 
-llvm::Optional<mlir::TensorType>
+std::optional<mlir::TensorType>
 mlir::ConvertOnlyCheckElementType::checkArg(func::FuncOp func, size_t offset,
                                             bool isArg) {
   FunctionType funcType = func.getFunctionType();
@@ -191,7 +191,7 @@ mlir::ConvertOnlyCheckElementType::checkArg(func::FuncOp func, size_t offset,
       return TensorTy.clone(convertElementType[elementTy]);
     }
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
 std::unique_ptr<OperationPass<ModuleOp>>

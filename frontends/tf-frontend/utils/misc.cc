@@ -47,7 +47,7 @@ tensorflow::Status tensorflow::ParseStrToVectorIntMaps(
     }
     name2shape[name] = shape;
   }
-  return tensorflow::Status::OK();
+  return tensorflow::OkStatus();
 }
 
 tensorflow::Status tensorflow::ParseStrToFloatMaps(
@@ -64,5 +64,5 @@ tensorflow::Status tensorflow::ParseStrToFloatMaps(
     std::vector<int> shape;
     name2value[name] = std::stof(tokens[1]);
   }
-  return tensorflow::Status::OK();
+  return tensorflow::OkStatus();
 }

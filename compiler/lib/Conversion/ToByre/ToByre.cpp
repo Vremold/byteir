@@ -24,8 +24,8 @@
 #include "byteir/Dialect/Lace/LaceDialect.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h" // LmhloDialect
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "lhlo/IR/lhlo_ops.h" // LmhloDialect
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/AsmParser/AsmParser.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -538,12 +538,20 @@ public:
   matchAndRewrite(CustomCallOp op, typename CustomCallOp::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     mlir::DictionaryAttr dictAttr;
-    auto backendConfig = op.getBackendConfig();
-    if (!backendConfig.empty()) {
-      Attribute attrs = mlir::parseAttribute(backendConfig, op->getContext());
-      if (!attrs || !attrs.isa<mlir::DictionaryAttr>())
-        return failure();
-      dictAttr = attrs.cast<mlir::DictionaryAttr>();
+    std::optional<mlir::Attribute> backendConfig = op.getBackendConfig();
+
+    if (backendConfig.has_value()) {
+      // Support older API, StringAttr, for now
+      if (auto backendConfigAsStringAttr =
+              backendConfig->dyn_cast<mlir::StringAttr>()) {
+        auto strref = backendConfigAsStringAttr.strref();
+        if (!strref.empty()) {
+          Attribute attrs = mlir::parseAttribute(strref, op->getContext());
+          if (!attrs || !attrs.isa<mlir::DictionaryAttr>())
+            return failure();
+          dictAttr = attrs.cast<mlir::DictionaryAttr>();
+        }
+      }
     }
 
     auto computeOp = replaceLmhloOpWithByreComputeOp(
@@ -946,14 +954,14 @@ public:
   }
 };
 
-Optional<StringAttr> getCalleeAttr(memref::CopyOp op) {
+std::optional<StringAttr> getCalleeAttr(memref::CopyOp op) {
   auto ctx = op->getContext();
   auto srcSpace = op.getSource().getType().cast<MemRefType>().getMemorySpace();
   auto dstSpace = op.getTarget().getType().cast<MemRefType>().getMemorySpace();
 
   if (!srcSpace.isa_and_nonnull<StringAttr>() ||
       !dstSpace.isa_and_nonnull<StringAttr>()) {
-    return None;
+    return std::nullopt;
   }
 
   auto srcRef = srcSpace.cast<StringAttr>().strref();
@@ -977,7 +985,7 @@ public:
     auto maybeCallee = getCalleeAttr(op);
 
     if (maybeCallee.has_value()) {
-      newOp->setAttr("callee", maybeCallee.value());
+      newOp->setAttr("callee", *maybeCallee);
     }
 
     return success();

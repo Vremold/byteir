@@ -43,7 +43,7 @@ size_t getSizeInBytes(Value value) {
   MemRefType t = value.getType().cast<MemRefType>();
   auto sizeInBits = getSizeInBits(t);
   assert(sizeInBits.has_value());
-  return (sizeInBits.value() + 7) >> 3;
+  return (*sizeInBits + 7) >> 3;
 }
 
 struct Event {
@@ -78,6 +78,8 @@ std::string allocCntStatisticsSingle(func::FuncOp func) {
         totalMemory += length;
         if (auto uses = useRange.getUserangeInterval(value)) {
           for (auto &&it : **uses) {
+            // when use start,increase 1
+            // and when use end + 1, decrease 1
             events.push_back({it.start, 1, length});
             events.push_back({it.end + 1, -1, length});
           }
@@ -87,6 +89,7 @@ std::string allocCntStatisticsSingle(func::FuncOp func) {
       }
     }
   });
+
   std::sort(events.begin(), events.end());
   for (auto &&e : events) {
     currentMemory += e.op * e.length;

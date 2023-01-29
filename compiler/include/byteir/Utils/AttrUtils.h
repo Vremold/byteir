@@ -19,7 +19,7 @@
 #define BYTEIR_UTILS_ATTRUTILS_H
 
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/Optional.h"
+#include <optional>
 
 namespace mlir {
 class ElementsAttr;
@@ -36,14 +36,14 @@ void setParsedConcatAttr(Operation *op, const std::string &attrName,
 
 /// Return a new ElementsAttr that has the same data as the current
 /// attribute, but has been reshaped to 'newShape'.
-llvm::Optional<ElementsAttr>
+std::optional<ElementsAttr>
 reshapeSplatElementsAttr(ElementsAttr attr, llvm::ArrayRef<int64_t> newShape);
 
-llvm::Optional<ElementsAttr> reshapeSplatElementsAttr(ElementsAttr attr,
-                                                      ShapedType newShape);
+std::optional<ElementsAttr> reshapeSplatElementsAttr(ElementsAttr attr,
+                                                     ShapedType newShape);
 
-llvm::Optional<ElementsAttr> cloneSplatElementsAttr(ElementsAttr attr,
-                                                    ShapedType newShape);
+std::optional<ElementsAttr> cloneSplatElementsAttr(ElementsAttr attr,
+                                                   ShapedType newShape);
 
 } // namespace mlir
 

@@ -33,10 +33,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Conversion/HloToLHlo/HloToLHlo.h"
-#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
-#include "mlir-hlo/Dialect/lhlo/transforms/map_hlo_to_lhlo_op.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
+#include "lhlo/IR/lhlo_ops.h"
+#include "lhlo/transforms/map_hlo_to_lhlo_op.h"
+#include "mhlo/IR/hlo_ops.h"
+#include "mhlo/transforms/rewriters.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/Transforms/Bufferize.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
@@ -117,7 +117,7 @@ Value InsertDynamicAlloc(Location loc, Type result_type, Operation *def_op,
   // Extract the required element out of the vector.
   SmallVector<Value, 4> dynamic_operands;
   for (auto shape_element : llvm::enumerate(result_tensor_type.getShape())) {
-    if (shape_element.value() != ShapedType::kDynamicSize)
+    if (shape_element.value() != ShapedType::kDynamic)
       continue;
     Value index = rewriter->create<ConstantIndexOp>(loc, shape_element.index());
     Value alloc_operand =
@@ -205,7 +205,7 @@ public:
     SmallVector<Value, 4> buffer_args(operands.begin(), operands.end());
     if (failed(ConvertResults(op, buffer_args, rewriter)))
       return failure();
-    rewriter.create<mhlo::HloToLhloOp<HloOpTy>>(op->getLoc(), llvm::None,
+    rewriter.create<mhlo::HloToLhloOp<HloOpTy>>(op->getLoc(), std::nullopt,
                                                 buffer_args, op->getAttrs());
     rewriter.replaceOp(
         op, llvm::makeArrayRef(buffer_args).drop_front(operands.size()));
@@ -240,7 +240,7 @@ public:
       return failure();
     }
 
-    rewriter.create<mhlo::HloToLhloOp<HloOpTy>>(op->getLoc(), llvm::None,
+    rewriter.create<mhlo::HloToLhloOp<HloOpTy>>(op->getLoc(), std::nullopt,
                                                 buffer_args, op->getAttrs());
 
     // rewrite all tuple user
@@ -276,7 +276,7 @@ public:
     if (failed(ConvertResults(op, buffer_args, rewriter)))
       return failure();
     auto new_op = rewriter.create<lmhlo::ReduceWindowOp>(
-        loc, llvm::None, buffer_args, op->getAttrs());
+        loc, std::nullopt, buffer_args, op->getAttrs());
 
     // Copy over the operations inside the region.
     rewriter.inlineRegionBefore(op.getBody(), new_op.getBody(),
@@ -344,7 +344,7 @@ public:
       return failure();
 
     auto lhloOp = rewriter.create<lmhlo::CustomCallOp>(
-        op->getLoc(), llvm::None, buffer_args, op->getAttrs());
+        op->getLoc(), std::nullopt, buffer_args, op->getAttrs());
     // Setup AttrSizedOperandSegments attribute to indicate number of operands
     // for args and outputs.
     const int32_t segments[2] = {
@@ -381,7 +381,7 @@ public:
       return failure();
 
     auto new_op = rewriter.create<mhlo::HloToLhloOp<HloOpTy>>(
-        op->getLoc(), llvm::None, buffer_args, op->getAttrs());
+        op->getLoc(), std::nullopt, buffer_args, op->getAttrs());
 
     // Copy over the operations inside regions.
     for (unsigned i = 0, num_region = op->getNumRegions(); i < num_region;

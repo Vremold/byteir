@@ -31,7 +31,7 @@
 using namespace llvm;
 using namespace mlir;
 
-llvm::Optional<int64_t> mlir::getLiteralFromConstantLike(Value v) {
+std::optional<int64_t> mlir::getLiteralFromConstantLike(Value v) {
   if (auto cOp = dyn_cast_or_null<arith::ConstantIndexOp>(v.getDefiningOp())) {
     return cOp.value();
   }
@@ -42,18 +42,18 @@ llvm::Optional<int64_t> mlir::getLiteralFromConstantLike(Value v) {
     if (auto maybeIndex = dimOp.getConstantIndex()) {
       if (maybeIndex.has_value()) {
         return dimOp.getSource().getType().dyn_cast<ShapedType>().getDimSize(
-            maybeIndex.value());
+            *maybeIndex);
       }
     }
   }
 
-  return llvm::None;
+  return std::nullopt;
 }
 
 int64_t mlir::getLiteralFromConstantLike(Value v, int64_t defaultLit) {
   auto maybeI64 = getLiteralFromConstantLike(v);
   if (maybeI64.has_value())
-    return maybeI64.value();
+    return *maybeI64;
   return defaultLit;
 }
 
@@ -207,10 +207,10 @@ void mlir::addAttrs(mlir::Operation *op,
   }
 }
 
-Optional<unsigned> mlir::findOperandIndex(mlir::Operation *op,
-                                          mlir::Value val) {
+std::optional<unsigned> mlir::findOperandIndex(mlir::Operation *op,
+                                               mlir::Value val) {
   if (op == nullptr) {
-    return None;
+    return std::nullopt;
   }
 
   auto numOperand = op->getNumOperands();
@@ -219,12 +219,13 @@ Optional<unsigned> mlir::findOperandIndex(mlir::Operation *op,
       return i;
     }
   }
-  return None;
+  return std::nullopt;
 }
 
-Optional<unsigned> mlir::findResultIndex(mlir::Operation *op, mlir::Value val) {
+std::optional<unsigned> mlir::findResultIndex(mlir::Operation *op,
+                                              mlir::Value val) {
   if (op == nullptr || val.getDefiningOp() != op) {
-    return None;
+    return std::nullopt;
   }
 
   auto numResult = op->getNumResults();
@@ -233,7 +234,7 @@ Optional<unsigned> mlir::findResultIndex(mlir::Operation *op, mlir::Value val) {
       return i;
     }
   }
-  return None;
+  return std::nullopt;
 }
 
 void mlir::getValuesFromDenseIntElementsAttr(

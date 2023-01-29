@@ -20,7 +20,7 @@
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
 #include "byteir/Utils/IRRewrite.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/Pass/Pass.h"

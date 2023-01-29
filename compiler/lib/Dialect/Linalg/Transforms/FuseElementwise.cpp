@@ -54,6 +54,7 @@ static FailureOr<linalg::GenericOp> getAliasGeneric(OpBuilder &b, Value val) {
   if (!tensorTy) {
     return failure();
   }
+
   auto loc = val.getLoc();
   SmallVector<Type> resultTypes(1, tensorTy);
   SmallVector<Value> inputOperands(1, val);
@@ -67,14 +68,11 @@ static FailureOr<linalg::GenericOp> getAliasGeneric(OpBuilder &b, Value val) {
   SmallVector<Value> outputOperands(1, empty);
   SmallVector<AffineMap> indexMaps(
       2, b.getMultiDimIdentityMap(tensorTy.getRank()));
-  SmallVector<Attribute> iteratorTys(
-      tensorTy.getRank(), b.getStringAttr(getParallelIteratorTypeName()));
+  SmallVector<utils::IteratorType> iteratorTys(tensorTy.getRank(),
+                                               utils::IteratorType::parallel);
 
-  auto genericOp = b.create<GenericOp>(
-      val.getLoc(), resultTypes, inputOperands, outputOperands,
-      b.getAffineMapArrayAttr(indexMaps), b.getArrayAttr(iteratorTys),
-      /*doc=*/nullptr,
-      /*library_call=*/nullptr);
+  auto genericOp = b.create<GenericOp>(val.getLoc(), resultTypes, inputOperands,
+                                       outputOperands, indexMaps, iteratorTys);
 
   // generate region
   Block *block = new Block();
@@ -132,20 +130,25 @@ public:
       FailureOr<Operation *> fusedOp = fuseElementwiseOps(rewriter, &opOperand);
       if (succeeded(fusedOp)) {
         auto replacements =
-            fusedOp.value()->getResults().take_back(genericOp.getNumResults());
+            (*fusedOp)->getResults().take_back(genericOp.getNumResults());
         rewriter.replaceOp(genericOp, replacements);
 
         // Try to replace the producer with fusedOp
         // if fusedOp dominates all of the producer's users
         auto producer = opOperand.get().getDefiningOp<GenericOp>();
-        for (unsigned i = 0; i < producer.getNumResults(); ++i) {
-          auto res = producer.getResult(i);
+        unsigned idx = 0;
+        for (auto &&res : producer.getResults()) {
+          // only check use producer results
+          if (res.use_empty())
+            continue;
           hoistDownDescendantUsers(res, postDomInfo);
-          if (!checkDominateAllUsers(fusedOp.value(), res, domInfo)) {
+          if (!checkDominateAllUsers(*fusedOp, res, domInfo)) {
+            idx++;
             continue;
           }
-          res.replaceAllUsesWith(fusedOp.value()->getResult(i));
+          res.replaceAllUsesWith((*fusedOp)->getResult(idx++));
         }
+
         return success();
       }
     }
@@ -210,11 +213,11 @@ public:
       }
 
       // replace all generic users except the aliasGeneric itself
-      val.replaceUsesWithIf(
-          aliasGeneric.value().getResult(0), [&](OpOperand &opOperand) {
-            return isa<GenericOp>(opOperand.getOwner()) &&
-                   opOperand.getOwner() != aliasGeneric.value();
-          });
+      val.replaceUsesWithIf(aliasGeneric->getResult(0),
+                            [&](OpOperand &opOperand) {
+                              return isa<GenericOp>(opOperand.getOwner()) &&
+                                     opOperand.getOwner() != *aliasGeneric;
+                            });
 
       return success();
     }

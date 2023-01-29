@@ -25,7 +25,8 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/Optional.h"
+
+#include <optional>
 
 /**
  * This file holds utility functions for IR
@@ -99,7 +100,7 @@ uint64_t GetStaticBytes(mlir::MemRefType memref);
 
 // Get total bytes of a value if it is a memref
 // Return None if a value is not a memref
-llvm::Optional<uint64_t> GetStaticBytes(mlir::Value val);
+std::optional<uint64_t> GetStaticBytes(mlir::Value val);
 
 // Get element in byte of a memref
 inline unsigned int GetElementTypeByte(mlir::MemRefType memref) {
@@ -124,16 +125,16 @@ inline unsigned int GetElementTypeByte(mlir::MemRefType memref) {
 
 // Get element in byte of a value if it is a memref
 // Return None if a value is not a memref
-llvm::Optional<uint64_t> GetElementTypeByte(mlir::Value val);
+std::optional<uint64_t> GetElementTypeByte(mlir::Value val);
 
 // Get static shape in IR, negative value for unknown
-llvm::Optional<llvm::ArrayRef<int64_t>> GetStaticShape(mlir::Value val);
+std::optional<llvm::ArrayRef<int64_t>> GetStaticShape(mlir::Value val);
 
-llvm::Optional<size_t> GetRank(mlir::Value val);
+std::optional<size_t> GetRank(mlir::Value val);
 
 // Get space in IR, empty value for unknown
 std::string GetSpace(mlir::MemRefType memref);
-llvm::Optional<std::string> GetSpace(mlir::Value val);
+std::optional<std::string> GetSpace(mlir::Value val);
 
 // Get dtype of given IR Value
 DTypeEnum GetElementDTypeEnum(mlir::Value val);
@@ -145,7 +146,7 @@ template <typename T> inline bool IsElementType(mlir::Value val) {
   return false;
 }
 
-llvm::Optional<int64_t> LinearizedStaticShape(llvm::ArrayRef<int64_t> shape);
+std::optional<int64_t> LinearizedStaticShape(llvm::ArrayRef<int64_t> shape);
 
 // Get IntegerAttr's value
 int64_t GetIntegerAttrValue(mlir::Attribute attr);

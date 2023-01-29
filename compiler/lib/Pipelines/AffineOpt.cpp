@@ -21,7 +21,7 @@
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/Common/Utils.h"
 #include "byteir/Transforms/Passes.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
+#include "mhlo/transforms/passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Linalg/Passes.h"

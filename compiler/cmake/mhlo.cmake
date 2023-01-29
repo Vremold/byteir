@@ -4,13 +4,14 @@ add_subdirectory(${REPO_ROOT_DIR}/../external/mlir-hlo ${CMAKE_CURRENT_BINARY_DI
 
 # FIXME: remove this when upstream fix
 target_link_libraries(MhloDialect PUBLIC StablehloTypeInference StablehloAssemblyFormat)
+target_link_libraries(GmlStPasses PUBLIC MLIRGmlStUtils)
 
-include_directories(${REPO_ROOT_DIR}/../external/mlir-hlo/include)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo/include)
+include_directories(${REPO_ROOT_DIR}/../external/mlir-hlo)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo)
 include_directories(${REPO_ROOT_DIR}/../external/mlir-hlo/stablehlo)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo/stablehlo)
 
-install(DIRECTORY ${REPO_ROOT_DIR}/../external/mlir-hlo/include/mlir-hlo ${REPO_ROOT_DIR}/../external/mlir-hlo/include/mlir-hlo-c
+install(DIRECTORY ${REPO_ROOT_DIR}/../external/mlir-hlo
   DESTINATION external/include
   COMPONENT byteir-headers
   FILES_MATCHING
@@ -20,7 +21,7 @@ install(DIRECTORY ${REPO_ROOT_DIR}/../external/mlir-hlo/include/mlir-hlo ${REPO_
   PATTERN "*.td"
   )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/mlir-hlo/include/mlir-hlo
+install(DIRECTORY ${CMAKE_BINARY_DIR}/mlir-hlo
   DESTINATION external/include
   COMPONENT byteir-headers
   FILES_MATCHING

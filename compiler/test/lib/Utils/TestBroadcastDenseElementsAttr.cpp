@@ -16,7 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Util/Util.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Pass/Pass.h"
@@ -42,11 +42,11 @@ struct BroadcastConstantPattern
     auto broadcastedAttr = createBroadcastedDenseElementsAttr(
         constOp.getValue().cast<DenseElementsAttr>(),
         op.getType().cast<ShapedType>(), broadcastDimensions);
-    if (!broadcastedAttr) {
+    if (!broadcastedAttr.has_value()) {
       return failure();
     }
-    auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-        op->getLoc(), broadcastedAttr.value());
+    auto newConstOp =
+        rewriter.create<mhlo::ConstantOp>(op->getLoc(), *broadcastedAttr);
     rewriter.replaceOp(op, newConstOp.getOutput());
     return success();
   }

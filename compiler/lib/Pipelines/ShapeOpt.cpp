@@ -21,6 +21,7 @@
 #include "byteir/Dialect/Shape/Passes.h"
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/Common/Utils.h"
+#include "byteir/Transforms/Passes.h"
 #include "mlir/Transforms/Passes.h"
 
 using namespace mlir;
@@ -29,14 +30,14 @@ void mlir::createShapeOptPipeline(OpPassManager &pm) {
   invokeOpPassPipelineBuilder<func::FuncOp>(
       [](OpPassManager &pm) {
         pm.addPass(createSetAssumingAlwaysTruePass());
-        pm.addPass(createCanonicalizerPass());
+        pm.addPass(createCanonicalizeExtPass());
         pm.addPass(createInsertTieShapePass());
         pm.addPass(createInsertShapeConstraintPass());
         pm.addPass(createByteIRShapeReificationPass());
-        addCleanUpExtPassPipeline(pm);
+        addCleanUpExtPassPipeline(pm, /*topHasSymTable*/ false);
         pm.addPass(createResolveShapeConstraintPass());
         pm.addPass(createBoundedShapeInferencePass());
-        pm.addPass(createCanonicalizerPass());
+        pm.addPass(createCanonicalizeExtPass());
       },
       pm);
 }

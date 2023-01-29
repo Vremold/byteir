@@ -86,8 +86,8 @@ def TileExtOp : Op<Transform_Dialect, "structured.tile_ext",
 
   let arguments = (ins PDL_Operation:$target,
                    Variadic<PDL_Operation>:$dynamic_sizes,
-                   DefaultValuedAttr<I64ArrayAttr, "{}">:$static_sizes,
-                   DefaultValuedAttr<I64ArrayAttr, "{}">:$interchange);
+                   DefaultValuedOptionalAttr<DenseI64ArrayAttr, "{}">:$static_sizes,
+                   DefaultValuedOptionalAttr<DenseI64ArrayAttr, "{}">:$interchange);
   let results = (outs PDL_Operation:$tiled_linalg_op,
                       Variadic<PDL_Operation>:$loops);
 

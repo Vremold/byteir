@@ -1,20 +1,8 @@
-diff --git a/tensorflow/compiler/xla/mlir_hlo/include/mlir-hlo/Dialect/mhlo/IR/hlo_ops.td b/tensorflow/compiler/xla/mlir_hlo/include/mlir-hlo/Dialect/mhlo/IR/hlo_ops.td
-index 62b33a66598..22bf83bd44e 100644
---- a/tensorflow/compiler/xla/mlir_hlo/include/mlir-hlo/Dialect/mhlo/IR/hlo_ops.td
-+++ b/tensorflow/compiler/xla/mlir_hlo/include/mlir-hlo/Dialect/mhlo/IR/hlo_ops.td
-@@ -3188,6 +3188,7 @@ def HLO_DynamicConvOp : HLO_Op<"dynamic_conv", [Pure]> {
-     ConvolutionAttributes.attributes);
-   let results = (outs HLO_Tensor);
-   let hasCustomHLOConverter = 1;
-+  let hasCanonicalizer = 1;
- }
- 
- def HLO_ComputeReshapeShapeOp :
-diff --git a/tensorflow/compiler/xla/mlir_hlo/lib/Dialect/mhlo/IR/hlo_ops.cc b/tensorflow/compiler/xla/mlir_hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
-index feb575f0b56..fe60817c51e 100644
---- a/tensorflow/compiler/xla/mlir_hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
-+++ b/tensorflow/compiler/xla/mlir_hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
-@@ -7096,8 +7096,9 @@ static Attribute CompareFolder(CompareOp op, ArrayRef<Attribute> attrs) {
+diff --git a/tensorflow/compiler/xla/mlir_hlo/mhlo/IR/hlo_ops.cc b/tensorflow/compiler/xla/mlir_hlo/mhlo/IR/hlo_ops.cc
+index 8728bd5714f..56c2c59296c 100644
+--- a/tensorflow/compiler/xla/mlir_hlo/mhlo/IR/hlo_ops.cc
++++ b/tensorflow/compiler/xla/mlir_hlo/mhlo/IR/hlo_ops.cc
+@@ -7072,8 +7072,9 @@ static Attribute CompareFolder(CompareOp op, ArrayRef<Attribute> attrs) {
  
    SmallVector<bool, 6> values;
    values.reserve(lhs.getNumElements());
@@ -26,52 +14,3 @@ index feb575f0b56..fe60817c51e 100644
      values.push_back(
          Convert()(addSign(std::get<0>(zip), lhs.getElementType()),
                    addSign(std::get<1>(zip), rhs.getElementType())));
-@@ -7961,6 +7962,48 @@ void WhileOp::getCanonicalizationPatterns(RewritePatternSet& results,
-   results.add(&whileCanonicalization);
- }
- 
-+//===----------------------------------------------------------------------===//
-+// DynamicConvOp
-+//===----------------------------------------------------------------------===//
-+
-+// simplify dynamic_conv = > convolution
-+static LogicalResult simplifyDynamicConv(DynamicConvOp op,
-+                                         PatternRewriter &rewriter) {
-+  DenseIntElementsAttr dPaddingAttr;
-+  if (!matchPattern(op.getDPadding(), m_Constant(&dPaddingAttr))) {
-+    return failure();
-+  }
-+  size_t spatialDim =
-+      op.getDimensionNumbers().getInputSpatialDimensions().size();
-+  assert(dPaddingAttr.size() * 2 == spatialDim);
-+
-+  llvm::SmallVector<int64_t> newPadding = llvm::to_vector(
-+      llvm::map_range(dPaddingAttr.getValues<APInt>(),
-+                      [&](APInt i) { return i.getSExtValue(); }));
-+  if (op.getPadding().hasValue()) {
-+    DenseIntElementsAttr paddingAttr = op.getPadding().getValue();
-+    assert(paddingAttr.size() * 2 == spatialDim);
-+
-+    for (const auto &it : llvm::enumerate(paddingAttr.getValues<int64_t>())) {
-+      newPadding[it.index()] += it.value();
-+    }
-+  }
-+
-+  mhlo::ConvolutionOp convOp = rewriter.create<mhlo::ConvolutionOp>(
-+      op->getLoc(), op.getType(),
-+      llvm::ArrayRef<Value>{op.getLhs(), op.getRhs()}, op->getAttrs());
-+  convOp.setPaddingAttr(DenseIntElementsAttr::get(
-+      RankedTensorType::get({spatialDim, 2}, rewriter.getI64Type()),
-+      newPadding));
-+  rewriter.replaceOp(op, convOp.getResult());
-+  return success();
-+}
-+
-+void DynamicConvOp::getCanonicalizationPatterns(RewritePatternSet &results,
-+                                                MLIRContext *context) {
-+  results.add(simplifyDynamicConv);
-+}
-+
- LogicalResult UniformDequantizeOp::inferReturnTypeComponents(
-     MLIRContext*, Optional<Location> /*location*/, ValueShapeRange operands,
-     DictionaryAttr attributes, RegionRange regions,

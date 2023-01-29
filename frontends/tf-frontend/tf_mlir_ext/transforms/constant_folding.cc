@@ -33,11 +33,11 @@ namespace {
 LogicalResult constantFoldingWhereOp(Operation *op) {
   auto whereOp = llvm::cast<TF::WhereOp>(op);
   OpBuilder rewriter(op);
-  auto const_input = whereOp.input().getDefiningOp<TF::ConstOp>();
+  auto const_input = whereOp.getInput().getDefiningOp<TF::ConstOp>();
   if (!const_input) {
     return failure();
   }
-  auto input_attr = const_input.value().cast<DenseElementsAttr>();
+  auto input_attr = const_input.getValue().cast<DenseElementsAttr>();
   auto input_type = input_attr.getType();
   auto output_type = whereOp.getType().cast<RankedTensorType>();
   if (input_type.getElementType().isInteger(1) &&

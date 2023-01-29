@@ -4,26 +4,28 @@ func.func @softmax_case0(%arg0: tensor<100x100xf32>) -> tensor<100x100xf32> {
   %0 = "tf.Softmax"(%arg0) : (tensor<100x100xf32>) -> tensor<100x100xf32>
   func.return %0 : tensor<100x100xf32>
 }
-//CHECK-LABEL:  func.func @softmax_case0(%arg0: tensor<100x100xf32>) -> tensor<100x100xf32> {
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = 1 : i64}, call_target_name = "byteir.softmax", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<100x100xf32>) -> tensor<100x100xf32>
-//CHECK-NEXT:    return %0 : tensor<100x100xf32>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @softmax_case0(%arg0: tensor<100x100xf32>) -> tensor<100x100xf32> {
+// CHECK:  mhlo.custom_call
+// CHECK-SAME: @byteir.softmax
+// CHECK-SAME: byteir_attrs = {axis = 1 : i64}
 
 func.func @log_softmax_case0(%arg0: tensor<100x?xf32>) -> tensor<100x?xf32> {
   %0 = "tf.LogSoftmax"(%arg0) : (tensor<100x?xf32>) -> tensor<100x?xf32>
   func.return %0 : tensor<100x?xf32>
 }
-//CHECK-LABEL:  func.func @log_softmax_case0(%arg0: tensor<100x?xf32>) -> tensor<100x?xf32> {
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = 1 : i64}, call_target_name = "byteir.log_softmax", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<100x?xf32>) -> tensor<100x?xf32>
-//CHECK-NEXT:    return %0 : tensor<100x?xf32>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @log_softmax_case0(%arg0: tensor<100x?xf32>) -> tensor<100x?xf32> {
+// CHECK:  mhlo.custom_call
+// CHECK-SAME: @byteir.log_softmax
+// CHECK-SAME: byteir_attrs = {axis = 1 : i64}
 
 func.func @erf_case0(%1: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
   %2 = "tf.Erf"(%1) : (tensor<100x?x?xf32>) -> tensor<100x?x?xf32>
   func.return %2 : tensor<100x?x?xf32>
 }
 // CHECK-LABEL: func.func @erf_case0
-// CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {}, call_target_name = "byteir.erf", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<100x?x?xf32>) -> tensor<100x?x?xf32>
+// CHECK:  mhlo.custom_call
+// CHECK-SAME: @byteir.erf
+// CHECK-SAME: byteir_attrs = {}
 
 func.func @gelu_erf_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
   %cst = "tf.Const"() {value = dense<0.707106769> : tensor<f32>} : () -> tensor<f32>
@@ -36,10 +38,10 @@ func.func @gelu_erf_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
   %4 = "tf.Mul"(%3, %0) : (tensor<100x?x?xf32>, tensor<100x?x?xf32>) -> tensor<100x?x?xf32>
   func.return %4 : tensor<100x?x?xf32>
 }
-//CHECK-LABEL:  func.func @gelu_erf_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {approximate = "erf"}, call_target_name = "byteir.gelu", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<100x?x?xf32>) -> tensor<100x?x?xf32>
-//CHECK-NEXT:    return %0 : tensor<100x?x?xf32>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @gelu_erf_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
+// CHECK:  mhlo.custom_call
+// CHECK-SAME: @byteir.gelu
+// CHECK-SAME: byteir_attrs = {approximate = "erf"}
 
 func.func @gelu_tanh_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
   %cst = "tf.Const"() {value = dense<4.471500e-02> : tensor<f32>} : () -> tensor<f32>
@@ -57,10 +59,10 @@ func.func @gelu_tanh_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
   %7 = "tf.Mul"(%5, %6) : (tensor<100x?x?xf32>, tensor<100x?x?xf32>) -> tensor<100x?x?xf32>
   func.return %7 : tensor<100x?x?xf32>
 }
-//CHECK-LABEL:  func.func @gelu_tanh_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {approximate = "tanh"}, call_target_name = "byteir.gelu", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<100x?x?xf32>) -> tensor<100x?x?xf32>
-//CHECK-NEXT:    return %0 : tensor<100x?x?xf32>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @gelu_tanh_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
+// CHECK:  mhlo.custom_call
+// CHECK-SAME: @byteir.gelu
+// CHECK-SAME: byteir_attrs = {approximate = "tanh"}
 
 func.func @gelu_tanh_case1(%arg0: tensor<128x512xf16>) -> tensor<128x512xf16> {
   %cst_212 = "tf.Const"() {value = dense<3.000000e+00> : tensor<f16>} : () -> tensor<f16>
@@ -78,10 +80,10 @@ func.func @gelu_tanh_case1(%arg0: tensor<128x512xf16>) -> tensor<128x512xf16> {
   %7 = "tf.Mul"(%arg0, %6) {_grappler_ArithmeticOptimizer_MinimizeBroadcasts = true, device = ""} : (tensor<128x512xf16>, tensor<128x512xf16>) -> tensor<128x512xf16>
   func.return %7 : tensor<128x512xf16>
 }
-//CHECK-LABEL:  func.func @gelu_tanh_case1(%arg0: tensor<128x512xf16>) -> tensor<128x512xf16> {
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {approximate = "tanh"}, call_target_name = "byteir.gelu", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<128x512xf16>) -> tensor<128x512xf16>
-//CHECK-NEXT:    return %0 : tensor<128x512xf16>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @gelu_tanh_case1(%arg0: tensor<128x512xf16>) -> tensor<128x512xf16> {
+// CHECK:  mhlo.custom_call
+// CHECK-SAME: @byteir.gelu
+// CHECK-SAME: byteir_attrs = {approximate = "tanh"}
 
 func.func @gelu_tanh_case2(%arg0: tensor<1x16x768xf32>) -> tensor<1x16x768xf32> {
   %cst_670 = "tf.Const"() {value = dense<3.000000e+00> : tensor<f32>} : () -> tensor<f32>
@@ -101,27 +103,28 @@ func.func @gelu_tanh_case2(%arg0: tensor<1x16x768xf32>) -> tensor<1x16x768xf32> 
 }
 // CHECK-LABEL: func.func @gelu_tanh_case2
 // CHECK: mhlo.custom_call
-// CHECK-SAME: byteir.gelu
+// CHECK-SAME: @byteir.gelu
+// CHECK-SAME: byteir_attrs = {approximate = "tanh"}
 
 func.func @arg_min_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?xi64> {
   %cst = "tf.Const"() {value = dense<2> : tensor<i32>} : () -> tensor<i32>
   %0 = "tf.ArgMin"(%arg0, %cst) : (tensor<100x?x?xf32>, tensor<i32>) -> tensor<100x?xi64>
   func.return %0 : tensor<100x?xi64>
 }
-//CHECK-LABEL:  func.func @arg_min_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?xi64> {
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = 2 : i64, keep_dims = false, select_last_index = false}, call_target_name = "byteir.arg_min", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<100x?x?xf32>) -> tensor<100x?xi64>
-//CHECK-NEXT:    return %0 : tensor<100x?xi64>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @arg_min_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?xi64> {
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.arg_min
+// CHECK-SAME: byteir_attrs = {axis = 2 : i64, keep_dims = false, select_last_index = false}
 
 func.func @arg_max_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?xi64> {
   %cst = "tf.Const"() {value = dense<2> : tensor<i32>} : () -> tensor<i32>
   %0 = "tf.ArgMax"(%arg0, %cst) : (tensor<100x?x?xf32>, tensor<i32>) -> tensor<100x?xi64>
   func.return %0 : tensor<100x?xi64>
 }
-//CHECK-LABEL:  func.func @arg_max_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?xi64> {
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = 2 : i64, keep_dims = false, select_last_index = false}, call_target_name = "byteir.arg_max", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<100x?x?xf32>) -> tensor<100x?xi64>
-//CHECK-NEXT:    return %0 : tensor<100x?xi64>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @arg_max_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?xi64> {
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.arg_max
+// CHECK-SAME: byteir_attrs = {axis = 2 : i64, keep_dims = false, select_last_index = false}
 
 func.func @topk_index_needed_case0(%arg0: tensor<16x32xf32>) -> (tensor<16x10xf32>, tensor<16x10xi32>) {
     %0 = "tf.Const"() {value = dense<10> : tensor<i32>} : () -> tensor<i32>
@@ -129,15 +132,17 @@ func.func @topk_index_needed_case0(%arg0: tensor<16x32xf32>) -> (tensor<16x10xf3
     func.return %1, %2: tensor<16x10xf32>, tensor<16x10xi32>
 }
 // CHECK-LABEL: func.func @topk_index_needed_case0
-// CHECK-NEXT:    %0:2 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [1], k = 10 : i64, sorted = true}, call_target_name = "byteir.top_k", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<16x32xf32>) -> (tensor<16x10xf32>, tensor<16x10xi32>)
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.top_k
+// CHECK-SAME: byteir_attrs = {axis = [1], k = 10 : i64, sorted = true}
 
 func.func @addn_case0(%arg0: tensor<16x32xf32>, %arg1: tensor<16x32xf32>, %arg2: tensor<16x32xf32>) -> tensor<16x32xf32> {
   %0 = "tf.AddN"(%arg0, %arg1, %arg2) : (tensor<16x32xf32>, tensor<16x32xf32>, tensor<16x32xf32>) -> tensor<16x32xf32>
   return %0 : tensor<16x32xf32>
 }
 // CHECK-LABEL: func.func @addn_case0
-// CHECK: "mhlo.custom_call"
-// CHECK-SAME: "byteir.addn"
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.addn
 
 func.func @layer_norm(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %cst = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
@@ -156,12 +161,12 @@ func.func @layer_norm(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %9 = "tf.AddV2"(%6, %8) : (tensor<1x32x3xf32>, tensor<1x32x3xf32>) -> tensor<1x32x3xf32>
   func.return %9 : tensor<1x32x3xf32>
 }
-//CHECK-LABEL:  func.func @layer_norm(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
-//CHECK-NEXT:    %cst = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517]> : tensor<3xf32>} : () -> tensor<3xf32>
-//CHECK-NEXT:    %cst_0 = "tf.Const"() {value = dense<[0.445568085, 0.45303449, 3.227140e-01]> : tensor<3xf32>} : () -> tensor<3xf32>
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0, %cst_0, %cst) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}, call_target_name = "byteir.layer_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<1x32x3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<1x32x3xf32>
-//CHECK-NEXT:    return %0 : tensor<1x32x3xf32>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @layer_norm(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
+// CHECK-NEXT:    %cst = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517]> : tensor<3xf32>} : () -> tensor<3xf32>
+// CHECK-NEXT:    %cst_0 = "tf.Const"() {value = dense<[0.445568085, 0.45303449, 3.227140e-01]> : tensor<3xf32>} : () -> tensor<3xf32>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.layer_norm
+// CHECK-SAME: byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}
 
 func.func @layer_norm_negative_axis(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %cst = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
@@ -180,12 +185,12 @@ func.func @layer_norm_negative_axis(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3x
   %9 = "tf.AddV2"(%6, %8) : (tensor<1x32x3xf32>, tensor<1x32x3xf32>) -> tensor<1x32x3xf32>
   func.return %9 : tensor<1x32x3xf32>
 }
-//CHECK-LABEL:  func.func @layer_norm_negative_axis(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
-//CHECK-NEXT:    %cst = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517]> : tensor<3xf32>} : () -> tensor<3xf32>
-//CHECK-NEXT:    %cst_0 = "tf.Const"() {value = dense<[0.445568085, 0.45303449, 3.227140e-01]> : tensor<3xf32>} : () -> tensor<3xf32>
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0, %cst_0, %cst) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}, call_target_name = "byteir.layer_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<1x32x3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<1x32x3xf32>
-//CHECK-NEXT:    return %0 : tensor<1x32x3xf32>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @layer_norm_negative_axis(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
+// CHECK-NEXT:    %cst = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517]> : tensor<3xf32>} : () -> tensor<3xf32>
+// CHECK-NEXT:    %cst_0 = "tf.Const"() {value = dense<[0.445568085, 0.45303449, 3.227140e-01]> : tensor<3xf32>} : () -> tensor<3xf32>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.layer_norm
+// CHECK-SAME: byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}
 
 func.func @layer_norm_swap_add(%arg0: tensor<2x32x3xf32>) -> tensor<2x32x3xf32> {
   %cst_15 = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
@@ -206,7 +211,7 @@ func.func @layer_norm_swap_add(%arg0: tensor<2x32x3xf32>) -> tensor<2x32x3xf32> 
 }
 // CHECK-LABEL: @layer_norm_swap_add
 // CHECK: mhlo.custom_call
-// CHECK-SAME: "byteir.layer_norm"
+// CHECK-SAME: @byteir.layer_norm
 
 func.func @layer_norm_swap_mul(%arg0: tensor<1x16x3xf32>) -> tensor<1x16x3xf32> {
   %cst_685 = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
@@ -227,7 +232,7 @@ func.func @layer_norm_swap_mul(%arg0: tensor<1x16x3xf32>) -> tensor<1x16x3xf32> 
 }
 // CHECK-LABEL: @layer_norm_swap_mul
 // CHECK: mhlo.custom_call
-// CHECK-SAME: "byteir.layer_norm"
+// CHECK-SAME: @byteir.layer_norm
 
 func.func @layer_norm_swap_squarediff(%arg0: tensor<256x4xf32>) -> tensor<256x4xf32> {
   %cst_136 = "tf.Const"() {value = dense<1> : tensor<1xi32>} : () -> tensor<1xi32>
@@ -248,7 +253,7 @@ func.func @layer_norm_swap_squarediff(%arg0: tensor<256x4xf32>) -> tensor<256x4x
 }
 // CHECK-LABEL: @layer_norm_swap_squarediff
 // CHECK: mhlo.custom_call
-// CHECK-SAME: "byteir.layer_norm"
+// CHECK-SAME: @byteir.layer_norm
 
 func.func @layer_norm_V2(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %cst = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
@@ -266,12 +271,12 @@ func.func @layer_norm_V2(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %8 = "tf.AddV2"(%7, %cst_1) : (tensor<1x32x3xf32>, tensor<3xf32>) -> tensor<1x32x3xf32>
   func.return %8 : tensor<1x32x3xf32>
 }
-//CHECK-LABEL:  func.func @layer_norm_V2(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
-//CHECK-NEXT:    %cst = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517]> : tensor<3xf32>} : () -> tensor<3xf32>
-//CHECK-NEXT:    %cst_0 = "tf.Const"() {value = dense<[0.445568085, 0.45303449, 3.227140e-01]> : tensor<3xf32>} : () -> tensor<3xf32>
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0, %cst, %cst_0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}, call_target_name = "byteir.layer_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<1x32x3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<1x32x3xf32>
-//CHECK-NEXT:    return %0 : tensor<1x32x3xf32>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @layer_norm_V2(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
+// CHECK-NEXT:    %cst = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517]> : tensor<3xf32>} : () -> tensor<3xf32>
+// CHECK-NEXT:    %cst_0 = "tf.Const"() {value = dense<[0.445568085, 0.45303449, 3.227140e-01]> : tensor<3xf32>} : () -> tensor<3xf32>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.layer_norm
+// CHECK-SAME: byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}
 
 func.func @layer_norm_V3_disable_minimize_broadcast(%113: tensor<1x3xf32>) -> tensor<1x3xf32> {
   %cst_76 = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
@@ -291,7 +296,7 @@ func.func @layer_norm_V3_disable_minimize_broadcast(%113: tensor<1x3xf32>) -> te
 }
 // CHECK-LABEL: func.func @layer_norm_V3_disable_minimize_broadcast
 // CHECK: mhlo.custom_call
-// CHECK-SAME: "byteir.layer_norm"
+// CHECK-SAME: @byteir.layer_norm
 
 func.func @layer_norm_V4(%1735: tensor<128x20x8xf16>) -> tensor<128x20x8xf16> {
   %cst_340 = "tf.Const"() {value = dense<-1> : tensor<1xi32>} : () -> tensor<1xi32>
@@ -311,7 +316,7 @@ func.func @layer_norm_V4(%1735: tensor<128x20x8xf16>) -> tensor<128x20x8xf16> {
 }
 // CHECK-LABEL: func.func @layer_norm_V4
 // CHECK: mhlo.custom_call
-// CHECK-SAME: "byteir.layer_norm"
+// CHECK-SAME: @byteir.layer_norm
 
 func.func @layer_norm_with_cast(%79: tensor<150x3xf16>) -> tensor<150x3xf16> {
   %cst_61 = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517]> : tensor<3xf16>} : () -> tensor<3xf16>
@@ -332,12 +337,12 @@ func.func @layer_norm_with_cast(%79: tensor<150x3xf16>) -> tensor<150x3xf16> {
   %91 = "tf.AddV2"(%90, %cst_62) {device = ""} : (tensor<150x3xf16>, tensor<3xf16>) -> tensor<150x3xf16>
   return %91 : tensor<150x3xf16>
 }
-//CHECK-LABEL:  func.func @layer_norm_with_cast(%arg0: tensor<150x3xf16>) -> tensor<150x3xf16> {
-//CHECK-NEXT:    %cst = "tf.Const"() {value = dense<[4.016110e-02, -1.137080e-01, 4.326170e-01]> : tensor<3xf16>} : () -> tensor<3xf16>
-//CHECK-NEXT:    %cst_0 = "tf.Const"() {value = dense<[4.455570e-01, 4.531250e-01, 3.227540e-01]> : tensor<3xf16>} : () -> tensor<3xf16>
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0, %cst, %cst_0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [1], epsilon = 1.0132789611816406E-6 : f64}, call_target_name = "byteir.layer_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<150x3xf16>, tensor<3xf16>, tensor<3xf16>) -> tensor<150x3xf16>
-//CHECK-NEXT:    return %0 : tensor<150x3xf16>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @layer_norm_with_cast(%arg0: tensor<150x3xf16>) -> tensor<150x3xf16> {
+// CHECK-NEXT:    %cst = "tf.Const"() {value = dense<[4.016110e-02, -1.137080e-01, 4.326170e-01]> : tensor<3xf16>} : () -> tensor<3xf16>
+// CHECK-NEXT:    %cst_0 = "tf.Const"() {value = dense<[4.455570e-01, 4.531250e-01, 3.227540e-01]> : tensor<3xf16>} : () -> tensor<3xf16>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.layer_norm
+// CHECK-SAME: byteir_attrs = {axis = [1], epsilon = 1.0132789611816406E-6 : f64}
 
 func.func @layer_norm_with_cast_disable_minimize_broadcast(%46: tensor<1024x4xf16>) -> tensor<1024x4xf16> {
   %cst_103 = "tf.Const"() {value = dense<[0.0401659757, -0.11370486, 0.432680517, 0.4000000]> : tensor<4xf16>} : () -> tensor<4xf16>
@@ -360,7 +365,7 @@ func.func @layer_norm_with_cast_disable_minimize_broadcast(%46: tensor<1024x4xf1
 }
 // CHECK-LABEL: func.func @layer_norm_with_cast_disable_minimize_broadcast
 // CHECK: mhlo.custom_call
-// CHECK-SAME: "byteir.layer_norm"
+// CHECK-SAME: @byteir.layer_norm
 
 func.func @l2_norm_V1(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %cst = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
@@ -372,10 +377,10 @@ func.func @l2_norm_V1(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %4 = "tf.Mul"(%arg0, %3) : (tensor<1x32x3xf32>, tensor<1x32x1xf32>) -> tensor<1x32x3xf32>
   func.return %4 : tensor<1x32x3xf32>
 }
-//CHECK-LABEL:  func.func @l2_norm_V1(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
-//CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}, call_target_name = "byteir.l2_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<1x32x3xf32>) -> tensor<1x32x3xf32>
-//CHECK-NEXT:    return %0 : tensor<1x32x3xf32>
-//CHECK-NEXT:  }
+// CHECK-LABEL:  func.func @l2_norm_V1(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.l2_norm
+// CHECK-SAME: byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}
 
 func.func @l2_norm_V1_swap_mul(%54: tensor<1x64xf32>) -> tensor<1x64xf32> {
   %cst_0 = "tf.Const"() {value = dense<1> : tensor<i32>} : () -> tensor<i32>
@@ -389,7 +394,7 @@ func.func @l2_norm_V1_swap_mul(%54: tensor<1x64xf32>) -> tensor<1x64xf32> {
 }
 // CHECK-LABEL: func.func @l2_norm_V1_swap_mul
 // CHECK: mhlo.custom_call
-// CHECK-SAME: "byteir.l2_norm"
+// CHECK-SAME: @byteir.l2_norm
 
 func.func @l2_norm_V2(%1871: tensor<1x128xf16>) -> tensor<1x128xf16> {
   %cst_5 = "tf.Const"() {value = dense<1> : tensor<i32>} : () -> tensor<i32>
@@ -401,7 +406,9 @@ func.func @l2_norm_V2(%1871: tensor<1x128xf16>) -> tensor<1x128xf16> {
   return %1876 : tensor<1x128xf16>
 }
 // CHECK-LABEL: @l2_norm_V2
-// CHECK: "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [1], epsilon = 0.000000e+00 : f64}, call_target_name = "byteir.l2_norm", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<1x128xf16>) -> tensor<1x128xf16>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.l2_norm
+// CHECK-SAME: byteir_attrs = {axis = [1], epsilon = 0.000000e+00 : f64}
 
 func.func @dynamic_mask_stitch(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
   %cst = "tf.Const"() {value = dense<[[-0.916170597, -0.884184718, 1.60242105, -1.19678485], [0.33643803, -0.431175768, 1.71861267, 0.126368985], [-1.07191086, -1.00517535, -0.666032254, 0.776807785], [1.53380013, 0.83925873, -0.24277249, 1.53341103]]> : tensor<4x4xf32>} : () -> tensor<4x4xf32>
@@ -427,35 +434,48 @@ func.func @dynamic_mask_stitch(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> 
   func.return %10 : tensor<?x4xf32>
 }
 // CHECK-LABEL: func.func @dynamic_mask_stitch
-// CHECK:     %7 = "mhlo.custom_call"(%4, %6, %arg1) {api_version = 1 : i32, backend_config = "", call_target_name = "tf.DynamicMaskStitch", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<?x4xf32>, tensor<?x4xf32>, tensor<4xi32>) -> tensor<?x4xf32>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @tf.DynamicPartition
+// CHECK-SAME: byteir_attrs = {num_partitions = 2 : i64}
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @tf.DynamicMaskStitch
+// CHECK-SAME: byteir_attrs = {}
 
 func.func @dynamic_partition(%1: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> (tensor<?x4xf32>, tensor<?x4xf32>) {
   %2:2 = "tf.DynamicPartition"(%1, %arg1) {T = f32, device = "", num_partitions = 2 : i64} : (tensor<4x4xf32>, tensor<4xi32>) -> (tensor<?x4xf32>, tensor<?x4xf32>)
   return %2#0, %2#1 : tensor<?x4xf32>, tensor<?x4xf32>
 }
 // CHECK-LABEL: func.func @dynamic_partition
-// CHECK:  %0:2 = "mhlo.custom_call"(%arg0, %arg1) {api_version = 1 : i32, backend_config = "", byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "tf.DynamicPartition", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<4x4xf32>, tensor<4xi32>) -> (tensor<?x4xf32>, tensor<?x4xf32>)
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @tf.DynamicPartition
+// CHECK-SAME: byteir_attrs = {num_partitions = 2 : i64}
 
 func.func @dynamic_stitch(%part0: tensor<?xi32>, %part1: tensor<?xi32>, %4: tensor<?x4xf32>, %6: tensor<?x4xf32>) -> tensor<?x4xf32> {
   %8 = "tf.DynamicStitch"(%part0, %part1, %4, %6) {device = ""} : (tensor<?xi32>, tensor<?xi32>, tensor<?x4xf32>, tensor<?x4xf32>) -> tensor<?x4xf32>
   return %8 : tensor<?x4xf32>
 }
 // CHECK-LABEL: func.func @dynamic_stitch
-// CHECK:  %0 = "mhlo.custom_call"(%arg0, %arg1, %arg2, %arg3) {api_version = 1 : i32, backend_config = "", byteir_attrs = {}, call_target_name = "tf.DynamicStitch", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<?xi32>, tensor<?xi32>, tensor<?x4xf32>, tensor<?x4xf32>) -> tensor<?x4xf32>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @tf.DynamicStitch
+// CHECK-SAME: byteir_attrs = {}
 
 func.func @space_to_batch_nd(%1164: tensor<1x20x30x40xf16>, %cst_342: tensor<2xi32>, %cst_359: tensor<2x2xi32>) -> tensor<4x14x19x40xf16> {
   %1185 = "tf.SpaceToBatchND"(%1164, %cst_342, %cst_359) {device = "/device:GPU:0"} : (tensor<1x20x30x40xf16>, tensor<2xi32>, tensor<2x2xi32>) -> tensor<4x14x19x40xf16>
   return %1185 : tensor<4x14x19x40xf16>
 }
 // CHECK-LABEL: func.func @space_to_batch_nd
-// CHECK:  %0 = "mhlo.custom_call"(%arg0, %arg1, %arg2) {api_version = 1 : i32, backend_config = "", byteir_attrs = {}, call_target_name = "tf.SpaceToBatchND", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<1x20x30x40xf16>, tensor<2xi32>, tensor<2x2xi32>) -> tensor<4x14x19x40xf16>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @tf.SpaceToBatchND
+// CHECK-SAME: byteir_attrs = {}
 
 func.func @batch_to_space_nd(%1186: tensor<4x10x15x32xf16>, %cst_342: tensor<2xi32>, %cst_360: tensor<2x2xi32>) -> tensor<1x20x30x32xf16> {
   %1187 = "tf.BatchToSpaceND"(%1186, %cst_342, %cst_360) {device = "/device:GPU:0"} : (tensor<4x10x15x32xf16>, tensor<2xi32>, tensor<2x2xi32>) -> tensor<1x20x30x32xf16>
   return %1187 : tensor<1x20x30x32xf16>
 }
 // CHECK-LABEL: func.func @batch_to_space_nd
-// CHECK:  %0 = "mhlo.custom_call"(%arg0, %arg1, %arg2) {api_version = 1 : i32, backend_config = "", byteir_attrs = {}, call_target_name = "tf.BatchToSpaceND", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<4x10x15x32xf16>, tensor<2xi32>, tensor<2x2xi32>) -> tensor<1x20x30x32xf16>
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @tf.BatchToSpaceND
+// CHECK-SAME: byteir_attrs = {}
 
 func.func @onehot_case0(%arg0: tensor<150xi32>) -> tensor<150x16xf32> {
   %off_value = "tf.Const"() {value = dense<0.000000e+00> : tensor<f32>} : () -> tensor<f32>
@@ -465,6 +485,6 @@ func.func @onehot_case0(%arg0: tensor<150xi32>) -> tensor<150x16xf32> {
   return %0 : tensor<150x16xf32>
 }
 // CHECK-LABEL: func.func @onehot_case0(%arg0: tensor<150xi32>) -> tensor<150x16xf32> {
-//CHECK-NEXT:     %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = 1 : i64, depth = 16 : i64, off_value = 0.000000e+00 : f32, on_value = 1.000000e+00 : f32}, call_target_name = "byteir.one_hot", called_computations = [], has_side_effect = false, output_operand_aliases = []} : (tensor<150xi32>) -> tensor<150x16xf32>
-//CHECK-NEXT:    return %0 : tensor<150x16xf32>
-//CHECK-NEXT:  }
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.one_hot
+// CHECK-SAME: byteir_attrs = {axis = 1 : i64, depth = 16 : i64, off_value = 0.000000e+00 : f32, on_value = 1.000000e+00 : f32}

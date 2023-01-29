@@ -19,7 +19,7 @@
 
 #include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
@@ -34,6 +34,8 @@
 
 #define DEBUG_TYPE "resolve-shape-constraint"
 
+#define K_INITIAL -999
+
 using namespace mlir;
 
 namespace {
@@ -47,9 +49,9 @@ struct ResolveShapeConstraintPass
 
   // get constant dim size from value, return dynamic if failed
   static int64_t getConstIndex(const Value &val) {
-    llvm::Optional<int64_t> i64Val = getLiteralFromConstantLike(val);
-    int64_t ret = i64Val.value_or(ShapedType::kDynamicSize);
-    if (ret == -1) {
+    std::optional<int64_t> i64Val = getLiteralFromConstantLike(val);
+    int64_t ret = i64Val.value_or(ShapedType::kDynamic);
+    if (ret == ShapedType::kDynamic) {
       if (auto cOp =
               llvm::dyn_cast_or_null<shape::ConstSizeOp>(val.getDefiningOp())) {
         ret = cOp.getValue().getSExtValue();
@@ -71,15 +73,17 @@ struct ResolveShapeConstraintPass
       getValuesFromDenseIntElementsAttr(shapeAttr, shape);
       if (static_cast<int>(shape.size()) <= index)
         getNullKnowledge();
-      int dynamicDim = -1;
+      int dynamicDim = K_INITIAL;
       int64_t prod = 1;
       for (size_t i = 0, e = shape.size(); i < e; ++i) {
         int64_t dim = shape[i];
-        if (!ShapedType::isDynamic(dim)) {
+        // mhlo.compute_reshape_shape uses negative as the dim size to be
+        // derived
+        if (dim > 0) {
           prod *= dim;
           continue;
         }
-        if (dynamicDim != -1)
+        if (dynamicDim != K_INITIAL)
           return getNullKnowledge();
         dynamicDim = i;
       }
@@ -115,7 +119,7 @@ struct ResolveShapeConstraintPass
       Operation *shapeOp = shapeVal.getDefiningOp();
       if (auto fromElementsOp =
               llvm::dyn_cast<tensor::FromElementsOp>(shapeOp)) {
-        int64_t dynamicDim = -1;
+        int64_t dynamicDim = K_INITIAL;
         int64_t prod = 1;
         for (const auto it : llvm::enumerate(fromElementsOp.getElements())) {
           int64_t dim = getConstIndex(it.value());
@@ -123,13 +127,13 @@ struct ResolveShapeConstraintPass
             prod *= dim;
             continue;
           }
-          if (dynamicDim != -1)
+          if (dynamicDim != K_INITIAL)
             return getNullKnowledge();
           dynamicDim = it.index();
         }
         if (dimSize % prod != 0)
           return getNullKnowledge();
-        if (dynamicDim != -1)
+        if (dynamicDim != K_INITIAL)
           return {fromElementsOp.getElements()[dynamicDim], dimSize / prod};
       }
     }
@@ -236,12 +240,18 @@ struct ResolveShapeConstraintPass
     while (!knowledgeQueue.empty()) {
       Knowledge knowledge = knowledgeQueue.front();
       knowledgeQueue.pop();
+      LLVM_DEBUG(llvm::dbgs() << "Handling knowledge: " << knowledge.first
+                              << ", " << knowledge.second << "\n");
       if (failed(applyKnowledge(knowledge)))
         continue;
       // try to derive new knowledge from current
       Knowledge newKnowledge = deriveKnowledge(knowledge);
-      if (newKnowledge.first != nullptr)
+      if (newKnowledge.first != nullptr) {
+        LLVM_DEBUG(llvm::dbgs()
+                   << "Enqueue new knowledge: " << newKnowledge.first << ", "
+                   << newKnowledge.second << "\n");
         knowledgeQueue.emplace(newKnowledge);
+      }
 
       Value leader = eqs.getOrInsertLeaderValue(knowledge.first);
       if (seenLeaders.count(leader))
@@ -253,6 +263,7 @@ struct ResolveShapeConstraintPass
           knowledgeQueue.emplace(*it, knowledge.second);
       }
     }
+
     for (const auto &it : valueToDimSize)
       replaceValueWithConst(it.first, getOrCreateDimSize(it.second));
 
@@ -271,7 +282,6 @@ struct ResolveShapeConstraintPass
     // to be set explicitly here.
     funcOp.setType(FunctionType::get(
         funcOp.getContext(),
-        //  funcOp.getArgumentTypes(),
         funcOp.getBody().getBlocks().front().getArgumentTypes(),
         retOp.getOperandTypes()));
   }

@@ -23,5 +23,5 @@ func.func @custom_call(%arg0: tensor<?xf32>) -> tensor<?xf32> attributes {__byte
 // CHECK-SAME: (%[[ARG0:.*]]: tensor<?xf32>) -> tensor<?xf16> attributes {__byteir_unit_test__} {
 // CHECK-NEXT:   %[[V0:.*]] = mhlo.subtract %[[ARG0]], %[[ARG0]] : tensor<?xf32>
 // CHECK-NEXT:   %[[V1:.*]] = mhlo.convert %[[V0]] : (tensor<?xf32>) -> tensor<?xf16>
-// CHECK-NEXT:   %[[V2:.*]] = "mhlo.custom_call"(%[[V1]], %[[V1]]) {call_target_name = "f16_custom_call", has_side_effect = false} : (tensor<?xf16>, tensor<?xf16>) -> tensor<?xf16>
+// CHECK-NEXT:   %[[V2:.*]] =  mhlo.custom_call @f16_custom_call(%[[V1]], %[[V1]]) : (tensor<?xf16>, tensor<?xf16>) -> tensor<?xf16>
 // CHECK-NEXT:   return %[[V2]] : tensor<?xf16>

@@ -78,8 +78,8 @@ struct FuseDilatedConv3DPattern : public OpRewritePattern<TF::Conv3DOp> {
       return rewriter.notifyMatchFailure(op, "dilations should be all 1");
     }
 
-    if (!TFL::TFTypeIsFloat32Tensor(op.input()) &&
-        !TFL::TFTypeIsBFloat16OrHalfTensor(op.input())) {
+    if (!TFL::TFTypeIsFloat32Tensor(op.getInput()) &&
+        !TFL::TFTypeIsBFloat16OrHalfTensor(op.getInput())) {
       return rewriter.notifyMatchFailure(
           op, "op's input is not float or half or bfloat16");
     }
@@ -95,7 +95,7 @@ struct FuseDilatedConv3DPattern : public OpRewritePattern<TF::Conv3DOp> {
     }
 
     TF::SpaceToBatchNDOp stb_op =
-        op.input().getDefiningOp<TF::SpaceToBatchNDOp>();
+        op.getInput().getDefiningOp<TF::SpaceToBatchNDOp>();
     if (!stb_op || !stb_op.getResult().hasOneUse()) {
       return failure();
     }
@@ -117,8 +117,8 @@ struct FuseDilatedConv3DPattern : public OpRewritePattern<TF::Conv3DOp> {
     }
 
     DenseIntElementsAttr paddings, crops;
-    if (!matchPattern(stb_op.paddings(), m_Constant(&paddings)) ||
-        !matchPattern(bts_op.crops(), m_Constant(&crops))) {
+    if (!matchPattern(stb_op.getPaddings(), m_Constant(&paddings)) ||
+        !matchPattern(bts_op.getCrops(), m_Constant(&crops))) {
       return rewriter.notifyMatchFailure(
           stb_op, "either SpaceToBatch or BatchToSpaceND doesn't have constant "
                   "paddings/crops value");
@@ -130,9 +130,9 @@ struct FuseDilatedConv3DPattern : public OpRewritePattern<TF::Conv3DOp> {
           "BatchToSpaceND op's crops");
     }
     llvm::Optional<ArrayAttr> dilations_attr =
-        ExtractDilationsAttrFromBlockShape(stb_op.block_shape(),
-                                           bts_op.block_shape(), rewriter);
-    if (!dilations_attr.hasValue()) {
+        ExtractDilationsAttrFromBlockShape(stb_op.getBlockShape(),
+                                           bts_op.getBlockShape(), rewriter);
+    if (!dilations_attr.has_value()) {
       return rewriter.notifyMatchFailure(stb_op,
                                          "failed to extract dilation rate");
     }
@@ -151,10 +151,10 @@ struct FuseDilatedConv3DPattern : public OpRewritePattern<TF::Conv3DOp> {
       }
     }
 
-    op->setAttr("dilations", dilations_attr.getValue());
-    op.setOperand(0, stb_op.input());
+    op->setAttr("dilations", dilations_attr.value());
+    op.setOperand(0, stb_op.getInput());
     op.getResult().setType(bts_op.getResult().getType());
-    bts_op.getResult().replaceAllUsesWith(bts_op.input());
+    bts_op.getResult().replaceAllUsesWith(bts_op.getInput());
     stb_op.getResult().dropAllUses();
     return success();
   }

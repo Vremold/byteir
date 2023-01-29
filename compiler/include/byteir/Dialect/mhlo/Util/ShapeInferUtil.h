@@ -76,8 +76,9 @@ InsertShapeConstraint insertShapeConstraint(llvm::StringRef name);
 //===----------------------------------------------------------------------===//
 
 using InferBoundedReturnTypeComponents = std::function<LogicalResult(
-    MLIRContext *, Optional<Location>, ValueShapeRange operands, DictionaryAttr,
-    RegionRange, SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes)>;
+    MLIRContext *, std::optional<Location>, ValueShapeRange operands,
+    DictionaryAttr, RegionRange,
+    SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes)>;
 
 struct InferBoundedReturnTypeComponentsRegistration {
   InferBoundedReturnTypeComponentsRegistration(
@@ -92,8 +93,9 @@ inferBoundedReturnTypeComponents(llvm::StringRef name);
 //===----------------------------------------------------------------------===//
 
 using InferReturnTypeComponents = std::function<LogicalResult(
-    MLIRContext *, Optional<Location>, ValueShapeRange operands, DictionaryAttr,
-    RegionRange, SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes)>;
+    MLIRContext *, std::optional<Location>, ValueShapeRange operands,
+    DictionaryAttr, RegionRange,
+    SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes)>;
 
 struct InferReturnTypeComponentsRegistration {
   InferReturnTypeComponentsRegistration(

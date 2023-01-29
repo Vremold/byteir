@@ -31,7 +31,7 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
-#include "llvm/ADT/Optional.h"
+#include <optional>
 
 #include "PassDetail.h"
 
@@ -67,10 +67,10 @@ struct TransformInsertionPass
   }
 };
 
-llvm::Optional<TilingMetadata> getTilingMetadata(Value value,
-                                                 const std::string &prefix) {
+std::optional<TilingMetadata> getTilingMetadata(Value value,
+                                                const std::string &prefix) {
   if (!value.getDefiningOp())
-    return llvm::None;
+    return std::nullopt;
 
   // TODO: use real tile sizes and tile interchange. Get this from Op attr.
   TilingMetadata metadata;
@@ -93,7 +93,7 @@ void InsertTransformIR(func::FuncOp funcOp, OpBuilder &b, StringRef prefix) {
   if (!tilingMetadata.has_value())
     return;
 
-  auto metadata = tilingMetadata.value();
+  auto metadata = *tilingMetadata;
   auto op = operand.getDefiningOp();
   op->setAttr(metadata.annotation, UnitAttr::get(ctx));
   auto unknownLoc = UnknownLoc::get(ctx);

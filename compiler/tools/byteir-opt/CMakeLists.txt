@@ -42,6 +42,7 @@ set(MHLO_LIBS
   AllGmlStPasses
   GmlStDialect
   GmlStTransforms
+  MLIRGmlStUtils
   LmhloDialect
   LmhloGPUDialect
   MhloRegisterDialects

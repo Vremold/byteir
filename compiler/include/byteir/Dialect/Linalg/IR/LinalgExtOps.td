@@ -329,7 +329,7 @@ def LinalgExt_TopkOp : LinalgExt_Op<"topk",
     Value values() {
       return getInputOperand(0)->get();
     }
-    Optional<Value> indices() {
+    std::optional<Value> indices() {
       if (getNumInputs() < 2) {
         return {};
       } else {

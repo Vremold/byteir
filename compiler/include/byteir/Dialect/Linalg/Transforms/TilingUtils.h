@@ -61,7 +61,7 @@ LogicalResult buildAffineLoop(
         nullptr);
 
 // Create atomic add
-llvm::Optional<linalg::LinalgOp>
+std::optional<linalg::LinalgOp>
 createAtomicLinalgGeneric(OpBuilder &b, Location loc, arith::AtomicRMWKind kind,
                           ArrayRef<Value> inputs, ArrayRef<Value> outputs);
 

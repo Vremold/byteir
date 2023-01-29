@@ -2,7 +2,8 @@
 
 // CHECK-LABEL:  func.func @layer_norm
 // CHECK: mhlo.custom_call
-// CHECK-SAME: call_target_name = "byteir.layer_norm", called_computations = [], callee = "layer_norm_tensor<1x32x3xf32>_tensor<3xf32>_tensor<3xf32>_tensor<1x32x3xf32>"
+// CHECK-SAME: @byteir.layer_norm
+// CHECK-SAME: callee = "layer_norm_tensor<1x32x3xf32>_tensor<3xf32>_tensor<3xf32>_tensor<1x32x3xf32>"
 
 func.func @layer_norm(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
   %cst = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>
@@ -42,9 +43,11 @@ func.func @layer_norm(%arg0: tensor<1x32x3xf32>) -> tensor<1x32x3xf32> {
 
 // CHECK-LABEL:  func.func @two_layer_norm
 // CHECK: mhlo.custom_call
-// CHECK: call_target_name = "byteir.layer_norm", called_computations = [], callee = "layer_norm_tensor<1x64x3xf32>_tensor<3xf32>_tensor<3xf32>_tensor<1x64x3xf32>"
+// CHECK-SAME: @byteir.layer_norm
+// CHECK-SAME: callee = "layer_norm_tensor<1x64x3xf32>_tensor<3xf32>_tensor<3xf32>_tensor<1x64x3xf32>"
 // CHECK: mhlo.custom_call
-// CHECK: call_target_name = "byteir.layer_norm", called_computations = [], callee = "layer_norm_tensor<1x64x3xf32>_tensor<3xf32>_tensor<3xf32>_tensor<1x64x3xf32>"
+// CHECK-SAME: @byteir.layer_norm
+// CHECK-SAME: callee = "layer_norm_tensor<1x64x3xf32>_tensor<3xf32>_tensor<3xf32>_tensor<1x64x3xf32>"
 
 func.func @two_layer_norm(%arg0: tensor<1x64x3xf32>, %arg1: tensor<1x64x3xf32>) -> tensor<1x64x3xf32> {
   %cst = "tf.Const"() {value = dense<9.99999997E-7> : tensor<f32>} : () -> tensor<f32>

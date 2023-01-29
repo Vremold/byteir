@@ -18,7 +18,7 @@
 #ifndef BYTEIR_DIALECT_MHLO_UTIL_UTIL_H
 #define BYTEIR_DIALECT_MHLO_UTIL_UTIL_H
 
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include <stdint.h>
@@ -108,7 +108,7 @@ getConvLayout(mhlo::ConvDimensionNumbersAttr dimension_numbers);
 template <typename T>
 void handleConvAttribute(NamedAttrList &attrs, T conv_op, OpBuilder &rewriter);
 
-Optional<Attribute>
+std::optional<Attribute>
 createBroadcastedDenseElementsAttr(DenseElementsAttr originAttr,
                                    ShapedType newType,
                                    ArrayRef<int64_t> broadcastDims);

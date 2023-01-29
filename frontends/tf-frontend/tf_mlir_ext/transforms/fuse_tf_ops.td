@@ -19,7 +19,7 @@
 #define FUSE_TF_OPS_PATTERN
 
 include "tensorflow/compiler/mlir/tensorflow/ir/tf_ops.td"
-include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.td"
+include "mhlo/IR/hlo_ops.td"
 
 //===----------------------------------------------------------------------===//
 // Sigmoid Pattern

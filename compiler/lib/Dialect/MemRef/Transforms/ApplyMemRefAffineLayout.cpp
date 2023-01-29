@@ -57,9 +57,9 @@ void applyAffineLayout(OpBuilder &b, ArrayRef<Operation *> collector) {
       for (unsigned i = 0; i < op->getNumResults(); ++i) {
         if (auto memref =
                 cloned->getResult(i).getType().dyn_cast<MemRefType>()) {
-          MemRefType newMemref = MemRefType::get(
-              memref.getShape(), memref.getElementType(), maybeAttrMap.value(),
-              memref.getMemorySpaceAsInt());
+          MemRefType newMemref =
+              MemRefType::get(memref.getShape(), memref.getElementType(),
+                              *maybeAttrMap, memref.getMemorySpaceAsInt());
 
           cloned->getResult(i).setType(newMemref);
           op->getResult(i).replaceAllUsesWith(cloned->getResult(i));

@@ -248,8 +248,8 @@ int64_t estimateGridSize(LoopLikeOpInterface loopLike, int64_t currGs,
   auto maybeTripCnt = getConstantTripCount(loopLike, stepMultiplier);
 
   if (maybeTripCnt.has_value() &&
-      (maybeTripCnt.value() > static_cast<uint64_t>(currGs))) {
-    return maybeTripCnt.value();
+      (*maybeTripCnt > static_cast<uint64_t>(currGs))) {
+    return *maybeTripCnt;
   }
   return currGs;
 }

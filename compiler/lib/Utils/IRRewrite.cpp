@@ -50,7 +50,7 @@ void mlir::replicateDefiningOp(Block *block,
       auto opDef = val.getDefiningOp();
       if (opDef != nullptr && checkFunc(opDef)) {
         auto maybeIdx = findResultIndex(opDef, val);
-        replaceOps.emplace_back(&op, i, maybeIdx.value());
+        replaceOps.emplace_back(&op, i, *maybeIdx);
       }
     }
   }
@@ -94,11 +94,11 @@ Type mlir::mixType(ShapedType cloneFromElementType, ShapedType cloneFromShape) {
   return cloneFromElementType.clone(cloneFromShape.getShape());
 }
 
-Optional<SmallVector<Type>> mlir::mixTypes(TypeRange cloneFromElementTypes,
-                                           TypeRange cloneFromShapes) {
+std::optional<SmallVector<Type>> mlir::mixTypes(TypeRange cloneFromElementTypes,
+                                                TypeRange cloneFromShapes) {
 
   if (cloneFromElementTypes.size() != cloneFromShapes.size()) {
-    return llvm::None;
+    return std::nullopt;
   }
 
   llvm::SmallVector<Type> ret;
@@ -108,7 +108,7 @@ Optional<SmallVector<Type>> mlir::mixTypes(TypeRange cloneFromElementTypes,
 
     if (!std::get<0>(item).isa<ShapedType>() ||
         !std::get<1>(item).isa<ShapedType>()) {
-      return llvm::None;
+      return std::nullopt;
     }
 
     auto fromElementType = std::get<0>(item).cast<ShapedType>();
@@ -232,6 +232,14 @@ static void eliminateMemoryAccess(
     op->erase();
   }
 }
+
+static bool hasNoEffect(Operation *op) {
+  if (auto sideEffectingOp = dyn_cast<MemoryEffectOpInterface>(op)) {
+    return sideEffectingOp.hasNoEffect();
+  }
+  return false;
+}
+
 static void collectEliminableAccess(
     Value base, DominanceInfo &domInfo, PostDominanceInfo &postDomInfo,
     llvm::EquivalenceClasses<Operation *> &leader_to_replaced) {
@@ -274,7 +282,7 @@ static void collectEliminableAccess(
       leader_to_replaced.insert(user);
     }
     // skip user without side-effect
-    if (MemoryEffectOpInterface::hasNoEffect(user))
+    if (hasNoEffect(user))
       continue;
 
     NearestDomAndPostInfo dpInfo;
@@ -282,7 +290,7 @@ static void collectEliminableAccess(
     for (auto another : base.getUsers()) {
       // skip user itself
       // skip user without side-effect
-      if (user == another || MemoryEffectOpInterface::hasNoEffect(another)) {
+      if (user == another || hasNoEffect(another)) {
         continue;
       }
 

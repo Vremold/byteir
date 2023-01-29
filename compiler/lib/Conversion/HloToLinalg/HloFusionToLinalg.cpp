@@ -34,9 +34,9 @@
 
 #include "byteir/Conversion/HloToLinalg/HloToLinalg.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/rewriters.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/type_conversion.h"
+#include "mhlo/IR/hlo_ops.h"
+#include "mhlo/transforms/rewriters.h"
+#include "mhlo/utils/type_conversion.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlowOps.h"
@@ -187,7 +187,7 @@ struct ReduceWindowOpConversion
 
       SmallVector<Value> resultDynamicDims;
       for (auto &en : llvm::enumerate(resultType.getShape())) {
-        if (en.value() != ShapedType::kDynamicSize)
+        if (en.value() != ShapedType::kDynamic)
           continue;
         Value dimSize = rewriter.create<tensor::DimOp>(loc, input, en.index());
         if (en.index() == 0 || static_cast<int64_t>(en.index()) == rank - 1) {

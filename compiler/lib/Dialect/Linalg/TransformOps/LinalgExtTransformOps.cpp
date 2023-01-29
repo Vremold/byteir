@@ -274,7 +274,8 @@ transform::FuseExtOp::apply(mlir::transform::TransformResults &transformResults,
             /*simplifyLoopIter*/ true);
       });
 
-  return DiagnosedSilenceableFailure(result);
+  return failed(result) ? DiagnosedSilenceableFailure::definiteFailure()
+                        : DiagnosedSilenceableFailure::success();
 }
 
 ParseResult transform::FuseExtOp::parse(OpAsmParser &parser,
@@ -369,10 +370,41 @@ void transform::TileLoopHintOp::getEffects(
 // TileExtOp
 //===----------------------------------------------------------------------===//
 
+namespace {
+
+// We want to parse `DenseI64ArrayAttr` using the short form without the
+// `array` prefix to be consistent in the IR with `parseDynamicIndexList`.
+static ParseResult parseOptionalInterchange(OpAsmParser &parser,
+                                            OperationState &result) {
+  if (succeeded(parser.parseOptionalLBrace())) {
+    if (failed(parser.parseKeyword("interchange")))
+      return parser.emitError(parser.getNameLoc()) << "expect `interchange`";
+    if (failed(parser.parseEqual()))
+      return parser.emitError(parser.getNameLoc()) << "expect `=`";
+    result.addAttribute("interchange",
+                        DenseI64ArrayAttr::parse(parser, Type{}));
+    if (failed(parser.parseRBrace()))
+      return parser.emitError(parser.getNameLoc()) << "expect `}`";
+  }
+  return success();
+}
+
+static void printOptionalInterchange(OpAsmPrinter &p,
+                                     ArrayRef<int64_t> interchangeVals) {
+  if (!interchangeVals.empty()) {
+    p << " {interchange = [";
+    llvm::interleaveComma(interchangeVals, p,
+                          [&](int64_t integer) { p << integer; });
+    p << "]}";
+  }
+}
+
+} // namespace
+
 DiagnosedSilenceableFailure
 transform::TileExtOp::apply(TransformResults &transformResults,
                             TransformState &state) {
-  ArrayRef<int64_t> tileSizes = extractFromI64ArrayAttr(getStaticSizes());
+  ArrayRef<int64_t> tileSizes = getStaticSizes();
 
   ArrayRef<Operation *> targets = state.getPayloadOps(getTarget());
   SmallVector<ArrayRef<Operation *>> dynamicSizeProducers;
@@ -436,7 +468,7 @@ transform::TileExtOp::apply(TransformResults &transformResults,
           });
     }
 
-    tilingOptions.setInterchange(extractFromI64ArrayAttr(getInterchange()));
+    tilingOptions.setInterchange(getInterchange());
     SimpleRewriter rewriter(en.value()->getContext());
 
     FailureOr<scf::SCFTilingResult> maybeTilingResult = tileUsingSCFForOp(
@@ -445,7 +477,7 @@ transform::TileExtOp::apply(TransformResults &transformResults,
     if (failed(maybeTilingResult))
       return DiagnosedSilenceableFailure::definiteFailure();
 
-    if (failed(isValidTiling(maybeTilingResult->tiledOp))) {
+    if (failed(isValidTiling(maybeTilingResult->tiledOps.back()))) {
       DiagnosedSilenceableFailure diag = emitSilenceableError()
                                          << "unsupported tiling dim at ";
       diag.attachNote(en.value()->getLoc()) << "target op";
@@ -455,7 +487,7 @@ transform::TileExtOp::apply(TransformResults &transformResults,
     rewriter.replaceOp(en.value(),
                        maybeTilingResult->loops.front()->getResults());
 
-    tiled.push_back(maybeTilingResult->tiledOp);
+    tiled.push_back(maybeTilingResult->tiledOps.back());
     for (const auto &en2 : llvm::enumerate(maybeTilingResult->loops))
       loops[en2.index()].push_back(en2.value());
   }
@@ -469,13 +501,13 @@ transform::TileExtOp::apply(TransformResults &transformResults,
 
 SmallVector<OpFoldResult> transform::TileExtOp::getMixedSizes() {
   ValueRange dynamic = getDynamicSizes();
-  SmallVector<int64_t> tileSizes = extractFromI64ArrayAttr(getStaticSizes());
+  ArrayRef<int64_t> tileSizes = getStaticSizes();
   SmallVector<OpFoldResult> results;
   results.reserve(tileSizes.size());
   unsigned dynamicPos = 0;
   Builder builder(getContext());
   for (int64_t size : tileSizes) {
-    if (size == ShapedType::kDynamicSize) {
+    if (size == ShapedType::kDynamic) {
       results.push_back(dynamic[dynamicPos++]);
     } else {
       results.push_back(builder.getIndexAttr(size));
@@ -488,28 +520,28 @@ ParseResult transform::TileExtOp::parse(OpAsmParser &parser,
                                         OperationState &result) {
   OpAsmParser::UnresolvedOperand target;
   SmallVector<OpAsmParser::UnresolvedOperand> dynamicSizes;
-  ArrayAttr staticSizes;
+  DenseI64ArrayAttr staticSizes;
   auto pdlOperationType = pdl::OperationType::get(parser.getContext());
   if (parser.parseOperand(target) ||
       parser.resolveOperand(target, pdlOperationType, result.operands) ||
-      parseDynamicIndexList(parser, dynamicSizes, staticSizes,
-                            ShapedType::kDynamicSize) ||
-      parser.resolveOperands(dynamicSizes, pdlOperationType, result.operands) ||
-      parser.parseOptionalAttrDict(result.attributes))
+      parseDynamicIndexList(parser, dynamicSizes, staticSizes) ||
+      parser.resolveOperands(dynamicSizes, pdlOperationType, result.operands))
     return ParseResult::failure();
 
+  // Parse optional interchange.
+  if (failed(parseOptionalInterchange(parser, result)))
+    return ParseResult::failure();
   result.addAttribute(getStaticSizesAttrName(result.name), staticSizes);
   size_t numExpectedLoops =
-      staticSizes.size() - llvm::count(extractFromI64ArrayAttr(staticSizes), 0);
+      staticSizes.size() - llvm::count(staticSizes.asArrayRef(), 0);
   result.addTypes(SmallVector<Type>(numExpectedLoops + 1, pdlOperationType));
   return success();
 }
 
 void TileExtOp::print(OpAsmPrinter &p) {
   p << ' ' << getTarget();
-  printDynamicIndexList(p, getOperation(), getDynamicSizes(), getStaticSizes(),
-                        ShapedType::kDynamicSize);
-  p.printOptionalAttrDict((*this)->getAttrs(), {getStaticSizesAttrName()});
+  printDynamicIndexList(p, getOperation(), getDynamicSizes(), getStaticSizes());
+  printOptionalInterchange(p, getInterchange());
 }
 
 void transform::TileExtOp::getEffects(

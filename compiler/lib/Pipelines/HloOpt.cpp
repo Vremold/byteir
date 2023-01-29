@@ -19,7 +19,7 @@
 
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/Common/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
+#include "mhlo/transforms/passes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 # path to byteir root
@@ -18,7 +19,7 @@ OUT_DIR="$BUILD_DIR/artifact"
 source $CUR_DIR/../prepare.sh
 prepare_for_compiler
 
-python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.6-cp37-cp37m-linux_x86_64.whl
+python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.7-cp37-cp37m-linux_x86_64.whl
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"

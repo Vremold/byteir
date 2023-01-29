@@ -21,6 +21,8 @@
 #include "brt/core/framework/allocator.h"
 #include "brt/core/ir/util.h"
 
+#include "mlir/IR/Types.h"
+
 using namespace brt;
 using namespace brt::common;
 using namespace brt::ir;
@@ -154,7 +156,7 @@ void BRTInferenceExecutionFrame::AllocIntermediate() {
     auto compiling_shape = GetStaticShape(value).value();
     Shape static_shape;
     for (size_t i = 0; i < compiling_shape.size(); ++i) {
-      if (compiling_shape[i] == -1) {
+      if (compiling_shape[i] == ShapedType::kDynamic) {
         static_shape.push_back(GetScalar<int64_t>(dynamic_dimensions[i]));
       } else {
         BRT_ENFORCE(dynamic_dimensions[i] == compiling_shape[i]);

@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -test-print-symbolic-shape -split-input-file 2>&1 | FileCheck %s
+// RUN: byteir-opt %s -test-print-symbolic-shape -split-input-file | FileCheck %s
 
 
 func.func @several_ops(%arg0: tensor<?x4xf32>, %arg1: tensor<4x4xf32>, %arg2: tensor<4xf32>) -> tensor<?x4xf32> {

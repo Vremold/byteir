@@ -25,7 +25,10 @@
 namespace mlir {
 class ModuleOp;
 
-void addCleanUpExtPassPipeline(OpPassManager &pm);
+// Add regular cleanup pass in pipeline
+// set `topHasSymTable` true when top-level has symbol table, e.g. ModuleOp
+// set `topHasSymTable` false when top-level has no symbol table, e.g. FuncOp
+void addCleanUpExtPassPipeline(OpPassManager &pm, bool topHasSymTable = true);
 
 template <typename OpClass = ModuleOp, typename Builder, typename... Args>
 void invokeOpPassPipelineBuilder(Builder builder, OpPassManager &pm,

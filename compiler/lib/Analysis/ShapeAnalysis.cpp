@@ -30,6 +30,7 @@ using namespace mlir::shape_analysis;
 
 namespace mlir {
 namespace shape_analysis {
+
 ValueKnowledge ValueKnowledge::getKnowledgeFromType(Type type) {
   ValueKnowledge result = getPessimisticValueState();
   if (auto shapedType = type.dyn_cast_or_null<ShapedType>()) {
@@ -69,8 +70,9 @@ ValueKnowledge ValueKnowledge::join(const ValueKnowledge &lhs,
     return rhs;
   if (rhs.isUninitialized())
     return lhs;
-  if (!lhs.dtype.value() || !rhs.dtype.value() ||
-      lhs.dtype.value() != rhs.dtype.value())
+  // Early termination when dtype is nullptr
+  // or not identical
+  if (!(*lhs.dtype) || !(*rhs.dtype) || *lhs.dtype != *rhs.dtype)
     return result;
 
   result.hasError = false;
@@ -87,7 +89,7 @@ ValueKnowledge ValueKnowledge::join(const ValueKnowledge &lhs,
   }
 
   result.hasRank = true;
-  result.sizes.resize(lhs.sizes.size(), ShapedType::kDynamicSize);
+  result.sizes.resize(lhs.sizes.size(), ShapedType::kDynamic);
   for (int i = 0, e = lhs.sizes.size(); i < e; i++) {
     if (lhs.sizes[i] == rhs.sizes[i]) {
       result.sizes[i] = lhs.sizes[i];
@@ -111,8 +113,9 @@ ValueKnowledge ValueKnowledge::meet(const ValueKnowledge &lhs,
     return rhs;
   if (rhs.isUninitialized())
     return lhs;
-  if (!lhs.dtype.value() || !rhs.dtype.value() ||
-      lhs.dtype.value() != rhs.dtype.value())
+  // Early termination when dtype is nullptr
+  // or not identical
+  if (!(*lhs.dtype) || !(*rhs.dtype) || *lhs.dtype != *rhs.dtype)
     return result;
 
   result.hasError = false;
@@ -137,14 +140,14 @@ ValueKnowledge ValueKnowledge::meet(const ValueKnowledge &lhs,
     return result;
 
   result.hasRank = true;
-  result.sizes.resize(lhs.sizes.size(), ShapedType::kDynamicSize);
+  result.sizes.resize(lhs.sizes.size(), ShapedType::kDynamic);
   for (auto i : llvm::seq<unsigned>(0, result.sizes.size())) {
     int64_t lhsSize = lhs.sizes[i];
     int64_t rhsSize = rhs.sizes[i];
     int64_t &resultSize = result.sizes[i];
-    if (lhsSize == ShapedType::kDynamicSize) {
+    if (lhsSize == ShapedType::kDynamic) {
       resultSize = rhsSize;
-    } else if (rhsSize == ShapedType::kDynamicSize) {
+    } else if (rhsSize == ShapedType::kDynamic) {
       resultSize = lhsSize;
     } else if (lhsSize == rhsSize) {
       resultSize = lhsSize;
@@ -250,7 +253,7 @@ void ShapeAnalysis::visitOperation(Operation *op,
 
     if (auto shapeKnowledge = shapeLattice->getValue()) {
       if (!shapeKnowledge.isUninitialized()) {
-        if (shapeKnowledge.dtype.value()) {
+        if (*shapeKnowledge.dtype) {
           shapeProvider[operand] = shapeKnowledge.getType();
         }
       } else {

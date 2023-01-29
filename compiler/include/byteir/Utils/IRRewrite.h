@@ -19,9 +19,9 @@
 #define BYTEIR_UTILS_IRREWRITE_H
 
 #include "mlir/IR/Types.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallVector.h"
 #include <functional>
+#include <optional>
 
 namespace mlir {
 class OpBuilder;
@@ -54,9 +54,9 @@ Operation *cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
 Type mixType(ShapedType cloneFromElementType, ShapedType cloneFromShape);
 
 // create new types, each of which call mixType
-// return None if two lists have non-equal length or not all ShapedType
-llvm::Optional<llvm::SmallVector<Type>>
-mixTypes(TypeRange cloneFromElementTypes, TypeRange cloneFromShapes);
+// return std::nullopt if two lists have non-equal length or not all ShapedType
+std::optional<llvm::SmallVector<Type>> mixTypes(TypeRange cloneFromElementTypes,
+                                                TypeRange cloneFromShapes);
 
 // CMAE utils
 // perform CMAE in a Block based on DominanceInfo and PostDominanceInfo

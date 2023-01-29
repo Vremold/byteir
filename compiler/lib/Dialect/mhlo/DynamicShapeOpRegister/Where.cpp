@@ -29,8 +29,8 @@ using namespace mlir;
 void mlir::registerWhereInferBoundedReturnTypeComponents() {
   static InferBoundedReturnTypeComponentsRegistration shapeRegister(
       getWhereName(),
-      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
-         DictionaryAttr, RegionRange,
+      [](MLIRContext *context, std::optional<Location>,
+         ValueShapeRange operands, DictionaryAttr, RegionRange,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         Value input = operands[0];
         ShapedType inputShape = input.getType().dyn_cast<ShapedType>();

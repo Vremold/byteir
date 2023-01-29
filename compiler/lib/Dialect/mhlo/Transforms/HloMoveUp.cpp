@@ -24,7 +24,7 @@
 #include "byteir/Utils/AttrUtils.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/Pass/Pass.h"
@@ -98,7 +98,7 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
           input.getDefiningOp<mhlo::ConstantOp>().getValue();
       auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, resultType);
       auto newConstOp =
-          rewriter.create<mhlo::ConstantOp>(op->getLoc(), newConstAttr.value());
+          rewriter.create<mhlo::ConstantOp>(op->getLoc(), *newConstAttr);
       bvm.map(input, newConstOp.getOutput());
     }
 
@@ -121,8 +121,8 @@ struct TransposeMoveUpPattern : public HloMoveUpPattern<mhlo::TransposeOp> {
     // maybeResultTypes should always have value
     assert(maybeResultTypes.has_value());
 
-    auto newConsumer = cloneAndReplaceResultTypes(rewriter, defOp, bvm,
-                                                  maybeResultTypes.value());
+    auto newConsumer =
+        cloneAndReplaceResultTypes(rewriter, defOp, bvm, *maybeResultTypes);
     rewriter.replaceOp(op, newConsumer->getResults());
     return success();
   }
@@ -179,7 +179,7 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
           input.getDefiningOp<mhlo::ConstantOp>().getValue();
       auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, resultType);
       auto newConstOp =
-          rewriter.create<mhlo::ConstantOp>(op->getLoc(), newConstAttr.value());
+          rewriter.create<mhlo::ConstantOp>(op->getLoc(), *newConstAttr);
       bvm.map(input, newConstOp.getOutput());
     }
 
@@ -204,8 +204,8 @@ struct ReshapeMoveUpPattern : public HloMoveUpPattern<mhlo::ReshapeOp> {
     // maybeResultTypes should always have value
     assert(maybeResultTypes.has_value());
 
-    auto newConsumer = cloneAndReplaceResultTypes(rewriter, defOp, bvm,
-                                                  maybeResultTypes.value());
+    auto newConsumer =
+        cloneAndReplaceResultTypes(rewriter, defOp, bvm, *maybeResultTypes);
     rewriter.replaceOp(op, newConsumer->getResults());
 
     return success();

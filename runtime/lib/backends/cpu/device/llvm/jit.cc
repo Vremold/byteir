@@ -34,6 +34,7 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/TargetSelect.h"
 
+#include <optional>
 #include <unordered_set>
 
 #ifndef _WIN32
@@ -51,7 +52,7 @@ inline void consumeLLVMError(llvm::Error err) {
   LLVMConsumeError(llvm::wrap(std::move(err)));
 }
 
-inline llvm::Optional<llvm::OptimizationLevel>
+inline std::optional<llvm::OptimizationLevel>
 getLLVMOptimizationLevel(int optLevel) {
   switch (optLevel) {
   case 0:
@@ -63,8 +64,8 @@ getLLVMOptimizationLevel(int optLevel) {
   case 3:
     return llvm::OptimizationLevel::O3;
   default:
-    // unknown opt level, return None
-    return llvm::None;
+    // unknown opt level, return std::nullopt
+    return std::nullopt;
   }
 }
 
@@ -179,9 +180,8 @@ void packFunctionArguments(llvm::Module *module) {
 class LLVMJITImpl {
 public:
   struct Options {
-    llvm::Optional<llvm::OptimizationLevel>
-        optLevel; // None for no optimization
-    bool debug;   // whether to save debug infomations
+    std::optional<llvm::OptimizationLevel> optLevel; // None for no optimization
+    bool debug; // whether to save debug infomations
     Options(int optLevel_, bool debug_)
         : optLevel(getLLVMOptimizationLevel(optLevel_)), debug(debug_) {}
   };

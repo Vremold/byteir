@@ -19,16 +19,19 @@
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/Debug.h"
+#include <cassert>
 
 #define DEBUG_TYPE "mhlo-shape-analysis"
 
 using namespace mlir::shape_analysis;
+
+#define K_INITIAL -999
 
 namespace mlir {
 LogicalResult MhloShapeAnalysis::inferResultShapesWithKnowledges(
@@ -154,9 +157,11 @@ void MhloShapeValueAnalysis::visitOperation(
           }
           llvm::SmallVector<int32_t> shape =
               llvm::to_vector(denseInt.getValues<int32_t>());
-          int cntDynamic = llvm::count_if(shape, [](int32_t dimSize) {
-            return dimSize == ShapedType::kDynamicSize;
-          });
+
+          // check whether has dimSize < 0, aka dynamic in mhlo
+          int cntDynamic = llvm::count_if(
+              shape, [](int32_t dimSize) { return dimSize < 0; });
+
           if (cntDynamic == 1) {
             const ShapeValueLattice *product = operands[0];
             Attribute productAttr = product->getValue().getConstantValue();
@@ -165,14 +170,16 @@ void MhloShapeValueAnalysis::visitOperation(
               if (number < 0) {
                 break;
               }
-              int32_t index = -1;
+
+              int32_t index = K_INITIAL;
               for (auto elem : llvm::enumerate(shape)) {
-                if (ShapedType::isDynamic(elem.value())) {
+                if (elem.value() < 0) {
                   index = elem.index();
                 } else {
                   number /= elem.value();
                 }
               }
+              assert(index != K_INITIAL);
               shape[index] = number;
               attr = DenseIntElementsAttr::get(denseInt.getType(), shape);
             }

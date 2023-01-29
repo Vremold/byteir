@@ -17,7 +17,7 @@
 
 #include "byteir/Dialect/mhlo/Transforms/ConvertInsertion.h"
 #include "byteir/Utils/PipelineUtils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/IR/BuiltinTypes.h"
 
 using namespace mlir;
@@ -72,8 +72,8 @@ struct TestI16ConvertRule : public ConvertRuleBase {
   virtual ~TestI16ConvertRule() {}
   bool checkFunc(func::FuncOp func) { return func->hasAttr(anchorAttr); }
 
-  llvm::Optional<mlir::TensorType> checkArg(func::FuncOp func, size_t offset,
-                                            bool isArg) {
+  std::optional<mlir::TensorType> checkArg(func::FuncOp func, size_t offset,
+                                           bool isArg) {
     auto context = func.getContext();
     auto builder = std::make_unique<mlir::OpBuilder>(context);
     FunctionType funcType = func.getFunctionType();

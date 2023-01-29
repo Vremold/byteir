@@ -63,26 +63,26 @@ void mlir::setParsedConcatAttr(Operation *op, const std::string &attrName,
   }
 }
 
-llvm::Optional<ElementsAttr>
+std::optional<ElementsAttr>
 mlir::reshapeSplatElementsAttr(ElementsAttr attr,
                                llvm::ArrayRef<int64_t> newShape) {
   auto type = RankedTensorType::get(newShape, attr.getElementType());
   return reshapeSplatElementsAttr(attr, type);
 }
 
-llvm::Optional<ElementsAttr>
+std::optional<ElementsAttr>
 mlir::reshapeSplatElementsAttr(ElementsAttr attr, ShapedType newShape) {
   if (auto splat = attr.dyn_cast_or_null<SplatElementsAttr>()) {
     ElementsAttr ret = splat.reshape(newShape);
     return ret;
   }
-  return None;
+  return std::nullopt;
 }
 
-llvm::Optional<ElementsAttr> mlir::cloneSplatElementsAttr(ElementsAttr attr,
-                                                          ShapedType type) {
+std::optional<ElementsAttr> mlir::cloneSplatElementsAttr(ElementsAttr attr,
+                                                         ShapedType type) {
   if (!attr.isSplat())
-    return None;
+    return std::nullopt;
 
   if (attr.isa<DenseFPElementsAttr>()) {
     ElementsAttr ret =
@@ -93,5 +93,5 @@ llvm::Optional<ElementsAttr> mlir::cloneSplatElementsAttr(ElementsAttr attr,
         DenseElementsAttr::get(type, attr.getSplatValue<IntegerAttr>());
     return ret;
   }
-  return None;
+  return std::nullopt;
 }

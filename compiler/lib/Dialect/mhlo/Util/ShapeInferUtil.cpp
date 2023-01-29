@@ -17,7 +17,7 @@
 
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
@@ -180,7 +180,7 @@ LogicalResult inferShapeUsingInferTypeOpInterface(InferTypeOpInterface op,
       llvm::to_vector(llvm::map_range(resultShapeTypes, [](Type t) {
         if (auto shape = t.dyn_cast<ShapedType>())
           return shape.getShape();
-        return ArrayRef<int64_t>(llvm::None);
+        return ArrayRef<int64_t>(std::nullopt);
       }));
   return checkAndSetTypes(op, resultShapes, overrideOldShape);
 }

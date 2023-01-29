@@ -19,13 +19,114 @@
 
 #include "byteir/Dialect/mhlo/Transforms/CanonicalizeExt.h"
 #include "byteir/Transforms/CondCanonicalize.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "byteir/Utils/Utils.h"
+#include "mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
+#include "mlir/Support/LogicalResult.h"
 
 #include "./PassDetail.h"
 
 using namespace mlir;
+
+namespace {
+
+// FIXME: this pattern should move to func dialect
+LogicalResult removeEmptyFuncCall(func::CallOp op, PatternRewriter &rewriter) {
+  if (op->getNumResults() == 0 && op.getNumOperands() == 0) {
+
+    // also check func body
+    auto funcOp = getFuncOp(op);
+    if (funcOp.getBody().front().without_terminator().empty()) {
+      rewriter.replaceOp(op, {});
+      // Note should NOT remove func here.
+      return success();
+    }
+  }
+  return failure();
+}
+} // namespace
+
+// FIXME: this pattern should move to func dialect
+void mlir::func::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
+  patterns.add(removeEmptyFuncCall);
+}
+
+namespace {
+// FIXME: this pattern should move to shape dialect
+LogicalResult foldShapeBroadcast(shape::BroadcastOp op,
+                                 PatternRewriter &rewriter) {
+
+  SmallVector<SmallVector<int64_t>> shapes;
+  SmallVector<Value> values;
+  for (auto shape : op.getShapes()) {
+    values.push_back(shape);
+    if (auto inputShape = shape.getDefiningOp<shape::ShapeOfOp>()) {
+      if (auto shapeType =
+              inputShape.getArg().getType().dyn_cast<ShapedType>()) {
+        shapes.push_back(llvm::to_vector(shapeType.getShape()));
+      } else {
+        return failure();
+      }
+    } else if (auto inputShape = shape.getDefiningOp<shape::ConstShapeOp>()) {
+      shapes.push_back(llvm::to_vector(
+          llvm::map_range(inputShape.getShape(), [](APInt elem) {
+            return static_cast<int64_t>(elem.getZExtValue());
+          })));
+    } else {
+      return failure();
+    }
+  }
+  // do broadcast
+  // see definition in https://mlir.llvm.org/docs/Dialects/ShapeDialect/
+  size_t size = 0;
+  for (auto &&shape : shapes) {
+    size = std::max(shape.size(), size);
+  }
+  auto copyShapes = shapes;
+  for (auto &shape : shapes) {
+    if (shape.size() < size) {
+      shape.insert(shape.begin(), size - shape.size(), 1);
+    }
+  }
+  for (size_t i = 0; i < size; ++i) {
+    int64_t res = 1;
+    for (auto &shape : shapes) {
+      if (shape[i] > 1) {
+        res = std::max(shape[i], res);
+      } else if (shape[i] == ShapedType::kDynamic && res == 1) {
+        res = ShapedType::kDynamic;
+      }
+    }
+    for (auto &shape : shapes) {
+      shape[i] = res;
+    }
+  }
+  // if output shape equal to the value shape, replace with SSA value
+  int index = 0;
+  for (auto &&shapePair : llvm::zip(shapes, copyShapes)) {
+    if (std::get<0>(shapePair).size() != std::get<1>(shapePair).size()) {
+      continue;
+    }
+    if (llvm::all_of(llvm::zip(std::get<0>(shapePair), std::get<1>(shapePair)),
+                     [](auto dimPair) {
+                       return std::get<0>(dimPair) == std::get<1>(dimPair);
+                     })) {
+      rewriter.replaceOp(op, values[index]);
+      return success();
+    }
+    index += 1;
+  }
+  return failure();
+}
+} // namespace
+
+// FIXME: this pattern should move to shape dialect
+void mlir::shape::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
+  patterns.add(foldShapeBroadcast);
+}
 
 namespace {
 
@@ -52,6 +153,10 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
     mhlo::getCanonicalizationExtPatterns(owningPatterns, context);
     // put conditional canonicalizer too
     populateCondCanonicalizePatterns(owningPatterns);
+    // put func canonicalizerExt too
+    func::populateCanonicalizeExtPatterns(owningPatterns);
+    // put shape canonicalizerExt too
+    shape::populateCanonicalizeExtPatterns(owningPatterns);
 
     patterns = FrozenRewritePatternSet(std::move(owningPatterns),
                                        disabledPatterns, enabledPatterns);

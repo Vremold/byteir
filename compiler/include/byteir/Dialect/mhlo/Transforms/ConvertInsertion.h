@@ -21,9 +21,9 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Pass/Pass.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallVector.h"
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace mlir {
@@ -41,7 +41,7 @@ struct ConvertRuleBase {
   // default all function
   virtual bool checkFunc(func::FuncOp) { return true; }
 
-  virtual llvm::Optional<mlir::TensorType>
+  virtual std::optional<mlir::TensorType>
   checkArg(func::FuncOp func, size_t offset, bool isArg) = 0;
 };
 
@@ -55,8 +55,8 @@ struct ConvertOnlyCheckElementType : public ConvertRuleBase {
   virtual ~ConvertOnlyCheckElementType() {}
 
   virtual bool checkFunc(func::FuncOp) override;
-  llvm::Optional<mlir::TensorType> checkArg(func::FuncOp func, size_t offset,
-                                            bool isArg) override;
+  std::optional<mlir::TensorType> checkArg(func::FuncOp func, size_t offset,
+                                           bool isArg) override;
 
   // convert element type from first to second
   llvm::DenseMap<mlir::Type, mlir::Type> convertElementType;

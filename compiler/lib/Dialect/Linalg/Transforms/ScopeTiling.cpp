@@ -249,17 +249,17 @@ void tileScopeImpl(OpBuilder &b, TileScope &ts, int64_t tileSize,
  *      invComposed = (0, 0, 1)
  *      iterAxis = 2
  **/
-static Optional<unsigned> getIterAxisFromDim(AffineMap affineMap,
+static std::optional<unsigned> getIterAxisFromDim(AffineMap affineMap,
                                              unsigned dimIndex) {
   AffineMap invMap = inverseAndBroadcastProjectedPermutation(affineMap);
   if (invMap.isEmpty())
-    return llvm::None;
+    return std::nullopt;
   auto invComposed =
       invMap.compose(createOneHot(invMap.getNumInputs(), dimIndex));
   auto iterAxes = getAllIndicesForNonZeros(invComposed);
   // no support all-to-1 or non mapping
   if (iterAxes.size() != 1) {
-    return llvm::None;
+    return std::nullopt;
   }
   return iterAxes[0];
 }
@@ -271,14 +271,14 @@ static Optional<unsigned> getIterAxisFromDim(AffineMap affineMap,
  *      composed = (0, 1)
  *      dim = 1
  **/
-static Optional<unsigned> getDimFromIterAxis(AffineMap affineMap,
+static std::optional<unsigned> getDimFromIterAxis(AffineMap affineMap,
                                              unsigned iterAxis) {
   auto composed =
       affineMap.compose(createOneHot(affineMap.getNumInputs(), iterAxis));
   auto dims = getAllIndicesForNonZeros(composed);
   // no support all-to-1 or non mapping
   if (dims.size() != 1) {
-    return llvm::None;
+    return std::nullopt;
   }
   return dims[0];
 }

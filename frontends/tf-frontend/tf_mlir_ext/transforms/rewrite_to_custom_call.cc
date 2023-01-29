@@ -35,7 +35,7 @@
 #include "tf_mlir_ext/utils/dce.h"
 #include "tf_mlir_ext/utils/utils.h"
 
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_ops.h"
 
 using namespace mlir;
@@ -157,10 +157,11 @@ Value createLayerNorm(PatternRewriter &rewriter, Location loc, Value input,
 
   mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
       loc, ArrayRef<Type>{inputType}, ArrayRef<Value>{input, gama, beta},
-      getLayerNormNameWithPrefix(), false, "",
+      getLayerNormNameWithPrefix(), false, rewriter.getStringAttr(""),
       mhlo::CustomCallApiVersion{
           mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-      rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
+      rewriter.getArrayAttr(ArrayRef<Attribute>{}),
+      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
       rewriter.getArrayAttr(ArrayRef<Attribute>{}));
   SmallVector<mlir::NamedAttribute> byteir_attrs;
   byteir_attrs.push_back(
@@ -247,10 +248,11 @@ Value createL2Norm(PatternRewriter &rewriter, Location loc, Value input,
 
   mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
       loc, ArrayRef<Type>{inputType}, ArrayRef<Value>{input},
-      getL2NormNameWithPrefix(), false, "",
+      getL2NormNameWithPrefix(), false, rewriter.getStringAttr(""),
       mhlo::CustomCallApiVersion{
           mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-      rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
+      rewriter.getArrayAttr(ArrayRef<Attribute>{}), 
+      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
       rewriter.getArrayAttr(ArrayRef<Attribute>{}));
   SmallVector<mlir::NamedAttribute> byteir_attrs;
   byteir_attrs.push_back(NamedAttribute(rewriter.getStringAttr("epsilon"),
@@ -282,10 +284,11 @@ Value createGELU(PatternRewriter &rewriter, Location loc, Value input,
   RankedTensorType inputType = input.getType().cast<RankedTensorType>();
   mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
       loc, ArrayRef<Type>{inputType}, ArrayRef<Value>{input},
-      getGeLUNameWithPrefix(), false, "",
+      getGeLUNameWithPrefix(), false, rewriter.getStringAttr(""),
       mhlo::CustomCallApiVersion{
           mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-      rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
+      rewriter.getArrayAttr(ArrayRef<Attribute>{}),
+      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
       rewriter.getArrayAttr(ArrayRef<Attribute>{}));
   SmallVector<mlir::NamedAttribute> byteir_attrs;
   byteir_attrs.push_back(NamedAttribute(rewriter.getStringAttr("approximate"),
@@ -306,13 +309,13 @@ struct RewriteMathArg : public OpRewritePattern<TFMathArgOp> {
   LogicalResult matchAndRewrite(TFMathArgOp mathArgOp,
                                 PatternRewriter &rewriter) const override {
     TF::ConstOp dimensionOp =
-        mathArgOp.dimension().template getDefiningOp<TF::ConstOp>();
+        mathArgOp.getDimension().template getDefiningOp<TF::ConstOp>();
     if (dimensionOp == nullptr) {
       return mathArgOp.emitOpError(
           "ArgMin/ArgMax's dimension must be constant.");
     }
     DenseIntElementsAttr value =
-        dimensionOp.value().cast<DenseIntElementsAttr>();
+        dimensionOp.getValue().cast<DenseIntElementsAttr>();
     if (value.getNumElements() != 1) {
       return mathArgOp.emitOpError(
           "ArgMin/ArgMax's dimension must be one rank.");
@@ -321,10 +324,12 @@ struct RewriteMathArg : public OpRewritePattern<TFMathArgOp> {
 
     mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
         mathArgOp->getLoc(), mathArgOp->getResults().getTypes(),
-        mathArgOp.input(), WrapName<TFMathArgOp>::name, false, "",
+        mathArgOp.getInput(), WrapName<TFMathArgOp>::name, false,
+        rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
+        rewriter.getArrayAttr(ArrayRef<Attribute>{}),
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
         rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     mathArgOp->setAttr("axis", rewriter.getI64IntegerAttr(axis));
     mathArgOp->setAttr("keep_dims", rewriter.getBoolAttr(false));
@@ -342,26 +347,27 @@ struct RewriteTopKV2 : public OpRewritePattern<TF::TopKV2Op> {
   using OpRewritePattern<TF::TopKV2Op>::OpRewritePattern;
   LogicalResult matchAndRewrite(TF::TopKV2Op op,
                                 PatternRewriter &rewriter) const override {
-    TF::ConstOp kOp = op.k().getDefiningOp<TF::ConstOp>();
+    TF::ConstOp kOp = op.getK().getDefiningOp<TF::ConstOp>();
     if (kOp == nullptr) {
       return op.emitOpError("tf.TopKV2's k should be constant.");
     }
-    ElementsAttr value = kOp.value();
+    ElementsAttr value = kOp.getValue();
     if (value.getNumElements() != 1) {
       return op.emitOpError("tf.TopKV2's k should be one rank.");
     }
     int64_t k = (*value.getValues<APInt>().begin()).getSExtValue();
 
     mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
-        op->getLoc(), op->getResults().getTypes(), op.input(),
-        getTopKV2NameWithPrefix(), false, "",
+        op->getLoc(), op->getResults().getTypes(), op.getInput(),
+        getTopKV2NameWithPrefix(), false, rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
+        rewriter.getArrayAttr(ArrayRef<Attribute>{}),
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
         rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     op->setAttr("k", rewriter.getI64IntegerAttr(k));
     // tf.TopKV2's axis is last dimension, like tf.Softmax
-    int64_t axis = op.input().getType().cast<RankedTensorType>().getRank() - 1;
+    int64_t axis = op.getInput().getType().cast<RankedTensorType>().getRank() - 1;
     op->setAttr("axis", rewriter.getI64ArrayAttr({axis}));
     // note: tf.TopKV2 has "sorted" BoolAttr
     customCallOp->setAttr(getByteIRAttrs(), getCleanAttr(op));
@@ -378,36 +384,37 @@ struct RewriteOneHot : public OpRewritePattern<TF::OneHotOp> {
   using OpRewritePattern<TF::OneHotOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(TF::OneHotOp op,
                                 PatternRewriter &rewriter) const override {
-    TF::ConstOp depthOp = op.depth().getDefiningOp<TF::ConstOp>();
-    if (!depthOp || depthOp.value().size() != 1) {
+    TF::ConstOp depthOp = op.getDepth().getDefiningOp<TF::ConstOp>();
+    if (!depthOp || depthOp.getValue().size() != 1) {
       return op.emitOpError(
           "tf.OneHot's depth should be constant with one element.");
     }
-    TF::ConstOp onValueOp = op.on_value().getDefiningOp<TF::ConstOp>();
-    if (!onValueOp || onValueOp.value().size() != 1) {
+    TF::ConstOp onValueOp = op.getOnValue().getDefiningOp<TF::ConstOp>();
+    if (!onValueOp || onValueOp.getValue().size() != 1) {
       return op.emitOpError(
           "tf.OneHot's on_value should be constant with one element.");
     }
-    TF::ConstOp offValueOp = op.off_value().getDefiningOp<TF::ConstOp>();
-    if (!offValueOp || offValueOp.value().size() != 1) {
+    TF::ConstOp offValueOp = op.getOffValue().getDefiningOp<TF::ConstOp>();
+    if (!offValueOp || offValueOp.getValue().size() != 1) {
       return op.emitOpError(
           "tf.OneHot's off_value should be constant with one element.");
     }
     int64_t depth =
-        (*depthOp.value().getValues<APInt>().begin()).getSExtValue();
-    Attribute on_value = *onValueOp.value().getValues<Attribute>().begin();
-    Attribute off_value = *offValueOp.value().getValues<Attribute>().begin();
-    int64_t axis = op.axis();
+        (*depthOp.getValue().getValues<APInt>().begin()).getSExtValue();
+    Attribute on_value = *onValueOp.getValue().getValues<Attribute>().begin();
+    Attribute off_value = *offValueOp.getValue().getValues<Attribute>().begin();
+    int64_t axis = op.getAxis();
     if (axis < 0) {
       axis = axis + op.getResult().getType().cast<ShapedType>().getRank();
     }
 
     mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
-        op->getLoc(), op->getResults().getTypes(), op.indices(),
-        getOneHotNameWithPrefix(), false, "",
+        op->getLoc(), op->getResults().getTypes(), op.getIndices(),
+        getOneHotNameWithPrefix(), false, rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
+        rewriter.getArrayAttr(ArrayRef<Attribute>{}),
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
         rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     op->setAttr("depth", rewriter.getI64IntegerAttr(depth));
     op->setAttr("axis", rewriter.getI64IntegerAttr(axis));
@@ -452,10 +459,11 @@ struct RewriteSimpleReplace : public OpRewritePattern<TF_OP> {
                                 PatternRewriter &rewriter) const override {
     mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
         op->getLoc(), op->getResults().getTypes(), op->getOperands(),
-        WrapName<TF_OP>::name, sideEffect, "",
+        WrapName<TF_OP>::name, sideEffect, rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
+        rewriter.getArrayAttr(ArrayRef<Attribute>{}),
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
         rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     handleCustomAttr(op, rewriter);
     customCallOp->setAttr(getByteIRAttrs(), getCleanAttr(op));
@@ -473,10 +481,12 @@ struct RewriteSimpleReplace : public OpRewritePattern<TF_OP> {
       mhlo::CustomCallOp customCallOp =                                        \
           rewriter.create<mlir::mhlo::CustomCallOp>(                           \
               op->getLoc(), op->getResults().getTypes(), op->getOperands(),    \
-              ORIGINOPNAME, false, "",                                         \
+              ORIGINOPNAME, false, rewriter.getStringAttr(""),                 \
               mhlo::CustomCallApiVersion{                                      \
                   mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},           \
-              rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,  \
+              rewriter.getArrayAttr(ArrayRef<Attribute>{}),                    \
+              mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE},        \
+              nullptr, nullptr,                                                \
               rewriter.getArrayAttr(ArrayRef<Attribute>{}));                   \
       customCallOp->setAttr(getByteIRAttrs(), getCleanAttr(op));               \
       rewriter.replaceOp(op, customCallOp->getResults());                      \
@@ -497,7 +507,7 @@ struct RewriteDynamicMaskStitch : public OpRewritePattern<TF::DynamicStitchOp> {
   using OpRewritePattern<TF::DynamicStitchOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(TF::DynamicStitchOp op,
                                 PatternRewriter &rewriter) const override {
-    SmallVector<Value> indices = op.indices();
+    SmallVector<Value> indices = op.getIndices();
     SmallVector<Operation *> defOps;
     for (Value index : indices) {
       if (!index.hasOneUse())
@@ -520,7 +530,7 @@ struct RewriteDynamicMaskStitch : public OpRewritePattern<TF::DynamicStitchOp> {
     if (!cst) {
       return failure();
     }
-    auto cstValue = cst.value().cast<DenseIntElementsAttr>();
+    auto cstValue = cst.getValue().cast<DenseIntElementsAttr>();
     size_t count = 0;
     if (!llvm::all_of(cstValue.getValues<APInt>(),
                       [&](APInt x) { return x.getSExtValue() == count++; })) {
@@ -528,16 +538,18 @@ struct RewriteDynamicMaskStitch : public OpRewritePattern<TF::DynamicStitchOp> {
     }
     // TODO(lyq): check indices' order in tf.DynamicPartition
 
-    SmallVector<Value> newInputs = op.data();
+    SmallVector<Value> newInputs = op.getData();
     newInputs.push_back(defOps[0]->getOperand(1));
 
     mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
         op->getLoc(), op->getResultTypes(), newInputs,
-        getDynamicMaskStitchNameWithPrefix(), false, "",
+        getDynamicMaskStitchNameWithPrefix(), false, rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
+        rewriter.getArrayAttr(ArrayRef<Attribute>{}),
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
         rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+    customCallOp->setAttr(getByteIRAttrs(), rewriter.getDictionaryAttr({}));
     rewriter.replaceOp(op, customCallOp->getResults());
     return success();
   }
@@ -696,8 +708,8 @@ struct RewriteToCustomCallOpsPass
         }
         // GeLU tanh
         if (auto powOp = llvm::dyn_cast<TF::PowOp>(op)) {
-          if (auto constOp = powOp.y().getDefiningOp<TF::ConstOp>()) {
-            auto value = constOp.value();
+          if (auto constOp = powOp.getY().getDefiningOp<TF::ConstOp>()) {
+            auto value = constOp.getValue();
             if (isSplatValue(value.dyn_cast<DenseIntElementsAttr>(), 3) ||
                 isSplatValue(value.dyn_cast<DenseFPElementsAttr>(), 3.0)) {
               llvm::errs() << "[[Warning]] there may be unfused GeLU. Please "

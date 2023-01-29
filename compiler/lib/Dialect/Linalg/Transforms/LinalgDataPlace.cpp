@@ -77,9 +77,9 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
       auto maybeNewInput = createAlloc(b, input, space);
 
       if (maybeNewInput.has_value()) {
-        operands.push_back(maybeNewInput.value());
+        operands.push_back(*maybeNewInput);
         // create copy
-        b.create<linalg::CopyOp>(loc, input, maybeNewInput.value());
+        b.create<linalg::CopyOp>(loc, input, *maybeNewInput);
       } else {
         operands.push_back(input);
       }
@@ -99,7 +99,7 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
       auto maybeNewInput = createAlloc(b, output, space);
 
       if (maybeNewInput.has_value()) {
-        operands.push_back(maybeNewInput.value());
+        operands.push_back(*maybeNewInput);
         outputReplaced.push_back(true);
         // TODO check outputs as inout??
         // if so, do copy
@@ -111,7 +111,7 @@ static void dataPlaceImpl(OpBuilder &b, LinalgOp op) {
   }
 
   b.setInsertionPointAfter(op);
-  auto cloned = op.clone(b, op.getLoc(), op->getResultTypes(), operands);
+  auto cloned = clone(b, op, op->getResultTypes(), operands);
   cloned->removeAttr(getDataPlaceAttrName());
 
   idx = 0;

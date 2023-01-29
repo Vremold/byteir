@@ -31,6 +31,8 @@ using namespace mlir;
 using namespace mlir::linalg;
 using namespace mlir::scf;
 
+#define K_INITIAL -999
+
 /// Given a list of subview ranges, extract individual values for lower, upper
 /// bounds and steps and put them into the corresponding vectors.
 void mlir::unpackRanges(OpBuilder &builder, Location loc,
@@ -70,8 +72,8 @@ LogicalResult mlir::buildAffineLoop(
 
   llvm::SmallVector<int64_t, 4> stepLiterals;
   for (auto step : steps.take_front()) {
-    auto lit = getLiteralFromConstantLike(step, -1);
-    if (lit == -1) {
+    auto lit = getLiteralFromConstantLike(step, K_INITIAL);
+    if (lit == K_INITIAL) {
       return failure();
     }
     stepLiterals.push_back(lit);
@@ -83,7 +85,7 @@ LogicalResult mlir::buildAffineLoop(
   return success();
 }
 
-Optional<linalg::LinalgOp> mlir::createAtomicLinalgGeneric(
+std::optional<linalg::LinalgOp> mlir::createAtomicLinalgGeneric(
     OpBuilder &b, Location loc, arith::AtomicRMWKind kind,
     ArrayRef<Value> inputs, ArrayRef<Value> outputs) {
   auto ctx = b.getContext();
@@ -92,26 +94,27 @@ Optional<linalg::LinalgOp> mlir::createAtomicLinalgGeneric(
   // FIXME: only support all Ranks are equal now
   auto maybeRank = getRank(inputs.back());
   if (!maybeRank.has_value())
-    return llvm::None;
-  auto rank = maybeRank.value();
+    return std::nullopt;
+  auto rank = *maybeRank;
 
   for (auto val : inputs) {
     auto anotherMaybeRank = getRank(val);
-    if (!anotherMaybeRank.has_value() || rank != anotherMaybeRank.value()) {
-      return llvm::None;
+    if (!anotherMaybeRank.has_value() || rank != *anotherMaybeRank) {
+      return std::nullopt;
     }
   }
 
   for (auto val : outputs) {
     auto anotherMaybeRank = getRank(val);
-    if (!anotherMaybeRank.has_value() || rank != anotherMaybeRank.value()) {
-      return llvm::None;
+    if (!anotherMaybeRank.has_value() || rank != *anotherMaybeRank) {
+      return std::nullopt;
     }
   }
 
   SmallVector<AffineMap, 2> indexingMaps;
 
-  SmallVector<StringRef> parallelLoopAttrs(rank, getParallelIteratorTypeName());
+  SmallVector<utils::IteratorType, 3> parallelLoopAttrs(
+      rank, utils::IteratorType::parallel);
 
   // insert identity map for input
   for (size_t i = 0; i < num; ++i) {

@@ -18,7 +18,7 @@
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -43,8 +43,8 @@ void mlir::registerSoftmaxReifyReturnTypeShapes() {
 void mlir::registerSoftmaxInferReturnTypeComponents() {
   static InferReturnTypeComponentsRegistration shapeRegister(
       getSoftmaxName(),
-      [](MLIRContext *context, Optional<Location> loc, ValueShapeRange operands,
-         DictionaryAttr attr, RegionRange,
+      [](MLIRContext *context, std::optional<Location> loc,
+         ValueShapeRange operands, DictionaryAttr attr, RegionRange,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         ShapedType dataType = operands[0].getType().dyn_cast<ShapedType>();
         if (!dataType) {

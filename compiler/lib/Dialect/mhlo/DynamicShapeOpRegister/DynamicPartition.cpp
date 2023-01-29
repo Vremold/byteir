@@ -1,4 +1,4 @@
-//===- DynamicPartition.h -------------------------------------*--- C++ -*-===//
+//===- DynamicPartition.cpp -----------------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,8 +54,8 @@ void mlir::registerDynamicPartitionShapeConstraints() {
 void mlir::registerDynamicPartitionInferBoundedReturnTypeComponents() {
   static InferBoundedReturnTypeComponentsRegistration shapeRegister(
       getDynamicPartitionName(),
-      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
-         DictionaryAttr attr, RegionRange,
+      [](MLIRContext *context, std::optional<Location>,
+         ValueShapeRange operands, DictionaryAttr attr, RegionRange,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         auto numPartition = attr.getAs<DictionaryAttr>(getCustomCallAttrName())
                                 .getAs<IntegerAttr>("num_partitions")

@@ -39,7 +39,7 @@ func.func @where_static_reshape(%arg0: tensor<6144x12xf16>, %arg1: tensor<6144xi
   return %21 : tensor<96x384xf16>
 }
 // CHECK-LABEL: @where_static_reshape(%arg0: tensor<6144x12xf16>, %arg1: tensor<6144xi1>) -> tensor<96x384xf16>
-// CHECK-NEXT:    %0 = "mhlo.custom_call"(%arg1) {api_version = 1 : i32, backend_config = "", byteir_attrs = {}, call_target_name = "tf.Where", called_computations = [], has_side_effect = false} : (tensor<6144xi1>) -> tensor<3072x1xi64>
+// CHECK-NEXT:    %0 = mhlo.custom_call @tf.Where(%arg1) {backend_config = "", byteir_attrs = {}} : (tensor<6144xi1>) -> tensor<3072x1xi64>
 // CHECK-NEXT:    %1 = mhlo.reshape %0 : (tensor<3072x1xi64>) -> tensor<3072xi64>
 // CHECK-NEXT:    %2 = "mhlo.torch_index_select"(%arg0, %1) {batch_dims = 0 : i64, dim = 0 : i64} : (tensor<6144x12xf16>, tensor<3072xi64>) -> tensor<3072x12xf16>
 // CHECK-NEXT:    %3 = mhlo.reshape %2 : (tensor<3072x12xf16>) -> tensor<3x32x32x12xf16>

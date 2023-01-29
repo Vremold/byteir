@@ -34,8 +34,6 @@ include "mlir/IR/OpBase.td"
 def Lace_Dialect : Dialect {
   let name = "lace";
   let cppNamespace = "::mlir::lace";
-
-  let emitAccessorPrefix = kEmitAccessorPrefix_Both; // TODO: change to prefix
 }
 
 //===----------------------------------------------------------------------===//

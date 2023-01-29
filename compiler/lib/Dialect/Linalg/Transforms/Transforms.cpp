@@ -51,7 +51,7 @@ using namespace mlir::linalg;
 using namespace mlir::linalg_ext;
 using namespace mlir::scf;
 
-using IteratorTypes = llvm::SmallVector<llvm::Optional<utils::IteratorType>>;
+using IteratorTypes = llvm::SmallVector<std::optional<utils::IteratorType>>;
 
 //===----------------------------------------------------------------------===//
 // populateMapOpToGenericPattern
@@ -75,7 +75,8 @@ public:
     SmallVector<Value> inputs = linalgOp.getDpsInputOperands();
     SmallVector<Value> outputs = linalgOp.getDpsInitOperands();
     SmallVector<AffineMap> indexingMaps = linalgOp.getIndexingMapsArray();
-    SmallVector<StringRef> iterators = linalgOp.getIteratorTypesArray();
+    SmallVector<utils::IteratorType> iterators =
+        linalgOp.getIteratorTypesArray();
     SmallVector<Type> resultTypes = linalgOp.hasTensorSemantics()
                                         ? TypeRange(ValueRange(outputs))
                                         : TypeRange{};
@@ -113,8 +114,8 @@ void mlir::linalg::populateMapOpToGenericPattern(RewritePatternSet &patterns) {
 //===----------------------------------------------------------------------===//
 
 void mlir::linalg_ext::mergeLoopIteratorTypes(
-    llvm::SmallVector<llvm::Optional<utils::IteratorType>> &from,
-    llvm::SmallVector<llvm::Optional<utils::IteratorType>> &to) {
+    llvm::SmallVector<std::optional<utils::IteratorType>> &from,
+    llvm::SmallVector<std::optional<utils::IteratorType>> &to) {
   // logic:
   // parallel, parallel => parallel
   // parallel, none => parallel
@@ -124,15 +125,14 @@ void mlir::linalg_ext::mergeLoopIteratorTypes(
   // reduce, x => reduce
   for (auto &en : llvm::enumerate(from)) {
     if (en.value().has_value()) {
-      if (to[en.index()].has_value() &&
-          en.value().value() != to[en.index()].value()) {
+      if (to[en.index()].has_value() && *en.value() != *to[en.index()]) {
         // when (iterTy, curTy) == (parallel, reduce) or (reduce, parallel)
         // assign iterTy = reduce
         to[en.index()] = utils::IteratorType::reduction;
       } else {
         // when either iterTy is none or iterTy == curTy
         // assign iterTy = curTy
-        to[en.index()] = en.value().value();
+        to[en.index()] = *en.value();
       }
     }
   } // for en : llvm::enumerate(from)
@@ -169,7 +169,7 @@ replaceTensorDim(RewriterBase &rewriter, tensor::DimOp dimOp, size_t offset,
   auto maybeConstIndex = dimOp.getConstantIndex();
   if (!maybeConstIndex.has_value())
     return failure();
-  unsigned exprOffset = offset + maybeConstIndex.value();
+  unsigned exprOffset = offset + *maybeConstIndex;
   auto affineExpr = concatMap.getResult(exprOffset);
   assert(exprToTensorAndDim.count(affineExpr) > 0);
 
@@ -177,7 +177,7 @@ replaceTensorDim(RewriterBase &rewriter, tensor::DimOp dimOp, size_t offset,
 
   // check whether it map to itself
   // if so, no need to replace
-  if (source == dimOp.getShapedValue() && maybeConstIndex.value() == dimIdx) {
+  if (source == dimOp.getShapedValue() && *maybeConstIndex == dimIdx) {
     return failure();
   }
 
@@ -196,7 +196,7 @@ mlir::linalg_ext::simplifyTensorDimOpUsedInLinalg(RewriterBase &rewriter,
     return failure();
   }
 
-  AffineMap concatMap = concatAffineMaps(mayIndexingMapArray.value());
+  AffineMap concatMap = concatAffineMaps(*mayIndexingMapArray);
   DenseMap<AffineExpr, std::tuple<Value, int64_t>> exprToTensorAndDim;
 
   unsigned offset = 0;
@@ -304,7 +304,7 @@ void mlir::scf::labelTileLoopType(Operation *op, ArrayRef<scf::ForOp> loops) {
     return;
   }
 
-  IteratorTypes iterTys(loops.size(), llvm::None);
+  IteratorTypes iterTys(loops.size(), std::nullopt);
 
   for (auto &innerOp : innerMostSCFFor.getBody()->without_terminator()) {
     if (!isa<TilingInterface>(innerOp)) {
@@ -317,12 +317,13 @@ void mlir::scf::labelTileLoopType(Operation *op, ArrayRef<scf::ForOp> loops) {
     }
 
     // merge IteratorTypes to iterTys
-    mergeLoopIteratorTypes(curTys.value(), iterTys);
+    mergeLoopIteratorTypes(*curTys, iterTys);
   }
 
   auto ctx = op->getContext();
   for (auto &en : llvm::enumerate(iterTys)) {
-    if (en.value().has_value() && en.value() == utils::IteratorType::parallel) {
+    if (en.value().has_value() &&
+        *en.value() == utils::IteratorType::parallel) {
       loops[en.index()]->setAttr(getSCFForParallelAttrName(),
                                  UnitAttr::get(ctx));
     }
@@ -414,7 +415,7 @@ mlir::linalg_ext::getLoopIteratorTypes(Operation *op,
   }
 
   auto tilingLoopIterType = cast<TilingInterface>(op).getLoopIteratorTypes();
-  IteratorTypes retIterTys(loops.size(), llvm::None);
+  IteratorTypes retIterTys(loops.size(), std::nullopt);
 
   // preset LoopIV to loopIdx
   DenseMap<Value, size_t> loopIV2Idx;
@@ -435,7 +436,7 @@ mlir::linalg_ext::getLoopIteratorTypes(Operation *op,
       continue;
     }
 
-    auto indexingMap = indexingMaps.value()[en.index()];
+    auto indexingMap = (*indexingMaps)[en.index()];
     for (const auto &en2 : llvm::enumerate(mixedOffsets)) {
       Value argVal = en2.value().dyn_cast<Value>();
 
@@ -452,13 +453,12 @@ mlir::linalg_ext::getLoopIteratorTypes(Operation *op,
         continue;
       }
 
-      auto iterTy = localComputation.value()
-                        ? utils::IteratorType::parallel
-                        : tilingLoopIterType[iterAxis.value()];
+      auto iterTy = *localComputation ? utils::IteratorType::parallel
+                                      : tilingLoopIterType[*iterAxis];
       auto loopIdx = loopIV2Idx[argVal];
 
       if (retIterTys[loopIdx].has_value()) {
-        if (retIterTys[loopIdx].value() != iterTy) {
+        if (*retIterTys[loopIdx] != iterTy) {
           // detect more than one LoopIterType
           return failure();
         }
@@ -523,10 +523,10 @@ LogicalResult confirmValidFusion(OpBuilder &b, OpResult unFusedProducer,
 /// `iter_args` of the outer most that is encountered. Traversing the iter_args
 /// indicates that this is a destination operand of the consumer. If there was
 /// no loop traversal needed, the second value of the returned tuple is empty.
-static std::tuple<OpResult, Optional<OpOperand *>>
+static std::tuple<OpResult, std::optional<OpOperand *>>
 getUntiledProducerFromSliceSource(OpOperand *source,
                                   ArrayRef<scf::ForOp> loops) {
-  Optional<OpOperand *> destinationIterArg;
+  std::optional<OpOperand *> destinationIterArg;
   auto loopIt = loops.rbegin(); // inner to outer
   while (auto iterArg = source->get().dyn_cast<BlockArgument>()) {
     scf::ForOp loop = *loopIt;
@@ -632,7 +632,7 @@ yieldTiledValues(RewriterBase &rewriter, ValueRange initValues,
                  ArrayRef<SmallVector<OpFoldResult>> tileSizesList,
                  MutableArrayRef<scf::ForOp> loops,
                  llvm::DenseMap<Value, Value> &replacements,
-                 Optional<OpOperand *> &destinationIterArg) {
+                 std::optional<OpOperand *> &destinationIterArg) {
   NewYieldValueFn yieldValueFn =
       [&](OpBuilder &b, Location loc,
           ArrayRef<BlockArgument> newBBArgs) -> SmallVector<Value> {
@@ -662,9 +662,9 @@ yieldTiledValues(RewriterBase &rewriter, ValueRange initValues,
   if (destinationIterArg.has_value()) {
     for (const auto &loop : llvm::enumerate(loops)) {
       // check old loop is the destinationIterArg's getOwner
-      if (destinationIterArg.value()->getOwner() == loop.value()) {
-        destinationIterArg.value() = &newLoops[loop.index()]->getOpOperand(
-            destinationIterArg.value()->getOperandNumber());
+      if ((*destinationIterArg)->getOwner() == loop.value()) {
+        *destinationIterArg = &newLoops[loop.index()]->getOpOperand(
+            (*destinationIterArg)->getOperandNumber());
       }
     }
   }
@@ -683,7 +683,7 @@ createResultSlices(RewriterBase &rewriter, Operation *op, Operation *tiledOp,
                    tensor::ExtractSliceOp sliceOp,
                    SmallVector<scf::ForOp> &loops,
                    llvm::DenseMap<Value, Value> &replacements,
-                   Optional<OpOperand *> &destinationIterArg) {
+                   std::optional<OpOperand *> &destinationIterArg) {
   if (!isa<TilingInterface>(op)) {
     return failure();
   }
@@ -791,18 +791,21 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
     if (failed(tilingResult))
       return rewriter.notifyMatchFailure(consumer, "failed to tile consumer");
 
-    if (failed(isValidTiling(tilingResult->tiledOp))) {
+    if (failed(isValidTiling(tilingResult->tiledOps.back()))) {
       return rewriter.notifyMatchFailure(
           consumer, "failed to tile consumer due to invalid tiling");
     }
 
-    tileAndFuseResult.tiledAndFusedOps.insert(tilingResult->tiledOp);
+    for (auto innerOp : tilingResult->tiledOps) {
+      tileAndFuseResult.tiledAndFusedOps.insert(innerOp);
+    }
+
     tileAndFuseResult.loops = std::move(tilingResult->loops);
     for (const auto &result : llvm::enumerate(
              llvm::zip(consumer->getResults(), tilingResult->replacements))) {
       tileAndFuseResult.replacements[std::get<0>(result.value())] =
           std::get<1>(result.value());
-      yieldedValueToResultNumber[tilingResult->tiledOp->getResult(
+      yieldedValueToResultNumber[tilingResult->tiledOps.back()->getResult(
           result.index())] = result.index();
     }
   }
@@ -866,7 +869,7 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
       continue;
     }
 
-    rewriter.replaceOp(candidateSliceOp, fusedProducerValue.value());
+    rewriter.replaceOp(candidateSliceOp, *fusedProducerValue);
 
     // Always create result slices here
     // Later in step 3, we will remove redundant ones
@@ -937,18 +940,17 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
     // TODO: This can be modeled better if the `DestinationStyleOpInterface`.
     // Update to use that when it does become available.
     scf::ForOp outerMostLoop = tileAndFuseResult.loops.front();
-    Optional<unsigned> iterArgNumber;
+    std::optional<unsigned> iterArgNumber;
     if (destinationIterArg) {
-      iterArgNumber = outerMostLoop.getIterArgNumberForOpOperand(
-          *destinationIterArg.value());
+      iterArgNumber =
+          outerMostLoop.getIterArgNumberForOpOperand(**destinationIterArg);
     }
     if (iterArgNumber) {
       int64_t resultNumber = fusibleProducer.getResultNumber();
       if (auto dstOp = dyn_cast<DestinationStyleOpInterface>(
               fusibleProducer.getOwner())) {
         outerMostLoop.setIterArg(
-            iterArgNumber.value(),
-            dstOp.getTiedOpOperand(fusibleProducer)->get());
+            *iterArgNumber, dstOp.getTiedOpOperand(fusibleProducer)->get());
       }
 
       if (auto dstOp = fusedProducerValue
@@ -956,7 +958,7 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
         scf::ForOp innerMostLoop = tileAndFuseResult.loops.back();
         updateDestinationOperandsForTiledOp(
             rewriter, dstOp.getDpsInitOperand(resultNumber)->get(),
-            innerMostLoop.getRegionIterArgs()[iterArgNumber.value()]);
+            innerMostLoop.getRegionIterArgs()[*iterArgNumber]);
       }
     }
 
@@ -1014,10 +1016,9 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
       auto confirmAllParallel = [&](size_t loopCnt) {
         bool allParallel = true;
         for (size_t idx = 0; idx <= loopCnt; ++idx) {
-          auto &maybeIterTy = loopIterTypes.value()[idx];
-          if (allParallel &&
-              !(maybeIterTy.has_value() &&
-                maybeIterTy.value() == utils::IteratorType::parallel)) {
+          auto &maybeIterTy = (*loopIterTypes)[idx];
+          if (allParallel && !(maybeIterTy.has_value() &&
+                               *maybeIterTy == utils::IteratorType::parallel)) {
             allParallel = false;
           }
         }
@@ -1063,13 +1064,14 @@ const StringLiteral LinalgTransforms::kLinalgTransformMarker =
     "__internal_linalg_transform__";
 
 LinalgTransformationFilter::LinalgTransformationFilter(
-    ArrayRef<StringAttr> matchDisjunction, Optional<StringAttr> replacement)
+    ArrayRef<StringAttr> matchDisjunction,
+    std::optional<StringAttr> replacement)
     : matchDisjunction(matchDisjunction.begin(), matchDisjunction.end()),
       replacement(replacement), matchByDefault(false) {}
 
 LinalgTransformationFilter::LinalgTransformationFilter(
     const FilterFunction &f, ArrayRef<StringAttr> matchDisjunction,
-    Optional<StringAttr> replacement)
+    std::optional<StringAttr> replacement)
     : matchDisjunction(matchDisjunction.begin(), matchDisjunction.end()),
       replacement(replacement), matchByDefault(false) {
   if (f)
@@ -1113,7 +1115,7 @@ LinalgTransformationFilter::checkAndNotify(PatternRewriter &rewriter,
 void LinalgTransformationFilter::replaceLinalgTransformationFilter(
     PatternRewriter &rewriter, Operation *op) const {
   if (replacement.has_value())
-    op->setAttr(LinalgTransforms::kLinalgTransformMarker, replacement.value());
+    op->setAttr(LinalgTransforms::kLinalgTransformMarker, *replacement);
   else
     op->removeAttr(
         rewriter.getStringAttr(LinalgTransforms::kLinalgTransformMarker));

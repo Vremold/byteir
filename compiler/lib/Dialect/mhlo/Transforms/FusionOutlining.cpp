@@ -18,7 +18,7 @@
 #include "byteir/Dialect/mhlo/Transforms/FusionOutlining.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -101,7 +101,7 @@ static func::FuncOp createOutlinedFuncOp(mhlo::FusionOp fusionOp,
 
       opBuilder.setInsertionPoint(op);
       auto clonedDefOp = opBuilder.clone(*defOp);
-      auto resIdx = findResultIndex(defOp, val).value();
+      auto resIdx = *findResultIndex(defOp, val);
 
       op->replaceUsesOfWith(val, clonedDefOp->getResult(resIdx));
       opSet.insert(clonedDefOp);

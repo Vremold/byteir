@@ -17,13 +17,15 @@
 
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "lhlo/IR/lhlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Operation.h"
 
 using namespace llvm;
 using namespace mlir;
 using namespace mlir::mhlo;
+
+#define K_INITIAL -999
 
 bool mlir::isMhlo(Operation *op) {
   Dialect *dialect = op->getDialect();
@@ -383,7 +385,7 @@ createBroadcastedDenseElementsAttrImpl(DenseElementsAttr originAttr,
       getStrides(originAttr.getType().getShape());
   auto outShape = newType.getShape();
   SmallVector<int64_t> outStrides = getStrides(outShape);
-  SmallVector<int64_t> dimMapping(newType.getRank(), -1);
+  SmallVector<int64_t> dimMapping(newType.getRank(), K_INITIAL);
   for (size_t i = 0; i < broadcastDims.size(); ++i) {
     dimMapping[broadcastDims[i]] = i;
   }
@@ -416,7 +418,7 @@ createBroadcastedDenseElementsAttrImpl(DenseElementsAttr originAttr,
 
 } // namespace
 
-Optional<Attribute>
+std::optional<Attribute>
 mlir::createBroadcastedDenseElementsAttr(DenseElementsAttr originAttr,
                                          ShapedType newType,
                                          ArrayRef<int64_t> broadcastDims) {
@@ -446,5 +448,5 @@ mlir::createBroadcastedDenseElementsAttr(DenseElementsAttr originAttr,
     return createBroadcastedDenseElementsAttrImpl<APInt>(originAttr, newType,
                                                          newBroadcastDims);
   }
-  return None;
+  return std::nullopt;
 }

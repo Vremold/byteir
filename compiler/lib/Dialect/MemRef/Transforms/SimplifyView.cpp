@@ -47,8 +47,8 @@ using namespace mlir::memref;
 namespace {
 
 // Util linearize
-Optional<int64_t> getLinearizeOffset(ArrayRef<int64_t> offsets,
-                                     ArrayRef<int64_t> sizes) {
+std::optional<int64_t> getLinearizeOffset(ArrayRef<int64_t> offsets,
+                                          ArrayRef<int64_t> sizes) {
   if (sizes.size() == 0)
     return 0;
 
@@ -57,13 +57,13 @@ Optional<int64_t> getLinearizeOffset(ArrayRef<int64_t> offsets,
   int rank = offsets.size();
   bool prevDynamic = false;
   for (int i = rank - 1; i >= 0; --i) {
-    if (prevDynamic || offsets[i] == MemRefType::getDynamicStrideOrOffset()) {
-      return llvm::None;
+    if (prevDynamic || offsets[i] == ShapedType::kDynamic) {
+      return std::nullopt;
     }
 
     sum += offsets[i] * prod;
 
-    if (sizes[i] == ShapedType::kDynamicSize) {
+    if (sizes[i] == ShapedType::kDynamic) {
       prevDynamic = true;
     }
     prod *= sizes[i];
@@ -127,7 +127,7 @@ struct ComposeSubViewOfView : public OpRewritePattern<memref::SubViewOp> {
       return failure();
 
     int64_t offsetInByte =
-        maybeInt.value() * getBytes(op.getType().getElementTypeBitWidth());
+        *maybeInt * getBytes(op.getType().getElementTypeBitWidth());
 
     auto lieanrizedOffset =
         rewriter.create<arith::ConstantIndexOp>(op.getLoc(), offsetInByte);

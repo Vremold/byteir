@@ -18,7 +18,7 @@
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
 #include "byteir/Dialect/mhlo/Util/ShapeInferUtil.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -50,8 +50,8 @@ void mlir::registerDynamicBroadcastInDimReifyReturnTypeShapes() {
 void mlir::registerDynamicBroadcastInDimInferReturnTypeComponents() {
   static InferReturnTypeComponentsRegistration shapeRegister(
       mhlo::DynamicBroadcastInDimOp::getOperationName(),
-      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
-         DictionaryAttr attr, RegionRange,
+      [](MLIRContext *context, std::optional<Location>,
+         ValueShapeRange operands, DictionaryAttr attr, RegionRange,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         auto inputType = operands[0].getType().dyn_cast<RankedTensorType>();
         if (inputType == nullptr) {

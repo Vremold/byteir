@@ -67,7 +67,7 @@ void insertOpsRecursively(Operation *op, SmallDenseSet<Operation *> &opSet) {
   }
 }
 
-Optional<SmallVector<FunctionMetadata, 4>>
+std::optional<SmallVector<FunctionMetadata, 4>>
 getFunctionMetadatas(func::FuncOp funcOp, StringRef attrName,
                      StringRef deviceAttr, StringRef deviceAnchorName,
                      bool dupOutputs) {
@@ -286,8 +286,9 @@ void GraphClusteringByDevicePass::runOnOperation() {
     originalFuncs.push_back(funcOp);
   }
   for (auto funcOp : originalFuncs) {
-    Optional<SmallVector<FunctionMetadata, 4>> metadatas = getFunctionMetadatas(
-        funcOp, attrName, device, deviceAnchorName, dupOutputs);
+    std::optional<SmallVector<FunctionMetadata, 4>> metadatas =
+        getFunctionMetadatas(funcOp, attrName, device, deviceAnchorName,
+                             dupOutputs);
     if (!metadatas) {
       signalPassFailure();
       return;

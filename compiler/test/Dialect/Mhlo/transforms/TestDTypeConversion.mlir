@@ -64,7 +64,7 @@ func.func @custom_call(%arg0: tensor<?xf32>) -> tensor<?xf32> attributes {__byte
 // CHECK-SAME: (%[[ARG0:.*]]: tensor<?xf32>) -> tensor<?xf32> attributes {__byteir_unit_test__} {
 // CHECK-NEXT:   %[[V0:.*]] = mhlo.subtract %[[ARG0]], %[[ARG0]] : tensor<?xf32>
 // CHECK-NEXT:   %[[V1:.*]] = mhlo.convert %[[V0]] : (tensor<?xf32>) -> tensor<?xf16>
-// CHECK-NEXT:   %[[V2:.*]] = "mhlo.custom_call"(%[[V1]], %[[V1]]) {call_target_name = "f16_custom_call", has_side_effect = false} : (tensor<?xf16>, tensor<?xf16>) -> tensor<?xf16>
+// CHECK-NEXT:   %[[V2:.*]] = mhlo.custom_call @f16_custom_call(%[[V1]], %[[V1]]) : (tensor<?xf16>, tensor<?xf16>) -> tensor<?xf16>
 // CHECK-NEXT:   %[[V3:.*]] = mhlo.convert %[[V2]] : (tensor<?xf16>) -> tensor<?xf32>
 // CHECK-NEXT:   return %[[V3]] : tensor<?xf32>
 
@@ -81,7 +81,7 @@ func.func @uselessConvert(%arg0: tensor<?xf16>) -> tensor<?xf16> attributes {__b
 // CHECK-LABEL: func.func @uselessConvert
 // CHECK-SAME: (%[[ARG0:.*]]: tensor<?xf16>) -> tensor<?xf16> attributes {__byteir_unit_test__} {
 // CHECK-NEXT:   %[[V0:.*]] = mhlo.subtract %[[ARG0]], %[[ARG0]] : tensor<?xf16>
-// CHECK-NEXT:   %[[V1:.*]] = "mhlo.custom_call"(%[[V0]], %[[V0]]) {call_target_name = "f16_custom_call", has_side_effect = false} : (tensor<?xf16>, tensor<?xf16>) -> tensor<?xf16>
+// CHECK-NEXT:   %[[V1:.*]] = mhlo.custom_call @f16_custom_call(%[[V0]], %[[V0]]) : (tensor<?xf16>, tensor<?xf16>) -> tensor<?xf16>
 // CHECK-NEXT:   return %[[V1]] : tensor<?xf16>
 
 // -----
@@ -96,7 +96,7 @@ func.func @mixp_custom_call(%arg0: tensor<?xf16>) -> tensor<?xf16> attributes {_
 // CHECK-SAME: (%[[ARG0:.*]]: tensor<?xf16>) -> tensor<?xf16> attributes {__byteir_unit_test__} {
 // CHECK-NEXT:   %[[V0:.*]] = mhlo.add %[[ARG0]], %[[ARG0]] : tensor<?xf16>
 // CHECK-NEXT:   %[[V1:.*]] = mhlo.convert %[[V0]] : (tensor<?xf16>) -> tensor<?xf32>
-// CHECK-NEXT:   %[[V2:.*]] = "mhlo.custom_call"(%[[V1]], %[[V0]]) {call_target_name = "mixp_custom_call", has_side_effect = false} : (tensor<?xf32>, tensor<?xf16>) -> tensor<?xf16>
+// CHECK-NEXT:   %[[V2:.*]] = mhlo.custom_call @mixp_custom_call(%[[V1]], %[[V0]]) : (tensor<?xf32>, tensor<?xf16>) -> tensor<?xf16>
 // CHECK-NEXT:   return %[[V2]] : tensor<?xf16>
 
 // -----
@@ -110,5 +110,5 @@ func.func @mixp_custom_call2(%arg0: tensor<?xf32>) -> tensor<?xf16> attributes {
 // CHECK-LABEL: func.func @mixp_custom_call2
 // CHECK-SAME: (%[[ARG0:.*]]: tensor<?xf32>) -> tensor<?xf16> attributes {__byteir_unit_test__} {
 // CHECK-NEXT:   %[[V0:.*]] = mhlo.convert %[[ARG0]] : (tensor<?xf32>) -> tensor<?xf16>
-// CHECK-NEXT:   %[[V1:.*]] = "mhlo.custom_call"(%[[ARG0]], %[[V0]]) {call_target_name = "mixp_custom_call", has_side_effect = false} : (tensor<?xf32>, tensor<?xf16>) -> tensor<?xf16>
+// CHECK-NEXT:   %[[V1:.*]] = mhlo.custom_call @mixp_custom_call(%[[ARG0]], %[[V0]]) : (tensor<?xf32>, tensor<?xf16>) -> tensor<?xf16>
 // CHECK-NEXT:   return %[[V1]] : tensor<?xf16>

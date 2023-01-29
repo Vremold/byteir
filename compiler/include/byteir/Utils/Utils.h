@@ -22,9 +22,9 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionInterfaces.h"
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include <optional>
 #include <string>
 #include <type_traits>
 
@@ -39,8 +39,8 @@ class FuncOp;
 } // namespace func
 
 // Return literal from a constant-like value
-// return None if not applicable
-llvm::Optional<int64_t> getLiteralFromConstantLike(Value);
+// return std::nullopt if not applicable
+std::optional<int64_t> getLiteralFromConstantLike(Value);
 
 // Return literal from a constant-like value,
 // return defaultLit if not applicable
@@ -138,9 +138,9 @@ bool hasAnyOfAttrs(llvm::ArrayRef<mlir::NamedAttribute> attrs,
 // add `attrs` into an operation
 void addAttrs(mlir::Operation *, llvm::ArrayRef<mlir::NamedAttribute> attrs);
 
-Optional<unsigned> findOperandIndex(mlir::Operation *, mlir::Value);
+std::optional<unsigned> findOperandIndex(mlir::Operation *, mlir::Value);
 
-Optional<unsigned> findResultIndex(mlir::Operation *, mlir::Value);
+std::optional<unsigned> findResultIndex(mlir::Operation *, mlir::Value);
 
 SmallVector<Value, 4>
 getInputsOfCluster(const llvm::SmallVector<Operation *, 8> &cluster);

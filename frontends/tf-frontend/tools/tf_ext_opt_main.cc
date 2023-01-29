@@ -23,9 +23,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "mlir-hlo/Dialect/lhlo/transforms/passes.h"
-#include "mlir-hlo/Dialect/mhlo/IR/register.h"
-#include "mlir-hlo/Dialect/mhlo/transforms/passes.h"
+#include "lhlo/transforms/passes.h"
+#include "mhlo/IR/register.h"
+#include "mhlo/transforms/passes.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"     // from @llvm-project
 #include "mlir/InitAllDialects.h"            // from @llvm-project
 #include "mlir/InitAllPasses.h"              // from @llvm-project

@@ -27,7 +27,7 @@
 #include "tf_mlir_ext/transforms/tf_fallback_to_custom_call.h"
 #include "tf_mlir_ext/utils/customcall.h"
 
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "tensorflow/compiler/mlir/tensorflow/ir/tf_ops.h"
 
 using namespace mlir;
@@ -70,15 +70,20 @@ void ReplaceTFTypeToAceType(SmallVector<Type> &types, MLIRContext *ctx) {
 
 void LowerToMhloCustomCall(Operation *op) {
   OpBuilder builder(op);
-  bool has_side_effect = !mlir::MemoryEffectOpInterface::hasNoEffect(op);
+  bool has_side_effect = false;
+  auto iface = dyn_cast<MemoryEffectOpInterface>(op);
+  if (iface && !iface.hasNoEffect()) {
+    has_side_effect = true;
+  }
 
   mhlo::CustomCallOp custom_call_op = builder.create<mhlo::CustomCallOp>(
       op->getLoc(), op->getResults().getTypes(), op->getOperands(),
-      op->getName().getStringRef(), has_side_effect, "",
+      op->getName().getStringRef(), has_side_effect, builder.getStringAttr(""),
       mhlo::CustomCallApiVersion{
           mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-      builder.getArrayAttr(ArrayRef<Attribute>{}), nullptr, nullptr,
-      builder.getArrayAttr(ArrayRef<Attribute>{}));
+      builder.getArrayAttr(ArrayRef<Attribute>{}),
+      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+      nullptr, builder.getArrayAttr(ArrayRef<Attribute>{}));
   mlir::DictionaryAttr attrs = getCleanAttr(op);
   custom_call_op->setAttr(getByteIRAttrs(), attrs);
   ReplaceOp(op, custom_call_op.operator->());
@@ -99,7 +104,7 @@ void LowerToAceCustomCall(Operation *op) {
 }
 
 void LowerToAceConstant(TF::ConstOp op) {
-  ShapedType ty = op.output().getType().dyn_cast<ShapedType>();
+  ShapedType ty = op.getOutput().getType().dyn_cast<ShapedType>();
   // TODO(lyq): handle resource type
   if (!ty || !ty.getElementType().isa<TF::StringType>()) {
     return;
@@ -109,7 +114,7 @@ void LowerToAceConstant(TF::ConstOp op) {
   auto new_ty =
       ty.cloneWith(llvm::None, ace::StringType::get(op->getContext()));
   llvm::SmallVector<llvm::StringRef> value =
-      llvm::to_vector(op.value().getValues<llvm::StringRef>());
+      llvm::to_vector(op.getValue().getValues<llvm::StringRef>());
   ace::ConstOp ace_const_op = builder.create<ace::ConstOp>(
       op->getLoc(), new_ty, DenseStringElementsAttr::get(new_ty, value));
   ReplaceOp(op, ace_const_op);

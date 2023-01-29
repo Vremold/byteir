@@ -250,13 +250,13 @@ struct CondContext {
     Value mergeInput1 = mergeOp.getOperand(1);
     auto maybeSubGraph0 = getSubgraph(mergeInput0, op2Id);
     auto maybeSubGraph1 = getSubgraph(mergeInput1, op2Id);
-    if (!maybeSubGraph0.hasValue() || !maybeSubGraph1.hasValue()) {
+    if (!maybeSubGraph0.has_value() || !maybeSubGraph1.has_value()) {
       // llvm::outs()
       //     << "!maybeSubGraph0.hasValue() || !maybeSubGraph1.hasValue()\n";
       return None;
     }
-    auto &subGraph0 = maybeSubGraph0.getValue();
-    auto &subGraph1 = maybeSubGraph1.getValue();
+    auto &subGraph0 = maybeSubGraph0.value();
+    auto &subGraph1 = maybeSubGraph1.value();
     if (!subGraph0.isValid() || !subGraph1.isValid()) {
       // llvm::outs() << "!subGraph0.isValid() || !subGraph1.isValid()\n";
       return None;
@@ -326,8 +326,8 @@ struct RewriteToIfPass : public RewriteToIfBase<RewriteToIfPass> {
     std::string prefix = "_RewriteToIfBranch";
     SymbolTable symbleTable(moduleOp);
     for (auto &mcc : maybeCondContexts) {
-      if (mcc.hasValue()) {
-        CondContext &condContext = mcc.getValue();
+      if (mcc.has_value()) {
+        CondContext &condContext = mcc.value();
         std::string trueSymbol =
             prefix + "True_" + std::to_string(validContextCnt);
         std::string falseSymbol =

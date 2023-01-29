@@ -28,15 +28,21 @@
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Linker/Linker.h"
 #include "llvm/MC/TargetRegistry.h"
+#include "llvm/Passes/PassBuilder.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/IPO.h"
+#include "llvm/Transforms/IPO/AlwaysInliner.h"
 #include "llvm/Transforms/IPO/Internalize.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#include "llvm/Transforms/Scalar/DCE.h"
+#include "llvm/Transforms/Vectorize/LoopVectorize.h"
+#include "llvm/Transforms/Vectorize/SLPVectorizer.h"
 
 using namespace llvm;
 using namespace mlir;
@@ -66,30 +72,33 @@ static llvm::CodeGenOpt::Level LLVMCodeGenOpt(unsigned optLevel) {
   return codegenOptLevel;
 }
 
-// TODO: maybe move another file
-static void addOptimizationPasses(llvm::legacy::PassManagerBase &MPM,
-                                  llvm::legacy::FunctionPassManager &FPM,
-                                  llvm::TargetMachine &TM, unsigned optLevel,
-                                  unsigned sizeLevel) {
-  FPM.add(llvm::createVerifierPass()); // Verify that input is correct
+static llvm::OptimizationLevel mapToLevel(unsigned optLevel) {
+  switch (optLevel) {
+  default:
+    llvm_unreachable("Invalid optimization level!");
+  case 0:
+    return llvm::OptimizationLevel::O0;
+  case 1:
+    return llvm::OptimizationLevel::O1;
+  case 2:
+    return llvm::OptimizationLevel::O2;
+  case 3:
+    return llvm::OptimizationLevel::O3;
+  }
+}
 
-  llvm::PassManagerBuilder builder;
-  builder.OptLevel = optLevel;
-  builder.SizeLevel = sizeLevel;
+static void addOptimizationPasses(llvm::FunctionPassManager &fPM,
+                                  llvm::ModulePassManager &mPM,
+                                  llvm::OptimizationLevel &optLevel) {
+  fPM.addPass(llvm::VerifierPass()); // Verify that input is correct
 
-  builder.Inliner =
-      llvm::createFunctionInliningPass(optLevel, sizeLevel,
-                                       /*DisableInlineHotCallSite*/ false);
+  if (optLevel.getSpeedupLevel() > 1 && optLevel.getSizeLevel() < 2) {
+    fPM.addPass(llvm::LoopVectorizePass());
+    fPM.addPass(llvm::SLPVectorizerPass());
+  }
 
-  // Has some similar configuration as llvm/opt
-  builder.DisableUnrollLoops = optLevel == 0;
-  builder.LoopVectorize = optLevel > 1 && sizeLevel < 2;
-  builder.SLPVectorize = optLevel > 1 && sizeLevel < 2;
-
-  TM.adjustPassManager(builder);
-
-  builder.populateFunctionPassManager(FPM);
-  builder.populateModulePassManager(MPM);
+  fPM.addPass(llvm::DCEPass());
+  mPM.addPass(llvm::AlwaysInlinerPass());
 }
 
 class SerializeToPTX
@@ -100,8 +109,8 @@ public:
   SerializeToPTX(unsigned opt, const std::string &libdeviceFile,
                  const std::string &triple, const std::string &chip,
                  const std::string &features, std::string &targetISA)
-      : optLevel(opt), libdeviceFile(libdeviceFile), triple(triple), chip(chip),
-        features(features), targetISA(targetISA) {}
+      : optLevelAsInt(opt), libdeviceFile(libdeviceFile), triple(triple),
+        chip(chip), features(features), targetISA(targetISA) {}
 
   void runOnOperation() override;
 
@@ -124,7 +133,7 @@ private:
   LogicalResult linkLibdevice(llvm::Module &llvmModule,
                               llvm::LLVMContext &llvmContext);
 
-  unsigned optLevel;
+  unsigned optLevelAsInt;
 
   std::string libdeviceFile;
 
@@ -169,8 +178,9 @@ std::unique_ptr<llvm::TargetMachine> SerializeToPTX::createTargetMachine() {
     return {};
   }
 
-  llvm::TargetMachine *machine = target->createTargetMachine(
-      triple, chip, features, {}, {}, None, LLVMCodeGenOpt(optLevel));
+  llvm::TargetMachine *machine =
+      target->createTargetMachine(triple, chip, features, {}, {}, std::nullopt,
+                                  LLVMCodeGenOpt(optLevelAsInt));
   if (!machine) {
     emitError(loc, "failed to create target machine");
     return {};
@@ -181,24 +191,46 @@ std::unique_ptr<llvm::TargetMachine> SerializeToPTX::createTargetMachine() {
 
 void SerializeToPTX::translateToISA(llvm::Module &llvmModule,
                                     llvm::TargetMachine &targetMachine) {
+
   llvmModule.setDataLayout(targetMachine.createDataLayout());
 
   llvm::raw_string_ostream stream(targetISA);
   llvm::buffer_ostream pstream(stream);
-  llvm::legacy::PassManager codegenPasses;
-  std::unique_ptr<llvm::legacy::FunctionPassManager> funPasses =
-      std::make_unique<llvm::legacy::FunctionPassManager>(&llvmModule);
-  funPasses->add(llvm::createTargetTransformInfoWrapperPass(
-      targetMachine.getTargetIRAnalysis()));
 
-  addOptimizationPasses(codegenPasses, *funPasses, targetMachine, optLevel,
-                        /*sizeLevel*/ 0);
-  funPasses->doInitialization();
-  for (llvm::Function &F : llvmModule) {
-    funPasses->run(F);
+  // new
+  llvm::OptimizationLevel optLevel = mapToLevel(optLevelAsInt);
+  llvm::PassBuilder pB(&targetMachine);
+
+  targetMachine.registerPassBuilderCallbacks(pB);
+
+  // Register all basic analyses
+  llvm::LoopAnalysisManager lAM;
+  llvm::FunctionAnalysisManager fAM;
+  llvm::CGSCCAnalysisManager cGAM;
+  llvm::ModuleAnalysisManager mAM;
+
+  pB.registerModuleAnalyses(mAM);
+  pB.registerCGSCCAnalyses(cGAM);
+  pB.registerFunctionAnalyses(fAM);
+  pB.registerLoopAnalyses(lAM);
+  pB.crossRegisterProxies(lAM, fAM, cGAM, mAM);
+
+  llvm::FunctionPassManager fPM = pB.buildFunctionSimplificationPipeline(
+      optLevel, llvm::ThinOrFullLTOPhase::None);
+  llvm::ModulePassManager mPM = pB.buildPerModuleDefaultPipeline(optLevel);
+
+  fAM.registerPass([&] { return targetMachine.getTargetIRAnalysis(); });
+
+  addOptimizationPasses(fPM, mPM, optLevel);
+
+  mPM.run(llvmModule, mAM);
+  for (auto &f : llvmModule) {
+    if (!f.empty()) {
+      fPM.run(f, fAM);
+    }
   }
 
-  funPasses->doFinalization();
+  llvm::legacy::PassManager codegenPasses;
   codegenPasses.add(llvm::createVerifierPass());
   targetMachine.addPassesToEmitFile(codegenPasses, pstream, nullptr,
                                     llvm::CGFT_AssemblyFile);

@@ -18,7 +18,7 @@
 #include "byteir/Conversion/LmhloToLace/LmhloToLace.h"
 #include "byteir/Dialect/Lace/LaceDialect.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
+#include "lhlo/IR/lhlo_ops.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -86,7 +86,7 @@ struct ConvertSlice : public OpConversionPattern<lmhlo::SliceOp> {
       auto newSliceOp = rewriter.create<lace::SliceOp>(
           op.getLoc(), adaptor.getOutput().getType(), adaptor.getOperand(),
           op.getStartIndices(), op.getLimitIndices(), op.getStrides());
-      rewriter.create<memref::CopyOp>(op.getLoc(), newSliceOp.target(),
+      rewriter.create<memref::CopyOp>(op.getLoc(), newSliceOp.getTarget(),
                                       adaptor.getOutput());
       rewriter.eraseOp(op);
       return success();

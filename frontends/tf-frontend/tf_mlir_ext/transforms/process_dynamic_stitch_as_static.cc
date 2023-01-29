@@ -104,7 +104,7 @@ struct ConvertDynamicStitchToStatic
                                 PatternRewriter &rewriter) const override {
     MLIRContext *context = stitchOp->getContext();
     SmallVector<Operation *> stitDataOps;
-    for (Value value : stitchOp.data()) {
+    for (Value value : stitchOp.getData()) {
       if (Operation *defOp = value.getDefiningOp()) {
         stitDataOps.push_back(defOp);
       }
@@ -143,7 +143,7 @@ struct ConvertDynamicStitchToStatic
             BoolAttr::get(context, true));
         auto curSelectOp = rewriter.create<TF::SelectOp>(
             UnknownLoc::get(context), data.getType(), equalOp, data, zeroConst);
-        newParRes.push_back(curSelectOp.output());
+        newParRes.push_back(curSelectOp.getOutput());
       }
       rewriter.replaceOp(parOp, newParRes);
     }
@@ -152,10 +152,10 @@ struct ConvertDynamicStitchToStatic
       rewriter.setInsertionPoint(stitchOp);
       Location stitLoc = stitchOp->getLoc();
       auto res = rewriter.create<TF::AddNOp>(
-          stitLoc, stitchOp->getResult(0).getType(), stitchOp.data());
-      rewriter.replaceOp(stitchOp, res.sum());
+          stitLoc, stitchOp->getResult(0).getType(), stitchOp.getData());
+      rewriter.replaceOp(stitchOp, res.getSum());
     } else {
-      rewriter.replaceOp(stitchOp, stitchOp.data()[1]);
+      rewriter.replaceOp(stitchOp, stitchOp.getData()[1]);
     }
     return success();
   }

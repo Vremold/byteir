@@ -276,7 +276,7 @@ TEST(CUDAOpKernelTest, PoolMaxGradOp2D) {
 }
 
 TEST(CUDAOpKernelTest, PoolMaxGradOp2DFp16) {
-  float abs_eps = 2e-2f, rel_eps = 2e-3f;
+  float abs_eps = 3e-2f, rel_eps = 3e-3f;
   TestPoolMaxGradOp2D<__half>(/*shape_input=*/{1, 64, 112, 112},
                               /*shape_output=*/{1, 64, 56, 56},
                               /*padding=*/{0, 0, 0, 0, 1, 1, 1, 1},

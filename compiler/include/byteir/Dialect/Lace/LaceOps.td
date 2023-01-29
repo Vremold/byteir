@@ -45,7 +45,7 @@ def Lace_ReshapeOp: Lace_AliasOp<"reshape"> {
   let results = (outs AnyStridedMemRef:$target);
 
   let extraClassDeclaration = [{
-    Value getViewSource() { return source(); }
+    Value getViewSource() { return getSource(); }
     int64_t getOffsetElem() { return 0; }
   }];
 
@@ -62,7 +62,7 @@ def Lace_SliceOp: Lace_AliasOp<"slice"> {
   let results = (outs AnyStridedMemRef:$target);
 
   let extraClassDeclaration = [{
-    Value getViewSource() { return source(); }
+    Value getViewSource() { return getSource(); }
 
     int64_t getOffsetElem();
 
@@ -96,7 +96,7 @@ def Lace_CustomCallOp : Lace_Op<"custom_call", [AttrSizedOperandSegments]> {
     Arg<Variadic<Lace_BufferType>, "", [MemRead]>:$inputs,
     Arg<Variadic<Lace_BufferType>, "", [MemWrite]>:$output,
     StrAttr:$call_target_name,
-    DefaultValuedStrAttr<StrAttr, "">:$backend_config
+    OptionalAttr<AnyAttrOf<[StrAttr, DictionaryAttr]>>:$backend_config
   );
 }
 

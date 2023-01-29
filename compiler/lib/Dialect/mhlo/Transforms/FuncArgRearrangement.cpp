@@ -23,7 +23,7 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/FuncUtils.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -72,7 +72,7 @@ static bool checkUser(Value val, Operation *user,
   return false;
 }
 
-static llvm::Optional<unsigned>
+static std::optional<unsigned>
 findMostLikelyUse(Value val, Operation *user,
                   ArrayRef<Operation *> indicators) {
 
@@ -102,7 +102,7 @@ findMostLikelyUse(Value val, Operation *user,
     }
   }
   LLVM_DEBUG(llvm::dbgs() << "findMostLikelyUse found no idx\n");
-  return llvm::None;
+  return std::nullopt;
 }
 
 class FuncArgRearrangementPass : public ::mlir::OperationPass<ModuleOp> {
@@ -344,7 +344,7 @@ void FuncArgRearrangementPass::runOnOperation() {
       auto maybeIdx =
           findMostLikelyUse(it.first, user, duplicateResolveIndicator);
       if (maybeIdx.has_value()) {
-        useIdxAndOp.emplace_back(maybeIdx.value(), user);
+        useIdxAndOp.emplace_back(*maybeIdx, user);
       }
     }
 

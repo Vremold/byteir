@@ -16,7 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Analysis/SideEffect.h"
-#include "mlir-hlo/Dialect/lhlo/IR/lhlo_ops.h"
+#include "lhlo/IR/lhlo_ops.h"
 #include "mlir/Pass/Pass.h"
 
 using namespace mlir;

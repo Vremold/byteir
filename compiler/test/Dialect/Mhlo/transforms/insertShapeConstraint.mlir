@@ -9,7 +9,7 @@ func.func @DynamicPartition_constraint(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi
   %3 = mhlo.constant dense<[0.478572756, 0.458867788, -1.44476604, 0.189240679]> : tensor<4xf32>
   // CHECK-DAG: %[[C0:.*]] = mhlo.constant dense<[0, 1, 2, 3]> : tensor<4xi32>
   %4 = mhlo.constant dense<[0, 1, 2, 3]> : tensor<4xi32>
-  // CHECK-DAG: %[[V0:.*]]:2 = "mhlo.custom_call"(%arg0, %arg1) {byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "tf.DynamicPartition", has_side_effect = false} : (tensor<4x4xf32>, tensor<4xi32>) -> (tensor<?x4xf32>, tensor<?x4xf32>)
+  // CHECK-DAG: %[[V0:.*]]:2 = mhlo.custom_call @tf.DynamicPartition(%arg0, %arg1) {byteir_attrs = {num_partitions = 2 : i64}} : (tensor<4x4xf32>, tensor<4xi32>) -> (tensor<?x4xf32>, tensor<?x4xf32>)
   %5:2 = "mhlo.custom_call"(%arg0, %arg1) {byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "tf.DynamicPartition", has_side_effect = false} : (tensor<4x4xf32>, tensor<4xi32>) -> (tensor<?x4xf32>, tensor<?x4xf32>)
   // CHECK-DAG: %[[V1:.*]] = tensor.dim %[[V0]]#0, %c0 : tensor<?x4xf32>
   // CHECK-DAG: %[[V2:.*]] = tensor.dim  %[[V0]]#1, %c0 : tensor<?x4xf32>
@@ -39,7 +39,7 @@ func.func @DynamicPartition_constraint(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi
   %20 = mhlo.add %15, %18 : tensor<?x4xf32>
   %21 = tensor.dim %20, %c0 : tensor<?x4xf32>
   "shape_ext.tie"(%20, %21) : (tensor<?x4xf32>, index) -> ()
-  // CHECK-DAG: %[[V4:.*]]:2 = "mhlo.custom_call"(%[[C0]], %arg1) {byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "tf.DynamicPartition", has_side_effect = false} : (tensor<4xi32>, tensor<4xi32>) -> (tensor<?xi32>, tensor<?xi32>)
+  // CHECK-DAG: %[[V4:.*]]:2 = mhlo.custom_call @tf.DynamicPartition(%[[C0]], %arg1) {byteir_attrs = {num_partitions = 2 : i64}} : (tensor<4xi32>, tensor<4xi32>) -> (tensor<?xi32>, tensor<?xi32>)
   %22:2 = "mhlo.custom_call"(%4, %arg1) {byteir_attrs = {num_partitions = 2 : i64}, call_target_name = "tf.DynamicPartition", has_side_effect = false} : (tensor<4xi32>, tensor<4xi32>) -> (tensor<?xi32>, tensor<?xi32>)
   // CHECK-DAG: %[[V5:.*]] = tensor.dim %[[V4]]#0, %c0 : tensor<?xi32>
   // CHECK-DAG: %[[V6:.*]] = tensor.dim %[[V4]]#1, %c0 : tensor<?xi32>

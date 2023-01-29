@@ -1,10 +1,10 @@
 function download_llvm_prebuilt() {
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_74fb770de9399d7258a8eda974c93610cfde698e.tar.gz"
+    LLVM_BUILD="llvm_install_7ccbb4dff10efe6c26219204e361ddb0264938b8.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install*
       rm -rf llvm_build
-      wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD"
+      wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD" -q
       tar xzf "$LLVM_BUILD"
     fi
     LLVM_INSTALL_DIR="${PWD}/llvm_build"

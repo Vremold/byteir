@@ -17,7 +17,7 @@
 
 #include "byteir/Dialect/mhlo/Transforms/MatmulLayoutTransform.h"
 #include "byteir/Dialect/mhlo/Transforms/CanonicalizeExt.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
@@ -121,7 +121,7 @@ struct MatmulLayoutTransformPass
     MLIRContext *context = &getContext();
     mlir::OpBuilder builder(context);
     funcOp.walk([&](mhlo::DotOp op) {
-      tryRewrite(op, builder, this->transposeConstantOnly, this->targetLayout);
+      (void)tryRewrite(op, builder, transposeConstantOnly, targetLayout);
     });
 
     RewritePatternSet patterns(context);

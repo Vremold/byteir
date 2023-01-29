@@ -26,8 +26,9 @@
 using namespace mlir;
 
 namespace {
-llvm::Optional<mlir::AffineMap> createTestAffineMap(MLIRContext *ctx,
-                                                    mlir::MemRefType memref) {
+
+std::optional<mlir::AffineMap> createTestAffineMap(MLIRContext *ctx,
+                                                   mlir::MemRefType memref) {
   if (memref.getRank() == 2) {
     AffineExpr x0 = mlir::getAffineDimExpr(0, ctx);
     AffineExpr x1 = mlir::getAffineDimExpr(1, ctx);
@@ -37,11 +38,11 @@ llvm::Optional<mlir::AffineMap> createTestAffineMap(MLIRContext *ctx,
     return AffineMap::get(2, 0, results, ctx);
   }
 
-  return llvm::None;
+  return std::nullopt;
 }
 } // namespace
 
-llvm::Optional<mlir::AffineMap>
+std::optional<mlir::AffineMap>
 mlir::createDefaultAffineMap(MLIRContext *ctx, mlir::MemRefType memref) {
   return AffineMap::get(memref.getRank(), memref.getNumDynamicDims(), ctx);
 }
@@ -57,7 +58,7 @@ AffineLayoutRegistry &mlir::AffineLayoutRegistry::getInstance() {
   return instance;
 }
 
-llvm::Optional<llvm::StringRef> mlir::getLayoutName(mlir::Value val) {
+std::optional<llvm::StringRef> mlir::getLayoutName(mlir::Value val) {
 
   if (auto defOp = val.getDefiningOp()) {
     if (defOp->hasAttrOfType<StringAttr>(getLayoutAttributeName())) {
@@ -67,7 +68,7 @@ llvm::Optional<llvm::StringRef> mlir::getLayoutName(mlir::Value val) {
   } else if (auto arg = val.dyn_cast<BlockArgument>()) {
     Region *region = arg.getParentRegion();
     if (region == nullptr)
-      return llvm::None;
+      return std::nullopt;
 
     if (auto funcOp = region->getParentOfType<func::FuncOp>()) {
       if (auto argAttr = funcOp.getArgAttrOfType<StringAttr>(
@@ -77,5 +78,5 @@ llvm::Optional<llvm::StringRef> mlir::getLayoutName(mlir::Value val) {
     }
   }
 
-  return None;
+  return std::nullopt;
 }

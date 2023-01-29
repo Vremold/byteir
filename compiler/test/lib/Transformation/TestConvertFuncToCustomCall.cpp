@@ -16,7 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Transforms/ConvertFuncToCustomCall.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Pass/PassManager.h"
 #include "llvm/ADT/StringRef.h"
 

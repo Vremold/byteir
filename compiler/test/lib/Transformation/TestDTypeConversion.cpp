@@ -17,7 +17,7 @@
 
 #include "byteir/Dialect/mhlo/Transforms/DTypeConversion.h"
 #include "byteir/Utils/PipelineUtils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/TypeUtilities.h"
 

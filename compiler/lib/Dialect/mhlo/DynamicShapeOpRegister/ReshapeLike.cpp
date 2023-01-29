@@ -17,7 +17,7 @@
 
 #include "byteir/Dialect/Shape/IR/ShapeExtOps.h"
 #include "byteir/Dialect/mhlo/DynamicShapeOpRegister/Register.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Builders.h"
@@ -27,6 +27,33 @@
 #define DEBUG_TYPE "dynamic-shape-op-register"
 
 using namespace mlir;
+
+namespace {
+
+// Correct negative shape to `ShapedType::kDynamic`
+// It is because mhlo allows a negative number, often `-1`, as dynamic
+// but in a real ShapedType, only kDynamic is allowed.
+ShapedTypeComponents correctNegativeShape(ShapedTypeComponents &old) {
+  if (!old.hasRank())
+    return old;
+
+  SmallVector<int64_t> shape;
+  shape.reserve(old.getDims().size());
+  bool hasNegative = false;
+  for (auto dim : old.getDims()) {
+    if (dim < 0) {
+      hasNegative = true;
+      shape.push_back(ShapedType::kDynamic);
+    } else {
+      shape.push_back(dim);
+    }
+  }
+
+  if (!hasNegative)
+    return old;
+  return ShapedTypeComponents(shape, old.getElementType(), old.getAttribute());
+}
+} // namespace
 
 LogicalResult InsertReshapeShapeConstraints(Operation *op, OpBuilder &builder) {
   builder.setInsertionPointAfter(op);
@@ -49,26 +76,26 @@ LogicalResult InsertReshapeShapeConstraints(Operation *op, OpBuilder &builder) {
     dimOfResult.push_back(
         builder.create<tensor::DimOp>(op->getLoc(), result, i));
 
-  Value opr_size;
+  Value oprSize;
   if (dimOfOperand.size() == 0) {
-    opr_size = builder.create<arith::ConstantIndexOp>(op->getLoc(), 1);
+    oprSize = builder.create<arith::ConstantIndexOp>(op->getLoc(), 1);
   } else {
-    opr_size = dimOfOperand[0];
+    oprSize = dimOfOperand[0];
     for (size_t i = 1; i < dimOfOperand.size(); ++i)
-      opr_size =
-          builder.create<shape::MulOp>(op->getLoc(), opr_size, dimOfOperand[i]);
+      oprSize =
+          builder.create<shape::MulOp>(op->getLoc(), oprSize, dimOfOperand[i]);
   }
 
-  Value res_size;
+  Value resSize;
   if (dimOfResult.size() == 0) {
-    res_size = builder.create<arith::ConstantIndexOp>(op->getLoc(), 1);
+    resSize = builder.create<arith::ConstantIndexOp>(op->getLoc(), 1);
   } else {
-    res_size = dimOfResult[0];
+    resSize = dimOfResult[0];
     for (size_t i = 1; i < dimOfResult.size(); ++i)
-      res_size =
-          builder.create<shape::MulOp>(op->getLoc(), res_size, dimOfResult[i]);
+      resSize =
+          builder.create<shape::MulOp>(op->getLoc(), resSize, dimOfResult[i]);
   }
-  builder.create<shape_ext::MeetOp>(op->getLoc(), opr_size, res_size);
+  builder.create<shape_ext::MeetOp>(op->getLoc(), oprSize, resSize);
 
   return success();
 };
@@ -87,8 +114,8 @@ void mlir::registerDynamicReshapeShapeConstraints() {
 void mlir::registerDynamicReshapeInferReturnTypeComponents() {
   static InferReturnTypeComponentsRegistration shapeRegister(
       mhlo::DynamicReshapeOp::getOperationName(),
-      [](MLIRContext *context, Optional<Location>, ValueShapeRange operands,
-         DictionaryAttr, RegionRange,
+      [](MLIRContext *context, std::optional<Location>,
+         ValueShapeRange operands, DictionaryAttr, RegionRange,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         mlir::ShapeAdaptor shapeAdaptor = operands.getValueAsShape(1);
         if (!shapeAdaptor)
@@ -96,6 +123,7 @@ void mlir::registerDynamicReshapeInferReturnTypeComponents() {
 
         ShapedTypeComponents resShape;
         shapeAdaptor.getDims(resShape);
+        resShape = correctNegativeShape(resShape);
         inferredReturnTypes.push_back(resShape);
         return success();
       });

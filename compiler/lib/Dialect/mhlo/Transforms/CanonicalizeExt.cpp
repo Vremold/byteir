@@ -20,12 +20,10 @@
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/AttrUtils.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
-#include "mlir-hlo/utils/convert_op_folder.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/IR/Matchers.h"
 #include "mlir/IR/TypeUtilities.h"
-#include "mlir/Support/LogicalResult.h"
+#include "utils/convert_op_folder.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
@@ -41,76 +39,11 @@
 
 #define DEBUG_TYPE "mhlo-canonicalize-ext"
 
+#define K_INITIAL -999
+
 using namespace llvm;
 using namespace mlir;
 using namespace mlir::mhlo;
-
-// FIXME: this pattern should move to shape dialect
-LogicalResult mlir::shape::foldShapeBroadcast(shape::BroadcastOp op,
-                                              PatternRewriter &rewriter) {
-
-  SmallVector<SmallVector<int64_t>> shapes;
-  SmallVector<Value> values;
-  for (auto shape : op.getShapes()) {
-    values.push_back(shape);
-    if (auto inputShape = shape.getDefiningOp<shape::ShapeOfOp>()) {
-      if (auto shapeType =
-              inputShape.getArg().getType().dyn_cast<ShapedType>()) {
-        shapes.push_back(llvm::to_vector(shapeType.getShape()));
-      } else {
-        return failure();
-      }
-    } else if (auto inputShape = shape.getDefiningOp<shape::ConstShapeOp>()) {
-      shapes.push_back(llvm::to_vector(
-          llvm::map_range(inputShape.getShape(), [](APInt elem) {
-            return static_cast<int64_t>(elem.getZExtValue());
-          })));
-    } else {
-      return failure();
-    }
-  }
-  // do broadcast
-  // see definition in https://mlir.llvm.org/docs/Dialects/ShapeDialect/
-  size_t size = 0;
-  for (auto &&shape : shapes) {
-    size = std::max(shape.size(), size);
-  }
-  auto copyShapes = shapes;
-  for (auto &shape : shapes) {
-    if (shape.size() < size) {
-      shape.insert(shape.begin(), size - shape.size(), 1);
-    }
-  }
-  for (size_t i = 0; i < size; ++i) {
-    int64_t res = 1;
-    for (auto &shape : shapes) {
-      if (shape[i] > 1) {
-        res = std::max(shape[i], res);
-      } else if (shape[i] == ShapedType::kDynamicSize && res == 1) {
-        res = ShapedType::kDynamicSize;
-      }
-    }
-    for (auto &shape : shapes) {
-      shape[i] = res;
-    }
-  }
-  // if output shape equal to the value shape, replace with SSA value
-  int index = 0;
-  for (auto &&shapePair : llvm::zip(shapes, copyShapes)) {
-    if (std::get<0>(shapePair).size() != std::get<1>(shapePair).size()) {
-      continue;
-    }
-    if (llvm::all_of(llvm::zip(std::get<0>(shapePair), std::get<1>(shapePair)),
-                     [](auto dimPair) {
-                       return std::get<0>(dimPair) == std::get<1>(dimPair);
-                     })) {
-      rewriter.replaceOp(op, values[index]);
-      return success();
-    }
-    index += 1;
-  }
-  return failure();
-}
 
 LogicalResult mlir::mhlo::foldBroadcastInDim(BroadcastInDimOp op,
                                              PatternRewriter &rewriter) {
@@ -161,7 +94,7 @@ LogicalResult mlir::mhlo::foldBroadcastInDim(BroadcastInDimOp op,
   if (!newAttr.has_value())
     return failure();
 
-  rewriter.replaceOpWithNewOp<ConstantOp>(op, newAttr.value());
+  rewriter.replaceOpWithNewOp<ConstantOp>(op, *newAttr);
   return success();
 }
 
@@ -177,7 +110,8 @@ struct ConcatChunk {
   SmallVector<unsigned> ids; // concat's arg id
 
   ConcatChunk(Value v, int64_t id)
-      : isSlice(false), axis(-1), begin(-1), end(-1), val(v) {
+      : isSlice(false), axis(K_INITIAL), begin(K_INITIAL), end(K_INITIAL),
+        val(v) {
     ids.push_back(id);
   }
 
@@ -204,8 +138,8 @@ static ConcatChunk getChunkOfSlice(unsigned id, mhlo::ConcatenateOp concat,
       // only support equal rank
 
       bool isSupport = true;
-      int64_t begin = -1;
-      int64_t end = -1;
+      int64_t begin = K_INITIAL;
+      int64_t end = K_INITIAL;
 
       auto startAttr = slice.getStartIndices();
       auto limitAttr = slice.getLimitIndices();
@@ -689,7 +623,7 @@ LogicalResult mlir::mhlo::foldLargeConcatenate(mhlo::ConcatenateOp op,
                                                PatternRewriter &rewriter) {
   LLVM_DEBUG(llvm::dbgs() << "foldLargeConcatenate\n");
   auto numOperands = op->getNumOperands();
-  int64_t index = -1;
+  int64_t index = K_INITIAL;
   for (int64_t i = 0; i < numOperands - 1; i++) {
     if (isa_and_nonnull<mhlo::ConstantOp>(op.getVal()[i].getDefiningOp()) &&
         isa_and_nonnull<mhlo::ConstantOp>(op.getVal()[i + 1].getDefiningOp())) {
@@ -697,8 +631,8 @@ LogicalResult mlir::mhlo::foldLargeConcatenate(mhlo::ConcatenateOp op,
       break;
     }
   }
-  if (index == -1) {
-    LLVM_DEBUG(llvm::dbgs() << "index is -1\n");
+  if (index == K_INITIAL) {
+    LLVM_DEBUG(llvm::dbgs() << "no constant index\n");
     return failure();
   }
 
@@ -764,7 +698,7 @@ DenseElementsAttr foldTransposeHelper(mhlo::TransposeOp op,
   }
 
   auto calculateOutputIndices = [&](int64_t index) -> SmallVector<int64_t> {
-    SmallVector<int64_t> indices(rank, -1);
+    SmallVector<int64_t> indices(rank, K_INITIAL);
     for (int64_t i = 0; i < rank; i++) {
       indices[i] = index / outputStrides[i];
       index = index % outputStrides[i];
@@ -836,7 +770,7 @@ mlir::mhlo::foldBeneficialConstantConvertOp(mhlo::ConvertOp op,
     } else if (type.isa<IntegerType>()) {
       return type.cast<IntegerType>().getWidth();
     } else {
-      return -1;
+      return K_INITIAL;
     }
   };
   int64_t inputTypeWidth = getWidth(inputElementType);
@@ -938,28 +872,9 @@ LogicalResult mlir::mhlo::simplifyByteIRAddNToAdd(mhlo::CustomCallOp op,
   return failure();
 }
 
-LogicalResult mlir::func::removeEmptyFuncCall(func::CallOp op,
-                                              PatternRewriter &rewriter) {
-  if (op->getNumResults() == 0 && op.getNumOperands() == 0) {
-    // remove call op if it doesn't have any input or output.
-    auto funcOp = getFuncOp(op);
-    size_t numNonReturnOp = 0;
-    for (auto &op : funcOp.getBody().front().without_terminator()) {
-      numNonReturnOp += isa<ReturnOp>(op) ? 0 : 1;
-    }
-    if (numNonReturnOp == 0) {
-      rewriter.eraseOp(funcOp);
-      rewriter.eraseOp(op);
-      return success();
-    }
-  }
-  return failure();
-}
-
 void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldBroadcastInDim);
   patterns.add(mlir::mhlo::foldConcatWithContinuousSlices);
-  patterns.add(mlir::shape::foldShapeBroadcast);
   patterns.add(mlir::mhlo::simplifyDynamicConvToConv);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::AddOp, std::plus>);
   patterns.add(mlir::mhlo::foldLargeBinaryOp<mhlo::MulOp, std::multiplies>);
@@ -976,7 +891,6 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns) {
   patterns.add(mlir::mhlo::foldConsecutiveConvertOp);
   patterns.add(mlir::mhlo::canonicalizeBroadcastInDimConst);
   patterns.add(mlir::mhlo::simplifyByteIRAddNToAdd);
-  patterns.add(mlir::func::removeEmptyFuncCall);
 }
 
 void mlir::mhlo::getCanonicalizationExtPatterns(RewritePatternSet &patterns,

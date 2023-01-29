@@ -24,31 +24,6 @@
 namespace mlir {
 class MLIRContext;
 
-namespace shape {
-class BroadcastOp;
-
-// fold the pattern like this
-// const0 = [4]
-// c = mhlo.xxx(a, b)
-// d = shape.shape_of(c)
-// e = shape.broadcast(d, const0)
-//
-// remove the shape.broadcast
-//
-// note the shape of c is [...., 4], ... means any, include dynamic shape
-//
-// generally, when const0 = c.shape[any:], this pattern would fold successfully
-LogicalResult foldShapeBroadcast(shape::BroadcastOp op,
-                                 PatternRewriter &rewriter);
-} // namespace shape
-
-namespace func {
-class CallOp;
-
-// remove empty function call
-LogicalResult removeEmptyFuncCall(func::CallOp op, PatternRewriter &rewriter);
-} // namespace func
-
 namespace mhlo {
 class ClampOp;
 class ConvertOp;
@@ -116,10 +91,6 @@ LogicalResult canonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
 // simplify byteir.addn => mhlo.add
 LogicalResult simplifyByteIRAddNToAdd(mhlo::CustomCallOp op,
                                       PatternRewriter &rewriter);
-
-// broadcast_in_dim + reshape => broadcast_in_dim
-LogicalResult foldReshapeBroadcastInDim(mhlo::ReshapeOp op,
-                                        PatternRewriter &rewriter);
 
 // populate canonicalizeExt patterns
 void populateCanonicalizeExtPatterns(RewritePatternSet &patterns);

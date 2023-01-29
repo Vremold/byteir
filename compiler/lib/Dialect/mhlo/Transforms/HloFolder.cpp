@@ -21,7 +21,7 @@
 #include "byteir/Dialect/mhlo/Transforms/CanonicalizeExt.h"
 #include "byteir/Dialect/mhlo/Util/Util.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
@@ -35,6 +35,8 @@ using namespace mlir;
 using namespace llvm;
 using namespace ::byteir;
 using namespace mlir::mhlo;
+
+#define K_INITIAL -999
 
 namespace {
 
@@ -205,7 +207,7 @@ struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvolutionOp> {
 // TODO: handle similar cases of dot op followed by mul or add
 //===----------------------------------------------------------------------===//
 
-// Return the expanded constOp if applicable, return None if not.
+// Return the expanded constOp if applicable, return std::nullopt if not.
 // Applicable if all following constraint satisfied:
 // 1. the op's input has static shape
 // 2. op's input rank equals 1, or it is equal to output rank
@@ -213,8 +215,8 @@ struct PadConvToConvPattern : public OpRewritePattern<mhlo::ConvolutionOp> {
 //     it should be euqal to featureDim
 // 4. the input's DefiningOp is of type mhlo::ConstantOp
 // 5. the const op's attr is of type DenseElementsAttr
-Optional<ConstantOp> getBroadcastedConstOp(BroadcastInDimOp op,
-                                           int64_t featureDim) {
+std::optional<ConstantOp> getBroadcastedConstOp(BroadcastInDimOp op,
+                                                int64_t featureDim) {
   Value broadInDimInput = op.getOperand();
   ShapedType broadInDimInpShape = broadInDimInput.getType().cast<ShapedType>();
   Value broadInDimOutput = op->getResult(0);
@@ -222,21 +224,21 @@ Optional<ConstantOp> getBroadcastedConstOp(BroadcastInDimOp op,
 
   // Only need to check the input shape of broadcast_in_dim
   if (!broadInDimInpShape.hasStaticShape())
-    return None;
+    return std::nullopt;
 
   // op's input rank equals 1, or it is equal to output rank
   if (broadInDimInpShape.getRank() == 1) {
     SmallVector<int64_t> broadcastDims;
     int64_t bdim = (*op.getBroadcastDimensions().begin()).getSExtValue();
     if (featureDim != bdim)
-      return None;
+      return std::nullopt;
   } else if (broadInDimInpShape.getRank() == broadInDimOupShape.getRank()) {
-    int64_t nonOneDim = -1;
+    int64_t nonOneDim = K_INITIAL;
     for (int64_t i = 0; i < broadInDimInpShape.getRank(); ++i) {
       int64_t dimSize = broadInDimInpShape.getDimSize(i);
       if (dimSize != 1) {
         if (nonOneDim >= 0)
-          return None;
+          return std::nullopt;
         else {
           nonOneDim = i;
         }
@@ -245,18 +247,18 @@ Optional<ConstantOp> getBroadcastedConstOp(BroadcastInDimOp op,
 
     // There's at most one dim whose size is not equal to 1, and it should be
     // euqal to featureDim.
-    if (nonOneDim != -1 && nonOneDim != featureDim)
-      return None;
+    if (nonOneDim != K_INITIAL && nonOneDim != featureDim)
+      return std::nullopt;
   } else {
-    return None;
+    return std::nullopt;
   }
 
   auto constOp = dyn_cast_or_null<ConstantOp>(broadInDimInput.getDefiningOp());
   if (!constOp)
-    return None;
+    return std::nullopt;
 
   if (!constOp.getValue().dyn_cast_or_null<DenseElementsAttr>())
-    return None;
+    return std::nullopt;
 
   return constOp;
 }
@@ -307,7 +309,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       if (!maybeConstOp.has_value())
         return failure();
 
-      biasConst = maybeConstOp.value();
+      biasConst = *maybeConstOp;
       biasBroadcastInDimOp = broadInDimOp;
     }
 
@@ -323,7 +325,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
       if (!maybeConstOp.has_value())
         return failure();
-      ConstantOp constOp = maybeConstOp.value();
+      ConstantOp constOp = *maybeConstOp;
 
       // Start to construct a new subgraph which could be const folded.
       if (!constOp->isBeforeInBlock(convOp))
@@ -370,7 +372,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
       if (!maybeConstOp.has_value())
         return failure();
-      ConstantOp constOp = maybeConstOp.value();
+      ConstantOp constOp = *maybeConstOp;
 
       // Start to construct a new subgraph which could be const folded.
       if (!constOp->isBeforeInBlock(convOp))
@@ -401,7 +403,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
       if (!maybeConstOp.has_value())
         return failure();
-      ConstantOp constOp = maybeConstOp.value();
+      ConstantOp constOp = *maybeConstOp;
 
       OpBuilder builder(subOp);
       // replace b_const with (- b_const)
@@ -429,7 +431,7 @@ struct ConvOrConvBiasFollowedByBroadcastOp
       auto maybeConstOp = getBroadcastedConstOp(broadInDimOp, featureDim);
       if (!maybeConstOp.has_value())
         return failure();
-      ConstantOp constOp = maybeConstOp.value();
+      ConstantOp constOp = *maybeConstOp;
 
       OpBuilder builder(divOp);
       // replace b_const with 1 / b_const

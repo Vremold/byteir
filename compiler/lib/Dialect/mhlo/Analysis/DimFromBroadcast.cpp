@@ -16,7 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/mhlo/Analysis/DimFromBroadcast.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "llvm/ADT/TypeSwitch.h"
 
 using namespace llvm;

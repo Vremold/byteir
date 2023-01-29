@@ -113,7 +113,7 @@ struct CustomCallOpInterface
     }
 
     auto laceOp = rewriter.create<lace::CustomCallOp>(
-        op->getLoc(), llvm::None, bufferArgs, op->getAttrs());
+        op->getLoc(), std::nullopt, bufferArgs, op->getAttrs());
     laceOp->setAttr(laceOp.getOperandSegmentSizeAttr(),
                     rewriter.getDenseI32ArrayAttr(
                         {static_cast<int32_t>(op->getNumOperands()),

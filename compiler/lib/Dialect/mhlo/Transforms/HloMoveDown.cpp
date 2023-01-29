@@ -24,7 +24,7 @@
 #include "byteir/Utils/AttrUtils.h"
 #include "byteir/Utils/IRRewrite.h"
 #include "byteir/Utils/Utils.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/Pass/Pass.h"
@@ -133,8 +133,8 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
         ElementsAttr oldConstAttr =
             input.getDefiningOp<mhlo::ConstantOp>().getValue();
         auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
-        auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-            op->getLoc(), newConstAttr.value());
+        auto newConstOp =
+            rewriter.create<mhlo::ConstantOp>(op->getLoc(), *newConstAttr);
         bvm.map(input, newConstOp.getOutput());
       }
 
@@ -146,8 +146,8 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       assert(maybeResultTypes.has_value());
 
       // clone an elementwise op as producer
-      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                                    maybeResultTypes.value());
+      auto newProducer =
+          cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
 
       // create transpose op
       rewriter.replaceOpWithNewOp<mhlo::TransposeOp>(
@@ -267,8 +267,8 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         ElementsAttr oldConstAttr =
             input.getDefiningOp<mhlo::ConstantOp>().getValue();
         auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
-        auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-            op->getLoc(), newConstAttr.value());
+        auto newConstOp =
+            rewriter.create<mhlo::ConstantOp>(op->getLoc(), *newConstAttr);
         bvm.map(input, newConstOp.getOutput());
       }
 
@@ -303,8 +303,8 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       assert(maybeResultTypes.has_value());
 
       // clone an elementwise op as producer
-      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                                    maybeResultTypes.value());
+      auto newProducer =
+          cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
 
       // create reshape op
       rewriter.replaceOpWithNewOp<mhlo::ReshapeOp>(user, user->getResultTypes(),
@@ -401,8 +401,8 @@ struct BroadcastMoveDownPattern
         ElementsAttr oldConstAttr =
             input.getDefiningOp<mhlo::ConstantOp>().getValue();
         auto newConstAttr = cloneSplatElementsAttr(oldConstAttr, operandType);
-        auto newConstOp = rewriter.create<mhlo::ConstantOp>(
-            op->getLoc(), newConstAttr.value());
+        auto newConstOp =
+            rewriter.create<mhlo::ConstantOp>(op->getLoc(), *newConstAttr);
         bvm.map(input, newConstOp.getOutput());
       }
 
@@ -414,8 +414,8 @@ struct BroadcastMoveDownPattern
       assert(maybeResultTypes.has_value());
 
       // clone an elementwise op as producer
-      auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                                    maybeResultTypes.value());
+      auto newProducer =
+          cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
 
       // create broadcast op
       rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
@@ -487,8 +487,8 @@ struct BroadcastBinaryMoveDownPattern
     assert(maybeResultTypes.has_value());
 
     rewriter.setInsertionPoint(consumer);
-    auto newProducer = cloneAndReplaceResultTypes(rewriter, consumer, bvm,
-                                                  maybeResultTypes.value());
+    auto newProducer =
+        cloneAndReplaceResultTypes(rewriter, consumer, bvm, *maybeResultTypes);
 
     rewriter.replaceOpWithNewOp<mhlo::BroadcastInDimOp>(
         consumer, consumer->getResultTypes(), newProducer->getResult(0),
@@ -818,8 +818,8 @@ private:
     // maybeResultTypes should always have value
     assert(maybeResultTypes.has_value());
 
-    auto newProducer = cloneAndReplaceResultTypes(rewriter, user, bvm,
-                                                  maybeResultTypes.value());
+    auto newProducer =
+        cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
     for (auto operand : newProducer->getOperands()) {
       const auto parentOp = operand.getDefiningOp();
       if (parentOp && newProducer->isBeforeInBlock(parentOp)) {

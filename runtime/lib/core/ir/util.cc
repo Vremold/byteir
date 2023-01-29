@@ -37,33 +37,33 @@ uint64_t GetStaticBytes(mlir::MemRefType memref) {
 
 // Get total bytes of a value if it is a memref
 // Return None if a value is not a memref
-llvm::Optional<uint64_t> GetStaticBytes(mlir::Value val) {
+std::optional<uint64_t> GetStaticBytes(mlir::Value val) {
   if (auto memref = val.getType().dyn_cast<mlir::MemRefType>()) {
     return GetStaticBytes(memref);
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
 // Get static shape in IR, negative value for unknown
-llvm::Optional<llvm::ArrayRef<int64_t>> GetStaticShape(mlir::Value val) {
+std::optional<llvm::ArrayRef<int64_t>> GetStaticShape(mlir::Value val) {
   if (auto memref = val.getType().dyn_cast<mlir::MemRefType>()) {
     return memref.getShape();
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
-llvm::Optional<uint64_t> GetElementTypeByte(mlir::Value val) {
+std::optional<uint64_t> GetElementTypeByte(mlir::Value val) {
   if (auto memref = val.getType().dyn_cast<mlir::MemRefType>()) {
     return GetElementTypeByte(memref);
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
-llvm::Optional<size_t> GetRank(mlir::Value val) {
+std::optional<size_t> GetRank(mlir::Value val) {
   if (auto memref = val.getType().dyn_cast<mlir::MemRefType>()) {
     return static_cast<size_t>(memref.getRank());
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
 // Get space in IR, empty value for unknown
@@ -74,7 +74,7 @@ std::string GetSpace(mlir::MemRefType memref) {
   return "";
 }
 
-llvm::Optional<std::string> GetSpace(mlir::Value val) {
+std::optional<std::string> GetSpace(mlir::Value val) {
   if (auto memref = val.getType().dyn_cast<mlir::MemRefType>()) {
     if (auto str_attr =
             memref.getMemorySpace().dyn_cast_or_null<StringAttr>()) {
@@ -82,7 +82,7 @@ llvm::Optional<std::string> GetSpace(mlir::Value val) {
     }
     return std::string();
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
 DTypeEnum GetElementDTypeEnum(mlir::Value val) {
@@ -95,7 +95,7 @@ DTypeEnum GetElementDTypeEnum(mlir::Value val) {
   return ConvertMLIRTypeToDType(elementType);
 }
 
-llvm::Optional<int64_t> LinearizedStaticShape(llvm::ArrayRef<int64_t> shape) {
+std::optional<int64_t> LinearizedStaticShape(llvm::ArrayRef<int64_t> shape) {
   int64_t res = 1;
   for (auto d : shape) {
     if (d <= 0) {

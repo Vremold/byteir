@@ -23,6 +23,19 @@
 
 namespace mlir {
 
+namespace func {
+// FIXME: this pattern should move to func dialect
+// populate canonicalizeExt patterns
+void populateCanonicalizeExtPatterns(RewritePatternSet &patterns);
+
+} // namespace func
+
+namespace shape {
+// FIXME: this pattern should move to shape dialect
+// populate canonicalizeExt patterns
+void populateCanonicalizeExtPatterns(RewritePatternSet &patterns);
+} // namespace shape
+
 /// Creates an instance of the CanonicalizeExt pass, configured with default
 /// settings (which can be overridden by pass options on the command line).
 std::unique_ptr<Pass> createCanonicalizeExtPass();
@@ -30,8 +43,8 @@ std::unique_ptr<Pass> createCanonicalizeExtPass();
 /// Creates an instance of the CanonicalizeExt pass with the specified config.
 std::unique_ptr<Pass>
 createCanonicalizeExtPass(const GreedyRewriteConfig &config,
-                          ArrayRef<std::string> disabledPatterns = llvm::None,
-                          ArrayRef<std::string> enabledPatterns = llvm::None);
+                          ArrayRef<std::string> disabledPatterns = std::nullopt,
+                          ArrayRef<std::string> enabledPatterns = std::nullopt);
 
 } // namespace mlir
 

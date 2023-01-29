@@ -19,7 +19,7 @@
 
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/FusionUtil.h"
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"

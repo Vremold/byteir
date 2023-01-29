@@ -57,11 +57,6 @@ void createGPUOptPipelineImpl(OpPassManager &pm, const std::string &target) {
   pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
                                getToGPUAttrName()));
 
-  // TODO add device here after general copy finished
-  // std::string deviceCudaAttr = "device:String:cuda";
-  // pm.addPass(createFuncTagPass(getByteIRElementwiseFusionAttrName(),
-  //                              deviceCudaAttr));
-
   std::string iteratorAttr =
       getLoopToSIMTAttrName().str() + ":String:" + getLinearIdXName().str();
 
@@ -72,18 +67,6 @@ void createGPUOptPipelineImpl(OpPassManager &pm, const std::string &target) {
 
   addCleanUpExtPassPipeline(pm);
   pm.addNestedPass<func::FuncOp>(createGenPTXConfigPass());
-
-  // soft-deprecated the following, since LoopFusionPass is buggy
-  /*
-  pm.addNestedPass<func::FuncOp>(createRewriteAffineToMemrefPass());
-  pm.addNestedPass<func::FuncOp>(createCoalescedForToGPULaunchPass(128));
-  addCleanUpExtPassPipeline(pm);
-  pm.addPass(createLowerAffinePass());
-  pm.addPass(createGpuLauchSinkIndexComputationsPass());
-  pm.addPass(createGpuKernelOutliningPass());
-  pm.addPass(createCSEPass());
-  pm.addNestedPass<func::FuncOp>(createGenPTXConfigPass());
-  */
 }
 
 } // namespace

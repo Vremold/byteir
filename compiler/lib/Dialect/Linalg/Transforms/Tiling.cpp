@@ -52,14 +52,14 @@ LogicalResult linalg_ext::TilingInterfaceBaseTilingPattern::matchAndRewriteBase(
 
   result = *res;
 
-  if (result.tiledOp) {
-    filter.replaceLinalgTransformationFilter(rewriter, result.tiledOp);
+  if (result.tiledOps.back()) {
+    filter.replaceLinalgTransformationFilter(rewriter, result.tiledOps.back());
   }
 
-  if (failed(isValidTiling(result.tiledOp))) {
+  if (failed(isValidTiling(result.tiledOps.back()))) {
     return tilableOp.emitOpError("has invalid tiling");
   }
-  labelTileLoopType(result.tiledOp, result.loops);
+  labelTileLoopType(result.tiledOps.back(), result.loops);
   return success();
 }
 
@@ -79,9 +79,9 @@ LogicalResult linalg_ext::TilingInterfaceTilingPattern::matchAndRewrite(
     return failure();
   }
   // Check for do-nothing case.
-  if (!tiledOp.tiledOp)
+  if (!tiledOp.tiledOps.back())
     return failure();
-  if (tiledOp.tiledOp != tilableOp) {
+  if (tiledOp.tiledOps.back() != tilableOp) {
     if (tiledOp.replacements.empty()) {
       rewriter.eraseOp(tilableOp);
     } else {

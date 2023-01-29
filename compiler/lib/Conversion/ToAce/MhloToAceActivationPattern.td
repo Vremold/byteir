@@ -20,7 +20,7 @@
 
 
 include "byteir/Dialect/Ace/AceOps.td"
-include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.td"
+include "mhlo/IR/hlo_ops.td"
 
 def CreateAceActivateOp : NativeCodeCall<"$_builder.create<mlir::ace::ActivateOp>($_loc, $0.getType(), $1, $2, $3)">;
 def AttrIsZero : Constraint<CPred<"mlir::isZeroAttribute($_self)">>;
@@ -29,9 +29,9 @@ def FPDenseSplatValue : Constraint<CPred<"$_self.dyn_cast<DenseFPElementsAttr>()
 
 
 def MhloToAceReluPattern : Pat<
-  (HLO_MaxOp
+  (MHLO_MaxOp
     $input,
-    (HLO_ConstantOp
+    (MHLO_ConstantOp
       $value
     )
   ),
@@ -39,12 +39,12 @@ def MhloToAceReluPattern : Pat<
   [(AttrIsZero:$value)]>;
 
 def MhloToAceRelu6Pattern : Pat<
-  (HLO_ClampOp
-    (HLO_ConstantOp
+  (MHLO_ClampOp
+    (MHLO_ConstantOp
       $value1
     ),
     $input,
-    (HLO_ConstantOp
+    (MHLO_ConstantOp
       $value2
     )
   ),
@@ -52,18 +52,18 @@ def MhloToAceRelu6Pattern : Pat<
   [(AttrIsZero:$value1), (FPDenseSixValue:$value2)]>;
 
 def MhloToAceLeakyReluPattern : Pat<
-  (HLO_SelectOp:$output
-    (HLO_CompareOp
+  (MHLO_SelectOp:$output
+    (MHLO_CompareOp
       $input,
-      (HLO_ConstantOp $value1),
+      (MHLO_ConstantOp $value1),
       // HLO_COMPARISON_DIRECTION_GT, TODO: fix this at mlir-tblgen
-      ConstantAttr<HLO_ComparisonDirectionAttr, "mhlo::ComparisonDirection::GT">:$comparion_direction,
+      ConstantAttr<MHLO_ComparisonDirectionAttr, "mhlo::ComparisonDirection::GT">:$comparion_direction,
       $_
     ),
     $input,
-    (HLO_MulOp
+    (MHLO_MulOp
       $input,
-      (HLO_ConstantOp $value2)
+      (MHLO_ConstantOp $value2)
     )
   ),
   (CreateAceActivateOp $output, $input, (NativeCodeCall<"$_builder.getStringAttr(\"leaky_relu\")">),

@@ -116,7 +116,7 @@ bool mlir::confirmGEUpperBound(Value val, LoopLikeOpInterface looplike) {
     auto maybeUBI64 = getLiteralFromConstantLike(ub);
     if (!maybeUBI64.has_value())
       return false;
-    return maybeValI64.value() >= maybeUBI64.value();
+    return *maybeValI64 >= *maybeUBI64;
   }
 
   return false;
@@ -178,17 +178,17 @@ void mlir::addLoopLowerBound(OpBuilder &b, LoopLikeOpInterface looplike,
   }
 }
 
-Optional<uint64_t> mlir::getConstantTripCount(LoopLikeOpInterface looplike,
-                                              int64_t stepMultiplier) {
+std::optional<uint64_t> mlir::getConstantTripCount(LoopLikeOpInterface looplike,
+                                                   int64_t stepMultiplier) {
   // TODO add support for ohter loop
   if (auto forOp = dyn_cast<scf::ForOp>(looplike.getOperation())) {
     return getConstantTripCount(forOp, stepMultiplier);
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
-Optional<uint64_t> mlir::getConstantTripCount(scf::ForOp forOp,
-                                              int64_t stepMultiplier) {
+std::optional<uint64_t> mlir::getConstantTripCount(scf::ForOp forOp,
+                                                   int64_t stepMultiplier) {
   auto lbCstOp = forOp.getLowerBound().getDefiningOp<arith::ConstantIndexOp>();
   auto ubCstOp = forOp.getUpperBound().getDefiningOp<arith::ConstantIndexOp>();
   auto stepCstOp = forOp.getStep().getDefiningOp<arith::ConstantIndexOp>();
@@ -205,7 +205,7 @@ Optional<uint64_t> mlir::getConstantTripCount(scf::ForOp forOp,
     if (tripCnt >= 0)
       return tripCnt;
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
 namespace {
@@ -250,12 +250,12 @@ static bool isHoistableOp(Operation *op) {
 
 } // namespace
 
-llvm::Optional<scf::ForOp>
+std::optional<scf::ForOp>
 mlir::createTrivialSCFForIfHaveNone(func::FuncOp funcOp) {
 
-  // if having scf::ForOp return None
+  // if having scf::ForOp return nullopt
   if (!funcOp.getOps<scf::ForOp>().empty()) {
-    return llvm::None;
+    return std::nullopt;
   }
 
   Operation *insertPt = nullptr;
@@ -273,7 +273,7 @@ mlir::createTrivialSCFForIfHaveNone(func::FuncOp funcOp) {
   }
 
   if (insertPt == nullptr)
-    return llvm::None;
+    return std::nullopt;
 
   OpBuilder b(insertPt);
   auto loc = insertPt->getLoc();
@@ -292,17 +292,15 @@ LogicalResult mlir::loopUnrollFull(scf::ForOp forOp, StringRef annotationAttr) {
   auto mayBeConstantCount = getConstantTripCount(forOp);
   if (!mayBeConstantCount.has_value())
     return failure();
-  return loopUnrollByFactor(forOp, mayBeConstantCount.value(), annotationAttr);
+  return loopUnrollByFactor(forOp, *mayBeConstantCount, annotationAttr);
 }
 
 LogicalResult mlir::loopUnrollUpToFactor(scf::ForOp forOp,
                                          uint64_t unrollFactor,
                                          StringRef annotationAttr) {
   auto mayBeConstantCount = getConstantTripCount(forOp);
-  if (mayBeConstantCount.has_value() &&
-      mayBeConstantCount.value() <= unrollFactor) {
-    return loopUnrollByFactor(forOp, mayBeConstantCount.value(),
-                              annotationAttr);
+  if (mayBeConstantCount.has_value() && *mayBeConstantCount <= unrollFactor) {
+    return loopUnrollByFactor(forOp, *mayBeConstantCount, annotationAttr);
   }
   return loopUnrollByFactor(forOp, unrollFactor, annotationAttr);
 }
