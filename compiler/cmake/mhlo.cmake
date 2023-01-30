@@ -4,7 +4,9 @@ add_subdirectory(${REPO_ROOT_DIR}/../external/mlir-hlo ${CMAKE_CURRENT_BINARY_DI
 
 # FIXME: remove this when upstream fix
 target_link_libraries(MhloDialect PUBLIC StablehloTypeInference StablehloAssemblyFormat)
+target_link_libraries(GmlStTilingInterface PUBLIC GmlStDialect)
 target_link_libraries(GmlStPasses PUBLIC MLIRGmlStUtils)
+target_link_libraries(THLODialect PUBLIC GmlStTilingInterface)
 
 include_directories(${REPO_ROOT_DIR}/../external/mlir-hlo)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo)
