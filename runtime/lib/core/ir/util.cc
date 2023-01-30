@@ -36,7 +36,7 @@ uint64_t GetStaticBytes(mlir::MemRefType memref) {
 }
 
 // Get total bytes of a value if it is a memref
-// Return None if a value is not a memref
+// Return std::nullopt if a value is not a memref
 std::optional<uint64_t> GetStaticBytes(mlir::Value val) {
   if (auto memref = val.getType().dyn_cast<mlir::MemRefType>()) {
     return GetStaticBytes(memref);
@@ -99,7 +99,7 @@ std::optional<int64_t> LinearizedStaticShape(llvm::ArrayRef<int64_t> shape) {
   int64_t res = 1;
   for (auto d : shape) {
     if (d <= 0) {
-      return llvm::None;
+      return std::nullopt;
     }
     res *= d;
   }
