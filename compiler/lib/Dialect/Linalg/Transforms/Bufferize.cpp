@@ -67,6 +67,7 @@ struct LinalgExtBufferizePass
                     tensor::TensorDialect, linalg::LinalgDialect,
                     linalg_ext::LinalgExtDialect>();
 
+    linalg::registerBufferizableOpInterfaceExternalModels(registry);
     linalg_ext::registerBufferizableOpInterfaceExternalModels(registry);
   }
 };

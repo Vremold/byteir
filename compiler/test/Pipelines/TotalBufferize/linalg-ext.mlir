@@ -18,7 +18,6 @@ module {
         //CHECK-DAG: %[[S:.+]] = memref.subview %[[ARG0]][%[[ARG3]], 0] [4, 32]
         //CHECK-DAG: %[[S0:.+]] = memref.subview %[[ARG1]][0, %[[ARG4]]] [32, 8]
         //CHECK-DAG: %[[A1:.+]] = memref.alloc() : memref<4x8xf32>
-        //CHECK-DAG: %[[S2:.+]] = memref.subview %[[ARG2]][%[[ARG4]], 0] [8, 32]
         //CHECK-DAG: %[[S3:.+]] = memref.subview %[[A]][%[[ARG3]], 0] [4, 32]     
         %extracted_slice = tensor.extract_slice %arg0[%arg3, 0] [4, 32] [1, 1] : tensor<1024x32xf32> to tensor<4x32xf32>
         %extracted_slice_0 = tensor.extract_slice %arg1[0, %arg5] [32, 8] [1, 1] : tensor<32x512xf32> to tensor<32x8xf32>
@@ -27,6 +26,7 @@ module {
         //CHECK-SAME: ins(%[[S]], %[[S0]] : {{.+}}) outs(%[[A1]] : {{.+}})
         %4 = linalg.matmul ins(%extracted_slice, %extracted_slice_0 : tensor<4x32xf32>, tensor<32x8xf32>) outs(%3 : tensor<4x8xf32>) -> tensor<4x8xf32>
         %extracted_slice_1 = tensor.extract_slice %arg2[%arg5, 0] [8, 32] [1, 1] : tensor<512x32xf32> to tensor<8x32xf32>
+        //CHECK: %[[S2:.+]] = memref.subview %[[ARG2]][%[[ARG4]], 0] [8, 32]
         %extracted_slice_2 = tensor.extract_slice %arg6[%arg3, 0] [4, 32] [1, 1] : tensor<1024x32xf32> to tensor<4x32xf32>
         //CHECK: linalg.matmul
         //CHECK-SAME: ins(%[[A1]], %[[S2]] : {{.+}}) outs(%[[S3]] : {{.+}})
@@ -60,7 +60,6 @@ module {
         //CHECK-DAG: %[[S:.+]] = memref.subview %[[ARG0]][%[[ARG4]], %[[ARG3]]] [4, 8]
         //CHECK-DAG: %[[S0:.+]] = memref.subview %[[A]][%[[ARG4]], %[[ARG3]]] [4, 8]
         //CHECK-DAG: %[[S1:.+]] = memref.subview %[[ARG1]][%[[ARG4]], %[[ARG3]]] [4, 8]
-        //CHECK-DAG: %[[S2:.+]] = memref.subview %[[ARG2]][%[[ARG4]], %[[ARG3]]] [4, 8]     
         %extracted_slice = tensor.extract_slice %arg0[%arg5, %arg3] [4, 8] [1, 1] : tensor<1024x512xf32> to tensor<4x8xf32>
         %extracted_slice_0 = tensor.extract_slice %arg1[%arg5, %arg3] [4, 8] [1, 1] : tensor<1024x512xf32> to tensor<4x8xf32>
         //CHECK: %[[A3:.+]] = memref.alloc() : memref<4x8xf32>
@@ -69,6 +68,7 @@ module {
         //CHECK-SAME: ins(%[[S]], %[[S1]] : {{.+}}) outs(%[[A3]] : {{.+}})
         %4 = linalg.elemwise_binary ins(%extracted_slice, %extracted_slice_0 : tensor<4x8xf32>, tensor<4x8xf32>) outs(%3 : tensor<4x8xf32>) -> tensor<4x8xf32>
         %extracted_slice_1 = tensor.extract_slice %arg1[%arg5, %arg3] [4, 8] [1, 1] : tensor<1024x512xf32> to tensor<4x8xf32>
+        //CHECK: %[[S2:.+]] = memref.subview %[[ARG2]][%[[ARG4]], %[[ARG3]]] [4, 8]
         %extracted_slice_2 = tensor.extract_slice %arg2[%arg5, %arg3] [4, 8] [1, 1] : tensor<1024x512xf32> to tensor<4x8xf32>
         //CHECK: %[[A4:.+]] = memref.alloc() : memref<4x8xf32>
         %5 = tensor.empty() : tensor<4x8xf32>
@@ -231,8 +231,6 @@ func.func @fuse_dot_attention(%arg0: tensor<1024x32xf32>, %arg1: tensor<32x512xf
     %6:3 = scf.for %arg7 = %c0 to %c1024 step %c4 iter_args(%arg8 = %arg4, %arg9 = %arg5, %arg10 = %arg6) -> (tensor<1024x32xf32>, tensor<1024xf32>, tensor<1024xf32>) {
       //CHECK-DAG: %[[S:.+]] = memref.subview %[[ARG0]][%[[ARG4]], 0] [4, 32]
       //CHECK-DAG: %[[A3:.+]] = memref.alloc() : memref<4x32xf32>
-      //CHECK-DAG: %[[S4:.+]] = memref.subview %[[A1]][%[[ARG4]], 0] [4, 32] 
-      //CHECK-DAG: %[[S5:.+]] = memref.subview %[[ARG2]][%[[ARG3]], 0] [8, 32]
       //CHECK-DAG: %[[S6:.+]] = memref.subview %[[A2]][%[[ARG4]]] [4]
       //CHECK-DAG: %[[S7:.+]] = memref.subview %[[A]][%[[ARG4]]] [4]
       //CHECK-DAG: %[[A8:.+]] = memref.alloc() : memref<4x8xf32>
@@ -256,6 +254,8 @@ func.func @fuse_dot_attention(%arg0: tensor<1024x32xf32>, %arg1: tensor<32x512xf
       %11:4 = linalg_ext.softmax dimension(1) ins(%9 : tensor<4x8xf32>) outs(%7, %extracted_slice_2, %extracted_slice_3, %10 : tensor<4x8xf32>, tensor<4xf32>, tensor<4xf32>, tensor<4xf32>) : tensor<4x8xf32>, tensor<4xf32>, tensor<4xf32>, tensor<4xf32>
       %extracted_slice_4 = tensor.extract_slice %arg2[%arg3, 0] [8, 32] [1, 1] : tensor<512x32xf32> to tensor<8x32xf32>
       %extracted_slice_5 = tensor.extract_slice %arg8[%arg7, 0] [4, 32] [1, 1] : tensor<1024x32xf32> to tensor<4x32xf32>
+      //CHECK-DAG: %[[S4:.+]] = memref.subview %[[A1]][%[[ARG4]], 0] [4, 32] 
+      //CHECK-DAG: %[[S5:.+]] = memref.subview %[[ARG2]][%[[ARG3]], 0] [8, 32]
       //CHECK: %[[A12:.+]] = memref.alloc() : memref<4x4xf32>
       %12 = tensor.empty() : tensor<4x4xf32>
       //CHECK: linalg_ext.diag

@@ -48,8 +48,8 @@ void mlir::createByteIRTotalBufferizePipeline(
         }
         pm.addNestedPass<func::FuncOp>(createSCFBufferizePass());
         pm.addNestedPass<func::FuncOp>(vector::createVectorBufferizePass());
-        pm.addNestedPass<func::FuncOp>(createLinalgExtBufferizePass());
         pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
+        pm.addNestedPass<func::FuncOp>(createLinalgExtBufferizePass());
         addCleanUpExtPassPipeline(pm);
 
         // clean-up possible redundant copy from bufferization
