@@ -27,7 +27,9 @@ class ModuleOp;
 
 std::unique_ptr<OperationPass<ModuleOp>>
 createTransformInsertionPass(const std::string &funcAnchor = "",
-                             const std::string &matchPrefix = "unknown");
+                             const std::string &matchPrefix = "unknown",
+                             const std::string &tileSizeAttrName = "",
+                             const std::string &tileInterchangeAttrName = "");
 
 } // namespace mlir
 

@@ -44,6 +44,12 @@ def TransformInsertion : Pass<"transform-insertion", "ModuleOp"> {
     Option<"matchPrefix", "match-prefix", "std::string",
             /*default=*/"",
             "An optional match prefix attribute on target ops.">,
+    Option<"tileSizeAttrName", "tile-size-attr-name", "std::string",
+            /*default=*/"",
+            "Tile size attribute name.">,
+    Option<"tileInterchangeAttrName", "tile-interchange-attr-name", "std::string",
+            /*default=*/"",
+            "Tile interchange attribute name.">,
   ];
 }
 

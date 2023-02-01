@@ -27,11 +27,13 @@
 #include "mlir/Dialect/Transform/IR/TransformOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Operation.h"
 #include <optional>
+#include <vector>
 
 #include "PassDetail.h"
 
@@ -44,8 +46,8 @@ static int tilingCount = 0;
 
 struct TilingMetadata {
   // Tiling info
-  SmallVector<int64_t> tileSizes;
-  SmallVector<int64_t> tileInterchange;
+  SmallVector<int64_t, 4> tileSizes;
+  SmallVector<int64_t, 4> tileInterchange;
   // Tiling annotation for matchOp
   std::string annotation;
 };
@@ -53,10 +55,14 @@ struct TilingMetadata {
 struct TransformInsertionPass
     : public TransformInsertionBase<TransformInsertionPass> {
 
-  TransformInsertionPass(const std::string &anchor, const std::string &prefix)
+  TransformInsertionPass(const std::string &anchor, const std::string &prefix,
+                         const std::string &tileSizeAttrName,
+                         const std::string &tileInterchangeAttrName)
       : TransformInsertionBase<TransformInsertionPass>() {
     this->funcAnchorAttr = anchor;
     this->matchPrefix = prefix;
+    this->tileSizeAttrName = tileSizeAttrName;
+    this->tileInterchangeAttrName = tileInterchangeAttrName;
   }
 
   void runOnOperation() override;
@@ -67,29 +73,47 @@ struct TransformInsertionPass
   }
 };
 
-std::optional<TilingMetadata> getTilingMetadata(Value value,
-                                                const std::string &prefix) {
+std::optional<TilingMetadata>
+getTilingMetadata(Value value, const std::string &prefix,
+                  const std::string &tileSizeAttrName,
+                  const std::string &tileInterchangeAttrName) {
   if (!value.getDefiningOp())
     return std::nullopt;
 
-  // TODO: use real tile sizes and tile interchange. Get this from Op attr.
+  auto op = value.getDefiningOp();
+  SmallVector<int64_t, 4> tileSizes = {};
+  SmallVector<int64_t, 4> tileInterchange = {};
+  if (auto tileSizesAttr = op->getAttrOfType<ArrayAttr>(tileSizeAttrName)) {
+    tileSizes = extractFromI64ArrayAttr(tileSizesAttr);
+  }
+  if (auto tileInterchangeAttr =
+          op->getAttrOfType<ArrayAttr>(tileInterchangeAttrName)) {
+    tileInterchange = extractFromI64ArrayAttr(tileInterchangeAttr);
+  }
+
+  if (tileSizes.empty())
+    tileSizes = {1};
+
   TilingMetadata metadata;
-  metadata.tileSizes = {1};
-  metadata.tileInterchange = {};
+  metadata.tileSizes = tileSizes;
+  metadata.tileInterchange = tileInterchange;
   metadata.annotation = prefix + std::to_string(tilingCount);
   tilingCount++;
   return metadata;
 }
 
 // TODO maybe move to public
-void InsertTransformIR(func::FuncOp funcOp, OpBuilder &b, StringRef prefix) {
+void InsertTransformIR(func::FuncOp funcOp, OpBuilder &b, StringRef prefix,
+                       const std::string &tileSizeAttrName,
+                       const std::string &tileInterchangeAttrName) {
   Operation *retOp = funcOp.getBody().front().getTerminator();
   MLIRContext *ctx = b.getContext();
 
   // only support 1 output for now
   assert(retOp->getNumOperands() == 1);
   Value operand = retOp->getOperand(0);
-  auto tilingMetadata = getTilingMetadata(operand, prefix.str());
+  auto tilingMetadata = getTilingMetadata(
+      operand, prefix.str(), tileSizeAttrName, tileInterchangeAttrName);
   if (!tilingMetadata.has_value())
     return;
 
@@ -130,7 +154,8 @@ void TransformInsertionPass::runOnOperation() {
     if (!funcAnchorAttr.empty() && !funcOp->hasAttr(funcAnchorAttr)) {
       continue;
     }
-    InsertTransformIR(funcOp, builder, matchPrefix);
+    InsertTransformIR(funcOp, builder, matchPrefix, this->tileSizeAttrName,
+                      this->tileInterchangeAttrName);
   }
 }
 
@@ -138,6 +163,9 @@ void TransformInsertionPass::runOnOperation() {
 
 std::unique_ptr<OperationPass<ModuleOp>>
 mlir::createTransformInsertionPass(const std::string &funcAnchor,
-                                   const std::string &matchPrefix) {
-  return std::make_unique<TransformInsertionPass>(funcAnchor, matchPrefix);
+                                   const std::string &matchPrefix,
+                                   const std::string &tileSizeAttrName,
+                                   const std::string &tileInterchangeAttrName) {
+  return std::make_unique<TransformInsertionPass>(
+      funcAnchor, matchPrefix, tileSizeAttrName, tileInterchangeAttrName);
 }
