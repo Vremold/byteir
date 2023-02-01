@@ -76,9 +76,9 @@ WRAP_LIST(WRAP)
   RETURN_IF_NULLPTR_WITH_RESULT(var, stmt, {})
 
 template <typename X, typename OP> X getOnePossibleOp(OP op) {
-  return op.A().template getDefiningOp<X>() != nullptr
-             ? op.A().template getDefiningOp<X>()
-             : op.B().template getDefiningOp<X>();
+  return op.getA().template getDefiningOp<X>() != nullptr
+             ? op.getA().template getDefiningOp<X>()
+             : op.getB().template getDefiningOp<X>();
 }
 
 /// attribute names
@@ -149,10 +149,11 @@ Value createL2Norm(PatternRewriter &rewriter, Location loc, Value input,
   std::string call_target_name = getL2NormNameWithPrefix();
   mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
       loc, llvm::ArrayRef<Type>{inputType}, llvm::ArrayRef<Value>{input},
-      call_target_name, false, "",
+      call_target_name, false, rewriter.getStringAttr(""),
       mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
-      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
-      nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
+      mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
   DictionaryAttrWrapper attrs(rewriter.getContext());
   attrs.setAttr("epsilon", rewriter.getF64FloatAttr(epsilon));
   attrs.setAttr("axis", rewriter.getI64ArrayAttr({axis}));
@@ -190,9 +191,11 @@ Value createQuantizeDequantize(PatternRewriter &rewriter, Location loc,
   mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
       loc, llvm::ArrayRef<Type>{outputType},
       llvm::ArrayRef<Value>{input, scale, zero_point}, call_target_name, false,
-      "", mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
-      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
-      nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+      rewriter.getStringAttr(""),
+      mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
+      mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
   DictionaryAttrWrapper attrs(rewriter.getContext());
   if (scaleType.getRank() != 0) {
     // per-channel quantization
@@ -221,10 +224,11 @@ Value createSoftmax(PatternRewriter &rewriter, Location loc, Value input,
   std::string call_target_name = getSoftmaxNameWithPrefix();
   mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
       loc, llvm::ArrayRef<Type>{inputType}, llvm::ArrayRef<Value>{input},
-      call_target_name, false, "",
+      call_target_name, false, rewriter.getStringAttr(""),
       mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
-      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
-      nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
+      mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
   DictionaryAttrWrapper attrs(rewriter.getContext());
   attrs.setAttr("axis", rewriter.getI64IntegerAttr(axis));
   customCallOp->setAttr(BYTEIR_ATTRS, getCleanAttr(attrs));
@@ -240,15 +244,15 @@ Value createSoftmax(PatternRewriter &rewriter, Location loc, Value input,
 SmallVector<Value> likeGeluPattern(ONNXMulOp lastMulOp) {
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(fistMulOp,
                                       getOnePossibleOp<ONNXMulOp>(lastMulOp));
-  RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(addOp,
-                                      fistMulOp.B().getDefiningOp<ONNXAddOp>());
+  RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(
+      addOp, fistMulOp.getB().getDefiningOp<ONNXAddOp>());
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(erfOp,
                                       getOnePossibleOp<ONNXErfOp>(addOp));
-  RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(divOp,
-                                      erfOp.input().getDefiningOp<ONNXDivOp>());
-  Value geluInput = divOp.A();
-  if (fistMulOp.A().getDefiningOp() != geluInput.getDefiningOp() &&
-      fistMulOp.B().getDefiningOp() != geluInput.getDefiningOp()) {
+  RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(
+      divOp, erfOp.getInput().getDefiningOp<ONNXDivOp>());
+  Value geluInput = divOp.getA();
+  if (fistMulOp.getA().getDefiningOp() != geluInput.getDefiningOp() &&
+      fistMulOp.getB().getDefiningOp() != geluInput.getDefiningOp()) {
     return {};
   }
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(
@@ -257,9 +261,9 @@ SmallVector<Value> likeGeluPattern(ONNXMulOp lastMulOp) {
                                       getOnePossibleOp<ONNXConstantOp>(addOp));
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(divisorConstantOp,
                                       getOnePossibleOp<ONNXConstantOp>(divOp));
-  ElementsAttr multiplierValue = multiplierConstantOp.value().value();
-  ElementsAttr oneValue = oneConstantOp.value().value();
-  ElementsAttr divisorValue = divisorConstantOp.value().value();
+  ElementsAttr multiplierValue = multiplierConstantOp.getValue().value();
+  ElementsAttr oneValue = oneConstantOp.getValue().value();
+  ElementsAttr divisorValue = divisorConstantOp.getValue().value();
   if (multiplierValue.getNumElements() != 1 || oneValue.getNumElements() != 1 ||
       divisorValue.getNumElements() != 1) {
     return {};
@@ -287,10 +291,12 @@ struct RewriteGelu : public OpRewritePattern<ONNXMulOp> {
 
     std::string call_target_name = getGeluNameWithPrefix();
     mhlo::CustomCallOp customCallOp = rewriter.create<mhlo::CustomCallOp>(
-        op->getLoc(), op->getResultTypes(), args, call_target_name, false, "",
+        op->getLoc(), op->getResultTypes(), args, call_target_name, false,
+        rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
-        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
-        nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
+        mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
+        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
     DictionaryAttrWrapper attrs(op->getContext());
     attrs.setAttr("approximate", rewriter.getStringAttr("erf"));
     customCallOp->setAttr(BYTEIR_ATTRS, getCleanAttr(attrs));
@@ -311,21 +317,22 @@ SmallVector<Value> likeLayerNormPattern(ONNXAddOp lastAddOp, double &eps,
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(divOp,
                                       getOnePossibleOp<ONNXDivOp>(mulOp));
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(sqrtOp,
-                                      divOp.B().getDefiningOp<ONNXSqrtOp>());
+                                      divOp.getB().getDefiningOp<ONNXSqrtOp>());
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(addOp,
-                                      sqrtOp.X().getDefiningOp<ONNXAddOp>());
+                                      sqrtOp.getX().getDefiningOp<ONNXAddOp>());
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(
       reduceMeanOp, getOnePossibleOp<ONNXReduceMeanOp>(addOp));
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(
-      powOp, reduceMeanOp.data().getDefiningOp<ONNXPowOp>());
+      powOp, reduceMeanOp.getData().getDefiningOp<ONNXPowOp>());
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(subOp,
-                                      powOp.X().getDefiningOp<ONNXSubOp>());
+                                      powOp.getX().getDefiningOp<ONNXSubOp>());
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(
-      firstReduceMeanOp, subOp.B().getDefiningOp<ONNXReduceMeanOp>());
-  if (divOp.A().getDefiningOp() != subOp) {
+      firstReduceMeanOp, subOp.getB().getDefiningOp<ONNXReduceMeanOp>());
+  if (divOp.getA().getDefiningOp() != subOp) {
     return {};
   }
-  if (subOp.A().getDefiningOp() != firstReduceMeanOp.data().getDefiningOp()) {
+  if (subOp.getA().getDefiningOp() !=
+      firstReduceMeanOp.getData().getDefiningOp()) {
     return {};
   }
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(
@@ -334,20 +341,20 @@ SmallVector<Value> likeLayerNormPattern(ONNXAddOp lastAddOp, double &eps,
                                       getOnePossibleOp<ONNXConstantOp>(mulOp));
   RETURN_IF_NULLPTR_WITH_EMPTY_VECTOR(epsConstantOp,
                                       getOnePossibleOp<ONNXConstantOp>(addOp));
-  Value input = firstReduceMeanOp.data(), gamma = gammaConstantOp.output(),
-        beta = betaConstantOp.output();
+  Value input = firstReduceMeanOp.getData(),
+        gamma = gammaConstantOp.getOutput(), beta = betaConstantOp.getOutput();
 
   // get eps
-  ElementsAttr epsValue = epsConstantOp.value().value();
+  ElementsAttr epsValue = epsConstantOp.getValue().value();
   if (epsValue.getNumElements() != 1) {
     return {};
   }
   eps = (*epsValue.getValues<APFloat>().begin()).convertToDouble();
   // get axis
-  ArrayAttr axisAttrs = reduceMeanOp.axesAttr();
-  ArrayAttr firstAxisAttrs = firstReduceMeanOp.axesAttr();
-  if (!axisAttrs || !firstAxisAttrs || reduceMeanOp.axesAttr().size() != 1 ||
-      firstReduceMeanOp.axesAttr().size() != 1) {
+  ArrayAttr axisAttrs = reduceMeanOp.getAxesAttr();
+  ArrayAttr firstAxisAttrs = firstReduceMeanOp.getAxesAttr();
+  if (!axisAttrs || !firstAxisAttrs || reduceMeanOp.getAxesAttr().size() != 1 ||
+      firstReduceMeanOp.getAxesAttr().size() != 1) {
     return {};
   }
   axis = axisAttrs.begin()->cast<IntegerAttr>().getInt();
@@ -390,10 +397,12 @@ struct RewriteLayerNorm : public OpRewritePattern<ONNXAddOp> {
 
     std::string call_target_name = getLayerNormNameWithPrefix();
     mhlo::CustomCallOp customCallOp = rewriter.create<mhlo::CustomCallOp>(
-        op->getLoc(), op->getResultTypes(), args, call_target_name, false, "",
+        op->getLoc(), op->getResultTypes(), args, call_target_name, false,
+        rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
-        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
-        nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
+        mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
+        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
     DictionaryAttrWrapper attrs(op->getContext());
     attrs.setAttr("epsilon", rewriter.getF64FloatAttr(eps));
     attrs.setAttr("axis", rewriter.getI64ArrayAttr({axis}));
@@ -414,27 +423,28 @@ struct RewriteMathArg : public OpRewritePattern<Op> {
   LogicalResult matchAndRewrite(Op op,
                                 PatternRewriter &rewriter) const override {
     OpAdaptor operandAdaptor(op->getOperands(), op->getAttrDictionary());
-    int64_t axis = operandAdaptor.axis();
+    int64_t axis = operandAdaptor.getAxis();
     if (axis < 0) {
       return op->emitError()
              << Op::getOperationName()
              << " with axis < 0 cannot be converted to CustomCallOp";
     }
-    bool keepDims = operandAdaptor.keepdims();
+    bool keepDims = operandAdaptor.getKeepdims();
     if (keepDims) {
       return op->emitError()
              << Op::getOperationName()
              << " with keepdims=true cannot be converted to CustomCallOp";
     }
-    bool selectLastIndex = operandAdaptor.select_last_index();
+    bool selectLastIndex = operandAdaptor.getSelectLastIndex();
 
     std::string call_target_name = WrapName<Op>::call_target_name;
     mhlo::CustomCallOp customCallOp = rewriter.create<mhlo::CustomCallOp>(
-        op->getLoc(), op->getResultTypes(), operandAdaptor.data(),
-        call_target_name, false, "",
+        op->getLoc(), op->getResultTypes(), operandAdaptor.getData(),
+        call_target_name, false, rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
-        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
-        nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
+        mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
+        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
     DictionaryAttrWrapper attrs(op->getContext());
     attrs.setAttr("axis", rewriter.getI64IntegerAttr(axis));
     attrs.setAttr("keep_dims", rewriter.getBoolAttr(keepDims));
@@ -458,9 +468,11 @@ struct RewriteSimpleReplace : public OpRewritePattern<Op> {
     std::string call_target_name = WrapName<Op>::call_target_name;
     mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
         op->getLoc(), op->getResultTypes(), op->getOperands(), call_target_name,
-        false, "", mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
-        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}), nullptr,
-        nullptr, rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+        false, rewriter.getStringAttr(""),
+        mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
+        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
+        mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
+        rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
     ResultRange result = customCallOp->getResults();
     rewriter.replaceOp(op, result);
     return success();

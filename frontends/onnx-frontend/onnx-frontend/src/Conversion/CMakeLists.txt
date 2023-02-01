@@ -15,6 +15,6 @@ add_onnx_frontend_library(OFConversion
   OFRewriteToCustomCallIncGen
 
   LINK_LIBS PUBLIC
-  CompilerUtils  # from onnx-mlir
+  OMCompilerUtils  # from onnx-mlir
   OFSupport
   )

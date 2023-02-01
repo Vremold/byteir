@@ -15,7 +15,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "mlir-hlo/Dialect/mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Pass/PassManager.h"

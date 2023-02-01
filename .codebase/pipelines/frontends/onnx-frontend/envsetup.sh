@@ -8,7 +8,7 @@ echo "ONNX_FRONTEND_ROOT = $ONNX_FRONTEND_ROOT"
 function download_llvm_prebuilt_rtti() {
   pushd $BYTEIR_ROOT
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_rtti_74fb770de9399d7258a8eda974c93610cfde698e.tar.gz"
+    LLVM_BUILD="llvm_install_rtti_9acc2f37bdfce08ca0c2faec03392db10d1bb7a9.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install_rtti*
       rm -rf llvm_build_rtti
@@ -27,7 +27,7 @@ function of_envsetup() {
   export no_proxy='*.byted.org'
 
   # install requirements
-  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.6-cp37-cp37m-linux_x86_64.whl
+  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.7-cp37-cp37m-linux_x86_64.whl
   python3 -m pip install -r $ONNX_FRONTEND_ROOT/requirements.txt
 
   # init submodule
@@ -36,7 +36,7 @@ function of_envsetup() {
   git submodule update -f $ONNX_MLIR_ROOT
   pushd $ONNX_MLIR_ROOT
   git clean -fd .
-  git apply ../patches/ClipAvgpoolConvtransposeElementwise.patch
+  git apply ../patches/ConstantDequantize.patch
   git apply ../patches/Pad.patch
   git apply ../patches/ShapeInference.patch
   popd
@@ -81,8 +81,10 @@ function of_test_lit() {
 
 function of_test_models() {
   pushd $ONNX_FRONTEND_ROOT
-  LARGE_MODEL_PATH=$BYTEIR_ROOT/../bdaimodels/onnx/onnx_frontend/ \
-      python3 -m pytest $ONNX_FRONTEND_ROOT/test/ -s
+  export LARGE_MODEL_PATH=$BYTEIR_ROOT/../bdaimodels/onnx/onnx_frontend/
+  python3 -m pytest $ONNX_FRONTEND_ROOT/test/ops -s
+  python3 -m pytest $ONNX_FRONTEND_ROOT/test/models -s
+  unset LARGE_MODEL_PATH
   popd
 }
 

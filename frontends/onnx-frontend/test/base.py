@@ -55,6 +55,7 @@ class TestBase:
         cmd_opts.append(onnx_path)
         cmd_opts.append(f"-custom-call-ops={','.join(CUSTOM_CALL_OPS)}")
         cmd_opts.append("-invokeOnnxVersionConverter")
+        cmd_opts.append("-mlir-print-op-generic")
         # cmd_opts.append(f"-o={mhlo_ir_path}")
         p = subprocess.run(
             cmd_opts, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)

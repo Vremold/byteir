@@ -31,6 +31,8 @@ endif()
 
 set(ONNX_MLIR_ENABLE_MHLO ON)
 add_subdirectory(third_party/onnx-mlir EXCLUDE_FROM_ALL)
+include_directories(${ONNX_FRONTEND_SRC_ROOT}/third_party/onnx-mlir/third_party/mlir-hlo)
+include_directories(${ONNX_FRONTEND_BIN_ROOT}/third_party/onnx-mlir/third_party/mlir-hlo)
 
 # Ensure warnings are reported for onnx-frontend code.
 if (ONNX_FRONTEND_SUPPRESS_THIRD_PARTY_WARNINGS)

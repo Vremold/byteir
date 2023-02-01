@@ -1,0 +1,40 @@
+diff --git a/src/Conversion/ONNXToMhlo/Tensor/Constant.cpp b/src/Conversion/ONNXToMhlo/Tensor/Constant.cpp
+index 910c0d40..49ebfee0 100644
+--- a/src/Conversion/ONNXToMhlo/Tensor/Constant.cpp
++++ b/src/Conversion/ONNXToMhlo/Tensor/Constant.cpp
+@@ -13,6 +13,7 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "src/Conversion/ONNXToMhlo/ONNXToMhloCommon.hpp"
++#include "src/Dialect/ONNX/ElementsAttr/DisposableElementsAttr.hpp"
+ 
+ using namespace mlir;
+ 
+@@ -32,8 +33,12 @@ struct ONNXConstantOpLoweringToMhlo : public ConversionPattern {
+     if (constantOp.getSparseValue().has_value())
+       return constantOp.emitWarning("Only support dense values at this time");
+     assert(constantOp.getValue().has_value() && "Value is not set");
+-    Value result =
+-        rewriter.create<mhlo::ConstantOp>(loc, constantOp.getValue().value());
++    Value result;
++    auto attr = constantOp.getValue().value();
++    if (auto disposable = attr.dyn_cast<DisposableElementsAttr>())
++      result = rewriter.create<mhlo::ConstantOp>(loc, disposable.toDenseElementsAttr());
++    else
++      result = rewriter.create<mhlo::ConstantOp>(loc, attr);
+     rewriter.replaceOp(op, result);
+     return success();
+   }
+diff --git a/src/Dialect/ONNX/ONNXOps/Quantize/DequantizeLinear.cpp b/src/Dialect/ONNX/ONNXOps/Quantize/DequantizeLinear.cpp
+index 4ead6093..3f9002d2 100644
+--- a/src/Dialect/ONNX/ONNXOps/Quantize/DequantizeLinear.cpp
++++ b/src/Dialect/ONNX/ONNXOps/Quantize/DequantizeLinear.cpp
+@@ -68,8 +68,6 @@ LogicalResult ONNXDequantizeLinearOpShapeHelper::computeShape() {
+     if (!outputDims[a].isLiteral()) {
+       outputDims[a] = LiteralIndexExpr(d);
+     }
+-    llvm::dbgs() << "literal: " << outputDims[a].getLiteral() << " d = " << d
+-                 << "\n";
+     // Checked in verify.
+     assert(outputDims[a].getLiteral() == d &&
+            "x_scale and x_zero_point 1-D tensor length must match the input "

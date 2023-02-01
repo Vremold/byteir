@@ -36,7 +36,7 @@ struct OFModifyEntryPointPass
     // remove ONNXEntryPointOp from module
     moduleOp.walk([&](mlir::ONNXEntryPointOp entryPointOp) {
       entryPointNames.insert(
-          entryPointOp.funcAttr().getLeafReference().getValue().str());
+          entryPointOp.getFuncAttr().getLeafReference().getValue().str());
       entryPointOp.erase();
     });
 
