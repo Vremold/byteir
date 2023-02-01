@@ -41,13 +41,29 @@ using namespace mlir::transform_ext;
 //===---------------------------------------------------------------------===//
 
 DiagnosedSilenceableFailure transform_ext::CanonicalizeExtOp::apply(
-    mlir::transform::TransformResults & /* result*/,
+    mlir::transform::TransformResults &results,
     mlir::transform::TransformState &state) {
-  PassManager pm(getContext());
-  pm.addPass(createCanonicalizeExtPass());
+  static auto applyToOne = [](Operation *op) {
+    PassManager pm(op->getContext(), op->getName().getStringRef());
+    pm.addPass(createCanonicalizeExtPass());
+    return pm.run(op);
+  };
 
-  if (failed(pm.run(state.getTopLevel())))
-    return DiagnosedSilenceableFailure::definiteFailure();
+  SmallVector<Operation *> payloadResults;
+  if (auto targetHandle = getTarget()) {
+    for (auto &&payload : state.getPayloadOps(targetHandle)) {
+      if (failed(applyToOne(payload)))
+        return DiagnosedSilenceableFailure::definiteFailure();
+      payloadResults.push_back(payload);
+    }
+  } else {
+    auto topLevel = state.getTopLevel();
+    if (failed(applyToOne(topLevel)))
+      return DiagnosedSilenceableFailure::definiteFailure();
+    payloadResults.push_back(topLevel);
+  }
+  if (auto result = getResults())
+    results.set(result.cast<OpResult>(), payloadResults);
   return DiagnosedSilenceableFailure::success();
 }
 
@@ -56,16 +72,34 @@ DiagnosedSilenceableFailure transform_ext::CanonicalizeExtOp::apply(
 //===---------------------------------------------------------------------===//
 
 DiagnosedSilenceableFailure
-transform_ext::CleanupOp::apply(mlir::transform::TransformResults & /* result*/,
+transform_ext::CleanupOp::apply(mlir::transform::TransformResults &results,
                                 mlir::transform::TransformState &state) {
-  PassManager pm(getContext());
-  pm.addPass(createCSEPass());
-  pm.addPass(createSCCPPass());
-  pm.addPass(createCanonicalizeExtPass());
-  pm.addPass(createSymbolDCEPass());
+  static auto applyToOne = [](Operation *op) {
+    PassManager pm(op->getContext(), op->getName().getStringRef());
+    pm.addPass(createCSEPass());
+    pm.addPass(createSCCPPass());
+    pm.addPass(createCanonicalizeExtPass());
+    if (op->hasTrait<OpTrait::SymbolTable>()) {
+      pm.addPass(createSymbolDCEPass());
+    }
+    return pm.run(op);
+  };
 
-  if (failed(pm.run(state.getTopLevel())))
-    return DiagnosedSilenceableFailure::definiteFailure();
+  SmallVector<Operation *> payloadResults;
+  if (auto targetHandle = getTarget()) {
+    for (auto &&payload : state.getPayloadOps(targetHandle)) {
+      if (failed(applyToOne(payload)))
+        return DiagnosedSilenceableFailure::definiteFailure();
+      payloadResults.push_back(payload);
+    }
+  } else {
+    auto topLevel = state.getTopLevel();
+    if (failed(applyToOne(topLevel)))
+      return DiagnosedSilenceableFailure::definiteFailure();
+    payloadResults.push_back(topLevel);
+  }
+  if (auto result = getResults())
+    results.set(result.cast<OpResult>(), payloadResults);
   return DiagnosedSilenceableFailure::success();
 }
 
@@ -77,7 +111,12 @@ DiagnosedSilenceableFailure
 transform_ext::DumpOp::apply(mlir::transform::TransformResults & /* result*/,
                              mlir::transform::TransformState &state) {
   llvm::errs() << getMessage() << "\n";
-  state.getTopLevel()->dump();
+  if (auto targetHandle = getTarget()) {
+    for (auto &&payload : state.getPayloadOps(targetHandle))
+      payload->dump();
+  } else {
+    state.getTopLevel()->dump();
+  }
   return DiagnosedSilenceableFailure::success();
 }
 

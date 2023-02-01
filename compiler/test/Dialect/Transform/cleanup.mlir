@@ -1,4 +1,5 @@
 // RUN: byteir-opt %s --test-transform-dialect-interpreter --split-input-file | FileCheck %s
+// RUN: byteir-opt %s --test-transform-dialect-interpreter --split-input-file -o /dev/null 2>&1 | FileCheck %s --check-prefix=DUMP
 
 transform.sequence failures(propagate) {
 ^bb1(%arg1: !pdl.operation):
@@ -50,3 +51,54 @@ func.func @sccp_no_control_flow(%arg0: i32) -> i32 {
   return %select : i32
 }
 
+// -----
+
+transform.sequence failures(propagate) {
+  ^bb0(%arg0: !pdl.operation):
+    %0 = transform.structured.match attributes{"__test__.foo"} in %arg0
+    transform.sequence %0 : !pdl.operation failures(propagate) {
+      ^bb0(%arg1: !pdl.operation):
+        %1 = transform.cleanup(%arg1 : !pdl.operation) -> !pdl.operation
+        transform.dump(%1 : !pdl.operation) "Debug"
+    }
+}
+// DUMP-LABEL: Debug
+// DUMP-NOT: symbol_dce
+// DUMP-LABEL: func.func @dce
+//   DUMP-NEXT: return
+// DUMP-LABEL: func.func @cse
+//   DUMP-NEXT: mhlo.add
+//   DUMP-NEXT: return
+// DUMP-NOT: add2
+
+module attributes {__test__.foo} {
+func.func private @symbol_dce() {
+  return
+}
+// CHECK-NOT: symbol_dce
+
+func.func @dce(%arg0 : tensor<?x?xf32>, %arg1 : tensor<?x?xf32>) {
+  %0 = mhlo.add %arg0, %arg1 : tensor<?x?xf32>
+  return
+}
+// CHECK-LABEL: func.func @dce
+//   CHECK-NOT: mhlo.add
+}
+
+module {
+func.func @cse(%arg0 : tensor<?x?xf32>, %arg1 : tensor<?x?xf32>) -> (tensor<?x?xf32>, tensor<?x?xf32>) attributes {__test__.foo} {
+  %0 = mhlo.add %arg0, %arg1 : tensor<?x?xf32>
+  %1 = mhlo.add %arg0, %arg1 : tensor<?x?xf32>
+  return %0, %1: tensor<?x?xf32>, tensor<?x?xf32>
+}
+// CHECK-LABEL: func.func @cse
+//   CHECK-NEXT: mhlo.add
+//   CHECK-NEXT: return
+
+func.func @add(%arg0 : tensor<?x?xf32>, %arg1 : tensor<?x?xf32>) {
+  %0 = mhlo.add %arg0, %arg1 : tensor<?x?xf32>
+  return
+}
+// CHECK-LABEL: func.func @add
+//   CHECK: mhlo.add
+}

@@ -27,8 +27,14 @@ def CanonicalizeExtOp : Op<Transform_Dialect, "canonicalize",
     [FunctionalStyleTransformOpTrait,
      MemoryEffectsOpInterface,
      DeclareOpInterfaceMethods<TransformOpInterface>]> {
-  let description = [{canonicalize the entire module}];
-  let assemblyFormat = "attr-dict";
+  let description = [{canonicalize the entire module or on the specified target ops}];
+  let arguments = (ins
+    Optional<TransformTypeInterface>:$target
+  );
+  let results = (outs
+    Optional<TransformTypeInterface>:$results
+  );
+  let assemblyFormat = "(`(` $target^ `:` type($target) `)`)? attr-dict (`->` type($results)^)?";
   let cppNamespace = "mlir::transform_ext";
 }
 
@@ -36,8 +42,14 @@ def CleanupOp : Op<Transform_Dialect, "cleanup",
     [FunctionalStyleTransformOpTrait,
      MemoryEffectsOpInterface,
      DeclareOpInterfaceMethods<TransformOpInterface>]> {
-  let description = [{cleanup the entire module}];
-  let assemblyFormat = "attr-dict";
+  let description = [{cleanup the entire module or on the specified target ops}];
+  let arguments = (ins
+    Optional<TransformTypeInterface>:$target
+  );
+  let results = (outs
+    Optional<TransformTypeInterface>:$results
+  );
+  let assemblyFormat = "(`(` $target^ `:` type($target) `)`)? attr-dict (`->` type($results)^)?";
   let cppNamespace = "mlir::transform_ext";
 }
 
@@ -45,10 +57,13 @@ def DumpOp : Op<Transform_Dialect, "dump",
     [FunctionalStyleTransformOpTrait,
      MemoryEffectsOpInterface,
      DeclareOpInterfaceMethods<TransformOpInterface>]> {
-  let description = [{dump the entire module for debug,
+  let description = [{dump the entire module or the specified target ops for debug,
                       the message is put in the beginning }];
-  let arguments = (ins StrAttr:$message);
-  let assemblyFormat = "$message attr-dict";
+  let arguments = (ins
+    StrAttr:$message,
+    Optional<TransformTypeInterface>:$target
+  );
+  let assemblyFormat = "(`(` $target^ `:` type($target) `)`)? $message attr-dict";
   let cppNamespace = "mlir::transform_ext";
 }
 

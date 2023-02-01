@@ -1,4 +1,5 @@
 // RUN: byteir-opt %s --test-transform-dialect-interpreter --split-input-file | FileCheck %s
+// RUN: byteir-opt %s --test-transform-dialect-interpreter --split-input-file -o /dev/null 2>&1 | FileCheck %s --check-prefix=DUMP
 
 transform.sequence failures(propagate) {
 ^bb1(%arg1: !pdl.operation):
@@ -51,3 +52,22 @@ func.func @sccp_no_control_flow(%arg0: i32) -> i32 {
   return %select : i32
 }
 
+// -----
+
+transform.sequence failures(propagate) {
+  ^bb0(%arg0: !pdl.operation):
+    %0 = transform.structured.match attributes{"__test__"} in %arg0
+    transform.dump(%0 : !pdl.operation) "Done"
+}
+
+func.func @foo(%arg0 : tensor<?x?xf32>, %arg1 : tensor<?x?xf32>) {
+  %0 = mhlo.add %arg0, %arg1 {__test__} : tensor<?x?xf32>
+  %1 = mhlo.multiply %arg0, %arg1 : tensor<?x?xf32>
+  return
+}
+// CHECK-LABEL: foo
+
+// DUMP-LABEL: Done
+// DUMP-NOT: foo
+// DUMP: mhlo.add
+// DUMP-NOT: mhlo.multiply

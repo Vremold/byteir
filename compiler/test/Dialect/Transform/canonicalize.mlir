@@ -1,4 +1,5 @@
 // RUN: byteir-opt %s --test-transform-dialect-interpreter --split-input-file | FileCheck %s
+// RUN: byteir-opt %s --test-transform-dialect-interpreter --split-input-file -o /dev/null 2>&1 | FileCheck %s --check-prefix=DUMP
 
 transform.sequence failures(propagate) {
 ^bb1(%arg1: !pdl.operation):
@@ -146,3 +147,33 @@ func.func @simplify_byteir_addn(%arg0: tensor<150x768xf16>, %arg1: tensor<150x76
 // CHECK-LABEL: simplify_byteir_addn
 // CHECK-NOT: mhlo.custom_call
 // CHECK: mhlo.add
+
+// -----
+
+transform.sequence failures(propagate) {
+  ^bb0(%arg0: !pdl.operation):
+    %0 = transform.structured.match attributes{"__test__"} in %arg0
+    transform.sequence %0 : !pdl.operation failures(propagate) {
+      ^bb0(%arg1: !pdl.operation):
+        %1 = transform.canonicalize(%arg1 : !pdl.operation) -> !pdl.operation
+        transform.dump(%1 : !pdl.operation) "Debug"
+    }
+}
+// DUMP-LABEL: Debug
+// DUMP-LABEL: func.func @add0
+//   DUMP-NEXT: return
+// DUMP-NOT: add1
+
+func.func @add0(%arg0 : tensor<?x?xf32>, %arg1 : tensor<?x?xf32>) attributes{__test__} {
+  %0 = mhlo.add %arg0, %arg1 : tensor<?x?xf32>
+  return
+}
+// CHECK-LABEL: add0
+//   CHECK-NOT: mhlo.add
+
+func.func @add1(%arg0 : tensor<?x?xf32>, %arg1 : tensor<?x?xf32>) {
+  %0 = mhlo.add %arg0, %arg1 : tensor<?x?xf32>
+  return
+}
+// CHECK-LABEL: add1
+//   CHECK: mhlo.add
