@@ -114,10 +114,6 @@ struct OneShotBufferizePass
       if (isa<mlir::bufferization::ToMemrefOp>(op))
         return true;
 
-      // FIXME: skip ConstantOp
-      if (isa<mlir::arith::ConstantOp>(op))
-        return true;
-
       return false;
     });
 

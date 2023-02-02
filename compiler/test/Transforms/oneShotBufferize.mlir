@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -empty-tensor-to-alloc-tensor -byteir-one-shot-bufferize -cse | FileCheck %s
+// RUN: byteir-opt %s -empty-tensor-to-alloc-tensor -byteir-one-shot-bufferize -cse --split-input-file | FileCheck %s
 
 #map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
 //CHECK-LABEL: func.func @linalg_genric
@@ -41,7 +41,7 @@ func.func @tensor_pad(%arg0: tensor<2x34xi32>) -> tensor<2x64xi32> {
 //CHECK-LABEL: func.func @arith_const_tensor
 func.func @arith_const_tensor() -> tensor<2x1xf32> {
   %cst = arith.constant dense<[[10.0], [11.0]]> : tensor<2x1xf32>
-  // CHECK: bufferization.to_memref
+  // CHECK: memref.get_global
   return %cst : tensor<2x1xf32>
 }
 
@@ -51,6 +51,6 @@ func.func @arith_const_tensor() -> tensor<2x1xf32> {
 func.func @tensor_splat() -> tensor<2x1xf32> {
   %s = arith.constant 10.1 : f32
   %t = tensor.splat %s : tensor<2x1xf32>
-  // CHECK: bufferization.to_memref
+  // CHECK: memref.get_global
   return %t : tensor<2x1xf32>
 }

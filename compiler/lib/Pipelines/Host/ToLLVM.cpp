@@ -73,12 +73,6 @@ void mlir::createToLLVMPipeline(OpPassManager &pm) {
   invokeOpPassPipelineBuilder(
       [](OpPassManager &pm) {
         pm.addPass(std::make_unique<CollectLLVMSubmodulePass>());
-        // TODO: move bufferize passes to total bufferize and collect
-        // memref.global operations into host module
-        pm.addPass(arith::createConstantBufferizePass());
-        pm.addNestedPass<func::FuncOp>(createTensorBufferizePass());
-        pm.addNestedPass<func::FuncOp>(
-            bufferization::createBufferDeallocationPass());
 
         pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
         pm.addPass(createCanonicalizerPass());

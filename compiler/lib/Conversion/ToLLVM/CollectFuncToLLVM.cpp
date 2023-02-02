@@ -21,7 +21,9 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/SymbolTable.h"
 #include "mlir/Pass/PassManager.h"
+#include "mlir/Transforms/Passes.h"
 
 #include "../PassDetail.h"
 
@@ -30,6 +32,20 @@ using namespace mlir;
 static constexpr StringRef kEmitIfaceAttrName = "llvm.emit_c_interface";
 
 namespace {
+inline bool isLLJIT(Operation *op) {
+  if (!isa<func::FuncOp>(op))
+    return false;
+
+  if (auto nameAttr =
+          op->getAttrOfType<StringAttr>(byre::getByreComputeName())) {
+    if (nameAttr.getValue() == getByteIRLLVMJITOpKernelName()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 ModuleOp getOrCreateLLVMSubmodule(ModuleOp m) {
   for (auto &op : m.getBody()->without_terminator()) {
     if (auto sm = dyn_cast<ModuleOp>(op)) {
@@ -45,19 +61,51 @@ ModuleOp getOrCreateLLVMSubmodule(ModuleOp m) {
   return sm;
 }
 
-LogicalResult processSingleFunc(func::FuncOp func, ModuleOp sm) {
-  FunctionType funcType = func.getFunctionType();
-  OpBuilder b(sm.getRegion());
-  func::FuncOp newFunc =
-      b.create<func::FuncOp>(func.getLoc(), func.getName(), funcType);
-  BlockAndValueMapping bvm;
-  func.getRegion().cloneInto(&newFunc.getRegion(), bvm);
-  // TODO: pass llvm config attributes to new function
-  // TODO: make c interface optional
-  newFunc->setAttr(kEmitIfaceAttrName, UnitAttr::get(newFunc->getContext()));
-  // TODO: handle alias op in function body
-  func.eraseBody();
-  func.setPrivate();
+LogicalResult processSingleSymbol(SymbolOpInterface oldSymbol, ModuleOp sm) {
+  auto b = OpBuilder::atBlockEnd(&sm.getRegion().front());
+
+  auto newSymbol = cast<SymbolOpInterface>(b.clone(*oldSymbol));
+  if (isLLJIT(oldSymbol)) {
+    oldSymbol.setPrivate();
+    cast<func::FuncOp>(oldSymbol.getOperation()).eraseBody();
+    newSymbol.setPublic();
+    // TODO: pass llvm config attributes to new function
+    // TODO: make c interface optional
+    newSymbol->setAttr(kEmitIfaceAttrName,
+                       UnitAttr::get(newSymbol->getContext()));
+  }
+  return success();
+}
+
+LogicalResult findUsedSymbolsRecursively(Operation *symbolTableOp,
+                                         ArrayRef<Operation *> roots,
+                                         DenseSet<Operation *> &usedSymbols) {
+  SmallVector<Operation *> worklist;
+  for (auto &&symbol : roots) {
+    worklist.push_back(symbol);
+    if (!usedSymbols.insert(symbol).second)
+      return failure();
+  }
+  while (!worklist.empty()) {
+    Operation *op = worklist.pop_back_val();
+    if (op->hasTrait<OpTrait::SymbolTable>()) {
+      // TODO: support nested symbol table
+      return failure();
+    }
+
+    auto uses = SymbolTable::getSymbolUses(op);
+    if (!uses) {
+      return failure();
+    }
+
+    for (const SymbolTable::SymbolUse &use : *uses) {
+      auto symbol =
+          SymbolTable::lookupSymbolIn(symbolTableOp, use.getSymbolRef());
+
+      if (usedSymbols.insert(symbol).second)
+        worklist.push_back(symbol);
+    }
+  }
   return success();
 }
 
@@ -68,29 +116,44 @@ struct CollectFuncToLLVMPass
 
   void runOnOperation() override {
     ModuleOp m = getOperation();
-    SmallVector<func::FuncOp> funcs;
+
+    // find LLJIT funcs
+    SmallVector<Operation *> funcs;
     for (auto func : m.getOps<func::FuncOp>()) {
-      if (auto nameAttr =
-              func->getAttrOfType<StringAttr>(byre::getByreComputeName())) {
-        if (nameAttr.getValue() == getByteIRLLVMJITOpKernelName()) {
-          funcs.push_back(func);
-        }
+      if (isLLJIT(func)) {
+        funcs.push_back(func);
       }
     }
     if (funcs.empty()) {
       return;
     }
+
+    // collect symbols used by LLJIT funcs
+    DenseSet<Operation *> usedSymbols;
+    if (failed(findUsedSymbolsRecursively(m, funcs, usedSymbols))) {
+      m->emitError("Failed to analysis used symbols");
+      return signalPassFailure();
+    }
+
+    // copy all LLJIT funcs and collected symbols to the new submodule
     ModuleOp sm = getOrCreateLLVMSubmodule(m);
-    for (auto func : funcs) {
-      if (failed(processSingleFunc(func, sm))) {
-        signalPassFailure();
+    for (auto symbol : m.getOps<SymbolOpInterface>()) {
+      if (usedSymbols.count(symbol)) {
+        if (failed(processSingleSymbol(symbol, sm))) {
+          symbol->emitError("Failed to copy symbol to new module");
+          return signalPassFailure();
+        }
       }
     }
-    OpPassManager pm(sm.getOperationName());
-    pm.addPass(bufferization::createBufferResultsToOutParamsPass());
-    pm.addNestedPass<func::FuncOp>(
+
+    OpPassManager pm(m.getOperationName());
+    pm.addPass(createSymbolDCEPass());
+    OpPassManager sub = pm.nest<ModuleOp>();
+    sub.addPass(bufferization::createBufferResultsToOutParamsPass());
+    sub.addNestedPass<func::FuncOp>(
         bufferization::createPromoteBuffersToStackPass());
-    if (mlir::failed(runPipeline(pm, sm))) {
+    if (mlir::failed(runPipeline(pm, m))) {
+      m->emitError("Postprocess in CollectFuncToLLVMPass failed");
       return signalPassFailure();
     }
   }
