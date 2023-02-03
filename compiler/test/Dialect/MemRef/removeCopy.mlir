@@ -272,64 +272,12 @@ func.func @softmax(%arg0: memref<1024x64xf32>) -> memref<1024x64xf32> {
 
 // -----
 
-#map = affine_map<(d0, d1) -> (d0, d1)>
-// CHECK-LABEL: func.func @two_outputs
-func.func @two_outputs(%arg0: memref<?x?xf32>, %arg1: memref<?x?xf32>, %arg2: memref<?x?xf32>) -> (memref<?x?xf32>, memref<?x?xf32>) {
-  // CHECK-NOT: memref.copy
-  %c1 = arith.constant 1 : index
-  %c0 = arith.constant 0 : index
-  %dim = memref.dim %arg0, %c0 : memref<?x?xf32>
-  %dim_0 = memref.dim %arg0, %c1 : memref<?x?xf32>
-  %alloc = memref.alloc(%dim, %dim_0) : memref<?x?xf32>
-  %alloc_1 = memref.alloc(%dim, %dim_0) : memref<?x?xf32>
-  linalg.generic {indexing_maps = [#map, #map, #map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1, %arg2 : memref<?x?xf32>, memref<?x?xf32>, memref<?x?xf32>) outs(%alloc, %alloc_1 : memref<?x?xf32>, memref<?x?xf32>) {
-  ^bb0(%in: f32, %in_2: f32, %in_3: f32, %out: f32, %out_4: f32):
-    %0 = arith.addf %in, %in_2 : f32
-    %1 = arith.mulf %0, %in_3 : f32
-    linalg.yield %0, %1 : f32, f32
-  }
-  return %alloc, %alloc_1 : memref<?x?xf32>, memref<?x?xf32>
-}
-
-// -----
-
-#map = affine_map<(d0, d1) -> (d0, d1)>
-// CHECK-LABEL: func.func @two_consumers
-func.func @two_consumers(%arg0: memref<?x?xf32>, %arg1: memref<?x?xf32>, %arg2: memref<?x?xf32>, %arg3: memref<?x?xf32>) -> (memref<?x?xf32>, memref<?x?xf32>) {
-  // CHECK-NOT: memref.copy
-  %c1 = arith.constant 1 : index
-  %c0 = arith.constant 0 : index
-  %dim = memref.dim %arg0, %c0 : memref<?x?xf32>
-  %dim_0 = memref.dim %arg0, %c1 : memref<?x?xf32>
-  %alloc = memref.alloc(%dim, %dim_0) : memref<?x?xf32>
-  %alloc_1 = memref.alloc(%dim, %dim_0) : memref<?x?xf32>
-  linalg.generic {indexing_maps = [#map, #map, #map, #map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1, %arg2, %arg3 : memref<?x?xf32>, memref<?x?xf32>, memref<?x?xf32>, memref<?x?xf32>) outs(%alloc, %alloc_1 : memref<?x?xf32>, memref<?x?xf32>) {
-  ^bb0(%in: f32, %in_2: f32, %in_3: f32, %in_4: f32, %out: f32, %out_5: f32):
-    %0 = arith.addf %in, %in_2 : f32
-    %1 = arith.mulf %0, %in_3 : f32
-    %2 = arith.mulf %0, %in_4 : f32
-    linalg.yield %1, %2 : f32, f32
-  }
-  return %alloc, %alloc_1 : memref<?x?xf32>, memref<?x?xf32>
-}
-
-// -----
-
-#map = affine_map<(d0, d1) -> (d0, d1)>
-// CHECK-LABEL: func.func @shared_input
-func.func @shared_input(%arg0: memref<?x?xf32>, %arg1: memref<?x?xf32>, %arg2: memref<?x?xf32>) -> (memref<?x?xf32>, memref<?x?xf32>) {
-  // CHECK-NOT: memref.copy
-  %c1 = arith.constant 1 : index
-  %c0 = arith.constant 0 : index
-  %dim = memref.dim %arg0, %c0 : memref<?x?xf32>
-  %dim_0 = memref.dim %arg0, %c1 : memref<?x?xf32>
-  %alloc = memref.alloc(%dim, %dim_0) : memref<?x?xf32>
-  %alloc_1 = memref.alloc(%dim, %dim_0) : memref<?x?xf32>
-  linalg.generic {indexing_maps = [#map, #map, #map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1, %arg2 : memref<?x?xf32>, memref<?x?xf32>, memref<?x?xf32>) outs(%alloc, %alloc_1 : memref<?x?xf32>, memref<?x?xf32>) {
-  ^bb0(%in: f32, %in_2: f32, %in_3: f32, %out: f32, %out_4: f32):
-    %0 = arith.addf %in, %in_2 : f32
-    %1 = arith.mulf %in, %in_3 : f32
-    linalg.yield %0, %1 : f32, f32
-  }
-  return %alloc, %alloc_1 : memref<?x?xf32>, memref<?x?xf32>
+// CHECK-LABEL: func.func @copy_collapse_shape
+func.func @copy_collapse_shape(%arg0: memref<90x10xf32>) -> memref<90xf32> {
+  %subview = memref.subview %arg0[0, 5] [90, 1] [1, 1] : memref<90x10xf32> to memref<90x1xf32, strided<[10, 1], offset: 5>>
+  %collapse_shape = memref.collapse_shape %subview [[0, 1]] : memref<90x1xf32, strided<[10, 1], offset: 5>> into memref<90xf32, strided<[10], offset: 5>>
+  %alloc = memref.alloc() : memref<90xf32>
+  // CHECK: memref.copy
+  memref.copy %collapse_shape, %alloc : memref<90xf32, strided<[10], offset: 5>> to memref<90xf32>
+  return %alloc : memref<90xf32>
 }

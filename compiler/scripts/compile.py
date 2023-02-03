@@ -62,7 +62,7 @@ if __name__ == "__main__":
             "input",
             "1_hlo_opt",
             "2_linalg_tensor_opt",
-            "3_total_bufferize",
+            "3_bufferize_opt",
             "4_affine_opt",
             "4_alternative_scf_opt",
             "5_gpu_opt",
@@ -93,15 +93,15 @@ if __name__ == "__main__":
         )
         run(
             paths["2_linalg_tensor_opt"],
-            paths["3_total_bufferize"],
+            paths["3_bufferize_opt"],
             BYTEIR_OPT,
             "-linalg-tensor-opt",
         )
         run(
-            paths["3_total_bufferize"],
+            paths["3_bufferize_opt"],
             paths["4_affine_opt"],
             BYTEIR_OPT,
-            "-byteir-total-bufferize",
+            "-byteir-bufferize-opt",
         )
         # copy from 4_affine_opt.mlir to 4_alternative_scf_opt.mlir
         run_and_write_log(["cp", paths["4_affine_opt"], paths["4_alternative_scf_opt"]])

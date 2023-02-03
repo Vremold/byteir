@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -byteir-total-bufferize | FileCheck %s
+// RUN: byteir-opt %s -byteir-bufferize-opt | FileCheck %s
 
 // CHECK-LABEL: func.func @main
 #map = affine_map<(d0, d1) -> (d0, d1)>

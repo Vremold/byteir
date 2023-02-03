@@ -1,4 +1,4 @@
-//===- TotalBufferize.h ---------------------------------------*--- C++ -*-===//
+//===- BufferizeOpt.h -----------------------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,32 +15,32 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_PIPELINES_TOTALBUFFERIZE_H
-#define BYTEIR_PIPELINES_TOTALBUFFERIZE_H
+#ifndef BYTEIR_PIPELINES_BUFFERIZEOPT_H
+#define BYTEIR_PIPELINES_BUFFERIZEOPT_H
 
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassRegistry.h"
 
 namespace mlir {
 
-struct ByteIRTotalBufferizeOptions
-    : public PassPipelineOptions<ByteIRTotalBufferizeOptions> {
+struct ByteIRBufferizeOptions
+    : public PassPipelineOptions<ByteIRBufferizeOptions> {
   Option<std::string> target{
       *this, "target",
       llvm::cl::desc("An optional attribute to specify target."),
       llvm::cl::init("")};
 };
 
-void createByteIRTotalBufferizePipeline(
-    OpPassManager &pm, const ByteIRTotalBufferizeOptions &options);
+void createByteIRBufferizeOptPipeline(OpPassManager &pm,
+                                      const ByteIRBufferizeOptions &options);
 
-inline void registerByteIRTotalBufferizePipeline() {
-  PassPipelineRegistration<ByteIRTotalBufferizeOptions>(
-      "byteir-total-bufferize",
+inline void registerByteIRBufferizeOptPipeline() {
+  PassPipelineRegistration<ByteIRBufferizeOptions>(
+      "byteir-bufferize-opt",
       "Performs all bufferization, including mhlo to lmhlo",
-      createByteIRTotalBufferizePipeline);
+      createByteIRBufferizeOptPipeline);
 }
 
 } // namespace mlir
 
-#endif // BYTEIR_PIPELINES_TOTALBUFFERIZE_H
+#endif // BYTEIR_PIPELINES_BUFFERIZEOPT_H

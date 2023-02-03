@@ -19,6 +19,7 @@
 #define BYTEIR_TRANSFORMS_PASSES_H
 
 #include "byteir/Transforms/AnchoredFuncPipeline.h"
+#include "byteir/Transforms/Bufferize.h"
 #include "byteir/Transforms/CMAE.h"
 #include "byteir/Transforms/CanonicalizeExt.h"
 #include "byteir/Transforms/CollectFunc.h"

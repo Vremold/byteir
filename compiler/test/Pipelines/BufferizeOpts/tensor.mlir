@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -byteir-total-bufferize --split-input-file | FileCheck %s
+// RUN: byteir-opt %s -byteir-bufferize-opt --split-input-file | FileCheck %s
 
 // CHECK-LABEL: tensor_pad
 func.func @tensor_pad(%arg0: tensor<2x34xi32>) -> tensor<2x64xi32> {

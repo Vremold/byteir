@@ -18,6 +18,7 @@
 #include "byteir/Pipelines/AllOpt.h"
 
 #include "byteir/Pipelines/AffineOpt.h"
+#include "byteir/Pipelines/BufferizeOpt.h"
 #include "byteir/Pipelines/ByreHost.h"
 #include "byteir/Pipelines/ByreOpt.h"
 #include "byteir/Pipelines/Common/Utils.h"
@@ -26,7 +27,6 @@
 #include "byteir/Pipelines/LinalgTensorOpt.h"
 #include "byteir/Pipelines/SCFOpt.h"
 #include "byteir/Pipelines/ShapeOpt.h"
-#include "byteir/Pipelines/TotalBufferize.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Pass/PassManager.h"
 
@@ -46,9 +46,9 @@ void createByteIRAllOptPipelineImpl(OpPassManager &pm,
   linalgTensorOptOptions.target = target;
   createLinalgTensorOptPipeline(pm, linalgTensorOptOptions);
 
-  ByteIRTotalBufferizeOptions totalBufferizeOptions;
-  totalBufferizeOptions.target = target;
-  createByteIRTotalBufferizePipeline(pm, totalBufferizeOptions);
+  ByteIRBufferizeOptions bufferizeOptions;
+  bufferizeOptions.target = target;
+  createByteIRBufferizeOptPipeline(pm, bufferizeOptions);
 
   createAffineOptPipeline(pm);
   // optional, alternative to affine-opt

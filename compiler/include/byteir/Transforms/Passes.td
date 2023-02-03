@@ -212,6 +212,15 @@ def RewriteOpToStdCall : Pass<"rewrite-op-to-std-call", "ModuleOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// OneShotBufferize
+//===----------------------------------------------------------------------===//
+
+def OneShotBufferize : Pass<"byteir-one-shot-bufferize", "ModuleOp"> {
+  let summary = "One shot bufferization pass.";
+  let constructor = "byteir::createOneShotBufferizePass()";
+}
+
+//===----------------------------------------------------------------------===//
 // LoopUnroll
 //===----------------------------------------------------------------------===//
 

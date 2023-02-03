@@ -10,10 +10,12 @@ target_link_libraries(THLODialect PUBLIC GmlStTilingInterface)
 
 include_directories(${REPO_ROOT_DIR}/../external/mlir-hlo)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo)
+include_directories(${REPO_ROOT_DIR}/../external/mlir-hlo/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo/include)
 include_directories(${REPO_ROOT_DIR}/../external/mlir-hlo/stablehlo)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/mlir-hlo/stablehlo)
 
-install(DIRECTORY ${REPO_ROOT_DIR}/../external/mlir-hlo
+install(DIRECTORY ${REPO_ROOT_DIR}/../external/mlir-hlo ${REPO_ROOT_DIR}/../external/mlir-hlo/include/mlir-hlo
   DESTINATION external/include
   COMPONENT byteir-headers
   FILES_MATCHING
@@ -23,7 +25,7 @@ install(DIRECTORY ${REPO_ROOT_DIR}/../external/mlir-hlo
   PATTERN "*.td"
   )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/mlir-hlo
+install(DIRECTORY ${CMAKE_BINARY_DIR}/mlir-hlo ${CMAKE_BINARY_DIR}/mlir-hlo/include/mlir-hlo
   DESTINATION external/include
   COMPONENT byteir-headers
   FILES_MATCHING

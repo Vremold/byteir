@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -hlo-opt="outline-single-elemwise-op" -linalg-tensor-opt -byteir-total-bufferize -affine-opt | FileCheck %s
+// RUN: byteir-opt %s -hlo-opt="outline-single-elemwise-op" -linalg-tensor-opt -byteir-bufferize-opt -affine-opt | FileCheck %s
 
 // CHECK-LABEL: func.func @main
 func.func @main(%arg0: tensor<1xi64>, %arg1: tensor<1xi64>, %arg2: tensor<1xi64>, %arg3: tensor<1x128xi32>) -> (tensor<1x128xi32>, tensor<1x128xi32>) {

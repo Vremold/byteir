@@ -54,6 +54,29 @@ public:
       return failure();
     }
 
+    auto allocUseInTerminator = [](memref::AllocOp alloc) {
+      for (auto user : alloc.getResult().getUsers()) {
+        if (user->hasTrait<::mlir::OpTrait::IsTerminator>()) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    if (target.getType() != src.getType()) {
+      // skip copy when it is used in a terminator
+      if (auto srcAlloc = src.getDefiningOp<memref::AllocOp>()) {
+        if (allocUseInTerminator(srcAlloc)) {
+          return failure();
+        }
+      }
+      if (auto targetAlloc = target.getDefiningOp<memref::AllocOp>()) {
+        if (allocUseInTerminator(targetAlloc)) {
+          return failure();
+        }
+      }
+    }
+
     SmallVector<SmallVector<Value>, 2> aliases(2);
     getAllAlias(copyOp, aliases);
 

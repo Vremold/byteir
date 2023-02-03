@@ -1,4 +1,4 @@
-// RUN: byteir-opt -hlo-legalize-to-linalg --linalg-tensor-opt -byteir-total-bufferize -scf-opt -gpu-opt %s | FileCheck %s
+// RUN: byteir-opt -hlo-legalize-to-linalg --linalg-tensor-opt -byteir-bufferize-opt -scf-opt -gpu-opt %s | FileCheck %s
 
 func.func @fusion_broadcast(%arg0: tensor<6x12x96xf32>, %arg1: tensor<6x12x96x96xf32>) -> tensor<6x12x96x96xf32> attributes {__byteir_elementwise_fusion__} {
   %0 = "mhlo.broadcast_in_dim"(%arg0) {broadcast_dimensions = dense<[0, 1, 2]> : tensor<3xi64>} : (tensor<6x12x96xf32>) -> tensor<6x12x96x96xf32>

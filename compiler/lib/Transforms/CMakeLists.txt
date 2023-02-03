@@ -1,5 +1,6 @@
 add_mlir_library(ByteIRTransforms
   AnchoredFuncPipeline.cpp
+  Bufferize.cpp
   CanonicalizeExt.cpp
   CMAE.cpp
   CondCanonicalize.cpp
