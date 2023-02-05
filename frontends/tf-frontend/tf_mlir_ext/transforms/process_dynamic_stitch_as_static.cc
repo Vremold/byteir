@@ -123,9 +123,8 @@ struct ConvertDynamicStitchToStatic
       }
       Value data = parOp->getOperand(0);
       Value partitions = parOp->getOperand(1);
-      IntegerAttr numParAttr =
-          parOp->getAttr("num_partitions").cast<IntegerAttr>();
-      int64_t numPar = numParAttr.getInt();
+      int64_t numPar =
+          llvm::dyn_cast<TF::DynamicPartitionOp>(parOp).getNumPartitions();
       auto zeroValueAttr =
           DenseIntElementsAttr::get(data.getType().cast<RankedTensorType>(), 0);
       auto zeroConst =
