@@ -67,8 +67,6 @@ def get_config(config: str):
             "black_list": [
                 "dynamic_partition",
                 "dynamic_stitch",
-                "space_to_batch_nd",
-                "batch_to_space_nd",
             ],
         }
     raise NotImplementedError("No such config name {}".format(config))

@@ -62,9 +62,7 @@ namespace {
     cb(one_hot, OneHot, CALL_TARGET_NAME_PREFIX)           \
     cb(DynamicMaskStitch, DynamicMaskStitch, CALL_TF_TARGET_NAME_PREFIX) \
     cb(DynamicPartition, DynamicPartition, CALL_TF_TARGET_NAME_PREFIX)   \
-    cb(DynamicStitch, DynamicStitch, CALL_TF_TARGET_NAME_PREFIX)         \
-    cb(SpaceToBatchND, SpaceToBatchND, CALL_TF_TARGET_NAME_PREFIX)       \
-    cb(BatchToSpaceND, BatchToSpaceND, CALL_TF_TARGET_NAME_PREFIX)
+    cb(DynamicStitch, DynamicStitch, CALL_TF_TARGET_NAME_PREFIX)
 // clang-format on
 
 #define GEN_FUNCNAME(op, func_name, target_name)                               \
@@ -86,7 +84,7 @@ namespace {
     cb(TF::ArgMaxOp, ArgMax)         \
     cb(TF::ErfOp, Erf)               \
     cb(TF::AddNOp, AddN)             \
-    cb(TF::OneHotOp, OneHot)         \
+    cb(TF::OneHotOp, OneHot)
 // clang-format on
 
 VALID_CUSTOM_CALL_OP(GEN_FUNCNAME) template <typename TF_OP> struct WrapName;
@@ -146,7 +144,8 @@ createFuncOpFromPattern(OpBuilder &b, StringRef subFnName, ValueRange inputs,
 Value createLayerNorm(PatternRewriter &rewriter, Location loc, Value input,
                       Value gama, Value beta, ElementsAttr epsilon,
                       ElementsAttr axis) {
-  double epsilonValue = (*epsilon.getValues<APFloat>().begin()).convertToDouble();
+  double epsilonValue =
+      (*epsilon.getValues<APFloat>().begin()).convertToDouble();
   int64_t axisValue = (*axis.getValues<APInt>().begin()).getSExtValue();
 
   RankedTensorType inputType = input.getType().cast<RankedTensorType>();
@@ -161,8 +160,8 @@ Value createLayerNorm(PatternRewriter &rewriter, Location loc, Value input,
       mhlo::CustomCallApiVersion{
           mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
       rewriter.getArrayAttr(ArrayRef<Attribute>{}),
-      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
-      rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+      nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{}));
   SmallVector<mlir::NamedAttribute> byteir_attrs;
   byteir_attrs.push_back(
       NamedAttribute(rewriter.getStringAttr("epsilon"),
@@ -251,9 +250,9 @@ Value createL2Norm(PatternRewriter &rewriter, Location loc, Value input,
       getL2NormNameWithPrefix(), false, rewriter.getStringAttr(""),
       mhlo::CustomCallApiVersion{
           mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
-      rewriter.getArrayAttr(ArrayRef<Attribute>{}), 
-      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
-      rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+      rewriter.getArrayAttr(ArrayRef<Attribute>{}),
+      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+      nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{}));
   SmallVector<mlir::NamedAttribute> byteir_attrs;
   byteir_attrs.push_back(NamedAttribute(rewriter.getStringAttr("epsilon"),
                                         rewriter.getF64FloatAttr(epsilon)));
@@ -267,7 +266,8 @@ Value createL2Norm(PatternRewriter &rewriter, Location loc, Value input,
 
 Value createL2NormV1(PatternRewriter &rewriter, Location loc, Value input,
                      ElementsAttr epsilon, ElementsAttr axis) {
-  double epsilonValue = (*epsilon.getValues<APFloat>().begin()).convertToDouble();
+  double epsilonValue =
+      (*epsilon.getValues<APFloat>().begin()).convertToDouble();
   int64_t axisValue = (*axis.getValues<APInt>().begin()).getSExtValue();
 
   return createL2Norm(rewriter, loc, input, epsilonValue, axisValue);
@@ -288,8 +288,8 @@ Value createGELU(PatternRewriter &rewriter, Location loc, Value input,
       mhlo::CustomCallApiVersion{
           mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
       rewriter.getArrayAttr(ArrayRef<Attribute>{}),
-      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
-      rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+      mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+      nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{}));
   SmallVector<mlir::NamedAttribute> byteir_attrs;
   byteir_attrs.push_back(NamedAttribute(rewriter.getStringAttr("approximate"),
                                         rewriter.getStringAttr(approximate)));
@@ -329,8 +329,8 @@ struct RewriteMathArg : public OpRewritePattern<TFMathArgOp> {
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
         rewriter.getArrayAttr(ArrayRef<Attribute>{}),
-        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+        nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     mathArgOp->setAttr("axis", rewriter.getI64IntegerAttr(axis));
     mathArgOp->setAttr("keep_dims", rewriter.getBoolAttr(false));
     mathArgOp->setAttr("select_last_index", rewriter.getBoolAttr(false));
@@ -363,11 +363,12 @@ struct RewriteTopKV2 : public OpRewritePattern<TF::TopKV2Op> {
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
         rewriter.getArrayAttr(ArrayRef<Attribute>{}),
-        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+        nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     op->setAttr("k", rewriter.getI64IntegerAttr(k));
     // tf.TopKV2's axis is last dimension, like tf.Softmax
-    int64_t axis = op.getInput().getType().cast<RankedTensorType>().getRank() - 1;
+    int64_t axis =
+        op.getInput().getType().cast<RankedTensorType>().getRank() - 1;
     op->setAttr("axis", rewriter.getI64ArrayAttr({axis}));
     // note: tf.TopKV2 has "sorted" BoolAttr
     customCallOp->setAttr(getByteIRAttrs(), getCleanAttr(op));
@@ -414,8 +415,8 @@ struct RewriteOneHot : public OpRewritePattern<TF::OneHotOp> {
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
         rewriter.getArrayAttr(ArrayRef<Attribute>{}),
-        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+        nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     op->setAttr("depth", rewriter.getI64IntegerAttr(depth));
     op->setAttr("axis", rewriter.getI64IntegerAttr(axis));
     op->setAttr("on_value", on_value);
@@ -432,8 +433,7 @@ struct RewriteOneHot : public OpRewritePattern<TF::OneHotOp> {
 //===----------------------------------------------------------------------===//
 
 template <typename TF_OP, typename Rewriter>
-std::enable_if_t<(std::is_same<TF_OP, TF::SoftmaxOp>::value ||
-                  std::is_same<TF_OP, TF::LogSoftmaxOp>::value),
+std::enable_if_t<llvm::is_one_of<TF_OP, TF::SoftmaxOp, TF::LogSoftmaxOp>::value,
                  void>
 handleCustomAttr(TF_OP op, Rewriter &rewriter) {
   auto type = op.getResult().getType().template dyn_cast<TensorType>();
@@ -445,9 +445,17 @@ handleCustomAttr(TF_OP op, Rewriter &rewriter) {
 }
 
 template <typename TF_OP, typename Rewriter>
-std::enable_if_t<(std::is_same<TF_OP, TF::ErfOp>::value ||
-                  std::is_same<TF_OP, TF::AddNOp>::value),
-                 void>
+std::enable_if_t<(std::is_same<TF_OP, TF::DynamicPartitionOp>::value), void>
+handleCustomAttr(TF_OP op, Rewriter &rewriter) {
+  int64_t num_partitions = op.getNumPartitions();
+  op->setAttr("num_partitions",
+              rewriter.getIntegerAttr(rewriter.getI64Type(), num_partitions));
+}
+
+template <typename TF_OP, typename Rewriter>
+std::enable_if_t<
+    llvm::is_one_of<TF_OP, TF::ErfOp, TF::AddNOp, TF::DynamicStitchOp>::value,
+    void>
 handleCustomAttr(TF_OP op, Rewriter &rewriter) {}
 
 // TODO(zfc): softmax in tf do not support axis, and tf warpper it in python
@@ -463,8 +471,8 @@ struct RewriteSimpleReplace : public OpRewritePattern<TF_OP> {
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
         rewriter.getArrayAttr(ArrayRef<Attribute>{}),
-        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+        nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     handleCustomAttr(op, rewriter);
     customCallOp->setAttr(getByteIRAttrs(), getCleanAttr(op));
     rewriter.replaceOp(op.operator->(), customCallOp->getResults());
@@ -486,8 +494,8 @@ struct RewriteSimpleReplace : public OpRewritePattern<TF_OP> {
                   mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},           \
               rewriter.getArrayAttr(ArrayRef<Attribute>{}),                    \
               mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE},        \
-              nullptr, nullptr,                                                \
-              rewriter.getArrayAttr(ArrayRef<Attribute>{}));                   \
+              nullptr, nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{})); \
+      handleCustomAttr(dyn_cast<TF::OPNAME##Op>(op), rewriter);                \
       customCallOp->setAttr(getByteIRAttrs(), getCleanAttr(op));               \
       rewriter.replaceOp(op, customCallOp->getResults());                      \
       return success();                                                        \
@@ -496,8 +504,6 @@ struct RewriteSimpleReplace : public OpRewritePattern<TF_OP> {
 
 SimpleReplaceOpPattern("tf.DynamicPartition", DynamicPartition);
 SimpleReplaceOpPattern("tf.DynamicStitch", DynamicStitch);
-SimpleReplaceOpPattern("tf.SpaceToBatchND", SpaceToBatchND);
-SimpleReplaceOpPattern("tf.BatchToSpaceND", BatchToSpaceND);
 #undef SimpleReplaceOpPattern
 
 //===----------------------------------------------------------------------===//
@@ -547,8 +553,8 @@ struct RewriteDynamicMaskStitch : public OpRewritePattern<TF::DynamicStitchOp> {
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
         rewriter.getArrayAttr(ArrayRef<Attribute>{}),
-        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr, nullptr,
-        rewriter.getArrayAttr(ArrayRef<Attribute>{}));
+        mhlo::CustomCallSchedule{mhlo::CustomCallSchedule::NONE}, nullptr,
+        nullptr, rewriter.getArrayAttr(ArrayRef<Attribute>{}));
     customCallOp->setAttr(getByteIRAttrs(), rewriter.getDictionaryAttr({}));
     rewriter.replaceOp(op, customCallOp->getResults());
     return success();
@@ -649,10 +655,6 @@ struct RewriteToCustomCallOpsPass
           std::make_unique<SimpleReplaceDynamicPartition>(context, 1));
       validCustomCallOpSet[getDynamicStitchName()].emplace_back(
           std::make_unique<SimpleReplaceDynamicStitch>(context, 1));
-      validCustomCallOpSet[getSpaceToBatchNDName()].emplace_back(
-          std::make_unique<SimpleReplaceSpaceToBatchND>(context, 1));
-      validCustomCallOpSet[getBatchToSpaceNDName()].emplace_back(
-          std::make_unique<SimpleReplaceBatchToSpaceND>(context, 1));
 
       RewritePatternSet patterns(context);
       for (auto op : opsSet) {

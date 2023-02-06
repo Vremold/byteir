@@ -1,4 +1,4 @@
-// RUN: tf-ext-opt -rewrite-to-custom-call="ops=softmax,log_softmax,gelu,erf,arg_max,arg_min,top_k,layer_norm,l2_norm,addn,one_hot,DynamicMaskStitch,DynamicPartition,DynamicStitch,SpaceToBatchND,BatchToSpaceND" %s -o %t
+// RUN: tf-ext-opt -rewrite-to-custom-call="ops=softmax,log_softmax,gelu,erf,arg_max,arg_min,top_k,layer_norm,l2_norm,addn,one_hot,DynamicMaskStitch,DynamicPartition,DynamicStitch" %s -o %t
 // RUN: FileCheck %s < %t
 // RUN: python3 numerical_test.py %s %t --config rewrite_to_custom_call
 
@@ -472,24 +472,6 @@ func.func @dynamic_stitch(%part0: tensor<?xi32>, %part1: tensor<?xi32>, %4: tens
 // CHECK-LABEL: func.func @dynamic_stitch
 // CHECK: mhlo.custom_call
 // CHECK-SAME: @tf.DynamicStitch
-// CHECK-SAME: byteir_attrs = {}
-
-func.func @space_to_batch_nd(%1164: tensor<1x20x30x40xf16>, %cst_342: tensor<2xi32>, %cst_359: tensor<2x2xi32>) -> tensor<4x14x19x40xf16> {
-  %1185 = "tf.SpaceToBatchND"(%1164, %cst_342, %cst_359) {device = "/device:GPU:0"} : (tensor<1x20x30x40xf16>, tensor<2xi32>, tensor<2x2xi32>) -> tensor<4x14x19x40xf16>
-  return %1185 : tensor<4x14x19x40xf16>
-}
-// CHECK-LABEL: func.func @space_to_batch_nd
-// CHECK: mhlo.custom_call
-// CHECK-SAME: @tf.SpaceToBatchND
-// CHECK-SAME: byteir_attrs = {}
-
-func.func @batch_to_space_nd(%1186: tensor<4x10x15x32xf16>, %cst_342: tensor<2xi32>, %cst_360: tensor<2x2xi32>) -> tensor<1x20x30x32xf16> {
-  %1187 = "tf.BatchToSpaceND"(%1186, %cst_342, %cst_360) {device = "/device:GPU:0"} : (tensor<4x10x15x32xf16>, tensor<2xi32>, tensor<2x2xi32>) -> tensor<1x20x30x32xf16>
-  return %1187 : tensor<1x20x30x32xf16>
-}
-// CHECK-LABEL: func.func @batch_to_space_nd
-// CHECK: mhlo.custom_call
-// CHECK-SAME: @tf.BatchToSpaceND
 // CHECK-SAME: byteir_attrs = {}
 
 func.func @onehot_case0(%arg0: tensor<150xi32>) -> tensor<150x16xf32> {
