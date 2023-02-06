@@ -1,4 +1,4 @@
-//===- AnchoredFuncPipeline.h ------------------------------------- C++ ---===//
+//===- AnchoredPipeline.h ----------------------------------- C++ ---===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_TRANSFORMS_ANCHOREDFUNCPIPELINE_H
-#define BYTEIR_TRANSFORMS_ANCHOREDFUNCPIPELINE_H
+#ifndef BYTEIR_TRANSFORMS_ANCHOREDPIPELINE_H
+#define BYTEIR_TRANSFORMS_ANCHOREDPIPELINE_H
 
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
@@ -27,14 +27,14 @@ namespace mlir {
 namespace func {
 class FuncOp;
 } // namespace func
+class ModuleOp;
 
-std::unique_ptr<OperationPass<func::FuncOp>>
-createAnchoredFuncPipelinePass(llvm::StringRef anchorTag,
-                               OpPassManager &otherPM);
+std::unique_ptr<Pass> createAnchoredPipelinePass(llvm::StringRef anchorTag,
+                                                 OpPassManager &otherPM);
 
-std::unique_ptr<OperationPass<func::FuncOp>>
-createAnchoredFuncPipelinePass(llvm::StringRef anchorTag = "");
+std::unique_ptr<Pass>
+createAnchoredPipelinePass(llvm::StringRef anchorTag = "");
 
 } // namespace mlir
 
-#endif // BYTEIR_TRANSFORMS_ANCHOREDFUNCPIPELINE_H
+#endif // BYTEIR_TRANSFORMS_ANCHOREDPIPELINE_H

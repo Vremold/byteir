@@ -1,4 +1,4 @@
-//===- AnchoredFuncPipeline.cpp ------------------------------------ C++ --===//
+//===- AnchoredPipeline.cpp -----------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Transforms/AnchoredFuncPipeline.h"
+#include "byteir/Transforms/AnchoredPipeline.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
@@ -26,17 +26,16 @@ using namespace mlir;
 
 namespace {
 
-struct AnchoredFuncPipelinePass
-    : public AnchoredFuncPipelineBase<AnchoredFuncPipelinePass> {
+struct AnchoredPipelinePass
+    : public AnchoredPipelineBase<AnchoredPipelinePass> {
 
-  explicit AnchoredFuncPipelinePass(const std::string &anchor)
-      : AnchoredFuncPipelineBase<AnchoredFuncPipelinePass>(),
-        pm(func::FuncOp::getOperationName()) {
+  explicit AnchoredPipelinePass(const std::string &anchor)
+      : AnchoredPipelineBase<AnchoredPipelinePass>(), pm("op") {
     this->anchorAttr = anchor;
   }
 
-  AnchoredFuncPipelinePass(const std::string &anchor, OpPassManager &otherPM)
-      : AnchoredFuncPipelineBase<AnchoredFuncPipelinePass>(), pm(otherPM) {
+  AnchoredPipelinePass(const std::string &anchor, OpPassManager &otherPM)
+      : AnchoredPipelineBase<AnchoredPipelinePass>(), pm(otherPM) {
     this->anchorAttr = anchor;
   }
 
@@ -49,13 +48,13 @@ struct AnchoredFuncPipelinePass
       return;
     }
 
-    auto f = getOperation();
+    auto op = getOperation();
 
-    if (!f->hasAttr(anchorAttr)) {
+    if (!op->hasAttr(anchorAttr)) {
       return;
     }
 
-    if (mlir::failed(runPipeline(pm, f))) {
+    if (mlir::failed(runPipeline(pm, op))) {
       signalPassFailure();
     }
   }
@@ -65,13 +64,13 @@ struct AnchoredFuncPipelinePass
 
 } // namespace
 
-std::unique_ptr<OperationPass<func::FuncOp>>
-mlir::createAnchoredFuncPipelinePass(llvm::StringRef anchorTag,
-                                     OpPassManager &otherPM) {
-  return std::make_unique<AnchoredFuncPipelinePass>(anchorTag.str(), otherPM);
+std::unique_ptr<Pass>
+mlir::createAnchoredPipelinePass(llvm::StringRef anchorTag,
+                                 OpPassManager &otherPM) {
+  return std::make_unique<AnchoredPipelinePass>(anchorTag.str(), otherPM);
 }
 
-std::unique_ptr<OperationPass<func::FuncOp>>
-mlir::createAnchoredFuncPipelinePass(llvm::StringRef anchorTag) {
-  return std::make_unique<AnchoredFuncPipelinePass>(anchorTag.str());
+std::unique_ptr<Pass>
+mlir::createAnchoredPipelinePass(llvm::StringRef anchorTag) {
+  return std::make_unique<AnchoredPipelinePass>(anchorTag.str());
 }

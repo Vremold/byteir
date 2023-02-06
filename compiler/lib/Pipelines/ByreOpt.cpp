@@ -60,7 +60,7 @@ void createByreOptPipelineImpl(OpPassManager &pm, const std::string &entryFunc,
   anchoredPM.addPass(createConvertLmhloToByrePass(appendArgTypes));
   anchoredPM.addPass(createCanonicalizerPass());
 
-  pm.addNestedPass<func::FuncOp>(createAnchoredFuncPipelinePass(
+  pm.addNestedPass<func::FuncOp>(createAnchoredPipelinePass(
       ByreDialect::getEntryPointFunctionAttrName(), anchoredPM));
 
   pm.addPass(createCSEPass());

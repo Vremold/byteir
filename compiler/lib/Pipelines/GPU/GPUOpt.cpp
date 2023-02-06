@@ -44,7 +44,7 @@ void createGPUOptPipelineImpl(OpPassManager &pm, const std::string &target) {
     anchoredPM.addPass(createPromoteBuffersToStackPass(
         /*isSmallAlloc =*/[](Value) { return true; }));
 
-    pm.addNestedPass<func::FuncOp>(createAnchoredFuncPipelinePass(
+    pm.addNestedPass<func::FuncOp>(createAnchoredPipelinePass(
         getByteIRElementwiseFusionAttrName(), anchoredPM));
   }
 

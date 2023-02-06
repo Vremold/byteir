@@ -317,7 +317,6 @@ void updateFuncReturnTypes(
         if (isFuncNotCompatiableWithSpace(anotherFunc, spaceAttr)) {
           // insert a CopyFrom after the CallOp
           auto retMemrefTy = retType.dyn_cast<MemRefType>();
-          CopyType_t copyKey = {ret, retMemrefTy.getMemorySpace()};
 
           for (unsigned i = 0; i < callOp.getNumResults(); ++i) {
             if (ret != callOp.getResult(i)) {

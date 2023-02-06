@@ -23,16 +23,35 @@ include "mlir/Pass/PassBase.td"
 include "mlir/Rewrite/PassUtil.td"
 
 //===----------------------------------------------------------------------===//
-// Anchored Func Pipeline
+// Anchored Pipeline
 //===----------------------------------------------------------------------===//
 
-def AnchoredFuncPipeline : Pass<"anchored-func-pipeline", "func::FuncOp"> {
-  let summary = "Apply a given pipeline when a func having anchorAttr";
-  let constructor = "mlir::createAnchoredFuncPipelinePass()";
+def AnchoredPipeline : Pass<"anchored-pipeline"> {
+  let summary = "Apply a given pipeline when an Operation having anchorAttr";
+  let constructor = "mlir::createAnchoredPipelinePass()";
   let options = [
     Option<"anchorAttr", "anchor-attr", "std::string",
-            /*default=*/"",
-            "An optional Unit attribute anchoring on target functions.">,
+           /*default=*/"",
+           "An optional Unit attribute anchoring on target functions.">,
+  ];
+}
+
+//===----------------------------------------------------------------------===//
+// TryCatch Module Pipeline
+//===----------------------------------------------------------------------===//
+
+def TryCatchModulePipeline : Pass<"try-catch-module-pipeline", "ModuleOp"> {
+  let summary =
+      "Apply a given pipeline with try-catch method in loop when there are "
+      "some limitation";
+  let constructor = "mlir::createTryCatchModulePipelinePass()";
+  let options = [
+    Option<"anchorAttr", "anchor-attr", "std::string",
+           /*default=*/"",
+           "An optional Unit attribute anchoring on target functions.">,
+    Option<"maxTries", "max-tries", "int64_t",
+           /*default=*/"10",
+           "The limit times of the try-catch loop">
   ];
 }
 

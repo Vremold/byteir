@@ -18,7 +18,7 @@
 #ifndef BYTEIR_TRANSFORMS_PASSES_H
 #define BYTEIR_TRANSFORMS_PASSES_H
 
-#include "byteir/Transforms/AnchoredFuncPipeline.h"
+#include "byteir/Transforms/AnchoredPipeline.h"
 #include "byteir/Transforms/Bufferize.h"
 #include "byteir/Transforms/CMAE.h"
 #include "byteir/Transforms/CanonicalizeExt.h"
@@ -35,6 +35,7 @@
 #include "byteir/Transforms/RewriteOpToStdCall.h"
 #include "byteir/Transforms/SetArgShape.h"
 #include "byteir/Transforms/SetSpace.h"
+#include "byteir/Transforms/TryCatchModulePipeline.h"
 
 namespace mlir {
 
