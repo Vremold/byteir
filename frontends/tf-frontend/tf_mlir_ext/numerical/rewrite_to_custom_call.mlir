@@ -412,6 +412,19 @@ func.func @l2_norm_V2(%1871: tensor<1x128xf16>) -> tensor<1x128xf16> {
 // CHECK-SAME: @byteir.l2_norm
 // CHECK-SAME: byteir_attrs = {axis = [1], epsilon = 0.000000e+00 : f64}
 
+func.func @l2_norm_V3(%15: tensor<1x100x512xf32>) -> tensor<1x100x512xf32> {
+  %cst_96 = "tf.Const"() {value = dense<2> : tensor<1xi32>} : () -> tensor<1xi32>
+  %16 = "tf.Square"(%15) {device = ""} : (tensor<1x100x512xf32>) -> tensor<1x100x512xf32>
+  %17 = "tf.Sum"(%16, %cst_96) {device = "", keep_dims = true} : (tensor<1x100x512xf32>, tensor<1xi32>) -> tensor<1x100x1xf32>
+  %18 = "tf.Rsqrt"(%17) {device = ""} : (tensor<1x100x1xf32>) -> tensor<1x100x1xf32>
+  %19 = "tf.Mul"(%15, %18) {device = ""} : (tensor<1x100x512xf32>, tensor<1x100x1xf32>) -> tensor<1x100x512xf32>
+  return %19 : tensor<1x100x512xf32>
+}
+// CHECK-LABEL: @l2_norm_V3
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.l2_norm
+// CHECK-SAME: byteir_attrs = {axis = [2], epsilon = 0.000000e+00 : f64}
+
 func.func @dynamic_mask_stitch(%arg0: tensor<4x4xf32>, %arg1: tensor<4xi32>) -> tensor<?x4xf32> {
   %cst = "tf.Const"() {value = dense<[[-0.916170597, -0.884184718, 1.60242105, -1.19678485], [0.33643803, -0.431175768, 1.71861267, 0.126368985], [-1.07191086, -1.00517535, -0.666032254, 0.776807785], [1.53380013, 0.83925873, -0.24277249, 1.53341103]]> : tensor<4x4xf32>} : () -> tensor<4x4xf32>
   %cst_0 = "tf.Const"() {value = dense<[0.553816557, -0.920699775, 0.418103188, -0.261674613]> : tensor<4xf32>} : () -> tensor<4xf32>

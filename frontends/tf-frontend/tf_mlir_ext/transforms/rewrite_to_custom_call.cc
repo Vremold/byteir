@@ -265,18 +265,18 @@ Value createL2Norm(PatternRewriter &rewriter, Location loc, Value input,
   return customCallOp.getResults()[0];
 }
 
-Value createL2NormV2(PatternRewriter &rewriter, Location loc, Value input,
-                     ElementsAttr axis) {
-  int64_t axisValue = (*axis.getValues<APInt>().begin()).getSExtValue();
-  return createL2Norm(rewriter, loc, input, 0.0, axisValue);
-}
-
 Value createL2NormV1(PatternRewriter &rewriter, Location loc, Value input,
                      ElementsAttr epsilon, ElementsAttr axis) {
   double epsilonValue = (*epsilon.getValues<APFloat>().begin()).convertToDouble();
   int64_t axisValue = (*axis.getValues<APInt>().begin()).getSExtValue();
 
   return createL2Norm(rewriter, loc, input, epsilonValue, axisValue);
+}
+
+Value createL2NormV2(PatternRewriter &rewriter, Location loc, Value input,
+                     ElementsAttr axis) {
+  int64_t axisValue = (*axis.getValues<APInt>().begin()).getSExtValue();
+  return createL2Norm(rewriter, loc, input, 0.0, axisValue);
 }
 
 Value createGELU(PatternRewriter &rewriter, Location loc, Value input,
@@ -620,6 +620,8 @@ struct RewriteToCustomCallOpsPass
           std::make_unique<RewriteL2NormV1SwapMul>(context));
       validCustomCallOpSet[getL2NormName()].emplace_back(
           std::make_unique<RewriteL2NormV2>(context));
+      validCustomCallOpSet[getL2NormName()].emplace_back(
+          std::make_unique<RewriteL2NormV3>(context));
 
       // patterns with c++
       validCustomCallOpSet[getOneHotName()].emplace_back(
