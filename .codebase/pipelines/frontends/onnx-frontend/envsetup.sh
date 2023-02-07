@@ -36,7 +36,7 @@ function of_envsetup() {
   git submodule update -f $ONNX_MLIR_ROOT
   pushd $ONNX_MLIR_ROOT
   git clean -fd .
-  git apply ../patches/ConstantDequantize.patch
+  git apply ../patches/ConstantExpandReductionDequantize.patch
   git apply ../patches/Pad.patch
   git apply ../patches/ShapeInference.patch
   popd

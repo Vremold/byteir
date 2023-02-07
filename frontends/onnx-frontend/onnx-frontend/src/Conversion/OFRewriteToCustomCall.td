@@ -21,10 +21,10 @@
 include "src/Dialect/ONNX/ONNX.td"  // third_party/onnx-mlir/src/Dialect/ONNX/ONNX.td
                  
 def IsOneSize : Constraint<CPred<"$0.size() == 1">, "is of size one">;
-def IsOneSizeDense : Constraint<And<[
+def IsOneSizeElements : Constraint<And<[
     CPred<" $0 ">,
-    CPred<" $0.isa<DenseElementsAttr>() ">,
-    CPred<" $0.cast<DenseElementsAttr>().size() == 1 ">]>, "is a DenseElementsAttr of size one">;
+    CPred<" $0.isa<ElementsAttr>() ">,
+    CPred<" $0.cast<ElementsAttr>().size() == 1 ">]>, "is a DenseElementsAttr of size one">;
 def TrueBoolAttr : Constraint<CPred<"$0.getValue() == true">, "this BoolAttr should be true">;
 
 //===----------------------------------------------------------------------===//
@@ -42,7 +42,7 @@ def RewriteL2Norm : Pat<
     )
   ),
   (NativeCodeCall<"createL2Norm($_builder, $_loc, $0, $1, $2)"> $input, $axis_attr, $epsilon_attr),
-  [(IsOneSize $axis_attr), (TrueBoolAttr $keep_dims), (IsOneSizeDense $epsilon_attr)]>;
+  [(IsOneSize $axis_attr), (TrueBoolAttr $keep_dims), (IsOneSizeElements $epsilon_attr)]>;
 
 //===----------------------------------------------------------------------===//
 // Quantize/Dequantize Pattern

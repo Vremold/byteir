@@ -1,3 +1,20 @@
+diff --git a/src/Conversion/ONNXToMhlo/Math/Reduction.cpp b/src/Conversion/ONNXToMhlo/Math/Reduction.cpp
+index 3b734e0b..66f6e438 100644
+--- a/src/Conversion/ONNXToMhlo/Math/Reduction.cpp
++++ b/src/Conversion/ONNXToMhlo/Math/Reduction.cpp
+@@ -86,10 +86,9 @@ llvm::SmallVector<int64_t, 4> getDefinedAxes<ONNXReduceSumOp>(Operation *op) {
+   // Assume it is verified that axes are known. Convert DenseElementsAttr to
+   // ArrayAttr.
+   if (!isFromNone(axesValue) && getONNXConstantOp(axesValue)) {
+-    mlir::DenseElementsAttr constAxes =
++    mlir::ElementsAttr constAxes =
+         getONNXConstantOp(axesValue)
+-            .getValueAttr()
+-            .dyn_cast_or_null<mlir::DenseElementsAttr>();
++            .getValueAttr().dyn_cast_or_null<mlir::ElementsAttr>();
+     for (mlir::IntegerAttr element : constAxes.getValues<IntegerAttr>())
+       definedAxes.push_back(element.getInt());
+     return definedAxes;
 diff --git a/src/Conversion/ONNXToMhlo/Tensor/Constant.cpp b/src/Conversion/ONNXToMhlo/Tensor/Constant.cpp
 index 910c0d40..49ebfee0 100644
 --- a/src/Conversion/ONNXToMhlo/Tensor/Constant.cpp
@@ -25,6 +42,23 @@ index 910c0d40..49ebfee0 100644
      rewriter.replaceOp(op, result);
      return success();
    }
+diff --git a/src/Conversion/ONNXToMhlo/Tensor/Expand.cpp b/src/Conversion/ONNXToMhlo/Tensor/Expand.cpp
+index 6352e180..5c35110e 100644
+--- a/src/Conversion/ONNXToMhlo/Tensor/Expand.cpp
++++ b/src/Conversion/ONNXToMhlo/Tensor/Expand.cpp
+@@ -68,10 +68,8 @@ struct ONNXExpandOpLoweringToMhlo : public ConversionPattern {
+     } else if (ONNXConstantOp shapeOp =
+                    dyn_cast_or_null<ONNXConstantOp>(shapeDefOp)) {
+       llvm::SmallVector<int64_t, 4> shapeValues;
+-      mlir::DenseElementsAttr constShape =
+-          getONNXConstantOp(shapeOp)
+-              .getValueAttr()
+-              .dyn_cast_or_null<mlir::DenseElementsAttr>();
++      mlir::ElementsAttr constShape =
++          shapeOp.getValueAttr().dyn_cast<ElementsAttr>();
+       for (mlir::IntegerAttr element : constShape.getValues<IntegerAttr>())
+         shapeValues.push_back(element.getInt());
+       RankedTensorType broadcastedType =
 diff --git a/src/Dialect/ONNX/ONNXOps/Quantize/DequantizeLinear.cpp b/src/Dialect/ONNX/ONNXOps/Quantize/DequantizeLinear.cpp
 index 4ead6093..3f9002d2 100644
 --- a/src/Dialect/ONNX/ONNXOps/Quantize/DequantizeLinear.cpp

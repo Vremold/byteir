@@ -142,7 +142,7 @@ Value createL2Norm(PatternRewriter &rewriter, Location loc, Value input,
     axis = inputType.getRank() + axis;
   }
   double epsilon =
-      (*epsilon_attr.dyn_cast<DenseElementsAttr>().getValues<APFloat>().begin())
+      (*epsilon_attr.dyn_cast<ElementsAttr>().getValues<APFloat>().begin())
           .convertToDouble();
   assert(0 < epsilon && epsilon < 1e-7 && "epsilon out of range for L2Norm");
 
