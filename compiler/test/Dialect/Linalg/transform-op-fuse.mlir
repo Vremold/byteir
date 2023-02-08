@@ -869,5 +869,58 @@ transform.sequence failures(propagate) {
   transform.structured.tile_loop_hint %1
 }
 
+// -----
 
+func.func @batch_matmul_elementwise(%ta3: tensor<8x32x128xf32>, %tb3: tensor<8x128x64xf32>, %tc3: tensor<8x32x64xf32>) -> (tensor<8x32x64xf32>)
+{
+  %empty= tensor.empty() : tensor<8x32x64xf32>
+  %0 = linalg_ext.batch_matmul
+                    ins(%ta3, %tb3: tensor<8x32x128xf32>, tensor<8x128x64xf32>)
+                    outs(%tc3: tensor<8x32x64xf32>)
+                    layout = "nn"
+  %1 = linalg.elemwise_unary ins(%0 : tensor<8x32x64xf32>)
+                             outs(%empty: tensor<8x32x64xf32>) -> tensor<8x32x64xf32>
+  return %1 : tensor<8x32x64xf32>
+}
+// CHECK-LABEL: func.func @batch_matmul_elementwise
+// CHECK: scf.for
+// CHECK:   scf.for
+// CHECK:     linalg_ext.batch_matmul
+// CHECK:     linalg.elemwise_unary
+// CHECK:   scf.yield
+// CHECK: scf.yield
 
+transform.sequence failures(propagate) {
+^bb0(%arg1: !pdl.operation):
+  %0 = transform.structured.match ops{["linalg.elemwise_unary"]} in %arg1
+  %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [2, 4], tile_interchange = [0, 1]}
+  transform.structured.tile_loop_hint %1
+}
+
+// -----
+
+func.func @elementwise_batch_matmul(%ta3: tensor<8x32x128xf32>, %tb3: tensor<8x128x64xf32>, %tc3: tensor<8x32x64xf32>) -> (tensor<8x32x64xf32>)
+{
+  %empty= tensor.empty() : tensor<8x32x128xf32>
+  %0 = linalg.elemwise_unary ins(%ta3 : tensor<8x32x128xf32>)
+                             outs(%empty: tensor<8x32x128xf32>) -> tensor<8x32x128xf32>
+  %1 = linalg_ext.batch_matmul
+                    ins(%0, %tb3: tensor<8x32x128xf32>, tensor<8x128x64xf32>)
+                    outs(%tc3: tensor<8x32x64xf32>)
+                    layout = "nn"
+  return %1 : tensor<8x32x64xf32>
+}
+// CHECK-LABEL: func.func @elementwise_batch_matmul
+// CHECK: scf.for
+// CHECK:   scf.for
+// CHECK:     linalg.elemwise_unary
+// CHECK:     linalg_ext.batch_matmul
+// CHECK:   scf.yield
+// CHECK: scf.yield
+
+transform.sequence failures(propagate) {
+^bb0(%arg1: !pdl.operation):
+  %0 = transform.structured.match ops{["linalg_ext.batch_matmul"]} in %arg1
+  %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [2, 4], tile_interchange = [0, 1]}
+  transform.structured.tile_loop_hint %1
+}

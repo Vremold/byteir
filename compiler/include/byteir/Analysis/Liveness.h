@@ -58,6 +58,8 @@ public:
   /// information for all associated regions.
   Liveness(mlir::Operation *op);
 
+  virtual ~Liveness() {}
+
   /// Returns the operation this analysis was constructed from.
   mlir::Operation *getOperation() const { return operation; }
 

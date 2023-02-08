@@ -201,3 +201,33 @@ func.func @topk_tensor_dynamic(%input_values: tensor<?x?xf32>, %input_indices: t
 }
 //CHECK-LABEL: func.func @topk_tensor_dynamic
 //CHECK: linalg_ext.topk
+
+func.func @batch_matmul_3d(%ta3: tensor<8x32x128xf32>, %tb3: tensor<8x128x64xf32>, %tc3: tensor<8x32x64xf32>) -> (tensor<8x32x64xf32>)
+{
+  %res = linalg_ext.batch_matmul
+                    ins(%ta3, %tb3: tensor<8x32x128xf32>, tensor<8x128x64xf32>)
+                    outs(%tc3: tensor<8x32x64xf32>)
+                    layout = "nn"
+  return %res : tensor<8x32x64xf32>
+}
+//CHECK-LABEL: func.func @batch_matmul_3d
+
+func.func @batch_matmul_4d(%ta4: tensor<16x8x32x128xf32>, %tb4: tensor<16x8x128x64xf32>, %tc4: tensor<16x8x32x64xf32>) -> (tensor<16x8x32x64xf32>)
+{
+  %res = linalg_ext.batch_matmul
+                    ins(%ta4, %tb4: tensor<16x8x32x128xf32>, tensor<16x8x128x64xf32>)
+                    outs(%tc4: tensor<16x8x32x64xf32>)
+                    layout = "nn"
+  return %res : tensor<16x8x32x64xf32>
+}
+//CHECK-LABEL: func.func @batch_matmul_4d
+
+func.func @batch_matmul_3d_memref(%ta3: memref<8x32x128xf32>, %tb3: memref<8x128x64xf32>, %tc3: memref<8x32x64xf32>) -> (memref<8x32x64xf32>)
+{
+  linalg_ext.batch_matmul
+                    ins(%ta3, %tb3: memref<8x32x128xf32>, memref<8x128x64xf32>)
+                    outs(%tc3: memref<8x32x64xf32>)
+                    layout = "nn"
+  return %tc3 : memref<8x32x64xf32>
+}
+//CHECK-LABEL: func.func @batch_matmul_3d_memref

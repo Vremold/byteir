@@ -64,8 +64,6 @@ inline std::string stringifyEnum(NamedLayout layout) {
     return "DHWCN";
   case NamedLayout::NCW:
     return "NCW";
-  default:
-    return "UNKNOWN";
   }
 }
 

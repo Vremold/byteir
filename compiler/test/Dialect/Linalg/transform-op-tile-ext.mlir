@@ -164,3 +164,32 @@ func.func @topk_tensor_optional(%input_values: tensor<1024x64xf32>) -> (tensor<1
 //CHECK: scf.yield
 
 // -----
+
+transform.sequence failures(propagate) {
+^bb0(%arg1: !pdl.operation):
+  %0 = transform.structured.match ops{["linalg_ext.batch_matmul"]} in %arg1
+  %1, %loops:3 = transform.structured.tile_ext %0 [2, 4, 8] {interchange = [0, 2, 1]}
+}
+
+func.func @batch_matmul_3d(%ta3: tensor<8x32x128xf32>, %tb3: tensor<8x128x64xf32>, %tc3: tensor<8x32x64xf32>) -> (tensor<8x32x64xf32>)
+{
+  %res = linalg_ext.batch_matmul
+                    ins(%ta3, %tb3: tensor<8x32x128xf32>, tensor<8x128x64xf32>)
+                    outs(%tc3: tensor<8x32x64xf32>)
+                    layout = "nn"
+  return %res : tensor<8x32x64xf32>
+}
+// CHECK-LABEL: func.func @batch_matmul_3d
+// CHECK: scf.for
+// CHECK:   scf.for
+// CHECK:     scf.for
+// CHECK:       tensor.extract_slice
+// CHECK:       tensor.extract_slice
+// CHECK:       tensor.extract_slice
+// CHECK:       linalg_ext.batch_matmul
+// CHECK:       tensor.insert_slice
+// CHECK:     scf.yield
+// CHECK:   scf.yield
+// CHECK: scf.yield
+
+// -----

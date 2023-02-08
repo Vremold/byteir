@@ -27,6 +27,7 @@
 #define BYTEIR_DIALECT_LINALG_IR_LINALGEXTOPS_H
 
 #include "byteir/Dialect/Linalg/IR/LinalgExtInterfaces.h"
+#include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Dialect.h"

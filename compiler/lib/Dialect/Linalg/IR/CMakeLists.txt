@@ -8,6 +8,7 @@ add_mlir_dialect_library(MLIRLinalgExt
 
   LINK_LIBS PUBLIC
   MLIRIR
+  MLIRLinalgUtils
   MLIRSupport
 )
 

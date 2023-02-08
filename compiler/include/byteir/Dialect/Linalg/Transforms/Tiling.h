@@ -75,7 +75,7 @@ struct TilingInterfaceTilingPattern : public TilingInterfaceBaseTilingPattern {
       : TilingInterfaceBaseTilingPattern(context, options, filter, benefit) {}
 
   LogicalResult matchAndRewrite(TilingInterface tilableOp,
-                                PatternRewriter &rewriter) const;
+                                PatternRewriter &rewriter) const override;
 };
 } // namespace linalg_ext
 

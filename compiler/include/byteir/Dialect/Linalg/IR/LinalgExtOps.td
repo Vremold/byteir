@@ -22,12 +22,21 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+// Some code comes from LinalgStructuredOps.td in LLVM project
+// Original license:
+//
+// Licensed under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
 
 #ifndef BYTEIR_DIALECT_LINALG_IR_LINALG_EXT_OPS
 #define BYTEIR_DIALECT_LINALG_IR_LINALG_EXT_OPS
 
 include "byteir/Dialect/Linalg/IR/LinalgExtBase.td"
 include "byteir/Dialect/Linalg/IR/LinalgExtInterfaces.td"
+include "mlir/Dialect/Linalg/IR/LinalgInterfaces.td"
 include "mlir/Interfaces/ControlFlowInterfaces.td"
 include "mlir/Interfaces/DestinationStyleOpInterface.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
@@ -59,6 +68,45 @@ class LinalgExt_Op<string mnemonic, list<Trait> traits = []> :
       return std::make_pair<int64_t, int64_t>(
           outputsIndexAndLength.first,
           outputsIndexAndLength.first + outputsIndexAndLength.second);
+    }
+
+  }];
+}
+
+class LinalgExtStructuredBase_Op<string mnemonic, list<Trait> props>
+  : LinalgExt_BaseOp<mnemonic, !listconcat([
+       SingleBlockImplicitTerminator<"::mlir::linalg_ext::YieldOp">,
+       DeclareOpInterfaceMethods<MemoryEffectsOpInterface>,
+       DestinationStyleOpInterface,
+       LinalgStructuredInterface,
+       ReifyRankedShapedTypeOpInterface], props)> {
+  let hasVerifier = 1;
+  let hasCustomAssemblyFormat = 1;
+  code extraLinalgExtOpClassDeclaration = [{
+    // Currently all the ops in linalg_ext has no region builder
+    static std::function<void(ImplicitLocOpBuilder &,
+                              Block &, ArrayRef<NamedAttribute>)>
+    getRegionBuilder() {
+      return nullptr;
+    }
+
+    // Return whether the op accesses the iteration indices.
+    bool hasIndexSemantics() {
+      return !this->getBody()->getOps<linalg::IndexOp>().empty();
+    }
+
+    // Declare functions necessary for LinalgStructuredInterface.
+    ArrayAttr getIndexingMaps();
+    SmallVector<utils::IteratorType> getIteratorTypesArray();
+    std::string getLibraryCallName() {
+      return "op_has_no_registered_library_name";
+    }
+
+    // Define functions for ReifyRankedShapedTypeOpInterface
+     LogicalResult reifyResultShapes(OpBuilder &b,
+        ReifiedRankedShapedTypeDims &reifiedReturnShapes) {
+      return llvm::cast<linalg::LinalgOp>(getOperation()).reifyResultShapes(b,
+          reifiedReturnShapes);
     }
 
   }];
@@ -382,6 +430,56 @@ def LinalgExt_CustomOp : LinalgExt_Op<"custom",
   }];
 
   let extraClassDeclaration = extraLinalgExtOpClassDeclaration # [{
+  }];
+}
+
+def LinalgExt_BatchMatmulOp : LinalgExtStructuredBase_Op<"batch_matmul", 
+    [DeclareOpInterfaceMethods<TilingInterface,
+        ["generateResultTileValue",
+         "getIterationDomain",
+         "getLoopIteratorTypes",
+         "getResultTilePosition",
+         "getTiledImplementation"]>]> {
+  let summary = "Batched matrix multiplication";
+  let description = [{
+    Performs a batched matrix multiplication of two N-D (N >= 3) inputs.
+
+    Numeric casting is performed on the operands to the inner multiply, promoting
+    them to the same data type as the accumulator/output.
+  }];
+
+  let arguments = (ins AnyRankedTensorOrMemRefType:$lhs,
+                       AnyRankedTensorOrMemRefType:$rhs,
+                       AnyRankedTensorOrMemRefType:$init,
+                       StrAttr:$layout
+  );
+  let results = (outs
+    Variadic<AnyRankedTensor>:$results
+  );
+  let regions = (region SizedRegion<1>:$region);
+
+  let skipDefaultBuilders = 1;
+  let builders = [
+    OpBuilder<(ins "Value":$lhs, "Value":$rhs, "Value":$init,
+        "StringAttr":$layout, CArg<"ArrayRef<NamedAttribute>",
+        "{}">:$attributes)>,
+    OpBuilder<(ins "Value":$lhs, "Value":$rhs, "Value":$init,
+        "StringRef":$layout, CArg<"ArrayRef<NamedAttribute>",
+        "{}">:$attributes)>,
+  ];
+
+  let extraClassDeclaration = extraLinalgExtOpClassDeclaration # [{
+    // Implement functions necessary for DestinationStyleOpInterface.
+    std::pair<int64_t, int64_t> getDpsInitsPositionRange() {
+      int64_t getNumOperands = this->getNumOperands();
+      return {getNumOperands - 1, getNumOperands};
+    }
+
+    // Additional functions
+    int64_t getFullRank() {
+      return getInit().getType().cast<ShapedType>().getRank() + 1;
+    }
+    
   }];
 }
 

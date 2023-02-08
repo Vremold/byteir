@@ -35,6 +35,8 @@ public:
   }
   virtual llvm::SmallVector<bool> compute(mlir::Value v) = 0;
 
+  virtual ~ComputeFlag() {}
+
 protected:
   DimFlagAnalysis *analysis{nullptr};
 };

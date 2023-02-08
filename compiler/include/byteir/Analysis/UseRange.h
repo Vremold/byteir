@@ -108,6 +108,7 @@ public:
   UserangeAnalysis(mlir::Operation *op, Liveness *liveness,
                    const mlir::bufferization::BufferPlacementAllocs &allocs,
                    const mlir::BufferViewFlowAnalysis &aliases);
+  virtual ~UserangeAnalysis() {}
 
   /// Returns the index of the first operation that uses the given value or an
   /// empty Optional if the value has no uses.
