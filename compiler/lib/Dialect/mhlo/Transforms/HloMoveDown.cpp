@@ -38,6 +38,8 @@ using namespace llvm;
 using namespace mlir;
 using namespace mlir::mhlo;
 
+#define K_INITIAL -999
+
 namespace {
 
 static constexpr char kMoveDownDisableKey[] = "__move_down_disable__";
@@ -63,7 +65,6 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
     }
 
     auto value = op.getResult();
-    auto operandType = op.getOperand().getType(); // T1 as Transpose: T1 -> T2
 
     // early termination if not allMultiUser nor multiUser but has multi users
     if (!allMultiUser && !multiUser && userCount(value) != 1) {
@@ -100,7 +101,8 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       for (auto operand : user->getOperands()) {
         if (operand == value) {
           continue;
-        } else if (isSplatMhloConstantValue(operand)) {
+        } else if (llvm::isa_and_nonnull<mhlo::ConstantOp>(
+                       operand.getDefiningOp())) {
           continue;
         } else if (llvm::isa_and_nonnull<mhlo::TransposeOp>(
                        operand.getDefiningOp()) &&
@@ -126,35 +128,32 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
     if (users.size() == 0)
       return failure();
 
+    // TODO(lyq): move this to utils
+    auto getReversedPermutation =
+        [&](DenseIntElementsAttr permutation) -> DenseIntElementsAttr {
+      SmallVector<int64_t> reversedPermutation(permutation.size(), K_INITIAL);
+      int64_t index = 0;
+      for (APInt p : permutation) {
+        reversedPermutation[p.getSExtValue()] = index;
+        index++;
+      }
+      return rewriter.getI64TensorAttr(reversedPermutation);
+    };
+
     // process user
     for (auto user : users) {
       BlockAndValueMapping bvm;
-      llvm::SetVector<Value> constInputs;
       for (auto operand : user->getOperands()) {
         if (operand == value) {
           if (!bvm.contains(operand)) {
             bvm.map(operand, op.getOperand());
           }
-        } else if (auto producerOp =
-                       operand.getDefiningOp<mhlo::TransposeOp>()) {
-          if (!bvm.contains(operand)) {
-            bvm.map(operand, producerOp.getOperand());
-          }
-        } else if (auto producerOp =
-                       operand.getDefiningOp<mhlo::BroadcastInDimOp>()) {
+        } else {
+          // other producer
+          Operation *producerOp = operand.getDefiningOp();
           if (!bvm.contains(operand)) {
             OpBuilder::InsertionGuard guard(rewriter);
             rewriter.setInsertionPointAfter(producerOp);
-            auto getReversedPermutation =
-                [&](DenseIntElementsAttr permutation) -> DenseIntElementsAttr {
-              SmallVector<int64_t> reversedPermutation(permutation.size(), -1);
-              int64_t index = 0;
-              for (APInt p : permutation) {
-                reversedPermutation[p.getSExtValue()] = index;
-                index++;
-              }
-              return rewriter.getI64TensorAttr(reversedPermutation);
-            };
             mhlo::TransposeOp newTransposeOp =
                 rewriter.create<mhlo::TransposeOp>(
                     producerOp->getLoc(), operand,
@@ -164,23 +163,7 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
 
             bvm.map(operand, newTransposeOp.getResult());
           }
-        } else {
-          // isSplatMhloConstantValue(operand) == true
-          // since it has been checked when collecting users
-          if (!constInputs.contains(operand)) {
-            constInputs.insert(operand);
-          }
         }
-      }
-
-      // create all const and put into bvm
-      for (auto input : constInputs) {
-        ElementsAttr oldConstAttr =
-            input.getDefiningOp<mhlo::ConstantOp>().getValue();
-        auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
-        auto newConstOp =
-            rewriter.create<mhlo::ConstantOp>(op->getLoc(), *newConstAttr);
-        bvm.map(input, newConstOp.getOutput());
       }
 
       auto maybeResultTypes =
@@ -259,10 +242,17 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         continue;
       }
 
+      auto isDenseMhloConstantValue = [](Value operand) -> bool {
+        if (auto constOp = operand.getDefiningOp<mhlo::ConstantOp>()) {
+          return llvm::isa<DenseElementsAttr>(constOp.getValue());
+        }
+        return false;
+      };
+
       // isElementwiseOneResult(user) == true
       bool failed = false;
       for (auto operand : user->getOperands()) {
-        if (operand != value && !isSplatMhloConstantValue(operand)) {
+        if (operand != value && !isDenseMhloConstantValue(operand)) {
           // fairly strict condition, so far we only accept static arg
           // to avoid side-effect on other branches as it seems we dont
           // know benefits besides branch here.
@@ -297,7 +287,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
             bvm.map(value, op.getOperand());
           }
         } else {
-          // isSplatMhloConstantValue(operand) == true
+          // isDenseMhloConstantValue(operand) == true
           // since it has been checked when collecting users
           if (reshapeInsertOperands.contains(operand) &&
               !insertedReshapeInputs.contains(operand)) {
@@ -310,11 +300,12 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
 
       // create all const and put into bvm
       for (auto input : constInputs) {
-        ElementsAttr oldConstAttr =
-            input.getDefiningOp<mhlo::ConstantOp>().getValue();
-        auto newConstAttr = reshapeSplatElementsAttr(oldConstAttr, operandType);
+        DenseElementsAttr oldConstAttr = input.getDefiningOp<mhlo::ConstantOp>()
+                                             .getValue()
+                                             .cast<DenseElementsAttr>();
+        auto newConstAttr = reshapeDenseElementsAttr(oldConstAttr, operandType);
         auto newConstOp =
-            rewriter.create<mhlo::ConstantOp>(op->getLoc(), *newConstAttr);
+            rewriter.create<mhlo::ConstantOp>(op->getLoc(), newConstAttr);
         bvm.map(input, newConstOp.getOutput());
       }
 
