@@ -463,6 +463,48 @@ transform.sequence failures(propagate) {
 
 // -----
 
+func.func @fuse_multihead_attention(%arg0: tensor<128x16x1024x32xf32>, %arg1: tensor<128x512x16x32xf32>, %arg2: tensor<128x16x512x32xf32>) -> tensor<128x16x1024x32xf32> {
+  %0 = tensor.empty() : tensor<128x16x1024x512xf32>
+  %1 = tensor.empty() : tensor<128x16x1024x32xf32>
+  %2 = tensor.empty() : tensor<128x16x1024x512xf32>
+  %3 = tensor.empty() : tensor<128x16x1024xf32>
+  %4 = tensor.empty() : tensor<128x16x1024xf32>
+  %5 = tensor.empty() : tensor<128x16x1024xf32>
+  %6 = tensor.empty() : tensor<128x16x32x512xf32>
+  %cst = arith.constant 0xFF800000 : f32
+  %7 = linalg.fill ins(%cst : f32) outs(%3 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
+  %cst_0 = arith.constant 0.000000e+00 : f32
+  %8 = linalg.fill ins(%cst_0 : f32) outs(%0 : tensor<128x16x1024x512xf32>) -> tensor<128x16x1024x512xf32>
+  %9 = linalg.fill ins(%cst_0 : f32) outs(%1 : tensor<128x16x1024x32xf32>) -> tensor<128x16x1024x32xf32>
+  %10 = linalg.fill ins(%cst_0 : f32) outs(%4 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
+  %transposed = linalg.transpose ins(%arg1 : tensor<128x512x16x32xf32>) outs(%6 : tensor<128x16x32x512xf32>) permutation = [0, 2, 3, 1] 
+  %11 = linalg_ext.batch_matmul ins(%arg0, %transposed : tensor<128x16x1024x32xf32>, tensor<128x16x32x512xf32>) outs(%8 : tensor<128x16x1024x512xf32>) layout = "nn"
+  %12:4 = linalg_ext.softmax dimension(3) ins(%11 : tensor<128x16x1024x512xf32>) outs(%2, %7, %10, %5 : tensor<128x16x1024x512xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>) : tensor<128x16x1024x512xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>
+  %13 = linalg_ext.batch_matmul ins(%12#0, %arg2 : tensor<128x16x1024x512xf32>, tensor<128x16x512x32xf32>) outs(%9 : tensor<128x16x1024x32xf32>) layout = "nn"  {__root__}
+  return %13 : tensor<128x16x1024x32xf32>
+}
+// CHECK-LABEL: func.func @fuse_multihead_attention
+// CHECK:       scf.for
+// CHECK:         scf.for
+// CHECK:           linalg.transpose
+// CHECK:           linalg_ext.batch_matmul
+// CHECK:           linalg_ext.softmax
+// CHECK:           linalg_ext.diag
+// CHECK:           linalg_ext.batch_matmul
+// CHECK:           linalg_ext.batch_matmul
+// CHECK:         scf.yield
+// CHECK:       }
+// CHECK:       scf.yield
+
+transform.sequence failures(propagate) {
+^bb1(%arg1: !pdl.operation):
+  %0 = transform.structured.match attributes{"__root__"} in %arg1
+  %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [0, 0, 4, 0, 8], tile_interchange = [0, 1, 4, 3, 2]}
+  transform.structured.tile_loop_hint %1 
+}
+
+// -----
+
 // CHECK-LABEL: func.func @fuse_2_matmul_2_output
 func.func @fuse_2_matmul_2_output(%arg0: tensor<1024x32xf32>, %arg1: tensor<32x512xf32>, %arg2: tensor<512x32xf32>) -> (tensor<1024x32xf32>, tensor<1024x512xf32>) {
 // CHECK: scf.for

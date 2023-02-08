@@ -103,6 +103,15 @@ func.func @diag_tensor(%arg0: tensor<1024xf32>) -> (tensor<1024x1024xf32>) {
 //CHECK-LABEL: func.func @diag_tensor
 //CHECK: linalg_ext.diag
 
+func.func @diag_tensor_2d(%arg0: tensor<512x1024xf32>) -> (tensor<512x1024x1024xf32>) {
+  %0 = tensor.empty() : tensor<512x1024x1024xf32>
+  %1 = linalg_ext.diag 
+    ins(%arg0 : tensor<512x1024xf32>) outs(%0 : tensor<512x1024x1024xf32>) : tensor<512x1024x1024xf32>
+  return %1 : tensor<512x1024x1024xf32>
+}
+//CHECK-LABEL: func.func @diag_tensor_2d
+//CHECK: linalg_ext.diag
+
 func.func @diag_memref(%arg0: memref<1024xf32>) -> (memref<1024x1024xf32>) {
   %0 = memref.alloc() : memref<1024x1024xf32>
   linalg_ext.diag 
@@ -110,6 +119,15 @@ func.func @diag_memref(%arg0: memref<1024xf32>) -> (memref<1024x1024xf32>) {
   return %0 : memref<1024x1024xf32>
 }
 //CHECK-LABEL: func.func @diag_memref
+//CHECK: linalg_ext.diag
+
+func.func @diag_memref_2d(%arg0: memref<512x1024xf32>) -> (memref<512x1024x1024xf32>) {
+  %0 = memref.alloc() : memref<512x1024x1024xf32>
+  linalg_ext.diag 
+    ins(%arg0 : memref<512x1024xf32>) outs(%0 : memref<512x1024x1024xf32>)
+  return %0 : memref<512x1024x1024xf32>
+}
+//CHECK-LABEL: func.func @diag_memref_2d
 //CHECK: linalg_ext.diag
 
 func.func @alias(%arg0: f32) -> (f32) {

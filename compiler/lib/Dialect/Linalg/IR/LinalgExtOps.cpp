@@ -243,7 +243,7 @@ static ParseResult parseDstStyleOp(
   // Parse `ins` and `outs`.
   SmallVector<Type, 4> inputTypes, outputTypes;
   if (parseCommonStructuredOpParts(parser, result, inputTypes, outputTypes,
-                                   /*addOperandSegmentSizes=*/true))
+                                   /*addOperandSegmentSizes=*/false))
     return failure();
 
   // Add result types.
@@ -567,9 +567,10 @@ LogicalResult mlir::linalg_ext::CustomOp::getResultTilePosition(
 //===----------------------------------------------------------------------===//
 
 Type mlir::linalg_ext::DiagOp::getDiagType(ShapedType type) {
-  auto shape = type.getShape();
+  ArrayRef<int64_t> shape = type.getShape();
+  size_t rank = shape.size();
   SmallVector<int64_t> newShape(shape.begin(), shape.end());
-  newShape.insert(newShape.end(), shape.begin(), shape.end());
+  newShape.push_back(shape[rank - 1]);
   return type.clone(newShape);
 }
 
@@ -584,7 +585,7 @@ ArrayAttr mlir::linalg_ext::DiagOp::getIndexingMaps() {
   MLIRContext *ctx = getContext();
 
   // input
-  maps.push_back(AffineMap::getMultiDimIdentityMap(rank / 2, ctx));
+  maps.push_back(AffineMap::getMultiDimIdentityMap(rank - 1, ctx));
 
   // outputs
   // result
@@ -812,9 +813,10 @@ mlir::LogicalResult validSoftmaxConsumer(Operation *op) {
   if (op == nullptr)
     return failure();
 
-  // support matmul op now
+  // support matmul, batch_matmul op now
   // TODO we will relax it
-  if (isa<linalg::MatmulOp>(op)) {
+  if (isa<linalg::MatmulOp, linalg_ext::BatchMatmulOp, linalg::BatchMatmulOp>(
+          op)) {
     return success();
   }
   return failure();
@@ -843,10 +845,17 @@ Value getSoftmaxScaleDiagMatmul(OpBuilder &b, mlir::Location loc,
     SmallVector<Value> scaleMatmulInputs;
     scaleMatmulInputs.push_back(diag->getResult(0));
     scaleMatmulInputs.push_back(consumerOutput);
-    auto scaleMatmul = b.create<linalg::MatmulOp>(loc, scaleMatmulInputs,
-                                                  filledTensor->getResults());
+    int64_t rank = consumerOutput.getType().cast<ShapedType>().getRank();
+    if (rank == 2) {
+      auto scaleMatmul = b.create<linalg::MatmulOp>(loc, scaleMatmulInputs,
+                                                    filledTensor->getResults());
+      return scaleMatmul->getResult(0);
+    }
+    auto scaleBatchMatmul = b.create<linalg_ext::BatchMatmulOp>(
+        loc, scaleMatmulInputs[0], scaleMatmulInputs[1],
+        filledTensor->getResult(0), "nn");
 
-    return scaleMatmul->getResult(0);
+    return scaleBatchMatmul->getResult(0);
   }
 
   return Value();
@@ -1470,7 +1479,7 @@ void mlir::linalg_ext::BatchMatmulOp::build(
     result.addTypes(initType);
 
   // TODO: currently the region content is wrong
-  buildIdentityRegion(builder, result.location, *result.addRegion(), {lhs},
+  buildIdentityRegion(builder, result.location, *result.addRegion(), {lhs, rhs},
                       init);
 }
 
@@ -1507,7 +1516,7 @@ void mlir::linalg_ext::BatchMatmulOp::print(OpAsmPrinter &p) {
   printCommonStructuredOpPartsWithNewLine(
       p, SmallVector<Value>(getDpsInputOperands()),
       SmallVector<Value>(getDpsInitOperands()));
-  p << ' ' << getLayoutAttrName() << " = " << getLayout() << " ";
+  p << ' ' << getLayoutAttrName().strref() << " = \"" << getLayout() << "\" ";
   p.printOptionalAttrDict((*this)->getAttrs(), {getLayoutAttrName()});
 }
 

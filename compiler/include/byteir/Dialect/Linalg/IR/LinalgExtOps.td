@@ -235,7 +235,20 @@ def LinalgExt_DiagOp : LinalgExt_Op<"diag",
   let summary = "Diag Op";
   let description = [{
     diag(x) presents a diag matrix from a vector.
+    it only works on the last dimension.
     it is an intermediate op for softmax's fusion
+
+    1D Example:
+    ```mlir
+    %1 = linalg_ext.diag 
+    ins(%arg0 : tensor<1024xf32>) outs(%0 : tensor<1024x1024xf32>) : tensor<1024x1024xf32>
+    ```
+
+    2D Example
+    ```mlir
+    %1 = linalg_ext.diag
+    ins(%arg0 : tensor<512x1024xf32>) outs(%0 : tensor<512x1024x1024xf32>) : tensor<512x1024x1024xf32>
+    ```
   }];
 
   let arguments = (ins
