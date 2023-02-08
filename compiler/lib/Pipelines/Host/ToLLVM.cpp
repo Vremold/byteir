@@ -27,6 +27,7 @@
 #include "mlir/Dialect/Arith/Transforms/Passes.h"
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/MemRef/Transforms/Passes.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/Transforms/Passes.h"
@@ -77,6 +78,7 @@ void mlir::createToLLVMPipeline(OpPassManager &pm) {
         pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
         pm.addPass(createCanonicalizerPass());
         pm.addPass(arith::createArithExpandOpsPass());
+        pm.addPass(memref::createExpandStridedMetadataPass());
         pm.addPass(createMemRefToLLVMConversionPass());
         pm.addPass(createConvertMathToLLVMPass());
         pm.addPass(createConvertFuncToLLVMPass());
