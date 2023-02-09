@@ -52,6 +52,18 @@ inline bool isElementwiseOneResult(Operation *op) {
          op->hasTrait<::mlir::OpTrait::OneResult>();
 }
 
+// TODO(lyq): move this to utils
+SmallVector<int64_t>
+getTransposeReversedPermutation(DenseIntElementsAttr permutation) {
+  SmallVector<int64_t> reversedPermutation(permutation.size(), K_INITIAL);
+  int64_t index = 0;
+  for (APInt p : permutation) {
+    reversedPermutation[p.getSExtValue()] = index;
+    index++;
+  }
+  return reversedPermutation;
+}
+
 struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
   TransposeMoveDownPattern(MLIRContext *context,
                            const llvm::DenseSet<llvm::StringRef> &blocker,
@@ -111,13 +123,30 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
           continue;
         } else if (llvm::isa_and_nonnull<mhlo::BroadcastInDimOp>(
                        operand.getDefiningOp())) {
-          continue;
-        } else {
-          if (allMultiUser)
-            return failure();
-          failed = true;
-          break;
+          // check whether BroadcastOp's dims are sorted after folding transpose
+          auto newPermuation =
+              getTransposeReversedPermutation(op.getPermutation());
+          SmallVector<int64_t> newBroadcastDimensions;
+          for (auto dimension : operand.getDefiningOp<mhlo::BroadcastInDimOp>()
+                                    .getBroadcastDimensions()
+                                    .getValues<int64_t>()) {
+            int64_t index = 0;
+            for (auto p : newPermuation) {
+              if (p == dimension) {
+                newBroadcastDimensions.push_back(index);
+                break;
+              }
+              index++;
+            }
+          }
+          if (llvm::is_sorted(newBroadcastDimensions)) {
+            continue;
+          }
         }
+        if (allMultiUser)
+          return failure();
+        failed = true;
+        break;
       }
       if (failed)
         continue;
@@ -127,18 +156,6 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
     // terminate if no legal users
     if (users.size() == 0)
       return failure();
-
-    // TODO(lyq): move this to utils
-    auto getReversedPermutation =
-        [&](DenseIntElementsAttr permutation) -> DenseIntElementsAttr {
-      SmallVector<int64_t> reversedPermutation(permutation.size(), K_INITIAL);
-      int64_t index = 0;
-      for (APInt p : permutation) {
-        reversedPermutation[p.getSExtValue()] = index;
-        index++;
-      }
-      return rewriter.getI64TensorAttr(reversedPermutation);
-    };
 
     // process user
     for (auto user : users) {
@@ -154,10 +171,11 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
           if (!bvm.contains(operand)) {
             OpBuilder::InsertionGuard guard(rewriter);
             rewriter.setInsertionPointAfter(producerOp);
+            auto newPermutation = rewriter.getI64TensorAttr(
+                getTransposeReversedPermutation(op.getPermutation()));
             mhlo::TransposeOp newTransposeOp =
-                rewriter.create<mhlo::TransposeOp>(
-                    producerOp->getLoc(), operand,
-                    getReversedPermutation(op.getPermutation()));
+                rewriter.create<mhlo::TransposeOp>(producerOp->getLoc(),
+                                                   operand, newPermutation);
             newTransposeOp->setAttr(kMoveDownDisableKey,
                                     rewriter.getUnitAttr());
 

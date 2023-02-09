@@ -70,6 +70,18 @@ func.func @transpose_move_down_brodcast_binary(%arg0 : tensor<31x20x32xf32>, %ar
 // CHECK-NEXT: mhlo.transpose
 // CHECK-NEXT: return
 
+func.func @transpose_not_move_down_brodcast_binary(%arg0 : tensor<31x20x32xf32>, %arg1 : tensor<32x20xf32>) -> tensor<20x31x32xf32> {
+    %0 = "mhlo.transpose"(%arg0) {permutation = dense<[1, 0, 2]> : tensor<3xi64>} : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
+    %1 = "mhlo.broadcast_in_dim"(%arg1) {broadcast_dimensions = dense<[2, 0]> : tensor<2xi64>} : (tensor<32x20xf32>) -> tensor<20x31x32xf32>
+    %2 = mhlo.add %0, %1 : tensor<20x31x32xf32>
+    return %2 : tensor<20x31x32xf32>
+}
+// CHECK-LABEL: func.func @transpose_not_move_down_brodcast_binary
+// CHECK-NEXT: mhlo.transpose
+// CHECK-NEXT: mhlo.broadcast_in_dim
+// CHECK-NEXT: mhlo.add
+// CHECK-NEXT: return
+
 func.func @same_two_transpose_move_down_binary(%arg0 : tensor<31x20x32xf32>, %arg1 : tensor<31x20x32xf32>) -> tensor<20x31x32xf32> {
     %0 = "mhlo.transpose"(%arg0) {permutation = dense<[1, 0, 2]> : tensor<3xi64>} : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
     %1 = "mhlo.transpose"(%arg1) {permutation = dense<[1, 0, 2]> : tensor<3xi64>} : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
