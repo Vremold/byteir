@@ -84,7 +84,7 @@ class TestBase:
         interp = Interpreter.load_from_file(mhlo_ir_path)
         # generate all golden references
         mhlo_data: List[npt.NDArray] = [input_data[name] for name in input_names]
-        mhlo_outputs: List[npt.NDArray] = interp.call_function("main_graph", mhlo_data)
+        mhlo_outputs: List[npt.NDArray] = interp.call_function("main", mhlo_data)
 
         np.testing.assert_almost_equal(onnx_outputs, mhlo_outputs, decimal=4)
 

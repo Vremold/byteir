@@ -92,6 +92,7 @@ struct OFModifyEntryPointPass
                       builder.getDictionaryAttr(byteirAttrs));
       funcOp->removeAttr("input_names");
       funcOp->removeAttr("output_names");
+      funcOp.setSymNameAttr(builder.getStringAttr("main"));
     }
   }
 };
