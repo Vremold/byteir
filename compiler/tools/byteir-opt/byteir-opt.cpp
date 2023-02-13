@@ -79,13 +79,6 @@ void registerTestBroadcastDenseElementsAttrPass();
 } // namespace test
 } // namespace byteir
 
-namespace mlir {
-namespace test {
-void registerTestTransformDialectEraseSchedulePass();
-void registerTestTransformDialectInterpreterPass();
-} // namespace test
-} // namespace mlir
-
 #ifdef BYTEIR_INCLUDE_TESTS
 void registerTestPasses() {
   byteir::test::registerTestMhloCanonicalizeExtPass();
@@ -101,8 +94,6 @@ void registerTestPasses() {
   byteir::test::registerTestPrintShapeAnalysisPass();
   byteir::test::registerTestByreOpInterfacePass();
   byteir::test::registerTestBroadcastDenseElementsAttrPass();
-  mlir::test::registerTestTransformDialectEraseSchedulePass();
-  mlir::test::registerTestTransformDialectInterpreterPass();
 }
 #endif
 

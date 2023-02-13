@@ -23,6 +23,7 @@
 #include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
+#include "mlir/Dialect/Tensor/Transforms/Transforms.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 #include "mlir/Support/LogicalResult.h"
@@ -157,6 +158,8 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
     func::populateCanonicalizeExtPatterns(owningPatterns);
     // put shape canonicalizerExt too
     shape::populateCanonicalizeExtPatterns(owningPatterns);
+    // put tensor fold empty too
+    tensor::populateFoldTensorEmptyPatterns(owningPatterns);
 
     patterns = FrozenRewritePatternSet(std::move(owningPatterns),
                                        disabledPatterns, enabledPatterns);

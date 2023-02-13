@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s --test-transform-dialect-interpreter --canonicalize-ext --split-input-file | FileCheck %s
+// RUN: byteir-opt %s --transform-dialect-interpreter --canonicalize-ext --split-input-file | FileCheck %s
 
 // CHECK-LABEL: func.func @fuse_unary
 func.func @fuse_unary(%arg0: tensor<64x128xf32>, %arg1: tensor<64x128xf32>) -> tensor<64x128xf32> {
@@ -434,20 +434,15 @@ func.func @fuse_dot_attention(%arg0: tensor<1024x32xf32>, %arg1: tensor<32x512xf
   %6 = tensor.empty() : tensor<1024xf32>
   %cst = arith.constant 0xFF800000 : f32
   %fill_4 = linalg.fill ins(%cst : f32) outs(%4 : tensor<1024xf32>) -> tensor<1024xf32>
-  
   %cst_0 = arith.constant 0.0 : f32
   %fill_0 = linalg.fill ins(%cst_0 : f32) outs(%0 : tensor<1024x512xf32>) -> tensor<1024x512xf32>
   %fill_2 = linalg.fill ins(%cst_0 : f32) outs(%2 : tensor<1024x32xf32>) -> tensor<1024x32xf32>
   %fill_5 = linalg.fill ins(%cst_0 : f32) outs(%5 : tensor<1024xf32>) -> tensor<1024xf32>
-
-
   %1 = linalg.matmul  ins(%arg0, %arg1: tensor<1024x32xf32>, tensor<32x512xf32>)
                      outs(%fill_0: tensor<1024x512xf32>)
     -> tensor<1024x512xf32>
-
   %7:4 = linalg_ext.softmax dimension(1) 
     ins(%1 : tensor<1024x512xf32>) outs(%3, %fill_4, %fill_5, %6 : tensor<1024x512xf32>, tensor<1024xf32>, tensor<1024xf32>, tensor<1024xf32>) : tensor<1024x512xf32>, tensor<1024xf32>, tensor<1024xf32>, tensor<1024xf32>  
-
   %8 = linalg.matmul {__root__} ins(%7#0, %arg2: tensor<1024x512xf32>, tensor<512x32xf32>)
                      outs(%fill_2: tensor<1024x32xf32>)
     -> tensor<1024x32xf32>
@@ -463,7 +458,7 @@ transform.sequence failures(propagate) {
 
 // -----
 
-func.func @fuse_multihead_attention(%arg0: tensor<128x16x1024x32xf32>, %arg1: tensor<128x512x16x32xf32>, %arg2: tensor<128x16x512x32xf32>) -> tensor<128x16x1024x32xf32> {
+func.func @fuse_multihead_attention_tile_3d(%arg0: tensor<128x16x1024x32xf32>, %arg1: tensor<128x16x32x512xf32>, %arg2: tensor<128x16x512x32xf32>) -> tensor<128x16x1024x32xf32> {
   %0 = tensor.empty() : tensor<128x16x1024x512xf32>
   %1 = tensor.empty() : tensor<128x16x1024x32xf32>
   %2 = tensor.empty() : tensor<128x16x1024x512xf32>
@@ -477,21 +472,31 @@ func.func @fuse_multihead_attention(%arg0: tensor<128x16x1024x32xf32>, %arg1: te
   %8 = linalg.fill ins(%cst_0 : f32) outs(%0 : tensor<128x16x1024x512xf32>) -> tensor<128x16x1024x512xf32>
   %9 = linalg.fill ins(%cst_0 : f32) outs(%1 : tensor<128x16x1024x32xf32>) -> tensor<128x16x1024x32xf32>
   %10 = linalg.fill ins(%cst_0 : f32) outs(%4 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
-  %transposed = linalg.transpose ins(%arg1 : tensor<128x512x16x32xf32>) outs(%6 : tensor<128x16x32x512xf32>) permutation = [0, 2, 3, 1] 
-  %11 = linalg_ext.batch_matmul ins(%arg0, %transposed : tensor<128x16x1024x32xf32>, tensor<128x16x32x512xf32>) outs(%8 : tensor<128x16x1024x512xf32>) layout = "nn"
+  %11 = linalg_ext.batch_matmul ins(%arg0, %arg1 : tensor<128x16x1024x32xf32>, tensor<128x16x32x512xf32>) outs(%8 : tensor<128x16x1024x512xf32>) layout = "nn"
   %12:4 = linalg_ext.softmax dimension(3) ins(%11 : tensor<128x16x1024x512xf32>) outs(%2, %7, %10, %5 : tensor<128x16x1024x512xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>) : tensor<128x16x1024x512xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>
   %13 = linalg_ext.batch_matmul ins(%12#0, %arg2 : tensor<128x16x1024x512xf32>, tensor<128x16x512x32xf32>) outs(%9 : tensor<128x16x1024x32xf32>) layout = "nn"  {__root__}
   return %13 : tensor<128x16x1024x32xf32>
 }
-// CHECK-LABEL: func.func @fuse_multihead_attention
+// CHECK-LABEL: func.func @fuse_multihead_attention_tile_3d
+// CHECK-DAG: linalg.fill
+// CHECK-DAG: linalg.fill
+// CHECK-DAG: linalg.fill
+// CHECK:     scf.for
 // CHECK:       scf.for
 // CHECK:         scf.for
-// CHECK:           linalg.transpose
+// CHECK:           tensor.empty
+// CHECK:           linalg.fill
 // CHECK:           linalg_ext.batch_matmul
+// CHECK:           tensor.empty
 // CHECK:           linalg_ext.softmax
+// CHECK:           tensor.empty
 // CHECK:           linalg_ext.diag
+// CHECK:           tensor.empty
+// CHECK:           linalg.fill
 // CHECK:           linalg_ext.batch_matmul
 // CHECK:           linalg_ext.batch_matmul
+// CHECK:           scf.yield
+// CHECK:         }
 // CHECK:         scf.yield
 // CHECK:       }
 // CHECK:       scf.yield
@@ -499,7 +504,7 @@ func.func @fuse_multihead_attention(%arg0: tensor<128x16x1024x32xf32>, %arg1: te
 transform.sequence failures(propagate) {
 ^bb1(%arg1: !pdl.operation):
   %0 = transform.structured.match attributes{"__root__"} in %arg1
-  %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [0, 0, 4, 0, 8], tile_interchange = [0, 1, 4, 3, 2]}
+  %1, %loops:3 = transform.structured.fuse_ext %0 {tile_sizes = [2, 0, 8, 0, 4], tile_interchange = [0, 1, 4, 3, 2]}
   transform.structured.tile_loop_hint %1 
 }
 
@@ -802,16 +807,16 @@ transform.sequence failures(propagate) {
 // -----
 
 // CHECK-LABEL: func.func @fuse_scan_unary_tile_2D
-func.func @fuse_scan_unary_tile_2D(%arg0: tensor<1024x64xf32>, %arg1: tensor<1024x64xf32>) -> tensor<1024x64xf32> {
+func.func @fuse_scan_unary_tile_2D(%arg0: tensor<1024x64xf32>) -> tensor<1024x64xf32> {
   // CHECK: linalg.fill
-  // CHECK: %[[RES:.*]] = scf.for
+  // CHECK: scf.for
   // CHECK:   scf.for
   // CHECK:     linalg_ext.scan
   // CHECK:     linalg.elemwise_unary
   // CHECK:   }
   // CHECK: } {__byteir_parallel__}
-  // CHECK: return %[[RES]]
   %0 = tensor.empty() : tensor<1024x64xf32>
+  %1 = tensor.empty() : tensor<1024x64xf32>
   %2 = tensor.empty() : tensor<1024xf32>
   %cst_0 = arith.constant 0.0 : f32
   %fill_2 = linalg.fill ins(%cst_0 : f32) outs(%2 : tensor<1024xf32>) -> tensor<1024xf32>
@@ -824,7 +829,7 @@ func.func @fuse_scan_unary_tile_2D(%arg0: tensor<1024x64xf32>, %arg1: tensor<102
   } -> tensor<1024x64xf32>, tensor<1024xf32>
 
   %5 = linalg.elemwise_unary ins(%4#0 : tensor<1024x64xf32>)
-                             outs(%arg1: tensor<1024x64xf32>) -> tensor<1024x64xf32>
+                             outs(%1: tensor<1024x64xf32>) -> tensor<1024x64xf32>
   return %5 : tensor<1024x64xf32>
 }
 
@@ -840,13 +845,12 @@ transform.sequence failures(propagate) {
 // CHECK-LABEL: func.func @fuse_unary_scan
 func.func @fuse_unary_scan(%arg0: tensor<1024x64xf32>, %arg1: tensor<1024x64xf32>) -> tensor<1024x64xf32> {
   //     CHECK: linalg.fill
-  //     CHECK: %[[RES:.*]] = scf.for
+  //     CHECK: scf.for
   //     CHECK:   scf.for
   //     CHECK:     linalg.elemwise_unary
   //     CHECK:     linalg_ext.scan
   //     CHECK:   } 
   //     CHECK: } {__byteir_parallel__}
-  //     CHECK: return %[[RES]]
 
   %0 = tensor.empty() : tensor<1024x64xf32>
   %2 = tensor.empty() : tensor<1024xf32>
@@ -965,4 +969,33 @@ transform.sequence failures(propagate) {
   %0 = transform.structured.match ops{["linalg_ext.batch_matmul"]} in %arg1
   %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [2, 4], tile_interchange = [0, 1]}
   transform.structured.tile_loop_hint %1
+}
+
+// -----
+
+//CHECK-LABEL: func.func @fuse_fill
+func.func @fuse_fill() -> tensor<1024x32xf32> {
+// CHECK: scf.for
+// CHECK:   scf.for
+// CHECK:     tensor.empty
+// CHECK:     linalg.fill
+// CHECK:     tensor.empty
+// CHECK:     linalg.elemwise_unary
+// CHECK:     scf.yield
+// CHECK:   }
+// CHECK:   scf.yield
+  %0 = tensor.empty() : tensor<1024x32xf32>
+  %cst = arith.constant 0.000000e+00 : f32
+  %1 = linalg.fill ins(%cst : f32) outs(%0 : tensor<1024x32xf32>) -> tensor<1024x32xf32>
+  %2 = tensor.empty() : tensor<1024x32xf32>
+  %3 = linalg.elemwise_unary {__root__} ins(%1 : tensor<1024x32xf32>)
+                             outs(%2: tensor<1024x32xf32>) -> tensor<1024x32xf32>
+  return %3 : tensor<1024x32xf32>
+}
+
+transform.sequence failures(propagate) {
+^bb1(%arg1: !pdl.operation):
+  %0 = transform.structured.match attributes{"__root__"} in %arg1
+  %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [8, 4], tile_interchange = [0, 1]}
+  transform.structured.tile_loop_hint %1 
 }

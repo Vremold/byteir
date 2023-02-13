@@ -1,4 +1,4 @@
-//===- ApplyTransformDialectAndErase.h ------------------------*--- C++ -*-===//
+//===- TransformDialectInterpreter.h --------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_APPLYTRANSFORMDIALECTANDERASE_H
-#define BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_APPLYTRANSFORMDIALECTANDERASE_H
+#ifndef BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_TRANSFORMDIALECTINTERPRETER_H
+#define BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_TRANSFORMDIALECTINTERPRETER_H
 
 #include "mlir/Pass/Pass.h"
 #include <memory>
@@ -25,8 +25,8 @@ namespace mlir {
 class ModuleOp;
 
 std::unique_ptr<OperationPass<ModuleOp>>
-createApplyTransformDialectAndErasePass();
+createTransformDialectInterpreter(bool eraseAfter = false);
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_APPLYTRANSFORMDIALECTANDERASE_H
+#endif // BYTEIR_DIALECT_TRANSFORM_TRANSFORMS_TRANSFORMDIALECTINTERPRETER_H

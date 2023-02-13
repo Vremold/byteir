@@ -1,5 +1,5 @@
-// RUN: byteir-opt %s --test-transform-dialect-interpreter --split-input-file | FileCheck %s
-// RUN: byteir-opt %s --test-transform-dialect-interpreter --split-input-file -o /dev/null 2>&1 | FileCheck %s --check-prefix=DUMP
+// RUN: byteir-opt %s --transform-dialect-interpreter --split-input-file | FileCheck %s
+// RUN: byteir-opt %s --transform-dialect-interpreter --split-input-file -o /dev/null 2>&1 | FileCheck %s --check-prefix=DUMP
 
 transform.sequence failures(propagate) {
 ^bb1(%arg1: !pdl.operation):

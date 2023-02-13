@@ -1,4 +1,4 @@
-// RUN: byteir-opt --test-transform-dialect-interpreter --split-input-file %s | FileCheck %s
+// RUN: byteir-opt --transform-dialect-interpreter --split-input-file %s | FileCheck %s
 
 transform.sequence failures(propagate) {
 ^bb0(%arg1: !pdl.operation):

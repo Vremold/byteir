@@ -1,4 +1,4 @@
-// RUN: byteir-opt --test-transform-dialect-interpreter --split-input-file %s | FileCheck %s
+// RUN: byteir-opt --transform-dialect-interpreter --split-input-file %s | FileCheck %s
 
 #map0 = affine_map<()[s0, s1] -> (s0 ceildiv s1)>
 #map1 = affine_map<(d0)[s0] -> (d0 * s0)>

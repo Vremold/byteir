@@ -1,5 +1,5 @@
 add_mlir_dialect_library(ByteIRTransformPasses
-  ApplyTransformDialectAndErase.cpp
+  TransformDialectInterpreter.cpp
   TransformInsertion.cpp
 
   ADDITIONAL_HEADER_DIRS

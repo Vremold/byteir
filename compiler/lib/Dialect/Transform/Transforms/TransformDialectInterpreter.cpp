@@ -1,4 +1,4 @@
-//===- ApplyTransformDialectAndErase.cpp --------------------------- C++ --===//
+//===- TransformDialectInterpreter.cpp ----------------------------- C++ --===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Transform/Transforms/ApplyTransformDialectAndErase.h"
+#include "byteir/Dialect/Transform/Transforms/TransformDialectInterpreter.h"
 #include "mlir/Dialect/Transform/IR/TransformInterfaces.h"
 #include "mlir/IR/BuiltinOps.h"
 
@@ -25,9 +25,13 @@ using namespace mlir;
 
 namespace {
 
-struct ApplyTransformDialectAndErasePass
-    : public ApplyTransformDialectAndEraseBase<
-          ApplyTransformDialectAndErasePass> {
+struct TransformDialectInterpreterPass
+    : public TransformDialectInterpreterBase<TransformDialectInterpreterPass> {
+  explicit TransformDialectInterpreterPass(bool erase)
+      : TransformDialectInterpreterBase() {
+    eraseAfter = erase;
+  }
+
   void runOnOperation() override {
     ModuleOp module = getOperation();
     for (auto op : module.getOps<transform::TransformOpInterface>()) {
@@ -37,19 +41,21 @@ struct ApplyTransformDialectAndErasePass
         return signalPassFailure();
     }
 
-    module.walk<WalkOrder::PreOrder>([&](Operation *nestedOp) {
-      if (isa<transform::TransformOpInterface>(nestedOp)) {
-        nestedOp->erase();
-        return WalkResult::skip();
-      }
-      return WalkResult::advance();
-    });
+    if (eraseAfter) {
+      module.walk<WalkOrder::PreOrder>([&](Operation *nestedOp) {
+        if (isa<transform::TransformOpInterface>(nestedOp)) {
+          nestedOp->erase();
+          return WalkResult::skip();
+        }
+        return WalkResult::advance();
+      });
+    }
   }
 };
 
 } // namespace
 
 std::unique_ptr<OperationPass<ModuleOp>>
-mlir::createApplyTransformDialectAndErasePass() {
-  return std::make_unique<ApplyTransformDialectAndErasePass>();
+mlir::createTransformDialectInterpreter(bool eraseAfter) {
+  return std::make_unique<TransformDialectInterpreterPass>(eraseAfter);
 }

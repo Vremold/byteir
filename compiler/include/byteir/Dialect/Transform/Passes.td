@@ -21,13 +21,17 @@
 include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
-// ApplyTransformDialectAndErase
+// TransformDialectInterpreter
 //===----------------------------------------------------------------------===//
 
-def ApplyTransformDialectAndErase : Pass<"apply-transform-dialect-and-erase", "ModuleOp"> {
-  let summary = "Apply transform dialect operations one by one, and erase these"
-                "operations after they are applied.";
-  let constructor = "mlir::createApplyTransformDialectAndErasePass()";
+def TransformDialectInterpreter : Pass<"transform-dialect-interpreter", "ModuleOp"> {
+  let summary = "Apply transform dialect operations one by one";
+  let constructor = "mlir::createTransformDialectInterpreter()";
+  let options = [
+    Option<"eraseAfter", "erase-after", "bool",
+            /*default=*/"false",
+            "Erase after applied">
+  ];
 }
 
 //===----------------------------------------------------------------------===//

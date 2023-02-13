@@ -57,6 +57,15 @@ func.func @diag(%arg0: tensor<1024xf32>) -> (tensor<1024x1024xf32>) {
 //CHECK: linalg_ext.diag
 //CHECK-SAME: memref<1024xf32>
 
+func.func @batch_matmul(%arg0: tensor<128x16x1024x32xf32>, %arg1: tensor<128x16x32x512xf32>) -> (tensor<128x16x1024x512xf32>) {
+  %0 = tensor.empty() : tensor<128x16x1024x512xf32>
+  %1 = linalg_ext.batch_matmul ins(%arg0, %arg1 : tensor<128x16x1024x32xf32>, tensor<128x16x32x512xf32>) outs(%0 : tensor<128x16x1024x512xf32>) layout = "nn"
+  return %1 : tensor<128x16x1024x512xf32>
+}
+//CHECK-LABEL: func.func @batch_matmul
+//CHECK: linalg_ext.batch_matmul
+//CHECK-SAME: memref<128x16x1024x32xf32>
+
 #map0 = affine_map<(d0, d1) -> (d0, d1)>
 func.func @alias_in_generic(%arg0: tensor<?x?xf32>) -> (tensor<?x?xf32>) {
   %c0 = arith.constant 0 : index

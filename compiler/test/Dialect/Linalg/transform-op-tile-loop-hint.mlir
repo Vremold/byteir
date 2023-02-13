@@ -1,4 +1,4 @@
-// RUN: byteir-opt --test-transform-dialect-interpreter --split-input-file %s | FileCheck %s
+// RUN: byteir-opt --transform-dialect-interpreter --split-input-file %s | FileCheck %s
 
 // CHECK-LABEL: func @tile_linalg_matmul
 func.func @tile_linalg_matmul(

@@ -118,8 +118,12 @@ struct LinalgExtOpInterface
   bool bufferizesToMemoryRead(Operation *op, OpOperand &opOperand,
                               const AnalysisState & /* state*/) const {
     // Operand is read if it is used in the computation.
-    auto linalgExtOp = cast<linalg_ext::LinalgExtOp>(op);
-    return linalgExtOp.isOperandRead(opOperand.getOperandNumber());
+    if (auto linalgExtOp = dyn_cast<linalg_ext::LinalgExtOp>(op)) {
+      return linalgExtOp.isOperandRead(opOperand.getOperandNumber());
+    } else if (auto linalgOp = dyn_cast<linalg::LinalgOp>(op)) {
+      return linalgOp.payloadUsesValueFromOperand(&opOperand);
+    }
+    return false;
   }
 
   bool bufferizesToMemoryWrite(Operation *op, OpOperand &opOperand,

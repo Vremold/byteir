@@ -398,78 +398,73 @@ func.func @dot_attention(%arg0: tensor<1024x32xf32>, %arg1: tensor<32x512xf32>, 
 And multi-head attention is also supported.
 ```
 // input.mlir
-func.func @fuse_multihead_attention(%arg0: tensor<128x16x1024x32xf32>, %arg1: tensor<128x512x16x32xf32>, %arg2: tensor<128x16x512x32xf32>) -> tensor<128x16x1024x32xf32> {
+func.func @fuse_multihead_attention(%arg0: tensor<128x16x1024x32xf32>, %arg1: tensor<128x16x32x512xf32>, %arg2: tensor<128x16x512x32xf32>) -> tensor<128x16x1024x32xf32> {
+  %cst = arith.constant 0.000000e+00 : f32
+  %cst_0 = arith.constant 0xFF800000 : f32
   %0 = tensor.empty() : tensor<128x16x1024x512xf32>
   %1 = tensor.empty() : tensor<128x16x1024x32xf32>
   %2 = tensor.empty() : tensor<128x16x1024x512xf32>
   %3 = tensor.empty() : tensor<128x16x1024xf32>
   %4 = tensor.empty() : tensor<128x16x1024xf32>
   %5 = tensor.empty() : tensor<128x16x1024xf32>
-  %6 = tensor.empty() : tensor<128x16x32x512xf32>
-  %cst = arith.constant 0xFF800000 : f32
-  %7 = linalg.fill ins(%cst : f32) outs(%3 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
-  %cst_0 = arith.constant 0.000000e+00 : f32
-  %8 = linalg.fill ins(%cst_0 : f32) outs(%0 : tensor<128x16x1024x512xf32>) -> tensor<128x16x1024x512xf32>
-  %9 = linalg.fill ins(%cst_0 : f32) outs(%1 : tensor<128x16x1024x32xf32>) -> tensor<128x16x1024x32xf32>
-  %10 = linalg.fill ins(%cst_0 : f32) outs(%4 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
-  %transposed = linalg.transpose ins(%arg1 : tensor<128x512x16x32xf32>) outs(%6 : tensor<128x16x32x512xf32>) permutation = [0, 2, 3, 1] 
-  %11 = linalg_ext.batch_matmul ins(%arg0, %transposed : tensor<128x16x1024x32xf32>, tensor<128x16x32x512xf32>) outs(%8 : tensor<128x16x1024x512xf32>) layout = "nn"
-  %12:4 = linalg_ext.softmax dimension(3) ins(%11 : tensor<128x16x1024x512xf32>) outs(%2, %7, %10, %5 : tensor<128x16x1024x512xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>) : tensor<128x16x1024x512xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>
-  %13 = linalg_ext.batch_matmul ins(%12#0, %arg2 : tensor<128x16x1024x512xf32>, tensor<128x16x512x32xf32>) outs(%9 : tensor<128x16x1024x32xf32>) layout = "nn"  {__root__}
-  return %13 : tensor<128x16x1024x32xf32>
+  %6 = linalg.fill ins(%cst_0 : f32) outs(%3 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
+  %7 = linalg.fill ins(%cst : f32) outs(%0 : tensor<128x16x1024x512xf32>) -> tensor<128x16x1024x512xf32>
+  %8 = linalg.fill ins(%cst : f32) outs(%1 : tensor<128x16x1024x32xf32>) -> tensor<128x16x1024x32xf32>
+  %9 = linalg.fill ins(%cst : f32) outs(%4 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
+  %10 = linalg_ext.batch_matmul ins(%arg0, %arg1 : tensor<128x16x1024x32xf32>, tensor<128x16x32x512xf32>) outs(%7 : tensor<128x16x1024x512xf32>) layout = "nn"
+  %11:4 = linalg_ext.softmax dimension(3) ins(%10 : tensor<128x16x1024x512xf32>) outs(%2, %6, %9, %5 : tensor<128x16x1024x512xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>) : tensor<128x16x1024x512xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>
+  %12 = linalg_ext.batch_matmul ins(%11#0, %arg2 : tensor<128x16x1024x512xf32>, tensor<128x16x512x32xf32>) outs(%8 : tensor<128x16x1024x32xf32>) layout = "nn"  {__root__}
+  return %12 : tensor<128x16x1024x32xf32>
 }
 
-// result after transform.structured.fuse_ext {tile_sizes = [0, 0, 4, 0, 8], tile_interchange = [0, 1, 4, 3, 2]}ssss
-func.func @fuse_multihead_attention(%arg0: tensor<128x16x1024x32xf32>, %arg1: tensor<128x512x16x32xf32>, %arg2: tensor<128x16x512x32xf32>) -> tensor<128x16x1024x32xf32> {
+// result after transform.structured.fuse_ext {tile_sizes = [2, 0, 8, 0, 4], tile_interchange = [0, 1, 4, 3, 2]}
+func.func @fuse_multihead_attention(%arg0: tensor<128x16x1024x32xf32>, %arg1: tensor<128x16x32x512xf32>, %arg2: tensor<128x16x512x32xf32>) -> tensor<128x16x1024x32xf32> {
   %c1024 = arith.constant 1024 : index
   %c512 = arith.constant 512 : index
+  %c128 = arith.constant 128 : index
   %c0 = arith.constant 0 : index
   %cst = arith.constant 0.000000e+00 : f32
   %cst_0 = arith.constant 0xFF800000 : f32
-  %c4 = arith.constant 4 : index
+  %c2 = arith.constant 2 : index
   %c8 = arith.constant 8 : index
-  %0 = tensor.empty() : tensor<128x16x1024x512xf32>
-  %1 = tensor.empty() : tensor<128x16x1024x32xf32>
-  %2 = tensor.empty() : tensor<128x16x1024x512xf32>
-  %3 = tensor.empty() : tensor<128x16x1024xf32>
-  %4 = tensor.empty() : tensor<128x16x1024xf32>
-  %5 = tensor.empty() : tensor<128x16x1024xf32>
-  %6 = tensor.empty() : tensor<128x16x32x512xf32>
-  %7 = linalg.fill ins(%cst_0 : f32) outs(%3 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
-  %8 = linalg.fill ins(%cst : f32) outs(%1 : tensor<128x16x1024x32xf32>) -> tensor<128x16x1024x32xf32>
-  %9 = linalg.fill ins(%cst : f32) outs(%4 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
-  %10:4 = scf.for %arg3 = %c0 to %c512 step %c8 iter_args(%arg4 = %8, %arg5 = %7, %arg6 = %9, %arg7 = %0) -> (tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024x512xf32>) {
-    %11:5 = scf.for %arg8 = %c0 to %c1024 step %c4 iter_args(%arg9 = %arg4, %arg10 = %arg5, %arg11 = %arg6, %arg12 = %arg7, %arg13 = %6) -> (tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024x512xf32>, tensor<128x16x32x512xf32>) {
-      %extracted_slice = tensor.extract_slice %arg0[0, 0, %arg8, 0] [128, 16, 4, 32] [1, 1, 1, 1] : tensor<128x16x1024x32xf32> to tensor<128x16x4x32xf32>
-      %extracted_slice_1 = tensor.extract_slice %arg1[0, %arg3, 0, 0] [128, 8, 16, 32] [1, 1, 1, 1] : tensor<128x512x16x32xf32> to tensor<128x8x16x32xf32>
-      %extracted_slice_2 = tensor.extract_slice %arg13[0, 0, 0, %arg3] [128, 16, 32, 8] [1, 1, 1, 1] : tensor<128x16x32x512xf32> to tensor<128x16x32x8xf32>
-      %transposed = linalg.transpose ins(%extracted_slice_1 : tensor<128x8x16x32xf32>) outs(%extracted_slice_2 : tensor<128x16x32x8xf32>) permutation = [0, 2, 3, 1] 
-      %extracted_slice_3 = tensor.extract_slice %arg12[0, 0, %arg8, %arg3] [128, 16, 4, 8] [1, 1, 1, 1] : tensor<128x16x1024x512xf32> to tensor<128x16x4x8xf32>
-      %12 = linalg.fill ins(%cst : f32) outs(%extracted_slice_3 : tensor<128x16x4x8xf32>) -> tensor<128x16x4x8xf32>
-      %13 = linalg_ext.batch_matmul ins(%extracted_slice, %transposed : tensor<128x16x4x32xf32>, tensor<128x16x32x8xf32>) outs(%12 : tensor<128x16x4x8xf32>) layout = "nn" 
-      %extracted_slice_4 = tensor.extract_slice %2[0, 0, %arg8, %arg3] [128, 16, 4, 8] [1, 1, 1, 1] : tensor<128x16x1024x512xf32> to tensor<128x16x4x8xf32>
-      %extracted_slice_5 = tensor.extract_slice %arg10[0, 0, %arg8] [128, 16, 4] [1, 1, 1] : tensor<128x16x1024xf32> to tensor<128x16x4xf32>
-      %extracted_slice_6 = tensor.extract_slice %arg11[0, 0, %arg8] [128, 16, 4] [1, 1, 1] : tensor<128x16x1024xf32> to tensor<128x16x4xf32>
-      %extracted_slice_7 = tensor.extract_slice %5[0, 0, %arg8] [128, 16, 4] [1, 1, 1] : tensor<128x16x1024xf32> to tensor<128x16x4xf32>
-      %14:4 = linalg_ext.softmax dimension(3) ins(%13 : tensor<128x16x4x8xf32>) outs(%extracted_slice_4, %extracted_slice_5, %extracted_slice_6, %extracted_slice_7 : tensor<128x16x4x8xf32>, tensor<128x16x4xf32>, tensor<128x16x4xf32>, tensor<128x16x4xf32>) : tensor<128x16x4x8xf32>, tensor<128x16x4xf32>, tensor<128x16x4xf32>, tensor<128x16x4xf32>
-      %extracted_slice_8 = tensor.extract_slice %arg2[0, 0, %arg3, 0] [128, 16, 8, 32] [1, 1, 1, 1] : tensor<128x16x512x32xf32> to tensor<128x16x8x32xf32>
-      %extracted_slice_9 = tensor.extract_slice %arg9[0, 0, %arg8, 0] [128, 16, 4, 32] [1, 1, 1, 1] : tensor<128x16x1024x32xf32> to tensor<128x16x4x32xf32>
-      %15 = tensor.empty() : tensor<128x16x4x4xf32>
-      %16 = linalg_ext.diag ins(%14#3 : tensor<128x16x4xf32>) outs(%15 : tensor<128x16x4x4xf32>) : tensor<128x16x4x4xf32>
-      %17 = tensor.empty() : tensor<128x16x4x32xf32>
-      %18 = linalg.fill ins(%cst : f32) outs(%17 : tensor<128x16x4x32xf32>) -> tensor<128x16x4x32xf32>
-      %19 = linalg_ext.batch_matmul ins(%16, %extracted_slice_9 : tensor<128x16x4x4xf32>, tensor<128x16x4x32xf32>) outs(%18 : tensor<128x16x4x32xf32>) layout = "nn" 
-      %20 = linalg_ext.batch_matmul ins(%14#0, %extracted_slice_8 : tensor<128x16x4x8xf32>, tensor<128x16x8x32xf32>) outs(%19 : tensor<128x16x4x32xf32>) layout = "nn"  {__root__}
-      %inserted_slice = tensor.insert_slice %20 into %arg9[0, 0, %arg8, 0] [128, 16, 4, 32] [1, 1, 1, 1] : tensor<128x16x4x32xf32> into tensor<128x16x1024x32xf32>
-      %inserted_slice_10 = tensor.insert_slice %14#1 into %arg10[0, 0, %arg8] [128, 16, 4] [1, 1, 1] : tensor<128x16x4xf32> into tensor<128x16x1024xf32>
-      %inserted_slice_11 = tensor.insert_slice %14#2 into %arg11[0, 0, %arg8] [128, 16, 4] [1, 1, 1] : tensor<128x16x4xf32> into tensor<128x16x1024xf32>
-      %inserted_slice_12 = tensor.insert_slice %13 into %arg12[0, 0, %arg8, %arg3] [128, 16, 4, 8] [1, 1, 1, 1] : tensor<128x16x4x8xf32> into tensor<128x16x1024x512xf32>
-      %inserted_slice_13 = tensor.insert_slice %transposed into %arg13[0, 0, 0, %arg3] [128, 16, 32, 8] [1, 1, 1, 1] : tensor<128x16x32x8xf32> into tensor<128x16x32x512xf32>
-      scf.yield %inserted_slice, %inserted_slice_10, %inserted_slice_11, %inserted_slice_12, %inserted_slice_13 : tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024x512xf32>, tensor<128x16x32x512xf32>
+  %c4 = arith.constant 4 : index
+  %0 = tensor.empty() : tensor<128x16x1024x32xf32>
+  %1 = tensor.empty() : tensor<128x16x1024xf32>
+  %2 = tensor.empty() : tensor<128x16x1024xf32>
+  %3 = linalg.fill ins(%cst_0 : f32) outs(%1 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
+  %4 = linalg.fill ins(%cst : f32) outs(%0 : tensor<128x16x1024x32xf32>) -> tensor<128x16x1024x32xf32>
+  %5 = linalg.fill ins(%cst : f32) outs(%2 : tensor<128x16x1024xf32>) -> tensor<128x16x1024xf32>
+  %6:3 = scf.for %arg3 = %c0 to %c128 step %c2 iter_args(%arg4 = %4, %arg5 = %3, %arg6 = %5) -> (tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>) {
+    %7:3 = scf.for %arg7 = %c0 to %c512 step %c4 iter_args(%arg8 = %arg4, %arg9 = %arg5, %arg10 = %arg6) -> (tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>) {
+      %8:3 = scf.for %arg11 = %c0 to %c1024 step %c8 iter_args(%arg12 = %arg8, %arg13 = %arg9, %arg14 = %arg10) -> (tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>) {
+        %extracted_slice = tensor.extract_slice %arg0[%arg3, 0, %arg11, 0] [2, 16, 8, 32] [1, 1, 1, 1] : tensor<128x16x1024x32xf32> to tensor<2x16x8x32xf32>
+        %extracted_slice_1 = tensor.extract_slice %arg1[%arg3, 0, 0, %arg7] [2, 16, 32, 4] [1, 1, 1, 1] : tensor<128x16x32x512xf32> to tensor<2x16x32x4xf32>
+        %9 = tensor.empty() : tensor<2x16x8x4xf32>
+        %10 = linalg.fill ins(%cst : f32) outs(%9 : tensor<2x16x8x4xf32>) -> tensor<2x16x8x4xf32>
+        %11 = linalg_ext.batch_matmul ins(%extracted_slice, %extracted_slice_1 : tensor<2x16x8x32xf32>, tensor<2x16x32x4xf32>) outs(%10 : tensor<2x16x8x4xf32>) layout = "nn"
+        %12 = tensor.empty() : tensor<2x16x8x4xf32>
+        %extracted_slice_2 = tensor.extract_slice %arg13[%arg3, 0, %arg11] [2, 16, 8] [1, 1, 1] : tensor<128x16x1024xf32> to tensor<2x16x8xf32>
+        %extracted_slice_3 = tensor.extract_slice %arg14[%arg3, 0, %arg11] [2, 16, 8] [1, 1, 1] : tensor<128x16x1024xf32> to tensor<2x16x8xf32>
+        %13 = tensor.empty() : tensor<2x16x8xf32>
+        %14:4 = linalg_ext.softmax dimension(3) ins(%11 : tensor<2x16x8x4xf32>) outs(%12, %extracted_slice_2, %extracted_slice_3, %13 : tensor<2x16x8x4xf32>, tensor<2x16x8xf32>, tensor<2x16x8xf32>, tensor<2x16x8xf32>) : tensor<2x16x8x4xf32>, tensor<2x16x8xf32>, tensor<2x16x8xf32>, tensor<2x16x8xf32>
+        %extracted_slice_4 = tensor.extract_slice %arg2[%arg3, 0, %arg7, 0] [2, 16, 4, 32] [1, 1, 1, 1] : tensor<128x16x512x32xf32> to tensor<2x16x4x32xf32>
+        %extracted_slice_5 = tensor.extract_slice %arg12[%arg3, 0, %arg11, 0] [2, 16, 8, 32] [1, 1, 1, 1] : tensor<128x16x1024x32xf32> to tensor<2x16x8x32xf32>
+        %15 = tensor.empty() : tensor<2x16x8x8xf32>
+        %16 = linalg_ext.diag ins(%14#3 : tensor<2x16x8xf32>) outs(%15 : tensor<2x16x8x8xf32>) : tensor<2x16x8x8xf32>
+        %17 = tensor.empty() : tensor<2x16x8x32xf32>
+        %18 = linalg.fill ins(%cst : f32) outs(%17 : tensor<2x16x8x32xf32>) -> tensor<2x16x8x32xf32>
+        %19 = linalg_ext.batch_matmul ins(%16, %extracted_slice_5 : tensor<2x16x8x8xf32>, tensor<2x16x8x32xf32>) outs(%18 : tensor<2x16x8x32xf32>) layout = "nn"
+        %20 = linalg_ext.batch_matmul ins(%14#0, %extracted_slice_4 : tensor<2x16x8x4xf32>, tensor<2x16x4x32xf32>) outs(%19 : tensor<2x16x8x32xf32>) layout = "nn"  {__root__}
+        %inserted_slice = tensor.insert_slice %20 into %arg12[%arg3, 0, %arg11, 0] [2, 16, 8, 32] [1, 1, 1, 1] : tensor<2x16x8x32xf32> into tensor<128x16x1024x32xf32>
+        %inserted_slice_6 = tensor.insert_slice %14#1 into %arg13[%arg3, 0, %arg11] [2, 16, 8] [1, 1, 1] : tensor<2x16x8xf32> into tensor<128x16x1024xf32>
+        %inserted_slice_7 = tensor.insert_slice %14#2 into %arg14[%arg3, 0, %arg11] [2, 16, 8] [1, 1, 1] : tensor<2x16x8xf32> into tensor<128x16x1024xf32>
+        scf.yield %inserted_slice, %inserted_slice_6, %inserted_slice_7 : tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>
+      }
+      scf.yield %8#0, %8#1, %8#2 : tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>
     }
-    scf.yield %11#0, %11#1, %11#2, %11#3 : tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024x512xf32>
-  }
-  return %10#0 : tensor<128x16x1024x32xf32>
+    scf.yield %7#0, %7#1, %7#2 : tensor<128x16x1024x32xf32>, tensor<128x16x1024xf32>, tensor<128x16x1024xf32>
+  } {__byteir_parallel__}
+  return %6#0 : tensor<128x16x1024x32xf32>
 }
 
 ```

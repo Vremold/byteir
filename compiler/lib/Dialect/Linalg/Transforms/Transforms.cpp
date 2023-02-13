@@ -359,7 +359,6 @@ bool mlir::scf::isResultLoopInvariant(Operation *op, int64_t resultNumber,
   } else if (isa<linalg::LinalgOp>(op)) {
     return hasOneOrZeroUse && allParallel;
   }
-
   return false;
 }
 
@@ -747,9 +746,8 @@ static void getProducerAndConsumerTensorSlices(
         opCollection.insert(sliceOp);
 
       Value src = sliceOp.getSource();
-      if (iterArgToOperand.count(src) > 0 &&
-          !valCollection.contains(iterArgToOperand[src])) {
-        valCollection.insert(iterArgToOperand[src]);
+      if (iterArgToOperand.count(src) > 0 && !valCollection.contains(src)) {
+        valCollection.insert(src);
       }
     }
   }
@@ -760,9 +758,8 @@ static void getProducerAndConsumerTensorSlices(
         if (!opCollection.contains(userOp))
           opCollection.insert(userOp);
         Value dst = sliceOp.getDest();
-        if (iterArgToOperand.count(dst) > 0 &&
-            !valCollection.contains(iterArgToOperand[dst])) {
-          valCollection.insert(iterArgToOperand[dst]);
+        if (iterArgToOperand.count(dst) > 0 && !valCollection.contains(dst)) {
+          valCollection.insert(dst);
         }
       }
     }
@@ -977,6 +974,8 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
     }
   }
 
+  assert(tileAndFuseResult.loops.size() > 0);
+
   // check getLoopIteratorTypes for each fusedOp
   // if parallel, corresponding getRegionIterArgs will be simplified
   unsigned resultOffset = 0;
@@ -995,13 +994,6 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
       continue;
     }
 
-    SmallPtrSet<Operation *, 8> opCollection;
-    SmallPtrSet<Value, 16> valCollection;
-    opCollection.insert(fusedOp);
-    // get all producer and consumer slices' op and value
-    getProducerAndConsumerTensorSlices(fusedOp, iterArgToOperand, opCollection,
-                                       valCollection);
-    assert(tileAndFuseResult.loops.size() > 0);
     for (unsigned i = 0; i < unfusedOp->getNumResults(); ++i) {
       auto result = unfusedOp->getResult(i);
       auto effectiveUseCnt =
@@ -1027,6 +1019,14 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
 
       for (int64_t loopIdx = tileAndFuseResult.loops.size() - 1; loopIdx >= 0;
            loopIdx -= 1) {
+
+        // update collection every iteration, since it might be replaced.
+        SmallPtrSet<Operation *, 8> opCollection;
+        SmallPtrSet<Value, 16> valCollection;
+        opCollection.insert(fusedOp);
+        // get all producer and consumer slices' op and value
+        getProducerAndConsumerTensorSlices(fusedOp, iterArgToOperand,
+                                           opCollection, valCollection);
 
         auto &forOp = tileAndFuseResult.loops[loopIdx];
 

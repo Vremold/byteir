@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s --test-transform-dialect-interpreter --canonicalize-ext --split-input-file | FileCheck %s
+// RUN: byteir-opt %s --transform-dialect-interpreter --canonicalize-ext --split-input-file | FileCheck %s
 
 // this is called dev, since it is not perfect yet.
 
