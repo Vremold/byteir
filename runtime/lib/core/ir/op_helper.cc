@@ -15,7 +15,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "brt/core/common/utils/op_helper.h"
+#include "brt/core/ir/op_helper.h"
 #include "brt/core/ir/ir.h"
 #include "brt/core/ir/util.h"
 

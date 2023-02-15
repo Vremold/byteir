@@ -35,18 +35,6 @@ BUILD_DIR="$PROJ_DIR/build"
 # dir to install
 INSTALL_DIR="$BUILD_DIR/install"
 
-if [[ -z ${BYRE_INSTALL_DIR} ]]; then
-  BYRE_INSTALL_ARTIFACT=$ROOT_PROJ_DIR/artifact/byre_install.tar.gz
-  if [[ ! -f ${BYRE_INSTALL_ARTIFACT} ]]; then
-    echo "cannot find byre artifact"
-    exit 1
-  fi
-  # dir to installed byre
-  BYRE_INSTALL_DIR=${ROOT_PROJ_DIR}/byre_install
-  rm -rf ${BYRE_INSTALL_DIR}
-  tar xzf ${BYRE_INSTALL_ARTIFACT} -C ${ROOT_PROJ_DIR}
-fi
-
 # build options
 BRT_USE_CUDA=${BRT_USE_CUDA:-OFF}
 BRT_ENABLE_ASAN=${BRT_ENABLE_ASAN:-OFF}
@@ -63,7 +51,6 @@ cmake -GNinja \
   "-B$BUILD_DIR" \
   -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
   -DLLVM_INSTALL_PATH="$LLVM_INSTALL_DIR" \
-  -DBYRE_INSTALL_PATH="$BYRE_INSTALL_DIR" \
   -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/install" \
   -Dbrt_USE_CUDA=${BRT_USE_CUDA} \
   -Dbrt_ENABLE_ASAN=${BRT_ENABLE_ASAN} \

@@ -13,8 +13,6 @@ PROJ_DIR="$ROOT_PROJ_DIR/compiler"
 BUILD_DIR="$PROJ_DIR/build"
 # dir to install
 INSTALL_DIR="$BUILD_DIR/byre_install"
-# dir to ci artifact
-OUT_DIR="$BUILD_DIR/artifact"
 
 source $CUR_DIR/../prepare.sh
 prepare_for_compiler
@@ -33,7 +31,3 @@ cmake "-H$PROJ_DIR/cmake" \
 
 cmake --build "$BUILD_DIR" --config Release --target all check-byteir install
 cmake --build "$BUILD_DIR" --target check-byteir-numerical
-
-rm -rf "$OUT_DIR"
-mkdir -p "$OUT_DIR"
-tar -czvf "$OUT_DIR/byre_install.tar.gz" -C ${BUILD_DIR} byre_install
