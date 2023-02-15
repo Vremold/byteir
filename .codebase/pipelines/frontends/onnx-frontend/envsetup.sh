@@ -27,7 +27,7 @@ function of_envsetup() {
   export no_proxy='*.byted.org'
 
   # install requirements
-  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.7-cp37-cp37m-linux_x86_64.whl
+  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.7-cp39-cp39-linux_x86_64.whl
   python3 -m pip install -r $ONNX_FRONTEND_ROOT/requirements.txt
 
   # init submodule

@@ -6,7 +6,7 @@ jobs:
     name: Release onnx-frontend
     runs-on:
       spec: m1.8xlarge
-    image: hub.byted.org/arnold/data.aml.byteir_cpu:v4
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v7
     working-directory: byteir/onnx-frontend
     envs:
       TOS_ACCESS_KEY: ${{TOS_ACCESS_KEY}}

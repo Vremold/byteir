@@ -17,7 +17,7 @@ jobs:
     name: tf frontend CI
     runs-on: 
       spec: m1.8xlarge
-    image: hub.byted.org/arnold/data.aml.byteir_cpu:v4
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v7
     working-directory: byteir/byteir
     steps:
       - name: Build TF-Frontend
