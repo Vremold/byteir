@@ -58,10 +58,6 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
                                               multiUser) {}
   LogicalResult matchAndRewrite(mhlo::TransposeOp op,
                                 PatternRewriter &rewriter) const override {
-    if (op->hasAttr(kMoveDownDisableKey)) {
-      return failure();
-    }
-
     auto value = op.getResult();
     auto operandType = op.getOperand().getType(); // T1 as Transpose: T1 -> T2
 
@@ -98,19 +94,7 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       // isElementwiseOneResult(user) == true
       bool failed = false;
       for (auto operand : user->getOperands()) {
-        if (operand == value) {
-          continue;
-        } else if (isSplatMhloConstantValue(operand)) {
-          continue;
-        } else if (llvm::isa_and_nonnull<mhlo::TransposeOp>(
-                       operand.getDefiningOp()) &&
-                   operand.getDefiningOp<mhlo::TransposeOp>()
-                           .getPermutation() == op.getPermutation()) {
-          continue;
-        } else if (llvm::isa_and_nonnull<mhlo::BroadcastInDimOp>(
-                       operand.getDefiningOp())) {
-          continue;
-        } else {
+        if (operand != value && !isSplatMhloConstantValue(operand)) {
           if (allMultiUser)
             return failure();
           failed = true;
@@ -132,37 +116,8 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       llvm::SetVector<Value> constInputs;
       for (auto operand : user->getOperands()) {
         if (operand == value) {
-          if (!bvm.contains(operand)) {
-            bvm.map(operand, op.getOperand());
-          }
-        } else if (auto producerOp =
-                       operand.getDefiningOp<mhlo::TransposeOp>()) {
-          if (!bvm.contains(operand)) {
-            bvm.map(operand, producerOp.getOperand());
-          }
-        } else if (auto producerOp =
-                       operand.getDefiningOp<mhlo::BroadcastInDimOp>()) {
-          if (!bvm.contains(operand)) {
-            OpBuilder::InsertionGuard guard(rewriter);
-            rewriter.setInsertionPointAfter(producerOp);
-            auto getReversedPermutation =
-                [&](DenseIntElementsAttr permutation) -> DenseIntElementsAttr {
-              SmallVector<int64_t> reversedPermutation(permutation.size(), -1);
-              int64_t index = 0;
-              for (APInt p : permutation) {
-                reversedPermutation[p.getSExtValue()] = index;
-                index++;
-              }
-              return rewriter.getI64TensorAttr(reversedPermutation);
-            };
-            mhlo::TransposeOp newTransposeOp =
-                rewriter.create<mhlo::TransposeOp>(
-                    producerOp->getLoc(), operand,
-                    getReversedPermutation(op.getPermutation()));
-            newTransposeOp->setAttr(kMoveDownDisableKey,
-                                    rewriter.getUnitAttr());
-
-            bvm.map(operand, newTransposeOp.getResult());
+          if (!bvm.contains(value)) {
+            bvm.map(value, op.getOperand());
           }
         } else {
           // isSplatMhloConstantValue(operand) == true
@@ -190,7 +145,6 @@ struct TransposeMoveDownPattern : public HloMoveDownPattern<mhlo::TransposeOp> {
       // maybeResultTypes should always have value
       assert(maybeResultTypes.has_value());
 
-      rewriter.setInsertionPointAfter(user);
       // clone an elementwise op as producer
       auto newProducer =
           cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
@@ -337,7 +291,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         }
         auto newReshapeOp = rewriter.create<mhlo::ReshapeOp>(
             rewriter.getUnknownLoc(), afterReshapeType, input);
-        newReshapeOp->setAttr(kMoveDownDisableKey, rewriter.getUnitAttr());
+        newReshapeOp->setAttr(kMoveDownDisableKey, rewriter.getBoolAttr(true));
         bvm.map(input, newReshapeOp.getResult());
       }
 
@@ -348,7 +302,6 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       // maybeResultTypes should always have value
       assert(maybeResultTypes.has_value());
 
-      rewriter.setInsertionPointAfter(user);
       // clone an elementwise op as producer
       auto newProducer =
           cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
@@ -460,7 +413,6 @@ struct BroadcastMoveDownPattern
       // maybeResultTypes should always have value
       assert(maybeResultTypes.has_value());
 
-      rewriter.setInsertionPointAfter(user);
       // clone an elementwise op as producer
       auto newProducer =
           cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
@@ -629,7 +581,6 @@ struct BroadcastReshapeMoveDownPattern
     BlockAndValueMapping bvm;
     bvm.map(value, op.getOperand());
 
-    rewriter.setInsertionPointAfter(reshape);
     auto newProducer =
         cloneAndReplaceResultTypes(rewriter, reshape, bvm, newReshapeOType);
 
