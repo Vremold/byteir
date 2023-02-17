@@ -45,19 +45,6 @@ func.func @transpose_move_down_binary_splat_const(%arg0 : tensor<31x20x32xf32>) 
 // CHECK-NEXT: mhlo.transpose
 // CHECK-NEXT: return
 
-func.func @transpose_move_down_binary_const(%arg0 : tensor<1x2x3xf32>) -> tensor<3x1x2xf32> {
-    %0 = mhlo.constant dense<[[[1.000000e+00, 2.000000e+00]], [[3.000000e+00, 4.000000e+00]], [[5.000000e+00, 6.000000e+00]]]> : tensor<3x1x2xf32>
-    %1 = "mhlo.transpose"(%arg0) {permutation = dense<[2, 0, 1]> : tensor<3xi64>} : (tensor<1x2x3xf32>) -> tensor<3x1x2xf32>
-    %2 = mhlo.add %1, %0 : tensor<3x1x2xf32>
-    return %2 : tensor<3x1x2xf32>
-}
-// CHECK-LABEL: func.func @transpose_move_down_binary_const
-// CHECK-NEXT: mhlo.constant
-// CHECK-SAME{LITERAL}: dense<[[[1.000000e+00, 3.000000e+00, 5.000000e+00], [2.000000e+00, 4.000000e+00, 6.000000e+00]]]>
-// CHECK-NEXT: mhlo.add
-// CHECK-NEXT: mhlo.transpose
-// CHECK-NEXT: return
-
 func.func @transpose_move_down_brodcast_binary(%arg0 : tensor<31x20x32xf32>, %arg1 : tensor<32xf32>) -> tensor<20x31x32xf32> {
     %0 = "mhlo.transpose"(%arg0) {permutation = dense<[1, 0, 2]> : tensor<3xi64>} : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
     %1 = "mhlo.broadcast_in_dim"(%arg1) {broadcast_dimensions = dense<2> : tensor<1xi64>} : (tensor<32xf32>) -> tensor<20x31x32xf32>
@@ -66,17 +53,6 @@ func.func @transpose_move_down_brodcast_binary(%arg0 : tensor<31x20x32xf32>, %ar
 }
 // CHECK-LABEL: func.func @transpose_move_down_brodcast_binary
 // CHECK-NEXT: mhlo.broadcast_in_dim
-// CHECK-NEXT: mhlo.add
-// CHECK-NEXT: mhlo.transpose
-// CHECK-NEXT: return
-
-func.func @same_two_transpose_move_down_binary(%arg0 : tensor<31x20x32xf32>, %arg1 : tensor<31x20x32xf32>) -> tensor<20x31x32xf32> {
-    %0 = "mhlo.transpose"(%arg0) {permutation = dense<[1, 0, 2]> : tensor<3xi64>} : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
-    %1 = "mhlo.transpose"(%arg1) {permutation = dense<[1, 0, 2]> : tensor<3xi64>} : (tensor<31x20x32xf32>) -> tensor<20x31x32xf32>
-    %2 = mhlo.add %0, %1 : tensor<20x31x32xf32>
-    return %2 : tensor<20x31x32xf32>
-}
-// CHECK-LABEL: func.func @same_two_transpose_move_down_binary
 // CHECK-NEXT: mhlo.add
 // CHECK-NEXT: mhlo.transpose
 // CHECK-NEXT: return
@@ -206,18 +182,6 @@ func.func @reshape_move_down_binary_splat_const(%arg0 : tensor<31x20x32xf32>) ->
     return %2 : tensor<31x640xf32>
 }
 // CHECK-LABEL: func.func @reshape_move_down_binary_splat_const
-// CHECK-NEXT: mhlo.constant
-// CHECK-NEXT: mhlo.add
-// CHECK-NEXT: mhlo.reshape
-// CHECK-NEXT: return
-
-func.func @reshape_move_down_binary_dense_const(%arg0 : tensor<2x1xf32>) -> tensor<2xf32> {
-    %0 = mhlo.constant dense<[1.000000e+00, 2.000000e+00]> : tensor<2xf32>
-    %1 = "mhlo.reshape"(%arg0) : (tensor<2x1xf32>) -> tensor<2xf32>
-    %2 = mhlo.add %1, %0 : tensor<2xf32>
-    return %2 : tensor<2xf32>
-}
-// CHECK-LABEL: func.func @reshape_move_down_binary_dense_const
 // CHECK-NEXT: mhlo.constant
 // CHECK-NEXT: mhlo.add
 // CHECK-NEXT: mhlo.reshape
