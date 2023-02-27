@@ -36,9 +36,15 @@ function of_envsetup() {
   git submodule update -f $ONNX_MLIR_ROOT
   pushd $ONNX_MLIR_ROOT
   git clean -fd .
-  git apply ../patches/ConstantExpandReductionDequantize.patch
+  git apply ../patches/WillPushToUpstream.patch
   git apply ../patches/Pad.patch
   git apply ../patches/ShapeInference.patch
+
+  ONNX_OFFICIAL_ROOT=$ONNX_MLIR_ROOT/third_party/onnx
+  git submodule update -f $ONNX_OFFICIAL_ROOT
+  pushd $ONNX_OFFICIAL_ROOT
+  git apply $ONNX_MLIR_ROOT/../patches/onnx.patch
+  popd
   popd
 
   # download bdaimodels repo

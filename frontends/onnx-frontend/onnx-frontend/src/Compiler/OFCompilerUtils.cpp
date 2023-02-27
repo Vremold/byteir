@@ -72,8 +72,7 @@ void SetBatchSize(onnx::ModelProto &model) {
                               << dim->dim_value() << "\n");
     }
   }
-  // Do shape inference on onnx pb
-  onnx::shape_inference::InferShapes(model);
+  // onnx::shape_inference::InferShapes(model);  // shape inference on pb
 }
 
 // Return 0 on success, error number on failure.
