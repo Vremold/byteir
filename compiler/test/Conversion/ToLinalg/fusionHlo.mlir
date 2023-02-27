@@ -38,6 +38,7 @@ func.func @fusion_broadcast_notag(%arg0: tensor<6x12x96xf32>, %arg1: tensor<6x12
 // NOTAG-LABEL: bad_case_0
 func.func @bad_case_0(%arg0: tensor<1x1xi64>) -> tensor<1x1xi32> {
   // NOTAG: linalg.generic
+  // NOTAG-NOT: mhlo.add
   %0 = mhlo.constant dense<0> : tensor<i32>
   %1 = mhlo.constant dense<0> : tensor<1x12xi32>
   %2 = mhlo.constant dense<[[1, 10001, 20001, 16001, 80004, 52, 20052, 10061, 80053, 80054, 9, 20010]]> : tensor<1x12xi32>

@@ -697,6 +697,9 @@ struct HloFusionToLinalgPass
 
     auto typeConverter = createHloToLinalgTypeConverter();
 
+    mhlo::populateScalarHloToArithmeticConversionPatterns(
+        &ctx, *typeConverter, &patterns,
+        [](Operation *op) { return isInBodyOfLinalgOps(op); });
     mhlo::populateHloToLinalgConversionPattern(&ctx, *typeConverter, &patterns,
                                                enablePrimitiveOps);
     patterns.add<ReduceWindowOpConversion>(*typeConverter, &ctx,
