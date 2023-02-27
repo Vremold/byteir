@@ -11,7 +11,6 @@ trigger:
       - ".codebase/pipelines/frontends/tf-frontend/**"
       - "compiler/include/byteir/Dialect/Ace/**"
       - "compiler/lib/Dialect/Ace/**"
-  manual:
 jobs:
   tf_frontend_build:
     name: tf frontend CI

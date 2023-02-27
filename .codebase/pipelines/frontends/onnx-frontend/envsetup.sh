@@ -6,7 +6,7 @@ echo "BYTEIR_ROOT = $BYTEIR_ROOT"
 echo "ONNX_FRONTEND_ROOT = $ONNX_FRONTEND_ROOT"
 
 function download_llvm_prebuilt_rtti() {
-  pushd $BYTEIR_ROOT
+  pushd $ONNX_FRONTEND_ROOT
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
     LLVM_BUILD="llvm_install_rtti_9acc2f37bdfce08ca0c2faec03392db10d1bb7a9.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
@@ -63,7 +63,6 @@ function of_envsetup() {
 }
 
 function of_build() {
-  LLVM_INSTALL_DIR=$BYTEIR_ROOT/llvm_build_rtti
   if [ ! -d ${ONNX_FRONTEND_ROOT}/build ]; then
     mkdir ${ONNX_FRONTEND_ROOT}/build
   fi

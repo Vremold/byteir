@@ -1,0 +1,23 @@
+name: TorchFrontend CI
+trigger:
+  manual:
+jobs:
+  torch_frontend_build:
+    name: torch-frontend Release CI
+    runs-on:
+      spec: m1.8xlarge
+    image: hub.byted.org/compile/data.aml.byteir_cuda:5e63a950ea08a0ebf5eb958b627c0f31
+    working-directory: byteir/torch-frontend
+    envs:
+      TOS_ACCESS_KEY: ${{TOS_ACCESS_KEY}}
+      TOS_BUCKET: ${{TOS_BUCKET}}
+    steps:
+      - name: Build TorchFrontend
+        commands:
+          - bash .codebase/pipelines/frontends/torch-frontend/build_with_prebuilt.sh
+      - name: Test
+        commands:
+          - bash .codebase/pipelines/frontends/torch-frontend/test.sh
+      - name: Upload to TOS
+        commands:
+          - bash .codebase/pipelines/frontends/torch-frontend/upload_to_tos.sh
