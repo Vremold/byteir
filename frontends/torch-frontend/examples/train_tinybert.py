@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 import torch._decomp
-import torchvision.models as models
 from functorch.compile import aot_module, aot_function
 from torch._decomp import get_decompositions
 import copy
