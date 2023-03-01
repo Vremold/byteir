@@ -43,7 +43,8 @@ function of_envsetup() {
   ONNX_OFFICIAL_ROOT=$ONNX_MLIR_ROOT/third_party/onnx
   git submodule update -f $ONNX_OFFICIAL_ROOT
   pushd $ONNX_OFFICIAL_ROOT
-  git apply $ONNX_MLIR_ROOT/../patches/onnx.patch
+  git apply $ONNX_MLIR_ROOT/../patches/VersionConvertSoftmax.patch
+  git apply $ONNX_MLIR_ROOT/../patches/VersionConvertExternalData.patch
   popd
   popd
 
