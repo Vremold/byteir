@@ -238,7 +238,10 @@ struct ConvertAtenLinalgVectorNormOp
     }
     auto constantOne = rewriter.create<stablehlo::ConstantOp>(
         op->getLoc(), blockArgumentTy,
-        DenseElementsAttr::get(blockArgumentTy, llvm::ArrayRef<float>{1.0}));
+        DenseElementsAttr::get(
+            blockArgumentTy,
+            APFloat(outElemType.cast<mlir::FloatType>().getFloatSemantics(),
+                    1)));
     auto reciprocalOrd = rewriter.create<stablehlo::DivOp>(
         op->getLoc(), blockArgumentTy, constantOne, ord);
     auto output = rewriter.create<chlo::BroadcastPowOp>(
@@ -389,14 +392,19 @@ struct ConvertTorchToStablehloExtPass
   void getDependentDialects(DialectRegistry &registry) const override {
     registry.insert<Torch::TorchDialect>();
     registry.insert<mhlo::MhloDialect>();
+    registry.insert<chlo::ChloDialect>();
+    registry.insert<stablehlo::StablehloDialect>();
+    registry.insert<tensor::TensorDialect>();
+    registry.insert<arith::ArithDialect>();
     TorchConversion::getBackendTypeConversionDependentDialects(registry);
   }
 
   void runOnOperation() override {
     MLIRContext *context = &getContext();
     ConversionTarget target(*context);
-    target.addLegalDialect<Torch::TorchDialect, mhlo::MhloDialect>();
-
+    target.addLegalDialect<Torch::TorchDialect, mhlo::MhloDialect,
+                           chlo::ChloDialect, stablehlo::StablehloDialect,
+                           tensor::TensorDialect, arith::ArithDialect>();
     TypeConverter typeConverter;
     typeConverter.addConversion([](Type type) { return type; });
     TorchConversion::setupBackendTypeConversion(target, typeConverter);
