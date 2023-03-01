@@ -7,7 +7,6 @@ CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 source $CUR_DIR/envsetup.sh
 
-download_llvm_prebuilt
 prepare_for_build
 
 pushd $PROJ_DIR

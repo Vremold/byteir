@@ -7,6 +7,8 @@ CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 ROOT_PROJ_DIR="$CUR_DIR/../../../.."
 # path to byteir/frontends/torch-frontend
 PROJ_DIR="$ROOT_PROJ_DIR/frontends/torch-frontend"
+# path to torch-mlir
+TORCH_MLIR_ROOT="$PROJ_DIR/third_party/torch-mlir"
 
 function download_llvm_prebuilt() {
   pushd ${PROJ_DIR}
@@ -23,6 +25,17 @@ function download_llvm_prebuilt() {
   popd
 }
 
+function apply_patches() {
+  git submodule update -f $TORCH_MLIR_ROOT
+  pushd $TORCH_MLIR_ROOT
+  git apply ../patches/build.patch
+  git apply ../patches/generated_torch_ops_td.patch
+  git apply ../patches/one_hot.patch
+  git apply ../patches/refine_types.patch
+  git apply ../patches/torch_ops.patch
+  popd
+}
+
 function prepare_for_build_with_prebuilt() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
@@ -32,7 +45,6 @@ function prepare_for_build_with_prebuilt() {
   # install requirements
   python3 -m pip install -r requirements.txt
 
-  TORCH_MLIR_ROOT=./third_party/torch-mlir
   # init submodule
   git submodule update --init $TORCH_MLIR_ROOT
   pushd $TORCH_MLIR_ROOT
@@ -40,14 +52,7 @@ function prepare_for_build_with_prebuilt() {
   popd
 
   # apply patches
-  git submodule update -f $TORCH_MLIR_ROOT
-  pushd $TORCH_MLIR_ROOT
-  git apply ../patches/build.patch
-  git apply ../patches/generated_torch_ops_td.patch
-  git apply ../patches/one_hot.patch
-  git apply ../patches/refine_types.patch
-  git apply ../patches/torch_ops.patch
-  popd
+  apply_patches
 
   unset http_proxy
   unset https_proxy
@@ -63,19 +68,11 @@ function prepare_for_build() {
   # install requirements
   python3 -m pip install -r requirements.txt
 
-  TORCH_MLIR_ROOT=./third_party/torch-mlir
   # init submodule
   git submodule update --init --recursive $TORCH_MLIR_ROOT
 
   # apply patches
-  git submodule update -f $TORCH_MLIR_ROOT
-  pushd $TORCH_MLIR_ROOT
-  git apply ../patches/build.patch
-  git apply ../patches/generated_torch_ops_td.patch
-  git apply ../patches/one_hot.patch
-  git apply ../patches/refine_types.patch
-  git apply ../patches/torch_ops.patch
-  popd
+  apply_patches
 
   unset http_proxy
   unset https_proxy

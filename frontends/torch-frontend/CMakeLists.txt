@@ -48,3 +48,6 @@ add_subdirectory(torch-frontend)
 
 add_custom_target(${PROJECT_NAME} ALL)
 add_dependencies(${PROJECT_NAME} check-torch-frontend-opt torch_frontend_python_pack)
+
+# for minimal test
+add_custom_target(torch-frontend-minimal-test DEPENDS TorchFrontendPythonModules check-torch-frontend-opt)
