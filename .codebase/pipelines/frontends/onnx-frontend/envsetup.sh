@@ -38,6 +38,7 @@ function of_envsetup() {
   git clean -fd .
   git apply ../patches/WillPushToUpstream.patch
   git apply ../patches/Pad.patch
+  git apply ../patches/ConstProp.patch
   git apply ../patches/ShapeInference.patch
 
   ONNX_OFFICIAL_ROOT=$ONNX_MLIR_ROOT/third_party/onnx
