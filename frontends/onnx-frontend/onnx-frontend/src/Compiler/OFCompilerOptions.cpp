@@ -37,7 +37,7 @@ llvm::cl::opt<int>
     ofRepeatStatic("of-repeat-static",
                    llvm::cl::desc("invoke onnx transform pass (shape "
                                   "inference, constant and canonicalizer)"),
-                   llvm::cl::init(20), llvm::cl::cat(OnnxFrontendOptions));
+                   llvm::cl::init(70), llvm::cl::cat(OnnxFrontendOptions));
 
 llvm::cl::opt<int> ofRepeatDynamicMax(
     "of-repeat-dynamic-max",
