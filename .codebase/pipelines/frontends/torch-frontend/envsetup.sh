@@ -32,7 +32,6 @@ function apply_patches() {
   git apply ../patches/generated_torch_ops_td.patch
   git apply ../patches/one_hot.patch
   git apply ../patches/refine_types.patch
-  git apply ../patches/torch_ops.patch
   popd
 }
 
