@@ -1,4 +1,4 @@
-//===- OFPasses.hpp -------------------------------------------------------===//
+//===- OFCanonicalizer.hpp ------------------------------------------------===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +17,11 @@
 
 #pragma once
 
-#include "mlir/Pass/Pass.h"
-
-#include "onnx-frontend/src/Conversion/OFCanonicalizer.hpp"
-#include "onnx-frontend/src/Conversion/OFModifyEntryPoint.hpp"
-#include "onnx-frontend/src/Conversion/OFRewriteToCustomCall.hpp"
+#include "onnx-frontend/src/Conversion/OFPassesDetail.hpp"
 
 namespace onnx_frontend {
 
-#define GEN_PASS_REGISTRATION
-#include "onnx-frontend/src/Conversion/OFPasses.inc"
+/// Canonicalize and correct the function's output types in one single pass
+std::unique_ptr<mlir::Pass> createOFCanonicalizerPass();
 
-} // namespace onnx_frontend
+}  // namespace onnx_frontend
