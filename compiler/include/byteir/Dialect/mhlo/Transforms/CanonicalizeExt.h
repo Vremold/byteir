@@ -51,7 +51,7 @@ class SliceOp;
 ///   broadcast_in_dim  const
 ///       \              /
 ///             mul
-LogicalResult foldBroadcastInDim(BroadcastInDimOp op,
+LogicalResult foldBroadcastInDim(mhlo::BroadcastInDimOp op,
                                  PatternRewriter &rewriter);
 
 ///
@@ -93,18 +93,7 @@ LogicalResult canonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
 LogicalResult simplifyByteIRAddNToAdd(mhlo::CustomCallOp op,
                                       PatternRewriter &rewriter);
 
-struct FoldSlice : public OpRewritePattern<SliceOp> {
-  FoldSlice(MLIRContext *context, bool blind = false,
-            PatternBenefit benefit = 1)
-      : OpRewritePattern(context, benefit), blind(blind) {}
-
-  LogicalResult matchAndRewrite(SliceOp sliceOp,
-                                PatternRewriter &rewriter) const override;
-
-private:
-  /// Fold it even if the final IR bloats
-  bool blind;
-};
+LogicalResult foldLargeSliceOp(mhlo::SliceOp op, PatternRewriter &rewriter);
 
 // populate canonicalizeExt patterns
 void populateCanonicalizeExtPatterns(RewritePatternSet &patterns,

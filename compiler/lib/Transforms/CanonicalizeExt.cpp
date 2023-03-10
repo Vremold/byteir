@@ -204,8 +204,10 @@ struct CanonicalizeExtPass : public CanonicalizeExtBase<CanonicalizeExtPass> {
 
 } // namespace
 
-std::unique_ptr<Pass> mlir::createCanonicalizeExtPass() {
-  return std::make_unique<CanonicalizeExtPass>();
+std::unique_ptr<Pass> mlir::createCanonicalizeExtPass(bool blindFold) {
+  GreedyRewriteConfig config;
+  return std::make_unique<CanonicalizeExtPass>(config, blindFold, std::nullopt,
+                                               std::nullopt);
 }
 
 std::unique_ptr<Pass>
