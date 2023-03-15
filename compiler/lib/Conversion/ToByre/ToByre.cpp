@@ -88,7 +88,6 @@ template <>
 LogicalResult ConvertToByrePattern<lmhlo::GatherOp>::matchAndRewrite(
     lmhlo::GatherOp op, typename lmhlo::GatherOp::Adaptor adaptor,
     ConversionPatternRewriter &rewriter) const {
-
   auto found = srcToCallee.find(op.getOperation()->getName().getStringRef());
   if (found == srcToCallee.end()) {
     return op->emitOpError() << "can not find matched byre_compute_name";
@@ -115,9 +114,9 @@ LogicalResult ConvertToByrePattern<lmhlo::GatherOp>::matchAndRewrite(
   }
 
   // Index select only works across a single dimension.
-  if (startIndicesTy.getShape().empty() || startIndicesTy.getRank() != 1) {
+  if (startIndicesTy.getShape().empty()) {
     return rewriter.notifyMatchFailure(
-        op, "start_indices index vector dimension not 1");
+        op, "empty start_indices index vector dimension");
   }
 
   // Only support the default case for start_index_map.
@@ -174,8 +173,13 @@ LogicalResult ConvertToByrePattern<lmhlo::GatherOp>::matchAndRewrite(
   auto computeOp =
       replaceLmhloOpWithByreComputeOp(rewriter, op, key, adaptor.getOperands());
 
-  // FIXME: currently only support select on dim0
-  computeOp->setAttr("dim", rewriter.getI32IntegerAttr(0));
+  // FIXME: currently only support select starting from 0
+  SmallVector<int32_t> dimensions;
+  dimensions.reserve(indexVectorDim);
+  for (int32_t i = 0; i < indexVectorDim; ++i) {
+    dimensions.push_back(i);
+  }
+  computeOp->setAttr("dimensions", rewriter.getI32TensorAttr(dimensions));
 
   return success();
 }

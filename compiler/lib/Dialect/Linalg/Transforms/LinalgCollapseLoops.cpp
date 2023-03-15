@@ -31,7 +31,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "byteir/Dialect/Linalg/Passes.h"
+#include "byteir/Dialect/Linalg/Transforms/LinalgCollapseLoops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -548,3 +548,7 @@ struct LinalgCollapseLoopsPass
   }
 };
 } // namespace
+
+std::unique_ptr<OperationPass<func::FuncOp>> mlir::createLinalgCollapseLoops() {
+  return std::make_unique<LinalgCollapseLoopsPass>();
+}

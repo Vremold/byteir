@@ -132,3 +132,12 @@ func.func @slice_fold_large_outputs() -> tensor<999998xi64> {
 }
 // CHECK-LABEL: slice_fold_large_outputs
 // CHECK-NOT: mhlo.slice
+
+func.func @multiply_zero(%arg0: tensor<2x128x128xf32>) -> tensor<2x128x128xf32> {
+  %c0 = "mhlo.constant"() {value = dense<0.000000e+00> : tensor<2x128x128xf32>} : () -> tensor<2x128x128xf32>
+  %1 = "mhlo.multiply"(%arg0, %c0) : (tensor<2x128x128xf32>, tensor<2x128x128xf32>) -> tensor<2x128x128xf32>
+  return %1: tensor<2x128x128xf32>
+}
+// CHECK-LABEL: multiply_zero
+// CHECK: mhlo.constant
+// CHECK-NOT: mhlo.multiply

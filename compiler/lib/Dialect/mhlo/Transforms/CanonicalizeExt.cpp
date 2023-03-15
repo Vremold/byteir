@@ -291,6 +291,57 @@ mlir::mhlo::foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
 }
 
 namespace {
+bool isSplatZero(SplatElementsAttr attr) {
+  if (!attr)
+    return false;
+  if (attr.getElementType().isa<FloatType>()) {
+    return attr.getSplatValue<APFloat>().isZero();
+  }
+  if (attr.getElementType().isa<IntegerType>()) {
+    return attr.getSplatValue<APInt>().isZero();
+  }
+  return false;
+}
+} // namespace
+
+LogicalResult mlir::mhlo::foldMultiplyZero(mhlo::MulOp op,
+                                           PatternRewriter &rewriter) {
+  auto lhsOp = op.getLhs().getDefiningOp<mhlo::ConstantOp>();
+  auto rhsOp = op.getRhs().getDefiningOp<mhlo::ConstantOp>();
+  if (!lhsOp && !rhsOp) {
+    return failure();
+  }
+
+  auto checkZeroThenReplace = [&](mhlo::ConstantOp cstOp) {
+    if (!cstOp)
+      return false;
+
+    DenseElementsAttr valAttr = cstOp.getValue().dyn_cast<DenseElementsAttr>();
+    if (!valAttr)
+      return false;
+
+    SplatElementsAttr splatAttr = valAttr.dyn_cast_or_null<SplatElementsAttr>();
+    if (!splatAttr)
+      return false;
+
+    if (isSplatZero(splatAttr)) {
+      rewriter.replaceOp(op, cstOp.getResult());
+      return true;
+    }
+
+    return false;
+  };
+
+  if (checkZeroThenReplace(lhsOp)) {
+    return success();
+  } else if (checkZeroThenReplace(rhsOp)) {
+    return success();
+  }
+
+  return failure();
+}
+
+namespace {
 // functions in this namespace copied from
 // mlir-hlo/lib/Dialect/mhlo/IR/hlo_ops.cc
 

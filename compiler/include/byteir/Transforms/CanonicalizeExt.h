@@ -36,6 +36,13 @@ namespace shape {
 void populateCanonicalizeExtPatterns(RewritePatternSet &patterns);
 } // namespace shape
 
+namespace arith {
+// FIXME: this pattern should move to arith dialect
+void foldMultiplyZeroPatterns(RewritePatternSet &patterns);
+} // namespace arith
+
+void populateFoldMultiplyZeroPatterns(RewritePatternSet &patterns);
+
 /// Creates an instance of the CanonicalizeExt pass, configured with default
 /// settings (which can be overridden by pass options on the command line).
 std::unique_ptr<Pass> createCanonicalizeExtPass(bool blindFold = false);

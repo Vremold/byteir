@@ -36,6 +36,7 @@ class DynamicBroadcastInDimOp;
 class DynamicConvOp;
 class DynamicGatherOp;
 class ReshapeOp;
+class MulOp;
 class SliceOp;
 
 // Most of these will push back to upstream
@@ -59,6 +60,9 @@ LogicalResult foldBroadcastInDim(mhlo::BroadcastInDimOp op,
 ///
 LogicalResult foldConcatWithContinuousSlices(mhlo::ConcatenateOp op,
                                              PatternRewriter &rewriter);
+
+// fold multi op with zero
+LogicalResult foldMultiplyZero(mhlo::MulOp op, PatternRewriter &rewriter);
 
 // fold binary op with large constant op
 template <typename Op, template <typename> typename Func>
