@@ -145,6 +145,15 @@ static bool isEligibleForCollapse(linalg::GenericOp genericOp) {
   if (genericOp.hasIndexSemantics())
     return false;
 
+  if (!llvm::all_of(genericOp->getOperandTypes(), [](Type t) {
+        if (auto memrefType = t.dyn_cast_or_null<MemRefType>()) {
+          return memrefType.getLayout().isIdentity();
+        }
+        return true;
+      })) {
+    return false;
+  }
+
   return true;
 }
 namespace {
