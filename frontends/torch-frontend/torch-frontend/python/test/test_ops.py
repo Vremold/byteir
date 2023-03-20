@@ -34,14 +34,8 @@ class CatModule(torch.nn.Module):
         return torch.cat([x, y], dim=0)
 
 def test_cat():
-  module = CatModule()
-  # inputs = [tu.randint(0, 2, (10, 20)).float(), tu.randint(0, 2, (10, 20)).float()]
-  # inputs = [tu.randint(0, 2, (10, 20)).bool(), tu.randint(0, 2, (10, 20)).long()]
-  inputs = [tu.randint(0, 2, (10, 20)).long()]
-  
-  module = torch.jit.trace(module, inputs)
-  # fx_g = make_fx(module)(*inputs)
-  # print(fx_g.code)
-
-  module = convert_to_mhlo_via_torch_mlir(module , inputs)
-  print(module.operation.get_asm(large_elements_limit=10, enable_debug_info=False))
+    module = CatModule()
+    inputs = [tu.randint(0, 2, (10, 20)).long()]
+    module = torch.jit.trace(module, inputs) # x.bool() can't be scripted
+    module = convert_to_mhlo_via_torch_mlir(module , inputs)
+    print(module.operation.get_asm(large_elements_limit=10, enable_debug_info=False))

@@ -11,6 +11,8 @@ torchvision==0.15.0.dev20230310
 # torchvision==0.15.0.dev20230310+cu118
 
 
+transformers
+
 # The following copied from torch-mlir
 numpy
 
