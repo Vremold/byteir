@@ -32,21 +32,18 @@ function of_envsetup() {
 
   # init submodule
   ONNX_MLIR_ROOT=$ONNX_FRONTEND_ROOT/third_party/onnx-mlir
+  ONNX_OFFICIAL_ROOT=$ONNX_MLIR_ROOT/third_party/onnx
+
   git submodule update --init --recursive $ONNX_MLIR_ROOT
   git submodule update -f $ONNX_MLIR_ROOT
   pushd $ONNX_MLIR_ROOT
   git clean -fd .
-  git apply ../patches/WillPushToUpstream.patch
-  git apply ../patches/Pad.patch
-  git apply ../patches/ConstProp.patch
-  git apply ../patches/ShapeInference.patch
-
-  ONNX_OFFICIAL_ROOT=$ONNX_MLIR_ROOT/third_party/onnx
+  git apply $ONNX_FRONTEND_ROOT/third_party/patches/OnnxMlir*.patch
   git submodule update -f $ONNX_OFFICIAL_ROOT
-  pushd $ONNX_OFFICIAL_ROOT
-  git apply $ONNX_MLIR_ROOT/../patches/VersionConvertSoftmax.patch
-  git apply $ONNX_MLIR_ROOT/../patches/VersionConvertExternalData.patch
   popd
+
+  pushd $ONNX_OFFICIAL_ROOT
+  git apply $ONNX_FRONTEND_ROOT/third_party/patches/OnnxOfficial*.patch
   popd
 
   unset http_proxy; unset https_proxy; unset no_proxy
