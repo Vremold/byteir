@@ -13,7 +13,7 @@ TORCH_MLIR_ROOT="$PROJ_DIR/third_party/torch-mlir"
 function download_llvm_prebuilt() {
   pushd ${PROJ_DIR}
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_ba8b8a73fcb6b830e63cd8e20c6e13b2a14d69bf.tar.gz"
+    LLVM_BUILD="llvm_install_21f4b84c456b471cc52016cf360e14d45f7f2960.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install*
       rm -rf llvm_build
@@ -76,4 +76,16 @@ function prepare_for_build() {
   unset http_proxy
   unset https_proxy
   unset no_proxy
+}
+
+function download_large_models() {
+  pushd $ROOT_PROJ_DIR/..
+  if [ ! -d bdaimodels ]; then
+    git clone git@code.byted.org:yuanhangjian/bdaimodelsv2.git bdaimodels
+  fi
+  cd bdaimodels
+  git lfs pull --include pytorch/sar_relevance_cross_model_latest/28365.ts
+  git lfs pull --include pytorch/tt_label3_0607/torch_model_1654572315533.jit.revert.ts
+  popd
+  export TORCH_LARGE_MODEL_PATH=$ROOT_PROJ_DIR/../bdaimodels/pytorch
 }

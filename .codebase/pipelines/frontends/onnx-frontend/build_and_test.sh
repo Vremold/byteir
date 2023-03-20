@@ -15,4 +15,5 @@ download_llvm_prebuilt_rtti
 of_envsetup
 of_build
 of_test_lit
+of_download_models
 of_test_models

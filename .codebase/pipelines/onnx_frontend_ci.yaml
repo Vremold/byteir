@@ -14,7 +14,7 @@ jobs:
     name: onnx frontend CI
     runs-on:
       spec: m1.8xlarge
-    image: hub.byted.org/arnold/data.aml.byteir_cpu:v7
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v8
     working-directory: byteir/byteir
     steps:
       - name: Build and test onnx-frontend

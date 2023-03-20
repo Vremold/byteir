@@ -49,17 +49,6 @@ function of_envsetup() {
   popd
   popd
 
-  # download bdaimodels repo
-  pushd $BYTEIR_ROOT/..
-  apt-get update && apt-get install -y git-lfs
-  git lfs install --force --skip-smudge
-  if [ ! -d bdaimodels ]; then
-    git clone git@code.byted.org:yuanhangjian/bdaimodelsv2.git bdaimodels
-  fi
-  cd bdaimodels
-  git lfs pull --include onnx/onnx_frontend/
-  popd
-
   unset http_proxy; unset https_proxy; unset no_proxy
   popd
 }
@@ -84,6 +73,17 @@ function of_build() {
 
 function of_test_lit() {
   cmake --build "$ONNX_FRONTEND_ROOT/build" --target check-of-lit
+}
+
+function of_download_models() {
+  # download bdaimodels repo
+  pushd $BYTEIR_ROOT/..
+  if [ ! -d bdaimodels ]; then
+    git clone git@code.byted.org:yuanhangjian/bdaimodelsv2.git bdaimodels
+  fi
+  cd bdaimodels
+  git lfs pull --include onnx/onnx_frontend/
+  popd
 }
 
 function of_test_models() {
