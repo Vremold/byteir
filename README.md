@@ -1,5 +1,7 @@
 # The ByteIR Project
 
+English | [中文](README-zh_cn.md)
+
 The ByteIR Project is a ByteDance model compilation solution.
 ByteIR includes compiler, runtime, and frontends, and provides an end-to-end model compilation solution.
 
