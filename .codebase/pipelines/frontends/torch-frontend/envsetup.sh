@@ -26,12 +26,13 @@ function download_llvm_prebuilt() {
 }
 
 function apply_patches() {
-  git submodule update -f $TORCH_MLIR_ROOT
   pushd $TORCH_MLIR_ROOT
+  git clean -fd .
   git apply ../patches/build.patch
   git apply ../patches/generated_torch_ops_td.patch
   git apply ../patches/one_hot.patch
   git apply ../patches/refine_types.patch
+  git apply ../patches/custom_op.patch
   popd
 }
 
@@ -45,9 +46,9 @@ function prepare_for_build_with_prebuilt() {
   python3 -m pip install -r requirements.txt
 
   # init submodule
-  git submodule update --init $TORCH_MLIR_ROOT
+  git submodule update --init -f $TORCH_MLIR_ROOT
   pushd $TORCH_MLIR_ROOT
-  git submodule update --init externals/mlir-hlo
+  git submodule update --init -f externals/mlir-hlo
   popd
 
   # apply patches
@@ -68,7 +69,7 @@ function prepare_for_build() {
   python3 -m pip install -r requirements.txt
 
   # init submodule
-  git submodule update --init --recursive $TORCH_MLIR_ROOT
+  git submodule update --init --recursive -f $TORCH_MLIR_ROOT
 
   # apply patches
   apply_patches

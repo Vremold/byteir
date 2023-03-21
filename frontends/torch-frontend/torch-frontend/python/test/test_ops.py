@@ -39,3 +39,27 @@ def test_cat():
     module = torch.jit.trace(module, inputs) # x.bool() can't be scripted
     module = convert_to_mhlo_via_torch_mlir(module , inputs)
     print(module.operation.get_asm(large_elements_limit=10, enable_debug_info=False))
+
+# ==============================================================================
+torch.ops.load_library("build/lib/libcustom_op.so")
+class DynamicPartitionStitchModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, data, partitions, index0, index1):
+        dynamic_partition = torch.ops.custom.dynamic_partition(data, partitions, 2)
+        dynamic_stitch = torch.ops.custom.dynamic_stitch([index0, index1], [dynamic_partition[0], dynamic_partition[1]], [5, 2]) 
+        return dynamic_stitch
+
+
+def test_dynamic_partition_stitch():
+    module = DynamicPartitionStitchModule()
+    data = torch.rand((5, 2))
+    partitions = torch.tensor([0, 1, 0, 1, 0])
+    indices = [torch.tensor([2, 3, 4]), torch.tensor([0, 1])]
+
+    inputs = [data, partitions, indices[0], indices[1]]
+    module = torch.jit.trace(module, inputs)
+
+    module = convert_to_mhlo_via_torch_mlir(module, inputs)
+    print(module.operation.get_asm(large_elements_limit=10, enable_debug_info=False))

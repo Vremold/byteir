@@ -1,4 +1,4 @@
-//===- Passes.cpp ---------------------------------------------*--- C++ -*-===//
+//===- RewriteCustomOp.h -------------------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +14,19 @@
 // limitations under the License.
 //
 //===----------------------------------------------------------------------===//
-#include "torch-frontend-c/Passes.h"
-#include "torch-frontend/Conversion/Passes.h"
-#include "torch-frontend/Pipelines/Pipelines.h"
 
-void torchFrontendRegisterAllPipelines() {
-  mlir::torch_frontend::registerTorchToMhloPipeline();
-  mlir::torch_frontend::registerTorchscriptToTorchPipeline();
-  mlir::torch_frontend::registerTorchFunctionToTorchPipeline();
-}
+#ifndef TORCH_FRONTEND_TRANSFORMS_REWRITECUSTOMOP_H
+#define TORCH_FRONTEND_TRANSFORMS_REWRITECUSTOMOP_H
 
-void torchFrontendRegisterConversionPasses() {
-  mlir::registerTorchFrontendConversionPasses();
-}
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Pass/Pass.h"
+
+#include <memory>
+
+namespace mlir {
+
+std::unique_ptr<OperationPass<func::FuncOp>> createRewriteCustomOp();
+
+} // namespace mlir
+
+#endif // TORCH_FRONTEND_TRANSFORMS_REWRITECUSTOMOP_H
