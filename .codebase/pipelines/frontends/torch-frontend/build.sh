@@ -14,6 +14,7 @@ cmake -S . \
       -B ./build \
       -GNinja \
       -DLLVM_EXTERNAL_LIT=$(which lit) \
+      -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_C_COMPILER=clang \
       -DCMAKE_CXX_COMPILER=clang++
 
