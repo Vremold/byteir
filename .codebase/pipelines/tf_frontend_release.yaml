@@ -6,7 +6,7 @@ jobs:
     name: Release tf-frontend
     runs-on:
       spec: m1.8xlarge
-    image: hub.byted.org/arnold/data.aml.byteir_cpu:v7
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v8
     working-directory: byteir/tf-frontend
     envs:
       TOS_ACCESS_KEY: ${{TOS_ACCESS_KEY}}
