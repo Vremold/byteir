@@ -5,6 +5,9 @@
 name: ONNX-Frontend CI
 trigger:
   change:
+    types:
+      - create
+      - push
     paths:
       - "frontends/onnx-frontend/**"
       - ".codebase/pipelines/onnx_frontend_ci.yaml"

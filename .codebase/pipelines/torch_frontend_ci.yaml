@@ -1,6 +1,9 @@
 name: TorchFrontend CI
 trigger:
   change:
+    types:
+      - create
+      - push
     paths:
       - "frontends/torch-frontend/**"
       - ".codebase/pipelines/torch_frontend_ci.yaml"

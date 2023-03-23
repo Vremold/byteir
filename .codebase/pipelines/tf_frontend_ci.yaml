@@ -5,6 +5,9 @@
 name: TF-Frontend CI
 trigger:
   change:
+    types:
+      - create
+      - push
     paths:
       - "frontends/tf-frontend/**"
       - ".codebase/pipelines/tf_frontend_ci.yaml"
