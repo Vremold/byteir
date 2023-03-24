@@ -2,40 +2,48 @@
 
 [English](README.md) | 中文
 
-ByteIR项目是字节跳动的模型编译解决方案。ByteIR 包括编译器、运行时和前端，并提供端到端的模型编译解决方案。
-尽管所有的ByteIR组件（compiler/runtime/frontends）一起提供端到端的解决方案，并且都在同一个代码库下，但每个组件在技术上都可以独立运行。
+ByteIR项目是字节跳动的模型编译解决方案。ByteIR包括编译器、运行时和前端，并提供端到端的模型编译解决方案。
+尽管所有的ByteIR组件（编译器/runtime/前端）一起提供端到端的解决方案，并且都在同一个代码库下，但每个组件在技术上都可以独立运行。
 
 ## ByteIR名字由来
 
-ByteIR这个名称是个公司内部的历史遗留物。ByteIR项目并不是一个IR规范定义项目。相反，在大多数情况下，ByteIR直接使用上游的几个MLIR方言和Google Mhlo。大多数ByteIR compiler的pass与所选的上游MLIR方言和Google Mhlo兼容。
+ByteIR这个名称是个公司内部的历史遗留物。ByteIR项目并不是一个IR规范定义项目。相反，在大多数情况下，ByteIR直接使用上游的几个MLIR方言和Google Mhlo。大多数ByteIR编译器的pass与所选的上游MLIR方言和Google Mhlo兼容。
+
+## 为何选择使用ByteIR
+* **最先进的模型:**
+ByteIR会负责维护前端模型转换到Mhlo，并且提供模型库（近期开放）方便科研和测试。
+* **方便好用:**
+ByteIR直接使用上游MLIR方言和Google Mhlo，为编译器提供兼容的passes和基础设施。允许混合使用passes去建构编译器，这包括ByteIR，上游MLIR方言，Mhlo或是自己写的passes。  
+* **新硬件支持:**
+ByteIR提供大量Mhlo和Linalg方言的图优化，Loop优化，或者张量优化，新硬件编译器可以复用，大大化简编译器开发。
 
 ## 项目状态
 
 ByteIR目前仍处于早期阶段。在这个阶段，我们的目标是为广泛的深度学习加速器以及通用CPU和GPU提供定义明确、必要的构建块和基础架构支持，以进行模型编译。因此，并没有将针对特定架构的高度调优的kernel代码作为优先考虑。当然，欢迎任何有关优先考虑特定架构的贡献。
 
-## [Compiler](compiler/README.md)
+## [编译器](compiler/README.md)
 
-ByteIR Compiler是一个基于MLIR的，用于CPU/GPU/ASIC的编译器。
+ByteIR编译器是一个基于MLIR的，用于CPU/GPU/ASIC的编译器。
 
 ## [Runtime](runtime/README.md)
 
-ByteIR Runtime是一个通用、轻量级的runtime，能够接入现成的kernel库和ByteIR compiler生成的kernel。
+ByteIR Runtime是一个通用、轻量级的runtime，能够接入现成的kernel库和ByteIR编译器生成的kernel。
 
-## [Frontends](frontends/README.md)
+## [前端](frontends/README.md)
 
-ByteIR Frontends包括Tensorflow, PyTorch, and ONNX.
+ByteIR前端支持Tensorflow，PyTorch，和ONNX。
 
 ## 各组件的交互接口
 
 每个ByteIR组件在技术上都可以独立运行。组件之间有预定义的交互接口。
 
-### frontends和compiler之间使用MHLO
+### 前端和编译器之间使用MHLO
 
-ByteIR frontends和ByteIR compiler通过mhlo方言进行交互，在开发过程中mhlo的版本可能会更新。这也意味着，任何生成兼容版本mhlo的frontend都可以与ByteIR compiler交互，并且任何使用兼容版本mhlo的compiler都可以与ByteIR frontends交互。
+ByteIR前端和ByteIR编译器通过Mhlo方言进行交互（注意在开发过程中Mhlo的版本可能会更新）。这也意味着，任何生成兼容版本Mhlo的前端都可以与ByteIR编译器交互，并且任何使用兼容版本Mhlo的编译器都可以与ByteIR前端交互。
 
-### compiler和runtime之间使用ByRE
+### 编译器和runtime之间使用ByRE
 
-ByteIR compiler和ByteIR runtime通过ByRE格式进行交互，其版本可能在开发过程中更新。ByRE方言在ByteIR编译器中被定义为一种ByRE格式，目前支持用于ByteIR compiler和runtime的文本形式。带有版本控制的ByRE方言的字节码形式将很快推出。其他ByRE格式正在开发中。
+ByteIR编译器和ByteIR Runtime通过ByRE格式进行交互，其版本可能在开发过程中更新。ByRE方言在ByteIR编译器中被定义为一种ByRE格式，目前支持用于ByteIR编译器和Runtime的文本形式。带有版本控制的ByRE方言的字节码形式将很快推出。其他ByRE格式正在开发中。
 
 ## 出版与引用
 
