@@ -1,0 +1,38 @@
+diff --git a/lib/Dialect/Torch/IR/TorchOps.cpp b/lib/Dialect/Torch/IR/TorchOps.cpp
+index df75d1b6..cd4e03be 100644
+--- a/lib/Dialect/Torch/IR/TorchOps.cpp
++++ b/lib/Dialect/Torch/IR/TorchOps.cpp
+@@ -2389,6 +2389,33 @@ OpFoldResult AtenCeilFloatOp::fold(FoldAdaptor adaptor) {
+ }
+ 
+ //===----------------------------------------------------------------------===//
++// AtenDetachOp
++//===----------------------------------------------------------------------===//
++
++void AtenDetachOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
++                                               MLIRContext *context) {
++  patterns.add(+[](AtenDetachOp op, PatternRewriter &rewriter) {
++    auto inputTensor = op.getSelf();
++    rewriter.replaceOp(op, inputTensor);
++    return success();
++  });
++}
++
++//===----------------------------------------------------------------------===//
++// PrimDeviceOp
++//===----------------------------------------------------------------------===//
++
++// Unconditionally canonicalize prim.device op to constant.device op,
++// since device information is useless in torch-to-mhlo pipeline.
++void PrimDeviceOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
++                                               MLIRContext *context) {
++  patterns.add(+[](PrimDeviceOp op, PatternRewriter &rewriter) {
++    rewriter.replaceOpWithNewOp<Torch::ConstantDeviceOp>(op, "cpu");
++    return success();
++  });
++}
++
++//===----------------------------------------------------------------------===//
+ // PrimMaxIntOp
+ //===----------------------------------------------------------------------===//
+ 

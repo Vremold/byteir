@@ -28,11 +28,9 @@ function download_llvm_prebuilt() {
 function apply_patches() {
   pushd $TORCH_MLIR_ROOT
   git clean -fd .
-  git apply ../patches/build.patch
-  git apply ../patches/generated_torch_ops_td.patch
-  git apply ../patches/one_hot.patch
-  git apply ../patches/refine_types.patch
-  git apply ../patches/custom_op.patch
+  for patch in ../patches/*; do
+    git apply $patch
+  done
   popd
 }
 

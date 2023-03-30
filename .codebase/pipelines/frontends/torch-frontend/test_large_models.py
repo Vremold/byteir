@@ -10,11 +10,12 @@ from torch_frontend import convert_to_mhlo_via_torch_mlir
 
 LARGE_MODEL_PATH = os.environ["TORCH_LARGE_MODEL_PATH"]
 MODEL_LIST = ["sar_relevance_cross_model_latest/28365.ts", "tt_label3_0607/torch_model_1654572315533.jit.revert.ts"]
+# MODEL_LIST = ["swinv2_tiny/swinv2_tiny.fixed.pt", "rtc/model.fixed.jit"]
 
 os.environ['TORCH_JIT_DISABLE_NEW_EXECUTOR'] = '1'
+torch._C._jit_set_nvfuser_enabled(False)
 
 def fx_rewrite(ts_module, sample_inputs):
-    torch._C._jit_set_nvfuser_enabled(False)
     fx_g = make_fx(ts_module)(*sample_inputs)
     for node in fx_g.graph.nodes:
         if node.op == "call_function":
@@ -40,9 +41,9 @@ def reload_model(model):
 
 def convert_to_mhlo_via_torch_mlir(jit_model_path):
     dir = os.path.abspath(os.path.dirname(jit_model_path))
-    ts_module = torch.jit.load(jit_model_path, map_location="cuda")
-    ts_module = ts_module.eval()
+    ts_module = torch.jit.load(jit_model_path, map_location="cuda").eval()
     sample_inputs = torch.load(os.path.join(dir, "batch_sample_inputs"), map_location="cuda")
+    print(ts_module(*sample_inputs))
 
     torch_frontend.register_decomposition_in_torchscript()
     torch._C._jit_pass_inline(ts_module.graph)
