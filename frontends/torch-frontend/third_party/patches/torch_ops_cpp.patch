@@ -1,11 +1,12 @@
 diff --git a/lib/Dialect/Torch/IR/TorchOps.cpp b/lib/Dialect/Torch/IR/TorchOps.cpp
-index df75d1b6..cd4e03be 100644
+index d678bd6b..1b8647c3 100644
 --- a/lib/Dialect/Torch/IR/TorchOps.cpp
 +++ b/lib/Dialect/Torch/IR/TorchOps.cpp
-@@ -2389,6 +2389,33 @@ OpFoldResult AtenCeilFloatOp::fold(FoldAdaptor adaptor) {
+@@ -2388,6 +2388,33 @@ OpFoldResult AtenCeilFloatOp::fold(FoldAdaptor adaptor) {
+   return nullptr;
  }
  
- //===----------------------------------------------------------------------===//
++//===----------------------------------------------------------------------===//
 +// AtenDetachOp
 +//===----------------------------------------------------------------------===//
 +
@@ -32,7 +33,7 @@ index df75d1b6..cd4e03be 100644
 +  });
 +}
 +
-+//===----------------------------------------------------------------------===//
+ //===----------------------------------------------------------------------===//
  // PrimMaxIntOp
  //===----------------------------------------------------------------------===//
  
