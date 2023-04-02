@@ -10,8 +10,9 @@
 torch==2.1.0.dev20230324+cu118
 torchvision==0.16.0.dev20230324+cu118
 
-
 transformers
+
+https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.8-cp39-cp39-linux_x86_64.whl
 
 # The following copied from torch-mlir
 numpy
