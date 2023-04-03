@@ -62,7 +62,7 @@ LogicalResult mlir::mhlo::foldBroadcastInDim(mhlo::BroadcastInDimOp op,
   for (unsigned i = 0; i < broadUser->getNumOperands(); ++i) {
     if (i == broadOperandNumber)
       continue;
-    Operation *otherOp = broadUser->getOperand(i).getDefiningOp();
+    Operation *constOp1 = broadUser->getOperand(i).getDefiningOp();
     /// const_0
     ///   \
     ///   broadcast_in_dim  const_1
@@ -70,8 +70,8 @@ LogicalResult mlir::mhlo::foldBroadcastInDim(mhlo::BroadcastInDimOp op,
     ///            mul          other ops
     ///
     /// Don't fold broadcast_in_dim if const_1 has other users
-    if (!otherOp || !isa<mhlo::ConstantOp>(otherOp) ||
-        !otherOp->getResult(0).hasOneUse())
+    if (!constOp1 || !isa<mhlo::ConstantOp>(constOp1) ||
+        !constOp1->getResult(0).hasOneUse())
       return failure();
   }
 
@@ -967,9 +967,6 @@ mlir::mhlo::canonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
   if (!constOp) {
     return failure();
   }
-  if (!op.getOperand().hasOneUse()) {
-    return failure();
-  }
   DenseElementsAttr valueAttr = constOp.getValue().cast<DenseElementsAttr>();
   ShapedType valueType = valueAttr.getType();
   if (llvm::none_of(valueType.getShape(),
@@ -987,8 +984,9 @@ mlir::mhlo::canonicalizeBroadcastInDimConst(mhlo::BroadcastInDimOp op,
   auto newValueType =
       RankedTensorType::get(newValueShape, valueType.getElementType());
   valueAttr = reshape(valueAttr, newValueType);
-  constOp.setValueAttr(valueAttr);
-  constOp.getOutput().setType(newValueType);
+  mhlo::ConstantOp newConstOp =
+      rewriter.create<mhlo::ConstantOp>(constOp->getLoc(), valueAttr);
+  op.setOperand(newConstOp.getOutput());
   op.setBroadcastDimensionsAttr(rewriter.getI64TensorAttr(newBroadcastDims));
   return success();
 }
