@@ -19,13 +19,16 @@ trigger:
     - push
 jobs:
   byteir_check_format:
-    name: byteir format check
+    name: byteir format check and open source check
     image: hub.byted.org/arnold/data.aml.byteir_cpu:v7
     working-directory: byteir/byteir
     steps:
       - name: Run clang format check
         commands:
           - bash .codebase/pipelines/clang_format_check.sh
+      - name: Run open source check
+        commands:
+          - python3 .codebase/pipelines/open_source_check.py
   byteir_compiler_build_and_test:
     name: byteir compiler CI
     runs-on:
