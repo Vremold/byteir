@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Build TorchFrontend
         commands:
-          - bash .codebase/pipelines/frontends/torch-frontend/build_with_prebuilt.sh
+          - bash .codebase/pipelines/frontends/torch-frontend/build.sh
       - name: Test
         commands:
           - bash .codebase/pipelines/frontends/torch-frontend/test.sh
