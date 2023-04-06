@@ -1,4 +1,5 @@
 add_mlir_dialect_library(ByteIRVectorPasses
+  CanonicalizeExt.cpp
   VectorLowerings.cpp
 
   ADDITIONAL_HEADER_DIRS

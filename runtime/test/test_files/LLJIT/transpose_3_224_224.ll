@@ -9,9 +9,9 @@ define void @Unknown0(ptr %0, ptr %1, i64 %2, i64 %3, i64 %4, i64 %5, i64 %6, i6
   br label %23
 
 23:                                               ; preds = %26, %22
-  %24 = phi i64 [ %115, %26 ], [ 0, %22 ]
+  %24 = phi i64 [ %113, %26 ], [ 0, %22 ]
   %25 = icmp slt i64 %24, 6272
-  br i1 %25, label %26, label %116
+  br i1 %25, label %26, label %114
 
 26:                                               ; preds = %23
   %27 = srem i64 %24, 28
@@ -44,76 +44,74 @@ define void @Unknown0(ptr %0, ptr %1, i64 %2, i64 %3, i64 %4, i64 %5, i64 %6, i6
   %54 = shufflevector <8 x float> %40, <8 x float> %46, <8 x i32> <i32 2, i32 10, i32 3, i32 11, i32 6, i32 14, i32 7, i32 15>
   %55 = shufflevector <8 x float> %52, <8 x float> zeroinitializer, <8 x i32> <i32 0, i32 8, i32 1, i32 9, i32 4, i32 12, i32 5, i32 13>
   %56 = shufflevector <8 x float> %52, <8 x float> zeroinitializer, <8 x i32> <i32 2, i32 10, i32 3, i32 11, i32 6, i32 14, i32 7, i32 15>
-  %57 = shufflevector <8 x float> %53, <8 x float> %55, <8 x i32> <i32 2, i32 3, i32 8, i32 9, i32 6, i32 7, i32 12, i32 13>
-  %58 = shufflevector <8 x float> %54, <8 x float> %56, <8 x i32> <i32 2, i32 3, i32 8, i32 9, i32 6, i32 7, i32 12, i32 13>
-  %59 = call <8 x float> asm inteldialect "vblendps $0, $1, $2, 0xcc", "=x,x,x"(<8 x float> %53, <8 x float> %57)
-  %60 = call <8 x float> asm inteldialect "vblendps $0, $1, $2, 0x33", "=x,x,x"(<8 x float> %55, <8 x float> %57)
-  %61 = call <8 x float> asm inteldialect "vblendps $0, $1, $2, 0xcc", "=x,x,x"(<8 x float> %54, <8 x float> %58)
-  %62 = call <8 x float> asm inteldialect "vblendps $0, $1, $2, 0x33", "=x,x,x"(<8 x float> %56, <8 x float> %58)
-  %63 = call <8 x float> asm inteldialect "vblendps $0, $1, $2, 0xcc", "=x,x,x"(<8 x float> zeroinitializer, <8 x float> zeroinitializer)
-  %64 = call <8 x float> asm inteldialect "vblendps $0, $1, $2, 0x33", "=x,x,x"(<8 x float> zeroinitializer, <8 x float> zeroinitializer)
-  %65 = call <8 x float> asm inteldialect "vblendps $0, $1, $2, 0xcc", "=x,x,x"(<8 x float> zeroinitializer, <8 x float> zeroinitializer)
-  %66 = call <8 x float> asm inteldialect "vblendps $0, $1, $2, 0x33", "=x,x,x"(<8 x float> zeroinitializer, <8 x float> zeroinitializer)
-  %67 = shufflevector <8 x float> %59, <8 x float> %63, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 8, i32 9, i32 10, i32 11>
-  %68 = shufflevector <8 x float> %60, <8 x float> %64, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 8, i32 9, i32 10, i32 11>
-  %69 = shufflevector <8 x float> %61, <8 x float> %65, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 8, i32 9, i32 10, i32 11>
-  %70 = shufflevector <8 x float> %62, <8 x float> %66, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 8, i32 9, i32 10, i32 11>
-  %71 = shufflevector <8 x float> %59, <8 x float> %63, <8 x i32> <i32 4, i32 5, i32 6, i32 7, i32 12, i32 13, i32 14, i32 15>
-  %72 = shufflevector <8 x float> %60, <8 x float> %64, <8 x i32> <i32 4, i32 5, i32 6, i32 7, i32 12, i32 13, i32 14, i32 15>
-  %73 = shufflevector <8 x float> %61, <8 x float> %65, <8 x i32> <i32 4, i32 5, i32 6, i32 7, i32 12, i32 13, i32 14, i32 15>
-  %74 = shufflevector <8 x float> %62, <8 x float> %66, <8 x i32> <i32 4, i32 5, i32 6, i32 7, i32 12, i32 13, i32 14, i32 15>
-  %75 = add i64 %34, 0
-  %76 = add i64 %75, 0
-  %77 = add i64 %76, 0
-  %78 = add i64 %77, 0
-  %79 = getelementptr float, ptr %12, i64 %78
-  call void @llvm.masked.store.v8f32.p0(<8 x float> %67, ptr %79, i32 4, <8 x i1> <i1 true, i1 true, i1 true, i1 false, i1 false, i1 false, i1 false, i1 false>)
-  %80 = add i64 %34, 0
+  %57 = shufflevector <8 x float> %53, <8 x float> %55, <8 x i32> <i32 0, i32 1, i32 8, i32 9, i32 4, i32 5, i32 12, i32 13>
+  %58 = shufflevector <8 x float> %53, <8 x float> %55, <8 x i32> <i32 2, i32 3, i32 10, i32 11, i32 6, i32 7, i32 14, i32 15>
+  %59 = shufflevector <8 x float> %54, <8 x float> %56, <8 x i32> <i32 0, i32 1, i32 8, i32 9, i32 4, i32 5, i32 12, i32 13>
+  %60 = shufflevector <8 x float> %54, <8 x float> %56, <8 x i32> <i32 2, i32 3, i32 10, i32 11, i32 6, i32 7, i32 14, i32 15>
+  %61 = shufflevector <8 x float> %57, <8 x float> %58, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 8, i32 9, i32 10, i32 11>
+  %62 = shufflevector <8 x float> %59, <8 x float> %60, <8 x i32> <i32 0, i32 1, i32 2, i32 3, i32 8, i32 9, i32 10, i32 11>
+  %63 = shufflevector <8 x float> %57, <8 x float> %58, <8 x i32> <i32 4, i32 5, i32 6, i32 7, i32 12, i32 13, i32 14, i32 15>
+  %64 = shufflevector <8 x float> %59, <8 x float> %60, <8 x i32> <i32 4, i32 5, i32 6, i32 7, i32 12, i32 13, i32 14, i32 15>
+  %65 = shufflevector <8 x float> %61, <8 x float> %61, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+  %66 = add i64 %34, 0
+  %67 = add i64 %66, 0
+  %68 = add i64 %67, 0
+  %69 = add i64 %68, 0
+  %70 = getelementptr float, ptr %12, i64 %69
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %65, ptr %70, i32 4, <4 x i1> <i1 true, i1 true, i1 true, i1 false>)
+  %71 = shufflevector <8 x float> %61, <8 x float> %61, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %72 = add i64 %34, 0
+  %73 = add i64 %72, 0
+  %74 = add i64 %73, 3
+  %75 = add i64 %74, 0
+  %76 = getelementptr float, ptr %12, i64 %75
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %71, ptr %76, i32 4, <4 x i1> <i1 true, i1 true, i1 true, i1 false>)
+  %77 = shufflevector <8 x float> %62, <8 x float> %62, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+  %78 = add i64 %34, 0
+  %79 = add i64 %78, 0
+  %80 = add i64 %79, 6
   %81 = add i64 %80, 0
-  %82 = add i64 %81, 3
-  %83 = add i64 %82, 0
-  %84 = getelementptr float, ptr %12, i64 %83
-  call void @llvm.masked.store.v8f32.p0(<8 x float> %68, ptr %84, i32 4, <8 x i1> <i1 true, i1 true, i1 true, i1 false, i1 false, i1 false, i1 false, i1 false>)
-  %85 = add i64 %34, 0
-  %86 = add i64 %85, 0
-  %87 = add i64 %86, 6
-  %88 = add i64 %87, 0
-  %89 = getelementptr float, ptr %12, i64 %88
-  call void @llvm.masked.store.v8f32.p0(<8 x float> %69, ptr %89, i32 4, <8 x i1> <i1 true, i1 true, i1 true, i1 false, i1 false, i1 false, i1 false, i1 false>)
+  %82 = getelementptr float, ptr %12, i64 %81
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %77, ptr %82, i32 4, <4 x i1> <i1 true, i1 true, i1 true, i1 false>)
+  %83 = shufflevector <8 x float> %62, <8 x float> %62, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %84 = add i64 %34, 0
+  %85 = add i64 %84, 0
+  %86 = add i64 %85, 9
+  %87 = add i64 %86, 0
+  %88 = getelementptr float, ptr %12, i64 %87
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %83, ptr %88, i32 4, <4 x i1> <i1 true, i1 true, i1 true, i1 false>)
+  %89 = shufflevector <8 x float> %63, <8 x float> %63, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
   %90 = add i64 %34, 0
   %91 = add i64 %90, 0
-  %92 = add i64 %91, 9
+  %92 = add i64 %91, 12
   %93 = add i64 %92, 0
   %94 = getelementptr float, ptr %12, i64 %93
-  call void @llvm.masked.store.v8f32.p0(<8 x float> %70, ptr %94, i32 4, <8 x i1> <i1 true, i1 true, i1 true, i1 false, i1 false, i1 false, i1 false, i1 false>)
-  %95 = add i64 %34, 0
-  %96 = add i64 %95, 0
-  %97 = add i64 %96, 12
-  %98 = add i64 %97, 0
-  %99 = getelementptr float, ptr %12, i64 %98
-  call void @llvm.masked.store.v8f32.p0(<8 x float> %71, ptr %99, i32 4, <8 x i1> <i1 true, i1 true, i1 true, i1 false, i1 false, i1 false, i1 false, i1 false>)
-  %100 = add i64 %34, 0
-  %101 = add i64 %100, 0
-  %102 = add i64 %101, 15
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %89, ptr %94, i32 4, <4 x i1> <i1 true, i1 true, i1 true, i1 false>)
+  %95 = shufflevector <8 x float> %63, <8 x float> %63, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %96 = add i64 %34, 0
+  %97 = add i64 %96, 0
+  %98 = add i64 %97, 15
+  %99 = add i64 %98, 0
+  %100 = getelementptr float, ptr %12, i64 %99
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %95, ptr %100, i32 4, <4 x i1> <i1 true, i1 true, i1 true, i1 false>)
+  %101 = shufflevector <8 x float> %64, <8 x float> %64, <4 x i32> <i32 0, i32 1, i32 2, i32 3>
+  %102 = add i64 %34, 0
   %103 = add i64 %102, 0
-  %104 = getelementptr float, ptr %12, i64 %103
-  call void @llvm.masked.store.v8f32.p0(<8 x float> %72, ptr %104, i32 4, <8 x i1> <i1 true, i1 true, i1 true, i1 false, i1 false, i1 false, i1 false, i1 false>)
-  %105 = add i64 %34, 0
-  %106 = add i64 %105, 0
-  %107 = add i64 %106, 18
-  %108 = add i64 %107, 0
-  %109 = getelementptr float, ptr %12, i64 %108
-  call void @llvm.masked.store.v8f32.p0(<8 x float> %73, ptr %109, i32 4, <8 x i1> <i1 true, i1 true, i1 true, i1 false, i1 false, i1 false, i1 false, i1 false>)
-  %110 = add i64 %34, 0
+  %104 = add i64 %103, 18
+  %105 = add i64 %104, 0
+  %106 = getelementptr float, ptr %12, i64 %105
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %101, ptr %106, i32 4, <4 x i1> <i1 true, i1 true, i1 true, i1 false>)
+  %107 = shufflevector <8 x float> %64, <8 x float> %64, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %108 = add i64 %34, 0
+  %109 = add i64 %108, 0
+  %110 = add i64 %109, 21
   %111 = add i64 %110, 0
-  %112 = add i64 %111, 21
-  %113 = add i64 %112, 0
-  %114 = getelementptr float, ptr %12, i64 %113
-  call void @llvm.masked.store.v8f32.p0(<8 x float> %74, ptr %114, i32 4, <8 x i1> <i1 true, i1 true, i1 true, i1 false, i1 false, i1 false, i1 false, i1 false>)
-  %115 = add i64 %24, 1
+  %112 = getelementptr float, ptr %12, i64 %111
+  call void @llvm.masked.store.v4f32.p0(<4 x float> %107, ptr %112, i32 4, <4 x i1> <i1 true, i1 true, i1 true, i1 false>)
+  %113 = add i64 %24, 1
   br label %23
 
-116:                                              ; preds = %23
+114:                                              ; preds = %23
   ret void
 }
 
@@ -147,7 +145,7 @@ define void @_mlir_ciface_Unknown0(ptr %0, ptr %1) {
 }
 
 ; Function Attrs: nocallback nofree nosync nounwind willreturn memory(argmem: write)
-declare void @llvm.masked.store.v8f32.p0(<8 x float>, ptr nocapture, i32 immarg, <8 x i1>) #0
+declare void @llvm.masked.store.v4f32.p0(<4 x float>, ptr nocapture, i32 immarg, <4 x i1>) #0
 
 attributes #0 = { nocallback nofree nosync nounwind willreturn memory(argmem: write) }
 

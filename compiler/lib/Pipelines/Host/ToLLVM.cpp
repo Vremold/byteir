@@ -20,6 +20,7 @@
 #include "byteir/Conversion/ToLLVM/ToLLVM.h"
 #include "byteir/Dialect/Vector/Transforms/Passes.h"
 #include "byteir/Pipelines/Common/Utils.h"
+#include "byteir/Transforms/CanonicalizeExt.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
 #include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
@@ -91,7 +92,7 @@ void mlir::createToLLVMPipeline(OpPassManager &pm) {
           transferToSCFOptions.setTargetRank(1);
           pm.addNestedPass<func::FuncOp>(
               createConvertVectorToSCFPass(transferToSCFOptions));
-          pm.addPass(createCanonicalizerPass());
+          pm.addPass(createCanonicalizeExtPass());
         }
         pm.addNestedPass<func::FuncOp>(createConvertSCFToCFPass());
         pm.addPass(createCanonicalizerPass());

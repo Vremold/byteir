@@ -66,8 +66,9 @@ std::optional<TileConfig> getTileConfig(linalg::TransposeOp transposeOp) {
     tileSizes[dim1] = 4;
   } else {
     paddingDimensions.push_back(dim1);
-    tileSizes[dim1] = 8;
-    int64_t splitPoint = inputShape[dim1] - inputShape[dim1] % 8;
+    int64_t tilSize = dim1 < 4 ? 4 : 8;
+    tileSizes[dim1] = tilSize;
+    int64_t splitPoint = inputShape[dim1] - inputShape[dim1] % tilSize;
     if (splitPoint > 0) {
       splitPoints.push_back(std::make_pair(dim1, splitPoint));
     }
