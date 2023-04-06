@@ -1,4 +1,5 @@
 add_mlir_library(ByteIRHostPipelines
+  Codegen.cpp
   HostOpt.cpp
   ToLLVM.cpp
 
@@ -10,6 +11,8 @@ add_mlir_library(ByteIRHostPipelines
   MLIRFuncDialect
   ByteIRToLLVM
   ByteIRPipelineCommon
+  ByteIRTransformPasses
+  ByteIRVectorPasses
   MLIRArithTransforms
   MLIRBufferizationTransforms
   MLIRFuncToLLVM

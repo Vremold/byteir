@@ -15,24 +15,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_LINALG_PASSES_H
-#define BYTEIR_DIALECT_LINALG_PASSES_H
+#ifndef BYTEIR_DIALECT_VECTOR_TRANSFORMS_PASSES_H
+#define BYTEIR_DIALECT_VECTOR_TRANSFORMS_PASSES_H
 
-#include "byteir/Dialect/Linalg/Transforms/Bufferize.h"
-#include "byteir/Dialect/Linalg/Transforms/FuseElementwise.h"
-#include "byteir/Dialect/Linalg/Transforms/LinalgCollapseLoops.h"
-#include "byteir/Dialect/Linalg/Transforms/LinalgDataPlace.h"
-#include "byteir/Dialect/Linalg/Transforms/LinalgExtToLoops.h"
-#include "byteir/Dialect/Linalg/Transforms/LinalgPrefetch.h"
-#include "byteir/Dialect/Linalg/Transforms/Tiling.h"
+#include "mlir/Pass/Pass.h"
+#include <memory>
 
 namespace mlir {
 
 /// Generate the code for registering transforms passes.
-#define GEN_PASS_DECL_LINALGGENERALIZATIONEXT
+#define GEN_PASS_DECL_VECTORTRANSPOSELOWERINGPASS
 #define GEN_PASS_REGISTRATION
-#include "byteir/Dialect/Linalg/Passes.h.inc"
+#include "byteir/Dialect/Vector/Transforms/Passes.h.inc"
 
 } // namespace mlir
 
-#endif // BYTEIR_DIALECT_LINALG_PASSES_H
+#endif // BYTEIR_DIALECT_VECTOR_TRANSFORMS_PASSES_H
