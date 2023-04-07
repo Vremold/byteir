@@ -80,23 +80,31 @@ struct LinalgGeneralizationExtPattern
         rewriter.create<GenericOp>(linalgOp.getLoc(), resultTypes, inputs,
                                    outputs, indexingMaps, iterators);
 
-    // create new block
-    auto &&newBlockArgTypes = llvm::to_vector(
-        llvm::map_range(genericOp->getOperandTypes(), [](Type t) {
-          return t.cast<ShapedType>().getElementType();
-        }));
-    Block *newBlock = rewriter.createBlock(
-        &genericOp.getRegion(), genericOp.getRegion().begin(), newBlockArgTypes,
-        SmallVector<Location>(newBlockArgTypes.size(), genericOp->getLoc()));
+    if (linalgOp.getRegionBuilder()) {
+      rewriter.inlineRegionBefore(linalgOp->getRegion(0), genericOp.getRegion(),
+                                  genericOp.getRegion().begin());
+    } else {
+      auto &&newBlockArgTypes = llvm::to_vector(
+          llvm::map_range(genericOp->getOperandTypes(), [](Type t) {
+            if (auto shapedType = t.dyn_cast_or_null<ShapedType>()) {
+              return shapedType.getElementType();
+            }
+            return t;
+          }));
+      Block *newBlock = rewriter.createBlock(
+          &genericOp.getRegion(), genericOp.getRegion().begin(),
+          newBlockArgTypes,
+          SmallVector<Location>(newBlockArgTypes.size(), genericOp->getLoc()));
 
-    // mapping from old block to new block
-    for (OpOperand *operand : linalgOp.getOpOperandsMatchingBBargs()) {
-      rewriter.replaceAllUsesWith(
-          linalgOp.getMatchingBlockArgument(operand),
-          newBlock->getArgument(operand->getOperandNumber()));
+      // mapping from old block to new block
+      for (OpOperand *operand : linalgOp.getOpOperandsMatchingBBargs()) {
+        rewriter.replaceAllUsesWith(
+            linalgOp.getMatchingBlockArgument(operand),
+            newBlock->getArgument(operand->getOperandNumber()));
+      }
+      newBlock->getOperations().splice(newBlock->end(),
+                                       linalgOp.getBlock()->getOperations());
     }
-    newBlock->getOperations().splice(newBlock->end(),
-                                     linalgOp.getBlock()->getOperations());
 
     rewriter.replaceOp(linalgOp, genericOp->getResults());
     return success();
