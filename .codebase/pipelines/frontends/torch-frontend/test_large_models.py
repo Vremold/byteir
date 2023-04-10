@@ -13,8 +13,10 @@ from mhlo_tools.ir_executor import Interpreter
 from mhlo_tools.ir_executor.helper import mlir_attr_to_pyobj
 
 LARGE_MODEL_PATH = os.environ["TORCH_LARGE_MODEL_PATH"]
-MODEL_LIST = ["sar_relevance_cross_model_latest/28365.ts", "tt_label3_0607/torch_model_1654572315533.jit.revert.ts"]
-# MODEL_LIST = ["swinv2_tiny/swinv2_tiny.fixed.pt", "rtc/model.fixed.jit"]
+MODEL_LIST = ["sar_relevance_cross_model_latest/28365.ts", 
+              "tt_label3_0607/torch_model_1654572315533.jit.revert.ts",
+              "swinv2_tiny/swinv2_tiny.fixed1.pt"]
+# MODEL_LIST = ["rtc/model.fixed.jit"]
 
 os.environ['TORCH_JIT_DISABLE_NEW_EXECUTOR'] = '1'
 torch._C._jit_set_nvfuser_enabled(False)
