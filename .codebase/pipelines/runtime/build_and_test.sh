@@ -63,5 +63,7 @@ if [[ $BRT_USE_CUDA == "ON" ]] && [[ $BRT_ENABLE_ASAN == "ON" ]]; then
 fi
 
 pushd $BUILD_DIR
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/compat ./bin/brt_test_all
+# note: now ci machine driver is 470.182.03, it's no need for compat(470.57.02) in docker
+# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/compat ./bin/brt_test_all
+./bin/brt_test_all
 popd
