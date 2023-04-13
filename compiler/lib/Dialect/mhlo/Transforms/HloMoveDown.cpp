@@ -470,7 +470,8 @@ struct BroadcastBinaryMoveDownPattern
     auto rhs = rhsValue.getDefiningOp<BroadcastInDimOp>();
 
     // lhs and rhs must have the same attribtue
-    if (lhs.getBroadcastDimensions() != rhs.getBroadcastDimensions()) {
+    if (lhs.getBroadcastDimensions() != rhs.getBroadcastDimensions() ||
+        lhs.getOperand().getType() != rhs.getOperand().getType()) {
       return failure();
     }
 
@@ -659,10 +660,11 @@ private:
   }
 };
 
-struct SliceMoveDownPattern : public HloMoveDownPattern<mhlo::SliceOp> {
-  SliceMoveDownPattern(MLIRContext *context,
-                       const llvm::DenseSet<llvm::StringRef> &blocker,
-                       bool allMultiUser = false, bool multiUser = false)
+struct SliceMoveDownAndMergePattern : public HloMoveDownPattern<mhlo::SliceOp> {
+  SliceMoveDownAndMergePattern(MLIRContext *context,
+                               const llvm::DenseSet<llvm::StringRef> &blocker,
+                               bool allMultiUser = false,
+                               bool multiUser = false)
       : HloMoveDownPattern<mhlo::SliceOp>(context, blocker, allMultiUser,
                                           multiUser) {}
 
@@ -907,7 +909,7 @@ void mlir::populateHloMoveDownPattern(RewritePatternSet &patterns,
                BroadcastReshapeMoveDownPattern,
                ReshapeBroadcastDotMoveDownPattern,
                BroadcastBinaryMoveDownPattern,
-               SliceMoveDownPattern>(
+               SliceMoveDownAndMergePattern>(
            patterns.getContext(), blocker, allMultiUser, multiUser);
   // clang-format on
 }
