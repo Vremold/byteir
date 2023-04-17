@@ -244,7 +244,6 @@ static void rewriteToGPULaunchFuncImpl(OpBuilder &builder, func::FuncOp func,
 
 int64_t estimateGridSize(LoopLikeOpInterface loopLike, int64_t currGs,
                          int64_t stepMultiplier) {
-
   auto maybeTripCnt = getConstantTripCount(loopLike, stepMultiplier);
 
   if (maybeTripCnt.has_value() &&
