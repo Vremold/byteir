@@ -2,6 +2,8 @@
 
 set -e
 
+BRT_TEST=ON
+
 while [[ $# -gt 0 ]]; do
   case $1 in
     --cuda)
@@ -15,6 +17,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --python)
       BRT_ENABLE_PYTHON_BINDINGS=ON
+      shift
+      ;;
+    --no-test)
+      BRT_TEST=OFF
       shift
       ;;
     *)
@@ -62,8 +68,10 @@ if [[ $BRT_USE_CUDA == "ON" ]] && [[ $BRT_ENABLE_ASAN == "ON" ]]; then
   export ASAN_OPTIONS=protect_shadow_gap=0
 fi
 
-pushd $BUILD_DIR
-# note: now ci machine driver is 470.182.03, it's no need for compat(470.57.02) in docker
-# LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/compat ./bin/brt_test_all
-./bin/brt_test_all
-popd
+if [[ $BRT_TEST == "ON" ]]; then
+  pushd $BUILD_DIR
+  # note: now ci machine driver is 470.182.03, it's no need for compat(470.57.02) in docker
+  # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/compat ./bin/brt_test_all
+  ./bin/brt_test_all
+  popd
+fi
