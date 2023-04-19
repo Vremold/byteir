@@ -1021,3 +1021,41 @@ func.func @collapse_shape_elementwise(%arg0: tensor<128x1x8x2xf32>) ->tensor<128
 // CHECK:     tensor.insert_slice
 // CHECK:     scf.yield
 // CHECK:   scf.yield
+
+// -----
+
+transform.sequence failures(propagate) {
+^bb0(%arg1: !pdl.operation):
+  %0 = transform.structured.match ops{["linalg.elemwise_unary"]} in %arg1
+  %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [7, 7]}
+}
+
+func.func @pad_pool_static(%arg0: tensor<12x12xf32>) -> tensor<14x14xf32> {
+  %cst = arith.constant 0.0 : f32
+  %padded = tensor.pad %arg0 nofold low[1, 1] high[1, 1] {
+  ^bb0(%arg1: index, %arg2: index):
+    tensor.yield %cst : f32
+  } : tensor<12x12xf32> to tensor<14x14xf32>
+  %empty= tensor.empty() : tensor<14x14xf32>
+  %0 = linalg.elemwise_unary ins(%padded : tensor<14x14xf32>)
+                             outs(%empty: tensor<14x14xf32>) -> tensor<14x14xf32>
+  return %0 : tensor<14x14xf32>
+}
+
+// CHECK-LABEL: func.func @pad_pool_static
+// CHECK: scf.for
+// CHECK:   scf.for
+// CHECK:     arith.cmpi
+// CHECK:     arith.cmpi
+// CHECK:     arith.ori
+// CHECK:     scf.if
+// CHECK:       tensor.generate
+// CHECK:     } else {
+// CHECK:       tensor.extract_slice
+// CHECK:       tensor.pad
+// CHECK:     }
+// CHECK:     tensor.empty
+// CHECK:     linalg.elemwise_unary
+// CHECK:     tensor.insert_slice
+// CHECK:     scf.yield
+// CHECK:   scf.yield
