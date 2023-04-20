@@ -290,15 +290,15 @@ static FailureOr<TensorSliceParameters> getCollapsedSliceParameters(
   return resSliceParameters;
 }
 
-static FailureOr<Value> commonGenerateResultTileValue(
+static FailureOr<TilingResult> commonGenerateResultTileValue(
     Operation *op, OpBuilder &b, unsigned resultNumber,
     ArrayRef<OpFoldResult> offsets, ArrayRef<OpFoldResult> sizes) {
   auto tilingInterfaceOp = cast<TilingInterface>(op);
-  SmallVector<Operation *> tiledOp =
+  FailureOr<TilingResult> tilingResult =
       tilingInterfaceOp.getTiledImplementation(b, offsets, sizes);
-  if (tiledOp.size() != 1)
-    return op->emitOpError("failed to generate tiled implementation");
-  return tiledOp[0]->getResult(resultNumber);
+  if (failed(tilingResult))
+    return failure();
+  return tilingResult.value();
 }
 
 // ------------------------------------------------------------------------ //
@@ -372,7 +372,7 @@ struct ExpandShapeOpTiling
     return success();
   }
 
-  SmallVector<Operation *>
+  FailureOr<TilingResult>
   getTiledImplementation(Operation *op, OpBuilder &b,
                          ArrayRef<OpFoldResult> offsets,
                          ArrayRef<OpFoldResult> sizes) const {
@@ -417,13 +417,14 @@ struct ExpandShapeOpTiling
     Operation *tiledExpandShapeOp =
         b.create<tensor::ExpandShapeOp>(loc, resType, tiledSrc, op->getAttrs());
 
-    return {tiledExpandShapeOp};
+    return TilingResult{{tiledExpandShapeOp},
+                        SmallVector<Value>(tiledExpandShapeOp->getResults())};
   }
 
-  FailureOr<Value> generateResultTileValue(Operation *op, OpBuilder &b,
-                                           unsigned resultNumber,
-                                           ArrayRef<OpFoldResult> offsets,
-                                           ArrayRef<OpFoldResult> sizes) const {
+  FailureOr<TilingResult>
+  generateResultTileValue(Operation *op, OpBuilder &b, unsigned resultNumber,
+                          ArrayRef<OpFoldResult> offsets,
+                          ArrayRef<OpFoldResult> sizes) const {
     return commonGenerateResultTileValue(op, b, resultNumber, offsets, sizes);
   }
 };
@@ -503,7 +504,7 @@ struct CollapseShapeOpTiling
     return success();
   }
 
-  SmallVector<Operation *>
+  FailureOr<TilingResult>
   getTiledImplementation(Operation *op, OpBuilder &b,
                          ArrayRef<OpFoldResult> offsets,
                          ArrayRef<OpFoldResult> sizes) const {
@@ -548,13 +549,14 @@ struct CollapseShapeOpTiling
     Operation *tiledCollapseShapeOp = b.create<tensor::CollapseShapeOp>(
         loc, resType, tiledSrc, op->getAttrs());
 
-    return {tiledCollapseShapeOp};
+    return TilingResult{{tiledCollapseShapeOp},
+                        SmallVector<Value>(tiledCollapseShapeOp->getResults())};
   }
 
-  FailureOr<Value> generateResultTileValue(Operation *op, OpBuilder &b,
-                                           unsigned resultNumber,
-                                           ArrayRef<OpFoldResult> offsets,
-                                           ArrayRef<OpFoldResult> sizes) const {
+  FailureOr<TilingResult>
+  generateResultTileValue(Operation *op, OpBuilder &b, unsigned resultNumber,
+                          ArrayRef<OpFoldResult> offsets,
+                          ArrayRef<OpFoldResult> sizes) const {
     return commonGenerateResultTileValue(op, b, resultNumber, offsets, sizes);
   }
 };

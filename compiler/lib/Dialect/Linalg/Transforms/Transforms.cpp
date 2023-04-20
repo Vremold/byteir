@@ -127,7 +127,7 @@ void mlir::linalg_ext::mergeLoopIteratorTypes(
   // none, none => none
   // none, reduce => reduce
   // reduce, x => reduce
-  for (auto &en : llvm::enumerate(from)) {
+  for (const auto &en : llvm::enumerate(from)) {
     if (en.value().has_value()) {
       if (to[en.index()].has_value() && *en.value() != *to[en.index()]) {
         // when (iterTy, curTy) == (parallel, reduce) or (reduce, parallel)
@@ -320,7 +320,7 @@ void mlir::scf::labelTileLoopType(Operation *op, ArrayRef<scf::ForOp> loops) {
   }
 
   auto ctx = op->getContext();
-  for (auto &en : llvm::enumerate(iterTys)) {
+  for (const auto &en : llvm::enumerate(iterTys)) {
     if (en.value().has_value() &&
         *en.value() == utils::IteratorType::parallel) {
       loops[en.index()]->setAttr(getSCFForParallelAttrName(),
@@ -895,24 +895,25 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
     // 2c. Generate the tiled implementation of the producer of the source
     rewriter.setInsertionPoint(candidateSliceOp);
 
-    FailureOr<Value> fusedProducerValue =
+    FailureOr<TilingResult> fusedTilingResult =
         tensor::replaceExtractSliceWithTiledProducer(rewriter, candidateSliceOp,
                                                      fusibleProducer);
 
-    if (failed(fusedProducerValue)) {
+    if (failed(fusedTilingResult)) {
       LLVM_DEBUG(llvm::dbgs() << "skip since no ExtractSlice of producuer for "
                               << fusibleProducer << "\n");
       continue;
     }
 
-    Operation *fusedProducerOp = fusedProducerValue->getDefiningOp();
+    Value fusedProducerValue = fusedTilingResult->tiledValues[0];
+    Operation *fusedProducerOp = fusedProducerValue.getDefiningOp();
     if (failed(confirmValidFusion(rewriter, fusibleProducer, fusedProducerOp,
                                   candidateSliceOp))) {
       LLVM_DEBUG(llvm::dbgs() << "skip since failing confirmValidFusion\n");
       continue;
     }
 
-    rewriter.replaceOp(candidateSliceOp, *fusedProducerValue);
+    rewriter.replaceOp(candidateSliceOp, fusedProducerValue);
 
     // Don't need the following steps if it's tensor.expand_shape or
     // tesnor.collapse_shape
@@ -1009,8 +1010,8 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
             *iterArgNumber, dstOp.getTiedOpOperand(fusibleProducer)->get());
       }
 
-      if (auto dstOp = fusedProducerValue
-                           ->getDefiningOp<DestinationStyleOpInterface>()) {
+      if (auto dstOp =
+              fusedProducerValue.getDefiningOp<DestinationStyleOpInterface>()) {
         scf::ForOp innerMostLoop = tileAndFuseResult.loops.back();
         updateDestinationOperandsForTiledOp(
             rewriter, dstOp.getDpsInitOperand(resultNumber)->get(),

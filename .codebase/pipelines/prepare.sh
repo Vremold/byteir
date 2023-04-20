@@ -1,6 +1,6 @@
 function download_llvm_prebuilt() {
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_7ccbb4dff10efe6c26219204e361ddb0264938b8.tar.gz"
+    LLVM_BUILD="llvm_install_225d255a583ea3d50bbba49d949ca76be6a880bf.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install*
       rm -rf llvm_build
@@ -11,6 +11,15 @@ function download_llvm_prebuilt() {
   fi
 }
 
+function apply_patches() {
+  pushd $ROOT_PROJ_DIR/external/mlir-hlo
+  git clean -fd .
+  for patch in $ROOT_PROJ_DIR/external/patches/mlir-hlo/*; do
+    git apply $patch
+  done
+  popd
+}
+
 function prepare_for_compiler() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
@@ -18,6 +27,7 @@ function prepare_for_compiler() {
   git submodule update --init --recursive external/mlir-hlo
   unset http_proxy; unset https_proxy; unset no_proxy
 
+  apply_patches
   download_llvm_prebuilt
 }
 

@@ -30,8 +30,8 @@
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
-#include "mlir/IR/BlockAndValueMapping.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/IRMapping.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -68,7 +68,7 @@ static void creaetGuardedSIMT(OpBuilder &b, Value id, Value bound,
     return;
   }
 
-  BlockAndValueMapping bvm;
+  IRMapping bvm;
   // newIV = lb + idx * step
   auto newIV = createIndexValue(b, looplike, id);
   auto oldIV = getInductionVar(looplike);

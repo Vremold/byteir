@@ -42,7 +42,6 @@
 #include "mlir/Dialect/SCF/Transforms/TileUsingInterface.h"
 #include "mlir/Dialect/Transform/IR/TransformDialect.h"
 #include "mlir/Dialect/Transform/IR/TransformInterfaces.h"
-#include "mlir/Dialect/Transform/IR/TransformUtils.h"
 #include "mlir/IR/Dominance.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/Interfaces/TilingInterface.h"
@@ -323,11 +322,11 @@ struct SimpleInliner : public InlinerInterface {
     return true;
   }
   bool isLegalToInline(Region *dest, Region *src, bool wouldBeCloned,
-                       BlockAndValueMapping &valueMapping) const override {
+                       IRMapping &valueMapping) const override {
     return true;
   }
   bool isLegalToInline(Operation *op, Region *dest, bool wouldBeCloned,
-                       BlockAndValueMapping &valueMapping) const override {
+                       IRMapping &valueMapping) const override {
     return true;
   }
 };
@@ -396,7 +395,7 @@ LogicalResult outlineSingleLinalgOp(RewriterBase &rewriter, Operation *linalgOp,
   if (!isLibcall) {
     Block *entryBlock = funcOp.addEntryBlock();
     rewriter.setInsertionPointToStart(entryBlock);
-    BlockAndValueMapping bvm;
+    IRMapping bvm;
     bvm.map(linalgOp->getOperands(), entryBlock->getArguments());
     auto newLinalgOp = rewriter.clone(*linalgOp, bvm);
     rewriter.create<func::ReturnOp>(loc, newLinalgOp->getResults());
@@ -423,7 +422,7 @@ transform::LinalgOutlineOp::apply(transform::TransformResults &results,
     if (anyUsedValuesDefinedAbove(target->getRegions()))
       return emitDefaultDefiniteFailure(target);
 
-    TrivialPatternRewriter rewriter(target->getContext());
+    IRRewriter rewriter(target->getContext());
     func::FuncOp funcOp;
     func::CallOp callOp;
     if (failed(outlineSingleLinalgOp(rewriter, target, getFuncName(),
@@ -574,7 +573,7 @@ transform::TileExtOp::apply(TransformResults &transformResults,
   SmallVector<Operation *> tiled;
   SmallVector<SmallVector<Operation *, 4>, 4> loops;
   loops.resize(getLoops().size());
-  for (auto &en : llvm::enumerate(targets)) {
+  for (const auto &en : llvm::enumerate(targets)) {
     if (!isa<TilingInterface>(en.value())) {
       DiagnosedSilenceableFailure diag = emitSilenceableError()
                                          << "only linalg ops are supported";
@@ -778,13 +777,13 @@ DiagnosedSilenceableFailure transform::SharedOutputToDistributedStyleOp::apply(
   SmallVector<Operation *> newLoopOps;
   for (size_t i = 0; i < loops.size(); ++i) {
     // check operation types for each payloads
-    auto loopOp = dyn_cast<scf::ForeachThreadOp>(loops[i]);
+    auto loopOp = dyn_cast<scf::ForallOp>(loops[i]);
     auto initOp = dyn_cast<linalg::FillOp>(inits[i]);
     auto mergeOp = dyn_cast<linalg::GenericOp>(merges[i]);
     if (!loopOp) {
       DiagnosedSilenceableFailure diag =
           emitSilenceableError()
-          << "loop op is supposed to be of type scf.foreach_thread op";
+          << "loop op is supposed to be of type scf.forall op";
       return diag;
     }
     if (!initOp) {
@@ -844,14 +843,14 @@ DiagnosedSilenceableFailure transform::SharedOutputToDistributedStyleOp::apply(
       return diag;
     }
     Block *block = &loopOp.getRegion().front();
-    auto parallelOp = cast<scf::PerformConcurrentlyOp>(block->getTerminator());
+    auto parallelOp = cast<scf::InParallelOp>(block->getTerminator());
     SmallVector<tensor::ParallelInsertSliceOp> parallelInsertSliceOps =
         llvm::to_vector(parallelOp.getOps<tensor::ParallelInsertSliceOp>());
     if (parallelInsertSliceOps.size() != 1) {
       DiagnosedSilenceableFailure diag =
           emitSilenceableError()
           << "only one tensor.parallel_insert_slice op is expected in the "
-             "region of scf.perform_concurrently op";
+             "region of scf.in_parallel op";
       return diag;
     }
 
