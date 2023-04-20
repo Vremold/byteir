@@ -1025,35 +1025,30 @@ func.func @collapse_shape_elementwise(%arg0: tensor<128x1x8x2xf32>) ->tensor<128
 // -----
 
 transform.sequence failures(propagate) {
-^bb0(%arg1: !pdl.operation):
-  %0 = transform.structured.match ops{["linalg.elemwise_unary"]} in %arg1 : (!pdl.operation) -> !pdl.operation
-  %1, %loops:2 = transform.structured.fuse_ext %0 {tile_sizes = [7, 7]}
+^bb0(%arg0: !pdl.operation):
+  %0 = transform.structured.match attributes {__root__} in %arg0 : (!pdl.operation) -> !pdl.operation
+  %transformed, %loops:2 = transform.structured.fuse_ext %0 {tile_interchange = [], tile_sizes = [7, 7]}
 }
-
-func.func @pad_unary_static(%arg0: tensor<12x12xf32>) -> tensor<14x14xf32> {
-  %cst = arith.constant 0.0 : f32
-  %padded = tensor.pad %arg0 nofold low[1, 1] high[1, 1] {
+func.func @elew_pad_elew(%arg0: tensor<12x12xf32>) -> tensor<14x14xf32> {
+  %cst = arith.constant 0.000000e+00 : f32
+  %0 = tensor.empty() : tensor<12x12xf32>
+  %1 = linalg.elemwise_unary ins(%arg0 : tensor<12x12xf32>) outs(%0 : tensor<12x12xf32>) -> tensor<12x12xf32>
+  %padded = tensor.pad %1 nofold low[1, 1] high[1, 1] {
   ^bb0(%arg1: index, %arg2: index):
     tensor.yield %cst : f32
   } : tensor<12x12xf32> to tensor<14x14xf32>
-  %empty= tensor.empty() : tensor<14x14xf32>
-  %0 = linalg.elemwise_unary ins(%padded : tensor<14x14xf32>)
-                             outs(%empty: tensor<14x14xf32>) -> tensor<14x14xf32>
-  return %0 : tensor<14x14xf32>
+  %2 = tensor.empty() : tensor<14x14xf32>
+  %3 = linalg.elemwise_unary {__root__} ins(%padded : tensor<14x14xf32>) outs(%2 : tensor<14x14xf32>) -> tensor<14x14xf32>
+  return %3 : tensor<14x14xf32>
 }
 
-// CHECK-LABEL: func.func @pad_unary_static
+// CHECK-LABEL: func.func @elew_pad_elew
 // CHECK: scf.for
 // CHECK:   scf.for
-// CHECK:     arith.cmpi
-// CHECK:     arith.cmpi
-// CHECK:     arith.ori
-// CHECK:     scf.if
-// CHECK:       tensor.generate
-// CHECK:     } else {
-// CHECK:       tensor.extract_slice
-// CHECK:       tensor.pad
-// CHECK:     }
+// CHECK:     tensor.extract_slice
+// CHECK:     tensor.extract_slice
+// CHECK:     linalg.elemwise_unary
+// CHECK:     tensor.pad
 // CHECK:     tensor.empty
 // CHECK:     linalg.elemwise_unary
 // CHECK:     tensor.insert_slice

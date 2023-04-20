@@ -48,6 +48,7 @@
 #include "llvm/Support/Debug.h"
 
 #define DEBUG_TYPE "linalg-transforms"
+#define DBGS() (llvm::dbgs() << '[' << DEBUG_TYPE << "] ")
 
 using namespace llvm;
 using namespace mlir;
@@ -727,6 +728,8 @@ createResultSlices(RewriterBase &rewriter, Operation *op, Operation *tiledOp,
   SmallVector<Value> destinationTensors; // tensor before tiling.
   if (failed(tensor::getOrCreateDestinations(rewriter, op->getLoc(), op,
                                              destinationTensors))) {
+    DBGS() << "[createResultSlices] failed to get destinations for " << *op
+           << "\n";
     return rewriter.notifyMatchFailure(op, "failed to get destinations");
   }
 
@@ -741,6 +744,8 @@ createResultSlices(RewriterBase &rewriter, Operation *op, Operation *tiledOp,
       resultOffsetsList[result.index()] = sliceOp.getMixedOffsets();
       resultSizesList[result.index()] = sliceOp.getMixedSizes();
     } else {
+      DBGS() << "[createResultSlices] handle non-slice by creating a entire "
+                "view\n";
       // TODO: handle non-slice by creating a entire view
       return failure();
     }
@@ -907,6 +912,18 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
 
     Value fusedProducerValue = fusedTilingResult->tiledValues[0];
     Operation *fusedProducerOp = fusedProducerValue.getDefiningOp();
+    // When tiling tensor.pad op, it will generate the IR below:
+    // tensor.extract ...
+    // tensor.pad ...
+    // tensor.cast ...
+    // So we need to find the correct `fusedProducerOp`
+    if (auto castOp = dyn_cast<tensor::CastOp>(fusedProducerOp)) {
+      Operation *castSrcOp = castOp.getSource().getDefiningOp();
+      if (tensor::canFoldIntoProducerOp(castOp) ||
+          isa<tensor::PadOp>(castSrcOp))
+        fusedProducerOp = castSrcOp;
+    }
+
     if (failed(confirmValidFusion(rewriter, fusibleProducer, fusedProducerOp,
                                   candidateSliceOp))) {
       LLVM_DEBUG(llvm::dbgs() << "skip since failing confirmValidFusion\n");
@@ -914,11 +931,11 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
     }
 
     rewriter.replaceOp(candidateSliceOp, fusedProducerValue);
+    DBGS() << "fusedProducerValue: " << fusedProducerValue << "\n";
 
-    // Don't need the following steps if it's tensor.expand_shape or
-    // tesnor.collapse_shape
-    if (isa<tensor::ExpandShapeOp, tensor::CollapseShapeOp>(
-            fusibleProducer.getOwner())) {
+    // Don't need the following steps if `fusibleProducer.getOwner()` doesn't
+    // implement DestinationStyleOpInterface
+    if (!isa<DestinationStyleOpInterface>(fusibleProducer.getOwner())) {
       addCandidateSlices(fusedProducerOp, candidates);
       continue;
     }
@@ -930,7 +947,8 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
             rewriter, fusibleProducer.getOwner(), fusedProducerOp,
             candidateSliceOp, tileAndFuseResult.loops,
             tileAndFuseResult.replacements, destinationIterArg))) {
-      LLVM_DEBUG(llvm::dbgs() << "skip since failing createResultSlices\n");
+      LLVM_DEBUG(llvm::dbgs() << "skip since failing createResultSlices for "
+                              << fusibleProducer << "\n");
       continue;
     }
 
