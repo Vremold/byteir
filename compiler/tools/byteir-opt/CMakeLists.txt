@@ -5,6 +5,7 @@ set(BYTEIR_LIBS
   MLIRCclDialect
   MLIRLaceDialect
   MLIRTransformExtDialect
+  MLIRCclTransformOps
   ByteIRAffinePasses
   ByteIRByrePasses
   ByteIRGPUPipelines

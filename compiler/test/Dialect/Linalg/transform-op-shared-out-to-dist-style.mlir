@@ -18,7 +18,7 @@ func.func @reduction_tile(%arg0: tensor<128x15xf32>, %out: tensor<128xf32>) -> t
 // CHECK: scf.forall
 // CHECK: tensor.extract_slice
 // CHECK: linalg.generic
-// CHECK: ccl.all_reduce
+// CHECK-LITERAL: "ccl.all_reduce"(%4) {reduction = "sum", replica_groups = [[0, 1, 2, 3, 4]]} : (tensor<128xf32>) -> tensor<128xf32>
 // CHECK: linalg.generic
 // CHECK: scf.forall.in_parallel
 
