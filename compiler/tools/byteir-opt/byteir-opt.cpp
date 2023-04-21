@@ -35,6 +35,7 @@
 #include "byteir/Dialect/mhlo/Passes.h"
 #include "byteir/Pipelines/InitAllPipelines.h"
 #include "byteir/Transforms/Passes.h"
+#include "byteir/Utils/OpInterfaceUtils.h"
 #include "gml_st/IR/gml_st_ops.h"
 #include "gml_st/transforms/passes.h"
 #include "gml_st/transforms/test_passes.h"
@@ -136,6 +137,7 @@ int main(int argc, char **argv) {
 
   DialectRegistry registry;
   registerAllDialects(registry);
+  registeOpInterfaceExtensions(registry);
 
   // register ByteIR's dialects here
   registry.insert<mlir::ace::AceDialect>();

@@ -16,12 +16,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "byteir/Dialect/Tensor/IR/TilingInterfaceImpl.h"
+#include "byteir/Utils/OpInterfaceUtils.h"
 #include "byteir/Utils/Utils.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
+#include "mlir/Dialect/Tensor/IR/TensorTilingInterfaceImpl.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/Interfaces/TilingInterface.h"
 #include "llvm/Support/Debug.h"
@@ -561,7 +563,43 @@ struct CollapseShapeOpTiling
   }
 };
 
+// ------------------------------------------------------------------------ //
+// Patch of PadOpTilingInterface
+// ------------------------------------------------------------------------ //
+namespace PadOpTilingInterfacePatch {
+FailureOr<TilingResult> getTiledImplementation(Operation *op, OpBuilder &b,
+                                               ArrayRef<OpFoldResult> offsets,
+                                               ArrayRef<OpFoldResult> sizes) {
+  FailureOr<TilingResult> result =
+      tensor::bubbleUpPadSlice(b, llvm::cast<tensor::PadOp>(op), offsets, sizes,
+                               /*generateZeroSliceGuard*/ false);
+  if (failed(result))
+    return failure();
+  return result.value();
+}
+
+FailureOr<TilingResult> generateResultTileValue(Operation *op, OpBuilder &b,
+                                                unsigned resultNumber,
+                                                ArrayRef<OpFoldResult> offsets,
+                                                ArrayRef<OpFoldResult> sizes) {
+  FailureOr<TilingResult> tilingResult =
+      getTiledImplementation(op, b, offsets, sizes);
+  if (failed(tilingResult))
+    return failure();
+  return tilingResult.value();
+}
+} // namespace PadOpTilingInterfacePatch
 } // namespace
+
+// TODO: removed this once upstrem fixed it
+RegisterOpInterfaceOverride(
+    /*Op=*/tensor::PadOp, /*Interface=*/TilingInterface,
+    /*InterfaceMethod=*/getTiledImplementation,
+    /*Impl=*/&PadOpTilingInterfacePatch::getTiledImplementation);
+RegisterOpInterfaceOverride(
+    /*Op=*/tensor::PadOp, /*Interface=*/TilingInterface,
+    /*InterfaceMethod=*/generateResultTileValue,
+    /*Impl=*/&PadOpTilingInterfacePatch::generateResultTileValue);
 
 void mlir::tensor_ext::registerTilingInterfaceExternalModels(
     DialectRegistry &registry) {
