@@ -3,7 +3,7 @@
 set -e
 set -x
 
-CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # path to byteir root
 ROOT_PROJ_DIR="$CUR_DIR/../.."
 OUTPUT_DIR="$ROOT_PROJ_DIR/output"

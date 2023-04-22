@@ -3,7 +3,7 @@
 set -e
 set -x
 
-CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # path to byteir root
 ROOT_PROJ_DIR="$CUR_DIR/../../.."
 # path to byteir/compiler
@@ -17,7 +17,7 @@ INSTALL_DIR="$BUILD_DIR/byre_install"
 source $CUR_DIR/../prepare.sh
 prepare_for_compiler
 
-python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.8-cp39-cp39-linux_x86_64.whl
+python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.9-cp39-cp39-linux_x86_64.whl
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"

@@ -3,7 +3,7 @@
 set -x
 set -e
 
-CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
+CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 source $CUR_DIR/envsetup.sh
 

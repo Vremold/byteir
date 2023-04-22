@@ -1,13 +1,21 @@
 diff --git a/mhlo/IR/hlo_ops.cc b/mhlo/IR/hlo_ops.cc
-index 8a4bef78a..39fd20b3f 100644
+index 8a4bef78..bc2b3180 100644
 --- a/mhlo/IR/hlo_ops.cc
 +++ b/mhlo/IR/hlo_ops.cc
-@@ -5040,6 +5040,8 @@ OpFoldResult ClampOp::fold(FoldAdaptor adaptor) {
-   if (!operand || !min || !max) {
-     return {};
+@@ -5032,6 +5032,8 @@ OpFoldResult XorOp::fold(FoldAdaptor adaptor) {
+ // ClampOp
+ //===----------------------------------------------------------------------===//
+ 
++#pragma GCC push_options
++#pragma GCC optimize ("O0")
+ OpFoldResult ClampOp::fold(FoldAdaptor adaptor) {
+   auto operands = adaptor.getOperands();
+   auto operand = operands[1].dyn_cast_or_null<ElementsAttr>();
+@@ -5062,6 +5064,7 @@ OpFoldResult ClampOp::fold(FoldAdaptor adaptor) {
    }
-+  if (!min.isSplat() || !max.isSplat())
-+    return {};
-   if (min.getType().getRank() == 0) {
-     min = DenseElementsAttr::get(operand.getType(),
-                                  min.getValues<Attribute>()[0]);
+   return result;
+ }
++#pragma GCC pop_options
+ 
+ LogicalResult ClampOp::inferReturnTypeComponents(
+     MLIRContext*, std::optional<Location> location, ValueShapeRange operands,
