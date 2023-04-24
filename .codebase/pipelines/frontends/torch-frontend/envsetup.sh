@@ -82,7 +82,7 @@ function prepare_for_build() {
 function download_large_models() {
   pushd $ROOT_PROJ_DIR/..
   if [ ! -d bdaimodels ]; then
-    git clone git@code.byted.org:yuanhangjian/bdaimodelsv2.git bdaimodels
+    git clone -b master --depth 1 git@code.byted.org:yuanhangjian/bdaimodelsv2.git bdaimodels
   fi
   cd bdaimodels
   git lfs pull --include pytorch/sar_relevance_cross_model_latest/28365.ts

@@ -76,7 +76,7 @@ function of_download_models() {
   # download bdaimodels repo
   pushd $BYTEIR_ROOT/..
   if [ ! -d bdaimodels ]; then
-    git clone git@code.byted.org:yuanhangjian/bdaimodelsv2.git bdaimodels
+    git clone -b master --depth 1 git@code.byted.org:yuanhangjian/bdaimodelsv2.git bdaimodels
   fi
   cd bdaimodels
   git lfs pull --include onnx/onnx_frontend/
