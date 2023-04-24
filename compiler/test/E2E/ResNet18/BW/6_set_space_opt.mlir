@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -byre-opt="append-arg-types" | FileCheck %s
+// RUN: byteir-opt %s -remove-func-body="anchor-attr=__byteir_elementwise_fusion__" -set-op-space="entry-func=main space=cuda" -set-arg-space="entry-func=main all-space=cuda" | FileCheck %s
 
 // CHECK-LABEL: func.func @main
 
