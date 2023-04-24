@@ -4,7 +4,7 @@ trigger:
 jobs:
   torch_frontend_build:
     name: torch-frontend Release CI
-    image: hub.byted.org/compile/data.aml.byteir_cuda:v8
+    image: hub.byted.org/compile/data.aml.byteir_cuda:v10
     working-directory: byteir/torch-frontend
     envs:
       TOS_ACCESS_KEY: ${{TOS_ACCESS_KEY}}

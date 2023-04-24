@@ -20,7 +20,7 @@ trigger:
 jobs:
   byteir_check_format:
     name: byteir format check and open source check
-    image: hub.byted.org/arnold/data.aml.byteir_cpu:v7
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v10
     working-directory: byteir/byteir
     steps:
       - name: Run clang format check
@@ -33,7 +33,7 @@ jobs:
     name: byteir compiler CI
     runs-on:
       spec: m1.8xlarge
-    image: hub.byted.org/compile/data.aml.byteir_cuda:v7
+    image: hub.byted.org/compile/data.aml.byteir_cuda:v10
     working-directory: byteir/byteir
     depends: [byteir_check_format]
     steps:
@@ -42,7 +42,7 @@ jobs:
           - bash .codebase/pipelines/compiler/build_and_lit_test.sh
   brt_check_cpu:
     name: BRT cpu test
-    image: hub.byted.org/compile/data.aml.byteir_cuda:v7
+    image: hub.byted.org/compile/data.aml.byteir_cuda:v10
     working-directory: byteir/byteir
     depends: [byteir_compiler_build_and_test]
     steps:
@@ -54,7 +54,7 @@ jobs:
           - bash .codebase/pipelines/runtime/build_external_project.sh
   brt_check_cuda:
     name: BRT cuda test
-    image: hub.byted.org/compile/data.aml.byteir_cuda:v7
+    image: hub.byted.org/compile/data.aml.byteir_cuda:v10
     working-directory: byteir/byteir
     depends: [byteir_compiler_build_and_test]
     steps:
@@ -63,7 +63,7 @@ jobs:
           - bash .codebase/pipelines/runtime/build_and_test.sh --cuda --python
   brt_check_asan:
     name: BRT test with asan
-    image: hub.byted.org/compile/data.aml.byteir_cuda:v7
+    image: hub.byted.org/compile/data.aml.byteir_cuda:v10
     working-directory: byteir/byteir
     depends: [byteir_compiler_build_and_test]
     steps:

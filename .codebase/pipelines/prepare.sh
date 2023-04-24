@@ -27,7 +27,7 @@ function prepare_for_compiler() {
   git submodule update --init --recursive -f external/mlir-hlo
   unset http_proxy; unset https_proxy; unset no_proxy
 
-  apply_patches
+  # apply_patches
   download_llvm_prebuilt
 }
 
