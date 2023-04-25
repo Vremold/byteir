@@ -66,6 +66,12 @@ static func::FuncOp createOutlinedFuncOp(mhlo::FusionOp fusionOp,
       func::FuncOp::create(fusionOp.getLoc(), funcName, funcType);
   funcOp.setPrivate();
 
+  // directly return if removing function body
+  if (fusionOp->hasAttr(mlir::byre::getRemoveFuncBodyAttrName())) {
+    addAttrs(funcOp.getOperation(), fusionOp->getAttrs());
+    return funcOp;
+  }
+
   // create entry block
   Block *block = funcOp.addEntryBlock();
   IRMapping bvm;
