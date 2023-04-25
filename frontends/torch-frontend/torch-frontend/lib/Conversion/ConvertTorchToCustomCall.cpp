@@ -49,18 +49,6 @@ llvm::SmallVector<NamedAttribute> getDefaultAttrs(PatternRewriter &rewriter) {
   return attrs;
 }
 
-Value getEmptyTensorCustomCall(PatternRewriter &rewriter, Location loc,
-                               Type reusltType) {
-  auto attrs = getDefaultAttrs(rewriter);
-  attrs.emplace_back(rewriter.getStringAttr("call_target_name"),
-                     rewriter.getStringAttr("byteir.empty_tensor"));
-  // construct a place holder to apply replaceOp()
-  auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
-      loc, ArrayRef<Type>{reusltType}, ArrayRef<Value>{},
-      ArrayRef<NamedAttribute>(attrs));
-  return customCallOp.getResults()[0];
-}
-
 template <typename OP>
 mhlo::ConstantOp createInitialValueForReduceOp(PatternRewriter &rewriter,
                                                Location loc, Type elementTy);
@@ -208,16 +196,11 @@ public:
                        rewriter.getDictionaryAttr(byteir_attrs));
 
     if (op.getResults()[1].use_empty() && op.getResults()[2].use_empty()) {
-      auto emptyTensorValue0 =
-          getEmptyTensorCustomCall(rewriter, op->getLoc(), resultTypes[1]);
-      auto emptyTensorValue1 =
-          getEmptyTensorCustomCall(rewriter, op->getLoc(), resultTypes[2]);
       auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
           op->getLoc(), ArrayRef<Type>{resultTypes[0]}, bufferArgs,
           ArrayRef<NamedAttribute>{attrs});
-      rewriter.replaceOp(op,
-                         ArrayRef<Value>{customCallOp.getResults()[0],
-                                         emptyTensorValue0, emptyTensorValue1});
+      rewriter.replaceOp(
+          op, ArrayRef<Value>{customCallOp.getResults()[0], Value(), Value()});
       return success();
     } else {
       auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
@@ -226,11 +209,6 @@ public:
       rewriter.replaceOp(op, customCallOp->getResults());
       return success();
     }
-
-    auto newOp = rewriter.create<mhlo::CustomCallOp>(
-        op->getLoc(), resultTypes, bufferArgs, ArrayRef<NamedAttribute>(attrs));
-    rewriter.replaceOp(op, newOp->getResults());
-    return success();
   }
 };
 
@@ -439,14 +417,12 @@ public:
     if (op.getResults()[1].use_empty()) { // simplify to mhlo.reduce
       auto reduceOp = createSingleOpReduce<mhlo::MaxOp>(rewriter, op->getLoc(),
                                                         input, {dimInt});
-      auto emptyTensorValue =
-          getEmptyTensorCustomCall(rewriter, op->getLoc(), resultTypes[1]);
       if (keepDim) {
         // TODO: handle keepDim == true and dynamic reshape.
         return op.emitError("unimplemented: keepDim == true");
       } else {
-        rewriter.replaceOp(
-            op, ArrayRef<Value>{reduceOp.getResults()[0], emptyTensorValue});
+        rewriter.replaceOp(op,
+                           ArrayRef<Value>{reduceOp.getResults()[0], Value()});
         return success();
       }
     }
@@ -466,13 +442,11 @@ public:
                        rewriter.getDictionaryAttr(byteir_attrs));
 
     if (op.getResults()[0].use_empty()) {
-      auto emptyTensorValue =
-          getEmptyTensorCustomCall(rewriter, op->getLoc(), resultTypes[0]);
       auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
           op->getLoc(), ArrayRef<Type>{resultTypes[1]}, bufferArgs,
           ArrayRef<NamedAttribute>{attrs});
       rewriter.replaceOp(
-          op, ArrayRef<Value>{emptyTensorValue, customCallOp.getResults()[0]});
+          op, ArrayRef<Value>{Value(), customCallOp.getResults()[0]});
       return success();
     } else {
       auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
