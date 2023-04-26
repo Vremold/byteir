@@ -28,6 +28,20 @@ def test_native_layer_norm():
 
 # ==============================================================================
 
+class LayerNormModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, weight, bias):
+        list = [2, 2, 3]
+        return torch.ops.aten.layer_norm(x, list, weight, bias, eps=0.5)
+
+def test_layer_norm():
+    inputs = [tu.rand(2, 5, 2, 2, 3).to(torch.float16), tu.rand(2, 2, 3).to(torch.float16), tu.rand(2, 2, 3).to(torch.float16)]
+    custom_test_helper(LayerNormModule(), inputs, "byteir.layer_norm")
+
+# ==============================================================================
+
 class OneHotModule(torch.nn.Module):
     def __init__(self):
         super().__init__()

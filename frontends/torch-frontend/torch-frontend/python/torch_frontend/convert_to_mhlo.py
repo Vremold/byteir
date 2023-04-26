@@ -10,6 +10,7 @@ _CUSTOM_OPS_IN_TORCH = [
     "aten._softmax",
     "aten._log_softmax",
     "aten.native_layer_norm",
+    "aten.layer_norm",
     "aten.gelu",
     "aten.softmax.int",
     "aten.argmax",

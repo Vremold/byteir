@@ -123,6 +123,18 @@ mhlo::ReduceOp createSingleOpReduce(PatternRewriter &rewriter, Location loc,
 
   return reduceOp;
 }
+
+Value promoteType(Location loc, Value input, TensorType desiredType,
+                  PatternRewriter &rewriter) {
+  TensorType inType = input.getType().dyn_cast<TensorType>();
+  if (inType.getElementType() == desiredType.getElementType()) {
+    return input;
+  }
+
+  TensorType promotedType =
+      inType.cloneWith(inType.getShape(), desiredType.getElementType());
+  return rewriter.create<mhlo::ConvertOp>(loc, promotedType, input);
+}
 } // namespace
 
 namespace {
@@ -133,31 +145,19 @@ class ConvertAtenNativeLayerNormOp
 public:
   using OpConversionPattern::OpConversionPattern;
 
-  // TODO: move to utils
-  static Value promoteType(Value input, TensorType desiredType,
-                           PatternRewriter &rewriter) {
-    Operation *op = input.getDefiningOp();
-    TensorType inType = input.getType().dyn_cast<TensorType>();
-    if (inType.getElementType() == desiredType.getElementType()) {
-      return input;
-    }
-
-    TensorType promotedType =
-        inType.cloneWith(inType.getShape(), desiredType.getElementType());
-    return rewriter.create<mhlo::ConvertOp>(op->getLoc(), promotedType, input);
-  }
-
   LogicalResult
   matchAndRewrite(AtenNativeLayerNormOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
     RankedTensorType outType = getTypeConverter()
                                    ->convertType(op.getResultTypes()[0])
                                    .cast<RankedTensorType>();
-    Value input = promoteType(adaptor.getInput(), outType, rewriter);
-    Value weight = promoteType(adaptor.getWeight(), outType, rewriter);
-    Value bias = promoteType(adaptor.getBias(), outType, rewriter);
+    Value input =
+        promoteType(op->getLoc(), adaptor.getInput(), outType, rewriter);
+    Value weight =
+        promoteType(op->getLoc(), adaptor.getWeight(), outType, rewriter);
+    Value bias =
+        promoteType(op->getLoc(), adaptor.getBias(), outType, rewriter);
     SmallVector<Value> bufferArgs({input, weight, bias});
-
     RankedTensorType inType = input.getType().cast<RankedTensorType>();
     SmallVector<Type> resultTypes;
     if (failed(getTypeConverter()->convertTypes(op.getResultTypes(),
@@ -209,6 +209,63 @@ public:
       rewriter.replaceOp(op, customCallOp->getResults());
       return success();
     }
+  }
+};
+
+// AtenLayerNormOp
+class ConvertAtenLayerNormOp : public OpConversionPattern<AtenLayerNormOp> {
+public:
+  using OpConversionPattern::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(AtenLayerNormOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    RankedTensorType outType = getTypeConverter()
+                                   ->convertType(op.getResult().getType())
+                                   .cast<RankedTensorType>();
+    Value input =
+        promoteType(op->getLoc(), adaptor.getInput(), outType, rewriter);
+    Value weight =
+        promoteType(op->getLoc(), adaptor.getWeight(), outType, rewriter);
+    Value bias =
+        promoteType(op->getLoc(), adaptor.getBias(), outType, rewriter);
+    SmallVector<Value> bufferArgs({input, weight, bias});
+    RankedTensorType inType = input.getType().cast<RankedTensorType>();
+
+    double epsValue;
+    if (!matchPattern(op.getEps(), m_TorchConstantFloat(&epsValue))) {
+      return op.emitError("eps must be a scalar constant");
+    }
+
+    SmallVector<int64_t> normalizedShape;
+    if (!matchPattern(op.getNormalizedShape(),
+                      m_TorchListOfConstantInts(normalizedShape))) {
+      return op.emitError("eps must be a int list");
+    }
+    // Infer the axis list
+    ArrayRef<int64_t> inShape = inType.getShape();
+    std::vector<int64_t> axisValue;
+    for (size_t i = 0; i < normalizedShape.size(); ++i) {
+      axisValue.push_back(inShape.size() - 1 - i);
+    }
+    std::reverse(axisValue.begin(), axisValue.end());
+
+    std::vector<NamedAttribute> byteir_attrs;
+    byteir_attrs.emplace_back(rewriter.getStringAttr("epsilon"),
+                              rewriter.getF64FloatAttr(epsValue));
+    byteir_attrs.emplace_back(rewriter.getStringAttr("axis"),
+                              rewriter.getI64ArrayAttr(axisValue));
+
+    auto attrs = getDefaultAttrs(rewriter);
+    attrs.emplace_back(rewriter.getStringAttr("call_target_name"),
+                       rewriter.getStringAttr(getLayerNormName()));
+    attrs.emplace_back(rewriter.getStringAttr(getCustomCallAttrName()),
+                       rewriter.getDictionaryAttr(byteir_attrs));
+
+    auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
+        op->getLoc(), outType, bufferArgs, ArrayRef<NamedAttribute>{attrs});
+    rewriter.replaceOp(op, customCallOp->getResults());
+    return success();
   }
 };
 
@@ -721,6 +778,8 @@ public:
     RewritePatternSet patterns(context);
     target.addIllegalOp<AtenNativeLayerNormOp>();
     patterns.add<ConvertAtenNativeLayerNormOp>(typeConverter, context);
+    target.addIllegalOp<AtenLayerNormOp>();
+    patterns.add<ConvertAtenLayerNormOp>(typeConverter, context);
     target.addIllegalOp<Aten_SoftmaxOp>();
     patterns.add<ConvertAtenSoftmaxOp<Aten_SoftmaxOp>>(typeConverter, context);
     target.addIllegalOp<AtenSoftmaxIntOp>();
