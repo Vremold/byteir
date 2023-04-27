@@ -16,9 +16,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "torch-frontend/Conversion/ConvertTorchToCustomCall.h"
-#include "./PassDetail.h"
 #include "mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "torch-frontend/Utils/CustomCallUtil.h"
+#include "torch-mlir/Conversion/TorchToStablehlo/StablehloLegalizeUtils.h"
 #include "torch-mlir/Conversion/TorchToStablehlo/TorchToStablehlo.h"
 #include "torch-mlir/Conversion/Utils/Utils.h"
 #include "torch-mlir/Dialect/Torch/IR/TorchDialect.h"
@@ -29,6 +31,8 @@
 #include "torch-mlir/Dialect/TorchConversion/IR/TorchConversionOps.h"
 #include "torch-mlir/Dialect/TorchConversion/Transforms/BackendTypeConversion.h"
 #include "utils/convert_op_folder.h"
+
+#include "./PassDetail.h"
 
 using namespace mlir;
 using namespace mlir::torch;
@@ -60,9 +64,9 @@ createInitialValueForReduceOp<mhlo::MaxOp>(PatternRewriter &rewriter,
   auto constType = RankedTensorType::get({}, elementTy);
   if (elementTy.isa<mlir::FloatType>()) {
     auto constAttr = DenseElementsAttr::get(
-        constType, {APFloat::getLargest(
-                       elementTy.cast<mlir::FloatType>().getFloatSemantics(),
-                       /*negative=*/true)});
+        constType,
+        {APFloat::getInf(elementTy.cast<mlir::FloatType>().getFloatSemantics(),
+                         /*negative=*/true)});
     return rewriter.create<mhlo::ConstantOp>(loc, constType, constAttr);
   } else if (elementTy.isa<mlir::IntegerType>() &&
              elementTy.getIntOrFloatBitWidth() != 8) {
@@ -475,8 +479,23 @@ public:
       auto reduceOp = createSingleOpReduce<mhlo::MaxOp>(rewriter, op->getLoc(),
                                                         input, {dimInt});
       if (keepDim) {
-        // TODO: handle keepDim == true and dynamic reshape.
-        return op.emitError("unimplemented: keepDim == true");
+        auto inputShapeInfo = hlo::getDimSizesOfTensor(rewriter, op, input,
+                                                       /*dimSizeIndexBits=*/64);
+        if (failed(inputShapeInfo)) {
+          return rewriter.notifyMatchFailure(
+              op, "failed to get dimension sizes of the input");
+        }
+        auto outputShapeVec = *inputShapeInfo;
+        outputShapeVec[dimInt] = rewriter.create<mlir::arith::ConstantOp>(
+            op->getLoc(),
+            rewriter.getIntegerAttr(rewriter.getIntegerType(64), 1));
+        auto outputShapeTensor = rewriter.create<mlir::tensor::FromElementsOp>(
+            op->getLoc(), outputShapeVec);
+        Value reshapeResult = rewriter.create<mhlo::DynamicReshapeOp>(
+            op->getLoc(), resultTypes[0], reduceOp.getResults()[0],
+            outputShapeTensor);
+        rewriter.replaceOp(op, ArrayRef<Value>{reshapeResult, Value()});
+        return success();
       } else {
         rewriter.replaceOp(op,
                            ArrayRef<Value>{reduceOp.getResults()[0], Value()});
@@ -763,13 +782,16 @@ public:
   void getDependentDialects(DialectRegistry &registry) const override {
     registry.insert<Torch::TorchDialect>();
     registry.insert<mhlo::MhloDialect>();
+    registry.insert<arith::ArithDialect>();
+    registry.insert<tensor::TensorDialect>();
     TorchConversion::getBackendTypeConversionDependentDialects(registry);
   }
 
   void runOnOperation() override {
     MLIRContext *context = &getContext();
     ConversionTarget target(*context);
-    target.addLegalDialect<Torch::TorchDialect, mhlo::MhloDialect>();
+    target.addLegalDialect<Torch::TorchDialect, mhlo::MhloDialect,
+                           arith::ArithDialect, tensor::TensorDialect>();
 
     TypeConverter typeConverter;
     typeConverter.addConversion([](Type type) { return type; });

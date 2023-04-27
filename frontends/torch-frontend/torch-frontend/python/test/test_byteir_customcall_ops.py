@@ -8,8 +8,8 @@ def custom_test_helper(module, inputs, custom_op_name):
     mlir_module = convert_to_mhlo_via_torch_mlir(module, inputs)
     mlir_str = mlir_module.operation.get_asm(large_elements_limit=10, enable_debug_info=False)
     compare_str = "mhlo.custom_call @{}".format(custom_op_name)
-    assert compare_str in mlir_str
     # print(mlir_str)
+    assert compare_str in mlir_str
 
 # ==============================================================================
 
@@ -65,6 +65,52 @@ class TopKModule(torch.nn.Module):
 def test_topk():
     inputs = [tu.randn(3, 4)]
     custom_test_helper(TopKModule(), inputs, "byteir.top_k")
+
+# ==============================================================================
+
+class MaxDimModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        return torch.max(x, dim=1)
+
+def test_max_dim():
+    inputs = [tu.randn(3, 4)]
+    custom_test_helper(MaxDimModule(), inputs, "byteir.arg_max")
+
+class MaxDimKeepDimModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        return torch.max(x, dim=1, keepdim=True)
+
+def test_max_dim_keepdim():
+    inputs = [tu.randn(3, 4)]
+    custom_test_helper(MaxDimKeepDimModule(), inputs, "byteir.arg_max")
+
+class MaxDimOnlyIndicesModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        return torch.max(x, dim=1)[1]
+
+def test_max_dim_only_indices():
+    inputs = [tu.randn(3, 4)]
+    custom_test_helper(MaxDimOnlyIndicesModule(), inputs, "byteir.arg_max")
+
+class MaxDimKeepDimOnlyIndicesModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        return torch.max(x, dim=1, keepdim=True)[1]
+
+def test_max_dim_keepdim_only_indices():
+    inputs = [tu.randn(3, 4)]
+    custom_test_helper(MaxDimKeepDimOnlyIndicesModule(), inputs, "byteir.arg_max")
 
 # ==============================================================================
 

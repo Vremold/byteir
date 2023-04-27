@@ -38,6 +38,32 @@ def test_linalg_vector_norm():
 
 # ==============================================================================
 
+class MaxDimModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        return torch.max(x, dim=1)[0]
+
+def test_max_dim():
+    inputs = [tu.randn(3, 4)]
+    module = convert_to_mhlo_via_torch_mlir(MaxDimModule(), inputs)
+    print(module.operation.get_asm())
+
+class MaxDimKeepDimModule(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, x):
+        return torch.max(x, dim=1, keepdim=True)[0]
+
+def test_max_dim_keepdim():
+    inputs = [tu.randn(3, 4)]
+    module = convert_to_mhlo_via_torch_mlir(MaxDimKeepDimModule(), inputs)
+    print(module.operation.get_asm())
+
+# ==============================================================================
+
 torch.ops.load_library("build/lib/libcustom_op.so")
 class DynamicPartitionStitchModule(torch.nn.Module):
     def __init__(self, *, output_shape):
