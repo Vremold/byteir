@@ -70,3 +70,14 @@ jobs:
       - name: Build and test BRT with asan
         commands:
           - bash .codebase/pipelines/runtime/build_and_test.sh --cuda --asan
+  byteir_compiler_build_and_test_python:
+    name: byteir python test CI
+    runs-on:
+      spec: m1.8xlarge
+    image: hub.byted.org/compile/data.aml.byteir_cuda:debian11_v1
+    working-directory: byteir/byteir
+    depends: [byteir_check_format]
+    steps:
+      - name: Build and Test Python APIs
+        commands:
+          - bash .codebase/pipelines/compiler/build_and_test_cat.sh

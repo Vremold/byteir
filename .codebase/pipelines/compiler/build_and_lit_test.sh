@@ -27,7 +27,8 @@ cmake "-H$PROJ_DIR/cmake" \
       -DCMAKE_BUILD_TYPE=Release \
       -DLLVM_INSTALL_PATH="$LLVM_INSTALL_DIR" \
       -DLLVM_EXTERNAL_LIT=$(which lit) \
-      -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR"
+      -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
+      -DBYTEIR_ENABLE_BINDINGS_PYTHON=ON
 
 cmake --build "$BUILD_DIR" --config Release --target all check-byteir install
 cmake --build "$BUILD_DIR" --target check-byteir-numerical

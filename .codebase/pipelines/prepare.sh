@@ -17,6 +17,12 @@ function apply_patches() {
   for patch in $ROOT_PROJ_DIR/external/patches/mlir-hlo/*; do
     git apply $patch
   done
+}
+
+function install_aitemplate() {
+  pushd external/AITemplate/python
+  python3 setup.py bdist_wheel
+  python3 -m pip install dist/*.whl --force-reinstall
   popd
 }
 
@@ -24,11 +30,12 @@ function prepare_for_compiler() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export no_proxy='*.byted.org'
-  git submodule update --init --recursive -f external/mlir-hlo
+  git submodule update --init --recursive external/mlir-hlo external/AITemplate
   unset http_proxy; unset https_proxy; unset no_proxy
 
   # apply_patches
   download_llvm_prebuilt
+  install_aitemplate
 }
 
 function prepare_for_runtime() {

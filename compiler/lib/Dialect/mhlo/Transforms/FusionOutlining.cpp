@@ -36,6 +36,8 @@ using namespace llvm;
 
 namespace {
 
+static unsigned cnt = 0;
+
 static std::string getOutlineFuncitonName(mhlo::FusionOp fusionOp,
                                           unsigned &cnt) {
   StringAttr nameAttr =
@@ -166,8 +168,6 @@ struct FusionOutliningPass : public FusionOutliningBase<FusionOutliningPass> {
 
 void FusionOutliningPass::runOnOperation() {
   ModuleOp moduleOp = getOperation();
-
-  unsigned cnt = 0;
 
   for (auto funcOp : moduleOp.getOps<func::FuncOp>()) {
     funcOp.walk([&](mhlo::FusionOp fusionOp) {
