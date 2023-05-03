@@ -87,7 +87,7 @@ function download_large_models() {
   cd bdaimodels
   git lfs pull --include pytorch/sar_relevance_cross_model_latest/28365.ts
   git lfs pull --include pytorch/tt_label3_0607/torch_model_1654572315533.jit.revert.ts
-  git lfs pull --include pytorch/swinv2_tiny/swinv2_tiny.fixed1.pt
+  git lfs pull --include pytorch/swinv2_tiny/swinv2_tiny.pt
   popd
   export TORCH_LARGE_MODEL_PATH=$ROOT_PROJ_DIR/../bdaimodels/pytorch
 }

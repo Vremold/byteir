@@ -81,6 +81,8 @@ void mlir::torch_frontend::createTorchFunctionToTorchPipeline(
   pm.addPass(Torch::createAdjustCallingConventionsPass());
   // Rewrite custum ops to Torch.CustomOp
   pm.addNestedPass<func::FuncOp>(createRewriteCustomOp());
+  // General cleanup.
+  pm.addNestedPass<func::FuncOp>(createCanonicalizerPass());
   pm.addPass(Torch::createLowerToBackendContractPass(
       options.maxIterations, options.decompose, options.backendLegalOps,
       options.extraLibrary));

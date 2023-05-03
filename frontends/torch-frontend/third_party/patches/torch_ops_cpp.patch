@@ -1,11 +1,98 @@
 diff --git a/lib/Dialect/Torch/IR/TorchOps.cpp b/lib/Dialect/Torch/IR/TorchOps.cpp
-index 14009fc7..4ab6f785 100644
+index 14009fc7..38940db3 100644
 --- a/lib/Dialect/Torch/IR/TorchOps.cpp
 +++ b/lib/Dialect/Torch/IR/TorchOps.cpp
-@@ -2406,6 +2406,20 @@ OpFoldResult AtenCeilFloatOp::fold(FoldAdaptor adaptor) {
+@@ -797,6 +797,48 @@ OpFoldResult AtenToDtypeLayoutOp::fold(FoldAdaptor adaptor) {
+   return getOperand(0);
  }
  
++void AtenToDtypeLayoutOp::getCanonicalizationPatterns(
++    RewritePatternSet &patterns, MLIRContext *context) {
++  // `to.dtype_layout` -> `to.device/to.dtype` if layout is none and pin memory
++  // is false
++  patterns.add(+[](AtenToDtypeLayoutOp op, PatternRewriter &rewriter) {
++    // The pin_memory arg should be either constant `False` or `none`.
++    if (!op.getPinMemory().getType().isa<Torch::NoneType>()) {
++      bool pinMemory;
++      if (!matchPattern(op.getPinMemory(), m_TorchConstantBool(&pinMemory)))
++        return failure();
++      else if (pinMemory)
++        return failure();
++    }
++
++    // The layout arg should be either `none` or `0` i.e. strided.
++    if (!op.getLayout().getType().isa<Torch::NoneType>()) {
++      int64_t tensorLayout;
++      if (!matchPattern(op.getLayout(), m_TorchConstantInt(&tensorLayout)))
++        return failure();
++      else if (tensorLayout != torch_upstream::Layout::Strided)
++        return failure();
++    }
++
++    if (op.getDevice().getType().isa<Torch::NoneType>()) {
++      // The device arg is `none`. Rewrite to to.dtype.
++      AtenToDtypeOp toDtype = rewriter.create<AtenToDtypeOp>(
++          op.getLoc(), op.getType(), op.getSelf(), op.getDtype(),
++          op.getNonBlocking(), op.getCopy(), op.getMemoryFormat());
++      rewriter.replaceOp(op, toDtype->getResults());
++    } else {
++      // The device arg is not `none`. Rewrite to to.device.
++      AtenToDeviceOp toDevice = rewriter.create<AtenToDeviceOp>(
++          op.getLoc(), op.getType(), op.getSelf(), op.getDevice(),
++          op.getDtype(), op.getNonBlocking(), op.getCopy(),
++          op.getMemoryFormat());
++      rewriter.replaceOp(op, toDevice->getResults());
++    }
++
++    return success();
++  });
++}
++
  //===----------------------------------------------------------------------===//
+ // AtenViewOp
+ //===----------------------------------------------------------------------===//
+@@ -2025,6 +2067,36 @@ void PrimListUnpackOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
+     rewriter.replaceOp(op, listConstruct.getElements());
+     return success();
+   });
++
++  patterns.add(+[](PrimListUnpackOp op, PatternRewriter &rewriter) {
++    // decompose AtenUnbindOp + PrimListUnpackOp to slice.tensor ops
++    if (!isa<AtenUnbindIntOp>(op.getOperand().getDefiningOp()))
++      return failure();
++    AtenUnbindIntOp unbind = cast<AtenUnbindIntOp>(op.getOperand().getDefiningOp());
++    if (!unbind->hasOneUse())
++      return failure();
++    Value dim = unbind.getOperand(1);
++    Value input = unbind.getOperand(0);
++    SmallVector<Value> slices;
++    auto step = rewriter.create<Torch::ConstantIntOp>(
++        op->getLoc(), rewriter.getI64IntegerAttr(1));
++    for (int i = 0; i < op.getNumResults(); i++) {
++      // rewrite to slice op
++      auto resultTy = op.getResult(i).getType();
++      auto start = rewriter.create<Torch::ConstantIntOp>(
++          op->getLoc(), rewriter.getI64IntegerAttr(i));
++      auto end = rewriter.create<Torch::ConstantIntOp>(
++          op->getLoc(), rewriter.getI64IntegerAttr(i + 1));
++      auto newSlice = rewriter.create<AtenSliceTensorOp>(
++          op->getLoc(), resultTy, input, dim, start, end, step);
++      auto squeeze = rewriter.create<AtenSqueezeDimOp>(op->getLoc(), resultTy,
++                                                       newSlice, dim);
++      slices.push_back(squeeze);
++    }
++    rewriter.replaceOp(op, slices);
++    unbind.erase();
++    return success();
++  });
+ }
+ 
+ static PrimDictConstructOp getDictConstructIfNotModified(Value torchDict) {
+@@ -2405,6 +2477,20 @@ OpFoldResult AtenCeilFloatOp::fold(FoldAdaptor adaptor) {
+   return nullptr;
+ }
+ 
++//===----------------------------------------------------------------------===//
 +// PrimDeviceOp
 +//===----------------------------------------------------------------------===//
 +
@@ -19,7 +106,6 @@ index 14009fc7..4ab6f785 100644
 +  });
 +}
 +
-+//===----------------------------------------------------------------------===//
+ //===----------------------------------------------------------------------===//
  // PrimMaxIntOp
  //===----------------------------------------------------------------------===//
- 

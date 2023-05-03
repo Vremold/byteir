@@ -13,9 +13,9 @@ from mhlo_tools.ir_executor import Interpreter
 from mhlo_tools.ir_executor.helper import mlir_attr_to_pyobj
 
 LARGE_MODEL_PATH = os.environ["TORCH_LARGE_MODEL_PATH"]
-MODEL_LIST = ["sar_relevance_cross_model_latest/28365.ts", 
-              "tt_label3_0607/torch_model_1654572315533.jit.revert.ts",
-              "swinv2_tiny/swinv2_tiny.fixed1.pt"]
+MODEL_LIST = [("sar_relevance_cross_model_latest/28365.ts", True), 
+              ("tt_label3_0607/torch_model_1654572315533.jit.revert.ts", True),
+              ("swinv2_tiny/swinv2_tiny.pt", False)]
 # MODEL_LIST = ["rtc/model.fixed.jit"]
 
 os.environ['TORCH_JIT_DISABLE_NEW_EXECUTOR'] = '1'
@@ -45,7 +45,7 @@ def reload_model(model):
         model = torch.jit.load(path)
     return model
 
-def convert_to_mhlo_via_torch_mlir(jit_model_path):
+def convert_to_mhlo_via_torch_mlir(jit_model_path, rewrite_fx):
     dir = os.path.abspath(os.path.dirname(jit_model_path))
     ts_module = torch.jit.load(jit_model_path, map_location="cuda").eval()
     sample_inputs = torch.load(os.path.join(dir, "batch_sample_inputs"), map_location="cuda")
@@ -57,8 +57,9 @@ def convert_to_mhlo_via_torch_mlir(jit_model_path):
     torch._C._jit_pass_run_decompositions(ts_module.graph)
     ts_module = reload_model(ts_module).eval()
 
-    ts_module = fx_rewrite(ts_module, sample_inputs)
-    ts_module = reload_model(ts_module).eval()
+    if rewrite_fx:
+        ts_module = fx_rewrite(ts_module, sample_inputs)
+        ts_module = reload_model(ts_module).eval()
 
     module = torch_frontend.convert_to_mhlo_via_torch_mlir(ts_module, sample_inputs)
     mhlo_file = "/tmp/tmp.mhlo.mlir"
@@ -78,8 +79,8 @@ def convert_to_mhlo_via_torch_mlir(jit_model_path):
 
 def test_large_models():
     for model in MODEL_LIST:
-        print(model)
-        convert_to_mhlo_via_torch_mlir(os.path.join(LARGE_MODEL_PATH, model))
+        print(model[0])
+        convert_to_mhlo_via_torch_mlir(os.path.join(LARGE_MODEL_PATH, model[0]), model[1])
 
 if __name__ == "__main__":
     test_large_models()
