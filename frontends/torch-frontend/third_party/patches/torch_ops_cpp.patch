@@ -2,55 +2,6 @@ diff --git a/lib/Dialect/Torch/IR/TorchOps.cpp b/lib/Dialect/Torch/IR/TorchOps.c
 index 14009fc7..38940db3 100644
 --- a/lib/Dialect/Torch/IR/TorchOps.cpp
 +++ b/lib/Dialect/Torch/IR/TorchOps.cpp
-@@ -797,6 +797,48 @@ OpFoldResult AtenToDtypeLayoutOp::fold(FoldAdaptor adaptor) {
-   return getOperand(0);
- }
- 
-+void AtenToDtypeLayoutOp::getCanonicalizationPatterns(
-+    RewritePatternSet &patterns, MLIRContext *context) {
-+  // `to.dtype_layout` -> `to.device/to.dtype` if layout is none and pin memory
-+  // is false
-+  patterns.add(+[](AtenToDtypeLayoutOp op, PatternRewriter &rewriter) {
-+    // The pin_memory arg should be either constant `False` or `none`.
-+    if (!op.getPinMemory().getType().isa<Torch::NoneType>()) {
-+      bool pinMemory;
-+      if (!matchPattern(op.getPinMemory(), m_TorchConstantBool(&pinMemory)))
-+        return failure();
-+      else if (pinMemory)
-+        return failure();
-+    }
-+
-+    // The layout arg should be either `none` or `0` i.e. strided.
-+    if (!op.getLayout().getType().isa<Torch::NoneType>()) {
-+      int64_t tensorLayout;
-+      if (!matchPattern(op.getLayout(), m_TorchConstantInt(&tensorLayout)))
-+        return failure();
-+      else if (tensorLayout != torch_upstream::Layout::Strided)
-+        return failure();
-+    }
-+
-+    if (op.getDevice().getType().isa<Torch::NoneType>()) {
-+      // The device arg is `none`. Rewrite to to.dtype.
-+      AtenToDtypeOp toDtype = rewriter.create<AtenToDtypeOp>(
-+          op.getLoc(), op.getType(), op.getSelf(), op.getDtype(),
-+          op.getNonBlocking(), op.getCopy(), op.getMemoryFormat());
-+      rewriter.replaceOp(op, toDtype->getResults());
-+    } else {
-+      // The device arg is not `none`. Rewrite to to.device.
-+      AtenToDeviceOp toDevice = rewriter.create<AtenToDeviceOp>(
-+          op.getLoc(), op.getType(), op.getSelf(), op.getDevice(),
-+          op.getDtype(), op.getNonBlocking(), op.getCopy(),
-+          op.getMemoryFormat());
-+      rewriter.replaceOp(op, toDevice->getResults());
-+    }
-+
-+    return success();
-+  });
-+}
-+
- //===----------------------------------------------------------------------===//
- // AtenViewOp
- //===----------------------------------------------------------------------===//
 @@ -2025,6 +2067,36 @@ void PrimListUnpackOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
      rewriter.replaceOp(op, listConstruct.getElements());
      return success();
@@ -88,24 +39,3 @@ index 14009fc7..38940db3 100644
  }
  
  static PrimDictConstructOp getDictConstructIfNotModified(Value torchDict) {
-@@ -2405,6 +2477,20 @@ OpFoldResult AtenCeilFloatOp::fold(FoldAdaptor adaptor) {
-   return nullptr;
- }
- 
-+//===----------------------------------------------------------------------===//
-+// PrimDeviceOp
-+//===----------------------------------------------------------------------===//
-+
-+// Unconditionally canonicalize prim.device op to constant.device op,
-+// since device information is useless in torch-to-mhlo pipeline.
-+void PrimDeviceOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
-+                                               MLIRContext *context) {
-+  patterns.add(+[](PrimDeviceOp op, PatternRewriter &rewriter) {
-+    rewriter.replaceOpWithNewOp<Torch::ConstantDeviceOp>(op, "cpu");
-+    return success();
-+  });
-+}
-+
- //===----------------------------------------------------------------------===//
- // PrimMaxIntOp
- //===----------------------------------------------------------------------===//

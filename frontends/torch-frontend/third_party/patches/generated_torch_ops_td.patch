@@ -2,14 +2,6 @@ diff --git a/include/torch-mlir/Dialect/Torch/IR/GeneratedTorchOps.td b/include/
 index 4f794b98..13042b77 100644
 --- a/include/torch-mlir/Dialect/Torch/IR/GeneratedTorchOps.td
 +++ b/include/torch-mlir/Dialect/Torch/IR/GeneratedTorchOps.td
-@@ -7326,6 +7326,7 @@ def Torch_AtenToDtypeLayoutOp : Torch_Op<"aten.to.dtype_layout", [
-     }
-   }];
-   let hasFolder = 1;
-+  let hasCanonicalizer = 1;
- }
- 
- def Torch_AtenToOtherOp : Torch_Op<"aten.to.other", [
 @@ -7432,6 +7433,29 @@ def Torch_AtenTypeAsOp : Torch_Op<"aten.type_as", [
    let hasFolder = 1;
  }
@@ -40,14 +32,6 @@ index 4f794b98..13042b77 100644
  def Torch_AtenViewOp : Torch_Op<"aten.view", [
      AllowsTypeRefinement,
      ReadOnly
-@@ -10980,6 +11004,7 @@ def Torch_PrimDeviceOp : Torch_Op<"prim.device", [
-       printDefaultTorchOp(printer, *this, 1, 1);
-     }
-   }];
-+  let hasCanonicalizer = 1;
- }
- 
- def Torch_PrimDtypeOp : Torch_Op<"prim.dtype", [
 @@ -11408,3 +11433,92 @@ def Torch_QuantizedLinearOp : Torch_Op<"quantized.linear", [
    }];
  }

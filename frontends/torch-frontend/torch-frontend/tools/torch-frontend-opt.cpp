@@ -50,6 +50,5 @@ int main(int argc, char **argv) {
   mlir::stablehlo::registerAllDialects(registry);
 
   return mlir::asMainReturnCode(
-      mlir::MlirOptMain(argc, argv, "TorchFrontend pass driver\n", registry,
-                        /*preloadDialectsInContext=*/false));
+      mlir::MlirOptMain(argc, argv, "TorchFrontend pass driver\n", registry));
 }
