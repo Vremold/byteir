@@ -6,6 +6,7 @@ set(TORCH_FORNTEND_LIBS
 
 set(MHLO_LIBS
   MhloDialect
+  AllMhloPasses
 )
 
 get_property(mlir_dialect_libs GLOBAL PROPERTY MLIR_DIALECT_LIBS)

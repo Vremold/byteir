@@ -16,6 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "mhlo/IR/hlo_ops.h"
+#include "mhlo/transforms/passes.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/InitAllDialects.h"
@@ -37,6 +38,7 @@ int main(int argc, char **argv) {
   registerAllPasses();
   mlir::registerTorchFrontendConversionPasses();
   mlir::registerTorchFrontendTransformsPasses();
+  mlir::mhlo::registerAllMhloPasses();
   mlir::torch_frontend::registerTorchToMhloPipeline();
   mlir::torch_frontend::registerTorchscriptToTorchPipeline();
   mlir::torch_frontend::registerTorchFunctionToTorchPipeline();
@@ -44,6 +46,7 @@ int main(int argc, char **argv) {
   DialectRegistry registry;
 
   registerAllDialects(registry);
+  mlir::stablehlo::registerAllDialects(registry);
   registry.insert<mlir::mhlo::MhloDialect>();
   registry.insert<mlir::torch::Torch::TorchDialect>();
   registry.insert<mlir::torch::TorchConversion::TorchConversionDialect>();
