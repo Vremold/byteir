@@ -384,8 +384,8 @@ public:
                           effectiveAppendArgTypes);
 
     mlir::byre::ComputeOp computeOp =
-        rewriter.replaceOpWithNewOp<byre::ComputeOp>(op, key, operands,
-                                                     memoryEffectsAttr);
+        rewriter.replaceOpWithNewOp<byre::ComputeOp>(
+            op, TypeRange{}, key, operands, memoryEffectsAttr);
 
     // copy byre attr, and remove prefix
     SmallVector<NamedAttribute> attrs;
