@@ -22,7 +22,8 @@ function apply_patches() {
 function install_aitemplate() {
   pushd external/AITemplate/python
   python3 setup.py bdist_wheel
-  python3 -m pip install dist/*.whl --force-reinstall
+  python3 -m pip uninstall -y aitemplate
+  python3 -m pip install dist/*.whl
   popd
 }
 

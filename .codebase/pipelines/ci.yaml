@@ -71,7 +71,7 @@ jobs:
         commands:
           - bash .codebase/pipelines/runtime/build_and_test.sh --cuda --asan
   byteir_compiler_build_and_test_python:
-    name: byteir python test CI
+    name: byteir cat test CI
     runs-on:
       spec: m1.8xlarge
     image: hub.byted.org/compile/data.aml.byteir_cuda:debian11_v1
