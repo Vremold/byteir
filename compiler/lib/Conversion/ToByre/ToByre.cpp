@@ -1098,14 +1098,14 @@ static inline void relocateFuncOpResults(func::FuncOp func,
                                          bool removeDupOutputs) {
   unsigned idx = func.getNumArguments();
   replicateFuncOpResults(func, [&](func::ReturnOp retOp) {
-    std::unordered_map<mlir::Operation *, mlir::Value> allocOps;
+    std::unordered_map<mlir::Operation *, mlir::BlockArgument> allocOpsMap;
     mlir::OpBuilder opBuilder(retOp);
     for (auto retValIter : llvm::enumerate(retOp.getOperands())) {
       auto retVal = retValIter.value();
       auto allocOp = retVal.getDefiningOp<memref::AllocOp>();
       if (allocOp) {
-        if (allocOps.find(allocOp.getOperation()) == allocOps.end()) {
-          allocOps[allocOp.getOperation()] =
+        if (allocOpsMap.find(allocOp.getOperation()) == allocOpsMap.end()) {
+          allocOpsMap[allocOp.getOperation()] =
               func.getArgument(idx + retValIter.index());
         } else if (removeDupOutputs) {
           assert(false && "Not implemented: remove dup function outputs");
@@ -1115,17 +1115,33 @@ static inline void relocateFuncOpResults(func::FuncOp func,
           opBuilder.create<memref::CopyOp>(
               retOp.getLoc(), retVal,
               func.getArgument(idx + retValIter.index()));
+          // append byre.argalias to func op
+          func.setArgAttr(
+              idx + retValIter.index(),
+              ByreDialect::getEntryPointFuncArgAliasIndexAttrName(),
+              opBuilder.getI64IntegerAttr(
+                  allocOpsMap[allocOp.getOperation()].getArgNumber()));
         }
+      } else if (retVal.isa<BlockArgument>()) {
+        // if return value is input from entry function, insert a memref.copy
+        opBuilder.setInsertionPoint(retOp);
+        opBuilder.create<memref::CopyOp>(
+            retOp.getLoc(), retVal, func.getArgument(idx + retValIter.index()));
+        // append byre.argalias to func op
+        func.setArgAttr(idx + retValIter.index(),
+                        ByreDialect::getEntryPointFuncArgAliasIndexAttrName(),
+                        opBuilder.getI64IntegerAttr(
+                            retVal.cast<BlockArgument>().getArgNumber()));
       } else {
-        // if return value not alloced in entry function (like inputs or alloced
-        // in inner function), insert a memref.copy.
+        // if return value not alloced in entry function (like alloced in inner
+        // function), insert a memref.copy.
         opBuilder.setInsertionPoint(retOp);
         opBuilder.create<memref::CopyOp>(
             retOp.getLoc(), retVal, func.getArgument(idx + retValIter.index()));
       }
     }
     // replace alloc ops
-    for (auto op : allocOps) {
+    for (auto op : allocOpsMap) {
       auto value = op.first->getResult(0);
       value.replaceAllUsesWith(op.second);
       op.first->erase();

@@ -43,7 +43,7 @@ function prepare_for_runtime() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export no_proxy='*.byted.org'
-  git submodule update --init --recursive external/mlir-hlo external/cutlass external/date external/googletest external/pybind11
+  git submodule update --init --recursive -f external/mlir-hlo external/cutlass external/date external/googletest external/pybind11
   unset http_proxy; unset https_proxy; unset no_proxy
 
   download_llvm_prebuilt

@@ -62,7 +62,7 @@ module {
 
   func.func private @some_func_4() -> (memref<4xf32>) attributes { byre_compute_name = "customAddOp4" }
 
-// CHECK: func.func @return_dup_value(%[[ARG0:.*]]: memref<4xf32> {byre.argname = "C", byre.argtype = 2 : i32}, %[[ARG1:.*]]: memref<4xf32> {byre.argname = "D", byre.argtype = 2 : i32})
+// CHECK: func.func @return_dup_value(%[[ARG0:.*]]: memref<4xf32> {byre.argname = "C", byre.argtype = 2 : i32}, %[[ARG1:.*]]: memref<4xf32> {byre.arg_alias_index = 0 : i64, byre.argname = "D", byre.argtype = 2 : i32})
 // CHECK:   byre.compute @customAddOp4(%[[ARG0]])
 // CHECK:   memref.copy %[[ARG0]], %[[ARG1]] : memref<4xf32> to memref<4xf32>
 // CHECK:   return
@@ -71,7 +71,7 @@ module {
     return %arg0 : memref<4xf32>
   }
 
-// CHECK: func.func @return_input_value(%[[ARG0:.*]]: memref<4xf32> {byre.argname = "C", byre.argtype = 1 : i32}, %[[ARG1:.*]]: memref<4xf32> {byre.argname = "D", byre.argtype = 2 : i32})
+// CHECK: func.func @return_input_value(%[[ARG0:.*]]: memref<4xf32> {byre.argname = "C", byre.argtype = 1 : i32}, %[[ARG1:.*]]: memref<4xf32> {byre.arg_alias_index = 0 : i64, byre.argname = "D", byre.argtype = 2 : i32})
 // CHECK:   memref.copy %[[ARG0]], %[[ARG1]] : memref<4xf32> to memref<4xf32>
 // CHECK:   return
 
