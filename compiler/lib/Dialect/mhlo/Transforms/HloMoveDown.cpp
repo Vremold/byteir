@@ -180,8 +180,8 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
     }
 
     llvm::SetVector<Value> reshapeInsertOperands;
-    const auto isStaticArg = [](Value value) {
-      if (!value || value.getDefiningOp() != nullptr) {
+    const auto isStaticShapeArg = [](Value value) {
+      if (!value || !value.isa<BlockArgument>()) {
         return false;
       }
       const auto inputTy = value.getType().dyn_cast<RankedTensorType>();
@@ -221,7 +221,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
           // to avoid side-effect on other branches as it seems we dont
           // know benefits besides branch here.
           // TODO(@zhangzhiwei.177): shall we remove static restriction?
-          if (isStaticArg(operand)) {
+          if (isStaticShapeArg(operand)) {
             reshapeInsertOperands.insert(operand);
             continue;
           }
@@ -289,6 +289,8 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
         if (!shouldAddNewReshapeOp) {
           break;
         }
+        OpBuilder::InsertionGuard guard(rewriter);
+        rewriter.setInsertionPointAfterValue(input);
         auto newReshapeOp = rewriter.create<mhlo::ReshapeOp>(
             rewriter.getUnknownLoc(), afterReshapeType, input);
         newReshapeOp->setAttr(kMoveDownDisableKey, rewriter.getBoolAttr(true));
@@ -302,6 +304,7 @@ struct ReshapeMoveDownPattern : public HloMoveDownPattern<mhlo::ReshapeOp> {
       // maybeResultTypes should always have value
       assert(maybeResultTypes.has_value());
 
+      rewriter.setInsertionPointAfter(user);
       // clone an elementwise op as producer
       auto newProducer =
           cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
