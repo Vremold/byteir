@@ -43,8 +43,8 @@ struct FoldGenericOp : public OpRewritePattern<linalg::GenericOp> {
                                 PatternRewriter &rewriter) const override {
     if (genericOp.getOutputs().size() != 1 ||
         genericOp.getInputs().size() != 1) {
-      LLVM_DEBUG(DBGS() << "generic op's output and input size is not one.\n");
-      return failure();
+      return rewriter.notifyMatchFailure(
+          genericOp, "currently only support one input/output.");
     }
 
     // check init op
@@ -52,30 +52,31 @@ struct FoldGenericOp : public OpRewritePattern<linalg::GenericOp> {
     tensor::EmptyOp emptyOp = dyn_cast_or_null<tensor::EmptyOp>(initOp);
     linalg::FillOp fillOp = dyn_cast_or_null<linalg::FillOp>(initOp);
     if (!fillOp && !emptyOp) {
-      LLVM_DEBUG(DBGS() << "the init op is not of type tensor.empty or "
-                           "linalg.fill.\n");
-      return failure();
+      return rewriter.notifyMatchFailure(
+          genericOp,
+          "the init op is expected to be of type tensor.empty or linalg.fill.");
     }
     if (fillOp) {
       Value fillOutput = *fillOp.getOutputs().begin();
       tensor::EmptyOp secondEmptyOp =
           fillOutput.getDefiningOp<tensor::EmptyOp>();
       if (!secondEmptyOp) {
-        LLVM_DEBUG(DBGS() << "the fill op's init op is not of tensor.empty.\n");
-        return failure();
+        return rewriter.notifyMatchFailure(
+            genericOp,
+            "the fill op's init op is expected to be of type tensor.empty.");
       }
       if (fillOp.getInputs().size() != 1) {
-        LLVM_DEBUG(DBGS() << "the fill op's inputs size is not one.\n");
-        return failure();
+        return rewriter.notifyMatchFailure(
+            genericOp, "the fill op's inputs size is expected to be one.");
       }
       Attribute fillAttr;
       if (!matchPattern(*fillOp.getInputs().begin(), m_Constant(&fillAttr))) {
-        LLVM_DEBUG(DBGS() << "the fill op's input op is not a constant.\n");
-        return failure();
+        return rewriter.notifyMatchFailure(
+            genericOp, "the fill op's input op is expected to be a constant.");
       }
       if (!isZeroAttribute(fillAttr)) {
-        LLVM_DEBUG(DBGS() << "the fill op's constant value is not zero.\n");
-        return failure();
+        return rewriter.notifyMatchFailure(
+            genericOp, "the fill op's constant value is expected to be zero.");
       }
     }
 
