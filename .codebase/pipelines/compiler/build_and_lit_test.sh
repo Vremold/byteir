@@ -33,3 +33,8 @@ cmake "-H$PROJ_DIR/cmake" \
 cmake --build "$BUILD_DIR" --config Release --target all check-byteir install
 cmake --build "$BUILD_DIR" --target check-byteir-numerical
 cmake --build "$BUILD_DIR" --target byteir-python-pack
+
+# test byteir.compile
+pushd $ROOT_PROJ_DIR
+PYTHONPATH=./compiler/build/python_packages/byteir python3 -m byteir.tools.compiler ./compiler/test/E2E/MLPInference/input.mlir ./test.mlir --entry_func forward --verbose
+popd
