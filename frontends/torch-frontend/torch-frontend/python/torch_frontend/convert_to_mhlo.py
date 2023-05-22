@@ -24,6 +24,7 @@ def compile(
     example_inputs: Union[torch.Tensor, Sequence[torch.Tensor]],
     output_type: str,
     backend_legal_ops: Optional[Sequence[str]] = None,
+    verbose: bool = False,
 ):
     if output_type not in ["raw", "torch", "mhlo"]:
         raise NotImplemented("unsupported output type {}".format(output_type))
@@ -68,7 +69,7 @@ def convert_to_mhlo_via_torch_mlir(
         example_inputs,
         output_type=torch_mlir.OutputType.RAW,
         use_tracing=use_tracing,
-        verbose=verbose,
+        verbose=False,
     )
 
     with module.context:
