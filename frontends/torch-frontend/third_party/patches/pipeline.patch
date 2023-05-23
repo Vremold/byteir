@@ -1,8 +1,8 @@
 diff --git a/lib/Dialect/Torch/Transforms/Passes.cpp b/lib/Dialect/Torch/Transforms/Passes.cpp
-index 407e9024..6df54db2 100644
+index 407e9024..7af2f77e 100644
 --- a/lib/Dialect/Torch/Transforms/Passes.cpp
 +++ b/lib/Dialect/Torch/Transforms/Passes.cpp
-@@ -118,12 +118,14 @@ void mlir::torch::Torch::createTorchSimplificationPipeline(
+@@ -118,12 +118,16 @@ void mlir::torch::Torch::createTorchSimplificationPipeline(
    pm.addNestedPass<func::FuncOp>(Torch::createMaximizeValueSemanticsPass());
    // Update the return op to return value tensors.
    pm.addPass(Torch::createRefinePublicReturnPass());
@@ -19,6 +19,8 @@ index 407e9024..6df54db2 100644
 +    // promotion rules actually depend on the shape of the operand.
 +    createTorchShapeRefinementPipeline(pm, options);
 +    createTorchDtypeRefinementPipeline(pm, options);
++    pm.addNestedPass<func::FuncOp>(createCanonicalizerPass());
++    pm.addNestedPass<func::FuncOp>(Torch::createMaximizeValueSemanticsPass());
 +  }
    // Propagate to ABI return types the shape/dtype information discovered by
    // the previous pass. Doing this is ABI-compatible for our backends.

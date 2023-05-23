@@ -43,14 +43,12 @@ def compile(
 
     with module.context:
         option_string = "{backend-legal-ops=" + ",".join(backend_legal_ops) + "}"
-        pm = PassManager.parse(f"builtin.module(torchscript-to-torch-pipeline{option_string})")
-        pm.run(module.operation)
+        PassManager.parse(f"builtin.module(torchscript-to-torch-pipeline{option_string})").run(module.operation)
     if output_type == "torch":
         return module
 
     with module.context:
-        pm = PassManager.parse("builtin.module(torch-to-mhlo-pipeline)")
-        pm.run(module.operation)
+        PassManager.parse("builtin.module(torch-to-mhlo-pipeline)").run(module.operation)
     return module
 
 
@@ -74,11 +72,10 @@ def convert_to_mhlo_via_torch_mlir(
 
     with module.context:
         option_string = "{backend-legal-ops=" + ",".join(backend_legal_ops) + "}"
-        pm = PassManager.parse(f"builtin.module(torchscript-to-torch-pipeline{option_string})")
-        pm.run(module.operation)
+        PassManager.parse(f"builtin.module(torchscript-to-torch-pipeline{option_string})").run(module.operation)
 
     with module.context:
-        pm = PassManager.parse("builtin.module(torch-to-mhlo-pipeline)")
-        pm.run(module.operation)
+        PassManager.parse("builtin.module(torch-to-mhlo-pipeline)").run(module.operation)
+
     return module
 
