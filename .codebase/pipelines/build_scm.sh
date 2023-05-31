@@ -19,6 +19,7 @@ bash $ROOT_PROJ_DIR/.codebase/pipelines/runtime/build_and_test.sh --cuda --pytho
 CMAKE_BUILD_PARALLEL_LEVEL=4 bash $ROOT_PROJ_DIR/.codebase/pipelines/frontends/torch-frontend/build_with_prebuilt.sh
 
 mkdir $OUTPUT_DIR
+cp $ROOT_PROJ_DIR/external/AITemplate/python/dist/*.whl $OUTPUT_DIR/
 cp $ROOT_PROJ_DIR/compiler/build/python/dist/*.whl $OUTPUT_DIR/
 cp $ROOT_PROJ_DIR/runtime/build/python/_brt.so $OUTPUT_DIR/
 cp $ROOT_PROJ_DIR/runtime/build/lib/libbrt.so $OUTPUT_DIR/
