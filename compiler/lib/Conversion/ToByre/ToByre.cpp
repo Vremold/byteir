@@ -1203,7 +1203,8 @@ static inline void rewriteCallOpsForFuncOp(ArrayRef<func::CallOp> calls) {
 
   // remove all remove ops
   for (auto op : calls) {
-    op->erase();
+    if (!op->hasAttr(getByreCallOpReadonlyOperandNumAttrName()))
+      op->erase();
   }
 }
 

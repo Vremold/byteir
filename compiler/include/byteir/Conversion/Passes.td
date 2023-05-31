@@ -300,7 +300,6 @@ def MhloToCat : Pass<"mhlo-to-cat", "func::FuncOp"> {
   ];
 }
 
-
 //===----------------------------------------------------------------------===//
 // HloToByreTensor
 //===----------------------------------------------------------------------===//
@@ -353,9 +352,6 @@ def ConvertMemrefToByre : Pass<"memref-to-byre", "func::FuncOp"> {
   ];
 }
 
-
-
-
 //===----------------------------------------------------------------------===//
 // FuncToByre
 //===----------------------------------------------------------------------===//
@@ -375,5 +371,24 @@ def ConvertMemrefToByre : Pass<"memref-to-byre", "func::FuncOp"> {
 //   ];
 // }
 
+
+def MemrefCopyToLinalgPass :
+    Pass<"memrefcopy-to-linalg", "ModuleOp"> {
+  let summary = "Convert memref.copy to linalg op";
+  let constructor = "mlir::createMemrefCopyToLinalgPass()";
+  let dependentDialects = [
+    "mlir::linalg::LinalgDialect",
+    "mlir::memref::MemRefDialect",
+  ];
+
+  let options = [
+    Option<"anchorTag", "anchor-tag", "std::string",
+            /*default=*/"",
+            "Optional unitAttr anchored tag to apply this pass">,
+    Option<"attachAttr", "attach-attr", "std::string",
+            /*default=*/"",
+            "An optional unit attribute attaching on target functions: <attr_name>">,
+  ];
+}
 
 #endif // BYTEIR_CONVERSION_PASSES

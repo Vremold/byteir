@@ -12,6 +12,7 @@ add_mlir_library(ByteIRPipelines
   CatOpt.cpp
   CatPreprocess.cpp
   HloOpt.cpp
+  LinalgMemrefOpt.cpp
   LinalgTensorOpt.cpp
   SCFOpt.cpp
   ShapeOpt.cpp
