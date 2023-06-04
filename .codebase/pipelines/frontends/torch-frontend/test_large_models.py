@@ -13,8 +13,8 @@ from mhlo_tools.ir_executor import Interpreter
 from mhlo_tools.ir_executor.helper import mlir_attr_to_pyobj
 
 LARGE_MODEL_PATH = os.environ["TORCH_LARGE_MODEL_PATH"]
-MODEL_LIST = [("sar_relevance_cross_model_latest/28365.ts", True), 
-              ("tt_label3_0607/torch_model_1654572315533.jit.revert.ts", True),
+MODEL_LIST = [("sar_relevance_cross_model_latest/28365.ts", False), 
+              ("tt_label3_0607/torch_model_1654572315533.jit.revert.ts", False),
               ("swinv2_tiny/swinv2_tiny.pt", False),
               ("rtc1/torch_jit_1682337197499.jit.revert", False)]
 # MODEL_LIST = ["rtc/model.fixed.jit"]
@@ -53,10 +53,10 @@ def convert_to_mhlo_via_torch_mlir(jit_model_path, rewrite_fx):
     torch_outputs = ts_module(*sample_inputs)
     print(torch_outputs)
 
-    torch_frontend.register_decomposition_in_torchscript()
-    torch._C._jit_pass_inline(ts_module.graph)
-    torch._C._jit_pass_run_decompositions(ts_module.graph)
-    ts_module = reload_model(ts_module).eval()
+    # torch_frontend.register_decomposition_in_torchscript()
+    # torch._C._jit_pass_inline(ts_module.graph)
+    # torch._C._jit_pass_run_decompositions(ts_module.graph)
+    # ts_module = reload_model(ts_module).eval()
 
     if rewrite_fx:
         ts_module = fx_rewrite(ts_module, sample_inputs)
