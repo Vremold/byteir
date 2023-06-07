@@ -16,8 +16,8 @@ LARGE_MODEL_PATH = os.environ["TORCH_LARGE_MODEL_PATH"]
 MODEL_LIST = [("sar_relevance_cross_model_latest/28365.ts", False), 
               ("tt_label3_0607/torch_model_1654572315533.jit.revert.ts", False),
               ("swinv2_tiny/swinv2_tiny.pt", False),
-              ("rtc1/torch_jit_1682337197499.jit.revert", False)]
-# MODEL_LIST = ["rtc/model.fixed.jit"]
+              ("rtc1/torch_jit_1682337197499.jit.revert", False),
+              ("rtc/model.jit", False)]
 
 os.environ['TORCH_JIT_DISABLE_NEW_EXECUTOR'] = '1'
 torch._C._jit_set_nvfuser_enabled(False)
