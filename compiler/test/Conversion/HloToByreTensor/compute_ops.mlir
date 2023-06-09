@@ -37,6 +37,15 @@ func.func @test_mhlo_constant() -> tensor<4xi32> attributes {__placeholder__byre
 
 // -----
 
+func.func @test_ace_constant() -> tensor<!ace.string> attributes {__placeholder__byre.entry_point} {
+  %0 = "ace.constant"() {value = dense<"foo"> : tensor<!ace.string>} : () -> tensor<!ace.string>
+  return %0 : tensor<!ace.string>
+}
+// CHECK-LABEL: func.func @test_ace_constant
+//   CHECK: arith.constant
+
+// -----
+
 func.func @test_mhlo_reshape_0(%arg0 : tensor<2x3x4x5xf32>) -> tensor<6x20xf32> attributes {__placeholder__byre.entry_point} {
   %0 = mhlo.reshape %arg0 : (tensor<2x3x4x5xf32>) -> tensor<6x20xf32>
   return %0 : tensor<6x20xf32>

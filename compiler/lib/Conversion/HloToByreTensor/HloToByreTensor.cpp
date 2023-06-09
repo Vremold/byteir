@@ -115,12 +115,13 @@ public:
   }
 };
 
-class ConvertConstOp : public OpConversionPattern<mhlo::ConstantOp> {
+template <typename ConstOp>
+class ConvertConstLikeOp : public OpConversionPattern<ConstOp> {
 public:
-  using OpConversionPattern::OpConversionPattern;
+  using OpConversionPattern<ConstOp>::OpConversionPattern;
 
   LogicalResult
-  matchAndRewrite(mhlo::ConstantOp constOp, OpAdaptor /*adaptor*/,
+  matchAndRewrite(ConstOp constOp, typename ConstOp::Adaptor /*adaptor*/,
                   ConversionPatternRewriter &rewriter) const final {
     rewriter.replaceOpWithNewOp<arith::ConstantOp>(constOp, constOp.getType(),
                                                    constOp.getValue());
@@ -800,8 +801,10 @@ void mlir::populateHloToByreTensorPattern(
                ConvertSelectAndScatterOpToByrePattern>(patterns.getContext(),
                                                        appendArgTypes);
 
-  patterns.add<ConvertConstOp, ConvertReshapeOp, ConvertSliceOp>(
-      patterns.getContext());
+  patterns
+      .add<ConvertConstLikeOp<mhlo::ConstantOp>,
+           ConvertConstLikeOp<ace::ConstOp>, ConvertReshapeOp, ConvertSliceOp>(
+          patterns.getContext());
 }
 
 std::unique_ptr<OperationPass<func::FuncOp>>
