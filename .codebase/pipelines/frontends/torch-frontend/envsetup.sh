@@ -90,6 +90,7 @@ function download_large_models() {
   git lfs pull --include pytorch/swinv2_tiny/swinv2_tiny.pt
   git lfs pull --include pytorch/rtc1/torch_jit_1682337197499.jit.revert
   git lfs pull --include pytorch/rtc/model.jit
+  git lfs pull --include pytorch/moe_static/mm_mf_jingpai_12_1_moe_context_matx/torch_model_1660205850750.jit.3.revert
   popd
-  export TORCH_LARGE_MODEL_PATH=$ROOT_PROJ_DIR/../bdaimodels/pytorch
+  export TORCH_LARGE_MODEL_PATH=$ROOT_PROJ_DIR/../bdaimodels/
 }
