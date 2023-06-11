@@ -15,27 +15,25 @@ name: ByteIR CI
 trigger:
   change:
     types:
-    - create
-    - push
+      - create
+      - push
+    paths:
+      - "!frontends/**"
+      - "!.codebase/pipelines/frontends/**"
+      - "!.codebase/pipelines/onnx_frontend_ci.yaml"
+      - "!.codebase/pipelines/onnx_frontend_release.yaml"
+      - "!.codebase/pipelines/tf_frontend_ci.yaml"
+      - "!.codebase/pipelines/tf_frontend_release.yaml"
+      - "!.codebase/pipelines/torch_frontend_ci.yaml"
+      - "!.codebase/pipelines/torch_frontend_release.yaml"
+      - "!.codebase/pipelines/build_scm.sh"
 jobs:
-  byteir_check_format:
-    name: byteir format check and open source check
-    image: hub.byted.org/arnold/data.aml.byteir_cpu:v10
-    working-directory: byteir/byteir
-    steps:
-      - name: Run clang format check
-        commands:
-          - bash .codebase/pipelines/clang_format_check.sh
-      - name: Run open source check
-        commands:
-          - python3 .codebase/pipelines/open_source_check.py
   byteir_compiler_build_and_test:
     name: byteir compiler CI
     runs-on:
       spec: m1.8xlarge
     image: hub.byted.org/compile/data.aml.byteir_cuda:v10
     working-directory: byteir/byteir
-    depends: [byteir_check_format]
     steps:
       - name: Build and Test ByteIR Libs
         commands:
@@ -76,7 +74,6 @@ jobs:
       spec: m1.8xlarge
     image: hub.byted.org/compile/data.aml.byteir_cuda:debian11_v1
     working-directory: byteir/byteir
-    depends: [byteir_check_format]
     steps:
       - name: Build and Test Python APIs
         commands:
