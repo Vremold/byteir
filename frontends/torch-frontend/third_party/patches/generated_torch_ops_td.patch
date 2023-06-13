@@ -1,8 +1,38 @@
 diff --git a/include/torch-mlir/Dialect/Torch/IR/GeneratedTorchOps.td b/include/torch-mlir/Dialect/Torch/IR/GeneratedTorchOps.td
-index 3989bd63..23c2ed6c 100644
+index 3d7bee6d..89bf77b1 100644
 --- a/include/torch-mlir/Dialect/Torch/IR/GeneratedTorchOps.td
 +++ b/include/torch-mlir/Dialect/Torch/IR/GeneratedTorchOps.td
-@@ -11995,3 +11996,90 @@ def Torch_QuantizedLinearOp : Torch_Op<"quantized.linear", [
+@@ -18,6 +18,29 @@
+ //
+ //===----------------------------------------------------------------------===//
+ 
++def Torch_AtenCudaOp : Torch_Op<"aten.cuda", [
++    AllowsTypeRefinement,
++    ReadOnly
++  ]> {
++  let summary = "Generated op for `aten::cuda : (Tensor) -> (Tensor)`";
++  let arguments = (ins
++    AnyTorchTensorType:$self
++  );
++  let results = (outs
++    AnyTorchTensorType:$result
++  );
++  let hasCustomAssemblyFormat = 1;
++  let extraClassDefinition = [{
++    ParseResult AtenCudaOp::parse(OpAsmParser &parser, OperationState &result) {
++      return parseDefaultTorchOp(parser, result, 1, 1);
++    }
++    void AtenCudaOp::print(OpAsmPrinter &printer) {
++      printDefaultTorchOp(printer, *this, 1, 1);
++    }
++  }];
++  let hasCanonicalizer = 1;
++}
++
+ 
+ def Torch_AtenTanhOp : Torch_Op<"aten.tanh", [
+     AllowsTypeRefinement,
+@@ -12066,3 +12089,90 @@ def Torch_QuantizedLinearOp : Torch_Op<"quantized.linear", [
    }];
  }
  
