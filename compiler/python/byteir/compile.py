@@ -22,6 +22,7 @@ def compile_cuda(
 
     context = ir.Context()
     register_mhlo_dialect(context)
+    byteir.register_dialect_extensions(context)
     context.allow_unregistered_dialects = True
     with open(input, "r") as f:
         module = ir.Module.parse(f.read(), context)
