@@ -35,25 +35,30 @@ def GemmBiasAddConstraint
           CPred<"$0.getType().cast<ShapedType>().getShape()[0] == $1.getType().cast<ShapedType>().getShape()[1]">,
           "bias add constraint">;
 
-def MhloDotBiasToCatGemmBiasPattern
+def IsGemmRCRDimNum
+    : Constraint<
+          CPred<"$0.getLhsContractingDimensions().size() == 1 && $0.getRhsContractingDimensions().size() == 1 && $0.getLhsContractingDimensions()[0] == 1 && $0.getRhsContractingDimensions()[0] == 1 && $0.getLhsBatchingDimensions().size() == 0 && $0.getLhsBatchingDimensions().size() == 0">,
+          "is gemm rcr dimension">;
+
+def MhloDotGeneralBiasToCatGemmBiasPattern
     : Pat<(MHLO_AddOp
-            (MHLO_DotOp : $output
-              $lhs, $rhs, $precision_config),
+            (MHLO_DotGeneralOp : $output
+              $lhs, $rhs, $dimension_numbers, $precision_config),
             (MHLO_BroadcastInDimOp $bias, $dim)),
           (Cat_GemmBiasOp $lhs, $rhs, $bias,
-              (NativeCodeCall<"$_builder.getStringAttr(\"rrr\")">)),
-          [(OneRank $bias), (GemmBiasAddConstraint $bias, $output)]>;
+              (NativeCodeCall<"$_builder.getStringAttr(\"rcr\")">)),
+          [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (IsGemmRCRDimNum $dimension_numbers), (GemmBiasAddConstraint $bias, $output)]>;
 
-def MhloBiasDotToCatGemmBiasPattern
+def MhloBiasDotGeneralToCatGemmBiasPattern
     : Pat<(MHLO_AddOp
             (MHLO_BroadcastInDimOp $bias, $dim),
-            (MHLO_DotOp : $output
-              $lhs, $rhs, $precision_config)),
+            (MHLO_DotGeneralOp : $output
+              $lhs, $rhs, $dimension_numbers, $precision_config)),
           (Cat_GemmBiasOp $lhs, $rhs, $bias,
-              (NativeCodeCall<"$_builder.getStringAttr(\"rrr\")">)),
-          [(OneRank $bias), (GemmBiasAddConstraint $bias, $output)]>;
+              (NativeCodeCall<"$_builder.getStringAttr(\"rcr\")">)),
+          [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (IsGemmRCRDimNum $dimension_numbers), (GemmBiasAddConstraint $bias, $output)]>;
 
-def LayoutFromDotGeneralDimNums : NativeCodeCall<"GetLayoutFromDotGeneralDimNums($0, &$_builder)">;
+def LayoutFrom3DDotGeneralDimNums : NativeCodeCall<"GetLayoutFrom3DDotGeneralDimNums($0, &$_builder)">;
 
 def getBMMShapeDAttr : NativeCodeCall<"$_builder.getI64IntegerAttr($0.getType().cast<ShapedType>().getShape()[1])">;
 
@@ -65,17 +70,8 @@ def MhloDotGeneralReshapeToBMMPermutePattern
             ),
             $permute),
           (Cat_BMMPermuteOp $lhs, $rhs, (getBMMShapeDAttr $reshape_out),
-              (LayoutFromDotGeneralDimNums $dimension_numbers)),
+              (LayoutFrom3DDotGeneralDimNums $dimension_numbers)),
           [(ThreeRank $lhs), (ThreeRank $rhs), (FourSize $permute), (BMMPermuteCheck $permute)]>;
-
-def MhloDotGeneralBiasToCatGemmPattern
-    : Pat<(MHLO_AddOp
-            (MHLO_DotGeneralOp : $output
-              $lhs, $rhs, $dimension_numbers, $precision_config),
-            (MHLO_BroadcastInDimOp $bias, $dim)),
-          (Cat_GemmBiasOp $lhs, $rhs, $bias,
-            (LayoutFromDotGeneralDimNums $dimension_numbers)),
-          [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (GemmBiasAddConstraint $bias, $output)]>;
 
 // support only fuse nhwc layout
 def ConvBiasAddConstraint

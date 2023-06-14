@@ -470,6 +470,34 @@ void updateOpTypes(FuncOp func, ModuleOp m,
       }
     }
   }
+
+  // respect to function return type
+  for (auto &&retOp : func.getOps<ReturnOp>()) {
+    for (auto &&opOperand : retOp->getOpOperands()) {
+      auto operandType = opOperand.get().getType().dyn_cast<MemRefType>();
+      auto resultType = func.getFunctionType()
+                            .getResult(opOperand.getOperandNumber())
+                            .dyn_cast<MemRefType>();
+      if (!resultType || !operandType)
+        continue;
+
+      auto operandSpace = operandType.getMemorySpace();
+      auto resultSpace = resultType.getMemorySpace();
+
+      if (operandSpace == resultSpace)
+        continue;
+
+      CopyType_t copyKey = {opOperand.get(), resultSpace};
+      if (copyPairToCopyTargets.count(copyKey) == 0) {
+        auto newArg = createCopyInputArg(retOp, opOperand.get(), resultType,
+                                         resultSpace, copyPairToCopyTargets);
+        opOperand.set(newArg);
+      } else {
+        auto taget = copyPairToCopyTargets[copyKey];
+        opOperand.set(taget);
+      }
+    }
+  }
 }
 
 // set op within a funcOp f to space

@@ -1,8 +1,8 @@
 // RUN: byteir-opt -fuse-mhlo-to-cat --canonicalize --cse %s | FileCheck %s
 
-func.func @test_gemm_bias(%arg0: tensor<2x2048xf32>, %arg1: tensor<2048x1001xf32>) -> tensor<2x1001xf32> {
+func.func @test_gemm_bias(%arg0: tensor<2x2048xf32>, %arg1: tensor<1001x2048xf32>) -> tensor<2x1001xf32> {
     %0 = mhlo.constant dense<1.0> : tensor<1001xf32>
-    %1 = "mhlo.dot"(%arg0, %arg1) : (tensor<2x2048xf32>, tensor<2048x1001xf32>) -> tensor<2x1001xf32>
+    %1 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_contracting_dimensions = [1], rhs_contracting_dimensions = [1]>} : (tensor<2x2048xf32>, tensor<1001x2048xf32>) -> tensor<2x1001xf32>
     %2 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<1001xf32>) -> tensor<2x1001xf32>
     %3 = mhlo.add %1, %2 : tensor<2x1001xf32>
     return %3 : tensor<2x1001xf32>

@@ -35,8 +35,8 @@ namespace mlir {
 namespace {
 
 mlir::StringAttr
-GetLayoutFromDotGeneralDimNums(mlir::mhlo::DotDimensionNumbersAttr dims,
-                               Builder *builder) {
+GetLayoutFrom3DDotGeneralDimNums(mlir::mhlo::DotDimensionNumbersAttr dims,
+                                 Builder *builder) {
   auto ldims = dims.getLhsContractingDimensions();
   auto rdims = dims.getRhsContractingDimensions();
   assert(ldims.size() == 1 && rdims.size() == 1);

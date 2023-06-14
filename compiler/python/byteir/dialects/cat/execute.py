@@ -33,13 +33,13 @@ if __name__ == "__main__":
 
         processor = IRProcessor(args.name, args.workdir)
         processor.load_from_file(args.mhlo_path)
-        processor.preprocess_pass(args.dump_ir)
         
         if args.bypass_byteir:
             processor.cat_opt_pass(anchor_only=True, dump_ir=args.dump_ir)
             if not args.dump_ir:
                 processor.benchmark(backend=args.backend, num_trials=100)
         else:
+            processor.preprocess_pass(args.dump_ir)
             # convert mhlo to cat
             processor.cat_opt_pass(anchor_only=False, dump_ir=args.dump_ir)
             # clustering
