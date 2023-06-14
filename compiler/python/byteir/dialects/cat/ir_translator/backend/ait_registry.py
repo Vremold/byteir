@@ -195,6 +195,20 @@ def _dispatch_cat_gemm_bias(op, inputs):
     else:
         raise RuntimeError("unsupported gemm_bias layout")
 
+@AITemplateIRTranslator.register("cat.bmm_add")
+def _dispatch_cat_bmm_add(op, inputs):
+    layout = mlir_attr_to_pyobj(op.attributes["layout"])
+    if layout == "rrr":
+        ait_op = ait_ops.bmm_rrr_add()
+        Y = ait_op(inputs[0], inputs[1], inputs[2])
+        return [Y]
+    elif layout == "rcr":
+        ait_op = ait_ops.bmm_rcr_add()
+        Y = ait_op(inputs[0], inputs[1], inputs[2])
+        return [Y]
+    else:
+        raise RuntimeError("unsupported bmm_add layout")
+
 @AITemplateIRTranslator.register("cat.bmm_permute")
 def _dispatch_cat_bmm_permute(op, inputs):
     layout = mlir_attr_to_pyobj(op.attributes["layout"])

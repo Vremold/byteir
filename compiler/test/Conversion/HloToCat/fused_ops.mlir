@@ -11,6 +11,20 @@ func.func @test_gemm_bias(%arg0: tensor<2x2048xf32>, %arg1: tensor<1001x2048xf32
 // CHECK: func.func
 // CHECK-NEXT: mhlo.constant
 // CHECK-NEXT: cat.gemm_bias
+// CHECK-NEXT: return
+
+func.func @test_gemm_bias_1(%arg0: tensor<2x2048xf32>, %arg1: tensor<2048x1001xf32>) -> tensor<2x1001xf32> {
+    %0 = mhlo.constant dense<1.0> : tensor<1001xf32>
+    %1 = "mhlo.dot"(%arg0, %arg1) : (tensor<2x2048xf32>, tensor<2048x1001xf32>) -> tensor<2x1001xf32>
+    %2 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<1001xf32>) -> tensor<2x1001xf32>
+    %3 = mhlo.add %2, %1 : tensor<2x1001xf32>
+    return %3 : tensor<2x1001xf32>
+}
+
+// CHECK: func.func @test_gemm_bias_1
+// CHECK-NEXT: mhlo.constant
+// CHECK-NEXT: cat.gemm_bias
+// CHECK-NEXT: return
 
 func.func @test_conv_bias(%arg0: tensor<2x28x28x256xf32>, %arg1: tensor<256x3x3x256xf32>) -> tensor<2x14x14x256xf32> {
     %0 = mhlo.constant dense<1.0> : tensor<256xf32>
@@ -34,4 +48,24 @@ func.func @test_bmm_permute(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x25
 
 // CHECK: func.func
 // CHECK-NEXT: cat.bmm_permute
+// CHECK-NEXT: return
+
+func.func @test_bmm_add_0(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>, %arg2: tensor<384x256x64xf32>) -> tensor<384x256x64xf32> {
+    %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<384x256x256xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
+    %1 = mhlo.add %0, %arg2 : (tensor<384x256x64xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
+    return %1 : tensor<384x256x64xf32>
+}
+
+// CHECK: func.func @test_bmm_add_0
+// CHECK-NEXT: cat.bmm_add
+// CHECK-NEXT: return
+
+func.func @test_bmm_add_1(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>, %arg2: tensor<384x256x64xf32>) -> tensor<384x256x64xf32> {
+    %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<384x256x256xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
+    %1 = mhlo.add %arg2, %0 : (tensor<384x256x64xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
+    return %1 : tensor<384x256x64xf32>
+}
+
+// CHECK: func.func @test_bmm_add_1
+// CHECK-NEXT: cat.bmm_add
 // CHECK-NEXT: return

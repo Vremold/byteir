@@ -68,6 +68,7 @@ public:
     ConversionTarget target(ctx);
     auto funcOp = getOperation();
 
+    target.addLegalOp<cat::BMMAddOp>();
     target.addLegalOp<cat::BMMPermuteOp>();
     target.addLegalOp<cat::GemmBiasOp>();
     target.addLegalOp<cat::Conv2dBiasOp>();

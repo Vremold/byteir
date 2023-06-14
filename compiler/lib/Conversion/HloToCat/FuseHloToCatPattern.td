@@ -58,11 +58,29 @@ def MhloBiasDotGeneralToCatGemmBiasPattern
               (NativeCodeCall<"$_builder.getStringAttr(\"rcr\")">)),
           [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (IsGemmRCRDimNum $dimension_numbers), (GemmBiasAddConstraint $bias, $output)]>;
 
+def MhloBiasDotToCatGemmBiasPattern
+    : Pat<(MHLO_AddOp
+            (MHLO_BroadcastInDimOp $bias, $dim),
+            (MHLO_DotOp : $output
+              $lhs, $rhs, $precision_config)),
+          (Cat_GemmBiasOp $lhs, $rhs, $bias, 
+              (NativeCodeCall<"$_builder.getStringAttr(\"rrr\")">)),
+          [(OneRank $bias), (GemmBiasAddConstraint $bias, $output)]>;
+
+def MhloDotBiasToCatGemmBiasPattern
+    : Pat<(MHLO_AddOp
+            (MHLO_DotOp : $output
+              $lhs, $rhs, $precision_config),
+            (MHLO_BroadcastInDimOp $bias, $dim)),
+          (Cat_GemmBiasOp $lhs, $rhs, $bias, 
+              (NativeCodeCall<"$_builder.getStringAttr(\"rrr\")">)),
+          [(OneRank $bias), (GemmBiasAddConstraint $bias, $output)]>;
+
 def LayoutFrom3DDotGeneralDimNums : NativeCodeCall<"GetLayoutFrom3DDotGeneralDimNums($0, &$_builder)">;
 
 def getBMMShapeDAttr : NativeCodeCall<"$_builder.getI64IntegerAttr($0.getType().cast<ShapedType>().getShape()[1])">;
 
-def MhloDotGeneralReshapeToBMMPermutePattern
+def MhloDotGeneralReshapeTransposeToBMMPermutePattern
     : Pat<(MHLO_TransposeOp
             (MHLO_ReshapeOp : $reshape_out
               (MHLO_DotGeneralOp : $bmm_out
@@ -72,6 +90,22 @@ def MhloDotGeneralReshapeToBMMPermutePattern
           (Cat_BMMPermuteOp $lhs, $rhs, (getBMMShapeDAttr $reshape_out),
               (LayoutFrom3DDotGeneralDimNums $dimension_numbers)),
           [(ThreeRank $lhs), (ThreeRank $rhs), (FourSize $permute), (BMMPermuteCheck $permute)]>;
+
+def MhloDotGeneralAddToBMMAddPattern
+    : Pat<(MHLO_AddOp
+            (MHLO_DotGeneralOp : $output
+              $lhs, $rhs, $dimension_numbers, $precision_config),
+            $add),
+          (Cat_BMMAddOp $lhs, $rhs, $add, (LayoutFrom3DDotGeneralDimNums $dimension_numbers)),
+          [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add)]>;
+
+def MhloAddDotGeneralToBMMAddPattern
+    : Pat<(MHLO_AddOp
+            $add,
+            (MHLO_DotGeneralOp : $output
+              $lhs, $rhs, $dimension_numbers, $precision_config)),
+          (Cat_BMMAddOp $lhs, $rhs, $add, (LayoutFrom3DDotGeneralDimNums $dimension_numbers)),
+          [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add)]>;
 
 // support only fuse nhwc layout
 def ConvBiasAddConstraint

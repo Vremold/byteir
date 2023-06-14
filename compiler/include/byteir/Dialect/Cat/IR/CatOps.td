@@ -101,8 +101,17 @@ def Cat_BatchMatmulOp : Cat_Op<"batch_matmul", [Cat_CatOpInterface, Pure]> {
   let hasVerifier = 1;
 }
 
+def Cat_BMMAddOp : Cat_Op<"bmm_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       AnyTensor : $add,
+                       StrAttr : $layout);
+  let results = (outs AnyTensor : $output);
+}
+
 def Cat_BMMPermuteOp : Cat_Op<"bmm_permute", [Cat_CatOpInterface, Pure]> {
-  let summary = "flash attention operator";
+  let summary = "batch matmul + permute operator";
   let arguments = (ins AnyTensor : $lhs,
                        AnyTensor : $rhs,
                        I64Attr : $shape,
