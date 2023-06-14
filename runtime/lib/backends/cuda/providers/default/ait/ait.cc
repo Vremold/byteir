@@ -82,7 +82,6 @@ AITOpKernel::AITOpKernel(const OpKernelInfo &info) : OpKernel(info) {
     inputShapes.push_back(shape);
     inputDtypes.push_back(dtype);
   }
-  aitOutputShapesOut.reserve(numOutputs);
   for (size_t i = 0; i < numOutputs; ++i) {
     AITemplateParamShape shape;
     AITemplateDtype dtype;
@@ -90,8 +89,6 @@ AITOpKernel::AITOpKernel(const OpKernelInfo &info) : OpKernel(info) {
     AIT_ERROR_CHECK(getOutputDtypeFunc_(aitModelHdl, i, &dtype));
     outputShapes.push_back(shape);
     outputDtypes.push_back(dtype);
-    auto shape_ptr = std::make_unique<int64_t[]>(shape.size);
-    aitOutputShapesOut.push_back(shape_ptr.get());
   }
 }
 
@@ -123,7 +120,7 @@ common::Status AITOpKernel::RunImpl(const ExecutionContext &ctx) {
   AIT_ERROR_CHECK(runFunc_(
       aitModelHdl, inputs, numInputs, outputs, numOutputs,
       reinterpret_cast<AITemplateStreamHandle>(work_queue->GetComputeStream()),
-      false /* sync */, false /* graph_mode*/, aitOutputShapesOut.data()));
+      false /* sync */, false /* graph_mode*/, nullptr /* output shape */));
   return Status::OK();
 }
 
