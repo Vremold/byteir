@@ -1,4 +1,7 @@
 function download_llvm_prebuilt() {
+  export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
+  export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
+  export no_proxy='*.byted.org'
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
     LLVM_BUILD="llvm_install_225d255a583ea3d50bbba49d949ca76be6a880bf.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
@@ -9,6 +12,7 @@ function download_llvm_prebuilt() {
     fi
     LLVM_INSTALL_DIR="${PWD}/llvm_build"
   fi
+  unset http_proxy; unset https_proxy; unset no_proxy
 }
 
 function apply_patches() {

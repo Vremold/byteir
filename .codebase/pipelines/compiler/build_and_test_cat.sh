@@ -16,7 +16,11 @@ INSTALL_DIR="$BUILD_DIR/byre_install"
 source $CUR_DIR/../prepare.sh
 prepare_for_compiler
 
+export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
+export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
+export no_proxy='*.byted.org'
 python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.9-cp39-cp39-linux_x86_64.whl
+unset http_proxy; unset https_proxy; unset no_proxy
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
