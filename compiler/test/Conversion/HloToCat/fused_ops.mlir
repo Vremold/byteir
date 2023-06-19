@@ -10,7 +10,7 @@ func.func @test_gemm_bias(%arg0: tensor<2x2048xf32>, %arg1: tensor<1001x2048xf32
 
 // CHECK: func.func
 // CHECK-NEXT: mhlo.constant
-// CHECK-NEXT: cat.gemm_bias
+// CHECK-NEXT: cat.gemm_rcr_bias
 // CHECK-NEXT: return
 
 func.func @test_gemm_bias_1(%arg0: tensor<2x2048xf32>, %arg1: tensor<2048x1001xf32>) -> tensor<2x1001xf32> {
@@ -23,7 +23,7 @@ func.func @test_gemm_bias_1(%arg0: tensor<2x2048xf32>, %arg1: tensor<2048x1001xf
 
 // CHECK: func.func @test_gemm_bias_1
 // CHECK-NEXT: mhlo.constant
-// CHECK-NEXT: cat.gemm_bias
+// CHECK-NEXT: cat.gemm_rrr_bias
 // CHECK-NEXT: return
 
 func.func @test_conv_bias(%arg0: tensor<2x28x28x256xf32>, %arg1: tensor<256x3x3x256xf32>) -> tensor<2x14x14x256xf32> {
@@ -69,3 +69,36 @@ func.func @test_bmm_add_1(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x
 // CHECK: func.func @test_bmm_add_1
 // CHECK-NEXT: cat.bmm_add
 // CHECK-NEXT: return
+
+
+func.func @test_dot(%arg0: tensor<16384x1152xf32>, %arg1: tensor<1152x384xf32>) -> tensor<16384x384xf32> {
+    %1 = "mhlo.dot"(%arg0, %arg1) : (tensor<16384x1152xf32>, tensor<1152x384xf32>) -> tensor<16384x384xf32>
+    return %1 : tensor<16384x384xf32>
+}
+
+// CHECK: func.func @test_dot
+// CHECK-NEXT: cat.gemm_rrr
+// CHECK-NEXT: return
+
+func.func @test_transpose_dot(%arg0: tensor<16384x1152xf32>, %arg1: tensor<384x1152xf32>) -> tensor<16384x384xf32> {
+    %0 = "mhlo.transpose"(%arg1) {permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<384x1152xf32>) -> tensor<1152x384xf32>
+    %1 = "mhlo.dot"(%arg0, %0) : (tensor<16384x1152xf32>, tensor<1152x384xf32>) -> tensor<16384x384xf32>
+    return %1 : tensor<16384x384xf32>
+}
+
+// CHECK: func.func @test_transpose_dot
+// CHECK-NEXT: cat.gemm_rcr
+// CHECK-NEXT: return
+
+func.func @test_transpose_dot_broadcast_add(%arg0: tensor<16384x1152xf32>, %arg1: tensor<384x1152xf32>, %arg2: tensor<384xf32>) -> tensor<16384x384xf32> {
+    %0 = "mhlo.transpose"(%arg1) {permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<384x1152xf32>) -> tensor<1152x384xf32>
+    %1 = "mhlo.dot"(%arg0, %0) : (tensor<16384x1152xf32>, tensor<1152x384xf32>) -> tensor<16384x384xf32>
+    %2 = "mhlo.broadcast_in_dim"(%arg2) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<384xf32>) -> tensor<16384x384xf32>
+    %3 = "mhlo.add"(%1, %2) : (tensor<16384x384xf32>, tensor<16384x384xf32>) -> tensor<16384x384xf32>
+    return %3 : tensor<16384x384xf32>
+}
+
+// CHECK: func.func @test_transpose_dot_broadcast_add
+// CHECK-NEXT: cat.gemm_rcr_bias
+// CHECK-NEXT: return
+
