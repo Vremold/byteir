@@ -238,7 +238,9 @@ def MemoryPlanning: Pass<"memory-planning", "mlir::func::FuncOp"> {
   ];
   let options = [
     Option<"alignment", "alignment", "size_t", /*default=*/"1",
-           "Memory address alignment, must be power of 2">
+           "Memory address alignment, must be power of 2">,
+    Option<"alloca", "alloca", "bool", /*default=*/"false",
+           "Whether to planning on memref.alloca ops">,
   ];
 }
 
