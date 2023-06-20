@@ -34,23 +34,3 @@ index b30200fc..c1161f69 100644
  }
  
  OpFoldResult DerefineOp::fold(FoldAdaptor adaptor) {
-@@ -2413,6 +2434,19 @@ void PrimDeviceOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
- }
- 
- //===----------------------------------------------------------------------===//
-+// AtenCudaOp
-+//===----------------------------------------------------------------------===//
-+
-+void AtenCudaOp::getCanonicalizationPatterns(RewritePatternSet &patterns,
-+                                             MLIRContext *context) {
-+  patterns.add(+[](AtenCudaOp op, PatternRewriter &rewriter) {
-+    auto inputTensor = op.getSelf();
-+    rewriter.replaceOp(op, inputTensor);
-+    return success();
-+  });
-+}
-+
-+//===----------------------------------------------------------------------===//
- // AtenIntTensorOp
- //===----------------------------------------------------------------------===//
- 
