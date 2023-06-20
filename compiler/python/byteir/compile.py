@@ -1,8 +1,7 @@
 import byteir
 from byteir import ir
 from byteir.passmanager import PassManager
-from byteir.dialects.cat import register_cat_dialect, IRProcessor
-from byteir.dialects.mhlo import register_mhlo_dialect
+from byteir.dialects.cat import IRProcessor
 from pathlib import Path
 import os
 
@@ -23,9 +22,7 @@ def compile_cuda(
     output_file_name = os.path.basename(output)
 
     context = ir.Context()
-    register_mhlo_dialect(context)
-    byteir.register_dialect_extensions(context)
-    context.allow_unregistered_dialects = True
+
     with open(input, "r") as f:
         module = ir.Module.parse(f.read(), context)
         if verbose:
@@ -75,14 +72,11 @@ def compile_cuda(
     # create device context and module
     module_str = module.operation.get_asm(print_generic_op_form=True)
     with ir.Context() as new_context:
-        register_mhlo_dialect(new_context)
-        new_context.allow_unregistered_dialects = True
         device_module = ir.Module.parse(module_str, new_context)
         PassManager.parse("builtin.module(nvvm-codegen)").run(device_module.operation)
         if verbose:
             _print_verbose(device_module, "// IR Dump After NVVM Codegen:")
         # write to output device ptx
-        byteir.register_translation_dialects(new_context)
         byteir.translate_to_ptx(device_module.operation, output_file_dir + "/" + output_file_name)
 
     with context:
@@ -107,10 +101,6 @@ def compile_cuda_with_ait(
     output_file_name = os.path.basename(output)
 
     context = ir.Context()
-    register_mhlo_dialect(context)
-    register_cat_dialect(context)
-    byteir.register_dialect_extensions(context)
-    context.allow_unregistered_dialects = True
 
     entry_func_str = "entry-func={}".format(entry_func)
     target_str = "target={}".format(target)
@@ -182,14 +172,11 @@ def compile_cuda_with_ait(
     # create device context and module
     module_str = processor.module.operation.get_asm(print_generic_op_form=True)
     with ir.Context() as new_context:
-        register_mhlo_dialect(new_context)
-        new_context.allow_unregistered_dialects = True
         device_module = ir.Module.parse(module_str, new_context)
         PassManager.parse("builtin.module(nvvm-codegen)").run(device_module.operation)
         if verbose:
             _print_verbose(device_module, "// IR Dump After NVVM Codegen:")
         # write to output device ptx
-        byteir.register_translation_dialects(new_context)
         byteir.translate_to_ptx(device_module.operation, output_file_dir + "/" + output_file_name)
 
     with context:
