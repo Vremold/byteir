@@ -76,7 +76,7 @@ func.func @test_dot(%arg0: tensor<16384x1152xf32>, %arg1: tensor<1152x384xf32>) 
     return %1 : tensor<16384x384xf32>
 }
 
-// CHECK: func.func @test_dot
+// CHECK-LABEL: func.func @test_dot
 // CHECK-NEXT: cat.gemm_rrr
 // CHECK-NEXT: return
 
@@ -86,7 +86,7 @@ func.func @test_transpose_dot(%arg0: tensor<16384x1152xf32>, %arg1: tensor<384x1
     return %1 : tensor<16384x384xf32>
 }
 
-// CHECK: func.func @test_transpose_dot
+// CHECK-LABEL: func.func @test_transpose_dot
 // CHECK-NEXT: cat.gemm_rcr
 // CHECK-NEXT: return
 
@@ -98,7 +98,24 @@ func.func @test_transpose_dot_broadcast_add(%arg0: tensor<16384x1152xf32>, %arg1
     return %3 : tensor<16384x384xf32>
 }
 
-// CHECK: func.func @test_transpose_dot_broadcast_add
+// CHECK-LABEL: func.func @test_transpose_dot_broadcast_add
 // CHECK-NEXT: cat.gemm_rcr_bias
 // CHECK-NEXT: return
 
+func.func @test_softmax(%arg0: tensor<64x6x256x256xf32>) -> tensor<64x6x256x256xf32> {
+    %0 = "mhlo.custom_call"(%arg0) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = 3 : i64}, call_target_name = "byteir.softmax", called_computations = [], has_side_effect = false} : (tensor<64x6x256x256xf32>) -> tensor<64x6x256x256xf32>
+    return %0 : tensor<64x6x256x256xf32>
+}
+
+// CHECK-LABEL: func.func @test_softmax
+// CHECK-NEXT: cat.softmax
+// CHECK-NEXT: return
+
+func.func @test_layer_norm(%arg0: tensor<8x32x128xf32>, %arg1: tensor<128xf32>, %arg2: tensor<128xf32>) -> (tensor<8x32x128xf32>) {
+  %0 = "mhlo.custom_call"(%arg0, %arg1, %arg2) {api_version = 1 : i32, backend_config = "", byteir_attrs = {axis = [2], epsilon = 9.9999999747524271E-7 : f64}, call_target_name = "byteir.layer_norm", called_computations = [], has_side_effect = false} : (tensor<8x32x128xf32>, tensor<128xf32>, tensor<128xf32>) -> tensor<8x32x128xf32>
+  return %0 : tensor<8x32x128xf32>
+}
+
+// CHECK-LABEL: func.func @test_layer_norm
+// CHECK-NEXT: cat.layernorm
+// CHECK-NEXT: return
