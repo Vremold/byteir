@@ -15,12 +15,21 @@ function download_llvm_prebuilt() {
   unset http_proxy; unset https_proxy; unset no_proxy
 }
 
-function apply_patches() {
+function apply_mhlo_patches() {
   pushd $ROOT_PROJ_DIR/external/mlir-hlo
   git clean -fd .
   for patch in $ROOT_PROJ_DIR/external/patches/mlir-hlo/*; do
     git apply $patch
   done
+}
+
+function apply_aitemplate_patches() {
+  pushd $ROOT_PROJ_DIR/external/AITemplate
+  git clean -fd .
+  for patch in $ROOT_PROJ_DIR/external/patches/AITemplate/*; do
+    git apply $patch
+  done
+  popd
 }
 
 function install_aitemplate() {
@@ -38,7 +47,7 @@ function prepare_for_compiler() {
   git submodule update --init --recursive external/mlir-hlo external/AITemplate
   unset http_proxy; unset https_proxy; unset no_proxy
 
-  # apply_patches
+  apply_aitemplate_patches
   download_llvm_prebuilt
   install_aitemplate
 }
