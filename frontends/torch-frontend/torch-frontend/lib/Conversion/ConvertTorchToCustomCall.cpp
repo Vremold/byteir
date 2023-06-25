@@ -19,6 +19,7 @@
 #include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
+#include "stablehlo/dialect/StablehloOps.h"
 #include "torch-frontend/Utils/CustomCallUtil.h"
 #include "torch-mlir/Conversion/TorchToStablehlo/StablehloLegalizeUtils.h"
 #include "torch-mlir/Conversion/TorchToStablehlo/TorchToStablehlo.h"
@@ -229,13 +230,38 @@ public:
                                    .cast<RankedTensorType>();
     Value input =
         promoteType(op->getLoc(), adaptor.getInput(), outType, rewriter);
-    Value weight =
-        promoteType(op->getLoc(), adaptor.getWeight(), outType, rewriter);
-    Value bias =
-        promoteType(op->getLoc(), adaptor.getBias(), outType, rewriter);
+    Value weight = adaptor.getWeight();
+    Value bias = adaptor.getBias();
+    auto inputTy = input.getType().cast<RankedTensorType>();
+    auto inputElemTy = inputTy.getElementType();
+    Value channelDim =
+        rewriter.create<mlir::tensor::DimOp>(op->getLoc(), input, 1);
+    Value channelShape = rewriter.create<mlir::tensor::FromElementsOp>(
+        op->getLoc(), ValueRange{channelDim});
+    auto biasType = bias.getType();
+    if (biasType.isa<mlir::NoneType>() || biasType.isa<Torch::NoneType>()) {
+      bias = hlo::getConstantOfShape(
+          rewriter, op->getLoc(),
+          {APFloat::getZero(
+              inputElemTy.cast<mlir::FloatType>().getFloatSemantics(),
+              /*negative=*/false)},
+          channelShape,
+          RankedTensorType::get({inputTy.getShape()[1]}, inputElemTy));
+    }
+    auto weightType = weight.getType();
+    if (weightType.isa<mlir::NoneType>() || weightType.isa<Torch::NoneType>()) {
+      weight = hlo::getConstantOfShape(
+          rewriter, op->getLoc(),
+          {APFloat::getAllOnesValue(
+              inputElemTy.cast<mlir::FloatType>().getFloatSemantics())},
+          channelShape,
+          RankedTensorType::get({inputTy.getShape()[1]}, inputElemTy));
+    }
+    bias = promoteType(op->getLoc(), bias, outType, rewriter);
+    weight = promoteType(op->getLoc(), weight, outType, rewriter);
+
     SmallVector<Value> bufferArgs({input, weight, bias});
     RankedTensorType inType = input.getType().cast<RankedTensorType>();
-
     double epsValue;
     if (!matchPattern(op.getEps(), m_TorchConstantFloat(&epsValue))) {
       return op.emitError("eps must be a scalar constant");
@@ -269,10 +295,10 @@ public:
                        rewriter.getStringAttr(getLayerNormName()));
     attrs.emplace_back(rewriter.getStringAttr(getCustomCallAttrName()),
                        rewriter.getDictionaryAttr(byteir_attrs));
-
     auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
         op->getLoc(), outType, bufferArgs, ArrayRef<NamedAttribute>{attrs});
     rewriter.replaceOp(op, customCallOp->getResults());
+
     return success();
   }
 };
@@ -788,6 +814,7 @@ public:
     registry.insert<mhlo::MhloDialect>();
     registry.insert<arith::ArithDialect>();
     registry.insert<tensor::TensorDialect>();
+    registry.insert<stablehlo::StablehloDialect>();
     TorchConversion::getBackendTypeConversionDependentDialects(registry);
   }
 
@@ -795,7 +822,8 @@ public:
     MLIRContext *context = &getContext();
     ConversionTarget target(*context);
     target.addLegalDialect<Torch::TorchDialect, mhlo::MhloDialect,
-                           arith::ArithDialect, tensor::TensorDialect>();
+                           arith::ArithDialect, tensor::TensorDialect,
+                           stablehlo::StablehloDialect>();
 
     TypeConverter typeConverter;
     typeConverter.addConversion([](Type type) { return type; });
