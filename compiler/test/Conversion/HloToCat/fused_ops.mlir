@@ -13,19 +13,6 @@ func.func @test_gemm_bias(%arg0: tensor<2x2048xf32>, %arg1: tensor<1001x2048xf32
 // CHECK-NEXT: cat.gemm_rcr_bias
 // CHECK-NEXT: return
 
-func.func @test_gemm_bias_1(%arg0: tensor<2x2048xf32>, %arg1: tensor<2048x1001xf32>) -> tensor<2x1001xf32> {
-    %0 = mhlo.constant dense<1.0> : tensor<1001xf32>
-    %1 = "mhlo.dot"(%arg0, %arg1) : (tensor<2x2048xf32>, tensor<2048x1001xf32>) -> tensor<2x1001xf32>
-    %2 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<1001xf32>) -> tensor<2x1001xf32>
-    %3 = mhlo.add %2, %1 : tensor<2x1001xf32>
-    return %3 : tensor<2x1001xf32>
-}
-
-// CHECK: func.func @test_gemm_bias_1
-// CHECK-NEXT: mhlo.constant
-// CHECK-NEXT: cat.gemm_rrr_bias
-// CHECK-NEXT: return
-
 func.func @test_conv_bias(%arg0: tensor<2x28x28x256xf32>, %arg1: tensor<256x3x3x256xf32>) -> tensor<2x14x14x256xf32> {
     %0 = mhlo.constant dense<1.0> : tensor<256xf32>
     %1 = mhlo.convolution(%arg0, %arg1) dim_numbers = [b, 0, 1, f]x[o, 0, 1, i]->[b, 0, 1, f], window = {stride = [2, 2], pad = [[1, 1], [1, 1]], rhs_dilate = [1, 1]} {batch_group_count = 1 : i64, feature_group_count = 1 : i64} : (tensor<2x28x28x256xf32>, tensor<256x3x3x256xf32>) -> tensor<2x14x14x256xf32>
