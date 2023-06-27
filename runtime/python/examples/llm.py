@@ -53,11 +53,13 @@ def main():
         req.bind_arg(offset, outputs[-1].data_ptr())
 
     req.finish_io_binding()
-    t0 = time.time()
-    req.run()
-    req.sync()
-    t1 = time.time()
-    print("E2E execution time {} ms".format((t1 - t0) * 1000))
+    for trial_id in range(10):
+        t0 = time.time()
+        req.run()
+        req.sync()
+        t1 = time.time()
+        if trial_id > 0:
+            print("Trial {}: E2E execution time {} ms".format(trial_id, (t1 - t0) * 1000))
 
 
 if __name__ == "__main__":
