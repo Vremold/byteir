@@ -110,12 +110,21 @@ def Cat_BMMAddOp : Cat_Op<"bmm_add", [Cat_CatOpInterface, Pure]> {
   let results = (outs AnyTensor : $output);
 }
 
-def Cat_BMMPermuteOp : Cat_Op<"bmm_permute", [Cat_CatOpInterface, Pure]> {
+def Cat_BMMRRRPermuteOp : Cat_Op<"bmm_rrr_permute", [Cat_CatOpInterface, Pure]> {
   let summary = "batch matmul + permute operator";
   let arguments = (ins AnyTensor : $lhs,
                        AnyTensor : $rhs,
-                       I64Attr : $shape,
-                       StrAttr : $layout);
+                       I64Attr : $shape);
+  let results = (outs AnyTensor : $output);
+
+  let hasVerifier = 1;
+}
+
+def Cat_BMMRCRPermuteOp : Cat_Op<"bmm_rcr_permute", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + permute operator";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       I64Attr : $shape);
   let results = (outs AnyTensor : $output);
 
   let hasVerifier = 1;

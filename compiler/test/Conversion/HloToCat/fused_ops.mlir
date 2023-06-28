@@ -26,15 +26,27 @@ func.func @test_conv_bias(%arg0: tensor<2x28x28x256xf32>, %arg1: tensor<256x3x3x
 // CHECK-NEXT: cat.conv2d_bias
 // CHECK-NEXT: return
 
-func.func @test_bmm_permute(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>) -> tensor<64x256x6x64xf32> {
+func.func @test_bmm_rrr_permute(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>) -> tensor<64x256x6x64xf32> {
     %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<384x256x256xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
     %1 = mhlo.reshape %0 : (tensor<384x256x64xf32>) -> tensor<64x6x256x64xf32>
     %2 = "mhlo.transpose"(%1) {permutation = dense<[0, 2, 1, 3]> : tensor<4xi64>} : (tensor<64x6x256x64xf32>) -> tensor<64x256x6x64xf32>
     return %2 : tensor<64x256x6x64xf32>
 }
 
-// CHECK: func.func
-// CHECK-NEXT: cat.bmm_permute
+// CHECK-LABEL: func.func @test_bmm_rrr_permute
+// CHECK-NEXT: cat.bmm_rrr_permute
+// CHECK-NEXT: return
+
+func.func @test_bmm_rcr_permute(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x64x256xf32>) -> tensor<64x256x6x64xf32> {
+    %0 = "mhlo.transpose"(%arg1) {permutation = dense<[0, 2, 1]> : tensor<3xi64>} : (tensor<384x64x256xf32>) -> tensor<384x256x64xf32>
+    %1 = "mhlo.dot_general"(%arg0, %0) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<384x256x256xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
+    %2 = mhlo.reshape %1 : (tensor<384x256x64xf32>) -> tensor<64x6x256x64xf32>
+    %3 = "mhlo.transpose"(%2) {permutation = dense<[0, 2, 1, 3]> : tensor<4xi64>} : (tensor<64x6x256x64xf32>) -> tensor<64x256x6x64xf32>
+    return %3 : tensor<64x256x6x64xf32>
+}
+
+// CHECK-LABEL: func.func @test_bmm_rcr_permute
+// CHECK-NEXT: cat.bmm_rcr_permute
 // CHECK-NEXT: return
 
 func.func @test_bmm_add_0(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>, %arg2: tensor<384x256x64xf32>) -> tensor<384x256x64xf32> {

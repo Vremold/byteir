@@ -205,20 +205,19 @@ def _dispatch_cat_bmm_add(op, inputs):
     else:
         raise RuntimeError("unsupported bmm_add layout")
 
-@AITemplateIRTranslator.register("cat.bmm_permute")
-def _dispatch_cat_bmm_permute(op, inputs):
-    layout = mlir_attr_to_pyobj(op.attributes["layout"])
+@AITemplateIRTranslator.register("cat.bmm_rrr_permute")
+def _dispatch_cat_bmm_rrr_permute(op, inputs):
     d1 = mlir_attr_to_pyobj(op.attributes["shape"])
-    if layout == "rrr":
-        ait_op = ait_ops.bmm_rrr_permute(shape=(d1,))
-        Y = ait_op(inputs[0], inputs[1])
-        return [Y]
-    elif layout == "rcr":
-        ait_op = ait_ops.bmm_rcr_permute(shape=(d1,))
-        Y = ait_op(inputs[0], inputs[1])
-        return [Y]
-    else:
-        raise RuntimeError("unsupported bmm_permute layout")
+    ait_op = ait_ops.bmm_rrr_permute(shape=(d1,))
+    Y = ait_op(inputs[0], inputs[1])
+    return [Y]
+
+@AITemplateIRTranslator.register("cat.bmm_rcr_permute")
+def _dispatch_cat_bmm_rcr_permute(op, inputs):
+    d1 = mlir_attr_to_pyobj(op.attributes["shape"])
+    ait_op = ait_ops.bmm_rcr_permute(shape=(d1,))
+    Y = ait_op(inputs[0], inputs[1])
+    return [Y]
 
 @AITemplateIRTranslator.register("cat.softmax")
 def _dispatch_cat_softmax(op, inputs):
