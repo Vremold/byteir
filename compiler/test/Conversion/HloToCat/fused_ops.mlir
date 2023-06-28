@@ -118,3 +118,33 @@ func.func @test_layer_norm(%arg0: tensor<8x32x128xf32>, %arg1: tensor<128xf32>, 
 // CHECK-LABEL: func.func @test_layer_norm
 // CHECK-NEXT: cat.layernorm
 // CHECK-NEXT: return
+
+func.func @test_bmm_rrr(%arg0: tensor<96x1024x256xf32>, %arg1: tensor<96x256x1024xf32>) -> (tensor<96x1024x1024xf32>) {
+  %1 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<96x1024x256xf32>, tensor<96x256x1024xf32>) -> tensor<96x1024x1024xf32>
+  return %1: tensor<96x1024x1024xf32>
+}
+
+// CHECK-LABEL: func.func @test_bmm_rrr
+// CHECK-NEXT: cat.bmm_rrr
+// CHECK-NEXT: return
+
+
+func.func @test_bmm_rcr(%arg0: tensor<96x1024x256xf32>, %arg1: tensor<96x1024x256xf32>) -> (tensor<96x1024x1024xf32>) {
+  %0 = "mhlo.transpose"(%arg1) {permutation = dense<[0, 2, 1]> : tensor<3xi64>} : (tensor<96x1024x256xf32>) -> tensor<96x256x1024xf32>
+  %1 = "mhlo.dot_general"(%arg0, %0) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<96x1024x256xf32>, tensor<96x256x1024xf32>) -> tensor<96x1024x1024xf32>
+  return %1: tensor<96x1024x1024xf32>
+}
+
+// CHECK-LABEL: func.func @test_bmm_rcr
+// CHECK-NEXT: cat.bmm_rcr
+// CHECK-NEXT: return
+
+func.func @test_bmm_crr(%arg0: tensor<96x256x1024xf32>, %arg1: tensor<96x256x1024xf32>) -> (tensor<96x1024x1024xf32>) {
+  %0 = "mhlo.transpose"(%arg0) {permutation = dense<[0, 2, 1]> : tensor<3xi64>} : (tensor<96x256x1024xf32>) -> tensor<96x1024x256xf32>
+  %1 = "mhlo.dot_general"(%0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<96x1024x256xf32>, tensor<96x256x1024xf32>) -> tensor<96x1024x1024xf32>
+  return %1: tensor<96x1024x1024xf32>
+}
+
+// CHECK-LABEL: func.func @test_bmm_crr
+// CHECK-NEXT: cat.bmm_crr
+// CHECK-NEXT: return
