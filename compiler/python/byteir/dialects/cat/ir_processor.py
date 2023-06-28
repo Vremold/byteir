@@ -37,9 +37,12 @@ class IRProcessor:
                 self._dump_ir("{}.mhlo.simplified.mlir".format(self.job_name))
         return self.module
 
-    def hlo_opt_pass(self, dump_ir=False):
+    def hlo_opt_pass(self, outline_single_elemwise_op=False, dump_ir=False):
         with self.module.context:
-            pass_arg = "builtin.module(hlo-opt{outline-cat-op})"
+            if outline_single_elemwise_op:
+                pass_arg = "builtin.module(hlo-opt{outline-single-elemwise-op outline-cat-op})"
+            else:
+                pass_arg = "builtin.module(hlo-opt{outline-cat-op})"
             pm = PassManager.parse(pass_arg)
             pm.run(self.module.operation)
             if dump_ir:
@@ -98,7 +101,7 @@ class IRProcessor:
         builder = self._get_builder(module=module, subgraph_name=subgraph_name, backend=backend)
         return builder.execute(inputs)
 
-    def benchmark(self, backend="ait", num_trials=10):
+    def benchmark(self, backend="ait", num_trials=5):
         module = self.module.body.operations[0]
         subgraph_name = module.name.value
         builder = self._get_builder(module=module, subgraph_name=subgraph_name, backend=backend)
