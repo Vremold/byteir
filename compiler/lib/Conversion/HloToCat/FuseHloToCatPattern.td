@@ -46,7 +46,7 @@ def IsGemmRCRDimNum
           CPred<"$0.getLhsContractingDimensions().size() == 1 && $0.getRhsContractingDimensions().size() == 1 && $0.getLhsContractingDimensions()[0] == 1 && $0.getRhsContractingDimensions()[0] == 1 && $0.getLhsBatchingDimensions().size() == 0 && $0.getLhsBatchingDimensions().size() == 0">,
           "is gemm rcr dimension">;
 
-def MhloDotGeneralBiasToCatGemmBiasPattern
+def MhloDotGeneralBiasToCatGemmRCRBiasPattern
     : Pat<(MHLO_AddOp
             (MHLO_DotGeneralOp : $output
               $lhs, $rhs, $dimension_numbers, $precision_config),
@@ -54,13 +54,29 @@ def MhloDotGeneralBiasToCatGemmBiasPattern
           (Cat_GemmRCRBiasOp $lhs, $rhs, $bias),
           [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (IsGemmRCRDimNum $dimension_numbers), (GemmBiasAddConstraint $bias, $output)]>;
 
-def MhloBiasDotGeneralToCatGemmBiasPattern
+def MhloBiasDotGeneralToCatGemmRCRBiasPattern
     : Pat<(MHLO_AddOp
             (MHLO_BroadcastInDimOp $bias, $dim),
             (MHLO_DotGeneralOp : $output
               $lhs, $rhs, $dimension_numbers, $precision_config)),
           (Cat_GemmRCRBiasOp $lhs, $rhs, $bias),
           [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (IsGemmRCRDimNum $dimension_numbers), (GemmBiasAddConstraint $bias, $output)]>;
+
+def MhloAddCatGemmRCRBiasToCatGemmRCRBiasPattern
+    : Pat<(MHLO_AddOp
+            (Cat_GemmRCROp : $output
+              $lhs, $rhs),
+            (MHLO_BroadcastInDimOp $bias, $dim)),
+          (Cat_GemmRCRBiasOp $lhs, $rhs, $bias),
+          [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (GemmBiasAddConstraint $bias, $output)]>;
+
+def MhloBiasCatGemmRCRAddToCatGemmRCRBiasPattern
+    : Pat<(MHLO_AddOp
+            (MHLO_BroadcastInDimOp $bias, $dim),
+            (Cat_GemmRCROp : $output
+              $lhs, $rhs)),
+          (Cat_GemmRCRBiasOp $lhs, $rhs, $bias),
+          [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (GemmBiasAddConstraint $bias, $output)]>;
 
 
 // these patterns are commented because gemm_rrr_bias op is not supported by AIT

@@ -148,3 +148,14 @@ func.func @test_bmm_crr(%arg0: tensor<96x256x1024xf32>, %arg1: tensor<96x256x102
 // CHECK-LABEL: func.func @test_bmm_crr
 // CHECK-NEXT: cat.bmm_crr
 // CHECK-NEXT: return
+
+func.func @test_gemm_rcr_broadcast_add(%arg0: tensor<8192x768xf32>, %arg1: tensor<2304x768xf32>, %arg2: tensor<2304xf32>) -> tensor<8192x2304xf32> {
+    %0 = "cat.gemm_rcr"(%arg0, %arg1) : (tensor<8192x768xf32>, tensor<2304x768xf32>) -> tensor<8192x2304xf32>
+    %1 = "mhlo.broadcast_in_dim"(%arg2) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<2304xf32>) -> tensor<8192x2304xf32>
+    %2 = "mhlo.add"(%0, %1) : (tensor<8192x2304xf32>, tensor<8192x2304xf32>) -> tensor<8192x2304xf32>
+    return %2: tensor<8192x2304xf32>
+}
+
+// CHECK-LABEL: func.func @test_gemm_rcr_broadcast_add
+// CHECK-NEXT: cat.gemm_rcr_bias
+// CHECK-NEXT: return
