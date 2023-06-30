@@ -159,3 +159,16 @@ func.func @test_gemm_rcr_broadcast_add(%arg0: tensor<8192x768xf32>, %arg1: tenso
 // CHECK-LABEL: func.func @test_gemm_rcr_broadcast_add
 // CHECK-NEXT: cat.gemm_rcr_bias
 // CHECK-NEXT: return
+
+func.func @test_gemm_crr(%arg0: tensor<256x1024xf32>, %arg1: tensor<256x1024xf32>) -> (tensor<1024x1024xf32>) {
+  %0 = "mhlo.transpose"(%arg0) {permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<256x1024xf32>) -> tensor<1024x256xf32>
+  %1 = "mhlo.dot"(%0, %arg1) : (tensor<1024x256xf32>, tensor<256x1024xf32>) -> tensor<1024x1024xf32>
+  return %1: tensor<1024x1024xf32>
+}
+
+// CHECK-LABEL: func.func @test_gemm_crr
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: cat.bmm_crr
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: return
