@@ -315,4 +315,13 @@ def TrivialFusion : Pass<"fuse-trivial", "mlir::func::FuncOp"> {
   let constructor = "mlir::createTrivialFusionPass()";
 }
 
+//===----------------------------------------------------------------------===//
+// Unfuse BatchNorm
+//===----------------------------------------------------------------------===//
+
+def UnfuseBatchNorm : Pass<"unfuse-batch-norm", "mlir::func::FuncOp"> {
+  let summary = "unfuse batch norm into multiplication and addition";
+  let constructor = "mlir::createUnfuseBatchNormPass()";
+}
+
 #endif // BYTEIR_DIALECT_MHLO_PASSES
