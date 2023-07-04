@@ -44,7 +44,7 @@ function prepare_for_compiler() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export no_proxy='*.byted.org'
-  git submodule update --init --recursive external/mlir-hlo external/AITemplate
+  git submodule update --init --recursive -f external/mlir-hlo external/AITemplate
   unset http_proxy; unset https_proxy; unset no_proxy
 
   apply_aitemplate_patches
