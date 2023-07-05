@@ -11,7 +11,19 @@ PROJ_DIR="$ROOT_PROJ_DIR/frontends/onnx-frontend"
 
 source $CUR_DIR/envsetup.sh
 
-download_llvm_prebuilt_rtti
+US_DEV=false
+while getopts ":d" opt; do
+    case $opt in
+        d)
+            US_DEV=true
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            ;;
+    esac
+done
+
+download_llvm_prebuilt_rtti $US_DEV
 of_envsetup
 of_build
 of_test_lit

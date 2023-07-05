@@ -7,7 +7,19 @@ CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 source $CUR_DIR/envsetup.sh
 
-download_llvm_prebuilt
+US_DEV=false
+while getopts ":d" opt; do
+    case $opt in
+        d)
+            US_DEV=true
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            ;;
+    esac
+done
+
+download_llvm_prebuilt $US_DEV
 prepare_for_build_with_prebuilt
 
 pushd $PROJ_DIR

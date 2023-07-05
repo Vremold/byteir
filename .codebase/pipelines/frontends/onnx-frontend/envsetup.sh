@@ -12,7 +12,11 @@ function download_llvm_prebuilt_rtti() {
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install_rtti*
       rm -rf llvm_build_rtti
-      wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD" -q
+      if [[ $1 = false ]]; then
+        wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD" -q
+      else
+        http_proxy='http://sys-proxy-rd-relay.byted.org:8118' https_proxy='http://sys-proxy-rd-relay.byted.org:8118' wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD" -q
+      fi
       tar xzf "$LLVM_BUILD"
     fi
     LLVM_INSTALL_DIR="${PWD}/llvm_build_rtti"

@@ -3,6 +3,7 @@
 set -e
 
 BRT_TEST=ON
+US_DEV=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -21,6 +22,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-test)
       BRT_TEST=OFF
+      shift
+      ;;
+    -d)
+      US_DEV=true
       shift
       ;;
     *)
@@ -48,7 +53,7 @@ BRT_ENABLE_PYTHON_BINDINGS=${BRT_ENABLE_PYTHON_BINDINGS:-OFF}
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
 
 source $CUR_DIR/../prepare.sh
-prepare_for_runtime
+prepare_for_runtime $US_DEV
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"

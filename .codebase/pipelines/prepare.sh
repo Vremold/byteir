@@ -1,18 +1,18 @@
 function download_llvm_prebuilt() {
-  export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
-  export no_proxy='*.byted.org'
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
     LLVM_BUILD="llvm_install_225d255a583ea3d50bbba49d949ca76be6a880bf.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install*
       rm -rf llvm_build
-      wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD" -q
+      if [[ $1 == false ]]; then
+        wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD" -q
+      else
+        http_proxy='http://sys-proxy-rd-relay.byted.org:8118' https_proxy='http://sys-proxy-rd-relay.byted.org:8118' wget "http://tosv.byted.org/obj/turing/byteir/$LLVM_BUILD" -q
+      fi
       tar xzf "$LLVM_BUILD"
     fi
     LLVM_INSTALL_DIR="${PWD}/llvm_build"
   fi
-  unset http_proxy; unset https_proxy; unset no_proxy
 }
 
 function apply_mhlo_patches() {
@@ -48,7 +48,7 @@ function prepare_for_compiler() {
   unset http_proxy; unset https_proxy; unset no_proxy
 
   apply_aitemplate_patches
-  download_llvm_prebuilt
+  download_llvm_prebuilt $1
   install_aitemplate
 }
 
@@ -59,5 +59,5 @@ function prepare_for_runtime() {
   git submodule update --init --recursive -f external/mlir-hlo external/cutlass external/date external/googletest external/pybind11
   unset http_proxy; unset https_proxy; unset no_proxy
 
-  download_llvm_prebuilt
+  download_llvm_prebuilt $1
 }
