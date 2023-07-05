@@ -11,9 +11,8 @@ export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
 export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
 export no_proxy='*.byted.org'
 
-python3 -m pip install --extra-index-url https://download.pytorch.org/whl/nightly/cu118 --pre torch==2.1.0.dev20230619+cu118
-
 pushd $PROJ_DIR
+python3 -m pip install -r ./torch-requirements.txt
 PYTHONPATH=./build/python_packages/ python3 -m pytest torch-frontend/python/test
 popd
 
