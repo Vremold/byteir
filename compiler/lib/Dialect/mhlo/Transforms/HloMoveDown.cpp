@@ -703,15 +703,13 @@ private:
             {static_cast<long int>(broadcastDimensions.size())},
             rewriter.getI64Type()),
         broadcastDimensions);
+
+    // insert broadcast exactly after binnaryCommonOperand
+    OpBuilder::InsertionGuard guard(rewriter);
+    rewriter.setInsertionPointAfterValue(binaryCommonOperand);
     auto broadcastOp = rewriter.create<mhlo::BroadcastInDimOp>(
         rewriter.getUnknownLoc(), afterBroadcastType, binaryCommonOperand,
         newBcastAttr);
-    auto *binaryCommonDefiningOp = binaryCommonOperand.getDefiningOp();
-    if (binaryCommonDefiningOp &&
-        binaryCommonDefiningOp->getBlock() == broadcastOp->getBlock() &&
-        broadcastOp->isBeforeInBlock(binaryCommonDefiningOp)) {
-      broadcastOp->moveAfter(binaryCommonDefiningOp);
-    }
     return broadcastOp;
   }
 
@@ -736,14 +734,19 @@ private:
     // maybeResultTypes should always have value
     assert(maybeResultTypes.has_value());
 
-    auto newProducer =
-        cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
-    for (auto operand : newProducer->getOperands()) {
-      const auto parentOp = operand.getDefiningOp();
-      if (parentOp && newProducer->isBeforeInBlock(parentOp)) {
-        newProducer->moveAfter(parentOp);
+    // insert sliceUser op after both slice opreand and newBroadcastOp
+    OpBuilder::InsertionGuard guard(rewriter);
+    rewriter.setInsertionPointAfterValue(slices[0]->getOperand(0));
+    if (newBroadcastOp) {
+      if (llvm::isa<BlockArgument>(slices[0]->getOperand(0))) {
+        rewriter.setInsertionPointAfter(newBroadcastOp);
+      } else if (slices[0]->getOperand(0).getDefiningOp()->isBeforeInBlock(
+                     newBroadcastOp)) {
+        rewriter.setInsertionPointAfter(newBroadcastOp);
       }
     }
+    auto newProducer =
+        cloneAndReplaceResultTypes(rewriter, user, bvm, *maybeResultTypes);
     newProducer->setLoc(rewriter.getUnknownLoc());
     return newProducer;
   }
@@ -766,21 +769,14 @@ private:
     // step 3: perform move down
     for (size_t i = 0; i < slices.size(); i++) {
       auto op = slices[i];
-      mhlo::SliceOp slice = dyn_cast<mhlo::SliceOp>(*op);
-      assert(slice);
+      mhlo::SliceOp slice = cast<mhlo::SliceOp>(op);
       auto user = sliceUsers[i];
-      // create slice op
+      // create slice op at every user's insertion point
+      OpBuilder::InsertionGuard guard(rewriter);
+      rewriter.setInsertionPointAfter(user);
       auto sliceOp = rewriter.replaceOpWithNewOp<mhlo::SliceOp>(
           user, user->getResultTypes(), newProducer->getResult(0),
           slice.getStartIndices(), slice.getLimitIndices(), slice.getStrides());
-      if (sliceOp->isBeforeInBlock(newProducer)) {
-        sliceOp->moveAfter(newProducer);
-      }
-      for (auto user : sliceOp.getResult().getUsers()) {
-        if (user->isBeforeInBlock(sliceOp)) {
-          user->moveAfter(sliceOp);
-        }
-      }
     }
     return success();
   }
