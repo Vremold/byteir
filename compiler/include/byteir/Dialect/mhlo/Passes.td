@@ -211,6 +211,15 @@ def HloMoveDown : Pass<"hlo-move-down", "mlir::func::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// SliceMoveDownAndMerge
+//===----------------------------------------------------------------------===//
+
+def SliceMoveDownAndMerge : Pass<"slice-move-down-and-merge", "mlir::func::FuncOp"> {
+  let summary = "Slice move down and merge branch";
+  let constructor = "mlir::createSliceMoveDownAndMergePass()";
+}
+
+//===----------------------------------------------------------------------===//
 // HloMoveUp
 //===----------------------------------------------------------------------===//
 
