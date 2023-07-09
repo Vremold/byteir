@@ -702,7 +702,8 @@ mlir::mhlo::foldConcatWithSlicesAndRehape(mhlo::ConcatenateOp op,
       newConcatInput.push_back(op.getOperand(i));
     }
     newConcatInput.push_back(newReshapeOp.getResult());
-    for (unsigned i = index + opOperandList.size(); i < index; i++) {
+    for (unsigned i = index + opOperandList.size(); i < op.getNumOperands();
+         i++) {
       newConcatInput.push_back(op.getOperand(i));
     }
 
