@@ -6,11 +6,27 @@ import os
 
 BYTEIR_CAT_ATTR = "__byteir_cat_fusion__"
 
+def func_hash_str(func):
+    hash_str = ""
+    ops = func.entry_block.operations
+    for op in ops:
+        op_name = op.operation.name
+        # op name
+        hash_str += op_name
+        # args
+        hash_str += "("
+        for operand in op.operands:
+            hash_str += f"{operand.type},"
+        hash_str += ")"
+    return hash_str
+
 class IRProcessor:
     def __init__(self, job_name, workdir):
         self.job_name = job_name
         self.workdir = workdir
         self.module = None
+        self.enable_ait_reuse = True
+        self.ait_reuse_dict = {} # key: hash key, value: Tuple(dll_name, ait_module_path)
 
     def _get_builder(self, module, subgraph_name, backend="ait"):
         assert module != None
@@ -72,11 +88,26 @@ class IRProcessor:
         for func in self.module.body.operations:
             if BYTEIR_CAT_ATTR not in func.attributes:
                 continue
-            builder = self._get_builder(module=func, subgraph_name=func.name.value, backend="ait")
-            builder.benchmark()
-            funcNameArg += func.name.value + ","
-            aitLibPathArg += builder.dll_name + ","
-            dllPaths.append(builder.ait_module_path)
+            if self.enable_ait_reuse:
+                hash_str = func_hash_str(func)
+                hash_key = hash(hash_str)
+                if hash_key in self.ait_reuse_dict:
+                    funcNameArg += func.name.value + ","
+                    aitLibPathArg += self.ait_reuse_dict[hash_key][0] + ","
+                    dllPaths.append(self.ait_reuse_dict[hash_key][1])
+                else:
+                    builder = self._get_builder(module=func, subgraph_name=func.name.value, backend="ait")
+                    builder.benchmark()
+                    funcNameArg += func.name.value + ","
+                    aitLibPathArg += builder.dll_name + ","
+                    dllPaths.append(builder.ait_module_path)
+                    self.ait_reuse_dict[hash_key] = (builder.dll_name, builder.ait_module_path)
+            else:
+                builder = self._get_builder(module=func, subgraph_name=func.name.value, backend="ait")
+                builder.benchmark()
+                funcNameArg += func.name.value + ","
+                aitLibPathArg += builder.dll_name + ","
+                dllPaths.append(builder.ait_module_path)
         
         with self.module.context:
             pm = PassManager.parse("builtin.module(func.func(gen-ait-config{{func-names={} ait-lib-paths={}}}))".format(funcNameArg, aitLibPathArg))
