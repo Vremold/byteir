@@ -78,24 +78,6 @@ def MhloBiasCatGemmRCRAddToCatGemmRCRBiasPattern
           (Cat_GemmRCRBiasOp $lhs, $rhs, $bias),
           [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (GemmBiasAddConstraint $bias, $output)]>;
 
-
-// these patterns are commented because gemm_rrr_bias op is not supported by AIT
-// def MhloBiasDotToCatGemmBiasPattern
-//     : Pat<(MHLO_AddOp
-//             (MHLO_BroadcastInDimOp $bias, $dim),
-//             (MHLO_DotOp : $output
-//               $lhs, $rhs, $precision_config)),
-//           (Cat_GemmRRRBiasOp $lhs, $rhs, $bias),
-//           [(OneRank $bias), (GemmBiasAddConstraint $bias, $output)]>;
-
-// def MhloDotBiasToCatGemmBiasPattern
-//     : Pat<(MHLO_AddOp
-//             (MHLO_DotOp : $output
-//               $lhs, $rhs, $precision_config),
-//             (MHLO_BroadcastInDimOp $bias, $dim)),
-//           (Cat_GemmRRRBiasOp $lhs, $rhs, $bias),
-//           [(OneRank $bias), (GemmBiasAddConstraint $bias, $output)]>;
-
 def LayoutFrom3DDotGeneralDimNums : NativeCodeCall<"GetLayoutFrom3DDotGeneralDimNums($0, &$_builder)">;
 
 def getBMMShapeDAttr : NativeCodeCall<"$_builder.getI64IntegerAttr($0.getType().cast<ShapedType>().getShape()[1])">;
@@ -186,20 +168,61 @@ def MhloTransposeDotToGemmRCRPattern
 // Mhlo Dot Broadcast Add To Cat GemmRRRBias Pattern
 //===----------------------------------------------------------------------===//
 
-// this pattern is commented because gemm_rrr_bias op is not supported by AIT
-// def MhloDotBroadcastAddToGemmRRRBiasPattern
-//     : Pat<(MHLO_AddOp
-//             (Cat_GemmRRROp $lhs, $rhs),
-//             (MHLO_BroadcastInDimOp $bias, $dim)),
-//           (Cat_GemmRRRBiasOp 
-//             $lhs, 
-//             $rhs, 
-//             $bias),
-//           [ (TwoRank $lhs), 
-//             (TwoRank $rhs),
-//             (OneRank $bias),
-//             (OneSize $dim),
-//             (BiasBroadcastDimCheck $dim) ]>;
+def MhloDotBroadcastAddToGemmRRRBiasPattern
+    : Pat<(MHLO_AddOp
+            (MHLO_DotOp $lhs, $rhs, $precision),
+            (MHLO_BroadcastInDimOp $bias, $dim)),
+          (Cat_GemmRRRBiasOp 
+            $lhs, 
+            $rhs, 
+            $bias),
+          [ (TwoRank $lhs), 
+            (TwoRank $rhs),
+            (OneRank $bias),
+            (OneSize $dim),
+            (BiasBroadcastDimCheck $dim) ]>;
+
+def MhloDotAddBroadcastToGemmRRRBiasPattern
+    : Pat<(MHLO_AddOp
+            (MHLO_BroadcastInDimOp $bias, $dim),
+            (MHLO_DotOp $lhs, $rhs, $precision)),
+          (Cat_GemmRRRBiasOp 
+            $lhs, 
+            $rhs, 
+            $bias),
+          [ (TwoRank $lhs), 
+            (TwoRank $rhs),
+            (OneRank $bias),
+            (OneSize $dim),
+            (BiasBroadcastDimCheck $dim) ]>;
+
+def CatGemmRRRBroadcastAddToGemmRRRBiasPattern
+    : Pat<(MHLO_AddOp
+            (Cat_GemmRRROp $lhs, $rhs),
+            (MHLO_BroadcastInDimOp $bias, $dim)),
+          (Cat_GemmRRRBiasOp 
+            $lhs, 
+            $rhs, 
+            $bias),
+          [ (TwoRank $lhs), 
+            (TwoRank $rhs),
+            (OneRank $bias),
+            (OneSize $dim),
+            (BiasBroadcastDimCheck $dim) ]>;
+
+def CatGemmRRRAddBroadcastToGemmRRRBiasPattern
+    : Pat<(MHLO_AddOp
+            (MHLO_BroadcastInDimOp $bias, $dim),
+            (Cat_GemmRRROp $lhs, $rhs)),
+          (Cat_GemmRRRBiasOp 
+            $lhs, 
+            $rhs, 
+            $bias),
+          [ (TwoRank $lhs), 
+            (TwoRank $rhs),
+            (OneRank $bias),
+            (OneSize $dim),
+            (BiasBroadcastDimCheck $dim) ]>;
 
 //===----------------------------------------------------------------------===//
 // Mhlo Transpose Dot Broadcast Add To Cat GemmRCRBias Pattern
@@ -239,6 +262,26 @@ def MhloAddDotGeneralToBMMAddPattern
               $lhs, $rhs, $dimension_numbers, $precision_config)),
           (Cat_BMMAddOp $lhs, $rhs, $add, (LayoutFrom3DDotGeneralDimNums $dimension_numbers)),
           [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add)]>;
+
+//===----------------------------------------------------------------------===//
+// Cat GemmRRRBias To Cat GemmRCRBias Pattern
+//===----------------------------------------------------------------------===//
+
+def MhloTransposeGemmRRRBiasToGemmRCRBiasPattern
+    : Pat<(Cat_GemmRRRBiasOp
+            $lhs,
+            (MHLO_TransposeOp
+                    $transpose_in, $permute),
+            $bias
+          ),
+          (Cat_GemmRCRBiasOp $lhs, $transpose_in, $bias),
+          [
+            (TwoRank $transpose_in), 
+            (TwoRank $lhs), 
+            (TwoSize $permute),
+            (OneRank $bias), 
+            (TransposeCheck $permute)
+          ]>;
 
 // support only fuse nhwc layout
 def ConvBiasAddConstraint

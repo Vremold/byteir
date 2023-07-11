@@ -172,3 +172,17 @@ func.func @test_gemm_crr(%arg0: tensor<256x1024xf32>, %arg1: tensor<256x1024xf32
 // CHECK-NEXT: cat.bmm_crr
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: return
+
+
+func.func @test_gemm_rrr_bias(%arg0: tensor<2x2048xf32>, %arg1: tensor<2048x1001xf32>) -> tensor<2x1001xf32> {
+    %0 = mhlo.constant dense<1.0> : tensor<1001xf32>
+    %1 = "mhlo.dot"(%arg0, %arg1) : (tensor<2x2048xf32>, tensor<2048x1001xf32>) -> tensor<2x1001xf32>
+    %2 = "mhlo.broadcast_in_dim"(%0) {broadcast_dimensions = dense<1> : tensor<1xi64>} : (tensor<1001xf32>) -> tensor<2x1001xf32>
+    %3 = mhlo.add %1, %2 : tensor<2x1001xf32>
+    return %3 : tensor<2x1001xf32>
+}
+
+// CHECK: func.func @test_gemm_rrr_bias
+// CHECK-NEXT: mhlo.constant
+// CHECK-NEXT: cat.gemm_rrr_bias
+// CHECK-NEXT: return
