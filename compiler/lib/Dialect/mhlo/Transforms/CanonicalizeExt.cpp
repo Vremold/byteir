@@ -1503,6 +1503,55 @@ mlir::mhlo::canonicalizeConcatWithBroadcast(mhlo::ConcatenateOp op,
   return success();
 }
 
+LogicalResult mlir::mhlo::simplifyCumsumToIota(mhlo::ReduceWindowOp op,
+                                               PatternRewriter &rewriter) {
+  if (op.getInputs().size() != 1 || op->getNumResults() != 1 ||
+      op.getInitValues().size() != 1) {
+    return failure();
+  }
+  if (!isSplatMhloConstantValue(op.getInputs()[0])) {
+    return failure();
+  }
+  Attribute constAttr;
+  if (!matchPattern(op.getInitValues()[0], m_Constant(&constAttr))) {
+    return failure();
+  }
+  Region &region = op.getBody();
+  if (region.getBlocks().size() != 1) {
+    return rewriter.notifyMatchFailure(op,
+                                       "unsupported region in reduce_window");
+  }
+  if (!isBlockSingleOp<mhlo::AddOp>(&region.front()) ||
+      !isZeroAttribute(constAttr)) {
+    return failure();
+  }
+
+  auto maybe_index = getCumsumIndex(op);
+  if (!maybe_index.has_value()) {
+    llvm::outs() << "maybe_index: nullopt\n";
+    return failure();
+  }
+  TensorType inputType = op.getInputs()[0].getType().cast<TensorType>();
+  Attribute one;
+  if (inputType.getElementType().isa<FloatType>()) {
+    one = rewriter.getFloatAttr(inputType.getElementType(), 1.0);
+  } else if (inputType.getElementType().isa<IntegerType>()) {
+    one = rewriter.getIntegerAttr(inputType.getElementType(), 1);
+  } else {
+    return failure();
+  }
+  Value constOne = rewriter.create<mhlo::ConstantOp>(
+      op.getLoc(), DenseElementsAttr::get(inputType, one));
+  Value iota = rewriter.create<mhlo::IotaOp>(op.getLoc(), inputType,
+                                             maybe_index.value());
+  Value addOne =
+      rewriter.create<mhlo::AddOp>(op.getLoc(), inputType, iota, constOne);
+  Value result =
+      rewriter.create<mhlo::MulOp>(op.getLoc(), addOne, op.getInputs()[0]);
+  rewriter.replaceOp(op, result);
+  return success();
+}
+
 void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns,
                                                  MLIRContext *ctx,
                                                  bool blindFold) {
@@ -1527,6 +1576,7 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns,
   patterns.add(mlir::mhlo::simplifyAddInsertSlicesToInsertSlices);
   patterns.add(mlir::mhlo::eliminateRedundantConvertFromI1);
   patterns.add(mlir::mhlo::foldConcatWithSlicesAndRehape);
+  patterns.add(mlir::mhlo::simplifyCumsumToIota);
   if (blindFold) {
     patterns.add(mlir::mhlo::foldLargeConcatenate);
   }
