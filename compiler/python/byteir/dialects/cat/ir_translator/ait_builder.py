@@ -14,6 +14,7 @@
 
 import random
 import torch
+import numpy as np
 from typing import Set
 
 from aitemplate.compiler.base import IntImm, IntVar, Tensor
@@ -21,7 +22,6 @@ from aitemplate.compiler import compile_model
 from aitemplate.testing import detect_target
 
 from .backend.ait_registry import *
-from mhlo_tools.ir_executor.helper import mlir_type_to_dtype
 
 def _torch_dtype_from_str(dtype_name: str) -> torch.dtype:
     _map = {
@@ -40,7 +40,38 @@ def _torch_dtype_from_str(dtype_name: str) -> torch.dtype:
     }
     return _map.get(dtype_name, None)
 
-import numpy as np
+def mlir_type_to_dtype(mlir_type):
+    if str(mlir_type) == "f64":
+        return np.float64
+    if str(mlir_type) == "f32":
+        return np.float32
+    if str(mlir_type) == "f16":
+        return np.half
+    if str(mlir_type) == "i64":
+        return np.int64
+    if str(mlir_type) == "ui64":
+        return np.uint64
+    if str(mlir_type) == "i32":
+        return np.int32
+    if str(mlir_type) == "ui32":
+        return np.uint32
+    if str(mlir_type) == "i16":
+        return np.int16
+    if str(mlir_type) == "ui16":
+        return np.uint16
+    if str(mlir_type) == "i8":
+        return np.int8
+    if str(mlir_type) == "ui8":
+        return np.uint8
+    if str(mlir_type) == "i1":
+        return np.bool_
+    if str(mlir_type) == "!tf_type.string":
+        return np.str_
+    if str(mlir_type) == "!ace.string":
+        return np.str_
+    if str(mlir_type) == "index":
+        return np.int64
+    raise NotImplementedError("unsupported mlir type {}".format(mlir_type))
 
 def _numpy_dtype_to_str(np_dtype: np.dtype) -> str:
     _map = {
