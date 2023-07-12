@@ -196,7 +196,7 @@ class ait_builder:
                 rt_shape.append(s.value())
             elif isinstance(s, IntVar):
                 rt_shape.append(random.choice(s._attrs["values"]))
-        return torch.randn(*rt_shape).cuda().to(_torch_dtype_from_str(tensor.dtype())) * scale
+        return torch.randn(*rt_shape, device="cuda").to(_torch_dtype_from_str(tensor.dtype())) * scale
 
     def execute(self, np_inputs, num_trials=1, benchmark=False, scale=1.0):
         rt_inputs = {}
