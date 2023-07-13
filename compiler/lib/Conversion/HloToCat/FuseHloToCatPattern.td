@@ -406,6 +406,18 @@ def Mhlo3DDotGeneralToBMMCRRPattern
             (ThreeRank $rhs), 
             (ThreeRank $transpose_in), 
             (Permute021Check $permute)
-          ]>;    
+          ]>;   
+
+def CatBMMCRRToBMMCRCPattern
+    : Pat<(MHLO_TransposeOp 
+            (Cat_BMMCRROp $lhs, $rhs), 
+            $permute
+          ),
+          (Cat_BMMCRCOp $lhs, $rhs),
+          [
+            (ThreeRank $lhs), 
+            (ThreeRank $rhs), 
+            (Permute021Check $permute)
+          ]>;
 
 #endif // BYTEIR_CONVERSION_HLOTOCAT_FUSE_MHLO_TO_CAT_PATTERN

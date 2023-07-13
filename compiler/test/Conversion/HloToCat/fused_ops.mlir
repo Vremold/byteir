@@ -198,3 +198,13 @@ func.func @test_gemm_rrr_bias(%arg0: tensor<2x2048xf32>, %arg1: tensor<2048x1001
 // CHECK-NEXT: mhlo.constant
 // CHECK-NEXT: cat.gemm_rrr_bias
 // CHECK-NEXT: return
+
+func.func @test_bmm_crc(%arg0: tensor<512x1024x128xf16>, %arg1: tensor<512x1024x1024xf16>) -> tensor<512x1024x128xf16> {
+    %0 = "cat.bmm_crr"(%arg0, %arg1) : (tensor<512x1024x128xf16>, tensor<512x1024x1024xf16>) -> tensor<512x128x1024xf16>  
+    %1 = "mhlo.transpose"(%0) {permutation = dense<[0, 2, 1]> : tensor<3xi64>} : (tensor<512x128x1024xf16>) -> tensor<512x1024x128xf16>
+    return %1 : tensor<512x1024x128xf16>
+}
+
+// CHECK: func.func @test_bmm_crc
+// CHECK-NEXT: cat.bmm_crc
+// CHECK-NEXT: return
