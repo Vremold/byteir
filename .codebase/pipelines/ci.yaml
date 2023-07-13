@@ -26,7 +26,7 @@ trigger:
       - "!.codebase/pipelines/tf_frontend_release.yaml"
       - "!.codebase/pipelines/torch_frontend_ci.yaml"
       - "!.codebase/pipelines/torch_frontend_release.yaml"
-      - "!.codebase/pipelines/build_scm.sh"
+      - "!.codebase/pipelines/build_scm*.sh"
 jobs:
   byteir_compiler_build_and_test:
     name: byteir compiler CI
