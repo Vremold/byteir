@@ -108,15 +108,6 @@ LogicalResult VerifyGemmPermute0213Layout(Value lhs, Value rhs, Value out,
 }
 
 //===----------------------------------------------------------------------===//
-// BatchMatmulOp
-//===----------------------------------------------------------------------===/
-
-LogicalResult BatchMatmulOp::verify() {
-  return VerifyBMMLayout(this->getLhs(), this->getRhs(), this->getOutput(),
-                         this->getLayout());
-}
-
-//===----------------------------------------------------------------------===//
 // BMMPermuteOp
 //===----------------------------------------------------------------------===/
 

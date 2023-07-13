@@ -96,28 +96,6 @@ def _dispatch_cat_batch_norm(op, inputs):
     # TODO: AITemplate does not have BN impl
     raise NotImplementedError()
 
-@AITemplateIRTranslator.register("cat.batch_matmul")
-def _dispatch_cat_batch_norm(op, inputs):
-    layout = mlir_attr_to_pyobj(op.attributes["layout"])
-    if (layout == "ccr"):
-        ait_op = ait_ops.bmm_ccr()
-    elif (layout == "rrr"):
-        ait_op = ait_ops.bmm_rrr()
-    elif (layout == "crr"):
-        ait_op = ait_ops.bmm_crr()
-    elif (layout == "rcr"):
-        ait_op = ait_ops.bmm_rcr()
-    elif (layout == "ccc"):
-        ait_op = ait_ops.bmm_ccr()
-    elif (layout == "rrc"):
-        ait_op = ait_ops.bmm_rrr()
-    elif (layout == "crc"):
-        ait_op = ait_ops.bmm_crr()
-    elif (layout == "rcc"):
-        ait_op = ait_ops.bmm_rcr()
-    Y = ait_op(inputs[0], inputs[1])
-    return [Y]
-
 @AITemplateIRTranslator.register("cat.pooling2d")
 def _dispatch_cat_pooling2d(op, inputs):
     window_stride = mlir_attr_to_pyobj(op.attributes["window_stride"])
@@ -199,19 +177,53 @@ def _dispatch_cat_gemm_rcr_permute(op, inputs):
     Y = ait_op(inputs[0], inputs[1])
     return [Y]
 
-@AITemplateIRTranslator.register("cat.bmm_add")
-def _dispatch_cat_bmm_add(op, inputs):
-    layout = mlir_attr_to_pyobj(op.attributes["layout"])
-    if layout == "rrr":
-        ait_op = ait_ops.bmm_rrr_add()
-        Y = ait_op(inputs[0], inputs[1], inputs[2])
-        return [Y]
-    elif layout == "rcr":
-        ait_op = ait_ops.bmm_rcr_add()
-        Y = ait_op(inputs[0], inputs[1], inputs[2])
-        return [Y]
-    else:
-        raise RuntimeError("unsupported bmm_add layout")
+@AITemplateIRTranslator.register("cat.bmm_rrr_add")
+def _dispatch_cat_bmm_rrr_add(op, inputs):
+    ait_op = ait_ops.bmm_rrr_add()
+    Y = ait_op(inputs[0], inputs[1], inputs[2])
+    return [Y]
+
+@AITemplateIRTranslator.register("cat.bmm_rrc_add")
+def _dispatch_cat_bmm_rrc_add(op, inputs):
+    ait_op = ait_ops.bmm_rrc_add()
+    Y = ait_op(inputs[0], inputs[1], inputs[2])
+    return [Y]
+
+@AITemplateIRTranslator.register("cat.bmm_rcr_add")
+def _dispatch_cat_bmm_rcr_add(op, inputs):
+    ait_op = ait_ops.bmm_rcr_add()
+    Y = ait_op(inputs[0], inputs[1], inputs[2])
+    return [Y]
+
+@AITemplateIRTranslator.register("cat.bmm_rcc_add")
+def _dispatch_cat_bmm_rcc_add(op, inputs):
+    ait_op = ait_ops.bmm_rcc_add()
+    Y = ait_op(inputs[0], inputs[1], inputs[2])
+    return [Y]
+
+@AITemplateIRTranslator.register("cat.bmm_crr_add")
+def _dispatch_cat_bmm_crr_add(op, inputs):
+    ait_op = ait_ops.bmm_crr_add()
+    Y = ait_op(inputs[0], inputs[1], inputs[2])
+    return [Y]
+
+@AITemplateIRTranslator.register("cat.bmm_crc_add")
+def _dispatch_cat_bmm_crc_add(op, inputs):
+    ait_op = ait_ops.bmm_crc_add()
+    Y = ait_op(inputs[0], inputs[1], inputs[2])
+    return [Y]
+
+@AITemplateIRTranslator.register("cat.bmm_ccr_add")
+def _dispatch_cat_bmm_ccr_add(op, inputs):
+    ait_op = ait_ops.bmm_ccr_add()
+    Y = ait_op(inputs[0], inputs[1], inputs[2])
+    return [Y]
+
+@AITemplateIRTranslator.register("cat.bmm_ccc_add")
+def _dispatch_cat_bmm_ccc_add(op, inputs):
+    ait_op = ait_ops.bmm_ccc_add()
+    Y = ait_op(inputs[0], inputs[1], inputs[2])
+    return [Y]
 
 @AITemplateIRTranslator.register("cat.bmm_rrr_permute")
 def _dispatch_cat_bmm_rrr_permute(op, inputs):

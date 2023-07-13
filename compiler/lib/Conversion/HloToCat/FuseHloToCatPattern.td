@@ -283,21 +283,78 @@ def MhloTransposeDotBroadcastAddToGemmRCRBiasPattern
             (BiasBroadcastDimCheck $dim)
           ]>;
 
-def MhloDotGeneralAddToBMMAddPattern
+def MhloDotGeneralAddToBMMRRRAddPattern
     : Pat<(MHLO_AddOp
             (MHLO_DotGeneralOp : $output
               $lhs, $rhs, $dimension_numbers, $precision_config),
             $add),
-          (Cat_BMMAddOp $lhs, $rhs, $add, (LayoutFrom3DDotGeneralDimNums $dimension_numbers)),
-          [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add)]>;
+          (Cat_BMMRRRAddOp $lhs, $rhs, $add),
+          [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add), (CheckRRRLayoutFrom3DDotGeneralDimNums $dimension_numbers)]>;
 
-def MhloAddDotGeneralToBMMAddPattern
+def MhloAddDotGeneralToBMMRRRAddPattern
     : Pat<(MHLO_AddOp
             $add,
             (MHLO_DotGeneralOp : $output
               $lhs, $rhs, $dimension_numbers, $precision_config)),
-          (Cat_BMMAddOp $lhs, $rhs, $add, (LayoutFrom3DDotGeneralDimNums $dimension_numbers)),
-          [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add)]>;
+          (Cat_BMMRRRAddOp $lhs, $rhs, $add),
+          [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add), (CheckRRRLayoutFrom3DDotGeneralDimNums $dimension_numbers)]>;
+
+// def MhloDotGeneralAddToBMMRCRAddPattern
+//     : Pat<(MHLO_AddOp
+//             (MHLO_DotGeneralOp : $output
+//               $lhs, $rhs, $dimension_numbers, $precision_config),
+//             $add),
+//           (Cat_BMMRCRAddOp $lhs, $rhs, $add),
+//           [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add), (CheckRCRLayoutFrom3DDotGeneralDimNums $dimension_numbers)]>;
+
+// def MhloAddDotGeneralToBMMRCRAddPattern
+//     : Pat<(MHLO_AddOp
+//             $add,
+//             (MHLO_DotGeneralOp : $output
+//               $lhs, $rhs, $dimension_numbers, $precision_config)),
+//           (Cat_BMMRCRAddOp $lhs, $rhs, $add),
+//           [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add), (CheckRCRLayoutFrom3DDotGeneralDimNums $dimension_numbers)]>;
+
+// def MhloDotGeneralAddToBMMCRRAddPattern
+//     : Pat<(MHLO_AddOp
+//             (MHLO_DotGeneralOp : $output
+//               $lhs, $rhs, $dimension_numbers, $precision_config),
+//             $add),
+//           (Cat_BMMCRRAddOp $lhs, $rhs, $add),
+//           [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add), (CheckCRRLayoutFrom3DDotGeneralDimNums $dimension_numbers)]>;
+
+// def MhloAddDotGeneralToBMMCRRAddPattern
+//     : Pat<(MHLO_AddOp
+//             $add,
+//             (MHLO_DotGeneralOp : $output
+//               $lhs, $rhs, $dimension_numbers, $precision_config)),
+//           (Cat_BMMCRRAddOp $lhs, $rhs, $add),
+//           [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add), (CheckCRRLayoutFrom3DDotGeneralDimNums $dimension_numbers)]>;
+
+// def MhloDotGeneralAddToBMMCCRAddPattern
+//     : Pat<(MHLO_AddOp
+//             (MHLO_DotGeneralOp : $output
+//               $lhs, $rhs, $dimension_numbers, $precision_config),
+//             $add),
+//           (Cat_BMMCCRAddOp $lhs, $rhs, $add),
+//           [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add), (CheckCCRLayoutFrom3DDotGeneralDimNums $dimension_numbers)]>;
+
+// def MhloAddDotGeneralToBMMCCRAddPattern
+//     : Pat<(MHLO_AddOp
+//             $add,
+//             (MHLO_DotGeneralOp : $output
+//               $lhs, $rhs, $dimension_numbers, $precision_config)),
+//           (Cat_BMMCCRAddOp $lhs, $rhs, $add),
+//           [(ThreeRank $lhs), (ThreeRank $rhs), (ThreeRank $add), (CheckCCRLayoutFrom3DDotGeneralDimNums $dimension_numbers)]>;
+
+def MhloTransposeBMMRRRAddToBMMCRRAddPattern
+    : Pat<(Cat_BMMRRRAddOp 
+            (MHLO_TransposeOp $transpose_in, $permute),
+            $rhs, 
+            $add),
+          (Cat_BMMCRRAddOp $transpose_in, $rhs, $add),
+          [(ThreeRank $transpose_in), (ThreeRank $rhs), (ThreeRank $add), (Permute021Check $permute)]>;
+
 
 //===----------------------------------------------------------------------===//
 // Cat GemmRRRBias To Cat GemmRCRBias Pattern

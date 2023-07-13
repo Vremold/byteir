@@ -484,9 +484,20 @@ struct ConvertBatchMatmul : public OpConversionPattern<mhlo::DotGeneralOp> {
     std::string layoutStr = getBMMLayoutString(dimNumbers);
     if (layoutStr == "illegal")
       return failure();
-    auto newOp = rewriter.create<cat::BatchMatmulOp>(op.getLoc(), op.getType(),
-                                                     lhs, rhs, layoutStr);
-    rewriter.replaceOp(op, newOp.getResult());
+    Value newOp;
+    if (layoutStr == "rrr")
+      newOp =
+          rewriter.create<cat::BMMRRROp>(op.getLoc(), op.getType(), lhs, rhs);
+    if (layoutStr == "rcr")
+      newOp =
+          rewriter.create<cat::BMMRCROp>(op.getLoc(), op.getType(), lhs, rhs);
+    if (layoutStr == "crr")
+      newOp =
+          rewriter.create<cat::BMMCRROp>(op.getLoc(), op.getType(), lhs, rhs);
+    if (layoutStr == "ccr")
+      newOp =
+          rewriter.create<cat::BMMCCROp>(op.getLoc(), op.getType(), lhs, rhs);
+    rewriter.replaceOp(op, newOp);
     return success();
   }
 };

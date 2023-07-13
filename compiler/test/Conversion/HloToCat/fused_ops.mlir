@@ -61,24 +61,35 @@ func.func @test_bmm_rcr_permute(%arg0: tensor<384x256x256xf32>, %arg1: tensor<38
 // CHECK-NEXT: cat.bmm_rcr_permute
 // CHECK-NEXT: return
 
-func.func @test_bmm_add_0(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>, %arg2: tensor<384x256x64xf32>) -> tensor<384x256x64xf32> {
+func.func @test_bmm_rrr_add_0(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>, %arg2: tensor<384x256x64xf32>) -> tensor<384x256x64xf32> {
     %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<384x256x256xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
     %1 = mhlo.add %0, %arg2 : (tensor<384x256x64xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
     return %1 : tensor<384x256x64xf32>
 }
 
-// CHECK: func.func @test_bmm_add_0
-// CHECK-NEXT: cat.bmm_add
+// CHECK: func.func @test_bmm_rrr_add_0
+// CHECK-NEXT: cat.bmm_rrr_add
 // CHECK-NEXT: return
 
-func.func @test_bmm_add_1(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>, %arg2: tensor<384x256x64xf32>) -> tensor<384x256x64xf32> {
+func.func @test_bmm_rrr_add_1(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>, %arg2: tensor<384x256x64xf32>) -> tensor<384x256x64xf32> {
     %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<384x256x256xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
     %1 = mhlo.add %arg2, %0 : (tensor<384x256x64xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
     return %1 : tensor<384x256x64xf32>
 }
 
-// CHECK: func.func @test_bmm_add_1
-// CHECK-NEXT: cat.bmm_add
+// CHECK: func.func @test_bmm_rrr_add_1
+// CHECK-NEXT: cat.bmm_rrr_add
+// CHECK-NEXT: return
+
+func.func @test_bmm_crr_add(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>, %arg2: tensor<384x256x64xf32>) -> tensor<384x256x64xf32> {
+    %0 = "mhlo.transpose"(%arg0) {permutation = dense<[0, 2, 1]> : tensor<3xi64>} : (tensor<384x256x256xf32>) -> tensor<384x256x256xf32>
+    %1 = "mhlo.dot_general"(%0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<384x256x256xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
+    %2 = mhlo.add %1, %arg2 : (tensor<384x256x64xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
+    return %2 : tensor<384x256x64xf32>
+}
+
+// CHECK: func.func @test_bmm_crr_add
+// CHECK-NEXT: cat.bmm_crr_add
 // CHECK-NEXT: return
 
 

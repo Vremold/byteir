@@ -91,22 +91,68 @@ def Cat_NchwToNhwcOp : Cat_Op<"nchw2nhwc", [Cat_CatOpInterface, Pure]> {
   let results = (outs AnyTensor : $output);
 }
 
-def Cat_BatchMatmulOp : Cat_Op<"batch_matmul", [Cat_CatOpInterface, Pure]> {
-  let summary = "batch matmul operator";
+// TODO: add verifier for each op
+def Cat_BMMRRRAddOp : Cat_Op<"bmm_rrr_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator (rrr)";
   let arguments = (ins AnyTensor : $lhs,
                        AnyTensor : $rhs,
-                       StrAttr : $layout);
+                       AnyTensor : $add);
   let results = (outs AnyTensor : $output);
-
-  let hasVerifier = 1;
 }
 
-def Cat_BMMAddOp : Cat_Op<"bmm_add", [Cat_CatOpInterface, Pure]> {
-  let summary = "batch matmul + add operator";
+def Cat_BMMRRCAddOp : Cat_Op<"bmm_rrc_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator (rrc)";
   let arguments = (ins AnyTensor : $lhs,
                        AnyTensor : $rhs,
-                       AnyTensor : $add,
-                       StrAttr : $layout);
+                       AnyTensor : $add);
+  let results = (outs AnyTensor : $output);
+}
+
+def Cat_BMMRCRAddOp : Cat_Op<"bmm_rcr_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator (rcr)";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       AnyTensor : $add);
+  let results = (outs AnyTensor : $output);
+}
+
+def Cat_BMMRCCAddOp : Cat_Op<"bmm_rcc_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator (rcc)";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       AnyTensor : $add);
+  let results = (outs AnyTensor : $output);
+}
+
+def Cat_BMMCRRAddOp : Cat_Op<"bmm_crr_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator (crr)";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       AnyTensor : $add);
+  let results = (outs AnyTensor : $output);
+}
+
+def Cat_BMMCRCAddOp : Cat_Op<"bmm_crc_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator (crc)";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       AnyTensor : $add);
+  let results = (outs AnyTensor : $output);
+}
+
+def Cat_BMMCCRAddOp : Cat_Op<"bmm_ccr_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator (ccr)";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       AnyTensor : $add);
+  let results = (outs AnyTensor : $output);
+}
+
+def Cat_BMMCCCAddOp : Cat_Op<"bmm_ccc_add", [Cat_CatOpInterface, Pure]> {
+  let summary = "batch matmul + add operator (ccc)";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       AnyTensor : $add);
   let results = (outs AnyTensor : $output);
 }
 
