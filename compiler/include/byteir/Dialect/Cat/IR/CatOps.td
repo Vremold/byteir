@@ -111,7 +111,7 @@ def Cat_BMMAddOp : Cat_Op<"bmm_add", [Cat_CatOpInterface, Pure]> {
 }
 
 def Cat_BMMRRRPermuteOp : Cat_Op<"bmm_rrr_permute", [Cat_CatOpInterface, Pure]> {
-  let summary = "batch matmul + permute operator";
+  let summary = "batch matmul + permute0213 operator";
   let arguments = (ins AnyTensor : $lhs,
                        AnyTensor : $rhs,
                        I64Attr : $shape);
@@ -121,7 +121,7 @@ def Cat_BMMRRRPermuteOp : Cat_Op<"bmm_rrr_permute", [Cat_CatOpInterface, Pure]> 
 }
 
 def Cat_BMMRCRPermuteOp : Cat_Op<"bmm_rcr_permute", [Cat_CatOpInterface, Pure]> {
-  let summary = "batch matmul + permute operator";
+  let summary = "batch matmul + permute0213 operator";
   let arguments = (ins AnyTensor : $lhs,
                        AnyTensor : $rhs,
                        I64Attr : $shape);
@@ -207,6 +207,17 @@ def Cat_GemmRCROp : Cat_Op<"gemm_rcr", [Cat_CatOpInterface, Pure]> {
   let summary = "gemm_rcr operator";
   let arguments = (ins AnyTensor : $lhs,
                        AnyTensor : $rhs);
+  let results = (outs AnyTensor : $output);
+
+  let hasVerifier = 1;
+}
+
+def Cat_GemmRCRPermuteOp : Cat_Op<"gemm_rcr_permute", [Cat_CatOpInterface, Pure]> {
+  let summary = "gemm_rcr + permute0213 operator, output layout is [m / t1, t1, t2, n / t2]";
+  let arguments = (ins AnyTensor : $lhs,
+                       AnyTensor : $rhs,
+                       I64Attr : $t1,
+                       I64Attr : $t2);
   let results = (outs AnyTensor : $output);
 
   let hasVerifier = 1;

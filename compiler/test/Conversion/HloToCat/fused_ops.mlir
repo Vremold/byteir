@@ -26,6 +26,18 @@ func.func @test_conv_bias(%arg0: tensor<2x28x28x256xf32>, %arg1: tensor<256x3x3x
 // CHECK-NEXT: cat.conv2d_bias
 // CHECK-NEXT: return
 
+func.func @test_gemm_rcr_permute(%arg0: tensor<16384x4096xf16>, %arg1: tensor<4096x4096xf16>) -> tensor<16x32x1024x128xf16> {
+    %0 = "mhlo.transpose"(%arg1) {permutation = dense<[1, 0]> : tensor<2xi64>} : (tensor<4096x4096xf16>) -> tensor<4096x4096xf16>
+    %1 = "mhlo.dot"(%arg0, %0) : (tensor<16384x4096xf16>, tensor<4096x4096xf16>) -> tensor<16384x4096xf16>
+    %2 = mhlo.reshape %1 : (tensor<16384x4096xf16>) -> tensor<16x1024x32x128xf16>
+    %3 = "mhlo.transpose"(%2) {permutation = dense<[0, 2, 1, 3]> : tensor<4xi64>} : (tensor<16x1024x32x128xf16>) -> tensor<16x32x1024x128xf16>
+    return %3 : tensor<16x32x1024x128xf16>
+}
+
+// CHECK: func.func
+// CHECK-NEXT: cat.gemm_rcr_permute
+// CHECK-NEXT: return
+
 func.func @test_bmm_rrr_permute(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x256x64xf32>) -> tensor<64x256x6x64xf32> {
     %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<384x256x256xf32>, tensor<384x256x64xf32>) -> tensor<384x256x64xf32>
     %1 = mhlo.reshape %0 : (tensor<384x256x64xf32>) -> tensor<64x6x256x64xf32>

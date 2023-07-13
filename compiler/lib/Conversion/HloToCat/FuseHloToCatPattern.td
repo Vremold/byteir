@@ -78,9 +78,45 @@ def MhloBiasCatGemmRCRAddToCatGemmRCRBiasPattern
           (Cat_GemmRCRBiasOp $lhs, $rhs, $bias),
           [(OneRank $bias), (TwoRank $lhs), (TwoRank $rhs), (GemmBiasAddConstraint $bias, $output)]>;
 
-def LayoutFrom3DDotGeneralDimNums : NativeCodeCall<"GetLayoutFrom3DDotGeneralDimNums($0, &$_builder)">;
 
-def getBMMShapeDAttr : NativeCodeCall<"$_builder.getI64IntegerAttr($0.getType().cast<ShapedType>().getShape()[1])">;
+// these patterns are commented because gemm_rrr_bias op is not supported by AIT
+// def MhloBiasDotToCatGemmBiasPattern
+//     : Pat<(MHLO_AddOp
+//             (MHLO_BroadcastInDimOp $bias, $dim),
+//             (MHLO_DotOp : $output
+//               $lhs, $rhs, $precision_config)),
+//           (Cat_GemmRRRBiasOp $lhs, $rhs, $bias),
+//           [(OneRank $bias), (GemmBiasAddConstraint $bias, $output)]>;
+
+// def MhloDotBiasToCatGemmBiasPattern
+//     : Pat<(MHLO_AddOp
+//             (MHLO_DotOp : $output
+//               $lhs, $rhs, $precision_config),
+//             (MHLO_BroadcastInDimOp $bias, $dim)),
+//           (Cat_GemmRRRBiasOp $lhs, $rhs, $bias),
+//           [(OneRank $bias), (GemmBiasAddConstraint $bias, $output)]>;
+
+def getDim1Attr : NativeCodeCall<"$_builder.getI64IntegerAttr($0.getType().cast<ShapedType>().getShape()[1])">;
+def getDim2Attr : NativeCodeCall<"$_builder.getI64IntegerAttr($0.getType().cast<ShapedType>().getShape()[2])">;
+def GemmPermuteShapeCheck
+    : Constraint<
+        CPred<"$0.getType().cast<ShapedType>().getShape()[0] * $0.getType().cast<ShapedType>().getShape()[1] == $1.getType().cast<ShapedType>().getShape()[0] && $0.getType().cast<ShapedType>().getShape()[2] * $0.getType().cast<ShapedType>().getShape()[3] == $1.getType().cast<ShapedType>().getShape()[1]">, "gemm permute shape check">;
+
+//===----------------------------------------------------------------------===//
+// Mhlo Transpose Dot Transpose To Cat GemmRCRPermute Pattern
+//===----------------------------------------------------------------------===//
+
+def MhloCatGemmRCRTransToCatGemmRCRPermutePattern
+    : Pat<(MHLO_TransposeOp
+            (MHLO_ReshapeOp : $reshape_out
+              (Cat_GemmRCROp : $gemm_out
+                $lhs, $rhs)
+            ),
+            $permute),
+          (Cat_GemmRCRPermuteOp $lhs, $rhs, (getDim1Attr $reshape_out), (getDim2Attr $reshape_out)),
+          [(TwoRank $lhs), (TwoRank $rhs), (FourRank $reshape_out), (GemmPermuteShapeCheck $reshape_out, $gemm_out), (Permute0213Check $permute)]>;
+
+def LayoutFrom3DDotGeneralDimNums : NativeCodeCall<"GetLayoutFrom3DDotGeneralDimNums($0, &$_builder)">;
 
 def CheckRRRLayoutFrom3DDotGeneralDimNums
     : Constraint<
@@ -111,7 +147,7 @@ def MhloDotGeneralReshapeTransposeToBMMRRRPermutePattern
                 $lhs, $rhs, $dimension_numbers, $precision_config)
             ),
             $permute),
-          (Cat_BMMRRRPermuteOp $lhs, $rhs, (getBMMShapeDAttr $reshape_out)),
+          (Cat_BMMRRRPermuteOp $lhs, $rhs, (getDim1Attr $reshape_out)),
           [
             (ThreeRank $lhs), 
             (ThreeRank $rhs), 
