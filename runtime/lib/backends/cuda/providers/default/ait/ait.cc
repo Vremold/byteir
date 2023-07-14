@@ -21,7 +21,6 @@
 #include "brt/core/framework/allocator.h"
 #include "brt/core/framework/op_accessor.h"
 #include "brt/core/ir/util.h"
-
 #include <cassert>
 #include <dlfcn.h>
 
@@ -65,6 +64,8 @@ class AITOpKernelWorkspaceDetector : public AITOpKernelBase {
 public:
   class MonotonicTracingOnlyAllocator : public AITemplateAllocator {
   public:
+    MonotonicTracingOnlyAllocator(IAllocator *allocator)
+        : iallocator_(allocator) {}
     void *Allocate(size_t nbytes) override {
       // Expected no more than 5 times allocation request:
       //  0 for constant
@@ -74,8 +75,13 @@ public:
       //  4 for constant folder's workspace
       BRT_ENFORCE(numAllocRequest < 5,
                   "expected no more than 5 times allocation reqeust");
-      if (numAllocRequest == 0 || numAllocRequest == 3 ||
-          numAllocRequest == 4) {
+      if (numAllocRequest == 0) {
+        // Allocating constants
+        void *ptr = iallocator_->Alloc(nbytes);
+        numAllocRequest++;
+        return ptr;
+      }
+      if (numAllocRequest == 3 || numAllocRequest == 4) {
         // constant should not be clustered into AIT subgraph, so the constant
         // memory usage and the extra memory used by constant folder should
         // always be zero
@@ -87,18 +93,24 @@ public:
       return nullptr;
     }
 
-    void Free(void *) override {}
+    void Free(void *ptr) override {
+      if (ptr != nullptr) {
+        iallocator_->Free(ptr);
+      }
+    }
 
     size_t GetTotalAllocatedInBytes() { return sizeInBytes; }
 
   private:
     size_t sizeInBytes = 0;
     size_t numAllocRequest = 0;
+    IAllocator *iallocator_;
   };
 
-  AITOpKernelWorkspaceDetector(void *aitLibHdl)
-      : AITOpKernelBase(aitLibHdl,
-                        std::make_unique<MonotonicTracingOnlyAllocator>()) {}
+  AITOpKernelWorkspaceDetector(void *aitLibHdl, IAllocator *alloc)
+      : AITOpKernelBase(
+            aitLibHdl, std::make_unique<MonotonicTracingOnlyAllocator>(alloc)) {
+  }
 
   size_t GetWorkspaceSizeInBytes() {
     return static_cast<MonotonicTracingOnlyAllocator *>(allocator_.get())
@@ -144,11 +156,21 @@ class AITOpKernelRunner {
   struct AITOpKernelRunnerImpl : public AITOpKernelBase {
     class MonotonicWorkspaceAllocator : public AITemplateAllocator {
     public:
-      MonotonicWorkspaceAllocator(void *workspaceBase, size_t workspaceSize)
-          : basePtr(workspaceBase), offset(0), sizeInBytes(workspaceSize) {}
+      MonotonicWorkspaceAllocator(void *workspaceBase, size_t workspaceSize,
+                                  IAllocator *allocator)
+          : basePtr(workspaceBase), offset(0), sizeInBytes(workspaceSize),
+            iallocator_(allocator) {}
 
       void *Allocate(size_t nbytes) override {
         BRT_ENFORCE(state == 0, "could only allocate in model ctor");
+        if (allocConst) {
+          allocConst = false;
+          if (!nbytes)
+            return nullptr;
+          void *ptr = iallocator_->Alloc(nbytes);
+          constPtr = ptr;
+          return ptr;
+        }
         if (!nbytes)
           return nullptr;
 
@@ -158,8 +180,11 @@ class AITOpKernelRunner {
         return ptr;
       }
 
-      void Free(void *) override {
+      void Free(void *ptr) override {
         BRT_ENFORCE(state == 2, "could only free in model dtor");
+        if (ptr == constPtr) {
+          iallocator_->Free(ptr);
+        }
       }
 
       void CallInCtorEpilogue() {
@@ -176,29 +201,38 @@ class AITOpKernelRunner {
       int8_t state = 0; // 0 - ctor, 1 - running, 2 - dtor
       void *basePtr;
       size_t offset, sizeInBytes;
+      IAllocator *iallocator_;
+      bool allocConst = true; // First time alloc is allocating constants
+      void *constPtr;
     };
 
     AITOpKernelRunnerImpl(void *aitLibHdl,
                           AITOpKernelWorkspaceManager *workspaceMgr,
                           IAllocator *alloc, std::string space,
-                          size_t workspaceSize)
-        : AITOpKernelBase(
-              aitLibHdl,
-              std::make_unique<MonotonicWorkspaceAllocator>(
-                  workspaceMgr->GetOrAlloc(space, alloc), workspaceSize)) {
+                          size_t workspaceSize, std::string name)
+        : AITOpKernelBase(aitLibHdl,
+                          std::make_unique<MonotonicWorkspaceAllocator>(
+                              workspaceMgr->GetOrAlloc(space, alloc),
+                              workspaceSize, alloc)),
+          lib_name(name) {
       LOAD_SYMBOL(getNumInputsFunc_, aitLibHdl,
                   "AITemplateModelContainerGetNumInputs");
+      LOAD_SYMBOL(getInputNameFunc_, aitLibHdl,
+                  "AITemplateModelContainerGetInputName");
       LOAD_SYMBOL(getMaximumInputShapeFunc_, aitLibHdl,
                   "AITemplateModelContainerGetMaximumInputShape");
       LOAD_SYMBOL(getInputDtypeFunc_, aitLibHdl,
                   "AITemplateModelContainerGetInputDtype");
       LOAD_SYMBOL(getNumOutputsFunc_, aitLibHdl,
                   "AITemplateModelContainerGetNumOutputs");
+      LOAD_SYMBOL(getOutputNameFunc_, aitLibHdl,
+                  "AITemplateModelContainerGetOutputName");
       LOAD_SYMBOL(getMaximumOutputShapeFunc_, aitLibHdl,
                   "AITemplateModelContainerGetMaximumOutputShape");
       LOAD_SYMBOL(getOutputDtypeFunc_, aitLibHdl,
                   "AITemplateModelContainerGetOutputDtype");
       LOAD_SYMBOL(runFunc_, aitLibHdl, "AITemplateModelContainerRun");
+      LOAD_SYMBOL(profileFunc_, aitLibHdl, "AITemplateModelContainerProfile");
 
       AIT_ERROR_CHECK(getNumInputsFunc_(aitModelHdl, &numInputs));
       AIT_ERROR_CHECK(getNumOutputsFunc_(aitModelHdl, &numOutputs));
@@ -207,6 +241,16 @@ class AITOpKernelRunner {
       inputDtypes.reserve(numInputs);
       outputShapes.reserve(numOutputs);
       outputDtypes.reserve(numOutputs);
+      for (size_t i = 0; i < numInputs; ++i) {
+        const char *name;
+        AIT_ERROR_CHECK(getInputNameFunc_(aitModelHdl, i, &name));
+        input_name_to_index_.emplace(name, i);
+      }
+      for (size_t i = 0; i < numOutputs; ++i) {
+        const char *name;
+        AIT_ERROR_CHECK(getOutputNameFunc_(aitModelHdl, i, &name));
+        output_name_to_index_.emplace(name, i);
+      }
       for (size_t i = 0; i < numInputs; ++i) {
         AITemplateParamShape shape;
         AITemplateDtype dtype;
@@ -236,30 +280,57 @@ class AITOpKernelRunner {
     void Run(const std::vector<void *> &args, CUstream_st *stream) {
       AITData inputs[numInputs], outputs[numOutputs];
       for (size_t i = 0; i < numInputs; ++i) {
-        inputs[i] = AITData(args[i], inputShapes[i], inputDtypes[i]);
+        std::string input_name = "input_tensor_" + std::to_string(i);
+        if (input_name_to_index_.find(input_name) ==
+            input_name_to_index_.end()) {
+          throw std::runtime_error("input namec" + input_name +
+                                   " not found in index map!");
+        }
+        auto idx = input_name_to_index_.at(input_name);
+        inputs[idx] = AITData(args[i], inputShapes[idx], inputDtypes[idx]);
       }
       for (size_t i = 0; i < numOutputs; ++i) {
-        outputs[i] =
-            AITData(args[numInputs + i], outputShapes[i], outputDtypes[i]);
+        std::string output_name = "output_tensor_" + std::to_string(i);
+        if (output_name_to_index_.find(output_name) ==
+            output_name_to_index_.end()) {
+          throw std::runtime_error("output name " + output_name +
+                                   " not found in index map!");
+        }
+        auto idx = output_name_to_index_.at(output_name);
+        outputs[idx] =
+            AITData(args[numInputs + i], outputShapes[idx], outputDtypes[idx]);
       }
 
       runFunc_(aitModelHdl, inputs, numInputs, outputs, numOutputs,
                reinterpret_cast<AITemplateStreamHandle>(stream),
                false /* sync */, false /* graph_mode*/,
                nullptr /* output shape */);
+
+      // std::string profile_log = "profile." + lib_name + ".log";
+      // const char* filename = profile_log.c_str();
+      // profileFunc_(aitModelHdl, inputs, numInputs, outputs, numOutputs,
+      //          reinterpret_cast<AITemplateStreamHandle>(stream),
+      //          5 /* num_iters */, filename /* filename */);
     }
 
     size_t numInputs, numOutputs;
     std::vector<AITemplateParamShape> inputShapes, outputShapes;
     std::vector<AITemplateDtype> inputDtypes, outputDtypes;
+    std::unordered_map<std::string, size_t> input_name_to_index_;
+    std::unordered_map<std::string, size_t> output_name_to_index_;
+    std::string lib_name;
 
     decltype(&AITemplateModelContainerRun) runFunc_ = nullptr;
+    decltype(&AITemplateModelContainerProfile) profileFunc_ = nullptr;
+    decltype(&AITemplateModelContainerGetInputName) getInputNameFunc_ = nullptr;
     decltype(&AITemplateModelContainerGetNumInputs) getNumInputsFunc_ = nullptr;
     decltype(&AITemplateModelContainerGetMaximumInputShape)
         getMaximumInputShapeFunc_ = nullptr;
     decltype(&AITemplateModelContainerGetInputDtype) getInputDtypeFunc_ =
         nullptr;
 
+    decltype(&AITemplateModelContainerGetOutputName) getOutputNameFunc_ =
+        nullptr;
     decltype(&AITemplateModelContainerGetNumOutputs) getNumOutputsFunc_ =
         nullptr;
     decltype(&AITemplateModelContainerGetMaximumOutputShape)
@@ -284,7 +355,7 @@ public:
 private:
   std::unique_ptr<AITOpKernelRunnerImpl> runnerImpl;
   std::tuple<void *, AITOpKernelWorkspaceManager *, IAllocator *, std::string,
-             size_t>
+             size_t, std::string>
       ctors;
 };
 } // namespace
@@ -301,9 +372,10 @@ AITOpKernel::AITOpKernel(const OpKernelInfo &info)
   lib_path += accessor.GetAttrAsString(std::string("ait_lib_file"));
   aitLibHdl = dlopen(lib_path.c_str(), RTLD_NOW | RTLD_LOCAL);
   assert(aitLibHdl && "AIT lib .so load failed");
-
+  std::string space = accessor.GetAttrAsString("device");
+  IAllocator *alloc = info_.GetAllocator(space);
   workspaceSizeInBytes =
-      AITOpKernelWorkspaceDetector(aitLibHdl).GetWorkspaceSizeInBytes();
+      AITOpKernelWorkspaceDetector(aitLibHdl, alloc).GetWorkspaceSizeInBytes();
 }
 
 AITOpKernel::~AITOpKernel() { dlclose(aitLibHdl); }
@@ -346,6 +418,8 @@ common::Status AITOpKernel::ProloguePerFrame(const ExecutionContext &ctx) {
       reinterpret_cast<AITOpKernelWorkspaceManager *>(
           ctx.exec_frame->GetState(handle_offset));
   std::string space = OpAccessor(info_).GetAttrAsString("device");
+  std::string name =
+      OpAccessor(info_).GetAttrAsString(std::string("ait_lib_file"));
   workspaceMgr->Update(space, workspaceSizeInBytes);
 
   IAllocator *alloc = info_.GetAllocator(space);
@@ -356,7 +430,7 @@ common::Status AITOpKernel::ProloguePerFrame(const ExecutionContext &ctx) {
   status = state_info.CreateStateIfNotExist(
       GetAITOpKernelRunnerUniqueKey(), ctx.exec_frame, [=]() {
         return static_cast<void *>(new AITOpKernelRunner(
-            aitLibHdl, workspaceMgr, alloc, space, workspaceSizeInBytes));
+            aitLibHdl, workspaceMgr, alloc, space, workspaceSizeInBytes, name));
       });
   return status;
 }

@@ -33,6 +33,12 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 class Cat_Op<string mnemonic, list<Trait> traits = []>
     : Op<Cat_Dialect, mnemonic, traits>;
 
+def Cat_CastOp : Cat_Op<"cast", [Cat_CatOpInterface, Pure]> {
+  let summary = "type cast operator";
+  let arguments = (ins AnyTensor : $input);
+  let results = (outs AnyTensor : $output);
+}
+
 def Cat_Conv2dOp : Cat_Op<"conv2d", [Cat_CatOpInterface, Pure]> {
   let summary = "conv2d operator";
   let arguments = (ins AnyTensor : $input,
@@ -216,6 +222,12 @@ def Cat_ReduceOp : Cat_Op<"reduce", [Cat_CatOpInterface, Pure]> {
   let results = (outs AnyTensor : $output);
 }
 
+def Cat_SliceOp : Cat_Op<"slice", [Cat_CatOpInterface, Pure]> {
+  let summary = "slice operator";
+  let arguments = (ins AnyTensor : $input, I64ElementsAttr : $start_indices, I64ElementsAttr : $end_indices);
+  let results = (outs AnyTensor : $output);
+}
+
 def Cat_GemmRRRBiasOp : Cat_Op<"gemm_rrr_bias", [Cat_CatOpInterface, Pure]> {
   let summary = "gemm_rrr_bias operator";
   let description =
@@ -350,6 +362,21 @@ def Cat_BMMCCCOp : Cat_Op<"bmm_ccc", [Cat_CatOpInterface, Pure]> {
   let summary = "batch matmul operator (ccc layout)";
   let arguments = (ins AnyTensor : $lhs,
                        AnyTensor : $rhs);
+  let results = (outs AnyTensor : $output);
+}
+
+def Cat_ConcatenateOp : Cat_Op<"concatenate", [Cat_CatOpInterface, Pure]> {
+  let summary = "concatenate operator";
+  let arguments = (ins Variadic<AnyTensor> : $val,
+                       I64Attr:$dimension);
+  let results = (outs AnyTensor : $output);
+}
+
+def Cat_WhereOp : Cat_Op<"where", [Cat_CatOpInterface, Pure]> {
+  let summary = "where operator";
+  let arguments = (ins AnyTensor : $condition,
+                       AnyTensor : $on_true,
+                       AnyTensor : $on_false);
   let results = (outs AnyTensor : $output);
 }
 
