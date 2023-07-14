@@ -477,4 +477,16 @@ def CatBMMCRRToBMMCRCPattern
             (Permute021Check $permute)
           ]>;
 
+def MhloTransposeCatBMMRRRToBMMRRCPattern
+    : Pat<(MHLO_TransposeOp 
+            (Cat_BMMRRROp $lhs, $rhs), 
+            $permute
+          ),
+          (Cat_BMMRRCOp $lhs, $rhs),
+          [
+            (ThreeRank $lhs), 
+            (ThreeRank $rhs), 
+            (Permute021Check $permute)
+          ]>;
+
 #endif // BYTEIR_CONVERSION_HLOTOCAT_FUSE_MHLO_TO_CAT_PATTERN
