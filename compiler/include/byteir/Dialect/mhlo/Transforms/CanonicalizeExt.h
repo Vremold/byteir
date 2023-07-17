@@ -135,6 +135,10 @@ LogicalResult eliminateRedundantConvertFromI1(mhlo::ConvertOp op,
 LogicalResult simplifyCumsumToIota(mhlo::ReduceWindowOp op,
                                    PatternRewriter &rewriter);
 
+// transpose(reshape(transpose(x))) => reshape(x)
+LogicalResult simplifyTransposeReshapeTranspose(mhlo::TransposeOp op,
+                                                PatternRewriter &rewriter);
+
 // populate canonicalizeExt patterns
 void populateCanonicalizeExtPatterns(RewritePatternSet &patterns,
                                      MLIRContext *context,

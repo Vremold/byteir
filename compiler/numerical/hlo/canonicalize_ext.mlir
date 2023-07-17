@@ -213,3 +213,14 @@ func.func @cumsum_to_iota_case1() -> tensor<10x16xf32> {
 // CHECK-NEXT: mhlo.broadcast_in_dim
 // CHECK-NEXT: mhlo.add
 
+func.func @transpose_reshape_transpose(%arg0: tensor<2x32x128x256xf16>) -> (tensor<64x256x128xf16>, tensor<64x128x256xf16>) {
+  %0 = "mhlo.transpose"(%arg0) {permutation = dense<[0, 1, 3, 2]> : tensor<4xi64>} : (tensor<2x32x128x256xf16>) -> tensor<2x32x256x128xf16>
+  %1 = mhlo.reshape %0 : (tensor<2x32x256x128xf16>) -> tensor<64x256x128xf16>
+  %2 = "mhlo.transpose"(%1) {permutation = dense<[0, 2, 1]> : tensor<3xi64>} : (tensor<64x256x128xf16>) -> tensor<64x128x256xf16>
+  return %1, %2 : tensor<64x256x128xf16>, tensor<64x128x256xf16>
+}
+// CHECK-LABEL: func.func @transpose_reshape_transpose
+// CHECK-NEXT: mhlo.transpose
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: return
