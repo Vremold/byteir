@@ -241,6 +241,8 @@ def MemoryPlanning: Pass<"memory-planning", "mlir::func::FuncOp"> {
            "Memory address alignment, must be power of 2">,
     Option<"alloca", "alloca", "bool", /*default=*/"false",
            "Whether to planning on memref.alloca ops">,
+    Option<"memSpace", "mem-space", "size_t", /*default=*/"0",
+           "Memory space considered in planning. 0 indicates all spaces.">,
   ];
 }
 
