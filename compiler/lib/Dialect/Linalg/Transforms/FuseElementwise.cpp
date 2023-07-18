@@ -130,6 +130,8 @@ public:
       FailureOr<ElementwiseOpFusionResult> fusionResult =
           fuseElementwiseOps(rewriter, &opOperand);
       if (succeeded(fusionResult)) {
+        auto producer = opOperand.get().getDefiningOp<GenericOp>();
+
         Operation *fusedOp = fusionResult->fusedOp;
         auto replacements =
             fusedOp->getResults().take_back(genericOp.getNumResults());
@@ -137,7 +139,6 @@ public:
 
         // Try to replace the producer with fusedOp
         // if fusedOp dominates all of the producer's users
-        auto producer = opOperand.get().getDefiningOp<GenericOp>();
         unsigned idx = 0;
         for (auto &&res : producer.getResults()) {
           // only check use producer results
