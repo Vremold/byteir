@@ -83,11 +83,6 @@ bool mlir::isSplatMhloConstantValue(Value val, double splat_val) {
   return isSplatMhloConstantValue(val.getDefiningOp(), splat_val);
 }
 
-// instantiate
-template bool mlir::isBlockSingleOp<mhlo::AddOp>(Block *);
-template bool mlir::isBlockSingleOp<mhlo::MaxOp>(Block *);
-template bool mlir::isBlockSingleOp<mhlo::MinOp>(Block *);
-
 namespace {
 
 byteir::NamedLayout
