@@ -130,6 +130,10 @@ public:
       FailureOr<ElementwiseOpFusionResult> fusionResult =
           fuseElementwiseOps(rewriter, &opOperand);
       if (succeeded(fusionResult)) {
+        // FIXME(lyq): applyPatternsAndFoldGreedily only trigger dce between
+        // patterns, so producer doesn't be erased when genericOp is replaced.
+        // If applyPatternsAndFoldGreedily's behavior changed, we should fix
+        // this.
         auto producer = opOperand.get().getDefiningOp<GenericOp>();
 
         Operation *fusedOp = fusionResult->fusedOp;

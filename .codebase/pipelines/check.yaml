@@ -1,3 +1,12 @@
+##################################################
+#         ByteIR CI pipeline
+#             
+#  Format check
+#
+#  Open Source check
+#
+##################################################
+
 name: ByteIR Check CI
 trigger:
   change:

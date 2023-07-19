@@ -41,6 +41,15 @@ endif()
 
 option(BYTEIR_BUILD_EMBEDDED "Build byteir as part of another project" OFF)
 
+option(BYTEIR_ENABLE_ASAN "Build byteir with asan" OFF)
+if (BYTEIR_ENABLE_ASAN)
+  if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(FATAL_ERROR "ASAN should be with Debug build.")
+  endif()
+  set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+  set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+endif()
+
 option(BYTEIR_ENABLE_BINDINGS_PYTHON "Enable byteir python binding" OFF)
 if (BYTEIR_ENABLE_BINDINGS_PYTHON)
   set(MHLO_ENABLE_BINDINGS_PYTHON ON)

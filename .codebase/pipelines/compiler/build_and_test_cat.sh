@@ -46,7 +46,7 @@ cmake "-H$PROJ_DIR/cmake" \
       -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
       -DBYTEIR_ENABLE_BINDINGS_PYTHON=ON
 
-cmake --build "$BUILD_DIR" --config Release --target check-byteir
+cmake --build "$BUILD_DIR" --target check-byteir
 # FIXME: need python >= 3.8 in CI runner
 cmake --build "$BUILD_DIR" --target check-byteir-python
 
