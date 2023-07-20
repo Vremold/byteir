@@ -178,7 +178,7 @@ def compile_cuda_with_ait(
         if verbose:
             _print_verbose(device_module, "// IR Dump After NVVM Codegen:")
         # write to output device ptx
-        byteir.translate_to_ptx(device_module.operation, output_file_dir + "/" + output_file_name)
+        byteir.translate_to_ptx(device_module.operation, output_file_dir + "/" + output_file_name, "sm_80")
 
     with context:
         PassManager.parse("builtin.module(byre-host{device-file-name=" + output_file_name + ".ptx" + " " + target_str + " " + entry_func_str + "})").run(processor.module.operation)
