@@ -53,6 +53,13 @@ std::optional<int64_t> mlir::getLiteralFromConstantLike(Value v) {
   return std::nullopt;
 }
 
+std::optional<Attribute> mlir::getAttrFromConstantLike(Value v) {
+  if (auto cOp = dyn_cast_or_null<arith::ConstantOp>(v.getDefiningOp())) {
+    return cOp.getValue();
+  }
+  return std::nullopt;
+}
+
 int64_t mlir::getLiteralFromConstantLike(Value v, int64_t defaultLit) {
   auto maybeI64 = getLiteralFromConstantLike(v);
   if (maybeI64.has_value())

@@ -219,8 +219,8 @@ def LoopTag : Pass<"loop-tag", "func::FuncOp"> {
     Option<"attachAttr", "attach-attr", "std::string",
             /*default=*/"",
             "An optional attribute attaching on target functions: <attr_name>:<type>:<value>">,
-    Option<"depth", "depth", "unsigned", /*default=*/"1",
-           "Use this depth factor to specify loop">,
+    Option<"depth", "depth", "int", /*default=*/"1",
+           "Use this depth factor to specify loop, -1 is last">,
     Option<"loopType", "loop-type", "std::string",
             /*default=*/"\"scf.for\"",
             "An optional name to specify loop type.">

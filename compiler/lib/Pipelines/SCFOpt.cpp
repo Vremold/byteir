@@ -38,7 +38,7 @@ void addGenericSCFOptPasses(OpPassManager &pm) {
   // lower affine.apply in case there is some
   pm.addPass(memref::createFoldMemRefAliasOpsPass());
   pm.addPass(createLowerAffinePass());
-  pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
+  // pm.addNestedPass<func::FuncOp>(createLoopCoalescingPass());
   pm.addNestedPass<func::FuncOp>(createCondCanonicalizePass());
   addCleanUpExtPassPipeline(pm);
 }

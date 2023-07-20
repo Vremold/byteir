@@ -35,7 +35,8 @@ void addGenericLinalgElementwisePasses(OpPassManager &pm) {
   pm.addNestedPass<func::FuncOp>(
       createHloFusionToLinalgPass(getByteIRElementwiseFusionAttrName()));
   pm.addNestedPass<func::FuncOp>(createUnrealizedCastToLinalgPass());
-  pm.addPass(createLinalgElementwiseFusionExtPass(true));
+  pm.addPass(createLinalgElementwiseFusionExtPass(
+      /*enableSharedInput*/ true /*, enableDiffShapes = false*/));
   pm.addPass(createCSEPass());
 }
 

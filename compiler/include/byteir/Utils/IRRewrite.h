@@ -30,6 +30,7 @@ class Block;
 class IRMapping;
 class DominanceInfo;
 class FunctionOpInterface;
+class OpFoldResult;
 class PostDominanceInfo;
 class ShapedType;
 class TypeRange;
@@ -47,6 +48,12 @@ Operation *replicateDefiningOp(OpBuilder &b, Operation *op, unsigned opIdx,
 // inference
 Operation *cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
                                       IRMapping bvm, TypeRange types);
+
+// deep fold an op by IRMapping bvm
+// return success if the op can be folded, and return FoldResult in results.
+// return failure if the op cannot be folded, results will be undefined.
+LogicalResult deepFold(Operation *op, IRMapping &bvm,
+                       SmallVectorImpl<mlir::OpFoldResult> &results);
 
 // create a new type by mixing two ShapedType
 // aka cloneFromElementType.clone(cloneFromShape.getShape());

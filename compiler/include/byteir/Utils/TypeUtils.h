@@ -28,6 +28,9 @@ namespace mlir {
 RankedTensorType appendTensorEncodingAttr(RankedTensorType origin,
                                           NamedAttribute attr);
 
+// return whether two ShapedType has a same Shape
+bool areSameShape(ShapedType lhs, ShapedType rhs);
+
 } // namespace mlir
 
 #endif // BYTEIR_UTILS_TYPEUTILS_H

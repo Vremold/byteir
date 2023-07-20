@@ -29,6 +29,9 @@
 #include "llvm/ADT/SmallVector.h"
 #include <tuple>
 
+#include "mlir/Dialect/Linalg/IR/Linalg.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
+
 using namespace llvm;
 using namespace mlir;
 using namespace mlir::memref;
@@ -87,6 +90,62 @@ Operation *mlir::cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
     newOp->getResult(i).setType(types[i]);
   }
   return newOp;
+}
+
+LogicalResult mlir::deepFold(Operation *op, IRMapping &bvm,
+                             SmallVectorImpl<OpFoldResult> &results) {
+  // early termination if op is a constant
+  if (auto cOp = dyn_cast<arith::ConstantOp>(op)) {
+    if (!bvm.contains(cOp) && !bvm.contains(cOp.getResult())) {
+      auto attr = getAttrFromConstantLike(cOp.getResult());
+      results.push_back(*attr);
+      return success();
+    }
+  }
+
+  OpBuilder b(op);
+
+  // fold operand first
+  SmallVector<Attribute> constOpernadAttrs;
+  for (auto operand : op->getOperands()) {
+    auto defOp = operand.getDefiningOp();
+
+    // if arg return failure
+    if (!defOp)
+      return failure();
+
+    // if fold happened before, skip
+    if (bvm.contains(operand)) {
+      auto toVal = bvm.lookup(operand);
+      auto attr = getAttrFromConstantLike(toVal);
+      if (!attr) {
+        return failure();
+      }
+      constOpernadAttrs.push_back(*attr);
+      continue;
+    }
+
+    SmallVector<OpFoldResult> operandResults;
+    auto isFold = deepFold(defOp, bvm, operandResults);
+    b.setInsertionPoint(defOp);
+    if (failed(isFold) || defOp->getNumResults() != operandResults.size()) {
+      return failure();
+    }
+
+    for (const OpResult &opRes : defOp->getOpResults()) {
+      OpFoldResult foldResult = operandResults[opRes.getResultNumber()];
+      auto attr = foldResult.dyn_cast<Attribute>();
+      constOpernadAttrs.push_back(attr);
+      if (!bvm.contains(opRes)) {
+        Value newConst =
+            b.create<arith::ConstantOp>(defOp->getLoc(), attr, opRes.getType());
+        bvm.map(opRes, newConst);
+      }
+    }
+  }
+
+  // fold op
+  return op->fold(constOpernadAttrs, results);
 }
 
 Type mlir::mixType(ShapedType cloneFromElementType, ShapedType cloneFromShape) {

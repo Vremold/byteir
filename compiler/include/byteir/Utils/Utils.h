@@ -21,6 +21,7 @@
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/FunctionInterfaces.h"
+#include "mlir/IR/Visitors.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -41,6 +42,8 @@ class FuncOp;
 // Return literal from a constant-like value
 // return std::nullopt if not applicable
 std::optional<int64_t> getLiteralFromConstantLike(Value);
+
+std::optional<Attribute> getAttrFromConstantLike(Value);
 
 // Return literal from a constant-like value,
 // return defaultLit if not applicable
@@ -220,6 +223,14 @@ template <typename Op> bool isBlockSingleOp(Block *block) {
   }
 
   return false;
+}
+
+// get all RetOp ops within an op's nested regions
+template <typename RetOp, WalkOrder Order = WalkOrder::PostOrder>
+SmallVector<RetOp, 4> getOpsNested(Operation *op) {
+  SmallVector<RetOp, 4> res;
+  op->walk<Order>([&](RetOp ret) { res.push_back(ret); });
+  return res;
 }
 
 } // namespace mlir
