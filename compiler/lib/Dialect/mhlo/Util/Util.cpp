@@ -561,4 +561,5 @@ mlir::computeReshapeExpandDim(mhlo::ReshapeOp reshapeOp) {
       return i;
     }
   }
+  return std::nullopt;
 }

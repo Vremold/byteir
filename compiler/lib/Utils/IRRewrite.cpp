@@ -79,7 +79,8 @@ void mlir::deepReplicateAncestorOps(
 
           LLVM_DEBUG(llvm::dbgs() << "replicateDefiningOp\n");
 
-          (void)replicateDefiningOp(builder, user, operandNumber, resultNumber);
+          (void)deepReplicateDefiningOp(builder, user, operandNumber,
+                                        resultNumber);
         }
       }
     }
