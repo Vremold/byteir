@@ -35,6 +35,15 @@ class PostDominanceInfo;
 class ShapedType;
 class TypeRange;
 
+// deep replicate specific op and its ancestor based a checkFunc
+void deepReplicateAncestorOps(Operation *op,
+                              std::function<bool(Operation *)> checkFunc);
+
+// deep replicate op's opIdx-th DefinitingOp
+// and set op's opIdx-th operand as cloned's resIdx-th result.
+Operation *deepReplicateDefiningOp(OpBuilder &b, Operation *op, unsigned opIdx,
+                                   unsigned resIdx);
+
 // replicate specific ops satisfying func
 void replicateDefiningOp(Block *block,
                          std::function<bool(Operation *)> checkFunc);
@@ -49,9 +58,14 @@ Operation *replicateDefiningOp(OpBuilder &b, Operation *op, unsigned opIdx,
 Operation *cloneAndReplaceResultTypes(OpBuilder &b, Operation *op,
                                       IRMapping bvm, TypeRange types);
 
+// deep clone an op with IRMapping
+Operation *deepClone(OpBuilder &b, Operation *op, IRMapping &mapper);
+Operation *deepClone(OpBuilder &b, Operation *op);
+
 // deep fold an op by IRMapping bvm
 // return success if the op can be folded, and return FoldResult in results.
 // return failure if the op cannot be folded, results will be undefined.
+// Note deepFold not involve in any cloning.
 LogicalResult deepFold(Operation *op, IRMapping &bvm,
                        SmallVectorImpl<mlir::OpFoldResult> &results);
 

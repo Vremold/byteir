@@ -49,6 +49,15 @@ bool mlir::isMhloConstantLike(Operation *op) {
   return isa<mhlo::ConstantOp>(op) || isa<mhlo::IotaOp>(op);
 }
 
+bool mlir::isDeepMhloFoldable(Operation *op) {
+  auto check = [](Operation *op) {
+    if (!op)
+      return false;
+    return isMhlo(op);
+  };
+  return deepCheck(op, check);
+}
+
 bool mlir::isSplatMhloConstantValue(Value val) {
   return isSplatMhloConstant(val.getDefiningOp());
 }

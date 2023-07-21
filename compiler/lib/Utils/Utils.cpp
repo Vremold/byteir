@@ -356,6 +356,53 @@ bool mlir::isMemrefTrivial(mlir::Value memref,
   return true;
 }
 
+bool mlir::deepCheck(Operation *op,
+                     std::function<bool(mlir::Operation *)> checkFunc) {
+  if (!op) {
+    return checkFunc(op);
+  }
+
+  for (auto operand : op->getOperands()) {
+    auto defOp = operand.getDefiningOp();
+    if (!deepCheck(defOp, checkFunc)) {
+      return false;
+    }
+  }
+  return checkFunc(op);
+}
+
+bool mlir::deepCheckWithMemory(Operation *op,
+                               std::function<bool(mlir::Operation *)> checkFunc,
+                               llvm::DenseMap<Operation *, bool> &memory) {
+  if (memory.contains(op)) {
+    return memory.lookup(op);
+  }
+
+  if (!op) {
+    auto result = checkFunc(op);
+    memory.try_emplace(op, result);
+    return result;
+  }
+
+  bool operandFalse = false;
+  for (auto operand : op->getOperands()) {
+    auto defOp = operand.getDefiningOp();
+    if (!deepCheckWithMemory(defOp, checkFunc, memory)) {
+      memory.try_emplace(op, false);
+      operandFalse = true;
+    }
+  }
+
+  if (operandFalse) {
+    memory.try_emplace(op, false);
+    return false;
+  }
+
+  auto result = checkFunc(op);
+  memory.try_emplace(op, result);
+  return result;
+}
+
 int mlir::userCount(Value val) {
   SmallDenseSet<Operation *> count;
   for (auto user : val.getUsers()) {

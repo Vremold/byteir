@@ -25,6 +25,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include <functional>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -162,6 +163,16 @@ SmallVector<Value, 4> getOutputsOfCluster(
 // return true, if memref is only used in op in the filters, or alloc or dealloc
 bool isMemrefTrivial(mlir::Value memref,
                      llvm::ArrayRef<mlir::Operation *> filters);
+
+// deep check an op satisfy check function
+// e.g. deep check an op's leaves are all constant
+bool deepCheck(Operation *op, std::function<bool(mlir::Operation *)> checkFunc);
+
+// deep check an op satisfy check function
+// allow a memory to store previous result for accelerating
+bool deepCheckWithMemory(Operation *op,
+                         std::function<bool(mlir::Operation *)> checkFunc,
+                         llvm::DenseMap<Operation *, bool> &memory);
 
 // count number of a value is used
 // if a value is used twice by a user, it will count twice
