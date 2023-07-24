@@ -28,7 +28,7 @@ cmake -S . \
       -GNinja \
       -DMLIR_DIR="$LLVM_INSTALL_DIR/lib/cmake/mlir" \
       -DLLVM_EXTERNAL_LIT=$(which lit) \
-      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_BUILD_TYPE=RelWithDebInfo \
       -DCMAKE_C_COMPILER=gcc \
       -DCMAKE_CXX_COMPILER=g++
 
