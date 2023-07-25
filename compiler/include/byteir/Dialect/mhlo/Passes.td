@@ -274,6 +274,15 @@ def ReduceFusion : Pass<"fuse-reduce", "mlir::func::FuncOp"> {
 }
 
 //===----------------------------------------------------------------------===//
+// ReshapeGather
+//===----------------------------------------------------------------------===//
+
+def ReshapeGather : Pass<"reshape-gather", "mlir::func::FuncOp"> {
+  let summary = "Reshape gather index to be 1D";
+  let constructor = "mlir::createReshapeGatherPass()";
+}
+
+//===----------------------------------------------------------------------===//
 // RewriteWithConstraint
 //===----------------------------------------------------------------------===//
 

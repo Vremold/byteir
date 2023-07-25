@@ -99,6 +99,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/IOConvertFusion.cpp
   Transforms/LayoutTransformation.cpp
   Transforms/ReduceFusion.cpp
+  Transforms/ReshapeGather.cpp
   Transforms/RewriteWithConstraint.cpp
   Transforms/ShapeReification.cpp
   Transforms/StaticShapeInference.cpp
