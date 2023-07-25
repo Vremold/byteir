@@ -1,4 +1,4 @@
-//===- TypeUtils.h ------------------------------------------------- C++---===//
+//===- GraphUtils.h ------------------------------------------------ C++---===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,22 +15,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_UTILS_TYPEUTILS_H
-#define BYTEIR_UTILS_TYPEUTILS_H
+#ifndef BYTEIR_UTILS_GRAPHUTILS_H
+#define BYTEIR_UTILS_GRAPHUTILS_H
 
-#include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/Support/LLVM.h"
 
 namespace mlir {
 
-// append attribute to origin type's encoding
-// note: if origin has non-DictionaryAttr, will replace it.
-RankedTensorType appendTensorEncodingAttr(RankedTensorType origin,
-                                          NamedAttribute attr);
+class Value;
+class Operation;
 
-// return whether two ShapedType has a same Shape
-bool areSameShape(ShapedType lhs, ShapedType rhs);
+DenseMap<Value, int64_t> getNumberOfUsesFromRoot(Operation *root);
+DenseMap<Value, int64_t> getNumberOfUsesFromRoots(ArrayRef<Operation *> roots);
 
 } // namespace mlir
 
-#endif // BYTEIR_UTILS_TYPEUTILS_H
+#endif // BYTEIR_UTILS_GRAPHUTILS_H
