@@ -3,7 +3,7 @@
 set -e
 set -x
 
-http_proxy=http://bj-rd-proxy.byted.org:3128 https_proxy=http://bj-rd-proxy.byted.org:3128 python3.7 -m pip install --no-cache-dir -f https://download.pytorch.org/whl/torch_stable.html torch==1.8.1+cu111
+http_proxy=http://bj-rd-proxy.byted.org:3128 https_proxy=http://bj-rd-proxy.byted.org:3128 python3.7 -m pip install --no-cache-dir -f https://download.pytorch.org/whl/torch_stable.html torch==1.8.1+cpu
 
 
 CUR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -20,6 +20,7 @@ pushd build
 cmake .. -DPython3_EXECUTABLE=python3.7
 make -j4
 
+rm -rf $OUTPUT_DIR
 mkdir $OUTPUT_DIR
 cp ./libcustom_op.so $OUTPUT_DIR/
 popd
