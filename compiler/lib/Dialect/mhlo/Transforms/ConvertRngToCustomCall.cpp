@@ -42,19 +42,18 @@ struct ConvertRngUniform : public OpRewritePattern<mhlo::RngOp> {
     auto B = op.getB();
     auto shape = op.getShape();
     TensorType resultType = op.getResult().getType();
-
-    // getSeed op
     TensorType seedType = RankedTensorType::get({}, rewriter.getI64Type());
     auto getSeedOp =
         rewriter.create<byre::ComputeOp>(op->getLoc(), ArrayRef<Type>{seedType},
-                                         "getSeed", ValueRange(), ArrayAttr());
+                                         "GetSeed", ValueRange(), ArrayAttr());
     auto getOffsetOp = rewriter.create<byre::ComputeOp>(
-        op->getLoc(), ArrayRef<Type>{seedType}, "getOffset", ValueRange(),
+        op->getLoc(), ArrayRef<Type>{seedType}, "GetOffset", ValueRange(),
         ArrayAttr());
-
-    SmallVector<Value> bufferArgs{A, B, shape, getSeedOp.getResults()[0],
+    SmallVector<Value> bufferArgs{A, B, getSeedOp.getResults()[0],
                                   getOffsetOp.getResults()[0]};
-
+    if (!op.getType().hasStaticShape()) {
+      bufferArgs.emplace_back(shape);
+    }
     auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
         op->getLoc(), ArrayRef<Type>{resultType}, bufferArgs,
         getRngUniformName(), false, rewriter.getStringAttr(""),
@@ -73,6 +72,11 @@ struct ConvertRngToCustomCallPass
 public:
   ConvertRngToCustomCallPass() = default;
 
+  void getDependentDialects(DialectRegistry &registry) const override {
+    registry.insert<byre::ByreDialect>();
+    registry.insert<mhlo::MhloDialect>();
+  }
+
   void runOnOperation() override {
     func::FuncOp funcOp = getOperation();
     MLIRContext *context = &getContext();
@@ -82,10 +86,6 @@ public:
     if (failed(applyPatternsAndFoldGreedily(funcOp, frozenPatterns))) {
       signalPassFailure();
     }
-  }
-
-  void getDependentDialects(DialectRegistry &registry) const override {
-    registry.insert<byre::ByreDialect>();
   }
 };
 
