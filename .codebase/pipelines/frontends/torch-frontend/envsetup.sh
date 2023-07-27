@@ -46,7 +46,7 @@ function prepare_for_build_with_prebuilt() {
   pushd ${PROJ_DIR}
   # install requirements
   python3 -m pip install -r requirements.txt
-  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.9-cp39-cp39-linux_x86_64.whl
+  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.11-cp39-cp39-linux_x86_64.whl
 
   # init submodule
   git submodule update --init -f $TORCH_MLIR_ROOT
@@ -70,7 +70,7 @@ function prepare_for_build() {
   pushd ${PROJ_DIR}
   # install requirements
   python3 -m pip install -r requirements.txt
-  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.9-cp39-cp39-linux_x86_64.whl
+  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.11-cp39-cp39-linux_x86_64.whl
 
   # init submodule
   git submodule update --init --recursive -f $TORCH_MLIR_ROOT
