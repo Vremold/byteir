@@ -81,6 +81,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/ConvBackwardFusion.cpp
   Transforms/ConvForwardFusion.cpp
   Transforms/ConvertFuncToCustomCall.cpp
+  Transforms/ConvertRngToCustomCall.cpp
   Transforms/ConvertInsertion.cpp
   Transforms/DotTransposeFusion.cpp
   Transforms/DTypeConversion.cpp
@@ -105,6 +106,7 @@ add_mlir_dialect_library(ByteIRMhloPasses
   Transforms/StaticShapeInference.cpp
   Transforms/TrivialFusion.cpp
   Transforms/UnfuseBatchNorm.cpp
+
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo

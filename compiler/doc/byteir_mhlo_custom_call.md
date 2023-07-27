@@ -192,3 +192,11 @@ Further needed infomation for a given coarse-grained op are encoded in a diction
 
 - Results:
   - output: Tensor
+
+### byteir.rng_uniform
+- Operands:
+  - low: Tensor
+  - high: Tensor
+  - shape: Tensor
+- Results:
+  - out: Tensor
