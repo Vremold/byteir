@@ -1,4 +1,4 @@
-//===- PassDetail.h -------------------------------------------*--- C++ -*-===//
+//===- GraphClusteringAlgo.h ----------------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,42 +15,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_TRANSFORMS_PASSDETAIL_H
-#define BYTEIR_TRANSFORMS_PASSDETAIL_H
+#ifndef BYTEIR_TRANSFORMS_GRAPHCLUSTERINGALGO_H
+#define BYTEIR_TRANSFORMS_GRAPHCLUSTERINGALGO_H
 
-#include "byteir/Transforms/GraphClusteringAlgo.h"
-#include "mlir/IR/DialectRegistry.h"
-#include "mlir/Pass/Pass.h"
+#include <cstdint>
 
-// forward dialects for conversions
 namespace mlir {
-class ModuleOp;
-class AffineDialect;
 
-namespace cf {
-class ControlFlowDialect;
-} // namespace cf
-
-namespace func {
-class FuncDialect;
-class FuncOp;
-} // namespace func
-
-namespace memref {
-class MemRefDialect;
-} // namespace memref
-
-namespace mhlo {
-class MhloDialect;
-} // namespace mhlo
-
-namespace scf {
-class SCFDialect;
-} // namespace scf
-
-#define GEN_PASS_CLASSES
-#include "byteir/Transforms/Passes.h.inc"
+enum class GraphClusteringAlgo : uint32_t {
+  kFallback = 0,
+  kTopDown = 1,
+  kBottomUp = 2,
+};
 
 } // namespace mlir
 
-#endif // BYTEIR_TRANSFORMS_PASSDETAIL_H
+#endif // BYTEIR_TRANSFORMS_GRAPHCLUSTERINGALGO_H
