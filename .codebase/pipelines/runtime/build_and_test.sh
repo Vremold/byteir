@@ -70,6 +70,12 @@ cmake -GNinja \
 
 cmake --build "$BUILD_DIR" --target all --target install
 
+if [[ $BRT_ENABLE_PYTHON_BINDINGS == "ON" ]]; then
+  pushd $PROJ_DIR/python
+  python3 setup.py bdist_wheel
+  popd
+fi
+
 if [[ $BRT_USE_CUDA == "ON" ]]; then
   export CUDA_VISIBLE_DEVICES=4,5,6,7
 fi

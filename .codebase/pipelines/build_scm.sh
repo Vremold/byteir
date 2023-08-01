@@ -21,8 +21,7 @@ CMAKE_BUILD_PARALLEL_LEVEL=4 bash $ROOT_PROJ_DIR/.codebase/pipelines/frontends/t
 mkdir $OUTPUT_DIR
 cp $ROOT_PROJ_DIR/external/AITemplate/python/dist/*.whl $OUTPUT_DIR/
 cp $ROOT_PROJ_DIR/compiler/build/python/dist/*.whl $OUTPUT_DIR/
-cp $ROOT_PROJ_DIR/runtime/build/python/_brt.so $OUTPUT_DIR/
-cp $ROOT_PROJ_DIR/runtime/build/lib/libbrt.so $OUTPUT_DIR/
+cp $ROOT_PROJ_DIR/runtime/python/dist/*.whl $OUTPUT_DIR/
 cp $ROOT_PROJ_DIR/frontends/torch-frontend/build/torch-frontend/python/dist/*.whl $OUTPUT_DIR/
 cp $ROOT_PROJ_DIR/frontends/torch-frontend/torch-requirements.txt $OUTPUT_DIR/
 
