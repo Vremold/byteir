@@ -235,7 +235,8 @@ def FuseOperandsOp : Op<Transform_Dialect, "structured.fuse_operands",
   let arguments =
     (ins PDL_Operation:$target,
          DefaultValuedAttr<I64ArrayAttr, "{}">:$tile_nums,
-         DefaultValuedAttr<I64ArrayAttr, "{}">:$tile_interchange);
+         DefaultValuedAttr<I64ArrayAttr, "{}">:$tile_interchange,
+         DefaultValuedAttr<I64ArrayAttr, "{}">:$use_distributed);
   let results = (outs PDL_Operation:$transformed,
                       Variadic<PDL_Operation>:$loops);
 

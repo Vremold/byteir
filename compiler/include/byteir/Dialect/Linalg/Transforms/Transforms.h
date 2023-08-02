@@ -34,6 +34,7 @@
 #ifndef BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
 #define BYTEIR_DIALECT_LINALG_TRANSFORMS_TRANSFORMS_H
 
+#include "byteir/Utils/TileUtils.h"
 #include "mlir/Dialect/Linalg/Transforms/Transforms.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Transforms/TileUsingInterface.h"
@@ -58,9 +59,9 @@ tileConsumerAndFuseProducerUsingSCFForOpExt(
     bool simplifyLoopIter = true, bool keepIntermediate = false);
 
 FailureOr<scf::SCFTileAndFuseResult>
-tileConsumerAndFuseProducerGreedilyUsingSCFForTensors(
+tileConsumerArrayAndFuseProducerGreedilyUsingSCFFor(
     RewriterBase &rewriter, ArrayRef<Value> tensors,
-    ArrayRef<OpFoldResult> numTiles, ArrayRef<int64_t> interchange);
+    const TilingOptions &options);
 
 void labelTileLoopType(Operation *op, ArrayRef<scf::ForOp> loops);
 

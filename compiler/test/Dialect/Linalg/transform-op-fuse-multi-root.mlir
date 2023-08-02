@@ -99,3 +99,23 @@ transform.sequence failures(propagate) {
   %1, %loops:2 = transform.structured.fuse_operands %0 {tile_nums = [32, 16], tile_interchange = [1, 0]}
   cleanup
 }
+
+// -----
+
+func.func @all_reduce(%arg0: tensor<64x128xf32>, %arg1: tensor<64x128xf32>, %arg2: tensor<64xf32>) -> tensor<64xf32> {
+  %0 = linalg.elemwise_unary ins(%arg0 : tensor<64x128xf32>) outs(%arg1 : tensor<64x128xf32>) -> tensor<64x128xf32>
+  %reduced = linalg.reduce { arith.addf } ins(%0 : tensor<64x128xf32>) outs(%arg2 : tensor<64xf32>) dimensions = [1] 
+  return %reduced : tensor<64xf32>
+}
+// CHECK-LABEL: func.func @all_reduce
+// CHECK:  {{.*}} scf.for
+// CHECK-DAG: %[[V0:.*]] = linalg.elemwise_unary
+// CHECK-DAG: %[[V1:.*]] = linalg.reduce { arith.addf } ins(%[[V0]] : tensor<64x4xf32>)
+// CHECK-DAG: %[[V2:.*]] = "ccl.all_reduce"(%[[V1]])
+// CHECK: scf.yield %[[V2]] : tensor<64xf32>
+
+transform.sequence  failures(propagate) {
+^bb0(%arg0: !pdl.operation):
+  %0 = transform.structured.match ops{["func.return"]} in %arg0 : (!pdl.operation) -> !pdl.operation
+  %transformed, %loops = transform.structured.fuse_operands %0 {tile_interchange = [], tile_nums = [1, 32], use_distributed = [0, 1]}
+}
