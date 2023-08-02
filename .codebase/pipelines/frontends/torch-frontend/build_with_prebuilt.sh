@@ -30,7 +30,8 @@ cmake -S . \
       -DLLVM_EXTERNAL_LIT=$(which lit) \
       -DCMAKE_BUILD_TYPE=RelWithDebInfo \
       -DCMAKE_C_COMPILER=gcc \
-      -DCMAKE_CXX_COMPILER=g++
+      -DCMAKE_CXX_COMPILER=g++ \
+      -DPython3_EXECUTABLE=$(which python3)
 
 cmake --build ./build --target all
 popd
