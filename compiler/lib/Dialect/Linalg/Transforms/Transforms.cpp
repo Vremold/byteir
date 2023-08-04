@@ -1397,7 +1397,7 @@ static LogicalResult checkRootsAndTileOptions(ArrayRef<Value> tensors,
 FailureOr<scf::SCFTileAndFuseResult>
 mlir::scf::tileConsumerArrayAndFuseProducerGreedilyUsingSCFFor(
     RewriterBase &rewriter, ArrayRef<Value> tensors,
-    const TilingOptions &options) {
+    const TilingOptions &options, bool expectWholeGraphFusion) {
   if (failed(checkRootsAndTileOptions(tensors, options))) {
     LLVM_DEBUG(DBGS() << "check root and tile options failed\n");
     return failure();
@@ -1649,6 +1649,28 @@ mlir::scf::tileConsumerArrayAndFuseProducerGreedilyUsingSCFFor(
   for (auto &loop : tileAndFuseResult.loops) {
     if (!sortTopologically(loop.getBody()))
       return rewriter.notifyMatchFailure(loc, "topological sort fails.");
+  }
+
+  // 4. if expectWholeGraphFusion is true
+  if (expectWholeGraphFusion) {
+    for (Operation *op : tileAndFuseResult.tiledAndFusedOps) {
+      for (Value operand : op->getOperands()) {
+        Operation *defOp = operand.getDefiningOp();
+        if (!defOp)
+          continue;
+        tensor::ExtractSliceOp sliceOp =
+            llvm::dyn_cast<tensor::ExtractSliceOp>(defOp);
+        if (!sliceOp)
+          continue;
+        Value sliceInput = sliceOp.getSource();
+        Operation *sliceInputDefOp = sliceInput.getDefiningOp();
+        if (!sliceInputDefOp)
+          continue;
+        if (!llvm::isa<tensor::EmptyOp, linalg::FillOp>(sliceInputDefOp))
+          return rewriter.notifyMatchFailure(sliceInputDefOp,
+                                             "expect whole graph fusion");
+      }
+    }
   }
 
   return tileAndFuseResult;

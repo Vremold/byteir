@@ -236,7 +236,8 @@ def FuseOperandsOp : Op<Transform_Dialect, "structured.fuse_operands",
     (ins PDL_Operation:$target,
          DefaultValuedAttr<I64ArrayAttr, "{}">:$tile_nums,
          DefaultValuedAttr<I64ArrayAttr, "{}">:$tile_interchange,
-         DefaultValuedAttr<I64ArrayAttr, "{}">:$use_distributed);
+         DefaultValuedAttr<I64ArrayAttr, "{}">:$use_distributed,
+         DefaultValuedAttr<BoolAttr, "false">:$expect_whole_graph_fusion);
   let results = (outs PDL_Operation:$transformed,
                       Variadic<PDL_Operation>:$loops);
 

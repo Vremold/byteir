@@ -1438,11 +1438,14 @@ DiagnosedSilenceableFailure transform::FuseOperandsOp::apply(
             .setInterchange(tileInterchange)
             .setUseDistributedStyle(useDistributed);
         return tileConsumerArrayAndFuseProducerGreedilyUsingSCFFor(
-            rewriter, tensors, options);
+            rewriter, tensors, options,
+            getExpectWholeGraphFusionAttr().getValue());
       });
 
-  return failed(result) ? DiagnosedSilenceableFailure::definiteFailure()
-                        : DiagnosedSilenceableFailure::success();
+  if (failed(result)) {
+    return emitSilenceableError() << "tiling and fusion fails";
+  } else
+    return DiagnosedSilenceableFailure::success();
 }
 
 ParseResult transform::FuseOperandsOp::parse(OpAsmParser &parser,

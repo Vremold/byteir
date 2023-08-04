@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s --transform-dialect-interpreter --split-input-file | FileCheck %s
+// RUN: byteir-opt %s --transform-dialect-interpreter --split-input-file -allow-unregistered-dialect -verify-diagnostics | FileCheck %s
 
 
 func.func @tile_two_roots(%arg0: tensor<64x128xf32>, %arg1: tensor<64x128xf32>, %arg2: tensor<64x128xf32>, %arg3: tensor<64x128xf32>) -> (tensor<64x128xf32>, tensor<64x128xf32>) {
@@ -118,4 +118,23 @@ transform.sequence  failures(propagate) {
 ^bb0(%arg0: !pdl.operation):
   %0 = transform.structured.match ops{["func.return"]} in %arg0 : (!pdl.operation) -> !pdl.operation
   %transformed, %loops = transform.structured.fuse_operands %0 {tile_interchange = [], tile_nums = [1, 32], use_distributed = [0, 1]}
+}
+
+// -----
+
+func.func @expect_whole_graph_fusion(%arg0: tensor<64x128xf32>, %arg1: tensor<64x128xf32>, %arg2: tensor<64x128xf32>) -> tensor<64x128xf32> {
+  %0 = "op_cannot_tile"(%arg0) : (tensor<64x128xf32>) -> (tensor<64x128xf32>)
+  %1 = linalg.elemwise_unary {__op0__} ins(%0 : tensor<64x128xf32>)
+                             outs(%arg1: tensor<64x128xf32>) -> tensor<64x128xf32>
+  %2 = linalg.elemwise_unary {__op1__} ins(%1 : tensor<64x128xf32>)
+                             outs(%arg2: tensor<64x128xf32>) -> tensor<64x128xf32>
+  return %2: tensor<64x128xf32>
+}
+
+transform.sequence failures(propagate) {
+^bb1(%arg1: !pdl.operation):
+  %0 = transform.structured.match ops {["func.return"]} in %arg1 : (!pdl.operation) -> !pdl.operation
+  // expected-error @below {{tiling and fusion fails}}
+  %1, %loops:2 = transform.structured.fuse_operands %0 {tile_nums = [32, 16], tile_interchange = [1, 0], expect_whole_graph_fusion = true}
+  cleanup
 }
