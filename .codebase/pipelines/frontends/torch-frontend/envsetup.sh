@@ -13,7 +13,7 @@ TORCH_MLIR_ROOT="$PROJ_DIR/third_party/torch-mlir"
 function download_llvm_prebuilt() {
   pushd ${PROJ_DIR}
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_4592543a01609feb4b3c19e81a9d54743e15e329.tar.gz"
+    LLVM_BUILD="llvm_install_41895843b5915bb78e9d02aa711fa10f7174db43.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install*
       rm -rf llvm_build
