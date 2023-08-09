@@ -646,21 +646,17 @@ mlir::mhlo::foldConcatWithSlicesAndRehape(mhlo::ConcatenateOp op,
 
     auto sliceOperandShape =
         iter->first.getType().cast<ShapedType>().getShape();
-    auto sliceSize = sliceOperandShape.back() / opOperandList.size();
 
-    // only support that extract slices on the last dimension
+    // TODO: only support that extract slices on the last dimension, relax it
+    // later
     if ((sliceOperandShape.back() % opOperandList.size()) != 0) {
       continue;
     }
-    // only support that reshape expand's dim is  equal to concat dim
-    auto expandDim = computeReshapeExpandDim(
-        opOperandList[0]->get().getDefiningOp<mhlo::ReshapeOp>());
-    if ((!expandDim.has_value()) || (*expandDim != concatDim)) {
-      continue;
-    }
+    auto sliceSize = sliceOperandShape.back() / opOperandList.size();
+
+    bool isAllSliceOpLegal = true;
     for (unsigned i = 0; i < opOperandList.size(); i++) {
       auto reshapeOp = opOperandList[i]->get().getDefiningOp<mhlo::ReshapeOp>();
-      // TODO: support slice on arbitrary dimension
       auto slice = reshapeOp.getOperand().getDefiningOp<mhlo::SliceOp>();
       auto startAttr = slice.getStartIndices();
       auto limitAttr = slice.getLimitIndices();
@@ -671,16 +667,33 @@ mlir::mhlo::foldConcatWithSlicesAndRehape(mhlo::ConcatenateOp op,
               (limitAttr.getValues<IntegerAttr>()[j].getInt() !=
                sliceOperandShape[j]) ||
               (stridesAttr.getValues<IntegerAttr>()[j].getInt() != 1)) {
-            continue;
+            isAllSliceOpLegal = false;
+            break;
           }
         } else if ((startAttr.getValues<IntegerAttr>()[j].getInt() !=
                     i * sliceSize) ||
                    (limitAttr.getValues<IntegerAttr>()[j].getInt() !=
                     (i + 1) * sliceSize) ||
                    (stridesAttr.getValues<IntegerAttr>()[j].getInt() != 1)) {
-          continue;
+          isAllSliceOpLegal = false;
+          break;
         }
       }
+      if (!isAllSliceOpLegal) {
+        break;
+      }
+    }
+    if (!isAllSliceOpLegal) {
+      continue;
+    }
+
+    auto expandDim = computeReshapeExpandDim(
+        opOperandList[0]->get().getDefiningOp<mhlo::ReshapeOp>());
+
+    // only support that reshape expand's dim is  equal to concat dim
+    if ((!expandDim.has_value()) || (*expandDim != concatDim) ||
+        (*expandDim != sliceOperandShape.size() - 1)) {
+      continue;
     }
     SmallVector<int64_t> newReshapeShape(sliceOperandShape.begin(),
                                          sliceOperandShape.end());
