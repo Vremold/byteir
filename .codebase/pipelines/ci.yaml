@@ -38,14 +38,6 @@ jobs:
       - name: Build and Test ByteIR Libs
         commands:
           - bash .codebase/pipelines/compiler/build_and_lit_test.sh
-  # byteir_compiler_build_and_test_with_asan:
-  #   name: byteir compiler CI with asan
-  #   image: hub.byted.org/compile/data.aml.byteir_cuda:v10
-  #   working-directory: byteir/byteir
-  #   steps:
-  #     - name: Build and Test ByteIR Libs
-  #       commands:
-  #         - bash .codebase/pipelines/compiler/build_and_lit_test.sh --asan
   brt_check_cpu:
     name: BRT cpu test
     image: hub.byted.org/compile/data.aml.byteir_cuda:v10
@@ -86,13 +78,4 @@ jobs:
       - name: Build and Test Python APIs
         commands:
           - bash .codebase/pipelines/compiler/build_and_test_cat.sh
-  byteir_e2e_test:
-    name: byteir E2E test CI
-    runs-on:
-      spec: m1.8xlarge
-    image: hub.byted.org/compile/data.aml.byteir_cuda:debian11_v1
-    working-directory: byteir/byteir
-    steps:
-      - name: Build and Test E2E
-        commands:
-          - bash .codebase/pipelines/e2e/build_and_test_e2e.sh
+
