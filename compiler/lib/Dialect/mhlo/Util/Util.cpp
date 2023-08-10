@@ -84,6 +84,13 @@ bool mlir::isSplatMhloConstantValue(Operation *op, double splat_val) {
   return false;
 }
 
+bool mlir::isDenseMhloConstantValue(Value val) {
+  if (auto constOp = val.getDefiningOp<mhlo::ConstantOp>()) {
+    return llvm::isa<DenseElementsAttr>(constOp.getValue());
+  }
+  return false;
+}
+
 bool mlir::isSplatMhloConstantValue(Value val, int64_t splat_val) {
   return isSplatMhloConstantValue(val.getDefiningOp(), splat_val);
 }
