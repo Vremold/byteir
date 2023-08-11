@@ -43,6 +43,7 @@ When building is completed, it will produce **three** python wheel packages: tor
 
 ### Install PyTorch and ByteIR Components
 Install torch-nightly:
+* cd byteir/frontends/torch-frontend
 * python3 -m pip install -r ./torch-requirements.txt
 
 Install ByteIR Components:
