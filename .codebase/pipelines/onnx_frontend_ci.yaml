@@ -12,6 +12,7 @@ trigger:
       - "frontends/onnx-frontend/**"
       - ".codebase/pipelines/onnx_frontend_ci.yaml"
       - ".codebase/pipelines/frontends/onnx-frontend/**"
+      - "!**/*.md"
 jobs:
   onnx_frontend_check:
     name: onnx frontend CI
