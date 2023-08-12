@@ -41,7 +41,7 @@ jobs:
           - bash .codebase/pipelines/compiler/build_and_lit_test.sh
   brt_check_cpu:
     name: BRT cpu test
-    image: hub.byted.org/compile/data.aml.byteir_cuda:v10
+    image: hub.byted.org/arnold/data.aml.byteir_cpu:v10
     working-directory: byteir/byteir
     # depends: [byteir_compiler_build_and_test]
     steps:
