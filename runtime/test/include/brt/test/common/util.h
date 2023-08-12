@@ -90,8 +90,8 @@ template <typename T,
 // check two values same
 template <typename T> [[nodiscard]] bool ExpectEQ(T first, T second) {
   if (first != second) {
-    std::cerr << "ExpectEQ Error: first value " << first << ", second value "
-              << second << "\n";
+    std::cerr << "ExpectEQ Error: first value " << static_cast<double>(first)
+              << ", second value " << static_cast<double>(second) << "\n";
     return false;
   }
   return true;
