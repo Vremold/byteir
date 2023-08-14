@@ -14,7 +14,7 @@ cmake -S . \
       -B ./build \
       -GNinja \
       -DLLVM_EXTERNAL_LIT=$(which lit) \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+      -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_C_COMPILER=clang \
       -DCMAKE_CXX_COMPILER=clang++ \
       -DPython3_EXECUTABLE=$(which python3)
