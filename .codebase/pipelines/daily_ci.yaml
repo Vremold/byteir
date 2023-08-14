@@ -21,3 +21,13 @@ jobs:
   #     - name: Build and Test ByteIR Libs
   #       commands:
   #         - bash .codebase/pipelines/compiler/build_and_lit_test.sh --asan
+  send_msg:
+    name: send message to byteir ci group
+    image: hub.byted.org/compile/data.aml.byteir_cuda:v10
+    working-directory: byteir/byteir
+    depends: [byteir_e2e_test]
+    steps:
+      - name: Send Message
+        commands:
+          - python3 -m pip install requests
+          - python3 .codebase/pipelines/scripts/send_feisu_msg.py
