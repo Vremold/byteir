@@ -2,6 +2,13 @@ name: ByteIR Daily CI
 trigger:
   manual:
   cron:
+  change:
+    types:
+      - create
+      - push
+    paths:
+      - ".codebase/pipelines/daily_ci.yaml"
+      - "tests/**"
 jobs:
   byteir_e2e_test:
     name: byteir E2E test CI
