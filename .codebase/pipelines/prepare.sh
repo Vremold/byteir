@@ -1,6 +1,6 @@
 function download_llvm_prebuilt() {
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_225d255a583ea3d50bbba49d949ca76be6a880bf.tar.gz"
+    LLVM_BUILD="llvm_install_4592543a01609feb4b3c19e81a9d54743e15e329.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install*
       rm -rf llvm_build
@@ -21,6 +21,7 @@ function apply_mhlo_patches() {
   for patch in $ROOT_PROJ_DIR/external/patches/mlir-hlo/*; do
     git apply $patch
   done
+  popd
 }
 
 function apply_aitemplate_patches() {

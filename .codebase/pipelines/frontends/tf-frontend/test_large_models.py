@@ -11,6 +11,9 @@ from mhlo_tools.ir_executor import Interpreter
 from mhlo_tools.ir_executor.helper import mlir_attr_to_pyobj, mlir_type_to_dtype
 from mhlo_tools.mlir import ir
 
+import random
+random.seed(12345)
+
 TF_CUSTOMCALL_OPS = [
     "softmax",
     "log_softmax",
@@ -34,10 +37,10 @@ TF_FRONTEND = os.environ["TF_FRONTEND_BIN_PATH"]
 MODEL_LIST = [
     {'model_name': "resnet/resnet50_v1.pb", 'batch_size': 32, 'output_names': ["softmax_tensor"], 'custom_compilation_cfgs': []},
     {'model_name': "bert/bert-base-mrpc-without-preprocess.pb", 'batch_size': 32, 'output_names': ["loss/Softmax"], 'custom_compilation_cfgs': []},
-    {'model_name': "recommender_model/industry_ecom_cvr_project_v50_spu_fm_bias_batch_r2042581_0.pb", 'batch_size': 100, 
-     'output_names': ["oracle_pred"], 'custom_compilation_cfgs': ["-staticalize-dynamic-shape=True", 
-                                                                  "-remove-control-flow=True", 
-                                                                  "-force-set-batch-size=False", 
+    {'model_name': "recommender_model/industry_ecom_cvr_project_v50_spu_fm_bias_batch_r2042581_0.pb", 'batch_size': 100,
+     'output_names': ["oracle_pred"], 'custom_compilation_cfgs': ["-staticalize-dynamic-shape=True",
+                                                                  "-remove-control-flow=True",
+                                                                  "-force-set-batch-size=False",
                                                                   "-customcall-ops={}".format(",".join(TF_CUSTOMCALL_OPS))]}
 ]
 # MODEL_LIST=[("quicksilver/nlp/bernard_model_27285.pb", 100, [])]
@@ -57,7 +60,7 @@ def calculate_tf_outputs(pb_model_path, inputs_name, outputs_name, inputs):
         output_tensors = [graph.get_tensor_by_name(name + ":0") for name in outputs_name]
         outputs = sess.run(output_tensors, feed_dict=feed_dict)
     return outputs
-            
+
 def translate_from_tf_graph(model_path, batch_size, output_names, custom_compilation_cfgs):
     cmd_opts = [TF_FRONTEND]
     cmd_opts += [model_path]
@@ -105,7 +108,7 @@ def test_large_models():
         inputs_name, inputs, mhlo_outputs = calculate_mhlo_golden(mhlo_str)
         tensorflow_outputs = calculate_tf_outputs(os.path.join(LARGE_MODEL_PATH, model["model_name"]), inputs_name, model["output_names"], inputs)
         assert len(mhlo_outputs) == len(tensorflow_outputs)
-        np.testing.assert_almost_equal(mhlo_outputs, tensorflow_outputs, decimal=2)    
+        np.testing.assert_almost_equal(mhlo_outputs, tensorflow_outputs, decimal=2)
 
 if __name__ == "__main__":
     test_large_models()

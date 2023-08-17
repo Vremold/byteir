@@ -354,7 +354,7 @@ static void populateCommonPatterns(RewritePatternSet &patterns,
   populateMapOpToGenericPattern(patterns);
 
   // General canonicalization patterns.
-  AffineApplyOp::getCanonicalizationPatterns(patterns, context);
+  affine::AffineApplyOp::getCanonicalizationPatterns(patterns, context);
   GenericOp::getCanonicalizationPatterns(patterns, context);
   tensor::ExpandShapeOp::getCanonicalizationPatterns(patterns, context);
   tensor::CollapseShapeOp::getCanonicalizationPatterns(patterns, context);

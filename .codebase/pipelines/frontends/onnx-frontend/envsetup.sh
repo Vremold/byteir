@@ -8,7 +8,7 @@ echo "ONNX_FRONTEND_ROOT = $ONNX_FRONTEND_ROOT"
 function download_llvm_prebuilt_rtti() {
   pushd $ONNX_FRONTEND_ROOT
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_rtti_76c83b3595a534c5b28bd80039e2115358ba2291.tar.gz"
+    LLVM_BUILD="llvm_install_rtti_4592543a01609feb4b3c19e81a9d54743e15e329.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install_rtti*
       rm -rf llvm_build_rtti
@@ -31,7 +31,7 @@ function of_envsetup() {
   export no_proxy='*.byted.org'
 
   # install requirements
-  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.9-cp39-cp39-linux_x86_64.whl
+  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.1.0-cp39-cp39-linux_x86_64.whl
   python3 -m pip install -r $ONNX_FRONTEND_ROOT/requirements.txt
 
   # init submodule
@@ -63,7 +63,7 @@ function of_build() {
       "-B$ONNX_FRONTEND_ROOT/build" \
       -GNinja \
       -DCMAKE_CXX_COMPILER=/usr/bin/c++ \
-      -DPython3_ROOT_DIR=/usr/bin/python3.7 \
+      -DPython3_ROOT_DIR=/usr/bin/python3.9 \
       -DPY_VERSION=3 \
       -DMLIR_DIR="$LLVM_INSTALL_DIR/lib/cmake/mlir" \
       -DCMAKE_BUILD_TYPE=Release \
