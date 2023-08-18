@@ -59,6 +59,7 @@
 #include "mlir/Interfaces/TilingInterface.h"
 #include "mlir/Transforms/InliningUtils.h"
 #include "mlir/Transforms/RegionUtils.h"
+#include "mlir/Transforms/TopologicalSortUtils.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Debug.h"
@@ -1378,20 +1379,21 @@ static LogicalResult applyTilingOperandsToAll(
     }
 
     // Perform the replacement of tiled and fused values.
-    llvm::SetVector<Operation *> opsToReplace;
-    for (Value operand : operandValues)
-      opsToReplace.insert(operand.getDefiningOp());
-    for (Operation *toReplace : opsToReplace) {
-      SmallVector<Value> replacements;
-      replacements.reserve(toReplace->getNumResults());
-      for (OpResult res : toReplace->getResults()) {
-        auto it = tileAndFuseResult->replacements.find(res);
-        if (it == tileAndFuseResult->replacements.end())
-          replacements.push_back(res);
-        else
-          replacements.push_back(it->getSecond());
+    for (Value operand : operandValues) {
+      auto res = tileAndFuseResult->replacements.find(operand);
+      assert(res != tileAndFuseResult->replacements.end() &&
+             "must find tile res.");
+      SmallPtrSet<Operation *, 4> excepts;
+      for (auto user : operand.getUsers()) {
+        // the op is tiled not need to replace.
+        if (tileAndFuseResult->fusedProducers.contains(user)) {
+          excepts.insert(user);
+        }
       }
-      rewriter.replaceOp(toReplace, replacements);
+      operand.replaceAllUsesExcept(res->second, excepts);
+    }
+    if (!sortTopologically(target->getBlock())) {
+      return rewriter.notifyMatchFailure(target, "topological sort fails.");
     }
 
     // Report back the relevant handles to the transform op.
