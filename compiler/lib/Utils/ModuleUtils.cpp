@@ -20,6 +20,7 @@
 #include "mlir/IR/IRMapping.h"
 #include "mlir/IR/Location.h"
 
+#include <string>
 #include <unordered_map>
 
 using namespace mlir;
@@ -30,7 +31,7 @@ const char *module0Name = "__byteir__merge_model_0";
 const char *module1Name = "__byteir__merge_model_1";
 
 func::FuncOp renameAndCloneFuncToNewModule(ModuleOp m, func::FuncOp func,
-                                           const char *newFuncName) {
+                                           const std::string &newFuncName) {
   OpBuilder builder = OpBuilder::atBlockBegin(m.getBody());
   auto newFunc = builder.create<func::FuncOp>(func->getLoc(), newFuncName,
                                               func.getFunctionType());

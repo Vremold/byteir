@@ -26,7 +26,7 @@ cmake ../cmake/ -G Ninja \
                 -DLLVM_INSTALL_PATH=path_to_LLVM_installed_or_built_directory \
                 -DLLVM_EXTERNAL_LIT=lit_executatble_location # or using $(which lit), this is optional for external lit 
 
-cmake --build . --config Release
+cmake --build . --target all
 ```
 ### Windows 
 ```bash
@@ -39,13 +39,13 @@ cmake ../cmake/ -G "Visual Studio 16 2019" -A x64 \
                 -DLLVM_INSTALL_PATH=path_to_LLVM_installed_or_built_directory \
                 -DLLVM_EXTERNAL_LIT=lit_location # this is optional for external lit 
 
-cmake --build . --config Release
+cmake --build . --target all
 ```
 
 ## Testing 
 This command runs all ByteIR unit tests:
 ```bash
-cmake --build . --config Release --target check-byteir
+cmake --build . --target check-byteir
 ```
 ByteIR relies on ```llvm-lit``` and ```FileCheck``` for testing.
 For more information, you can refer to [this page](https://www.llvm.org/docs/CommandGuide/FileCheck.html)
