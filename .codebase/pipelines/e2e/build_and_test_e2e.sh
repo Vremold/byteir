@@ -20,7 +20,7 @@ pip3 install $ROOT_PROJ_DIR/external/AITemplate/python/dist/*.whl
 pip3 install $ROOT_PROJ_DIR/compiler/build/python/dist/*.whl
 pip3 install $ROOT_PROJ_DIR/runtime/python/dist/*.whl
 pip3 install $ROOT_PROJ_DIR/frontends/torch-frontend/build/torch-frontend/python/dist/*.whl 
-pip3 install -r $ROOT_PROJ_DIR/frontends/torch-frontend/torch-requirements.txt
+http_proxy='http://sys-proxy-rd-relay.byted.org:8118' https_proxy='http://sys-proxy-rd-relay.byted.org:8118' pip3 install -r $ROOT_PROJ_DIR/frontends/torch-frontend/torch-requirements.txt
 
 python3 tests/numerical_test/main.py
 rm -rf ./local_test
