@@ -20,6 +20,7 @@
 #include "./PassDetail.h"
 #include "byteir/Dialect/Byre/Common.h"
 #include "byteir/Dialect/mhlo/Util/CustomCallUtil.h"
+#include "byteir/Utils/Utils.h"
 #include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -53,6 +54,26 @@ func::FuncOp getOrCreatePrivateFunctionDeclare(ModuleOp module,
     return func;
   }
 }
+
+func::CallOp getOrCreateCallGetSeedOp(func::FuncOp func,
+                                      func::FuncOp getSeedFunc,
+                                      PatternRewriter &rewriter) {
+  func::CallOp callGetSeedOp;
+  func.walk([&](func::CallOp op) {
+    if (getFuncOp(op) == getSeedFunc) {
+      callGetSeedOp = op;
+    }
+  });
+  if (!callGetSeedOp) {
+    callGetSeedOp = rewriter.create<func::CallOp>(
+        UnknownLoc::get(rewriter.getContext()), getSeedFunc, ArrayRef<Value>{});
+  }
+  // move func.call @getSeed to the begin of func
+  Block *block = callGetSeedOp->getBlock();
+  callGetSeedOp->moveBefore(&block->front());
+  return callGetSeedOp;
+}
+
 struct ConvertRngUniformToCustomCall : public OpRewritePattern<mhlo::RngOp> {
   using OpRewritePattern<mhlo::RngOp>::OpRewritePattern;
 
@@ -65,18 +86,21 @@ struct ConvertRngUniformToCustomCall : public OpRewritePattern<mhlo::RngOp> {
     auto B = op.getB();
     auto shape = op.getShape();
     TensorType resultType = op.getResult().getType();
-    TensorType seedType = RankedTensorType::get({}, rewriter.getI64Type());
+    TensorType seedOrOffsetType =
+        RankedTensorType::get({}, rewriter.getI64Type());
 
     ModuleOp module = op->getParentRegion()->getParentOfType<ModuleOp>();
-    auto functionType =
-        FunctionType::get(module.getContext(), {}, ArrayRef<Type>{seedType});
+    auto functionType = FunctionType::get(module.getContext(), {},
+                                          ArrayRef<Type>{seedOrOffsetType});
     func::FuncOp getSeedFunc = getOrCreatePrivateFunctionDeclare(
         module, "GetSeedFunc", "GetSeed", functionType);
     func::FuncOp nextOffsetFunc = getOrCreatePrivateFunctionDeclare(
         module, "NextOffsetFunc", "NextOffset", functionType);
 
-    auto getSeedOp = rewriter.create<func::CallOp>(op->getLoc(), getSeedFunc,
-                                                   ArrayRef<Value>{});
+    // avoid to call @getSeed every time
+    auto getSeedOp = getOrCreateCallGetSeedOp(
+        op->getParentRegion()->getParentOfType<func::FuncOp>(), getSeedFunc,
+        rewriter);
     auto getOffsetOp = rewriter.create<func::CallOp>(
         op->getLoc(), nextOffsetFunc, ArrayRef<Value>{});
     SmallVector<Value> bufferArgs{A, B, getSeedOp.getResults()[0],

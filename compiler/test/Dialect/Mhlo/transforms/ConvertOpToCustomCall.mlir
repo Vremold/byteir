@@ -15,7 +15,7 @@ func.func @convert_rng_static() -> tensor<8x1024x768xf32> {
 // CHECK-NEXT:  call @GetSeedFunc
 // CHECK-NEXT:  call @NextOffsetFunc
 // CHECK-NEXT:  mhlo.custom_call
-// CHEKC-SAME:  call_target_name = "byteir.rng_uniform"
+// CHECK-SAME:  @byteir.rng_uniform
 
 // -----
 
@@ -35,11 +35,10 @@ func.func @convert_two_rng_static() -> (tensor<8x1024x768xf32>, tensor<8x1024x76
 // CHECK-NEXT:  call @GetSeedFunc
 // CHECK-NEXT:  call @NextOffsetFunc
 // CHECK-NEXT:  mhlo.custom_call
-// CHEKC-SAME:  call_target_name = "byteir.rng_uniform"
-// CHECK-NEXT:  call @GetSeed
-// CHECK-NEXT:  call @NextOffset
+// CHECK-SAME:  @byteir.rng_uniform
+// CHECK-NEXT:  call @NextOffsetFunc
 // CHECK-NEXT:  mhlo.custom_call
-// CHEKC-SAME:  call_target_name = "byteir.rng_uniform"
+// CHECK-SAME:  @byteir.rng_uniform
 
 // -----
 
@@ -56,9 +55,9 @@ func.func @convert_rng_dynamic(%arg0: tensor<?x?x?xf32>) -> tensor<?x?x?xf32> {
 // CHECK-LABEL: func.func @convert_rng_dynamic
 // CHECK-NEXT:  mhlo.constant
 // CHECK-NEXT:  mhlo.constant
+// CHECK-NEXT:  call @GetSeedFunc
 // CHECK-NEXT:  shape.shape_of
 // CHECK-NEXT:  arith.index_cast
-// CHECK-NEXT:  call @GetSeedFunc
 // CHECK-NEXT:  call @NextOffsetFunc
 // CHECK-NEXT:  mhlo.custom_call
-// CHEKC-SAME:  call_target_name = "byteir.rng_uniform"
+// CHECK-SAME:  @byteir.rng_uniform
