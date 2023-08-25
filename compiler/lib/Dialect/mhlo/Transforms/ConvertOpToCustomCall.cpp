@@ -34,6 +34,7 @@ namespace {
 
 func::FuncOp getOrCreatePrivateFunctionDeclare(ModuleOp module,
                                                const std::string &funcName,
+                                               const std::string &byreOpName,
                                                FunctionType funcType) {
   auto func = SymbolTable(module).lookup<func::FuncOp>(funcName);
   if (func) {
@@ -45,7 +46,8 @@ func::FuncOp getOrCreatePrivateFunctionDeclare(ModuleOp module,
     func = builder.create<func::FuncOp>(UnknownLoc::get(context), funcName,
                                         funcType);
     func.setPrivate();
-    func->setAttr(byre::getByreComputeName(), builder.getStringAttr(funcName));
+    func->setAttr(byre::getByreComputeName(),
+                  builder.getStringAttr(byreOpName));
     func->setAttr(byre::getByreForceComputeNameAttrName(),
                   UnitAttr::get(context));
     return func;
@@ -68,10 +70,10 @@ struct ConvertRngUniformToCustomCall : public OpRewritePattern<mhlo::RngOp> {
     ModuleOp module = op->getParentRegion()->getParentOfType<ModuleOp>();
     auto functionType =
         FunctionType::get(module.getContext(), {}, ArrayRef<Type>{seedType});
-    func::FuncOp getSeedFunc =
-        getOrCreatePrivateFunctionDeclare(module, "GetSeed", functionType);
-    func::FuncOp nextOffsetFunc =
-        getOrCreatePrivateFunctionDeclare(module, "NextOffset", functionType);
+    func::FuncOp getSeedFunc = getOrCreatePrivateFunctionDeclare(
+        module, "GetSeedFunc", "GetSeed", functionType);
+    func::FuncOp nextOffsetFunc = getOrCreatePrivateFunctionDeclare(
+        module, "NextOffsetFunc", "NextOffset", functionType);
 
     auto getSeedOp = rewriter.create<func::CallOp>(op->getLoc(), getSeedFunc,
                                                    ArrayRef<Value>{});

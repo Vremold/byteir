@@ -7,13 +7,13 @@ func.func @convert_rng_static() -> tensor<8x1024x768xf32> {
   %26 = "mhlo.rng"(%17, %16, %18) {rng_distribution = #mhlo.rng_distribution<UNIFORM>} : (tensor<f32>, tensor<f32>, tensor<3xi64>) -> tensor<8x1024x768xf32>
   return %26 : tensor<8x1024x768xf32>
 }
-// CHECK-LABEL: func.func private @NextOffset() -> tensor<i64> attributes {byre_compute_name = "NextOffset", byre_force_compute_name}
-// CHECK-LABEL: func.func private @GetSeed() -> tensor<i64> attributes {byre_compute_name = "GetSeed", byre_force_compute_name}
+// CHECK-LABEL: func.func private @NextOffsetFunc() -> tensor<i64> attributes {byre_compute_name = "NextOffset", byre_force_compute_name}
+// CHECK-LABEL: func.func private @GetSeedFunc() -> tensor<i64> attributes {byre_compute_name = "GetSeed", byre_force_compute_name}
 // CHECK-LABEL: func.func @convert_rng_static
 // CHECK-NEXT:  mhlo.constant
 // CHECK-NEXT:  mhlo.constant
-// CHECK-NEXT:  call @GetSeed
-// CHECK-NEXT:  call @NextOffset
+// CHECK-NEXT:  call @GetSeedFunc
+// CHECK-NEXT:  call @NextOffsetFunc
 // CHECK-NEXT:  mhlo.custom_call
 // CHEKC-SAME:  call_target_name = "byteir.rng_uniform"
 
@@ -27,13 +27,13 @@ func.func @convert_two_rng_static() -> (tensor<8x1024x768xf32>, tensor<8x1024x76
   %27 = "mhlo.rng"(%17, %16, %18) {rng_distribution = #mhlo.rng_distribution<UNIFORM>} : (tensor<f32>, tensor<f32>, tensor<3xi64>) -> tensor<8x1024x768xf32>
   return %26, %27 : tensor<8x1024x768xf32>, tensor<8x1024x768xf32>
 }
-// CHECK-LABEL: func.func private @NextOffset() -> tensor<i64> attributes {byre_compute_name = "NextOffset", byre_force_compute_name}
-// CHECK-LABEL: func.func private @GetSeed() -> tensor<i64> attributes {byre_compute_name = "GetSeed", byre_force_compute_name}
+// CHECK-LABEL: func.func private @NextOffsetFunc() -> tensor<i64> attributes {byre_compute_name = "NextOffset", byre_force_compute_name}
+// CHECK-LABEL: func.func private @GetSeedFunc() -> tensor<i64> attributes {byre_compute_name = "GetSeed", byre_force_compute_name}
 // CHECK-LABEL: func.func @convert_two_rng_static
 // CHECK-NEXT:  mhlo.constant
 // CHECK-NEXT:  mhlo.constant
-// CHECK-NEXT:  call @GetSeed
-// CHECK-NEXT:  call @NextOffset
+// CHECK-NEXT:  call @GetSeedFunc
+// CHECK-NEXT:  call @NextOffsetFunc
 // CHECK-NEXT:  mhlo.custom_call
 // CHEKC-SAME:  call_target_name = "byteir.rng_uniform"
 // CHECK-NEXT:  call @GetSeed
@@ -51,14 +51,14 @@ func.func @convert_rng_dynamic(%arg0: tensor<?x?x?xf32>) -> tensor<?x?x?xf32> {
   %26 = "mhlo.rng"(%17, %16, %shape1) {rng_distribution = #mhlo.rng_distribution<UNIFORM>} : (tensor<f32>, tensor<f32>, tensor<3xi64>) -> tensor<?x?x?xf32>
   return %26 : tensor<?x?x?xf32>
 }
-// CHECK-LABEL: func.func private @NextOffset() -> tensor<i64> attributes {byre_compute_name = "NextOffset", byre_force_compute_name}
-// CHECK-LABEL: func.func private @GetSeed() -> tensor<i64> attributes {byre_compute_name = "GetSeed", byre_force_compute_name}
+// CHECK-LABEL: func.func private @NextOffsetFunc() -> tensor<i64> attributes {byre_compute_name = "NextOffset", byre_force_compute_name}
+// CHECK-LABEL: func.func private @GetSeedFunc() -> tensor<i64> attributes {byre_compute_name = "GetSeed", byre_force_compute_name}
 // CHECK-LABEL: func.func @convert_rng_dynamic
 // CHECK-NEXT:  mhlo.constant
 // CHECK-NEXT:  mhlo.constant
 // CHECK-NEXT:  shape.shape_of
 // CHECK-NEXT:  arith.index_cast
-// CHECK-NEXT:  call @GetSeed
-// CHECK-NEXT:  call @NextOffset
+// CHECK-NEXT:  call @GetSeedFunc
+// CHECK-NEXT:  call @NextOffsetFunc
 // CHECK-NEXT:  mhlo.custom_call
 // CHEKC-SAME:  call_target_name = "byteir.rng_uniform"
