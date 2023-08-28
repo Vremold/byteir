@@ -40,9 +40,9 @@ using namespace mlir::transform_ext;
 // Type Extensions
 //===---------------------------------------------------------------------===//
 namespace {
-struct PDLAttributeTypeTransformPramTypeInterfaceImpl
+struct PDLAttributeTypeTransformParamTypeInterfaceImpl
     : public transform::TransformParamTypeInterface::ExternalModel<
-          PDLAttributeTypeTransformPramTypeInterfaceImpl, pdl::AttributeType> {
+          PDLAttributeTypeTransformParamTypeInterfaceImpl, pdl::AttributeType> {
 
   /// Accept any attribute.
   DiagnosedSilenceableFailure checkPayload(Type type, Location loc,
@@ -175,7 +175,7 @@ public:
 
     addCustomInitializationStep([](MLIRContext *context) {
       pdl::AttributeType::attachInterface<
-          PDLAttributeTypeTransformPramTypeInterfaceImpl>(*context);
+          PDLAttributeTypeTransformParamTypeInterfaceImpl>(*context);
     });
   }
 };
