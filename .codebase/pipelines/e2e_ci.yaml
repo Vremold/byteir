@@ -1,0 +1,22 @@
+name: ByteIR E2E CI
+trigger:
+  manual:
+  change:
+    types:
+      - create
+      - push
+    paths:
+      - ".codebase/pipelines/e2e/build_and_test_e2e.sh"
+      - ".codebase/pipelines/e2e_ci.yaml"
+      - "tests/**"
+jobs:
+  byteir_e2e_test:
+    name: byteir E2E test CI
+    runs-on:
+      spec: m1.8xlarge
+    image: hub.byted.org/compile/data.aml.byteir_cuda:debian11_v1
+    working-directory: byteir/byteir
+    steps:
+      - name: Build and Test E2E
+        commands:
+          - CUDA_VISIBLE_DEVICES=4,5,6,7 bash .codebase/pipelines/e2e/build_and_test_e2e.sh

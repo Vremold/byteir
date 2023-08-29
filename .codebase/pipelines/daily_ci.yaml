@@ -2,13 +2,6 @@ name: ByteIR Daily CI
 trigger:
   manual:
   cron:
-  change:
-    types:
-      - create
-      - push
-    paths:
-      - ".codebase/pipelines/daily_ci.yaml"
-      - "tests/**"
 jobs:
   byteir_e2e_test:
     name: byteir E2E test CI
@@ -19,7 +12,7 @@ jobs:
     steps:
       - name: Build and Test E2E
         commands:
-          - bash .codebase/pipelines/e2e/build_and_test_e2e.sh
+          - CUDA_VISIBLE_DEVICES=4,5,6,7 bash .codebase/pipelines/e2e/build_and_test_e2e.sh
   # byteir_compiler_build_and_test_with_asan:
   #   name: byteir compiler CI with asan
   #   image: hub.byted.org/compile/data.aml.byteir_cuda:v10
