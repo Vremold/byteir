@@ -19,6 +19,7 @@ MAX_COMPILATION_PARALLELISM = available_cuda_device_num
 def func_hash_str(func, gpu_type):
     hash_str = gpu_type + "_"
     ops = func.entry_block.operations
+    assert len(ops) == 2
     for op in ops:
         op_name = op.operation.name
         # op name
@@ -119,7 +120,7 @@ class IRProcessor:
         gpu_type = get_gpu_type()
         if gpu_type == None:
             raise RuntimeError("No gpu found in this machine! cannot perform ait-opt-pass")
-        work_items = []
+        dedup_work_items = [] # deduplicated work items
         libs_to_add_to_cache = {} # key: hash_str, value: lib path 
         for func in self.module.body.operations:
             if BYTEIR_CAT_ATTR not in func.attributes:
@@ -131,18 +132,7 @@ class IRProcessor:
                 print(func_ir_str)
                 print("hash str for this ait op:")
                 print(hash_str)
-            # First, try ait cache
-            cached_lib = self.ait_cache.find(gpu_type, hash_str)
-            if cached_lib != None:
-                builder = self._get_builder(module=func, subgraph_name=func.name.value, backend="ait")
-                os.makedirs(os.path.dirname(builder.ait_module_path), exist_ok=True)
-                copyfile(cached_lib, builder.ait_module_path)
-                copymode(cached_lib, builder.ait_module_path)
-                funcNameArg += func.name.value + ","
-                aitLibPathArg += builder.dll_name + ","
-                dllPaths.append(builder.ait_module_path)
-                continue
-            # Then, try ait reuse
+            # perform ait reuse to remove duplicated work items
             if hash_str in self.ait_reuse_recorder:
                 funcNameArg += func.name.value + ","
                 aitLibPathArg += self.ait_reuse_recorder[hash_str][0] + ","
@@ -155,12 +145,27 @@ class IRProcessor:
                 dllPaths.append(builder.ait_module_path)
                 self.ait_reuse_recorder[hash_str] = (builder.dll_name, builder.ait_module_path)
                 libs_to_add_to_cache[hash_str] = builder.ait_module_path
-                work_items.append(func_ir_str)
+                dedup_work_items.append((hash_str, func_ir_str))
         
+        # search in ait cache
+        work_items_not_in_cache = []
+        for hash_str, func_ir_str in dedup_work_items:
+            cached_lib = self.ait_cache.find(gpu_type, hash_str)
+            if cached_lib != None:
+                # hit, copy cached lib
+                builder = self._get_builder(module=func, subgraph_name=func.name.value, backend="ait")
+                os.makedirs(os.path.dirname(builder.ait_module_path), exist_ok=True)
+                copyfile(cached_lib, builder.ait_module_path)
+                copymode(cached_lib, builder.ait_module_path)
+                continue
+            else:
+                # miss, add to work_items
+                work_items_not_in_cache.append(func_ir_str)
+
         # compile and benchmark
-        print("compile ait module using {} processes".format(min(len(work_items), self.compile_parallelism)))
+        print("compile ait module using {} processes".format(min(len(work_items_not_in_cache), self.compile_parallelism)))
         t_st = time.time()
-        for func_ir_str in work_items:
+        for func_ir_str in work_items_not_in_cache:
             self.pool.apply_async(_parallel_ait_compile, (self.workdir, func_ir_str))
             # _parallel_ait_compile(self.workdir, func_ir_str)
         
