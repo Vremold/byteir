@@ -2,7 +2,10 @@ import torch
 import torch as tu
 
 import torch_frontend
-from torch_frontend import convert_to_mhlo_via_torch_mlir
+from torch_frontend import convert_to_mhlo_via_torch_mlir, replace_flash_attn 
+from functorch.compile import aot_module
+import functools
+from torch.testing import FileCheck
 
 # ==============================================================================
 
@@ -64,3 +67,50 @@ def test_dynamic_partition_mask_stitch_gpu():
     output = module(*inputs)
     assert output.device.type == "cuda" and tuple(output.size()) == (5, 2, 2)
     assert torch.all(torch.eq(data, output))
+
+
+class FlashAttnModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, q, k, v):
+        return torch.nn.functional.scaled_dot_product_attention(q, k, v, dropout_p=0.1)
+
+
+def flash_attn_compile_fx_inner(graph: torch.fx.GraphModule, inputs, is_backward):
+    all_formatted = "\n".join([n.format_node() for n in graph.graph.nodes])
+    if not is_backward:
+        FileCheck().check("call_function").check(
+            "torch.ops.byteir.flash_attn_fwd.default").run(all_formatted)
+    else:
+        FileCheck().check("call_function").check(
+            "torch.ops.byteir.flash_attn_bwd.default").run(all_formatted)
+    fx_graph = torch_frontend.preprocess_fx_graph(graph)
+    compiled_graph = torch_frontend.compile(fx_graph, inputs, 'torch')
+    if not is_backward:
+        FileCheck().check("torch.aten.transpose").check("torch.aten.transpose").check("torch.aten.transpose").check("torch.operator \"byteir.flash_attn_fwd\"").check(
+            "(!torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.float, !torch.float, !torch.bool, !torch.bool) -> (!torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,12,256],f32>, !torch.vtensor<[2,12,256,256],f16>, !torch.vtensor<[2],si64>)") \
+            .run(str(compiled_graph))
+    else:
+        FileCheck().check("torch.operator \"byteir.flash_attn_bwd\"") \
+            .check("(!torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,12,256],f32>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.float, !torch.float, !torch.bool, !torch.vtensor<[2],si64>) -> (!torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>)") \
+            .check("torch.aten.transpose").check("torch.aten.transpose").check("torch.aten.transpose").run(str(compiled_graph))
+    return graph
+
+
+def flash_attn_compile_fx(model: torch.fx.GraphModule, inputs):
+    module = aot_module(model, fw_compiler=functools.partial(flash_attn_compile_fx_inner, is_backward=False),
+                        bw_compiler=functools.partial(flash_attn_compile_fx_inner, is_backward=True))
+    return module
+
+
+def test_flash_attn():
+    model = FlashAttnModel().cuda()
+    q = torch.rand(2, 12, 256, 128, requires_grad=True, dtype=torch.half).cuda()
+    k = torch.rand(2, 12, 256, 128, requires_grad=True, dtype=torch.half).cuda()
+    v = torch.rand(2, 12, 256, 128, requires_grad=True, dtype=torch.half).cuda()
+    gm = torch.fx.symbolic_trace(model)
+    gm = replace_flash_attn(gm)
+    optimized_model = torch.compile(gm, backend=flash_attn_compile_fx)
+    output = optimized_model(q, k, v)
+    output.sum().backward()

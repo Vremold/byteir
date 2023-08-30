@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Union, List
+from typing import Optional, Sequence, Union, List, Tuple
 import torch
 
 from torch_frontend import torch_mlir
@@ -18,7 +18,42 @@ _CUSTOM_OPS_IN_TORCH = [
     "aten.max.dim",
     "aten.one_hot",
     "aten.topk",
+    "byteir.flash_attn_fwd",
+    "byteir.flash_attn_bwd",
 ]
+
+def byteir〇flash_attn_fwd〡shape(q: List[int], k: List[int], v: List[int], dropout_p: float, softmax_scale: float, casual: bool, return_softmax: bool) -> Tuple[List[int], List[int], List[int], List[int], List[int], List[int], List[int], List[int]]:
+    batch_size = q[0]
+    seqlen_q = q[1]
+    num_heads = q[2]
+    seqlen_k = k[1]
+    softmax_lse = [batch_size, num_heads, seqlen_q]
+    softmax_return = [batch_size, num_heads, seqlen_q, seqlen_k]
+    rng_shape = [2]
+    return q, q, k, v, q, softmax_lse, softmax_return, rng_shape
+
+def byteir〇flash_attn_fwd〡dtype(q_rank_dtype: Tuple[int, int], k_rank_dtype: Tuple[int, int], v_rank_dtype: Tuple[int, int], dropout_p: float, softmax_scale: float, casual: bool, return_softmax: bool) -> Tuple[int, int, int, int, int, int, int, int]:
+    q_rank, q_dtype = q_rank_dtype
+    return q_dtype, q_dtype, q_dtype, q_dtype, q_dtype, torch.float32, q_dtype, torch.int64
+
+def byteir〇flash_attn_fwd〡has_value_semantics() -> None:
+    return
+
+def byteir〇flash_attn_bwd〡shape(dout: List[int], q: List[int], k: List[int], v: List[int], out: List[int], softmax_lse: List[int], dq: List[int], dk: List[int], dv: List[int], dropout_p: float, softmax_scale: float, casual: bool, rng: List[int]) -> Tuple[List[int], List[int], List[int]]:
+    return dq, dk, dv
+
+def byteir〇flash_attn_bwd〡dtype(dout_rank_dtype: Tuple[int, int], q_rank_dtype: Tuple[int, int], k_rank_dtype: Tuple[int, int], v_rank_dtype: Tuple[int, int], out_rank_dtype: Tuple[int, int], softmax_lse_rank_dtype: Tuple[int, int], dq_rank_dtype: Tuple[int, int], dk_rank_dtype: Tuple[int, int], dv_rank_dtype: Tuple[int, int], dropout_p: float, softmax_scale: float, casual: bool, rng_rank_dtype: Tuple[int, int]) -> Tuple[int, int, int]:
+    dq_rank, dq_dtype = dq_rank_dtype
+    dk_rank, dk_dtype = dk_rank_dtype
+    dv_rank, dv_dtype = dv_rank_dtype
+    return dq_dtype, dk_dtype, dv_dtype
+
+def byteir〇flash_attn_bwd〡has_value_semantics() -> None:
+    return
+
+extra_library = [
+    byteir〇flash_attn_fwd〡shape, byteir〇flash_attn_fwd〡dtype, byteir〇flash_attn_fwd〡has_value_semantics,
+    byteir〇flash_attn_bwd〡shape, byteir〇flash_attn_bwd〡dtype, byteir〇flash_attn_bwd〡has_value_semantics]
 
 def compile(
     model: torch.nn.Module,
@@ -42,11 +77,12 @@ def compile(
     if output_type == "raw":
         return module
 
+    extra_library_file_name = torch_mlir._canon_extra_library(extra_library)
     if verbose:
-        cmdline_option_string = "backend-legal-ops=" + ",".join(backend_legal_ops)
+        cmdline_option_string = "backend-legal-ops=" + ",".join(backend_legal_ops) + " extra-library=" + extra_library_file_name
         print(f'[RUN] ./build/bin/torch-frontend-opt --torchscript-to-torch-pipeline="{cmdline_option_string}"')
     with module.context:
-        option_string = "{backend-legal-ops=" + ",".join(backend_legal_ops) + "}"
+        option_string = "{backend-legal-ops=" + ",".join(backend_legal_ops) + " extra-library=" + extra_library_file_name + "}"
         PassManager.parse(f"builtin.module(torchscript-to-torch-pipeline{option_string})").run(module.operation)
     if output_type == "torch":
         return module
