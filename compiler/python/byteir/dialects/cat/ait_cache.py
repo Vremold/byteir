@@ -1,5 +1,6 @@
 import os
 import json
+import fcntl
 
 from shutil import copyfile, copymode
 
@@ -15,17 +16,36 @@ class AITCache:
         self.idx = 0 # unique id of saved compiled .so
         self.cache_dir = cache_dir
         self.cache = { IDX_KEY : self.idx } # key: ait op hash str, value: relative path of compiled .so
+        self.fp = None
     
-    def create_new_cache(self):
-        os.makedirs(self.cache_dir, exist_ok=True)
-        self.idx = 0
-        self.cache = { IDX_KEY : self.idx }
-        self.save_cache()
+    def _open(self):
+        if not os.path.exists(os.path.join(self.cache_dir, CACHE_FILE_NAME)):
+            self.fp = open(os.path.join(self.cache_dir, CACHE_FILE_NAME), "w")
+            fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
+            self.cache = { IDX_KEY : self.idx }
+            json.dump(self.cache, self.fp, indent=2)
+            fcntl.flock(self.fp.fileno(), fcntl.LOCK_UN)
+            self.fp.close()
+        self.fp = open(os.path.join(self.cache_dir, CACHE_FILE_NAME), "r+")
+        print("try to acquire file lock...")
+        # acquire lock
+        fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
+        print("file lock acquired.")
+
+    def _close(self):
+        # release lock
+        fcntl.flock(self.fp.fileno(), fcntl.LOCK_UN)
+        self.fp.close()
     
-    def save_cache(self):
-        fp = open(os.path.join(self.cache_dir, CACHE_FILE_NAME), "w")
-        json.dump(self.cache, fp, indent=2)
-        fp.close()
+    def _load(self):
+        try:
+            self.cache = json.load(self.fp)
+        except json.decoder.JSONDecodeError:
+            self.cache = { IDX_KEY : self.idx }
+
+    def _save(self):
+        self.fp.seek(0)
+        json.dump(self.cache, self.fp, indent=2)
 
     def sync_cache(self):
         # sync cache with the files in cache dir 
@@ -42,16 +62,13 @@ class AITCache:
                     max_idx = self.get_lib_idx(value)
         self.idx = max_idx + 1
         self.cache[IDX_KEY] = self.idx
-        self.save_cache()
     
     def load_or_create_cache(self):
-        if not os.path.exists(os.path.join(self.cache_dir, CACHE_FILE_NAME)):
-            self.create_new_cache()
-        else:
-            fp = open(os.path.join(self.cache_dir, CACHE_FILE_NAME), "r")
-            self.cache = json.load(fp)
-            fp.close()
-            self.sync_cache()
+        if not os.path.exists(self.cache_dir):
+            os.makedirs(self.cache_dir, exist_ok=True)
+        self._open()
+        self._load()
+        self.sync_cache()
     
     def add(self, gpu_type, key, lib_path, override = False):
         if gpu_type not in self.cache:
@@ -71,7 +88,10 @@ class AITCache:
             return os.path.join(self.cache_dir, self.cache[gpu_type][key])
         else:
             return None
-    
 
     def get_lib_idx(self, lib_name):
         return int(lib_name.split(".")[0])
+    
+    def close_cache(self):
+        if self.fp != None:
+            self._close()

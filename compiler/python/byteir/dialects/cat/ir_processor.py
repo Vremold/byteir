@@ -178,7 +178,8 @@ class IRProcessor:
         if not self.disable_ait_cache:
             for key, lib_path in libs_to_add_to_cache.items():
                 self.ait_cache.add(gpu_type, key, lib_path, override=False)
-            self.ait_cache.save_cache()
+            self.ait_cache._save()
+            self.ait_cache.close_cache()
         
         with self.module.context:
             pm = PassManager.parse("builtin.module(func.func(gen-ait-config{{func-names={} ait-lib-paths={}}}))".format(funcNameArg, aitLibPathArg))
