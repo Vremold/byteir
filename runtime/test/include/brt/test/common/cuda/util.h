@@ -105,5 +105,16 @@ template <typename T>
   return passed;
 }
 
+// print floating point values
+template <typename T,
+          std::enable_if_t<std::is_floating_point<T>::value, int> = 0>
+void PrintCUDAValues(T *mat, size_t size, size_t print_size = 0) {
+  T *h_ptr = (T *)malloc(size * sizeof(T));
+  cudaMemcpy(h_ptr, mat, size * sizeof(T), cudaMemcpyDeviceToHost);
+  cudaDeviceSynchronize();
+  PrintCPUValues(h_ptr, size, print_size);
+  free(h_ptr);
+}
+
 } // namespace test
 } // namespace brt

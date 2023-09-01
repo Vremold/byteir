@@ -3,6 +3,7 @@
 set -e
 
 US_DEV=false
+TEST_SM80=true
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -25,6 +26,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -d)
       US_DEV=true
+      shift
+      ;;
+    --no-sm80-test)
+      TEST_SM80=false
       shift
       ;;
     *)
@@ -76,9 +81,9 @@ if [[ $BRT_ENABLE_PYTHON_BINDINGS == "ON" ]]; then
   popd
 fi
 
-if [[ $BRT_USE_CUDA == "ON" ]]; then
-  export CUDA_VISIBLE_DEVICES=4,5,6,7
-fi
+# if [[ $BRT_USE_CUDA == "ON" ]]; then
+#   export CUDA_VISIBLE_DEVICES=4,5,6,7
+# fi
 
 if [[ $BRT_USE_CUDA == "ON" ]] && [[ $BRT_ENABLE_ASAN == "ON" ]]; then
   export ASAN_OPTIONS=protect_shadow_gap=0
@@ -88,6 +93,11 @@ if [[ $BRT_TEST == "ON" ]]; then
   pushd $BUILD_DIR
   # note: now ci machine driver is 470.182.03, it's no need for compat(470.57.02) in docker
   # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/compat ./bin/brt_test_all
-  ./bin/brt_test_all
+  if [[ $TEST_SM80 == false ]]; then
+    echo "no sm80 tests"
+    ./bin/brt_test_all --gtest_filter=-\*SM80\*
+  else 
+    ./bin/brt_test_all
+  fi
   popd
 fi

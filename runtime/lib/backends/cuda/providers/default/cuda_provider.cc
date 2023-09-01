@@ -23,6 +23,7 @@
 #include "brt/backends/cuda/providers/default/ait/op_registration.h"
 #include "brt/backends/cuda/providers/default/codegen/op_registration.h"
 #include "brt/backends/cuda/providers/default/copy/op_registration.h"
+#include "brt/backends/cuda/providers/default/flash_attn/op_registration.h"
 #include "brt/backends/cuda/providers/default/indexing/op_registration.h"
 #include "brt/backends/cuda/providers/default/math/op_registration.h"
 #include "brt/backends/cuda/providers/default/normalization/op_registration.h"
@@ -47,6 +48,7 @@ BRT_STATIC_KERNEL_REGISTRATION(
       cuda::RegisterAITOps(registry);
       cuda::RegisterCodegenOps(registry);
       cuda::RegisterCopyOps(registry);
+      cuda::RegisterFlashAttentionOps(registry);
       cuda::RegisterIndexingOps(registry);
       cuda::RegisterMathOps(registry);
       cuda::RegisterNormalizationOps(registry);

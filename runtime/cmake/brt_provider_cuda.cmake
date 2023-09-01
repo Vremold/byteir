@@ -1,6 +1,6 @@
 set(brt_all_includes brt_common brt_framework)
 
-# CUDA provide
+# CUDA provide with default CUDA_ARCHITECTURES (70)
 file(GLOB_RECURSE brt_cuda_provider_srcs CONFIGURE_DEPENDS
   "${BRT_INCLUDE_DIR}/brt/backends/cuda/providers/default/*.h"
   "${LIB_ROOT}/backends/cuda/providers/default/*.h"
@@ -22,6 +22,17 @@ target_link_libraries(brt_provider_cuda ${BRT_CUDA_LIBRARIES})
 brt_add_include_to_target(brt_provider_cuda ${brt_all_includes})
 set_target_properties(brt_provider_cuda PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(brt_provider_cuda PROPERTIES FOLDER "Brt")
+
+
+file(GLOB_RECURSE brt_cuda_provider_sm_80_srcs CONFIGURE_DEPENDS
+  "${BRT_INCLUDE_DIR}/brt/backends/cuda/providers/default/flash_attn/*.h"
+  "${LIB_ROOT}/backends/cuda/providers/default/flash_attn/kernels/*.h"
+  "${LIB_ROOT}/backends/cuda/providers/default/flash_attn/kernels/*.cc"
+  "${LIB_ROOT}/backends/cuda/providers/default/flash_attn/kernels/*.cu"
+)
+
+set_source_files_properties(${brt_cuda_provider_sm_80_srcs}
+  PROPERTIES COMPILE_FLAGS "-gencode=arch=compute_80,code=sm_80")
 
 install(
   DIRECTORY "${BRT_INCLUDE_DIR}/brt/backends/cuda/providers"
