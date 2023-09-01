@@ -29,6 +29,11 @@ def func_hash_str(func, gpu_type):
         for operand in op.operands:
             hash_str += f"{operand.type},"
         hash_str += ")"
+        hash_str += "{"
+        for attr in op.attributes:
+            attr = attr.name
+            hash_str += f"{attr}:{op.attributes[attr]},"
+        hash_str += "}"
     return hash_str
 
 class IRProcessor:
@@ -153,7 +158,11 @@ class IRProcessor:
             cached_lib = self.ait_cache.find(gpu_type, hash_str)
             if cached_lib != None:
                 # hit, copy cached lib
-                builder = self._get_builder(module=func, subgraph_name=func.name.value, backend="ait")
+                context = ir.Context()
+                _module = ir.Module.parse(func_ir_str, context)
+                assert len(_module.body.operations) == 1
+                _func = _module.body.operations[0]
+                builder = self._get_builder(module=_func, subgraph_name=_func.name.value, backend="ait")
                 os.makedirs(os.path.dirname(builder.ait_module_path), exist_ok=True)
                 copyfile(cached_lib, builder.ait_module_path)
                 copymode(cached_lib, builder.ait_module_path)

@@ -27,10 +27,10 @@ class AITCache:
             fcntl.flock(self.fp.fileno(), fcntl.LOCK_UN)
             self.fp.close()
         self.fp = open(os.path.join(self.cache_dir, CACHE_FILE_NAME), "r+")
-        print("try to acquire file lock...")
+        # print("try to acquire file lock...")
         # acquire lock
         fcntl.flock(self.fp.fileno(), fcntl.LOCK_EX)
-        print("file lock acquired.")
+        # print("file lock acquired.")
 
     def _close(self):
         # release lock
