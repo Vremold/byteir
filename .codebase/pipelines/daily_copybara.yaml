@@ -1,0 +1,29 @@
+name: ByteIR Sync with GitHub
+trigger:
+  manual:
+  cron:
+jobs:
+  byteir_sync_with_github_external:
+    name: sync byteir with external github repo
+    runs-on:
+      spec: m1.8xlarge
+      env: boei18n
+    image: hub.byted.org/codebase/ci_java11
+    working-directory: byteir/byteir
+    allow-push: true
+    steps:
+      - name: sync with github
+        commands:
+          - git config --global user.name "wujiawei.aml"
+          - git config --global user.email "wujiawei.aml@bytedance.com"
+          - bash .codebase/pipelines/copybara/sync_with_github.sh
+  send_msg:
+    name: send message to byteir ci group
+    image: hub.byted.org/codebase/ci_java11
+    working-directory: byteir/byteir
+    depends: [byteir_sync_with_github_external]
+    steps:
+      - name: Send Message
+        commands:
+          - python3 -m pip install requests
+          - python3 .codebase/pipelines/scripts/send_feisu_msg.py --ci "ByteIR Sync with GitHub" --msg "ByteIR Sync with GitHub finished. Please propose a MR from branch `copybara_sync` to `external_mirror`, and further merge the `external_mirror` to `master` branch. Do not remove `external_mirror` branch."

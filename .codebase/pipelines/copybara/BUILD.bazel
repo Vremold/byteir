@@ -1,0 +1,5 @@
+load("@bazelize//rules/common:root.bzl", "byte_repo_root")
+
+byte_repo_root(
+    repo_name = "byteir/byteir",
+)

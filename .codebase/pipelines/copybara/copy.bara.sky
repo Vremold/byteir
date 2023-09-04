@@ -1,0 +1,35 @@
+"""
+This configuration configures Copybara to sync the GitHub repository
+to the codebase repository at root directory.
+
+To run this configuration, run from the root of the Bazel repository:
+$ bazel run @bazelize//scripts/copybara:run -- <repository_url> <config_file_path>
+"""
+
+src_branch = "main"
+dst_branch = "external-mirror"
+author = "Jiawei Wu<wujiawei.aml@bytedance.com>"
+new_branch = "copybara_sync"
+
+core.workflow(
+    name = "default",
+    origin = git.origin(
+        url = "https://github.com/bytedance/byteir.git",
+        ref = src_branch,
+    ),
+    destination = git.destination(
+        url = "git@code.byted.org:byteir/byteir.git",
+        fetch = dst_branch,
+        push = new_branch,
+    ),
+    mode = "ITERATIVE",
+    origin_files = glob(["**"]),
+    destination_files = glob(["**"], exclude = [".codebase/**", "BUILD.bazel", ".bazelignore", "WORKSPACE"]),
+    authoring = authoring.pass_thru(author),
+    transformations = [
+        metadata.add_header(
+            text="[COPYBARA SYNC] ",
+            new_line=False,
+        )
+    ]
+)
