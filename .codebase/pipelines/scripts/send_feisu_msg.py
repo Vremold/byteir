@@ -51,6 +51,6 @@ def send_feishu_msg(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--ci", type=str, default="ByteIR Daily CI")
-    parser.add_argument("--msg", type="str", default="byteir daily ci has completed")
+    parser.add_argument("--msg", type=str, default="byteir daily ci has completed")
     args = parser.parse_args()
     send_feishu_msg(args.ci, args.msg)
