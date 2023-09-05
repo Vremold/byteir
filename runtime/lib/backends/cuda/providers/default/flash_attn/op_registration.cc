@@ -16,6 +16,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "brt/backends/cuda/providers/default/flash_attn/op_registration.h"
+#include "./flash_attn_bwd.h"
 #include "./flash_attn_fwd.h"
 #include "brt/core/framework/kernel_registry.h"
 
@@ -27,6 +28,11 @@ void RegisterFlashAttentionOps(KernelRegistry *registry) {
       "byteir.flash_attn_fwd",
       [](const brt::OpKernelInfo &info) -> std::shared_ptr<brt::OpKernel> {
         return std::make_shared<FlashAttnFwdOpKernel>(info);
+      });
+  registry->Register(
+      "byteir.flash_attn_bwd",
+      [](const brt::OpKernelInfo &info) -> std::shared_ptr<brt::OpKernel> {
+        return std::make_shared<FlashAttnBwdOpKernel>(info);
       });
 }
 } // namespace cuda

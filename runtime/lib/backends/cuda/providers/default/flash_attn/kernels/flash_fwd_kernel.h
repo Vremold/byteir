@@ -18,11 +18,9 @@
 #include "philox.cuh"
 #include "softmax.h"
 #include "utils.h"
-
 namespace brt {
 namespace cuda {
 namespace kernel {
-
 namespace flash {
 
 using namespace cute;
@@ -81,7 +79,7 @@ inline __device__ void softmax_rescale_o(Tensor0 &scores, Tensor1 &scores_max,
     flash::reduce_sum(scores, scores_sum);
   } else {
     Tensor scores_max_prev = make_fragment_like(scores_max);
-    copy(scores_max, scores_max_prev);
+    cute::copy(scores_max, scores_max_prev);
     flash::template reduce_max</*zero_init=*/false>(scores, scores_max);
     // Reshape acc_o from (MMA=4, MMA_M, MMA_K) to (nrow=(2, MMA_M), ncol=(2,
     // MMA_K))
@@ -117,17 +115,16 @@ template <typename Engine0, typename Layout0, typename Engine1,
 inline __device__ void
 write_softmax_to_gmem(Tensor<Engine0, Layout0> const &tOrP,
                       Tensor<Engine1, Layout1> &tPgP,
-                      TiledCopy gmem_thr_copy_P) {
+                      TiledCopy gmem_tiled_copy_P) {
   // Reshape tOrP from (8, MMA_M, MMA_N) to (8, MMA_M * MMA_N)
   Layout l = tOrP.layout();
   Tensor tPrP = make_tensor(
       tOrP.data(), make_layout(get<0>(l), make_layout(get<1>(l), get<2>(l))));
   CUTE_STATIC_ASSERT_V(size<2>(tPgP) == _1{});
-// TODO(laurent): reactivate the following
 // CUTE_STATIC_ASSERT_V(size<1>(tPrP) == size<1>(tPgP));
 #pragma unroll
   for (int mi = 0; mi < size<1>(tPrP); ++mi) {
-    copy(gmem_thr_copy_P, tPrP(_, mi), tPgP(_, mi, 0));
+    cute::copy(gmem_tiled_copy_P, tPrP(_, mi), tPgP(_, mi, 0));
   }
 };
 
@@ -148,6 +145,9 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
 
   // The thread index.
   const int tidx = threadIdx.x;
+  // The global block index.
+  // const int block_id = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x *
+  // gridDim.y * blockIdx.z;
 
   constexpr int kBlockM = Kernel_traits::kBlockM;
   constexpr int kBlockN = Kernel_traits::kBlockN;
@@ -222,10 +222,10 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
   Tensor sVtNoSwizzle = make_tensor(
       sV.data(), typename Kernel_traits::SmemLayoutVtransposedNoSwizzle{});
 
-  auto gmem_thr_copy_QKV =
-      typename Kernel_traits::GmemTiledCopyQKV{}.get_thread_slice(tidx);
-  auto gmem_thr_copy_P =
-      typename Kernel_traits::GmemTiledCopyP{}.get_thread_slice(tidx);
+  typename Kernel_traits::GmemTiledCopyQKV gmem_tiled_copy_QKV;
+  auto gmem_thr_copy_QKV = gmem_tiled_copy_QKV.get_thread_slice(tidx);
+  typename Kernel_traits::GmemTiledCopyP gmem_tiled_copy_P;
+  auto gmem_thr_copy_P = gmem_tiled_copy_P.get_thread_slice(tidx);
 
   Tensor tQgQ = gmem_thr_copy_QKV.partition_S(gQ);
   Tensor tQsQ = gmem_thr_copy_QKV.partition_D(sQ);
@@ -249,24 +249,23 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
   // Copy Atom retiling
   //
 
-  auto smem_thr_copy_Q =
-      make_tiled_copy_A(typename Kernel_traits::SmemCopyAtom{}, tiled_mma)
-          .get_thread_slice(tidx);
+  auto smem_tiled_copy_Q =
+      make_tiled_copy_A(typename Kernel_traits::SmemCopyAtom{}, tiled_mma);
+  auto smem_thr_copy_Q = smem_tiled_copy_Q.get_thread_slice(tidx);
   // auto smem_thr_copy_Q = make_tiled_copy_A_warpcontiguousM<MMA_M>(typename
   // Kernel_traits::SmemCopyAtom{}, tiled_mma).get_thread_slice(tidx); if
   // (cute::thread0()) {smem_thr_copy_Q.print_all();}
   Tensor tSsQ = smem_thr_copy_Q.partition_S(sQ);
   // if (cute::thread0()) {print(tSsQ.layout()); printf("\n");}
 
-  auto smem_thr_copy_K =
-      make_tiled_copy_B(typename Kernel_traits::SmemCopyAtom{}, tiled_mma)
-          .get_thread_slice(tidx);
+  auto smem_tiled_copy_K =
+      make_tiled_copy_B(typename Kernel_traits::SmemCopyAtom{}, tiled_mma);
+  auto smem_thr_copy_K = smem_tiled_copy_K.get_thread_slice(tidx);
   Tensor tSsK = smem_thr_copy_K.partition_S(sK);
 
-  auto smem_thr_copy_V =
-      make_tiled_copy_B(typename Kernel_traits::SmemCopyAtomTransposed{},
-                        tiled_mma)
-          .get_thread_slice(tidx);
+  auto smem_tiled_copy_V = make_tiled_copy_B(
+      typename Kernel_traits::SmemCopyAtomTransposed{}, tiled_mma);
+  auto smem_thr_copy_V = smem_tiled_copy_V.get_thread_slice(tidx);
   Tensor tOsVt = smem_thr_copy_V.partition_S(sVt);
 
   // TODO: this might need to change if we change the mma instruction in SM70
@@ -330,7 +329,7 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
   // We don't need to clear the sQ smem tiles since we'll only write out the
   // valid outputs
   flash::copy</*Is_even_MN=*/false, Is_even_K>(
-      gmem_thr_copy_QKV, tQgQ, tQsQ, tQcQ, tQpQ,
+      gmem_tiled_copy_QKV, tQgQ, tQsQ, tQcQ, tQpQ,
       binfo.actual_seqlen_q - m_block * kBlockM);
   if (Kernel_traits::Is_Q_in_regs) {
     cute::cp_async_fence();
@@ -350,14 +349,14 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     __syncthreads();
     Tensor tSrQ_copy_view = smem_thr_copy_Q.retile_D(tSrQ);
     CUTE_STATIC_ASSERT_V(size<1>(tSsQ) == size<1>(tSrQ_copy_view)); // M
-    copy(smem_thr_copy_Q, tSsQ, tSrQ_copy_view);
+    cute::copy(smem_tiled_copy_Q, tSsQ, tSrQ_copy_view);
     __syncthreads();
   }
 
   int n_block = n_block_max - 1;
   // We don't need to clear the sK smem tiles since we'll mask out the scores
   // anyway.
-  flash::copy<Is_even_N, Is_even_K>(gmem_thr_copy_QKV, tKgK, tKsK, tKVcKV,
+  flash::copy<Is_even_N, Is_even_K>(gmem_tiled_copy_QKV, tKgK, tKsK, tKVcKV,
                                     tKVpKV,
                                     binfo.actual_seqlen_k - n_block * kBlockN);
   cute::cp_async_fence();
@@ -369,15 +368,22 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     __syncthreads();
     Tensor tSrQ_copy_view = smem_thr_copy_Q.retile_D(tSrQ);
     CUTE_STATIC_ASSERT_V(size<1>(tSsQ) == size<1>(tSrQ_copy_view)); // M
-    copy(smem_thr_copy_Q, tSsQ, tSrQ_copy_view);
+    cute::copy(smem_tiled_copy_Q, tSsQ, tSrQ_copy_view);
   }
 
   // auto seeds = at::cuda::philox::unpack(params.philox_args);
   // unsigned long long seed = std::get<0>(seeds);
   // unsigned long long offset = std::get<1>(seeds) + (bidb * params.h + bidh) *
   // 32 + tidx % 32;
+
   unsigned long long seed = 0;
   unsigned long long offset = 0;
+
+  // Save seed and offset for backward.
+  // if (block_id == 0 && tidx == 0) {
+  //     params.rng_state[0] = seed;
+  //     params.rng_state[1] = std::get<1>(seeds);
+  // }
 
   clear(acc_o);
 
@@ -403,19 +409,19 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     // Advance gV
     if (masking_step > 0) {
       tVgV.data() = tVgV.data() + (-int(kBlockN * params.v_row_stride));
-      flash::copy</*Is_even_MN=*/true, Is_even_K>(gmem_thr_copy_QKV, tVgV, tVsV,
-                                                  tKVcKV, tKVpKV);
+      flash::copy</*Is_even_MN=*/true, Is_even_K>(gmem_tiled_copy_QKV, tVgV,
+                                                  tVsV, tKVcKV, tKVpKV);
     } else {
       // Clear the smem tiles to account for predicated off loads
       flash::copy<Is_even_N, Is_even_K, /*Clear_OOB_MN=*/true>(
-          gmem_thr_copy_QKV, tVgV, tVsV, tKVcKV, tKVpKV,
+          gmem_tiled_copy_QKV, tVgV, tVsV, tKVcKV, tKVpKV,
           binfo.actual_seqlen_k - n_block * kBlockN);
     }
     cute::cp_async_fence();
 
     flash::gemm</*A_in_regs=*/Kernel_traits::Is_Q_in_regs>(
-        acc_s, tSrQ, tSrK, tSsQ, tSsK, tiled_mma, smem_thr_copy_Q,
-        smem_thr_copy_K);
+        acc_s, tSrQ, tSrK, tSsQ, tSsK, tiled_mma, smem_tiled_copy_Q,
+        smem_tiled_copy_K, smem_thr_copy_Q, smem_thr_copy_K);
     // if (cute::thread0()) { print(acc_s); }
 
     // Reshape acc_s from (MMA=4, MMA_M, MMA_N) to (nrow=(2, MMA_M), ncol=(2,
@@ -460,8 +466,8 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     if (n_block > 0) {
       // Advance gK
       tKgK.data() = tKgK.data() + (-int(kBlockN * params.k_row_stride));
-      flash::copy</*Is_even_MN=*/true, Is_even_K>(gmem_thr_copy_QKV, tKgK, tKsK,
-                                                  tKVcKV, tKVpKV);
+      flash::copy</*Is_even_MN=*/true, Is_even_K>(gmem_tiled_copy_QKV, tKgK,
+                                                  tKsK, tKVcKV, tKVpKV);
       // This cp_async_fence needs to be in the if block, otherwise the
       // synchronization isn't right and we get race conditions.
       cute::cp_async_fence();
@@ -486,11 +492,11 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     uint32_t block_col_idx = n_block * (kBlockN / 32);
     if (Return_softmax) {
       Tensor tOrP_copy = make_fragment_like(tOrP);
-      copy(tOrP, tOrP_copy);
+      cute::copy(tOrP, tOrP_copy);
       flash::apply_dropout</*encode_dropout_in_sign_bit=*/true>(
           tOrP_copy, params.p_dropout_in_uint8_t, seed, offset, block_row_idx,
           block_col_idx, kNWarps);
-      flash::write_softmax_to_gmem(tOrP_copy, tPgP, gmem_thr_copy_P);
+      flash::write_softmax_to_gmem(tOrP_copy, tPgP, gmem_tiled_copy_P);
       tPgP.data() = tPgP.data() + (-kBlockN);
     }
     if (Is_dropout) {
@@ -500,7 +506,7 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     // if (cute::thread0()) { print(tOrP); }
 
     flash::gemm_A_in_regs(acc_o, tOrP, tOrVt, tOsVt, tiled_mma,
-                          smem_thr_copy_V);
+                          smem_tiled_copy_V, smem_thr_copy_V);
     // if (cute::thread0()) { print(scores); }
 
     // This check is at the end of the loop since we always have at least 1
@@ -521,21 +527,21 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     __syncthreads();
     // Advance gV
     tVgV.data() = tVgV.data() + (-int(kBlockN * params.v_row_stride));
-    flash::copy</*Is_even_MN=*/true, Is_even_K>(gmem_thr_copy_QKV, tVgV, tVsV,
+    flash::copy</*Is_even_MN=*/true, Is_even_K>(gmem_tiled_copy_QKV, tVgV, tVsV,
                                                 tKVcKV, tKVpKV);
     cute::cp_async_fence();
 
     flash::gemm</*A_in_regs=*/Kernel_traits::Is_Q_in_regs>(
-        acc_s, tSrQ, tSrK, tSsQ, tSsK, tiled_mma, smem_thr_copy_Q,
-        smem_thr_copy_K);
+        acc_s, tSrQ, tSrK, tSsQ, tSsK, tiled_mma, smem_tiled_copy_Q,
+        smem_tiled_copy_K, smem_thr_copy_Q, smem_thr_copy_K);
 
     flash::cp_async_wait<0>();
     __syncthreads();
     if (n_block > 0) {
       // Advance gK
       tKgK.data() = tKgK.data() + (-int(kBlockN * params.k_row_stride));
-      flash::copy</*Is_even_MN=*/true, Is_even_K>(gmem_thr_copy_QKV, tKgK, tKsK,
-                                                  tKVcKV, tKVpKV);
+      flash::copy</*Is_even_MN=*/true, Is_even_K>(gmem_tiled_copy_QKV, tKgK,
+                                                  tKsK, tKVcKV, tKVpKV);
       // This cp_async_fence needs to be in the if block, otherwise the
       // synchronization isn't right and we get race conditions.
       cute::cp_async_fence();
@@ -559,11 +565,11 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     uint32_t block_col_idx = n_block * (kBlockN / 32);
     if (Return_softmax) {
       Tensor tOrP_copy = make_fragment_like(tOrP);
-      copy(tOrP, tOrP_copy);
+      cute::copy(tOrP, tOrP_copy);
       flash::apply_dropout</*encode_dropout_in_sign_bit=*/true>(
           tOrP_copy, params.p_dropout_in_uint8_t, seed, offset, block_row_idx,
           block_col_idx, kNWarps);
-      flash::write_softmax_to_gmem(tOrP_copy, tPgP, gmem_thr_copy_P);
+      flash::write_softmax_to_gmem(tOrP_copy, tPgP, gmem_tiled_copy_P);
       tPgP.data() = tPgP.data() + (-kBlockN);
     }
     if (Is_dropout) {
@@ -572,7 +578,7 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     }
 
     flash::gemm_A_in_regs(acc_o, tOrP, tOrVt, tOsVt, tiled_mma,
-                          smem_thr_copy_V);
+                          smem_tiled_copy_V, smem_thr_copy_V);
   }
 
   // Epilogue
@@ -603,9 +609,9 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
   Tensor sO = make_tensor(
       sQ.data(), typename Kernel_traits::SmemLayoutO{}); // (SMEM_M,SMEM_N)
   // Partition sO to match the accumulator partitioning
-  auto smem_thr_copy_O =
-      make_tiled_copy_C(typename Kernel_traits::SmemCopyAtomO{}, tiled_mma)
-          .get_thread_slice(tidx);
+  auto smem_tiled_copy_O =
+      make_tiled_copy_C(typename Kernel_traits::SmemCopyAtomO{}, tiled_mma);
+  auto smem_thr_copy_O = smem_tiled_copy_O.get_thread_slice(tidx);
   // auto smem_thr_copy_O = make_tiled_copy_C_warpcontiguousM<MMA_M>(typename
   // Kernel_traits::SmemCopyAtomO{}, tiled_mma).get_thread_slice(tidx);
   Tensor taccOrO =
@@ -618,7 +624,7 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
     __syncthreads();
   }
 
-  copy(smem_thr_copy_O, taccOrO, taccOsO);
+  cute::copy(smem_tiled_copy_O, taccOrO, taccOsO);
 
   const index_t row_offset_o =
       binfo.q_offset(params.o_batch_stride, params.o_row_stride, bidb) +
@@ -634,8 +640,8 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
                     row_offset_lse),
       Shape<Int<kBlockM>>{}, Stride<_1>{});
 
-  auto gmem_thr_copy_O =
-      typename Kernel_traits::GmemTiledCopyO{}.get_thread_slice(tidx);
+  typename Kernel_traits::GmemTiledCopyO gmem_tiled_copy_O;
+  auto gmem_thr_copy_O = gmem_tiled_copy_O.get_thread_slice(tidx);
   Tensor tOsO =
       gmem_thr_copy_O.partition_S(sO); // ((Atom,AtomNum),ATOM_M,ATOM_N)
   Tensor tOgO = gmem_thr_copy_O.partition_D(gO);
@@ -643,7 +649,7 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
   __syncthreads();
 
   Tensor tOrO = make_tensor<Element>(shape(tOgO));
-  copy(gmem_thr_copy_O, tOsO, tOrO);
+  cute::copy(gmem_tiled_copy_O, tOsO, tOrO);
 
   Tensor caccO = make_identity_tensor(
       Shape<Int<kBlockM>, Int<kHeadDim>>{});   // (BLK_M,BLK_K) -> (blk_m,blk_k)
@@ -678,7 +684,7 @@ inline __device__ void compute_attn_1rowblock(const Params &params,
   }
   // Clear_OOB_K must be false since we don't want to write zeros to gmem
   flash::copy</*Is_even_MN=*/false, Is_even_K, /*Clear_OOB_MN=*/false,
-              /*Clear_OOB_K=*/false>(gmem_thr_copy_O, tOrO, tOgO, tOcO, tOpO,
+              /*Clear_OOB_K=*/false>(gmem_tiled_copy_O, tOrO, tOgO, tOcO, tOpO,
                                      binfo.actual_seqlen_q - m_block * kBlockM);
 }
 

@@ -914,7 +914,7 @@ public:
 };
 
 // torch.operator "byteir.flash_attn_fwd"
-// operands: q, k, v, dropout_p, softmax_scale, casual, return_softmax
+// operands: q, k, v, dropout_p, softmax_scale, causal, return_softmax
 // results: out, q_padded, k_padded, v_padded, out_padded, softmax_lse,
 // softmax_return, rng
 //
@@ -929,7 +929,7 @@ public:
 //
 // CustomCall:
 // operands: q_padded, k_padded, v_padded
-// Attributes: dropout_p, softmax_scale, casual, return_softmax
+// Attributes: dropout_p, softmax_scale, causal, return_softmax
 // results: out_padded, softmax_lse, softmax_return, rng
 
 class ConvertFlashAttnFwdOp : public OpConversionPattern<OperatorOp> {
@@ -956,9 +956,9 @@ public:
     if (!matchPattern(op.getOperand(4), m_TorchConstantFloat(&softmaxScale)))
       return rewriter.notifyMatchFailure(
           op, "softmax scale must be constant float");
-    bool casual;
-    if (!matchPattern(op.getOperand(5), m_TorchConstantBool(&casual)))
-      return rewriter.notifyMatchFailure(op, "casual must be constant bool");
+    bool causal;
+    if (!matchPattern(op.getOperand(5), m_TorchConstantBool(&causal)))
+      return rewriter.notifyMatchFailure(op, "causal must be constant bool");
     bool returnSoftmax;
     if (!matchPattern(op.getOperand(6), m_TorchConstantBool(&returnSoftmax)))
       return rewriter.notifyMatchFailure(
@@ -981,8 +981,8 @@ public:
                               rewriter.getF64FloatAttr(dropoutP));
     byteir_attrs.emplace_back(rewriter.getStringAttr("softmax_scale"),
                               rewriter.getF64FloatAttr(softmaxScale));
-    byteir_attrs.emplace_back(rewriter.getStringAttr("casual"),
-                              rewriter.getBoolAttr(casual));
+    byteir_attrs.emplace_back(rewriter.getStringAttr("causal"),
+                              rewriter.getBoolAttr(causal));
     byteir_attrs.emplace_back(rewriter.getStringAttr("return_softmax"),
                               rewriter.getBoolAttr(returnSoftmax));
 

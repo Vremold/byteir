@@ -1,11 +1,9 @@
 // Pytorch also has an implementation of Philox RNG: https://github.com/pytorch/pytorch/blob/8ca3c881db3e3510fcb7725389f6a0633c9b992c/torch/csrc/jit/tensorexpr/cuda_random.h
 #pragma once
 // Philox CUDA.
-
 namespace brt {
 namespace cuda {
 namespace kernel {
-
 namespace flash {
 
 struct ull2 {

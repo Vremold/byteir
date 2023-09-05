@@ -40,8 +40,8 @@ namespace cuda {
 FlashAttnFwdOpKernel::FlashAttnFwdOpKernel(const OpKernelInfo &info)
     : OpKernel(info, false, false, false, false) {}
 
-// byre.compute @flash_attn_fwd(out_padded, q_padded, k_padded, v_padded,
-// softmax_lse, softmax_ptr, rng_state) {casual, dropout_p, softmax_scale,
+// byre.compute @byteir.flash_attn_fwd(out_padded, q_padded, k_padded, v_padded,
+// softmax_lse, softmax_ptr, rng_state) {causal, dropout_p, softmax_scale,
 // return_softmax} output: out, q_padded, k_padded, v_padded, out_padded,
 // softmax_lse, softmax_ptr, rng_state(2xi64)
 common::Status FlashAttnFwdOpKernel::RunImpl(const ExecutionContext &ctx) {
@@ -56,7 +56,7 @@ common::Status FlashAttnFwdOpKernel::RunImpl(const ExecutionContext &ctx) {
   void *rng_state_ptr = accessor.GetArgAsyncValueRef(6); // TODO : handle rng
 
   // attr
-  const bool is_causal = accessor.GetAttrAsBool("casual");
+  const bool is_causal = accessor.GetAttrAsBool("causal");
   const float p_dropout = accessor.GetAttrAsFloat("dropout_p");
   const float softmax_scale = accessor.GetAttrAsFloat("softmax_scale");
   const bool return_softmax = accessor.GetAttrAsBool("return_softmax");
@@ -159,7 +159,7 @@ common::Status FlashAttnFwdOpKernel::RunImpl(const ExecutionContext &ctx) {
   // std::cout << "batch_size_q: " << batch_size_q << std::endl;
   // std::cout << "num_heads_q: " << num_heads_q << std::endl;
   // std::cout << "num_heads_k: " << num_heads_k << std::endl;
-  // std::cout << "head_size_og_q: " << head_size_og_q << std::endl;
+  // std::cout << "head_size: " << head_size << std::endl;
   // std::cout << "head_size_rounded: " << head_size_rounded << std::endl;
   // std::cout << "softmax_scale: " << softmax_scale << std::endl;
   // std::cout << "seqlen_q: " << seqlen_q << std::endl;
@@ -187,7 +187,7 @@ common::Status FlashAttnFwdOpKernel::RunImpl(const ExecutionContext &ctx) {
                   /* b */ batch_size_q,
                   /* h */ num_heads_q,
                   /* h_k */ num_heads_k,
-                  /* d */ head_size_og_q,
+                  /* d */ head_size,
                   /* d_rounded */ head_size_rounded,
                   /* softmax_scale*/ softmax_scale,
                   /* seqlen_q */ seqlen_q,

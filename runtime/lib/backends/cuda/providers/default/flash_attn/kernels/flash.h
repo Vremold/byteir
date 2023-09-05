@@ -13,9 +13,8 @@
 // #else
 // #include <ATen/cuda/CUDAGeneratorImpl.h>
 // #endif
-//
-// #include <ATen/cuda/CUDAGraphsUtils.cuh>
 
+// #include <ATen/cuda/CUDAGraphsUtils.cuh>
 namespace brt {
 namespace cuda {
 namespace kernel {
@@ -95,6 +94,9 @@ struct Flash_fwd_params : public Qkv_params {
   // Random state.
   // at::PhiloxCudaState philox_args;
 
+  // Pointer to the RNG seed (idx 0) and offset (idx 1).
+  uint64_t *rng_state;
+
   bool is_bf16;
   bool is_causal;
 };
@@ -146,7 +148,6 @@ void run_mha_fwd_(Flash_fwd_params &params, cudaStream_t stream);
 template <typename T, int Headdim>
 void run_mha_bwd_(Flash_bwd_params &params, cudaStream_t stream,
                   const bool configure);
-
 } // namespace kernel
 } // namespace cuda
 } // namespace brt

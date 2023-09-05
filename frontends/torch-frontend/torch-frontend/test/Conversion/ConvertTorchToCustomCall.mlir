@@ -211,5 +211,5 @@ func.func @torch.byteir.flash_attn_fwd(%arg0: !torch.vtensor<[2,12,256,128],f32>
 // CHECK-LABEL: func.func @torch.byteir.flash_attn_fwd
 // CHECK: mhlo.custom_call
 // CHECK-SAME: @byteir.flash_attn_fwd
-// CHECK: byteir_attrs = {casual = false, dropout_p = 1.000000e-01 : f64, return_softmax = false, softmax_scale = 1.000000e+00 : f64}
+// CHECK: byteir_attrs = {causal = false, dropout_p = 1.000000e-01 : f64, return_softmax = false, softmax_scale = 1.000000e+00 : f64}
 // CHECH-NOT: torch.operator

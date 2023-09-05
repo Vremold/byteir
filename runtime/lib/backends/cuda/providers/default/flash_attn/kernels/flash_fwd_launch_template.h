@@ -9,11 +9,9 @@
 #include "flash.h"
 #include "flash_fwd_kernel.h"
 #include "static_switch.h"
-
 namespace brt {
 namespace cuda {
 namespace kernel {
-
 template <typename Kernel_traits, bool Is_dropout, bool Is_causal,
           bool Is_even_N, bool Is_even_K, bool Return_softmax>
 __global__ void flash_fwd_kernel(Flash_fwd_params params) {
@@ -47,12 +45,14 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
         auto kernel = &flash_fwd_kernel < Kernel_traits, Is_dropout, Is_causal,
              IsEvenNConst, IsEvenKConst, ReturnSoftmaxConst && Is_dropout > ;
         // auto kernel = &flash_fwd_kernel<Kernel_traits, Is_dropout, Is_causal,
-        // IsEvenNConst, true, ReturnSoftmaxConst && Is_dropout>; if (smem_size
-        // >= 48 * 1024) {
-        //     C10_CUDA_CHECK(cudaFuncSetAttribute(
-        //         kernel, cudaFuncAttributeMaxDynamicSharedMemorySize,
-        //         smem_size));
-        // }
+        // IsEvenNConst, true, ReturnSoftmaxConst && Is_dropout>;
+        if (smem_size >= 48 * 1024) {
+          // C10_CUDA_CHECK(cudaFuncSetAttribute(
+          //     kernel, cudaFuncAttributeMaxDynamicSharedMemorySize,
+          //     smem_size));
+          cudaFuncSetAttribute(
+              kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_size);
+        }
         int ctas_per_sm;
         cudaError status_ = cudaOccupancyMaxActiveBlocksPerMultiprocessor(
             &ctas_per_sm, kernel, Kernel_traits::kNThreads, smem_size);
@@ -113,7 +113,9 @@ template <typename T>
 void run_mha_fwd_hdim96(Flash_fwd_params &params, cudaStream_t stream) {
   constexpr int Headdim = 96;
   // auto dprops = at::cuda::getCurrentDeviceProperties();
-  bool is_sm8x = true; // dprops->major == 8 && dprops->minor > 0;
+  // bool is_sm8x = dprops->major == 8 && dprops->minor > 0;
+  // TODO: get real is_sm8x
+  bool is_sm8x = true;
   BOOL_SWITCH(params.p_dropout < 1.f, Is_dropout, [&] {
     BOOL_SWITCH(params.is_causal, Is_causal, [&] {
       // For sm86 or sm89, 64 x 64 is the fastest for causal (because it's
@@ -148,7 +150,8 @@ template <typename T>
 void run_mha_fwd_hdim128(Flash_fwd_params &params, cudaStream_t stream) {
   constexpr int Headdim = 128;
   // auto dprops = at::cuda::getCurrentDeviceProperties();
-  bool is_sm8x = true; // dprops->major == 8 && dprops->minor > 0;
+  // bool is_sm8x = dprops->major == 8 && dprops->minor > 0;
+  bool is_sm8x = true;
   BOOL_SWITCH(params.p_dropout < 1.f, Is_dropout, [&] {
     BOOL_SWITCH(params.is_causal, Is_causal, [&] {
       if constexpr (!Is_dropout) {
@@ -202,7 +205,8 @@ template <typename T>
 void run_mha_fwd_hdim160(Flash_fwd_params &params, cudaStream_t stream) {
   constexpr int Headdim = 160;
   // auto dprops = at::cuda::getCurrentDeviceProperties();
-  bool is_sm8x = true; // dprops->major == 8 && dprops->minor > 0;
+  // bool is_sm8x = dprops->major == 8 && dprops->minor > 0;
+  bool is_sm8x = true;
   BOOL_SWITCH(params.p_dropout < 1.f, Is_dropout, [&] {
     BOOL_SWITCH(params.is_causal, Is_causal, [&] {
       // For A100, H100, 128 x 32 is the fastest.

@@ -21,6 +21,7 @@
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
+#include <fstream>
 #include <functional>
 
 namespace std {
@@ -69,6 +70,46 @@ template <typename T> void CheckCUDAValues(T *mat, size_t size, T value) {
   cudaMemcpy(h_ptr, mat, size * sizeof(T), cudaMemcpyDeviceToHost);
   cudaDeviceSynchronize();
   CheckValues(h_ptr, size, value);
+  free(h_ptr);
+}
+
+template <typename T>
+void ReadCUDAFloatValues(T *mat, size_t size, std::string filename) {
+  T *h_ptr = (T *)malloc(size * sizeof(T));
+  std::ifstream inFile;
+  inFile.open(filename);
+  if (inFile.is_open()) {
+    double num; // use highest precision
+    for (size_t i = 0; i < size; i++) {
+      inFile >> num;
+      // std::cout << "read:" << num << std::endl;
+      h_ptr[i] = static_cast<T>(num);
+    }
+  } else {
+    ASSERT_TRUE(false) << "cannot open file " << filename;
+  }
+  cudaMemcpy(mat, h_ptr, size * sizeof(T), cudaMemcpyHostToDevice);
+  cudaDeviceSynchronize();
+  free(h_ptr);
+}
+
+template <typename T>
+void ReadCUDAIntegerValues(T *mat, size_t size, std::string filename) {
+  T *h_ptr = (T *)malloc(size * sizeof(T));
+  std::ifstream inFile;
+  inFile.open(filename);
+  if (inFile.is_open()) {
+    T num;
+    for (size_t i = 0; i < size; i++) {
+      inFile >> num;
+      // std::cout << "read:" << num << std::endl;
+      h_ptr[i] = num;
+    }
+  } else {
+    ASSERT_TRUE(false) << "cannot open file " << filename;
+  }
+  cudaMemcpy(mat, h_ptr, size * sizeof(T), cudaMemcpyHostToDevice);
+  cudaDeviceSynchronize();
   free(h_ptr);
 }
 
