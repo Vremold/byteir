@@ -1,6 +1,5 @@
 import torch
 from torch.library import Library
-import torch.nn.functional as F
 
 OPERATORS = []
 
@@ -83,7 +82,7 @@ class CustomFlashAttnFunc(torch.autograd.Function):
         return dq, dk, dv, None, None, None, None
 
 
-def flash_attn_func(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False):
+def flash_attn_func(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False, scale=1.0):
     """dropout_p should be set to 0.0 during evaluation
     Supports multi-query and grouped-query attention (MQA/GQA) by passing in KV with fewer heads
     than Q. Note that the number of heads in KV must be divisible by the number of heads in Q.
@@ -108,14 +107,13 @@ def flash_attn_func(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False):
             The output of softmax (possibly with different scaling). It also encodes the dropout
             pattern (negative means that location was dropped, nonnegative means it was kept).
     """
-    return CustomFlashAttnFunc.apply(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), dropout_p, 1.0, is_causal, False)
+    return CustomFlashAttnFunc.apply(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), dropout_p, scale, is_causal, False)
 
 
 def replace_flash_attn(gm: torch.fx.GraphModule) -> torch.nn.Module:
     for node in gm.graph.nodes:
-        if node.op == 'call_function' and node.target == F.scaled_dot_product_attention:
+        if node.op == 'call_function' and node.target == torch.ops.aten.scaled_dot_product_attention:
             node.target = flash_attn_func
-            break
 
     gm.graph.lint()
     gm.recompile()

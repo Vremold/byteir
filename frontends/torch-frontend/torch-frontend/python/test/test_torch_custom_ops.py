@@ -74,7 +74,7 @@ class FlashAttnModel(torch.nn.Module):
         super().__init__()
 
     def forward(self, q, k, v):
-        return torch.nn.functional.scaled_dot_product_attention(q, k, v, dropout_p=0.1)
+        return torch.ops.aten.scaled_dot_product_attention(q, k, v, attn_mask=None, is_causal=True, scale=0.2)
 
 
 def flash_attn_compile_fx_inner(graph: torch.fx.GraphModule, inputs, is_backward):
@@ -99,6 +99,7 @@ def flash_attn_compile_fx_inner(graph: torch.fx.GraphModule, inputs, is_backward
 
 
 def flash_attn_compile_fx(model: torch.fx.GraphModule, inputs):
+    model = replace_flash_attn(model)
     module = aot_module(model, fw_compiler=functools.partial(flash_attn_compile_fx_inner, is_backward=False),
                         bw_compiler=functools.partial(flash_attn_compile_fx_inner, is_backward=True))
     return module
@@ -109,8 +110,6 @@ def test_flash_attn():
     q = torch.rand(2, 12, 256, 128, requires_grad=True, dtype=torch.half).cuda()
     k = torch.rand(2, 12, 256, 128, requires_grad=True, dtype=torch.half).cuda()
     v = torch.rand(2, 12, 256, 128, requires_grad=True, dtype=torch.half).cuda()
-    gm = torch.fx.symbolic_trace(model)
-    gm = replace_flash_attn(gm)
-    optimized_model = torch.compile(gm, backend=flash_attn_compile_fx)
+    optimized_model = torch.compile(model, backend=flash_attn_compile_fx)
     output = optimized_model(q, k, v)
     output.sum().backward()

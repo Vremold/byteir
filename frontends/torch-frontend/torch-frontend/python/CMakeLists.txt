@@ -14,8 +14,10 @@ declare_mlir_python_sources(TorchFrontendPythonSources.TopLevel
     __init__.py
     _torch_frontend_registry.py
     ts_utils.py
-    fx_utils.py
     flash_attn_op.py
+    fx_rewrite.py
+    fx_tracer.py
+    fx_utils.py
     convert_to_mhlo.py
 )
 
