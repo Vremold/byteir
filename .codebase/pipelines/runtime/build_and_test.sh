@@ -77,6 +77,7 @@ cmake --build "$BUILD_DIR" --target all --target install
 
 if [[ $BRT_ENABLE_PYTHON_BINDINGS == "ON" ]]; then
   pushd $PROJ_DIR/python
+  # note: python packing depend on `--target install`
   python3 setup.py bdist_wheel
   popd
 fi
