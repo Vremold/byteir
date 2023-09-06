@@ -63,7 +63,7 @@ jobs:
     steps:
       - name: Build and test BRT with CUDA ON
         commands:
-          - CMAKE_BUILD_PARALLEL_LEVEL=16 CUDA_VISIBLE_DEVICES=4,5,6,7 bash .codebase/pipelines/runtime/build_and_test.sh --cuda --python
+          - CUDA_VISIBLE_DEVICES=4,5,6,7 bash .codebase/pipelines/runtime/build_and_test.sh --cuda --python
   brt_check_asan:
     name: BRT test with asan
     image: hub.byted.org/compile/data.aml.byteir_cuda:v10
@@ -72,7 +72,7 @@ jobs:
     steps:
       - name: Build and test BRT with asan
         commands:
-          - CMAKE_BUILD_PARALLEL_LEVEL=16 CUDA_VISIBLE_DEVICES=4,5,6,7 bash .codebase/pipelines/runtime/build_and_test.sh --cuda --asan
+          - CUDA_VISIBLE_DEVICES=4,5,6,7 bash .codebase/pipelines/runtime/build_and_test.sh --cuda --asan
   byteir_compiler_build_and_test_python:
     name: byteir cat test CI
     runs-on:
