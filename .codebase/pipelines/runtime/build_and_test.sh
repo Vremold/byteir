@@ -3,7 +3,6 @@
 set -e
 
 US_DEV=false
-TEST_SM80=true
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -28,8 +27,8 @@ while [[ $# -gt 0 ]]; do
       US_DEV=true
       shift
       ;;
-    --no-sm80-test)
-      TEST_SM80=false
+    --flash)
+      BRT_ENABLE_FLASH_ATTENSION=ON
       shift
       ;;
     *)
@@ -55,6 +54,7 @@ BRT_USE_CUDA=${BRT_USE_CUDA:-OFF}
 BRT_ENABLE_ASAN=${BRT_ENABLE_ASAN:-OFF}
 BRT_ENABLE_PYTHON_BINDINGS=${BRT_ENABLE_PYTHON_BINDINGS:-OFF}
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Release}
+BRT_ENABLE_FLASH_ATTENSION=${BRT_ENABLE_FLASH_ATTENSION:-OFF}
 # test options
 BRT_TEST=${BRT_TEST:-ON}
 
@@ -70,6 +70,7 @@ cmake -GNinja \
   -DLLVM_INSTALL_PATH="$LLVM_INSTALL_DIR" \
   -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/install" \
   -Dbrt_USE_CUDA=${BRT_USE_CUDA} \
+  -Dbrt_ENABLE_FLASH_ATTENSION=${BRT_ENABLE_FLASH_ATTENSION} \
   -Dbrt_ENABLE_ASAN=${BRT_ENABLE_ASAN} \
   -Dbrt_ENABLE_PYTHON_BINDINGS=${BRT_ENABLE_PYTHON_BINDINGS}
 
@@ -90,11 +91,7 @@ if [[ $BRT_TEST == "ON" ]]; then
   pushd $BUILD_DIR
   # note: now ci machine driver is 470.182.03, it's no need for compat(470.57.02) in docker
   # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/compat ./bin/brt_test_all
-  if [[ $TEST_SM80 == false ]]; then
-    echo "no sm80 tests"
-    ./bin/brt_test_all --gtest_filter=-\*SM80\*
-  else 
-    ./bin/brt_test_all
-  fi
+  # ./bin/brt_test_all --gtest_filter=-\*SM80\*
+  ./bin/brt_test_all
   popd
 fi
