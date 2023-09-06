@@ -20,6 +20,7 @@ trigger:
     paths:
       - "!frontends/**"
       - "!.codebase/pipelines/frontends/**"
+      - "!.codebase/pipelines/copybara/**"
       - "!.codebase/pipelines/onnx_frontend_ci.yaml"
       - "!.codebase/pipelines/onnx_frontend_release.yaml"
       - "!.codebase/pipelines/tf_frontend_ci.yaml"
@@ -27,6 +28,8 @@ trigger:
       - "!.codebase/pipelines/torch_frontend_ci.yaml"
       - "!.codebase/pipelines/torch_frontend_release.yaml"
       - "!.codebase/pipelines/e2e_ci.yaml"
+      - "!.codebase/pipelines/daily_ci.yaml"
+      - "!.codebase/pipelines/daily_copybara.yaml"
       - "!.codebase/pipelines/build_scm*.sh"
       - "!**/*.md"
 jobs:

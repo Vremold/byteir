@@ -22,14 +22,15 @@ core.workflow(
         fetch = dst_branch,
         push = new_branch,
     ),
-    mode = "ITERATIVE",
-    origin_files = glob(["**"]),
-    destination_files = glob(["**"], exclude = [".codebase/**", "BUILD.bazel", ".bazelignore", "WORKSPACE"]),
+    mode = "SQUASH",
+    origin_files = glob(["**"], exclude = [".gitignore"]),
+    destination_files = glob(["**"], exclude = [".codebase/**", ".gitignore", ".clang-format", "frontends/onnx-frontend/.gitignore", "frontends/tf-frontend/.bazelrc", "frontends/tf-frontend/.bazelversion", "frontends/tf-frontend/.tf_configure.bazelrc"]),
     authoring = authoring.pass_thru(author),
     transformations = [
-        metadata.add_header(
-            text="[COPYBARA SYNC] ",
-            new_line=False,
+        metadata.squash_notes("COPYBARA SYNC:\n",
+            max=10,
+            oldest_first = False,
+            show_author = False,
         )
     ]
 )
