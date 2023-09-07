@@ -41,10 +41,9 @@ namespace cuda {
 FlashAttnBwdOpKernel::FlashAttnBwdOpKernel(const OpKernelInfo &info)
     : OpKernel(info, false, false, false, false) {}
 
-// byre.compute @byteir.flash_attn_bwd(dout, q, k, v, out, softmax_lse, dq, dk,
-// dv, rng_state, dsoftmax_sum_ptr, dq_accum_ptr) {causal, dropout_p,
-// softmax_scale} output: out, q_padded, k_padded, v_padded, out_padded,
-// softmax_lse, softmax_ptr, rng_state(2xi64)
+// byre.compute @byteir.flash_attn_bwd(dout, q, k, v, out, softmax_lse,
+// rng_state, dq, dk, dv, dsoftmax_sum_ptr) {causal,
+// dropout_p,softmax_scale, dq_accum_ptr}
 common::Status FlashAttnBwdOpKernel::RunImpl(const ExecutionContext &ctx) {
   OpAccessor accessor(info_, ctx.exec_frame);
   // args
@@ -54,10 +53,10 @@ common::Status FlashAttnBwdOpKernel::RunImpl(const ExecutionContext &ctx) {
   void *v_ptr = accessor.GetArgAsyncValueRef(3);
   void *out_ptr = accessor.GetArgAsyncValueRef(4);
   void *softmax_lse_ptr = accessor.GetArgAsyncValueRef(5);
-  void *dq_ptr = accessor.GetArgAsyncValueRef(6);
-  void *dk_ptr = accessor.GetArgAsyncValueRef(7);
-  void *dv_ptr = accessor.GetArgAsyncValueRef(8);
-  void *rng_state_ptr = accessor.GetArgAsyncValueRef(9); // TODO : handle rng
+  void *rng_state_ptr = accessor.GetArgAsyncValueRef(6); // TODO : handle rng
+  void *dq_ptr = accessor.GetArgAsyncValueRef(7);
+  void *dk_ptr = accessor.GetArgAsyncValueRef(8);
+  void *dv_ptr = accessor.GetArgAsyncValueRef(9);
   void *dsoftmax_ptr = accessor.GetArgAsyncValueRef(10);
   void *dq_accum_ptr = accessor.GetArgAsyncValueRef(11);
 
@@ -97,9 +96,9 @@ common::Status FlashAttnBwdOpKernel::RunImpl(const ExecutionContext &ctx) {
   const auto k_type = accessor.GetArgDTypeEnum(2);
   const auto v_type = accessor.GetArgDTypeEnum(3);
   const auto out_type = accessor.GetArgDTypeEnum(4);
-  const auto dq_type = accessor.GetArgDTypeEnum(6);
-  const auto dk_type = accessor.GetArgDTypeEnum(7);
-  const auto dv_type = accessor.GetArgDTypeEnum(8);
+  const auto dq_type = accessor.GetArgDTypeEnum(7);
+  const auto dk_type = accessor.GetArgDTypeEnum(8);
+  const auto dv_type = accessor.GetArgDTypeEnum(9);
 
   // if (q_type != DTypeEnum::Float16 || q_type != DTypeEnum::BFloat16) {
   //   return InvalidArgs("FlashAttention only support fp16 and bf16 data
@@ -117,9 +116,9 @@ common::Status FlashAttnBwdOpKernel::RunImpl(const ExecutionContext &ctx) {
   const auto k_shape = accessor.GetArgShape(2);
   const auto v_shape = accessor.GetArgShape(3);
   const auto out_shape = accessor.GetArgShape(4);
-  const auto dq_shape = accessor.GetArgShape(6);
-  const auto dk_shape = accessor.GetArgShape(7);
-  const auto dv_shape = accessor.GetArgShape(8);
+  const auto dq_shape = accessor.GetArgShape(7);
+  const auto dk_shape = accessor.GetArgShape(8);
+  const auto dv_shape = accessor.GetArgShape(9);
   const auto dsoftmax_shape = accessor.GetArgShape(10);
   const auto dq_accum_shape = accessor.GetArgShape(11);
   int64_t o_rank = out_shape.size();

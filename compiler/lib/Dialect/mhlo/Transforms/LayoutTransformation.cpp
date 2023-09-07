@@ -714,9 +714,8 @@ struct LayoutTransformationPass
       globalLayoutStr = stringifyEnum(globalLayout);
     }
     if (globalLayoutStr == "UNKNOWN") {
-      funcOp.emitError("LayoutTransformationPass doesn't support the global "
-                       "layout to be unknown");
-      return signalPassFailure();
+      funcOp.emitWarning("LayoutTransformationPass: global layout is unknown");
+      return;
     } else if (globalLayoutStr.size() != this->targetLayout.size()) {
       funcOp.emitWarning(
           "LayoutTransformationPass doesn't support that the dimension numbers "

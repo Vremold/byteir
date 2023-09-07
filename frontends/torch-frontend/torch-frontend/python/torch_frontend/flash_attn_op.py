@@ -47,9 +47,21 @@ def byteir_flash_attn_fwd(q, k, v, dropout_p, softmax_scale, causal, return_soft
     return out, q_padded, k_padded, v_padded, out_padded, softmax_lse, p, rng
 
 
-@op("byteir::flash_attn_bwd(Tensor dout, Tensor q, Tensor k, Tensor v, Tensor out, Tensor softmax_lse, Tensor dq, Tensor dk, Tensor dv, float dropout_p, float softmax_scale, bool casual, Tensor rng) -> (Tensor, Tensor, Tensor)")
-def byteir_flash_attn_bwd(dout, q, k, v, out, softmax_lse, dq, dk, dv, dropout_p, softmax_scale, causal, rng_state):
-    return dq, dk, dv
+@op("byteir::flash_attn_bwd(Tensor dout, Tensor q, Tensor k, Tensor v, Tensor out, Tensor softmax_lse, float dropout_p, float softmax_scale, bool casual, Tensor rng) -> (Tensor, Tensor, Tensor, Tensor, Tensor)")
+def byteir_flash_attn_bwd(dout, q, k, v, out, softmax_lse, dropout_p, softmax_scale, causal, rng_state):
+    sizes = q.shape
+    batch_size = sizes[0]
+    seqlen_q = sizes[1]
+    num_heads = sizes[2]
+    seqlen_q_rounded = ((seqlen_q+127)//128)*128
+    head_size = sizes[3]
+    head_size_rounded = ((head_size+31)//32)*32
+    dq_accum = torch.empty((batch_size, num_heads, seqlen_q_rounded, head_size_rounded), dtype=torch.float, device='meta')
+    softmax_d = torch.empty((batch_size, num_heads, seqlen_q_rounded), dtype=torch.float, device='meta')
+    dq = torch.empty_like(q)
+    dk = torch.empty_like(k)
+    dv = torch.empty_like(v)
+    return dq, dk, dv, softmax_d, dq_accum
 
 
 class CustomFlashAttnFunc(torch.autograd.Function):
@@ -58,11 +70,13 @@ class CustomFlashAttnFunc(torch.autograd.Function):
     def forward(ctx, q, k, v, dropout_p, softmax_scale, causal, return_softmax):
         if softmax_scale is None:
             softmax_scale = q.shape[-1] ** (-0.5)
+        assert q.dtype == torch.float16 or q.dtype == torch.bfloat16
         # Save rng_state because the backward pass will regenerate the dropout mask
         out, q_pad, k_pad, v_pad, out_pad, softmax_lse, S_dmask, rng_state = torch.ops.byteir.flash_attn_fwd(
             q, k, v, dropout_p, softmax_scale,
             causal, (return_softmax and dropout_p > 0)
         )
+        out = out.transpose(1, 2)
         ctx.save_for_backward(q_pad, k_pad, v_pad, out_pad, softmax_lse, rng_state)
         ctx.dropout_p = dropout_p
         ctx.softmax_scale = softmax_scale
@@ -71,10 +85,12 @@ class CustomFlashAttnFunc(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, dout, *args):
+        dout = dout.transpose(1, 2)
         q_pad, k_pad, v_pad, out_pad, softmax_lse, rng_state = ctx.saved_tensors
-        dq, dk, dv = torch.empty_like(q_pad), torch.empty_like(k_pad), torch.empty_like(v_pad)
-        dq, dk, dv = torch.ops.byteir.flash_attn_bwd(
-            dout, q_pad, k_pad, v_pad, out_pad, softmax_lse, dq, dk, dv, ctx.dropout_p, ctx.softmax_scale, ctx.causal, rng_state
+        sizes = q_pad.shape
+
+        dq, dk, dv, d_softmax, dq_accum = torch.ops.byteir.flash_attn_bwd(
+            dout, q_pad, k_pad, v_pad, out_pad, softmax_lse, ctx.dropout_p, ctx.softmax_scale, ctx.causal, rng_state
         )
         dq = dq[..., :dout.shape[-1]]  # We could have padded the head dimension
         dk = dk[..., :dout.shape[-1]]

@@ -91,10 +91,10 @@ TEST(SM80CUDATestFlashAttnFwd, Basic) {
   // PrintCUDAValues(d_v, input_len, input_len);
   // PrintCUDAValues(d_softmax_lse, softmax_len, 10);
 
-  request->BindArg(0, d_o);
-  request->BindArg(1, d_q);
-  request->BindArg(2, d_k);
-  request->BindArg(3, d_v);
+  request->BindArg(0, d_q);
+  request->BindArg(1, d_k);
+  request->BindArg(2, d_v);
+  request->BindArg(3, d_o);
   request->BindArg(4, d_softmax_lse);
 
   request->FinishIOBinding();

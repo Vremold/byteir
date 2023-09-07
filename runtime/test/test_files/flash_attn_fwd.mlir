@@ -1,8 +1,8 @@
 module attributes {byre.container_module} {
-  func.func @test_flash_attn_fwd(%arg0 : memref<1x128x3x32xf16, "cuda"> {byre.argname = "Out", byre.argtype = 2: i32},
-                 %arg1 : memref<1x128x3x32xf16, "cuda"> {byre.argname = "Q", byre.argtype = 2: i32},
-                 %arg2 : memref<1x128x3x32xf16, "cuda"> {byre.argname = "K", byre.argtype = 2: i32},
-                 %arg3 : memref<1x128x3x32xf16, "cuda"> {byre.argname = "V", byre.argtype = 2: i32},
+  func.func @test_flash_attn_fwd(%arg0 : memref<1x128x3x32xf16, "cuda"> {byre.argname = "Q", byre.argtype = 2: i32},
+                 %arg1 : memref<1x128x3x32xf16, "cuda"> {byre.argname = "K", byre.argtype = 2: i32},
+                 %arg2 : memref<1x128x3x32xf16, "cuda"> {byre.argname = "V", byre.argtype = 2: i32},
+                 %arg3 : memref<1x128x3x32xf16, "cuda"> {byre.argname = "Out", byre.argtype = 2: i32},
                  %arg4 : memref<1x3x128xf32, "cuda"> {byre.argname = "SoftmaxLse", byre.argtype = 2: i32},
                  %arg5 : memref<1x3x128x128xf32, "cuda"> {byre.argname = "SoftmaxPtr", byre.argtype = 2: i32},
                  %arg6 : memref<2xi64, "cuda"> {byre.argname = "RngState", byre.argtype = 2: i32}) attributes {byre.entry_point} {

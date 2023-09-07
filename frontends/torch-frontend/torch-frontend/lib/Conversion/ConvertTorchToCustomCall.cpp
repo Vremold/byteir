@@ -1005,6 +1005,81 @@ public:
     return success();
   }
 };
+
+// torch.operator "byteir.flash_attn_bwd"
+// operands: dout, q, k, v, out, softmax_lse, dropout_p,
+// softmax_scale, causal, rng_state
+// results: dq, dk, dv, d_softmax, dq_accum
+//
+// CustomCall:
+// operands: dout, q, k, v, out, softmax_lse, rng_state
+// Attributes: dropout_p, softmax_scale, causal
+// results: dq, dk, dv, d_softmax, dq_accum
+
+class ConvertFlashAttnBwdOp : public OpConversionPattern<OperatorOp> {
+public:
+  using OpConversionPattern::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(OperatorOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    auto opName = adaptor.getName();
+    if (opName != getFlashAttnBwdName())
+      return rewriter.notifyMatchFailure(op, "op name not match");
+
+    auto operands = adaptor.getOperands();
+    Value dout = operands[0];
+    Value q = operands[1];
+    Value k = operands[2];
+    Value v = operands[3];
+    Value out = operands[4];
+    Value softmax_lse = operands[5];
+    Value rng_state = operands[9];
+
+    double dropoutP;
+    if (!matchPattern(op.getOperand(6), m_TorchConstantFloat(&dropoutP)))
+      return rewriter.notifyMatchFailure(op,
+                                         "dropout rate must be constant float");
+    double softmaxScale;
+    if (!matchPattern(op.getOperand(7), m_TorchConstantFloat(&softmaxScale)))
+      return rewriter.notifyMatchFailure(
+          op, "softmax scale must be constant float");
+    bool causal;
+    if (!matchPattern(op.getOperand(8), m_TorchConstantBool(&causal)))
+      return rewriter.notifyMatchFailure(op, "causal must be constant bool");
+
+    SmallVector<Value> bufferArgs({dout, q, k, v, out, softmax_lse, rng_state});
+    Type dqTy = op.getResult(0).getType();
+    Type dkTy = op.getResult(1).getType();
+    Type dvTy = op.getResult(2).getType();
+    Type dSoftmaxTy = op.getResult(3).getType();
+    Type dqAccumTy = op.getResult(4).getType();
+    SmallVector<Type> resultTypes;
+    if (failed(getTypeConverter()->convertTypes(
+            {dqTy, dkTy, dvTy, dSoftmaxTy, dqAccumTy}, resultTypes))) {
+      return op.emitError("could not convert output types");
+    }
+
+    std::vector<NamedAttribute> byteir_attrs;
+    byteir_attrs.emplace_back(rewriter.getStringAttr("dropout_p"),
+                              rewriter.getF64FloatAttr(dropoutP));
+    byteir_attrs.emplace_back(rewriter.getStringAttr("softmax_scale"),
+                              rewriter.getF64FloatAttr(softmaxScale));
+    byteir_attrs.emplace_back(rewriter.getStringAttr("causal"),
+                              rewriter.getBoolAttr(causal));
+
+    auto attrs = getDefaultAttrs(rewriter);
+    attrs.emplace_back(rewriter.getStringAttr("call_target_name"),
+                       rewriter.getStringAttr(getFlashAttnBwdName()));
+    attrs.emplace_back(rewriter.getStringAttr(getCustomCallAttrName()),
+                       rewriter.getDictionaryAttr(byteir_attrs));
+
+    auto customCallOp = rewriter.create<mhlo::CustomCallOp>(
+        op->getLoc(), resultTypes, bufferArgs, ArrayRef<NamedAttribute>{attrs});
+    rewriter.replaceOp(op, customCallOp);
+    return success();
+  }
+};
 } // namespace
 
 namespace {
@@ -1067,6 +1142,7 @@ public:
     patterns.add<ConvertDynamicMaskStitchCustomOp>(typeConverter, context);
     target.addIllegalOp<OperatorOp>();
     patterns.add<ConvertFlashAttnFwdOp>(typeConverter, context);
+    patterns.add<ConvertFlashAttnBwdOp>(typeConverter, context);
 
     if (failed(applyPartialConversion(getOperation(), target,
                                       std::move(patterns)))) {

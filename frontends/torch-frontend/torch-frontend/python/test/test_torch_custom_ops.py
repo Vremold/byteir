@@ -93,7 +93,7 @@ def flash_attn_compile_fx_inner(graph: torch.fx.GraphModule, inputs, is_backward
             .run(str(compiled_graph))
     else:
         FileCheck().check("torch.operator \"byteir.flash_attn_bwd\"") \
-            .check("(!torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,12,256],f32>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.float, !torch.float, !torch.bool, !torch.vtensor<[2],si64>) -> (!torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>)") \
+            .check("(!torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,12,256],f32>, !torch.float, !torch.float, !torch.bool, !torch.vtensor<[2],si64>) -> (!torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,256,12,128],f16>, !torch.vtensor<[2,12,256],f32>, !torch.vtensor<[2,12,256,128],f32>)") \
             .check("torch.aten.transpose").check("torch.aten.transpose").check("torch.aten.transpose").run(str(compiled_graph))
     return graph
 

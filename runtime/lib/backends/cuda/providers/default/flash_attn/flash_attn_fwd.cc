@@ -40,17 +40,17 @@ namespace cuda {
 FlashAttnFwdOpKernel::FlashAttnFwdOpKernel(const OpKernelInfo &info)
     : OpKernel(info, false, false, false, false) {}
 
-// byre.compute @byteir.flash_attn_fwd(out_padded, q_padded, k_padded, v_padded,
+// byre.compute @byteir.flash_attn_fwd(q_padded, k_padded, v_padded, out_padded,
 // softmax_lse, softmax_ptr, rng_state) {causal, dropout_p, softmax_scale,
 // return_softmax} output: out, q_padded, k_padded, v_padded, out_padded,
 // softmax_lse, softmax_ptr, rng_state(2xi64)
 common::Status FlashAttnFwdOpKernel::RunImpl(const ExecutionContext &ctx) {
   OpAccessor accessor(info_, ctx.exec_frame);
   // args
-  void *o_ptr = accessor.GetArgAsyncValueRef(0);
-  void *q_ptr = accessor.GetArgAsyncValueRef(1);
-  void *k_ptr = accessor.GetArgAsyncValueRef(2);
-  void *v_ptr = accessor.GetArgAsyncValueRef(3);
+  void *q_ptr = accessor.GetArgAsyncValueRef(0);
+  void *k_ptr = accessor.GetArgAsyncValueRef(1);
+  void *v_ptr = accessor.GetArgAsyncValueRef(2);
+  void *o_ptr = accessor.GetArgAsyncValueRef(3);
   void *softmax_lse_ptr = accessor.GetArgAsyncValueRef(4);
   void *softmax_ptr = accessor.GetArgAsyncValueRef(5);
   void *rng_state_ptr = accessor.GetArgAsyncValueRef(6); // TODO : handle rng
@@ -63,10 +63,10 @@ common::Status FlashAttnFwdOpKernel::RunImpl(const ExecutionContext &ctx) {
 
   softmax_ptr = return_softmax ? softmax_ptr : nullptr;
 
-  const auto o_shape = accessor.GetArgShape(0);
-  const auto q_shape = accessor.GetArgShape(1);
-  const auto k_shape = accessor.GetArgShape(2);
-  const auto v_shape = accessor.GetArgShape(3);
+  const auto q_shape = accessor.GetArgShape(0);
+  const auto k_shape = accessor.GetArgShape(1);
+  const auto v_shape = accessor.GetArgShape(2);
+  const auto o_shape = accessor.GetArgShape(3);
   int64_t o_rank = o_shape.size();
   int64_t q_rank = q_shape.size();
   int64_t k_rank = k_shape.size();
@@ -112,10 +112,10 @@ common::Status FlashAttnFwdOpKernel::RunImpl(const ExecutionContext &ctx) {
   }
 
   // dtype check
-  DTypeEnum o_dtype = accessor.GetArgDTypeEnum(0);
-  DTypeEnum q_dtype = accessor.GetArgDTypeEnum(1);
-  DTypeEnum k_dtype = accessor.GetArgDTypeEnum(2);
-  DTypeEnum v_dtype = accessor.GetArgDTypeEnum(3);
+  DTypeEnum q_dtype = accessor.GetArgDTypeEnum(0);
+  DTypeEnum k_dtype = accessor.GetArgDTypeEnum(1);
+  DTypeEnum v_dtype = accessor.GetArgDTypeEnum(2);
+  DTypeEnum o_dtype = accessor.GetArgDTypeEnum(3);
   if (o_dtype != q_dtype || q_dtype != k_dtype || k_dtype != v_dtype) {
     return InvalidArgs(
         "query, key, value, and output must have the same dtype");
