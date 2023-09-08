@@ -1,5 +1,6 @@
 from typing import Optional, Sequence, Union, List, Tuple
 import torch
+import sys
 
 from torch_frontend import torch_mlir
 from torch_mlir import ir
@@ -69,6 +70,7 @@ def compile(
     output_type: str,
     backend_legal_ops: Optional[Sequence[str]] = None,
     verbose: bool = False,
+    debug: bool = False,
 ):
     if output_type not in ["raw", "torch", "mhlo"]:
         raise NotImplemented("unsupported output type {}".format(output_type))
@@ -85,20 +87,35 @@ def compile(
     if output_type == "raw":
         return module
 
+    if debug:
+        print("// IR Dump After RAW")
+        print(module.operation.get_asm(large_elements_limit=10, enable_debug_info=False))
+        print()
+        sys.stdout.flush()
+
+    if debug:
+        module.context.enable_multithreading(False)
+
     extra_library_file_name = torch_mlir._canon_extra_library(extra_library)
     if verbose:
         cmdline_option_string = "backend-legal-ops=" + ",".join(backend_legal_ops) + " extra-library=" + extra_library_file_name
         print(f'[RUN] ./build/bin/torch-frontend-opt --torchscript-to-torch-pipeline="{cmdline_option_string}"')
     with module.context:
         option_string = "{backend-legal-ops=" + ",".join(backend_legal_ops) + " extra-library=" + extra_library_file_name + "}"
-        PassManager.parse(f"builtin.module(torchscript-to-torch-pipeline{option_string})").run(module.operation)
+        pm = PassManager.parse(f"builtin.module(torchscript-to-torch-pipeline{option_string})")
+        if debug:
+            pm.enable_ir_printing()
+        pm.run(module.operation)
     if output_type == "torch":
         return module
 
     if verbose:
         print('[RUN] ./build/bin/torch-frontend-opt --torch-to-mhlo-pipeline')
     with module.context:
-        PassManager.parse("builtin.module(torch-to-mhlo-pipeline)").run(module.operation)
+        pm = PassManager.parse("builtin.module(torch-to-mhlo-pipeline)")
+        if debug:
+           pm.enable_ir_printing() 
+        pm.run(module.operation)
     return module
 
 

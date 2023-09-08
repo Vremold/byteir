@@ -31,7 +31,8 @@ function download_llvm_prebuilt() {
 
 function apply_patches() {
   pushd $TORCH_MLIR_ROOT
-  git clean -fd .
+  git reset --hard
+  git clean -fd
   for patch in ../patches/*; do
     git apply $patch
   done
