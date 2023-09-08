@@ -19,21 +19,9 @@ MAX_COMPILATION_PARALLELISM = available_cuda_device_num
 def func_hash_str(func, gpu_type):
     hash_str = gpu_type + "_"
     ops = func.entry_block.operations
-    assert len(ops) == 2
+    # assert len(ops) == 2
     for op in ops:
-        op_name = op.operation.name
-        # op name
-        hash_str += op_name
-        # args
-        hash_str += "("
-        for operand in op.operands:
-            hash_str += f"{operand.type},"
-        hash_str += ")"
-        hash_str += "{"
-        for attr in op.attributes:
-            attr = attr.name
-            hash_str += f"{attr}:{op.attributes[attr]},"
-        hash_str += "}"
+        hash_str += f"{op.get_asm(large_elements_limit=None)};"
     return hash_str
 
 class IRProcessor:
