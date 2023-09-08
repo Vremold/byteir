@@ -88,3 +88,98 @@ def test_flash_attn_gpt2_pattern():
 
     torch.testing.assert_close(golden_loss, flash_loss, atol=1e-4, rtol=1e-6)
     torch.testing.assert_close(golden_logits, flash_logits, atol=4e-3, rtol=1e-5)
+
+
+def test_flash_attn_llama_pattern():
+    torch.manual_seed(0)
+    config = transformers.LlamaConfig(num_hidden_layers=4)
+    model = transformers.LlamaForCausalLM(config=config).to("cuda")
+
+    flash_model = transformers.LlamaForCausalLM(config=config).to("cuda")
+    flash_model.load_state_dict(model.state_dict())
+
+    data = make_data(model, "cuda")
+    flash_data = copy_nested_tensor(data)
+
+    model.zero_grad(set_to_none=True)
+    flash_model.zero_grad(set_to_none=True)
+    flash_attn_gm = torch.compile(flash_model, backend=trival_compile_fx)
+    with torch.cuda.amp.autocast(enabled=True, dtype=torch.float16):
+        input_data, label = data
+        output = flash_model(input_data)
+        golden_logits = output.logits
+        golden_loss = F.cross_entropy(golden_logits.view(-1, model.config.vocab_size), label.view(-1))
+    
+        flash_input_data, flash_label = flash_data
+        flash_output = flash_attn_gm(flash_input_data)
+        flash_logits = flash_output["logits"]
+        flash_loss = F.cross_entropy(flash_logits.view(-1, model.config.vocab_size), flash_label.view(-1))
+
+    # Flash attention uses a different mask than the original llama, relax check
+    torch.testing.assert_close(golden_loss, flash_loss, atol=2e-4, rtol=1e-6)
+    torch.testing.assert_close(golden_logits, flash_logits, atol=3e-2, rtol=1e-6)
+
+
+def test_flash_attn_bloom_pattern():
+    torch.manual_seed(0)
+    config = transformers.BloomConfig.from_pretrained('bigscience/bloom-560m')
+    config.tie_word_embeddings = False
+    config.hidden_size=512
+    config.num_hidden_layers=12
+    model = transformers.BloomForCausalLM(config=config).to("cuda")
+
+    flash_model = transformers.BloomForCausalLM(config=config).to("cuda")
+    flash_model.load_state_dict(model.state_dict())
+
+    data = make_data(model, "cuda")
+    flash_data = copy_nested_tensor(data)
+
+    with torch.cuda.amp.autocast(enabled=True, dtype=torch.float16):
+        model.zero_grad(set_to_none=True)
+        input_data, label = data
+        output = flash_model(input_data)
+        golden_logits = output.logits
+        golden_loss = F.cross_entropy(golden_logits.view(-1, model.config.vocab_size), label.view(-1))
+    
+        flash_model.zero_grad(set_to_none=True)
+        flash_attn_gm = torch.compile(flash_model, backend=trival_compile_fx)
+        flash_input_data, flash_label = flash_data
+        flash_output = flash_attn_gm(flash_input_data)
+        flash_logits = flash_output["logits"]
+        flash_loss = F.cross_entropy(flash_logits.view(-1, model.config.vocab_size), flash_label.view(-1))
+
+    # Bloom uses Alibi tensor, which is not causal. Transformation is not mathematically equivalent
+    torch.testing.assert_close(golden_loss, flash_loss, atol=1e-3, rtol=1e-6)
+
+
+def test_flash_attn_opt_pattern():
+    torch.manual_seed(0)
+    config = transformers.AutoConfig.from_pretrained("facebook/opt-1.3b")
+    config.tie_word_embeddings = False
+    config.hidden_size=512
+    config.num_hidden_layers=4
+    config.dropout=0.0
+    model = transformers.OPTForCausalLM(config=config).to("cuda")
+
+    flash_model = transformers.OPTForCausalLM(config=config).to("cuda")
+    flash_model.load_state_dict(model.state_dict())
+
+    data = make_data(model, "cuda")
+    flash_data = copy_nested_tensor(data)
+
+    with torch.cuda.amp.autocast(enabled=True, dtype=torch.float16):
+        model.zero_grad(set_to_none=True)
+        input_data, label = data
+        output = flash_model(input_data)
+        golden_logits = output.logits
+        golden_loss = F.cross_entropy(golden_logits.view(-1, model.config.vocab_size), label.view(-1))
+    
+        flash_model.zero_grad(set_to_none=True)
+        flash_attn_gm = torch.compile(flash_model, backend=trival_compile_fx)
+        flash_input_data, flash_label = flash_data
+        flash_output = flash_attn_gm(flash_input_data)
+        flash_logits = flash_output["logits"]
+        flash_loss = F.cross_entropy(flash_logits.view(-1, model.config.vocab_size), flash_label.view(-1))
+
+    torch.testing.assert_close(golden_loss, flash_loss, atol=1e-4, rtol=1e-6)
+    torch.testing.assert_close(golden_logits, flash_logits, atol=3e-3, rtol=1e-6)
