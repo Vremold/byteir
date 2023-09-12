@@ -32,4 +32,4 @@ jobs:
       - name: Send Message
         commands:
           - python3 -m pip install requests
-          - python3 .codebase/pipelines/scripts/send_feisu_msg.py --ci "ByteIR Sync with GitHub" --msg "ByteIR Sync with GitHub finished. Please propose a MR from branch copybara_sync to master, update the external_mirror branch to the latest sync commit, and remove copybara_sync branch."
+          - python3 .codebase/pipelines/scripts/send_feisu_msg.py --ci "ByteIR Sync with GitHub" --msg "ByteIR Sync with GitHub finished. Please propose a MR from branch copybara_sync to master, update the external_mirror branch to the latest sync commit."

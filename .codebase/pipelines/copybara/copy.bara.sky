@@ -23,7 +23,7 @@ core.workflow(
         push = new_branch,
     ),
     mode = "SQUASH",
-    origin_files = glob(["**"], exclude = [".gitignore"]),
+    origin_files = glob(["**"], exclude = [".gitignore", ".clang-format", "frontends/onnx-frontend/.gitignore", "frontends/tf-frontend/.bazelrc", "frontends/tf-frontend/.bazelversion", "frontends/tf-frontend/.tf_configure.bazelrc"]),
     destination_files = glob(["**"], exclude = [".codebase/**", ".gitignore", ".clang-format", "frontends/onnx-frontend/.gitignore", "frontends/tf-frontend/.bazelrc", "frontends/tf-frontend/.bazelversion", "frontends/tf-frontend/.tf_configure.bazelrc"]),
     authoring = authoring.pass_thru(author),
     transformations = [

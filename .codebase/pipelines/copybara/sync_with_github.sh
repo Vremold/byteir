@@ -41,6 +41,10 @@ ROOT_PROJ_DIR="$CUR_DIR/../../.."
 
 pushd "$ROOT_PROJ_DIR/.codebase/pipelines/copybara"
 
+if git ls-remote --exit-code --heads origin copybara_sync; then
+  git push origin --delete copybara_sync
+fi
+
 echo yes | bazel run @bazelize//scripts/copybara:run -- https://github.com/bytedance/byteir.git $(pwd)/copy.bara.sky --force --init-history
 
 popd
