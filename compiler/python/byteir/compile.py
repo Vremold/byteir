@@ -127,7 +127,7 @@ def compile_cuda_with_ait(
     name: str = "model",
     aggressive_mode: bool = False,
     parallelism: int = 1,
-    disable_ait_cache: bool = False,
+    disable_byteir_cache: bool = False,
     **kwargs,
 ):
     target = "cuda"
@@ -143,7 +143,7 @@ def compile_cuda_with_ait(
     processor = IRProcessor(name, 
                             "./workspace", 
                             compile_parallelism=parallelism,
-                            disable_ait_cache=disable_ait_cache,
+                            disable_byteir_cache=disable_byteir_cache,
                             verbose=verbose)
     with context:
         processor.load_from_file(input)
@@ -240,7 +240,7 @@ def compile(
     target: str = "cuda",
     verbose: bool = False,
     parallelism: int = 1,
-    disable_ait_cache: bool = False,
+    disable_byteir_cache: bool = False,
     **kwargs,
 ):
     if target == "cuda":
@@ -251,7 +251,7 @@ def compile(
                               entry_func, 
                               verbose, 
                               parallelism=parallelism, 
-                              disable_ait_cache=disable_ait_cache)
+                              disable_byteir_cache=disable_byteir_cache)
     elif target == "cuda_with_ait_aggressive":
         compile_cuda_with_ait(input, 
                               output, 
@@ -259,6 +259,6 @@ def compile(
                               verbose, 
                               aggressive_mode=True, 
                               parallelism=parallelism,
-                              disable_ait_cache=disable_ait_cache)
+                              disable_byteir_cache=disable_byteir_cache)
     else:
         raise NotImplemented("not implemented target: {}".format(target))
