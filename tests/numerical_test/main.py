@@ -31,7 +31,7 @@ Regular expression specifying which tests to include in this run.
 parser.add_argument("--target", type=str, default="cuda_with_ait",
                     choices=["ait", "cuda", "cuda_with_ait_aggressive"], help="target device name")
 parser.add_argument("-c", "--config", default="all",
-                    choices=["all", "mlir", "torch"], help="test sets to run.")
+                    choices=["all", "mlir", "torch", "dynamo"], help="test sets to run.")
 args = parser.parse_args()
 
 EXCLUDE_MLIR_TESTS = []
@@ -115,13 +115,15 @@ def main():
     if args.config == 'all':
         results = run_mlir_test(arch)
         results = results + run_torch_test(arch)
+        run_torch_dynamo_tests(arch)
     elif args.config == 'mlir':
         results = run_mlir_test(arch)
     elif args.config == 'torch':
         results = run_torch_test(arch)
+    elif args.config == 'dynamo':
+        # TODO(zzk): use test infra for dynamo tests
+        run_torch_dynamo_tests(arch)
     failed = report_results(results)
-    # TODO(zzk): use test infra for dynamo tests
-    run_torch_dynamo_tests(arch)
     sys.exit(1 if failed else 0)
 
 
