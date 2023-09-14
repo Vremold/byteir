@@ -88,6 +88,11 @@ def compile_cuda(
         _print_verbose(module, "// IR Dump After GPU Opt:")
     with context:
         PassManager.parse("builtin.module(func.func(remove-func-body{anchor-attr=__byteir_elementwise_fusion__}))").run(module.operation)
+        PassManager.parse("builtin.module(inline)").run(module.operation)
+        if useBarePtrCallConv:
+            PassManager.parse("builtin.module(func.func(gpu-launch-func-to-byre{use-bare-ptr-memref-call-conv=true}))").run(module.operation)
+        else:
+            PassManager.parse("builtin.module(func.func(gpu-launch-func-to-byre))").run(module.operation)
         PassManager.parse("builtin.module(func.func(set-op-space{" + entry_func_str + " space={}".format(target) +  "}))").run(module.operation)
         PassManager.parse("builtin.module(set-arg-space{" + entry_func_str + " all-space={}".format(target) + "})").run(module.operation)
     if verbose:
@@ -202,6 +207,11 @@ def compile_cuda_with_ait(
         _print_verbose(processor.module, "// IR Dump After GPU Opt:")
     with context:
         PassManager.parse("builtin.module(func.func(remove-func-body{anchor-attr=__byteir_elementwise_fusion__}))").run(processor.module.operation)
+        PassManager.parse("builtin.module(inline)").run(processor.module.operation)
+        if useBarePtrCallConv:
+            PassManager.parse("builtin.module(func.func(gpu-launch-func-to-byre{use-bare-ptr-memref-call-conv=true}))").run(processor.module.operation)
+        else:
+            PassManager.parse("builtin.module(func.func(gpu-launch-func-to-byre))").run(processor.module.operation)
         PassManager.parse("builtin.module(func.func(set-op-space{" + entry_func_str + " space={}".format(target) +  "}))").run(processor.module.operation)
         PassManager.parse("builtin.module(set-arg-space{" + entry_func_str + " all-space={}".format(target) + "})").run(processor.module.operation)
     if verbose:
