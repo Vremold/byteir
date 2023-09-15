@@ -9,7 +9,7 @@ import time
 import multiprocessing
 import torch
 from byteir.utils import get_gpu_type
-import hashlib
+import traceback
 
 BYTEIR_CAT_ATTR = "__byteir_cat_fusion__"
 
@@ -158,12 +158,36 @@ class IRProcessor:
         # compile and benchmark
         print("compile ait module using {} processes".format(min(len(work_items_not_in_cache), self.compile_parallelism)))
         t_st = time.time()
+        error_info = []
+        def compile_error_handler(result):
+            if result != None:
+                ir, e, tb = result
+                error_info.append((ir, e, tb))
         for func_ir_str in work_items_not_in_cache:
-            self.pool.apply_async(_parallel_ait_compile, (self.workdir, func_ir_str))
+            self.pool.apply_async(
+                _parallel_ait_compile, 
+                (self.workdir, func_ir_str), 
+                callback=compile_error_handler
+            )
             # _parallel_ait_compile(self.workdir, func_ir_str)
         
         self.pool.close()
         self.pool.join()
+
+        # error handling
+        if len(error_info) > 0:
+            print("================================================")
+            print("error occurs when compiling ait ops:")
+            for ir_str, e, tb in error_info:
+                print("------------------------------------------")
+                print("ir str to compile:")
+                print(ir_str)
+                print("errors:")
+                print(e)
+                print("stack trace:")
+                print("".join(tb))
+            print("================================================")
+            raise RuntimeError("error occurs when compiling ait ops, please check the above information.")
         t_ed = time.time()
         print("compilation finished in {}s".format(t_ed-t_st))
 
@@ -210,12 +234,16 @@ class IRProcessor:
 
 
 def _parallel_ait_compile(workdir: str, ir_str: str):
-    os.environ["CUDA_VISIBLE_DEVICES"]=str(os.getpid() % available_cuda_device_num)
-    context = ir.Context()
-    module = ir.Module.parse(ir_str, context)
-    assert len(module.body.operations) == 1
-    func = module.body.operations[0]
-    from byteir.dialects.cat.ir_translator.ait_builder import ait_builder
-    builder = ait_builder(func, workdir=workdir, subgraph_name=func.name.value)
-    builder.compile()
-    builder.benchmark()
+    try:
+        os.environ["CUDA_VISIBLE_DEVICES"]=str(os.getpid() % available_cuda_device_num)
+        context = ir.Context()
+        module = ir.Module.parse(ir_str, context)
+        assert len(module.body.operations) == 1
+        func = module.body.operations[0]
+        from byteir.dialects.cat.ir_translator.ait_builder import ait_builder
+        builder = ait_builder(func, workdir=workdir, subgraph_name=func.name.value)
+        builder.compile()
+        builder.benchmark()
+    except Exception as e:
+        tb = traceback.format_tb(e.__traceback__)
+        return ir_str, e, tb
