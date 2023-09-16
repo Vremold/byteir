@@ -140,6 +140,12 @@ def CheckCCRLayoutFrom3DDotGeneralDimNums
           CPred<"$0.getLhsContractingDimensions().size() == 1 && $0.getRhsContractingDimensions().size() == 1 && $0.getLhsContractingDimensions()[0] == 1 && $0.getRhsContractingDimensions()[0] == 2">,
           "is bmm ccr dimension">;
 
+def CheckBMMPermuteShapeSplitOnBatch
+    : Constraint<
+          CPred<"$0.getType().cast<ShapedType>().getShape()[0] * $0.getType().cast<ShapedType>().getShape()[1] == $1.getType().cast<ShapedType>().getShape()[0] && $0.getType().cast<ShapedType>().getShape()[2] == $1.getType().cast<ShapedType>().getShape()[1]">,
+          "bmm rrr Shape Split On Batch">;
+
+
 def MhloDotGeneralReshapeTransposeToBMMRRRPermutePattern
     : Pat<(MHLO_TransposeOp
             (MHLO_ReshapeOp : $reshape_out
@@ -153,7 +159,8 @@ def MhloDotGeneralReshapeTransposeToBMMRRRPermutePattern
             (ThreeRank $rhs), 
             (FourSize $permute), 
             (Permute0213Check $permute),
-            (CheckRRRLayoutFrom3DDotGeneralDimNums $dimension_numbers)
+            (CheckRRRLayoutFrom3DDotGeneralDimNums $dimension_numbers),
+            (CheckBMMPermuteShapeSplitOnBatch $reshape_out, $lhs)
           ]>;
 
 def MhloDotGeneralReshapeTransposeToBMMRCRPermutePattern
