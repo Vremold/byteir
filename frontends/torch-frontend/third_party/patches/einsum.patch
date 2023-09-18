@@ -35,10 +35,10 @@ index efdb89fa..c87de79e 100644
      AllowsTypeRefinement,
      HasValueSemantics,
 diff --git a/lib/Dialect/Torch/Transforms/DecomposeComplexOps.cpp b/lib/Dialect/Torch/Transforms/DecomposeComplexOps.cpp
-index 558e31c6..919cc1b9 100644
+index 558e31c6..fefc337e 100644
 --- a/lib/Dialect/Torch/Transforms/DecomposeComplexOps.cpp
 +++ b/lib/Dialect/Torch/Transforms/DecomposeComplexOps.cpp
-@@ -5022,6 +5022,456 @@ public:
+@@ -5022,6 +5022,460 @@ public:
  };
  } // namespace
  
@@ -250,34 +250,38 @@ index 558e31c6..919cc1b9 100644
 +                                   SmallVector<char> &finalResultTokens) {
 +  auto lhsType = lhs.getType().cast<BaseTensorType>();
 +  auto rhsType = rhs.getType().cast<BaseTensorType>();
++  Type promotedDType;
 +
 +  // promote dtype
-+  auto lhsDtype = Torch::getScalarTypeForType(lhsType.getDtype());
-+  auto rhsDtype = Torch::getScalarTypeForType(rhsType.getDtype());
-+  auto promotedDTypeInt =
-+      torch_upstream::promote_skip_undefined(lhsDtype, rhsDtype);
-+  auto promotedDTypeIntValue = rewriter.create<Torch::ConstantIntOp>(
-+      loc, rewriter.getI64IntegerAttr((int)promotedDTypeInt));
-+  auto promotedDTypeInfo =
-+      getTypeForScalarType(rewriter.getContext(), promotedDTypeInt,
-+                           mlir::IntegerType::SignednessSemantics::Signed);
-+  if (failed(promotedDTypeInfo))
-+    return rewriter.notifyMatchFailure(loc,
-+                                       "Failed to get type for promoted dtype");
-+  auto promotedDType = *promotedDTypeInfo;
++  if (lhsType.hasDtype() && rhsType.hasDtype()) {
++    auto lhsDtype = Torch::getScalarTypeForType(lhsType.getOptionalDtype());
++    auto rhsDtype = Torch::getScalarTypeForType(rhsType.getOptionalDtype());
++    auto promotedDTypeInt =
++        torch_upstream::promote_skip_undefined(lhsDtype, rhsDtype);
++    auto promotedDTypeIntValue = rewriter.create<Torch::ConstantIntOp>(
++        loc, rewriter.getI64IntegerAttr((int)promotedDTypeInt));
++    auto promotedDTypeInfo =
++        getTypeForScalarType(rewriter.getContext(), promotedDTypeInt,
++                            mlir::IntegerType::SignednessSemantics::Signed);
++    if (failed(promotedDTypeInfo))
++      rewriter.notifyMatchFailure(loc, "Failed to get type for promoted dtype");
++    promotedDType = *promotedDTypeInfo;
 +
-+  auto falseValue =
-+      rewriter.create<Torch::ConstantBoolOp>(loc, rewriter.getBoolAttr(false));
-+  auto noneValue = rewriter.create<Torch::ConstantNoneOp>(loc);
-+  lhs = rewriter.create<Torch::AtenToDtypeOp>(
-+      loc,
-+      lhsType.getWithSizesAndDtype(lhsType.getOptionalSizes(), promotedDType),
-+      lhs, promotedDTypeIntValue, falseValue, falseValue, noneValue);
-+  rhs = rewriter.create<Torch::AtenToDtypeOp>(
-+      loc,
-+      rhsType.getWithSizesAndDtype(rhsType.getOptionalSizes(), promotedDType),
-+      rhs, promotedDTypeIntValue, falseValue, falseValue, noneValue);
-+
++    auto falseValue =
++        rewriter.create<Torch::ConstantBoolOp>(loc, rewriter.getBoolAttr(false));
++    auto noneValue = rewriter.create<Torch::ConstantNoneOp>(loc);
++    lhs = rewriter.create<Torch::AtenToDtypeOp>(
++        loc,
++        lhsType.getWithSizesAndDtype(lhsType.getOptionalSizes(), promotedDType),
++        lhs, promotedDTypeIntValue, falseValue, falseValue, noneValue);
++    rhs = rewriter.create<Torch::AtenToDtypeOp>(
++        loc,
++        rhsType.getWithSizesAndDtype(rhsType.getOptionalSizes(), promotedDType),
++        rhs, promotedDTypeIntValue, falseValue, falseValue, noneValue);
++  } else {
++    promotedDType = lhsType.hasDtype() ? lhsType.getOptionalDtype() : rhsType.getOptionalDtype();
++  }
++  
 +  llvm::SmallDenseMap<char, Value> lhsDimShapeMap;
 +  for (size_t idx = 0; idx < lhsTokens.size(); ++idx) {
 +    char d = lhsTokens[idx];
@@ -495,7 +499,7 @@ index 558e31c6..919cc1b9 100644
  namespace {
  // Unconditionally decompose `aten.tile` into `aten.repeat`.
  class DecomposeAtenTileOp : public OpRewritePattern<AtenTileOp> {
-@@ -5221,6 +5671,7 @@ public:
+@@ -5221,6 +5675,7 @@ public:
      addPatternIfTargetOpIsIllegal<DecomposeAtenVarMeanOp>(patterns);
      addPatternIfTargetOpIsIllegal<DecomposeAtenEluOp>(patterns);
      addPatternIfTargetOpIsIllegal<DecomposeAtenLeakyReluOp>(patterns);
