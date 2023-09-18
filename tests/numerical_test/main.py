@@ -43,6 +43,7 @@ SM80_PLUS_TESTS = [
     "MatmulF32Module_basic",
     "bmm_rrr_add_f32.mlir",
     "bmm_rrr_f32.mlir",
+    "bmm_rrr_permute_f16.mlir",
     "bmm_rrr_permute_f32.mlir",
 ]
 
