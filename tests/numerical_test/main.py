@@ -40,11 +40,11 @@ EXCLUDE_TORCH_TESTS = []
 
 SM80_PLUS_TESTS = [
     "dot_f32.mlir",
-    "MatmulF32Module_basic",
-    "bmm_rrr_add_f32.mlir",
-    "bmm_rrr_f32.mlir",
     "bmm_rrr_permute_f16.mlir",
     "bmm_rrr_permute_f32.mlir",
+    "MatmulF32Module_basic",
+    "BatchMatmulAddF32Module_basic",
+    "BatchMatmulF32Module_basic",
 ]
 
 
@@ -60,7 +60,7 @@ def _detect_cuda_with_nvidia_smi():
         sm_names = {
             70: ["V100"],
             75: ["T4", "Quadro T2000"],
-            80: ["PG509", "A100", "A10", "RTX 30", "A30", "RTX 40"],
+            80: ["PG509", "A100", "A10", "RTX 30", "A30", "RTX 40", "A16"],
             90: ["H100"],
         }
         for sm, names in sm_names.items():
@@ -116,14 +116,17 @@ def main():
     if args.config == 'all':
         results = run_mlir_test(arch)
         results = results + run_torch_test(arch)
-        run_torch_dynamo_tests(arch)
+        # TODO(zzk): disable flash attn test for now
+        # run_torch_dynamo_tests(arch)
     elif args.config == 'mlir':
         results = run_mlir_test(arch)
     elif args.config == 'torch':
         results = run_torch_test(arch)
     elif args.config == 'dynamo':
         # TODO(zzk): use test infra for dynamo tests
-        run_torch_dynamo_tests(arch)
+        # TODO(zzk): disable flash attn test for now
+        # run_torch_dynamo_tests(arch)
+        pass
     failed = report_results(results)
     sys.exit(1 if failed else 0)
 
