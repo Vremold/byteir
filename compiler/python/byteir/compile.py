@@ -119,6 +119,8 @@ def compile_cuda(
         PassManager.parse("builtin.module(byre-host{device-file-name=" + output_file_name + ".ptx" + " " + target_str + " " + entry_func_str + "})").run(module.operation)
     if verbose:
         _print_verbose(module, "// IR Dump After Byre Host:")
+        with open(output+".elide", "w") as f:
+            f.write(module.operation.get_asm(large_elements_limit=10))
     # write to output host mlir
     with open(output, "w") as f:
         f.write(module.operation.get_asm())
@@ -239,6 +241,8 @@ def compile_cuda_with_ait(
         PassManager.parse("builtin.module(byre-host{device-file-name=" + output_file_name + ".ptx" + " " + target_str + " " + entry_func_str + "})").run(processor.module.operation)
     if verbose:
         _print_verbose(processor.module, "// IR Dump After Byre Host:")
+        with open(output+".elide", "w") as f:
+            f.write(processor.module.operation.get_asm(large_elements_limit=10))
     # write to output host mlir
     with open(output, "w") as f:
         f.write(processor.module.operation.get_asm())
