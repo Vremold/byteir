@@ -76,7 +76,7 @@ func.func @test_bmm_rrr_add_0(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x
     return %1 : tensor<384x256x64xf32>
 }
 
-// CHECK: func.func @test_bmm_rrr_add_0
+// CHECK-LABEL: func.func @test_bmm_rrr_add_0
 // CHECK-NEXT: cat.bmm_rrr_add
 // CHECK-NEXT: return
 
@@ -86,7 +86,7 @@ func.func @test_bmm_rrr_add_1(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x
     return %1 : tensor<384x256x64xf32>
 }
 
-// CHECK: func.func @test_bmm_rrr_add_1
+// CHECK-LABEL: func.func @test_bmm_rrr_add_1
 // CHECK-NEXT: cat.bmm_rrr_add
 // CHECK-NEXT: return
 
@@ -97,7 +97,7 @@ func.func @test_bmm_crr_add(%arg0: tensor<384x256x256xf32>, %arg1: tensor<384x25
     return %2 : tensor<384x256x64xf32>
 }
 
-// CHECK: func.func @test_bmm_crr_add
+// CHECK-LABEL: func.func @test_bmm_crr_add
 // CHECK-NEXT: cat.bmm_crr_add
 // CHECK-NEXT: return
 
@@ -214,7 +214,7 @@ func.func @test_gemm_rrr_bias(%arg0: tensor<2x2048xf32>, %arg1: tensor<2048x1001
     return %3 : tensor<2x1001xf32>
 }
 
-// CHECK: func.func @test_gemm_rrr_bias
+// CHECK-LABEL: func.func @test_gemm_rrr_bias
 // CHECK-NEXT: mhlo.constant
 // CHECK-NEXT: cat.gemm_rrr_bias
 // CHECK-NEXT: return
@@ -225,7 +225,7 @@ func.func @test_bmm_crc(%arg0: tensor<512x1024x128xf16>, %arg1: tensor<512x1024x
     return %1 : tensor<512x1024x128xf16>
 }
 
-// CHECK: func.func @test_bmm_crc
+// CHECK-LABEL: func.func @test_bmm_crc
 // CHECK-NEXT: cat.bmm_crc
 // CHECK-NEXT: return
 
@@ -235,7 +235,7 @@ func.func @test_bmm_rrc(%arg0: tensor<512x128x1024xf16>, %arg1: tensor<512x1024x
     return %1 : tensor<512x1024x128xf16>
 }
 
-// CHECK: func.func @test_bmm_rrc
+// CHECK-LABEL: func.func @test_bmm_rrc
 // CHECK-NEXT: cat.bmm_rrc
 // CHECK-NEXT: return
 
@@ -246,7 +246,7 @@ func.func @test_transpose_reshape_bmm_rrr_to_reshape_bmm_rcr(%arg0: tensor<64x12
     return %2 : tensor<64x128x128xf16>
 }
 
-// CHECK: func.func @test_transpose_reshape_bmm_rrr_to_reshape_bmm_rcr
+// CHECK-LABEL: func.func @test_transpose_reshape_bmm_rrr_to_reshape_bmm_rcr
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: cat.bmm_rcr
 // CHECK-NEXT: return
@@ -257,7 +257,7 @@ func.func @test_bmm_rrr_reshape_transpose_to_bmm_rrc_reshape(%arg0: tensor<64x12
     %2 = "mhlo.transpose"(%1) {permutation = dense<[0, 1, 3, 2]> : tensor<4xi64>} : (tensor<2x32x128x128xf16>) -> tensor<2x32x128x128xf16>
     return %2 : tensor<2x32x128x128xf16>
 }
-// CHECK: func.func @test_bmm_rrr_reshape_transpose_to_bmm_rrc_reshape
+// CHECK-LABEL: func.func @test_bmm_rrr_reshape_transpose_to_bmm_rrc_reshape
 // CHECK-NEXT: cat.bmm_rrc
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: return
@@ -268,7 +268,7 @@ func.func @test_bmm_crr_reshape_transpose_to_bmm_crc_reshape(%arg0: tensor<512x1
     %2 = "mhlo.transpose"(%1) {permutation = dense<[0, 1, 3, 2]> : tensor<4xi64>} : (tensor<16x32x128x128xf16>) -> tensor<16x32x128x128xf16>
     return %2 : tensor<16x32x128x128xf16>
 }
-// CHECK: func.func @test_bmm_crr_reshape_transpose_to_bmm_crc_reshape
+// CHECK-LABEL: func.func @test_bmm_crr_reshape_transpose_to_bmm_crc_reshape
 // CHECK-NEXT: cat.bmm_crc
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: return
@@ -277,8 +277,30 @@ func.func @test_softmax_f16(%arg0 : tensor<1x12x1024x1024xf16>) -> tensor<1x12x1
   %0 = mhlo.custom_call @byteir.softmax(%arg0) {backend_config = "", byteir_attrs = {axis = 3 : i64}} : (tensor<1x12x1024x1024xf16>) -> tensor<1x12x1024x1024xf32>
   return %0 : tensor<1x12x1024x1024xf32>
 }
-
-// CHECK: func.func @test_softmax_f16
+// CHECK-LABEL: func.func @test_softmax_f16
 // CHECK-NEXT: cat.softmax
 // CHECK-NEXT: mhlo.convert
+// CHECK-NEXT: return
+
+func.func @test_bmm_rrr_broadcast_to_reshape_gemm_rrr_reshape(%arg0: tensor<16x1024x4096xf16>, %arg1: tensor<4096x4096xf16>) -> tensor<16x1024x4096xf16> {
+  %0 = "mhlo.broadcast_in_dim"(%arg1) {broadcast_dimensions = dense<[1, 2]> : tensor<2xi64>} : (tensor<4096x4096xf16>) -> tensor<16x4096x4096xf16>
+  %1 = "cat.bmm_rrr"(%arg0, %0) : (tensor<16x1024x4096xf16>, tensor<16x4096x4096xf16>) -> tensor<16x1024x4096xf16>
+  return %1 : tensor<16x1024x4096xf16>
+}
+// CHECK-LABEL: func.func @test_bmm_rrr_broadcast_to_reshape_gemm_rrr_reshape
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: cat.gemm_rrr
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: return
+
+func.func @test_transpose_bmm_rrr_broadcast_to_gemm_rrr_permute(%arg0: tensor<16x1024x4096xf16>, %arg1: tensor<4096x4096xf16>) -> tensor<16x32x1024x128xf16> {
+  %0 = "mhlo.broadcast_in_dim"(%arg1) {broadcast_dimensions = dense<[1, 2]> : tensor<2xi64>} : (tensor<4096x4096xf16>) -> tensor<16x4096x4096xf16>
+  %1 = "cat.bmm_rrr"(%arg0, %0) : (tensor<16x1024x4096xf16>, tensor<16x4096x4096xf16>) -> tensor<16x1024x4096xf16>
+  %2 = mhlo.reshape %1 : (tensor<16x1024x4096xf16>) -> tensor<16x1024x32x128xf16>
+  %3 = "mhlo.transpose"(%2) {permutation = dense<[0, 2, 1, 3]> : tensor<4xi64>} : (tensor<16x1024x32x128xf16>) -> tensor<16x32x1024x128xf16>
+  return %3 : tensor<16x32x1024x128xf16>
+}
+// CHECK-LABEL: func.func @test_transpose_bmm_rrr_broadcast_to_gemm_rrr_permute
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: cat.gemm_rrr_permute
 // CHECK-NEXT: return

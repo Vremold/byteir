@@ -116,6 +116,16 @@ def MhloCatGemmRCRTransToCatGemmRCRPermutePattern
           (Cat_GemmRCRPermuteOp $lhs, $rhs, (getDim1Attr $reshape_out), (getDim2Attr $reshape_out)),
           [(TwoRank $lhs), (TwoRank $rhs), (FourRank $reshape_out), (GemmPermuteShapeCheck $reshape_out, $gemm_out), (Permute0213Check $permute)]>;
 
+def MhloCatGemmRRRTransToCatGemmRCRPermutePattern
+    : Pat<(MHLO_TransposeOp
+            (MHLO_ReshapeOp : $reshape_out
+              (Cat_GemmRRROp : $gemm_out
+                $lhs, $rhs)
+            ),
+            $permute),
+          (Cat_GemmRRRPermuteOp $lhs, $rhs, (getDim1Attr $reshape_out), (getDim2Attr $reshape_out)),
+          [(TwoRank $lhs), (TwoRank $rhs), (FourRank $reshape_out), (GemmPermuteShapeCheck $reshape_out, $gemm_out), (Permute0213Check $permute)]>;
+
 def LayoutFrom3DDotGeneralDimNums : NativeCodeCall<"GetLayoutFrom3DDotGeneralDimNums($0, &$_builder)">;
 
 def CheckRRRLayoutFrom3DDotGeneralDimNums
