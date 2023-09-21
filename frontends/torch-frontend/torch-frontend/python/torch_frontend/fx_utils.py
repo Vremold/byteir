@@ -76,6 +76,34 @@ def _remove_nones(fx_g: torch.fx.GraphModule) -> List[int]:
     return removed_indexes
 
 
+# note: torch.jit.script doesn't support  torch.ops.aten.full([2, 1, 1, 128], True, dtype = torch.bool), replace it with  torch.ops.aten.full([2, 1, 1, 128], 1, dtype = torch.bool)
+def _replace_aten_full_arugment(fx_g: torch.fx.GraphModule) -> torch.fx.GraphModule :
+    def get_aten_target(node):
+        if hasattr(node.target, 'overloadpacket'):
+            return node.target.overloadpacket
+        return node.target
+
+    nodes = []
+    for node in fx_g.graph.nodes:
+        if get_aten_target(node) == torch.ops.aten.full:
+            if node.args[1] == True or node.args[1] == False:
+                nodes.append(node)
+    for node in nodes:
+        if node.args[1] == True:
+            with fx_g.graph.inserting_after(node):
+                new_node = fx_g.graph.call_function(torch.ops.aten.full, args=(node.args[0], 1), kwargs=node.kwargs)
+                node.replace_all_uses_with(new_node)
+                fx_g.graph.erase_node(node)
+        if node.args[1] == False:
+            with fx_g.graph.inserting_after(node):
+                new_node = fx_g.graph.call_function(torch.ops.aten.full, args=(node.args[0], 0), kwargs=node.kwargs)
+                node.replace_all_uses_with(new_node)
+                fx_g.graph.erase_node(node)
+    fx_g.graph.lint()
+    fx_g.recompile()
+    return fx_g
+
+
 def threshold_backward_pattern(grad_output, inp, threshold):
     return torch.ops.aten.threshold_backward(grad_output, inp, threshold)
 
@@ -135,6 +163,22 @@ def LLaMAAttnReplacement(query, key, value, attn_mask, min_val, inv_scale, batch
     return S_dmask, out
 
 
+def get_none_indices(fx_g: torch.fx.GraphModule) -> List[int]:
+    none_indices = []
+    for node in fx_g.graph.nodes:
+        if node.op == "output":
+            assert len(node.args) == 1, "Output node must have a single argument"
+            node_arg = node.args[0]
+            if isinstance(node_arg, (list, tuple)):
+                node_arg = list(node_arg)
+                node_args_len = len(node_arg)
+                for i in range(node_args_len):
+                    if node_arg[i] is None:
+                        none_indices.append(i)
+                break
+    return none_indices
+
+
 def list_decomposed_ops():
     return [
         torch.ops.aten._native_batch_norm_legit_functional,
@@ -146,6 +190,7 @@ def list_decomposed_ops():
         torch.ops.aten.native_dropout_backward,
         torch.ops.aten.tril
     ]
+
 
 def preprocess_fx_graph(fx_graph: torch.fx.GraphModule):
     if _returns_nothing(fx_graph):
@@ -159,4 +204,5 @@ def preprocess_fx_graph(fx_graph: torch.fx.GraphModule):
     removed_none_indexes = _remove_nones(fx_graph)
     strip_overloads(fx_graph)
     torch.fx.replace_pattern(fx_graph, threshold_backward_pattern, threshold_backward_replacement)
+    fx_graph = _replace_aten_full_arugment(fx_graph)
     return fx_graph
