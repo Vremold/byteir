@@ -184,7 +184,8 @@ def train_model(args):
     model = make_model(model_name)
     model.to(device)
 
-    from backend import byteir_compile_fx, new_byteir_compile_fx, fuse_aware_byteir_compile_fx
+    import backend
+    from backend import fuse_aware_byteir_compile_fx
     backend.MODEL_NAME = model_name
     backend.FLASH = use_flash_attn
 
