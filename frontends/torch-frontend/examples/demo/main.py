@@ -160,7 +160,6 @@ def infer_model(args):
             with open(mhlo_file_name, "w") as f:
                 print(mhlo_model.operation.get_asm(), file=f)
             print("save mhlo to {}".format(mhlo_file_name))
-            # run_mhlo_tools(mhlo_file_name, trace_data)
 
         if not os.path.exists(byre_file_name):
             import byteir
