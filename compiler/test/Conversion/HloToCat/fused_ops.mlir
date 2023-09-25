@@ -304,3 +304,16 @@ func.func @test_transpose_bmm_rrr_broadcast_to_gemm_rrr_permute(%arg0: tensor<16
 // CHECK-NEXT: mhlo.reshape
 // CHECK-NEXT: cat.gemm_rrr_permute
 // CHECK-NEXT: return
+
+func.func @test_transpose_bmm_rrr_broadcast_to_gemm_rcr_permute(%arg0: tensor<16x1024x4096xf16>, %arg1: tensor<4096x4096xf16>) -> tensor<16x32x1024x128xf16> {
+  %t = "mhlo.transpose"(%arg1) {permutation = dense<[1,0]> : tensor<2xi64>} : (tensor<4096x4096xf16>) -> tensor<4096x4096xf16>
+  %0 = "mhlo.broadcast_in_dim"(%t) {broadcast_dimensions = dense<[1, 2]> : tensor<2xi64>} : (tensor<4096x4096xf16>) -> tensor<16x4096x4096xf16>
+  %1 = "cat.bmm_rrr"(%arg0, %0) : (tensor<16x1024x4096xf16>, tensor<16x4096x4096xf16>) -> tensor<16x1024x4096xf16>
+  %2 = mhlo.reshape %1 : (tensor<16x1024x4096xf16>) -> tensor<16x1024x32x128xf16>
+  %3 = "mhlo.transpose"(%2) {permutation = dense<[0, 2, 1, 3]> : tensor<4xi64>} : (tensor<16x1024x32x128xf16>) -> tensor<16x32x1024x128xf16>
+  return %3 : tensor<16x32x1024x128xf16>
+}
+// CHECK-LABEL: func.func @test_transpose_bmm_rrr_broadcast_to_gemm_rcr_permute
+// CHECK-NEXT: mhlo.reshape
+// CHECK-NEXT: cat.gemm_rcr_permute
+// CHECK-NEXT: return

@@ -151,9 +151,9 @@ def infer_model(args):
                 module = preprocess_fx_graph(module)
             else:
                 module = torch.jit.trace(model, trace_data, check_trace=False)
-            print("torch jit inputs:")
+            print("torch inputs:")
             print(trace_data)
-            print("torch jit outputs:")
+            print("torch outputs:")
             print(module(*trace_data))
             import torch_frontend
             mhlo_model = torch_frontend.compile(module, trace_data, "mhlo")
@@ -163,6 +163,7 @@ def infer_model(args):
 
         if not os.path.exists(byre_file_name):
             import byteir
+            print("begin byteir compile")
             byteir.compile(mhlo_file_name, byre_file_name, entry_func='forward', target='cuda_with_ait', disable_byteir_cache=False, verbose=False)
             print("byteir compile to {}".format(byre_file_name))
 

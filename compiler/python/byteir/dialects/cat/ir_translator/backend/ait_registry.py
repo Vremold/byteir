@@ -173,14 +173,6 @@ def _dispatch_cat_gemm_rcr_permute(op, inputs):
     Y = ait_op(inputs[0], inputs[1])
     return [Y]
 
-@AITemplateIRTranslator.register("cat.gemm_rrr_permute")
-def _dispatch_cat_gemm_rcr_permute(op, inputs):
-    t1 = mlir_attr_to_pyobj(op.attributes["t1"])
-    t2 = mlir_attr_to_pyobj(op.attributes["t2"])
-    ait_op = ait_ops.gemm_rrr_permute(shape=([t1, t2]), layout="0213")
-    Y = ait_op(inputs[0], inputs[1])
-    return [Y]
-
 @AITemplateIRTranslator.register("cat.bmm_rrr_add")
 def _dispatch_cat_bmm_rrr_add(op, inputs):
     ait_op = ait_ops.bmm_rrr_add()
