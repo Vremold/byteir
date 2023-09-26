@@ -148,13 +148,17 @@ def infer_model(args):
                 from torch.fx.experimental.proxy_tensor import make_fx
                 from torch_frontend import preprocess_fx_graph
                 module = make_fx(model)(*trace_data)
+                print("torch inputs:")
+                print(trace_data)
+                print("torch outputs:")
+                print(module(*trace_data))
                 module = preprocess_fx_graph(module)
             else:
                 module = torch.jit.trace(model, trace_data, check_trace=False)
-            print("torch inputs:")
-            print(trace_data)
-            print("torch outputs:")
-            print(module(*trace_data))
+                print("torch inputs:")
+                print(trace_data)
+                print("torch outputs:")
+                print(module(*trace_data))
             import torch_frontend
             mhlo_model = torch_frontend.compile(module, trace_data, "mhlo")
             with open(mhlo_file_name, "w") as f:

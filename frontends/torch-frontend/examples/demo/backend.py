@@ -1,9 +1,6 @@
 import os
-import copy
 import torch
-import sys
 import functools
-from typing import List
 
 from torch.fx.experimental.proxy_tensor import maybe_disable_fake_tensor_mode
 from torch.fx.passes.fake_tensor_prop import FakeTensorProp
