@@ -76,6 +76,7 @@ class CustomFlashAttnFunc(torch.autograd.Function):
             q, k, v, dropout_p, softmax_scale,
             causal, (return_softmax and dropout_p > 0)
         )
+        # output also needs to be transposed
         out = out.transpose(1, 2)
         ctx.save_for_backward(q_pad, k_pad, v_pad, out_pad, softmax_lse, rng_state)
         ctx.dropout_p = dropout_p
@@ -123,6 +124,7 @@ def flash_attn_func(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False, sca
             The output of softmax (possibly with different scaling). It also encodes the dropout
             pattern (negative means that location was dropped, nonnegative means it was kept).
     """
+    # q, k, v needs to be transposed for flash attn v2 
     return CustomFlashAttnFunc.apply(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), dropout_p, scale, is_causal, False)
 
 

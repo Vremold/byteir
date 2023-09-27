@@ -57,8 +57,6 @@ def AttnReplacement1(q, k, v, causal_mask, mask_value, scale, dropout_p):
     )
 
 # LLaMA Attention pattern
-# Note, LLaMA attention uses a different mask than flash attention.
-# Replacement is not mathematically equivalent
 def AttnPattern2(query, key, value, attn_mask, min_val, inv_scale):
     attn_weights = torch.matmul(query, key.transpose(2, 3))
     attn_weights = attn_weights / inv_scale
