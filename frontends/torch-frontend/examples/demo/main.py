@@ -64,7 +64,7 @@ def make_model(model_name):
         config.num_labels = config.vocab_size
         model = transformers.GPT2ForTokenClassification(config=config)
     elif model_name == 'nanogpt':
-        from my_transformers.modeling_nanogpt import GPTConfig, GPT
+        from models.modeling_nanogpt import GPTConfig, GPT
         config_args = dict(n_layer=12, n_head=12, n_embd=768)
         config_args['vocab_size'] = 50257  # always 50257 for GPT model checkpoints
         config_args['block_size'] = 1024  # always 1024 for GPT model checkpoints
