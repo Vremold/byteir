@@ -25,7 +25,6 @@
 
 #include "torch-frontend/Conversion/ConvertTorchToStablehloExt.h"
 #include "./PassDetail.h"
-#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
@@ -44,7 +43,6 @@ using namespace mlir;
 using namespace mlir::torch;
 using namespace mlir::torch::Torch;
 
-// TODO: use stablehlo dialect, instead of mhlo
 // Aten_IndexPutImplOp
 namespace {
 struct ConvertAten_IndexPutImplOp
@@ -104,35 +102,36 @@ struct ConvertAten_IndexPutImplOp
     auto reshapedIndexType = RankedTensorType::get(
         {indexShape[0] * indexShape[1], 1}, indexType.getElementType());
     Value reshapedIndex =
-        rewriter.create<mhlo::ReshapeOp>(loc, reshapedIndexType, index);
+        rewriter.create<stablehlo::ReshapeOp>(loc, reshapedIndexType, index);
 
     auto reshapedValuesType =
         RankedTensorType::get({valuesShape[0] * valuesShape[1], valuesShape[2]},
                               valuesType.getElementType());
     Value reshapedValues =
-        rewriter.create<mhlo::ReshapeOp>(loc, reshapedValuesType, values);
+        rewriter.create<stablehlo::ReshapeOp>(loc, reshapedValuesType, values);
 
     // setup ScatterDimensionNumbersAttr
     SmallVector<int64_t> updateWindowDims{1};
     SmallVector<int64_t> insertedWindowDims{0};
     SmallVector<int64_t> scatterDimsToOperandDims{0};
     int64_t indexVectorDim = indexShape.size() - 1;
-    auto scatter_dimension_numbers = mhlo::ScatterDimensionNumbersAttr::get(
-        rewriter.getContext(),
-        /*updateWindowDims=*/updateWindowDims,
-        /*insertedWindowDims=*/insertedWindowDims,
-        /*scatterDimsToOperandDims=*/scatterDimsToOperandDims,
-        /*indexVectorDim=*/indexVectorDim);
+    auto scatter_dimension_numbers =
+        stablehlo::ScatterDimensionNumbersAttr::get(
+            rewriter.getContext(),
+            /*updateWindowDims=*/updateWindowDims,
+            /*insertedWindowDims=*/insertedWindowDims,
+            /*scatterDimsToOperandDims=*/scatterDimsToOperandDims,
+            /*indexVectorDim=*/indexVectorDim);
 
     BoolAttr indices_are_sorted = rewriter.getBoolAttr(false);
     BoolAttr unique_indices = rewriter.getBoolAttr(false);
 
     auto outType = getTypeConverter()->convertType(op.getType());
-    auto mhloScatterOp = rewriter.replaceOpWithNewOp<mhlo::ScatterOp>(
+    auto stablehloScatterOp = rewriter.replaceOpWithNewOp<stablehlo::ScatterOp>(
         op, outType, input, reshapedIndex, reshapedValues,
         scatter_dimension_numbers, indices_are_sorted, unique_indices);
 
-    Block &block = mhloScatterOp.getUpdateComputation().emplaceBlock();
+    Block &block = stablehloScatterOp.getUpdateComputation().emplaceBlock();
     // Add block arguments
     auto blockValArgumentType =
         RankedTensorType::get({}, inputType.getElementType());
@@ -145,9 +144,9 @@ struct ConvertAten_IndexPutImplOp
       OpBuilder::InsertionGuard guard(rewriter);
       rewriter.setInsertionPointToStart(&block);
 
-      Value res = rewriter.create<mhlo::AddOp>(op->getLoc(), *firstValArg,
-                                               *secondValArg);
-      rewriter.create<mhlo::ReturnOp>(op->getLoc(), res);
+      Value res = rewriter.create<stablehlo::AddOp>(op->getLoc(), *firstValArg,
+                                                    *secondValArg);
+      rewriter.create<stablehlo::ReturnOp>(op->getLoc(), res);
     }
 
     return success();
@@ -293,7 +292,6 @@ struct ConvertTorchToStablehloExtPass
     : public ConvertTorchToStablehloExtBase<ConvertTorchToStablehloExtPass> {
   void getDependentDialects(DialectRegistry &registry) const override {
     registry.insert<Torch::TorchDialect>();
-    registry.insert<mhlo::MhloDialect>();
     registry.insert<chlo::ChloDialect>();
     registry.insert<stablehlo::StablehloDialect>();
     registry.insert<tensor::TensorDialect>();
@@ -304,9 +302,9 @@ struct ConvertTorchToStablehloExtPass
   void runOnOperation() override {
     MLIRContext *context = &getContext();
     ConversionTarget target(*context);
-    target.addLegalDialect<Torch::TorchDialect, mhlo::MhloDialect,
-                           chlo::ChloDialect, stablehlo::StablehloDialect,
-                           tensor::TensorDialect, arith::ArithDialect>();
+    target.addLegalDialect<Torch::TorchDialect, chlo::ChloDialect,
+                           stablehlo::StablehloDialect, tensor::TensorDialect,
+                           arith::ArithDialect>();
     TypeConverter typeConverter;
     typeConverter.addConversion([](Type type) { return type; });
     TorchConversion::setupBackendTypeConversion(target, typeConverter);
