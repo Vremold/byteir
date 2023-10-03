@@ -4,6 +4,8 @@ import functools
 
 from torch.fx.experimental.proxy_tensor import maybe_disable_fake_tensor_mode
 from torch.fx.passes.fake_tensor_prop import FakeTensorProp
+from torch.fx.passes.infra.partitioner import CapabilityBasedPartitioner
+from torch.fx.passes.operator_support import OperatorSupport
 
 import brt
 import byteir
@@ -14,7 +16,7 @@ from torch_frontend import list_decomposed_ops, preprocess_fx_graph, fx_replace_
 
 TRACE = False
 
-cnt = 0
+submodule_cnt = 0
 MODEL_NAME = ''
 FLASH = False
 
@@ -100,55 +102,125 @@ class ByteIRFunction:
                 ret_ptr += 1
         return results
 
-def byteir_compile_fx_inner(graph: torch.fx.GraphModule, inputs, is_backward, ban_lst=[]):
-    category = 'backward' if is_backward else 'forward'
+class ByteIROperatorSupport(OperatorSupport):
+    def __init__(self, fallback_ops):
+        super().__init__()
+        self._fallback_ops = fallback_ops
 
-    print("\n\n============")
-    print(f"{category} Part")
-    print("============\n\n")
-    none_indices = get_none_indices(graph)
-    fx_graph = preprocess_fx_graph(graph)
+    def is_node_supported(self, submodules, node: torch.fx.Node) -> bool:
+        unsupported_ops = [torch.ops.aten.view_as_complex.default]
+        return node.op in [
+          "call_function", "call_module", "call_method"
+        ] and node not in self._fallback_ops and node.target not in unsupported_ops
 
-    compile_type = 'mhlo'
-    backend_legal_ops = [
-        "aten._softmax",
-        "aten.softmax.int",
-        "aten.log_softmax.int",
-        "aten._log_softmax",
-        # "aten.native_layer_norm",
-        # "aten.layer_norm",
-        "aten.gelu",
-        "aten.argmax",
-        "aten.max.dim",
-        "aten.one_hot",
-        "aten.topk",
-        "byteir.flash_attn_fwd",
-        "byteir.flash_attn_bwd",
-    ]
-    with maybe_disable_fake_tensor_mode():
-        compiled_graph = compile(fx_graph, inputs, compile_type, backend_legal_ops=backend_legal_ops)
+def is_complex_tensor(tensor: torch.Tensor) -> bool:
+    return tensor.is_complex()
 
-    model_name = MODEL_NAME
-    global cnt
-    TEMP_FOLDER="./temp"
-    os.makedirs(TEMP_FOLDER, exist_ok=True)
-    os.makedirs(TEMP_FOLDER + f"/{model_name}_{category}", exist_ok=True)
-    mlir_file_name = f'{TEMP_FOLDER}/{model_name}_{category}_{cnt}.{compile_type}.mlir'
-    output_mlir_file_name = f'{TEMP_FOLDER}/{model_name}_{category}/{model_name}_{category}.rt.mlir'
-    cnt = cnt + 1
-    with open(mlir_file_name, "w+") as fout:
-        compiled_graph.operation.print(file=fout,
-                                       large_elements_limit=None)
+class FallBackNodeCollector(torch.fx.Interpreter):
 
-    with maybe_disable_fake_tensor_mode():
-        byteir.compile(mlir_file_name, output_mlir_file_name, entry_func='forward', target='cuda_with_ait')
+  def __init__(self, module):
+    super().__init__(module)
+    self._fallback_ops = []
 
-    outputs = FakeTensorProp(graph).propagate(*inputs)
-    mhlo_ret_dtypes = [t.dtype for t in outputs]
-    mhlo_ret_shapes = [t.shape for t in outputs]
+  def run_node(self, n: torch.fx.Node):
+    result = super().run_node(n)
+    # fallback if inputs are complex tensors,
+    if n.op in ["call_function", "call_module", "call_method"]:
+        args, kwargs = self.fetch_args_kwargs_from_env(n)
+        for arg in args:
+            if isinstance(arg, torch.Tensor) and is_complex_tensor(arg):
+                self._fallback_ops.append(n)
+                break
+    return result
 
-    print(output_mlir_file_name)
-    return ByteIRFunction(output_mlir_file_name, mhlo_ret_shapes, mhlo_ret_dtypes, none_indices)
+  def get_fallback_ops(self):
+    return self._fallback_ops
+
+
+def extract_internal(graph, is_backward):
+    def byteir_runner(*inputs):
+        category = 'backward' if is_backward else 'forward'
+
+        print("\n\n============")
+        print(f"{category} Part")
+        print("============\n\n")
+        none_indices = get_none_indices(graph)
+        fx_graph = preprocess_fx_graph(graph)
+
+        compile_type = 'mhlo'
+        backend_legal_ops = [
+            "aten._softmax",
+            "aten.softmax.int",
+            "aten.log_softmax.int",
+            "aten._log_softmax",
+            # "aten.native_layer_norm",
+            # "aten.layer_norm",
+            "aten.gelu",
+            "aten.argmax",
+            "aten.max.dim",
+            "aten.one_hot",
+            "aten.topk",
+            "byteir.flash_attn_fwd",
+            "byteir.flash_attn_bwd",
+        ]
+        with maybe_disable_fake_tensor_mode():
+            compiled_graph = compile(fx_graph, inputs, compile_type, backend_legal_ops=backend_legal_ops)
+
+        model_name = MODEL_NAME
+        global submodule_cnt
+        TEMP_FOLDER="./temp"
+        os.makedirs(TEMP_FOLDER, exist_ok=True)
+        os.makedirs(TEMP_FOLDER + f"/{model_name}_{category}_{submodule_cnt}", exist_ok=True)
+        mlir_file_name = f'{TEMP_FOLDER}/{model_name}_{category}_{submodule_cnt}.{compile_type}.mlir'
+        output_mlir_file_name = f'{TEMP_FOLDER}/{model_name}_{category}_{submodule_cnt}/{model_name}_{category}_{submodule_cnt}.rt.mlir'
+        submodule_cnt = submodule_cnt + 1
+        with open(mlir_file_name, "w+") as fout:
+            compiled_graph.operation.print(file=fout,
+                                        large_elements_limit=None)
+
+        with maybe_disable_fake_tensor_mode():
+            byteir.compile(mlir_file_name, output_mlir_file_name, entry_func='forward', target='cuda_with_ait')
+
+        outputs = FakeTensorProp(graph).propagate(*inputs)
+        mhlo_ret_dtypes = [t.dtype for t in outputs]
+        mhlo_ret_shapes = [t.shape for t in outputs]
+
+        print(output_mlir_file_name)
+        runner = ByteIRFunction(output_mlir_file_name, mhlo_ret_shapes, mhlo_ret_dtypes, none_indices)
+        return runner(*inputs)
+    return byteir_runner
+
+
+def partition_graphs(gm, inputs):
+    FakeTensorProp(gm).propagate(*inputs)
+    collector = FallBackNodeCollector(gm)
+    collector.run(*inputs)
+    fallback_ops = collector.get_fallback_ops()
+    supported_ops = ByteIROperatorSupport(fallback_ops)
+    partitioner = CapabilityBasedPartitioner(gm,
+                                            supported_ops,
+                                            allows_single_node_partition=True)
+    partitions = partitioner.propose_partitions()
+    fused_graph = partitioner.fuse_partitions(partitions)
+    return fused_graph
+
+
+def fallback_inner(model_: torch.fx.GraphModule, inputs, is_backward):
+    partitioned_graph = partition_graphs(model_, inputs)
+    # partitioned_graph.graph.print_tabular()
+    # compile each submodule and replace it with a call
+    for node in partitioned_graph.graph.nodes:
+        if node.op == "call_module" and "fused_" in node.name:
+            fused_module = getattr(partitioned_graph, node.name)
+            partitioned_graph.delete_submodule(node.target)
+            with partitioned_graph.graph.inserting_after(node):
+                compile_submodule = extract_internal(fused_module, is_backward)
+                new_node = partitioned_graph.graph.call_function(
+                    compile_submodule, node.args, None)
+                node.replace_all_uses_with(new_node)
+            partitioned_graph.graph.erase_node(node)
+    partitioned_graph.recompile()
+    return partitioned_graph
 
 
 from torch._inductor.virtualized import V
@@ -186,9 +258,9 @@ def fuse_aware_byteir_compile_fx(model_: torch.fx.GraphModule, example_inputs_):
 
     with V.set_fake_mode(fake_mode), torch._guards.tracing(tracing_context):
         return aot_autograd(
-            fw_compiler=functools.partial(byteir_compile_fx_inner, is_backward=False),
-            bw_compiler=functools.partial(byteir_compile_fx_inner, is_backward=True),
-            inference_compiler=functools.partial(byteir_compile_fx_inner, is_backward=False),
+            fw_compiler=functools.partial(fallback_inner, is_backward=False),
+            bw_compiler=functools.partial(fallback_inner, is_backward=True),
+            inference_compiler=functools.partial(fallback_inner, is_backward=False),
             decompositions=decompositions,
             partition_fn=partition_fn,
             keep_inference_input_mutations=True,

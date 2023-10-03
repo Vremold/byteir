@@ -4,13 +4,15 @@ import transformers
 import sys
 import os
 import functools
-import torch._dynamo
+import torch._dynamo as dynamo
 import torch.nn.functional as F
 
 import transformers
 import argparse
 
-MODEL_LIST = ["gpt2", "bloom-560m", "llama", "opt-1.3b", "nanogpt"]
+MODEL_LIST = ["gpt2", "bloom-560m", "llama", "llama-2", "opt-1.3b", "nanogpt"]
+
+AUTH_TOKEN="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"
 
 class InferLLAMAModule(torch.nn.Module):
     def __init__(self):
@@ -47,10 +49,36 @@ class InferGPT2Module(torch.nn.Module):
     def forward(self, x):
         return self.model(x)[0]
 
+class InferLLAMA2Module(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.config = transformers.AutoConfig.from_pretrained(
+            "meta-llama/Llama-2-7b-chat-hf", use_auth_token=AUTH_TOKEN)
+        # self.config.num_hidden_layers = 2
+        self.model = transformers.AutoModelForCausalLM.from_pretrained(
+            "meta-llama/Llama-2-7b-chat-hf",
+            torch_dtype=torch.float,
+            use_auth_token=AUTH_TOKEN,
+            config=self.config
+        )
+
+    def forward(self, x):
+        return self.model(x)[0]
+
 def make_model(model_name):
     if model_name == 'llama':
         config = transformers.LlamaConfig(num_hidden_layers=4)
         model = transformers.LlamaForCausalLM(config=config)
+    elif model_name == 'llama-2':
+        config = transformers.AutoConfig.from_pretrained(
+            "meta-llama/Llama-2-7b-chat-hf", use_auth_token=AUTH_TOKEN)
+        # config.num_hidden_layers = 2
+        model = transformers.AutoModelForCausalLM.from_pretrained(
+            "meta-llama/Llama-2-7b-chat-hf",
+            torch_dtype=torch.float,
+            use_auth_token=AUTH_TOKEN,
+            config=config
+        )
     elif model_name == 'opt-1.3b':
         config = transformers.AutoConfig.from_pretrained("facebook/opt-1.3b")
         config.tie_word_embeddings = False
@@ -81,6 +109,8 @@ def make_model(model_name):
 def make_inference_model(model_name):
     if model_name == 'llama':
         return InferLLAMAModule()
+    elif model_name == 'llama-2':
+        return InferLLAMA2Module()
     elif model_name == 'opt-1.3b':
         return InferOPTModule()
     elif model_name == 'bloom-560m':
@@ -199,7 +229,9 @@ def train_model(args):
     model.zero_grad(set_to_none=True)
     with torch.cuda.amp.autocast(enabled=True, dtype=torch.float16):
         loss = compute_loss(optimized_model, data, model_name)
+        torch_loss = compute_loss(model, data, model_name)
         print("loss:", loss)
+        print("torch_loss:", torch_loss)
         loss.backward()
 
 

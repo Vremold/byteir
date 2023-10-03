@@ -194,7 +194,8 @@ def list_decomposed_ops():
         torch.ops.aten.select_backward,
         torch.ops.aten.slice_backward,
         torch.ops.aten.native_dropout_backward,
-        torch.ops.aten.tril
+        torch.ops.aten.tril,
+        torch.ops.aten.triu
     ]
 
 
