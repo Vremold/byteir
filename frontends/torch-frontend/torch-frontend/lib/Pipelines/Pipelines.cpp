@@ -51,20 +51,21 @@ void mlir::torch_frontend::createTorchToMhloPipeline(OpPassManager &pm) {
   pm.addNestedPass<func::FuncOp>(createCanonicalizerPass());
   pm.addNestedPass<func::FuncOp>(
       TorchConversion::createFinalizingBackendTypeConversionPass());
+
   // Verify that we have lowered to the form that Stablehlo backends
   // expect. This fails compilation (signalPassFailure) if the IR is not in the
   // correct form.
   pm.addPass(TorchConversion::createVerifyStablehloBackendContractPass());
+  // Perform additional canonicalization, which is not suitable in byteir
+  // pipeline.
+  pm.addNestedPass<func::FuncOp>(createCanonicalizerPass());
+  pm.addNestedPass<func::FuncOp>(createCanonicalizeExtPass());
 
   // Convert CHLO ops to MHLO ops
   pm.addNestedPass<func::FuncOp>(mhlo::createChloLegalizeToHloPass());
   // convert StableHLO ops to MHLO ops
   pm.addPass(mhlo::createStablehloLegalizeToHloPass());
-
-  // Perform additional canonicalization, which is not suitable in byteir
-  // pipeline.
   pm.addNestedPass<func::FuncOp>(createCanonicalizerPass());
-  pm.addNestedPass<func::FuncOp>(createCanonicalizeExtPass());
 }
 
 void mlir::torch_frontend::createTorchscriptToTorchPipeline(
