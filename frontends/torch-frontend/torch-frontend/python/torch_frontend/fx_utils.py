@@ -187,13 +187,14 @@ def get_none_indices(fx_g: torch.fx.GraphModule) -> List[int]:
 
 def list_decomposed_ops():
     return [
+        torch.ops.aten.embedding_dense_backward,
         torch.ops.aten._native_batch_norm_legit_functional,
         torch.ops.aten.native_batch_norm_backward,
+        torch.ops.aten.native_dropout_backward,
         torch.ops.aten.native_layer_norm_backward,
-        torch.ops.aten.embedding_dense_backward,
         torch.ops.aten.select_backward,
         torch.ops.aten.slice_backward,
-        torch.ops.aten.native_dropout_backward,
+        torch.ops.aten.split_with_sizes,
         torch.ops.aten.tril,
         torch.ops.aten.triu
     ]

@@ -196,11 +196,13 @@ def partition_graphs(gm, inputs):
     collector = FallBackNodeCollector(gm)
     collector.run(*inputs)
     fallback_ops = collector.get_fallback_ops()
+    # print("fallback_ops", fallback_ops)
     supported_ops = ByteIROperatorSupport(fallback_ops)
     partitioner = CapabilityBasedPartitioner(gm,
                                             supported_ops,
                                             allows_single_node_partition=True)
     partitions = partitioner.propose_partitions()
+    print("num graphs:", len(partitions))
     fused_graph = partitioner.fuse_partitions(partitions)
     return fused_graph
 

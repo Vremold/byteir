@@ -30,6 +30,7 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "stablehlo/dialect/ChloOps.h"
 #include "stablehlo/dialect/StablehloOps.h"
+#include "torch-mlir/Conversion/TorchToStablehlo/StablehloLegalizeUtils.h"
 #include "torch-mlir/Conversion/Utils/Utils.h"
 #include "torch-mlir/Dialect/Torch/IR/TorchDialect.h"
 #include "torch-mlir/Dialect/Torch/IR/TorchOps.h"
@@ -284,6 +285,47 @@ struct ConvertAtenMaxPool2dWithIndicesBackwardOp
     return success();
   }
 };
+
+// TODO: move to upstream
+// AtenPowScalarOp
+struct ConvertAtenPowScalarOp : public OpConversionPattern<AtenPowScalarOp> {
+  using OpConversionPattern::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(AtenPowScalarOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    Value lhs = adaptor.getSelf();
+    auto lhsType = lhs.getType().dyn_cast<TensorType>();
+    Value rhs = adaptor.getExponent();
+    TensorType rhsType = rhs.getType().dyn_cast<TensorType>();
+
+    if (!rhsType)
+      return op.emitError("only Tensor types supported in StableHLO");
+
+    auto outType = OpConversionPattern<AtenPowScalarOp>::getTypeConverter()
+                       ->convertType(op.getType())
+                       .template cast<TensorType>();
+
+    Type outElemTy = outType.getElementType();
+    if (!outElemTy.isIntOrFloat()) {
+      return op.emitError(
+          "only floating-point or integer datatype legalization supported");
+    }
+
+    if (!lhsType) {
+      lhs = hlo::scalarToStablehloTensor(rewriter, op, lhs, outElemTy);
+    }
+    DenseIntElementsAttr bcastDimensions;
+    lhs = hlo::promoteType(rewriter, op.getLoc(), lhs, outType);
+    rhs = hlo::promoteType(rewriter, op.getLoc(), rhs, outType);
+    auto loc = op.getLoc();
+    Value result = rewriter.create<chlo::BroadcastPowOp>(loc, outType, lhs, rhs,
+                                                         bcastDimensions);
+
+    rewriter.replaceOp(op, result);
+    return success();
+  }
+};
 } // namespace
 
 namespace {
@@ -315,6 +357,8 @@ struct ConvertTorchToStablehloExtPass
     target.addIllegalOp<AtenMaxPool2dWithIndicesBackwardOp>();
     patterns.add<ConvertAtenMaxPool2dWithIndicesBackwardOp>(typeConverter,
                                                             context);
+    target.addIllegalOp<AtenPowScalarOp>();
+    patterns.add<ConvertAtenPowScalarOp>(typeConverter, context);
     if (failed(applyPartialConversion(getOperation(), target,
                                       std::move(patterns)))) {
       return signalPassFailure();
