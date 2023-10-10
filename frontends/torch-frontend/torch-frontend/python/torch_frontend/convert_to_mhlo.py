@@ -72,7 +72,7 @@ def compile(
     debug: bool = False,
 ):
     if output_type not in ["raw", "torch", "stablehlo"]:
-        raise NotImplemented("unsupported output type {}".format(output_type))
+        raise NotImplementedError("unsupported output type {}".format(output_type))
     if backend_legal_ops is None:
         backend_legal_ops = _CUSTOM_OPS_IN_TORCH
 

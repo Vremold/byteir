@@ -32,6 +32,8 @@ trigger:
       - "!.codebase/pipelines/daily_copybara.yaml"
       - "!.codebase/pipelines/build_scm*.sh"
       - "!**/*.md"
+      - "!compiler/python/version.txt"
+      - "!runtime/VERSION_NUMBER"
 jobs:
   byteir_compiler_build_and_test:
     name: byteir compiler CI

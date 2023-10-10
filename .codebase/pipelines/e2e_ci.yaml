@@ -6,7 +6,7 @@ trigger:
       - create
       - push
     paths:
-      - ".codebase/pipelines/e2e/build_and_test_e2e.sh"
+      - ".codebase/pipelines/e2e/**"
       - ".codebase/pipelines/e2e_ci.yaml"
       - "tests/**"
 jobs:
@@ -14,7 +14,7 @@ jobs:
     name: byteir E2E test CI
     runs-on:
       spec: m1.8xlarge
-    image: hub.byted.org/compile/data.aml.byteir_cuda:debian11_v1
+    image: hub.byted.org/compile/data.aml.byteir_cuda:debian11_v2
     working-directory: byteir/byteir
     steps:
       - name: Build and Test E2E
