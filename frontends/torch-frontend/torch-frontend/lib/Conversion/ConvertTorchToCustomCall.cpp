@@ -30,7 +30,6 @@
 #include "torch-mlir/Dialect/Torch/Utils/Utils.h"
 #include "torch-mlir/Dialect/TorchConversion/IR/TorchConversionOps.h"
 #include "torch-mlir/Dialect/TorchConversion/Transforms/BackendTypeConversion.h"
-#include "utils/convert_op_folder.h"
 
 #include "./PassDetail.h"
 

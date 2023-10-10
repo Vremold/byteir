@@ -13,7 +13,7 @@ TORCH_MLIR_ROOT="$PROJ_DIR/third_party/torch-mlir"
 function download_llvm_prebuilt() {
   pushd ${PROJ_DIR}
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_a3f2751f782f3cdc6ba4790488ec20163a40ac37.tar.gz"
+    LLVM_BUILD="llvm_install_d13da154a7c7eff77df8686b2de1cfdfa7cc7029.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install*
       rm -rf llvm_build
@@ -47,12 +47,12 @@ function prepare_for_build_with_prebuilt() {
   pushd ${PROJ_DIR}
   # install requirements
   python3 -m pip install -r requirements.txt
-  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.11-cp39-cp39-linux_x86_64.whl
+  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.2.0-cp39-cp39-linux_x86_64.whl
 
   # init submodule
   git submodule update --init -f $TORCH_MLIR_ROOT
   pushd $TORCH_MLIR_ROOT
-  git submodule update --init -f externals/mlir-hlo
+  git submodule update --init -f externals/stablehlo
   popd
 
   # apply patches
@@ -71,7 +71,7 @@ function prepare_for_build() {
   pushd ${PROJ_DIR}
   # install requirements
   python3 -m pip install -r requirements.txt
-  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.11-cp39-cp39-linux_x86_64.whl
+  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.2.0-cp39-cp39-linux_x86_64.whl
 
   # init submodule
   git submodule update --init --recursive -f $TORCH_MLIR_ROOT

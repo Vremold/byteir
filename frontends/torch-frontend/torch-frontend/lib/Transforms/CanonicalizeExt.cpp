@@ -19,7 +19,7 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 #include "stablehlo/dialect/StablehloOps.h"
-#include "utils/convert_op_folder.h"
+#include "torch-frontend/Utils/ConvertOpFolder.h"
 
 #include "./PassDetail.h"
 

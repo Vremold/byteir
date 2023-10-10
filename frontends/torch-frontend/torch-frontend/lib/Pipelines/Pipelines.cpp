@@ -16,7 +16,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "torch-frontend/Pipelines/Pipelines.h"
-#include "mhlo/transforms/passes.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/Passes.h"
 #include "torch-frontend/Conversion/Passes.h"
@@ -60,12 +59,6 @@ void mlir::torch_frontend::createTorchToMhloPipeline(OpPassManager &pm) {
   // pipeline.
   pm.addNestedPass<func::FuncOp>(createCanonicalizerPass());
   pm.addNestedPass<func::FuncOp>(createCanonicalizeExtPass());
-
-  // Convert CHLO ops to MHLO ops
-  pm.addNestedPass<func::FuncOp>(mhlo::createChloLegalizeToHloPass());
-  // convert StableHLO ops to MHLO ops
-  pm.addPass(mhlo::createStablehloLegalizeToHloPass());
-  pm.addNestedPass<func::FuncOp>(createCanonicalizerPass());
 }
 
 void mlir::torch_frontend::createTorchscriptToTorchPipeline(
