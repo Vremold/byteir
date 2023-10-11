@@ -10,7 +10,7 @@ from torch.fx.passes.operator_support import OperatorSupport
 import brt
 import byteir
 
-from torch_frontend import compile
+import torch_frontend
 from torch_frontend import list_decomposed_ops, preprocess_fx_graph, fx_replace_attn_pattern, replace_flash_attn, get_none_indices
 
 
@@ -147,7 +147,7 @@ def extract_internal(graph, is_backward):
         none_indices = get_none_indices(graph)
         fx_graph = preprocess_fx_graph(graph)
 
-        compile_type = 'mhlo'
+        compile_type = 'stablehlo'
         backend_legal_ops = [
             "aten._softmax",
             "aten.softmax.int",
@@ -164,7 +164,7 @@ def extract_internal(graph, is_backward):
             "byteir.flash_attn_bwd",
         ]
         with maybe_disable_fake_tensor_mode():
-            compiled_graph = compile(fx_graph, inputs, compile_type, backend_legal_ops=backend_legal_ops)
+            compiled_graph = torch_frontend.compile(fx_graph, inputs, compile_type, backend_legal_ops=backend_legal_ops)
 
         model_name = MODEL_NAME
         global submodule_cnt
