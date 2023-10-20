@@ -51,7 +51,7 @@ class ByteIRInferenceFunction:
         return results
 
 class ByteIRFunction:
-    def __init__(self, module_path, output_shapes, output_dtypes, none_indices):
+    def __init__(self, module_path, output_shapes, output_dtypes, none_indices, device):
         self._session = brt.Session(
             alloc_func=caching_allocator_alloc,
             free_func=caching_allocator_delete)
@@ -61,6 +61,7 @@ class ByteIRFunction:
         self._req = self._session.new_request_context(
             torch.cuda.current_stream()._as_parameter_.value)
         self._none_indices = none_indices
+        self.device = device
 
     def __call__(self, *inputs):
         if TRACE:
@@ -68,8 +69,7 @@ class ByteIRFunction:
                 input = inputs[i]
                 print("In ByteIRFunction, Inputs["+str(i)+"]", input)
 
-        device = inputs[0].device
-        rets = [torch.empty(shape, dtype=dtype, device=device)
+        rets = [torch.empty(shape, dtype=dtype, device=self.device)
                 for shape, dtype in zip(self._output_shapes, self._output_dtypes)]
         for offset, arg in zip(self._session.get_input_arg_offsets(), inputs):
             assert list(self._session.get_static_shape(offset)) == list(arg.shape)
@@ -100,6 +100,8 @@ class ByteIRFunction:
             else:
                 results.append(rets[ret_ptr])
                 ret_ptr += 1
+        if len(results) == 1:
+            return results[0]
         return results
 
 class ByteIROperatorSupport(OperatorSupport):
@@ -108,7 +110,12 @@ class ByteIROperatorSupport(OperatorSupport):
         self._fallback_ops = fallback_ops
 
     def is_node_supported(self, submodules, node: torch.fx.Node) -> bool:
-        unsupported_ops = [torch.ops.aten.view_as_complex.default]
+        unsupported_ops = [
+            torch.ops.aten.view_as_complex.default,
+            torch.ops.aten.scaled_dot_product_attention.default,
+            torch.ops.aten._scaled_dot_product_efficient_attention.default,
+            torch.ops.aten.all.default, # TODO support in torch mlir
+        ]
         return node.op in [
           "call_function", "call_module", "call_method"
         ] and node not in self._fallback_ops and node.target not in unsupported_ops
@@ -182,17 +189,18 @@ def extract_internal(graph, is_backward):
             byteir.compile(mlir_file_name, output_mlir_file_name, entry_func='forward', target='cuda_with_ait')
 
         outputs = FakeTensorProp(graph).propagate(*inputs)
+        if isinstance(outputs, torch.Tensor):
+            outputs = [outputs]
         mhlo_ret_dtypes = [t.dtype for t in outputs]
         mhlo_ret_shapes = [t.shape for t in outputs]
 
         print(output_mlir_file_name)
-        runner = ByteIRFunction(output_mlir_file_name, mhlo_ret_shapes, mhlo_ret_dtypes, none_indices)
+        runner = ByteIRFunction(output_mlir_file_name, mhlo_ret_shapes, mhlo_ret_dtypes, none_indices, device=outputs[0].device)
         return runner(*inputs)
     return byteir_runner
 
 
 def partition_graphs(gm, inputs):
-    FakeTensorProp(gm).propagate(*inputs)
     collector = FallBackNodeCollector(gm)
     collector.run(*inputs)
     fallback_ops = collector.get_fallback_ops()

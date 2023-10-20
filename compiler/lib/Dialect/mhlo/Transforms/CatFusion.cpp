@@ -53,9 +53,9 @@ bool isFusibleCandidate(Operation *op) {
     return true;
   if (isa<mhlo::TransposeOp>(op)) {
     auto transOp = cast<mhlo::TransposeOp>(*op);
-    if (matchPermute(transOp, {0, 2, 1}) || matchPermute(transOp, {1, 0, 2}) ||
-        matchPermute(transOp, {0, 2, 1, 3}) ||
-        matchPermute(transOp, {1, 0, 2, 3}))
+    if (!matchPermute(transOp, {0, 2, 3, 1}) &&
+        !matchPermute(transOp, {0, 3, 1, 2}) && !matchPermute(transOp, {1, 0}))
+      // BRT support TBD, offload to AIT
       return true;
   }
   return false;
@@ -76,9 +76,9 @@ bool isFusibleCandidateAggressive(Operation *op) {
     return true;
   if (isa<mhlo::TransposeOp>(op)) {
     auto transOp = cast<mhlo::TransposeOp>(*op);
-    if (matchPermute(transOp, {0, 2, 1}) || matchPermute(transOp, {1, 0, 2}) ||
-        matchPermute(transOp, {0, 2, 1, 3}) ||
-        matchPermute(transOp, {1, 0, 2, 3}))
+    if (!matchPermute(transOp, {0, 2, 3, 1}) &&
+        !matchPermute(transOp, {0, 3, 1, 2}) && !matchPermute(transOp, {1, 0}))
+      // BRT support TBD, offload to AIT
       return true;
   }
   if (isa<mhlo::ReshapeOp>(op))

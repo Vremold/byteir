@@ -126,7 +126,10 @@ def flash_attn_func(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False, sca
             pattern (negative means that location was dropped, nonnegative means it was kept).
     """
     # q, k, v needs to be transposed for flash attn v2 
-    return CustomFlashAttnFunc.apply(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), dropout_p, scale, is_causal, False)
+    if attn_mask == None and is_causal:
+        return CustomFlashAttnFunc.apply(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), dropout_p, scale, is_causal, False)
+    else:
+        return torch.ops.aten.scaled_dot_product_attention
 
 
 def flash_attn_functional_func(q, k, v, attn_mask=None, dropout_p=0.0, is_causal=False, scale=None):
@@ -154,10 +157,12 @@ def flash_attn_functional_func(q, k, v, attn_mask=None, dropout_p=0.0, is_causal
             The output of softmax (possibly with different scaling). It also encodes the dropout
             pattern (negative means that location was dropped, nonnegative means it was kept).
     """
-    # q, k, v needs to be transposed for flash attn v2 
-    scale_factor = 1 / math.sqrt(q.size(-1)) if scale is None else scale
-    return CustomFlashAttnFunc.apply(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), dropout_p, scale_factor, is_causal, False)
-
+    if attn_mask == None and is_causal:
+        # q, k, v needs to be transposed for flash attn v2 
+        scale_factor = 1 / math.sqrt(q.size(-1)) if scale is None else scale
+        return CustomFlashAttnFunc.apply(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), dropout_p, scale_factor, is_causal, False)
+    else:
+        return torch._C._nn.scaled_dot_product_attention
 
 def replace_flash_attn(gm: torch.fx.GraphModule) -> torch.nn.Module:
     for node in gm.graph.nodes:
