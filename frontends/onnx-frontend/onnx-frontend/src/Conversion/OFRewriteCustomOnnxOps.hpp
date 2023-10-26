@@ -1,6 +1,6 @@
-//===- OFConstants.hpp ----------------------------------------------------===//
+//===- OFRewriteCustomOnnxOps.hpp -----------------------------------------===//
 //
-// Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
+// Copyright 2023 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include <string>
+#include "onnx-frontend/src/Conversion/OFPassesDetail.hpp"
 
 namespace onnx_frontend {
 
-/// attribute names
-static const std::string ONNX_NODE_NAME_ATTR = "onnx_node_name";
+/// Add pass for lowering Onnx Custom Ops to Mhlo Custom Call with byteir
+/// attributes.
+std::unique_ptr<mlir::Pass> createOFRewriteCustomOnnxOpsPass();
 
-/// attribute names
-const std::string BYTEIR_ATTRS = "byteir_attrs";
 } // namespace onnx_frontend

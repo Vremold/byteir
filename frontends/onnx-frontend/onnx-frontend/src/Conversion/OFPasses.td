@@ -29,6 +29,14 @@ def OFCanonicalizer : Pass<"of-canonicalize", "mlir::ModuleOp"> {
   ];
 }
 
+def OFRewriteCustomOnnxOps: Pass<"rewrite-custom-onnx-ops", "mlir::func::FuncOp"> {
+  let summary = "convert onnx custom ops to mhlo.custom_call";
+  let constructor = "onnx_frontend::createOFRewriteCustomOnnxOpsPass()";
+  let dependentDialects = [
+    "mlir::mhlo::MhloDialect",
+  ];
+}
+
 def OFRewriteToCustomCall: Pass<"rewrite-to-custom-call", "mlir::func::FuncOp"> {
   let summary = "convert some ops to mhlo.custom_call";
   let constructor = "onnx_frontend::createOFRewriteToCustomCallPass()";

@@ -41,6 +41,8 @@ void addCustomizedONNXToMhloPasses(
   // convert coarse-grained onnx ops to byteir.xxx custom calls
   for (int i = 0; i < 2; i++) {
     pm.addNestedPass<mlir::func::FuncOp>(
+        onnx_frontend::createOFRewriteCustomOnnxOpsPass());
+    pm.addNestedPass<mlir::func::FuncOp>(
         onnx_frontend::createOFRewriteToCustomCallPass(customCallOps));
     pm.addNestedPass<mlir::func::FuncOp>(
         onnx_mlir::createDecomposeONNXToONNXPass("mhlo"));
