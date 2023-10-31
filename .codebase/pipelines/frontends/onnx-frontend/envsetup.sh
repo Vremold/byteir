@@ -8,7 +8,7 @@ echo "ONNX_FRONTEND_ROOT = $ONNX_FRONTEND_ROOT"
 function download_llvm_prebuilt_rtti() {
   pushd $ONNX_FRONTEND_ROOT
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_rtti_4592543a01609feb4b3c19e81a9d54743e15e329.tar.gz"
+    LLVM_BUILD="llvm_install_rtti_d13da154a7c7eff77df8686b2de1cfdfa7cc7029.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install_rtti*
       rm -rf llvm_build_rtti

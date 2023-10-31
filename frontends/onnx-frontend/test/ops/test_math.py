@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from test.base import TestBase
-from test.ops.utils import build_onnx
+from test.ops.utils import build_onnx, build_reduce_sum_axis_one
 import onnx
 
 
@@ -144,17 +144,14 @@ class TestOpsMath(TestBase):
     def test_reduce_sum(self):
         input_shape_dtype = [
             ["X", (3, 2, 2), "float32"],
-            ["axis", (1,), "int64"],
         ]
         output_shape_dtype = [
             ["Y", (3, 1, 2), "float32"],
         ]
-        proto = build_onnx("ReduceSum", input_shape_dtype, output_shape_dtype)
-
+        proto = build_reduce_sum_axis_one(input_shape_dtype, output_shape_dtype)
         np.random.seed(0)
         input_data = {
             "X": np.random.rand(3, 2, 2).astype(np.float32),
-            "axis": np.array([1], dtype=np.int64),
         }
         self.run(model_filename="reduce_sum.onnx", model_onnx_pb=proto, input_data=input_data)
 

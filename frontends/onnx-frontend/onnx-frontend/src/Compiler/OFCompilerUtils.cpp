@@ -109,15 +109,13 @@ void SetBatchSize(onnx::ModelProto &model) {
                               << dim->dim_value() << "\n");
     }
   }
-  if (forceSetBatchSize) {
-    for (auto &output : *(graph->mutable_output())) {
-      auto *type = output.mutable_type();
-      if (type->value_case() != onnx::TypeProto::kTensorType) {
-        continue;
-      }
-      auto *tensorType = type->mutable_tensor_type();
-      tensorType->clear_shape();
+  for (auto &output : *(graph->mutable_output())) {
+    auto *type = output.mutable_type();
+    if (type->value_case() != onnx::TypeProto::kTensorType) {
+      continue;
     }
+    auto *tensorType = type->mutable_tensor_type();
+    tensorType->clear_shape();
   }
 }
 

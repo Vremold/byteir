@@ -63,7 +63,7 @@ void addCustomizedONNXToMhloPasses(
   if (onnx_frontend::ofRepeatDynamicMax > 0) {
     // Dynamic iterate in ONNXOpTransformPass
     pm.addPass(onnx_mlir::createONNXOpTransformPass(
-        onnx_frontend::ofRepeatStatic, /*report=*/false, false, false));
+        onnx_frontend::ofRepeatStatic, /*report=*/false, false, false, true));
   } else {
     // Statically add extra passes
     for (int i = 0; i < onnx_frontend::ofRepeatStatic; i++) {
