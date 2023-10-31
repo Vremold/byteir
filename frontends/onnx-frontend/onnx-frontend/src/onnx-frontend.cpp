@@ -88,6 +88,8 @@ int main(int argc, char *argv[]) {
     onnx_frontend::addCustomizedONNXToMhloPasses(pm,
                                                  onnx_frontend::customCallOps);
   }
-  return onnx_frontend::compileModule(module, pm, onnx_mlir::outputBaseName,
-                                      emissionTarget, emitElide);
+  auto status = onnx_frontend::compileModule(
+      module, pm, onnx_mlir::outputBaseName, emissionTarget, emitElide);
+  onnx_frontend::addVerifyONNXToMhloPasses(pm);
+  return status;
 }

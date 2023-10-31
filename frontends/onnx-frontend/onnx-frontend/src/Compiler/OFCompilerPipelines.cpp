@@ -85,4 +85,8 @@ void addCustomizedONNXToMhloPasses(
   mlir::applyDefaultTimingPassManagerCLOptions(pm);
 }
 
+void addVerifyONNXToMhloPasses(mlir::PassManager &pm) {
+  pm.addPass(onnx_frontend::createOFCheckNonLoweredPass());
+}
+
 } // namespace onnx_frontend

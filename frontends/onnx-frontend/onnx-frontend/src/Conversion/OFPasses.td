@@ -37,6 +37,11 @@ def OFRewriteCustomOnnxOps: Pass<"rewrite-custom-onnx-ops", "mlir::func::FuncOp"
   ];
 }
 
+def OFCheckNonLowered : Pass<"check-non-lowered", "mlir::func::FuncOp"> {
+  let summary = "check non-lowered onnx ops";
+  let constructor = "onnx_frontend::createOFCheckNonLoweredPass()";
+}
+
 def OFRewriteToCustomCall: Pass<"rewrite-to-custom-call", "mlir::func::FuncOp"> {
   let summary = "convert some ops to mhlo.custom_call";
   let constructor = "onnx_frontend::createOFRewriteToCustomCallPass()";
