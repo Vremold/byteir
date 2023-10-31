@@ -1,4 +1,4 @@
-//===- PassDetail.h -------------------------------------------*--- C++ -*-===//
+//===- ByreDialectBytecode.h ----------------------------------------------===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,25 +15,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef BYTEIR_DIALECT_BYRE_TRANSFORMS_PASSDETAIL_H
-#define BYTEIR_DIALECT_BYRE_TRANSFORMS_PASSDETAIL_H
+#pragma once
 
-#include "byteir/Dialect/Ace/AceDialect.h"
-#include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Pass/Pass.h"
-
-// forward dialects for conversions
 namespace mlir {
 namespace byre {
-class ByreDialect;
 namespace serialization {
 class ByreSerialDialect;
+
+void addBytecodeInterface(ByreSerialDialect *dialect);
 } // namespace serialization
 } // namespace byre
-
-#define GEN_PASS_CLASSES
-#include "byteir/Dialect/Byre/Passes.h.inc"
-
 } // namespace mlir
-
-#endif // BYTEIR_DIALECT_BYRE_TRANSFORMS_PASSDETAIL_H
