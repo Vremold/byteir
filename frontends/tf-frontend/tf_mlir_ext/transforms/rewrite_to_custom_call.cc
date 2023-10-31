@@ -175,6 +175,16 @@ Value createLayerNorm(PatternRewriter &rewriter, Location loc, Value input,
   return customCallOp.getResults()[0];
 }
 
+Value createLayerNormWithoutBeta(PatternRewriter &rewriter, Location loc,
+                                 Value input, Value gama, ElementsAttr epsilon,
+                                 ElementsAttr axis) {
+  auto gamaShapedType = gama.getType().cast<ShapedType>();
+  auto betaAttr = DenseElementsAttr::get(gamaShapedType, 0.0f);
+  auto betaOp = rewriter.create<TF::ConstOp>(loc, betaAttr);
+  Value beta = betaOp.getOutput();
+  return createLayerNorm(rewriter, loc, input, gama, beta, epsilon, axis);
+}
+
 std::string getBodyName(std::string baseName, SmallVector<Value, 4> inputs,
                         SmallVector<Value, 4> outputs) {
   std::string name;
@@ -608,6 +618,8 @@ struct RewriteToCustomCallOpsPass
         validCustomCallOpSet[getLayerNormName()].emplace_back(
             std::make_unique<RewriteLayerNorm>(context));
       }
+      validCustomCallOpSet[getLayerNormName()].emplace_back(
+          std::make_unique<RewriteLayerNormWithoutBeta>(context));
       validCustomCallOpSet[getLayerNormName()].emplace_back(
           std::make_unique<RewriteLayerNormSwapAdd>(context));
       validCustomCallOpSet[getLayerNormName()].emplace_back(
