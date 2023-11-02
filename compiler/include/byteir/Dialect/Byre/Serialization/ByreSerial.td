@@ -321,7 +321,6 @@ def Byre_DenseStringElementsAttrV1 : Byre_SerializableAttr<"DenseStringElementsV
       return $_get(type.getContext(), type, value, isSplat);
     }]>,
   ];
-  // let genAccessors = 0;
   let hasCustomAssemblyFormat = 1;
   let genStorageClass = 0;
   let skipDefaultBuilders = 1;

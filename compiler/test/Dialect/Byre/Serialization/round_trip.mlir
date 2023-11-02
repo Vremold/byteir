@@ -57,21 +57,38 @@ module attributes {byre.container_module} {
 // CHECK-LABEL: func.func @test_alias
 // CHECK: "byre.alias"
 
-  func.func @test_tensor_attr(%arg0: memref<100x100xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
-    byre.compute @some_kernel(%arg0, %arg1) {weight = dense<1.0> : tensor<100x100xf32>, value = dense<"-1"> : tensor<100x!ace.string>} : memref<100x100xf32>, memref<100x?xf32>
+  func.func @test_scalar_attr(%arg0: memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+    byre.compute @some_kernel(%arg0, %arg1) {memory_effects = [1 : i32, 1 : i32], bool_attr = true, float_attr = 1.0 : f32, integer_attr = 1 : i32, string_attr = "string", ui8_attr = 1: ui8} : memref<100x?xf32>, memref<100x?xf32>
     return
   }
-// CHECK-LABEL: func.func @test_tensor_attr
+// CHECK-LABEL: func.func @test_scalar_attr
 // CHECK-NEXT: byre.compute @some_kernel
-// CHECK-SAME: value = dense<"-1"> : tensor<100x!ace.string>
-// CHECK-SAME: weight = dense<1.000000e+00> : tensor<100x100xf32>
+// CHECK-SAME: bool_attr = true,
+// CHECK-SAME: float_attr = 1.000000e+00 : f32,
+// CHECK-SAME: integer_attr = 1 : i32,
+// CHECK-SAME: string_attr = "string",
+// CHECK-SAME: ui8_attr = 1 : ui8
 
-  func.func @test_dense_array_attr(%arg0: memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
-    byre.compute @some_kernel(%arg0, %arg1) {memory_effects = [1 : i32, 1 : i32], dense_array_attr = array<i32: 10, 42>, integer_attr = 1 : i32, float_attr = 1.0 : f32} : memref<100x?xf32>, memref<100x?xf32>
+  func.func @test_dense_attr(%arg0: memref<100x100xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+    byre.compute @some_kernel(%arg0, %arg1) {dense_array_attr = array<i32: 10, 42>, weight0 = dense<1.0> : tensor<100x100xf32>, weight1 = dense<[-1, 1]> : tensor<2xi32>, value0 = dense<"-1"> : tensor<100x!ace.string>, value1 = dense<["test", "string"]> : tensor<2x!ace.string>} : memref<100x100xf32>, memref<100x?xf32>
     return
   }
-// CHECK-LABEL: func.func @test_dense_array_attr
-// CHECK: dense_array_attr = array<i32: 10, 42>
-// CHECK-SAME: float_attr = 1.000000e+00 : f32
-// CHECK-SAME: integer_attr = 1 : i32
+// CHECK-LABEL: func.func @test_dense_attr
+// CHECK-NEXT: byre.compute @some_kernel
+// CHECK-SAME: dense_array_attr = array<i32: 10, 42>,
+// CHECK-SAME: value0 = dense<"-1"> : tensor<100x!ace.string>,
+// CHECK-SAME: value1 = dense<["test", "string"]> : tensor<2x!ace.string>,
+// CHECK-SAME: weight0 = dense<1.000000e+00> : tensor<100x100xf32>,
+// CHECK-SAME: weight1 = dense<[-1, 1]> : tensor<2xi32>
+
+  func.func @test_sparse_attr(%arg0: memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+    byre.compute @some_kernel(%arg0, %arg1) {memory_effects = [1 : i32, 1 : i32], unit_attr, type_attr = !ace.string, array_attr = ["a", "b", 1], dict_attr = {a = "a", b = 1 : ui32}} : memref<100x?xf32>, memref<100x?xf32>
+    return
+  }
+// CHECK-LABEL: func.func @test_sparse_attr
+// CHECK-NEXT: byre.compute @some_kernel
+// CHECK-SAME: array_attr = ["a", "b", 1],
+// CHECK-SAME: dict_attr = {a = "a", b = 1 : ui32},
+// CHECK-SAME: type_attr = !ace.string,
+// CHECK-SAME: unit_attr
 }

@@ -27,13 +27,18 @@ module attributes {byre.container_module} {
     return
   }
 
-  func.func @test_tensor_attr(%arg0: memref<100x100xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
-    byre.compute @some_kernel(%arg0, %arg1) {weight = dense<1.0> : tensor<100x100xf32>, value = dense<"-1"> : tensor<100x!ace.string>} : memref<100x100xf32>, memref<100x?xf32>
+  func.func @test_scalar_attr(%arg0: memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+    byre.compute @some_kernel(%arg0, %arg1) {memory_effects = [1 : i32, 1 : i32], bool_attr = true, float_attr = 1.0 : f32, integer_attr = 1 : i32, string_attr = "string", ui8_attr = 1: ui8} : memref<100x?xf32>, memref<100x?xf32>
     return
   }
 
-  func.func @test_dense_array_attr(%arg0: memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
-    byre.compute @some_kernel(%arg0, %arg1) {memory_effects = [1 : i32, 1 : i32], dense_array_attr = array<i32: 10, 42>, integer_attr = 1 : i32, float_attr = 1.0 : f32} : memref<100x?xf32>, memref<100x?xf32>
+  func.func @test_dense_attr(%arg0: memref<100x100xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+    byre.compute @some_kernel(%arg0, %arg1) {dense_array_attr = array<i32: 10, 42>, weight0 = dense<1.0> : tensor<100x100xf32>, weight1 = dense<[-1, 1]> : tensor<2xi32>, value0 = dense<"-1"> : tensor<100x!ace.string>, value1 = dense<["test", "string"]> : tensor<2x!ace.string>} : memref<100x100xf32>, memref<100x?xf32>
+    return
+  }
+
+  func.func @test_sparse_attr(%arg0: memref<100x?xf32> {byre.argtype = 1: i32, byre.argname = "A"}, %arg1: memref<100x?xf32> {byre.argtype = 2: i32, byre.argname = "B"}) attributes {byre.entry_point} {
+    byre.compute @some_kernel(%arg0, %arg1) {memory_effects = [1 : i32, 1 : i32], unit_attr, type_attr = !ace.string, array_attr = ["a", "b", 1], dict_attr = {a = "a", b = 1 : ui32}} : memref<100x?xf32>, memref<100x?xf32>
     return
   }
 }
