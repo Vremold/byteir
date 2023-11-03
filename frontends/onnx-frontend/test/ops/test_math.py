@@ -90,6 +90,19 @@ class TestOpsMath(TestBase):
         self.run(model_filename="pow.onnx",
                  model_onnx_pb=proto,
                  input_shape_dtype=input_shape_dtype)
+        
+    def test_prelu(self):
+        input_shape_dtype = [
+            ["x", (3, 4, 5), "float32"],
+            ["slope", (5, ), "float32"],
+        ]
+        output_shape_dtype = [
+            ["y", (3, 4, 5), "float32"],
+        ]
+        proto = build_onnx("PRelu", input_shape_dtype, output_shape_dtype)
+        self.run(model_filename="prelu.onnx",
+                 model_onnx_pb=proto,
+                 input_shape_dtype=input_shape_dtype)
 
     def test_mat_mul(self):
         input_shape_dtype = [

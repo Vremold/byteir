@@ -74,6 +74,7 @@ function of_build() {
 
 function of_test_lit() {
   cmake --build "$ONNX_FRONTEND_ROOT/build" --target check-of-lit
+  cmake --build "$ONNX_FRONTEND_ROOT/build" --target check-onnx-lit
 }
 
 function of_download_models() {
