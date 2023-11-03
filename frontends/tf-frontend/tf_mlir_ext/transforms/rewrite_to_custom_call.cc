@@ -332,11 +332,17 @@ struct RewriteMathArg : public OpRewritePattern<TFMathArgOp> {
           "ArgMin/ArgMax's dimension must be one rank.");
     }
     int64_t axis = (*value.getValues<APInt>().begin()).getSExtValue();
+    Value input = mathArgOp.getInput();
+    RankedTensorType inputType = input.getType().cast<RankedTensorType>();
+    auto inputRank = inputType.getRank();
+    if (axis < 0) {
+      axis += inputRank;
+      assert(axis >= 0);
+    }
 
     mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
-        mathArgOp->getLoc(), mathArgOp->getResults().getTypes(),
-        mathArgOp.getInput(), WrapName<TFMathArgOp>::name, false,
-        rewriter.getStringAttr(""),
+        mathArgOp->getLoc(), mathArgOp->getResults().getTypes(), input,
+        WrapName<TFMathArgOp>::name, false, rewriter.getStringAttr(""),
         mhlo::CustomCallApiVersion{
             mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL},
         rewriter.getArrayAttr(ArrayRef<Attribute>{}),
