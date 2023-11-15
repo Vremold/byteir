@@ -1911,13 +1911,9 @@ void mlir::mhlo::populateFoldMultiplyZeroPattern(RewritePatternSet &patterns) {
   patterns.add<FoldMultiplyZero>(patterns.getContext());
 }
 
-void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns,
-                                                 MLIRContext *ctx,
-                                                 bool blindFold) {
-  patterns.add<FoldBroadcastInDimConstWithBinary>(ctx);
-  patterns.add<FoldBroadcastInDimReshape>(ctx);
-  patterns.add<FoldConcatWithContinuousSlices>(ctx);
-  patterns.add<SimplifyDynamicConvToConv>(ctx);
+void mlir::mhlo::populateFoldLargeBinaryOpPatterns(
+    RewritePatternSet &patterns) {
+  auto ctx = patterns.getContext();
   patterns.add<FoldLargeBinaryOp<mhlo::AddOp, std::plus>>(ctx);
   patterns.add<FoldLargeBinaryOp<mhlo::MulOp, std::multiplies>>(ctx);
   patterns.add<FoldLargeBinaryOp<mhlo::SubtractOp, std::minus>>(ctx);
@@ -1927,9 +1923,25 @@ void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns,
   patterns.add<FoldLargeBinaryOp<mhlo::MinOp, Min>>(ctx);
   patterns.add<FoldLargeBinaryOp<mhlo::PowOp, Pow>>(ctx);
   patterns.add<FoldLargeCompareOp>(ctx);
+}
+
+void mlir::mhlo::populateFoldBeneficialConstantConvertOpPattern(
+    RewritePatternSet &patterns) {
+  patterns.add<FoldBeneficialConstantConvertOp>(patterns.getContext());
+}
+
+// TODO: split more patterns to populate function
+void mlir::mhlo::populateCanonicalizeExtPatterns(RewritePatternSet &patterns,
+                                                 MLIRContext *ctx,
+                                                 bool blindFold) {
+  patterns.add<FoldBroadcastInDimConstWithBinary>(ctx);
+  patterns.add<FoldBroadcastInDimReshape>(ctx);
+  patterns.add<FoldConcatWithContinuousSlices>(ctx);
+  patterns.add<SimplifyDynamicConvToConv>(ctx);
+  populateFoldLargeBinaryOpPatterns(patterns);
   patterns.add<FoldLargeSliceOp>(ctx);
   patterns.add<FoldTransposeNonSplat>(ctx);
-  patterns.add<FoldBeneficialConstantConvertOp>(ctx);
+  populateFoldBeneficialConstantConvertOpPattern(patterns);
   patterns.add<CanonicalizeBroadcastInDimConst>(ctx);
   patterns.add<SimplifyByteIRAddNToAdd>(ctx);
   patterns.add<CanonicalizeConcatWithBroadcast>(ctx);
