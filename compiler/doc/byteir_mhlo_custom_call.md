@@ -220,3 +220,39 @@ Further needed infomation for a given coarse-grained op are encoded in a diction
 %shape = shape.shape_of %arg0 : tensor<3xindex>
 %0 = "mhlo.custom_call"(%low, %high, %seed, %offset, %shape) {call_target_name = "byteir.rng_uniform", has_side_effect = false} : (tensor<f32>, tensor<f32>, tensor<i64>, tensor<i64>, tensor<3xindex>) -> tensor<?x?x?xf32>
 ```
+
+### byteir.flash_attn_fwd
+- Operands:
+  - q: Tensor
+  - k: Tensor
+  - v: Tensor
+- Attrs:
+  - dropout_p: FloatAttr
+  - softmax_scale: FloatAttr
+  - causal: BoolAttr
+  - return_softmax: BoolAttr
+- Results:
+  - output: Tensor
+  - softmax_lse: Tensor
+  - softmax_return: Tensor
+  - rng: Tensor
+
+### byteir.flash_attn_bwd
+- Operands:
+  - dout: Tensor
+  - q: Tensor
+  - k: Tensor
+  - v: Tensor
+  - out: Tensor
+  - softmax_lse: Tensor
+  - rng_state: Tensor
+- Attrs:
+  - dropout_p: FloatAttr
+  - softmax_scale: FloatAttr
+  - causal: BoolAttr
+- Results:
+  - dq: Tensor
+  - dk: Tensor
+  - dv: Tensor
+  - d_softmax: Tensor
+  - dq_accum: Tensor
