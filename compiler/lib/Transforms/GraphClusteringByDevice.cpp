@@ -624,20 +624,62 @@ void GraphClusteringByDevicePass::runOnOperation() {
   for (auto funcOp : originalFuncs) {
     std::optional<SmallVector<FunctionMetadata, 4>> metadatas;
     switch (this->clusterAlgo) {
-    case GraphClusteringAlgo::kTopDown:
+    case GraphClusteringAlgo::kTopDown: {
       metadatas = TopDownDeviceClustering(funcOp, attrName)
                       .getFunctionMetadatas(attrName, device, deviceAnchorName,
                                             dupOutputs);
       break;
-    case GraphClusteringAlgo::kBottomUp:
+    }
+    case GraphClusteringAlgo::kBottomUp: {
       metadatas = BottomUpDeviceClustering(funcOp, attrName)
                       .getFunctionMetadatas(attrName, device, deviceAnchorName,
                                             dupOutputs);
       break;
+    }
+    case GraphClusteringAlgo::kGreedy: {
+      std::optional<SmallVector<FunctionMetadata, 4>> topDownMetadatas;
+      std::optional<SmallVector<FunctionMetadata, 4>> bottomUpMetadatas;
+      auto topDownFunc = funcOp.clone();
+      auto bottomUpFunc = funcOp.clone();
+
+      topDownMetadatas =
+          TopDownDeviceClustering(topDownFunc, attrName)
+              .getFunctionMetadatas(attrName, device, deviceAnchorName,
+                                    dupOutputs);
+      bottomUpMetadatas =
+          BottomUpDeviceClustering(bottomUpFunc, attrName)
+              .getFunctionMetadatas(attrName, device, deviceAnchorName,
+                                    dupOutputs);
+      if (topDownMetadatas && bottomUpMetadatas) {
+        auto topDownSize = (*topDownMetadatas)[0].ops.size();
+        auto bottomUpSize = (*bottomUpMetadatas)[0].ops.size();
+        if (topDownSize > bottomUpSize) {
+          metadatas = TopDownDeviceClustering(funcOp, attrName)
+                          .getFunctionMetadatas(attrName, device,
+                                                deviceAnchorName, dupOutputs);
+        } else {
+          metadatas = BottomUpDeviceClustering(funcOp, attrName)
+                          .getFunctionMetadatas(attrName, device,
+                                                deviceAnchorName, dupOutputs);
+        }
+      } else if (topDownMetadatas) {
+        metadatas = TopDownDeviceClustering(funcOp, attrName)
+                        .getFunctionMetadatas(attrName, device,
+                                              deviceAnchorName, dupOutputs);
+      } else if (bottomUpMetadatas) {
+        metadatas = BottomUpDeviceClustering(funcOp, attrName)
+                        .getFunctionMetadatas(attrName, device,
+                                              deviceAnchorName, dupOutputs);
+      }
+      topDownFunc.erase();
+      bottomUpFunc.erase();
+      break;
+    }
     case GraphClusteringAlgo::kFallback:
-    default:
+    default: {
       metadatas = getFunctionMetadatasFallback(funcOp, attrName, device,
                                                deviceAnchorName, dupOutputs);
+    }
     }
 
     if (!metadatas) {
