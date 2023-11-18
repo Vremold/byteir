@@ -1,4 +1,4 @@
-// RUN: onnx-frontend-opt -rewrite-to-custom-call="ops=arg_max,arg_min,layer_norm,erf,gelu,l2_norm,quantize,dequantize,softmax,resize" -of-canonicalize -constprop-onnx -of-canonicalize %s -split-input-file | FileCheck %s
+// RUN: onnx-frontend-opt -rewrite-to-custom-call="ops=arg_max,arg_min,layer_norm,erf,gelu,l2_norm,quantize,dequantize,softmax,resize,one_hot" -of-canonicalize -constprop-onnx -of-canonicalize %s -split-input-file | FileCheck %s
 
 func.func @test_arg_max(%arg0: tensor<1x5x5x3xf32>) -> tensor<1x5x5xi64> {
   %0 = "onnx.ArgMax"(%arg0) {axis = 3 : si64, keepdims = 0 : si64, onnx_node_name = "ArgMax_0"} : (tensor<1x5x5x3xf32>) -> tensor<1x5x5xi64>
@@ -342,4 +342,18 @@ func.func @test_not_l2_norm_gelu_dense(%1092: tensor<1x4xf32>) -> tensor<1x4xf32
   return %1105 : tensor<1x4xf32>
 // CHECK-LABEL:  func.func @test_not_l2_norm_gelu_dense
 // CHECK-NOT: mhlo.custom_call @byteir.gelu
+}
+
+func.func @test_onehot(%arg0 : tensor<2x3x4xi64>) -> tensor<2x3x4x64xi64> {
+  %0 = onnx.Constant dense<64> : tensor<1xi64>
+  %1 = onnx.Constant dense<[0, 1]> : tensor<2xi64>
+  %2 = "onnx.OneHot"(%arg0, %0, %1) {axis = -1 : si64} : (tensor<2x3x4xi64>, tensor<1xi64>, tensor<2xi64>) -> tensor<2x3x4x64xi64>
+  "func.return"(%2) : (tensor<2x3x4x64xi64>) -> ()
+// CHECK-LABEL: func.func @test_onehot
+// CHECK-SAME: (%[[ARG0:.+]]: tensor<2x3x4xi64>) -> tensor<2x3x4x64xi64> {
+// CHECK: %[[GE_ZERO:.+]] = mhlo.compare  GE, %[[ARG0]], %[[ZERO:.+]],  NOTYPE : (tensor<2x3x4xi64>, tensor<2x3x4xi64>) -> tensor<2x3x4xi1>
+// CHECK: %[[POS_ARG0:.+]] = mhlo.add %[[ARG0]], %[[DEPTH:.+]] : tensor<2x3x4xi64>
+// CHECK: %[[NORM_ARG:.+]] = mhlo.select %[[GE_ZERO]], %[[ARG0]], %[[POS_ARG0]] : tensor<2x3x4xi1>, tensor<2x3x4xi64>
+// CHECK: %[[RESULT:.+]] = mhlo.custom_call @byteir.one_hot(%[[NORM_ARG]]) {backend_config = "", byteir_attrs = {axis = 3 : i64, depth = 64 : i64, off_value = 0 : i64, on_value = 1 : i64}} : (tensor<2x3x4xi64>) -> tensor<2x3x4x64xi64>
+// CHECK: return %[[RESULT]] : tensor<2x3x4x64xi64>
 }

@@ -30,6 +30,7 @@ namespace {
 #define CALL_TARGET_NAME_PREFIX "byteir."
 
 // clang-format off
+// func(byteir_op_name, onnx_op_name)
 #define VALID_CUSTOM_CALL_OP(func) \
     func(arg_max, ArgMax)          \
     func(arg_min, ArgMin)          \
@@ -39,17 +40,21 @@ namespace {
     func(instance_norm, InstanceNorm) \
     func(l2_norm, L2Norm)          \
     func(layer_norm, LayerNorm)    \
+    func(log_softmax, LogSoftmax)  \
+    func(one_hot, OneHot)          \
     func(quantize, Quantize)       \
     func(resize, Resize)           \
-    func(softmax, Softmax)         \
-    func(log_softmax, LogSoftmax)
+    func(softmax, Softmax)
 
+// generate get name function name, function name contains onnx op name,
+// return byteir custom call target op name
 #define GEN_FUNCNAME(call_target_name, func_name)                            \
   constexpr const char *get##func_name##NameWithPrefix() {                   \
     return CALL_TARGET_NAME_PREFIX #call_target_name;                        \
   }                                                                          \
   constexpr const char *get##func_name##Name() { return #call_target_name; }
 
+// Wrapname class which outputs target name for ops that can be simply replaced.
 #define WRAP(onnx_class, func_name)                                                   \
   template <> struct WrapName<onnx_class> {                                           \
     static constexpr const char *call_target_name = get##func_name##NameWithPrefix(); \
@@ -58,9 +63,9 @@ namespace {
 #define WRAP_LIST(func)                      \
     func(ONNXArgMaxOp, ArgMax)               \
     func(ONNXArgMinOp, ArgMin)               \
+    func(ONNXDequantizeLinearOp, Dequantize) \
     func(ONNXErfOp, Erf)                     \
-    func(ONNXQuantizeLinearOp, Quantize)     \
-    func(ONNXDequantizeLinearOp, Dequantize)
+    func(ONNXQuantizeLinearOp, Quantize)
 // clang-format on
 
 VALID_CUSTOM_CALL_OP(GEN_FUNCNAME)
@@ -467,6 +472,76 @@ Value createLayerNormGeLU(PatternRewriter &rewriter, Location loc, Value input,
   return createGeLU(rewriter, loc, result);
 }
 
+//===----------------------------------------------------------------------===//
+// OneHot Pattern
+//===----------------------------------------------------------------------===//
+
+Value createOneHot(PatternRewriter &rewriter, Location loc, Value indices,
+                   Value depthValue, Value values, IntegerAttr axisAttr,
+                   Value output) {
+  // indices
+  RankedTensorType indicesType = indices.getType().dyn_cast<RankedTensorType>();
+  assert(indicesType && indicesType.hasStaticShape() &&
+         "indices must be static");
+  int64_t indicesRank = indicesType.getRank();
+  Type indicesElementType = indicesType.getElementType();
+  // depth
+  DenseIntElementsAttr depthAttr;
+  assert(matchPattern(depthValue, m_Constant(&depthAttr)) &&
+         "depth value must be constant int");
+  int64_t depth = depthAttr.getValues<APInt>()[0].getSExtValue();
+  // axis
+  int64_t axis = axisAttr.getSInt();
+  if (axis < 0)
+    axis += indicesRank + 1;
+  assert(axis >= 0 && axis <= indicesRank && "axis not in range");
+  // normalized indices
+  Value zero = rewriter.create<mhlo::ConstantOp>(
+      loc,
+      DenseIntElementsAttr::get(RankedTensorType::get({}, indicesElementType),
+                                ArrayRef<int64_t>{0}));
+  Value broadcastZero = rewriter.create<mhlo::BroadcastInDimOp>(
+      loc, indicesType, zero, rewriter.getI64TensorAttr({}));
+  Value broadcastDepth;
+  int64_t depthRank = depthValue.getType().cast<RankedTensorType>().getRank();
+  if (depthRank == 1)
+    broadcastDepth = rewriter.create<mhlo::BroadcastInDimOp>(
+        loc, indicesType, depthValue, rewriter.getI64TensorAttr({0}));
+  else
+    broadcastDepth = rewriter.create<mhlo::BroadcastInDimOp>(
+        loc, indicesType, depthValue, rewriter.getI64TensorAttr({}));
+  Value compareGeZero = rewriter.create<mhlo::CompareOp>(
+      loc, indices, broadcastZero, mhlo::ComparisonDirection::GE);
+  Value positiveIndices =
+      rewriter.create<mhlo::AddOp>(loc, indices, broadcastDepth);
+  Value normalizedIndices = rewriter.create<mhlo::SelectOp>(
+      loc, indicesType, compareGeZero, indices, positiveIndices);
+  // values
+  ONNXConstantOp ValuesOp = values.getDefiningOp<ONNXConstantOp>();
+  assert(ValuesOp && "onnx.OneHot's values should be constant");
+  DenseElementsAttr valuesAttr =
+      ValuesOp.getValueAttr().dyn_cast<DenseElementsAttr>();
+  assert(valuesAttr && valuesAttr.size() == 2 &&
+         "value should keep DenseElementsAttr with size = 2");
+  Attribute off_value = valuesAttr.getValues<Attribute>()[0];
+  Attribute on_value = valuesAttr.getValues<Attribute>()[1];
+  mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
+      loc, llvm::ArrayRef<Type>{output.getType()},
+      llvm::ArrayRef<Value>{normalizedIndices}, getOneHotNameWithPrefix(),
+      false, rewriter.getStringAttr(""),
+      mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
+      mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
+      rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
+  DictionaryAttrWrapper attrs(rewriter.getContext());
+  attrs.setAttr("depth", rewriter.getI64IntegerAttr(depth));
+  attrs.setAttr("axis", rewriter.getI64IntegerAttr(axis));
+  attrs.setAttr("on_value", on_value);
+  attrs.setAttr("off_value", off_value);
+  customCallOp->setAttr(BYTEIR_ATTRS, getCleanAttr(attrs));
+  return customCallOp.getResults()[0];
+}
+
 #include "onnx-frontend/src/Conversion/OFRewriteToCustomCall.inc"
 
 //===----------------------------------------------------------------------===//
@@ -577,6 +652,8 @@ struct OFRewriteToCustomCallPass
         std::make_unique<RewriteLayerNormWithoutLastAdd>(context));
     validOpSet[getLayerNormName()].emplace_back(
         std::make_unique<RewriteInstanceNorm>(context));
+    validOpSet[getOneHotName()].emplace_back(
+        std::make_unique<RewriteOneHot>(context));
     validOpSet[getArgMaxName()].emplace_back(
         std::make_unique<RewriteMathArg<ONNXArgMaxOp, ONNXArgMaxOpAdaptor>>(
             context, 1));
