@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s -allow-unregistered-dialect -graph-clustering-by-device="cluster-algo=Greedy" --split-input-file | FileCheck %s
+// RUN: byteir-opt %s -allow-unregistered-dialect -graph-clustering-by-device="cluster-algo=Greedy" --split-input-file --canonicalize | FileCheck %s
 // RUN: byteir-opt %s -allow-unregistered-dialect -graph-clustering-by-device="cluster-algo=TopDown" --split-input-file | FileCheck %s --check-prefix TOPDOWN
 // RUN: byteir-opt %s -allow-unregistered-dialect -graph-clustering-by-device="cluster-algo=BottomUp" --split-input-file | FileCheck %s --check-prefix BOTTOMUP
 
@@ -71,3 +71,24 @@ func.func @use_top_down(%arg0 : tensor<4xf32>) -> tensor<4xf32> {
 //   BOTTOMUP-NEXT: "foo.bar"
 //   BOTTOMUP-NEXT: "foo.bar"
 //   BOTTOMUP-NEXT: return
+
+// -----
+func.func @constant_used_by_host_op(%arg0: tensor<f32>) -> (tensor<f32>) {
+  %0 = mhlo.add %arg0, %arg0 : tensor<f32>
+  %1 = mhlo.add %0, %arg0 : tensor<f32>
+  %2 = "mhlo.constant"() {value = dense<1.0000> : tensor<f32> } : () -> tensor<f32>
+  %3 = "mhlo.add"(%2, %1) {device = "host"} : (tensor<f32>, tensor<f32>) -> tensor<f32>
+  %4 = mhlo.subtract %3, %1 : tensor<f32>
+  return %4 : tensor<f32>
+}
+
+// CHECK-LABEL: func.func @constant_used_by_host_op
+//   CHECK-NEXT: mhlo.constant
+//   CHECK-NEXT: call @constant_used_by_host_op_test
+//   CHECK-NEXT: mhlo.add
+//   CHECK-NEXT: mhlo.subtract
+//   CHECK-NEXT: return
+// CHECK-LABEL: func.func @constant_used_by_host_op_test
+//   CHECK-NEXT: mhlo.add
+//   CHECK-NEXT: mhlo.add
+//   CHECK-NEXT: return

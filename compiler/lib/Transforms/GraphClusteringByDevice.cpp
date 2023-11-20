@@ -337,7 +337,16 @@ DeviceClusteringAlgoBaseHelper::DeviceClusteringAlgoBaseHelper(
         continue;
       }
     }
-
+    // if a constant is only used by host op, mark it as host
+    if (isMhloConstantLike(&op) && op.getResult(0).hasOneUse()) {
+      Operation *user = *op.getResult(0).getUsers().begin();
+      if (user->hasAttr(attrName)) {
+        StringAttr attr = user->getAttrOfType<StringAttr>(attrName);
+        if (attr.getValue().str() == DEVICE_ATTR_HOST) {
+          continue;
+        }
+      }
+    }
     op2cluster.try_emplace(&op, ActiveDeviceCluster(&op));
   }
 }
