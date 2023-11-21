@@ -66,6 +66,15 @@ jobs:
       - name: Build and test BRT with CUDA ON
         commands:
           - CUDA_VISIBLE_DEVICES=4,5,6,7 bash .codebase/pipelines/runtime/build_and_test.sh --cuda --python
+  brt_check_nccl:
+    name: BRT nccl test
+    image: hub.byted.org/compile/data.aml.byteir_cuda:v10
+    working-directory: byteir/byteir
+    # depends: [byteir_compiler_build_and_test]
+    steps:
+      - name: Build and test BRT with CUDA and NCCL ON
+        commands:
+          - NCCL_DEBUG=INFO NCCL_P2P_DISABLE=1 CUDA_VISIBLE_DEVICES=2,3 bash .codebase/pipelines/runtime/build_and_test.sh --cuda --nccl --python
   brt_check_asan:
     name: BRT test with asan
     image: hub.byted.org/compile/data.aml.byteir_cuda:v10
