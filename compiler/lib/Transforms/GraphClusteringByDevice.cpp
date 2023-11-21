@@ -135,6 +135,7 @@ getFunctionMetadatasFallback(func::FuncOp funcOp, StringRef attrName,
 
 struct ActiveDeviceCluster {
   using OpList = llvm::SetVector<Operation *>;
+  using OpClusterMap = llvm::DenseMap<Operation *, ActiveDeviceCluster>;
   OpList operations;
   ActiveDeviceCluster *mergedInto;
 
@@ -160,7 +161,8 @@ struct ActiveDeviceCluster {
   // return merged ActiveDeviceCluster or nullptr for merge failure
   // arg order sensitive, prefer merge lhs into rhs
   static ActiveDeviceCluster *tryMerge(ActiveDeviceCluster *lhs,
-                                       ActiveDeviceCluster *rhs);
+                                       ActiveDeviceCluster *rhs,
+                                       OpClusterMap &op2cluster);
 
   struct CompareByNumOps {
     bool operator()(ActiveDeviceCluster *lhs, ActiveDeviceCluster *rhs) {
@@ -169,7 +171,8 @@ struct ActiveDeviceCluster {
   };
 
 private:
-  static bool tryMergeInto(ActiveDeviceCluster *from, ActiveDeviceCluster *to);
+  static bool tryMergeInto(ActiveDeviceCluster *from, ActiveDeviceCluster *to,
+                           OpClusterMap &op2cluster);
 
   static bool anyDefIn(Operation *op, const OpList &operations) {
     for (auto &&operand : op->getOperands())
@@ -189,12 +192,27 @@ private:
   // \p moveUp in pre-order, and the remaining operations will be kept in \p src
   // in pre-order
   static auto computeMoveUpSet(const OpList &target, OpList &src,
-                               OpList &moveUp) {
+                               OpList &moveUp, OpClusterMap &op2cluster) {
     std::vector<Operation *> vec = src.takeVector();
     OpList &remain = src;
     for (auto &&op : vec) {
+      if (remain.contains(op))
+        continue;
       if (anyDefIn(op, target) || anyDefIn(op, remain)) {
-        remain.insert(op);
+        auto &&iter = op2cluster.find(op);
+        OpList ops;
+        if (iter == op2cluster.end()) {
+          remain.insert(op);
+          continue;
+        }
+        ActiveDeviceCluster *cluster = iter->second.getRoot();
+        for (Operation *clusterOp : cluster->operations) {
+          assert(std::find(vec.begin(), vec.end(), clusterOp) != vec.end());
+          assert(remain.insert(clusterOp));
+          if (moveUp.contains(clusterOp)) {
+            moveUp.remove(clusterOp);
+          }
+        }
       } else {
         moveUp.insert(op);
       }
@@ -205,24 +223,39 @@ private:
   // \p moveDown in post-order, and the remaining operations will be kept in \p
   // src in pre-order
   static auto computeMoveDownSet(const OpList &target, OpList &src,
-                                 OpList &moveDown) {
+                                 OpList &moveDown, OpClusterMap &op2cluster) {
     std::vector<Operation *> vec = src.takeVector();
     OpList &remain = src;
     for (auto &&op : llvm::reverse(vec)) {
+      if (remain.contains(op))
+        continue;
       if (anyUseIn(op, target) || anyUseIn(op, remain)) {
-        remain.insert(op);
+        auto &&iter = op2cluster.find(op);
+        OpList ops;
+        if (iter == op2cluster.end()) {
+          remain.insert(op);
+          continue;
+        }
+        ActiveDeviceCluster *cluster = iter->second.getRoot();
+        for (Operation *clusterOp : llvm::reverse(cluster->operations)) {
+          assert(std::find(vec.begin(), vec.end(), clusterOp) != vec.end());
+          assert(remain.insert(clusterOp));
+          if (moveDown.contains(clusterOp)) {
+            moveDown.remove(clusterOp);
+          }
+        }
       } else {
         moveDown.insert(op);
       }
     }
-
     vec = remain.takeVector();
     remain.insert(vec.rbegin(), vec.rend());
   }
 };
 
 bool ActiveDeviceCluster::tryMergeInto(ActiveDeviceCluster *from,
-                                       ActiveDeviceCluster *to) {
+                                       ActiveDeviceCluster *to,
+                                       OpClusterMap &op2cluster) {
   static auto takePointer = [](Operation &op) { return &op; };
   if (from->isBeforeInBlock(to)) {
     OpList toMove(
@@ -231,8 +264,8 @@ bool ActiveDeviceCluster::tryMergeInto(ActiveDeviceCluster *from,
         llvm::map_iterator(to->operations.front()->getIterator(), takePointer));
     OpList moveUp, moveDown;
 
-    computeMoveUpSet(from->operations, toMove, moveUp);
-    computeMoveDownSet(to->operations, toMove, moveDown);
+    computeMoveUpSet(from->operations, toMove, moveUp, op2cluster);
+    computeMoveDownSet(to->operations, toMove, moveDown, op2cluster);
 
     if (!toMove.empty())
       return false;
@@ -257,8 +290,8 @@ bool ActiveDeviceCluster::tryMergeInto(ActiveDeviceCluster *from,
                            takePointer));
     OpList moveUp, moveDown;
 
-    computeMoveDownSet(from->operations, toMove, moveDown);
-    computeMoveUpSet(to->operations, toMove, moveUp);
+    computeMoveDownSet(from->operations, toMove, moveDown, op2cluster);
+    computeMoveUpSet(to->operations, toMove, moveUp, op2cluster);
 
     if (!toMove.empty())
       return false;
@@ -280,18 +313,19 @@ bool ActiveDeviceCluster::tryMergeInto(ActiveDeviceCluster *from,
 }
 
 ActiveDeviceCluster *ActiveDeviceCluster::tryMerge(ActiveDeviceCluster *lhs,
-                                                   ActiveDeviceCluster *rhs) {
+                                                   ActiveDeviceCluster *rhs,
+                                                   OpClusterMap &op2cluster) {
   if (!lhs || !rhs || lhs == rhs)
     return nullptr;
 
   if (lhs->mergedInto || rhs->mergedInto)
     return nullptr;
 
-  if (tryMergeInto(lhs, rhs)) {
+  if (tryMergeInto(lhs, rhs, op2cluster)) {
     return rhs;
   }
 
-  if (tryMergeInto(rhs, lhs)) {
+  if (tryMergeInto(rhs, lhs, op2cluster)) {
     return lhs;
   }
 
@@ -401,7 +435,8 @@ void DeviceClusteringAlgoBaseHelper::populateCandidates() {
     ActiveDeviceCluster *cluster = workList.front();
     workList.pop_front();
     for (auto &&iter = workList.begin(); iter != workList.end();) {
-      if (auto merged = ActiveDeviceCluster::tryMerge(*iter, cluster)) {
+      if (auto merged =
+              ActiveDeviceCluster::tryMerge(*iter, cluster, op2cluster)) {
         cluster = merged;
         iter = workList.erase(iter);
       } else {
@@ -443,7 +478,8 @@ void TopDownDeviceClustering::mergeDeviceClustersProgressively() {
     auto curCluster = getCluster(op);
     for (auto &&operand : op->getOperands()) {
       auto preCluster = getCluster(operand);
-      if (auto merged = ActiveDeviceCluster::tryMerge(curCluster, preCluster)) {
+      if (auto merged = ActiveDeviceCluster::tryMerge(preCluster, curCluster,
+                                                      op2cluster)) {
         curCluster = merged;
       }
     }
@@ -466,7 +502,8 @@ void BottomUpDeviceClustering::mergeDeviceClustersProgressively() {
     auto curCluster = getCluster(op);
     for (auto &&use : op->getUses()) {
       auto preCluster = getCluster(use.getOwner());
-      if (auto merged = ActiveDeviceCluster::tryMerge(preCluster, curCluster)) {
+      if (auto merged = ActiveDeviceCluster::tryMerge(preCluster, curCluster,
+                                                      op2cluster)) {
         curCluster = merged;
       }
     }

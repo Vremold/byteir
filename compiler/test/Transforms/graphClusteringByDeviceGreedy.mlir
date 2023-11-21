@@ -92,3 +92,31 @@ func.func @constant_used_by_host_op(%arg0: tensor<f32>) -> (tensor<f32>) {
 //   CHECK-NEXT: mhlo.add
 //   CHECK-NEXT: mhlo.add
 //   CHECK-NEXT: return
+
+// -----
+
+func.func @should_move_down(%arg0 : tensor<4xf32>, %arg1 : tensor<4xf32>) -> (tensor<4xf32>, tensor<4xf32>) {
+  %0 = "foo.bar"(%arg0) : (tensor<4xf32>) -> tensor<4xf32>
+  %1 = "foo.bar"(%0) {device = "host"} : (tensor<4xf32>) -> tensor<4xf32>
+  %2 = "foo.bar"(%arg1) : (tensor<4xf32>) -> tensor<4xf32>
+  %3 = "foo.bar"(%1, %2) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
+  %4 = "foo.bar"(%2) {device = "host"} : (tensor<4xf32>) -> tensor<4xf32>
+  %5 = "foo.bar"(%4, %2) : (tensor<4xf32>, tensor<4xf32>) -> tensor<4xf32>
+  %6 = "foo.bar"(%0) : (tensor<4xf32>) -> tensor<4xf32>
+  %7 = "foo.bar"(%6) : (tensor<4xf32>) -> tensor<4xf32>
+  return %7, %5 : tensor<4xf32>, tensor<4xf32>
+}
+
+// CHECK-LABEL: func.func @should_move_down
+//   CHECK-NEXT: call @should_move_down_test
+//   CHECK-NEXT: "foo.bar"
+//   CHECK-NEXT: "foo.bar"
+//   CHECK-NEXT: "foo.bar"
+//   CHECK-NEXT: "foo.bar"
+//   CHECK-NEXT: "foo.bar"
+//   CHECK-NEXT: return
+// CHECK-LABEL: func.func @should_move_down_test
+//   CHECK-NEXT: "foo.bar"
+//   CHECK-NEXT: "foo.bar"
+//   CHECK-NEXT: "foo.bar"
+//   CHECK-NEXT: return
