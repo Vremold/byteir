@@ -479,6 +479,20 @@ func.func @l2_norm_V2(%1871: tensor<1x128xf16>) -> tensor<1x128xf16> {
 // CHECK-SAME: @byteir.l2_norm
 // CHECK-SAME: byteir_attrs = {axis = [1], epsilon = 0.000000e+00 : f64}
 
+func.func @l2_norm_V2_swap_mul(%1871: tensor<1x128xf16>) -> tensor<1x128xf16> {
+  %cst_5 = "tf.Const"() {value = dense<1> : tensor<i32>} : () -> tensor<i32>
+  %1872 = "tf.Square"(%1871) {device = ""} : (tensor<1x128xf16>) -> tensor<1x128xf16>
+  %1873 = "tf.Sum"(%1872, %cst_5) {device = "", keep_dims = true} : (tensor<1x128xf16>, tensor<i32>) -> tensor<1x1xf16>
+  %1874 = "tf.Relu"(%1873) : (tensor<1x1xf16>) -> tensor<1x1xf16>
+  %1875 = "tf.Rsqrt"(%1874) {device = ""} : (tensor<1x1xf16>) -> tensor<1x1xf16>
+  %1876 = "tf.Mul"(%1871, %1875) {device = ""} : (tensor<1x128xf16>, tensor<1x1xf16>) -> tensor<1x128xf16>
+  return %1876 : tensor<1x128xf16>
+}
+// CHECK-LABEL: @l2_norm_V2_swap_mul
+// CHECK: mhlo.custom_call
+// CHECK-SAME: @byteir.l2_norm
+// CHECK-SAME: byteir_attrs = {axis = [1], epsilon = 0.000000e+00 : f64}
+
 func.func @l2_norm_V3(%15: tensor<1x100x512xf32>) -> tensor<1x100x512xf32> {
   %cst_96 = "tf.Const"() {value = dense<2> : tensor<1xi32>} : () -> tensor<1xi32>
   %16 = "tf.Square"(%15) {device = ""} : (tensor<1x100x512xf32>) -> tensor<1x100x512xf32>

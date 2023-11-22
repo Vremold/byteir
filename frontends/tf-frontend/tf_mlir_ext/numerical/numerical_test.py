@@ -70,6 +70,7 @@ def get_config(config: str):
                 "l2_norm_V1": 6,
                 "l2_norm_V1_swap_mul": 6,
                 "l2_norm_V2": 3,
+                "l2_norm_V2_swap_mul": 3,
                 "l2_norm_V3": 6,
                 "onehot_case0": 6,
             },

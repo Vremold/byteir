@@ -605,6 +605,24 @@ def RewriteL2NormV2 : Pat<
   (NativeCodeCall<"createL2NormV2($_builder, $_loc, $0, $1)"> $input, $axis_attr),
   [(OneSize $axis_attr), (TrueBoolAttr $keep_dims)]>;
 
+def RewriteL2NormV2SwapMul : Pat<
+  (TF_MulOp
+    $input,
+    (TF_RsqrtOp
+      (TF_ReluOp
+        (TF_SumOp
+          (TF_SquareOp
+            $input
+          ),
+          (TF_ConstOp:$axis $axis_attr),
+          $keep_dims
+        )
+      )
+    )
+  ),
+  (NativeCodeCall<"createL2NormV2($_builder, $_loc, $0, $1)"> $input, $axis_attr),
+  [(OneSize $axis_attr), (TrueBoolAttr $keep_dims)]>;
+
 // note: x^2 guarantee >= 0, so set epsilon to 0.0
 def RewriteL2NormV3 : Pat<
   (TF_MulOp

@@ -655,6 +655,8 @@ struct RewriteToCustomCallOpsPass
       validCustomCallOpSet[getL2NormName()].emplace_back(
           std::make_unique<RewriteL2NormV2>(context));
       validCustomCallOpSet[getL2NormName()].emplace_back(
+          std::make_unique<RewriteL2NormV2SwapMul>(context));
+      validCustomCallOpSet[getL2NormName()].emplace_back(
           std::make_unique<RewriteL2NormV3>(context));
 
       // patterns with c++
