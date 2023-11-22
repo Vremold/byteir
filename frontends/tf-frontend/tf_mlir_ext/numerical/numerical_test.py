@@ -65,6 +65,7 @@ def get_config(config: str):
                 "layer_norm_V4": 2,
                 "layer_norm_V4_swap_squarediff": 2,
                 "layer_norm_with_cast": 2,
+                "layer_norm_with_cast_v2": 2,
                 "layer_norm_with_cast_disable_minimize_broadcast": 2,
                 "l2_norm_V1": 6,
                 "l2_norm_V1_swap_mul": 6,
