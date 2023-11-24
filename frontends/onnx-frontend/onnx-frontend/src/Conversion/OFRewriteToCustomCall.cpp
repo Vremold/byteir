@@ -486,9 +486,9 @@ Value createOneHot(PatternRewriter &rewriter, Location loc, Value indices,
   int64_t indicesRank = indicesType.getRank();
   Type indicesElementType = indicesType.getElementType();
   // depth
-  DenseIntElementsAttr depthAttr;
-  assert(matchPattern(depthValue, m_Constant(&depthAttr)) &&
-         "depth value must be constant int");
+  ONNXConstantOp depthOp = depthValue.getDefiningOp<ONNXConstantOp>();
+  assert(depthOp && "onnx.OneHot's depth should be constant");
+  ElementsAttr depthAttr = depthOp.getValueAttr().dyn_cast<ElementsAttr>();
   int64_t depth = depthAttr.getValues<APInt>()[0].getSExtValue();
   // axis
   int64_t axis = axisAttr.getSInt();
@@ -519,10 +519,9 @@ Value createOneHot(PatternRewriter &rewriter, Location loc, Value indices,
   // values
   ONNXConstantOp ValuesOp = values.getDefiningOp<ONNXConstantOp>();
   assert(ValuesOp && "onnx.OneHot's values should be constant");
-  DenseElementsAttr valuesAttr =
-      ValuesOp.getValueAttr().dyn_cast<DenseElementsAttr>();
+  ElementsAttr valuesAttr = ValuesOp.getValueAttr().dyn_cast<ElementsAttr>();
   assert(valuesAttr && valuesAttr.size() == 2 &&
-         "value should keep DenseElementsAttr with size = 2");
+         "value should keep ElementsAttr with size = 2");
   Attribute off_value = valuesAttr.getValues<Attribute>()[0];
   Attribute on_value = valuesAttr.getValues<Attribute>()[1];
   mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
