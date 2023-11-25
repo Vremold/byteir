@@ -652,9 +652,9 @@ struct EliminateRedundantConvertFromI1
 };
 
 ///                tensor
-///         /         |        \      \
+///         /         |        \      |
 ///       slice_0   slice_1   ...   slice_n
-///         |         |        |       \        
+///         |         |        |      |
 ///  ... reshape_0 reshape_1  ...  reshape_n   ...
 ///    \     \        |        /       /        /li
 ///               concatenate
@@ -1078,29 +1078,27 @@ template <typename T> struct Xor {
   T operator()(const T &a, const T &b) const { return a ^ b; }
 };
 
-template <typename T, typename = void> struct Pow;
+template <typename T> struct Pow;
 
 // note: the power op in XLA will return 0 in case of power(-1,-n), where n>0.
-template <typename T>
-struct Pow<T, std::enable_if_t<std::is_same_v<T, APSInt>>> {
-  T operator()(const T &a, const T &b) const {
+template <> struct Pow<APSInt> {
+  APSInt operator()(const APSInt &a, const APSInt &b) const {
     int64_t aPromoted = a.getSExtValue();
     int64_t bPromoted = b.getSExtValue();
     auto bitWidth = a.getBitWidth();
     APInt res_(bitWidth, std::pow(aPromoted, bPromoted), true);
-    T res(res_);
+    APSInt res(res_);
     return res;
   }
 };
 
-template <typename T>
-struct Pow<T, std::enable_if_t<std::is_same_v<T, APFloat>>> {
-  T operator()(const T &a, const T &b) const {
+template <> struct Pow<APFloat> {
+  APFloat operator()(const APFloat &a, const APFloat &b) const {
     double aPromoted = a.convertToDouble();
     double bPromoted = b.convertToDouble();
     auto &semantics = a.getSemantics();
     bool loses_info;
-    T res(std::pow(aPromoted, bPromoted));
+    APFloat res(std::pow(aPromoted, bPromoted));
     res.convert(semantics, APFloat::rmNearestTiesToEven, &loses_info);
     return res;
   }

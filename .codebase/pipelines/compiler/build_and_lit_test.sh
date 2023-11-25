@@ -41,9 +41,9 @@ source $CUR_DIR/../prepare.sh
 prepare_for_compiler $US_DEV
 
 if [[ $US_DEV = false ]]; then
-    python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.11-cp39-cp39-linux_x86_64.whl
+    python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.2.2-cp39-cp39-linux_x86_64.whl
 else
-    http_proxy='http://sys-proxy-rd-relay.byted.org:8118' https_proxy='http://sys-proxy-rd-relay.byted.org:8118' python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.11-cp39-cp39-linux_x86_64.whl
+    http_proxy='http://sys-proxy-rd-relay.byted.org:8118' https_proxy='http://sys-proxy-rd-relay.byted.org:8118' python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.2.2-cp39-cp39-linux_x86_64.whl
 fi
 
 

@@ -53,6 +53,14 @@ function prepare_for_compiler() {
   install_aitemplate
 }
 
+function prepare_for_compiler_with_llvmraw() {
+  export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
+  export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
+  export no_proxy='*.byted.org'
+  git submodule update --init --recursive -f external/mlir-hlo external/llvm-project
+  unset http_proxy; unset https_proxy; unset no_proxy
+}
+
 function prepare_for_runtime() {
   export http_proxy='http://sys-proxy-rd-relay.byted.org:8118';
   export https_proxy='http://sys-proxy-rd-relay.byted.org:8118';
