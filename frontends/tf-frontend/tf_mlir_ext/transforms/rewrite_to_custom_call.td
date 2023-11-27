@@ -668,6 +668,25 @@ def RewriteGELUerf : Pat<
   (NativeCodeCall<"createGELU($_builder, $_loc, $0, \"erf\")"> $input),
   [(GeluValue0 $cst1), (GeluValue1 $cst0), (GeluValue5 $cst)]>;
 
+def RewriteGELUerfV2 : Pat<
+  (TF_MulOp
+    $input,
+    (TF_MulOp
+      (TF_AddV2Op
+        (TF_ErfOp
+          (TF_MulOp
+            $input,
+            (TF_ConstOp $cst)
+          )
+        ),
+        (TF_ConstOp $cst0)
+      ),
+      (TF_ConstOp $cst1)
+    )
+  ),
+  (NativeCodeCall<"createGELU($_builder, $_loc, $0, \"erf\")"> $input),
+  [(GeluValue0 $cst1), (GeluValue1 $cst0), (GeluValue5 $cst)]>;
+
 def RewriteGELUtanh : Pat<
   (TF_MulOp
     (TF_AddV2Op

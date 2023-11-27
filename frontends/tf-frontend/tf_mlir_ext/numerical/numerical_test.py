@@ -51,6 +51,7 @@ def get_config(config: str):
                 "log_softmax_case0": 6,
                 "erf_case0": 6,
                 "gelu_erf_case0": 6,
+                "gelu_erf_case1": 6,
                 "gelu_tanh_case0": 6,
                 "gelu_tanh_case1": 2,
                 "gelu_tanh_case2": 6,

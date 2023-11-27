@@ -616,6 +616,8 @@ struct RewriteToCustomCallOpsPass
           std::make_unique<RewriteGELUtanhV3>(context));
       validCustomCallOpSet[getGeLUName()].emplace_back(
           std::make_unique<RewriteGELUerf>(context));
+      validCustomCallOpSet[getGeLUName()].emplace_back(
+          std::make_unique<RewriteGELUerfV2>(context));
 
       if (keepBody) {
         validCustomCallOpSet[getLayerNormName()].emplace_back(

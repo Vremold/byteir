@@ -43,6 +43,22 @@ func.func @gelu_erf_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
 // CHECK-SAME: @byteir.gelu
 // CHECK-SAME: byteir_attrs = {approximate = "erf"}
 
+func.func @gelu_erf_case1(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
+  %cst = "tf.Const"() {value = dense<0.707106769> : tensor<f32>} : () -> tensor<f32>
+  %cst_0 = "tf.Const"() {value = dense<1.000000e+00> : tensor<f32>} : () -> tensor<f32>
+  %cst_1 = "tf.Const"() {value = dense<5.000000e-01> : tensor<f32>} : () -> tensor<f32>
+  %1 = "tf.Mul"(%arg0, %cst) : (tensor<100x?x?xf32>, tensor<f32>) -> tensor<100x?x?xf32>
+  %2 = "tf.Erf"(%1) : (tensor<100x?x?xf32>) -> tensor<100x?x?xf32>
+  %3 = "tf.AddV2"(%2, %cst_0) : (tensor<100x?x?xf32>, tensor<f32>) -> tensor<100x?x?xf32>
+  %4 = "tf.Mul"(%3, %cst_1) : (tensor<100x?x?xf32>, tensor<f32>) -> tensor<100x?x?xf32>
+  %5 = "tf.Mul"(%arg0, %4) : (tensor<100x?x?xf32>, tensor<100x?x?xf32>) -> tensor<100x?x?xf32>
+  func.return %5 : tensor<100x?x?xf32>
+}
+// CHECK-LABEL:  func.func @gelu_erf_case1(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
+// CHECK:  mhlo.custom_call
+// CHECK-SAME: @byteir.gelu
+// CHECK-SAME: byteir_attrs = {approximate = "erf"}
+
 func.func @gelu_tanh_case0(%arg0: tensor<100x?x?xf32>) -> tensor<100x?x?xf32> {
   %cst = "tf.Const"() {value = dense<4.471500e-02> : tensor<f32>} : () -> tensor<f32>
   %cst_0 = "tf.Const"() {value = dense<3.000000e+00> : tensor<f32>} : () -> tensor<f32>
