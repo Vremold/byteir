@@ -626,10 +626,10 @@ mlir::computeReshapeExpandDim(mhlo::ReshapeOp reshapeOp) {
     return std::nullopt;
   }
   auto index = *maybeIndex;
-  for (int64_t i = 0; i < reshapeResultType.getRank(); i++) {
+  for (int64_t i = 0; i < reshapeOperandType.getRank(); i++) {
     if (index[i] != i) {
       return i;
     }
   }
-  return std::nullopt;
+  return reshapeOperandType.getRank();
 }
