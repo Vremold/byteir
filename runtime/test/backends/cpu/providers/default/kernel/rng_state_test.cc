@@ -15,30 +15,27 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "brt/backends/cuda/device/common/cuda_call.h"
-#include "brt/backends/cuda/device/cuda_allocator.h"
-#include "brt/backends/cuda/providers/default/cuda_provider.h"
+#include "brt/backends/cpu/device/cpu_work_queue.h"
+#include "brt/backends/cpu/providers/default/cpu_provider.h"
+#include "brt/core/common/status.h"
 #include "brt/core/session/request_context.h"
 #include "brt/core/session/session.h"
-#include "brt/test/common/cuda/util.h"
+#include "brt/test/common/util.h"
 #include "gtest/gtest.h"
-#include <cuda_fp16.h>
-#include <cuda_runtime.h>
 
-static std::string test_file_fill = "test/test_files/rng_state_cuda.mlir";
+static std::string test_file_fill = "test/test_files/rng_state_cpu.mlir";
 
 using namespace brt;
-using namespace brt::cuda;
 using namespace brt::test;
 
-TEST(CUDATestRngState, Basic) {
+TEST(CPUTestRngState, Basic) {
   constexpr size_t length = 1;
 
   Session session;
-  auto status_allocator = CUDAAllocatorFactory(&session);
+  auto status_allocator = CPUAllocatorFactory(&session);
   BRT_TEST_CHECK_STATUS(status_allocator);
-  auto status_cuda = DefaultCUDAExecutionProviderFactory(&session);
-  BRT_TEST_CHECK_STATUS(status_cuda);
+  auto status_cpu = NaiveCPUExecutionProviderFactory(&session);
+  BRT_TEST_CHECK_STATUS(status_cpu);
 
   auto status_load = session.Load(test_file_fill, "byre");
   BRT_TEST_CHECK_STATUS(status_load);
@@ -54,12 +51,8 @@ TEST(CUDATestRngState, Basic) {
   auto status_sync = request->Sync();
   BRT_TEST_CHECK_STATUS(status_sync);
 
-  CheckCUDAValues<int64_t>(static_cast<int64_t *>(request->GetArg(0)), length,
-                           0);
-  CheckCUDAValues<int64_t>(static_cast<int64_t *>(request->GetArg(1)), length,
-                           0);
-  CheckCUDAValues<int64_t>(static_cast<int64_t *>(request->GetArg(2)), length,
-                           1);
-  CheckCUDAValues<int64_t>(static_cast<int64_t *>(request->GetArg(3)), length,
-                           2);
+  CheckValues<int64_t>(static_cast<int64_t *>(request->GetArg(0)), length, 0);
+  CheckValues<int64_t>(static_cast<int64_t *>(request->GetArg(1)), length, 0);
+  CheckValues<int64_t>(static_cast<int64_t *>(request->GetArg(2)), length, 1);
+  CheckValues<int64_t>(static_cast<int64_t *>(request->GetArg(3)), length, 2);
 }

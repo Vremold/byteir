@@ -21,15 +21,7 @@
 #include "brt/core/framework/op_kernel.h"
 
 namespace brt {
-namespace cuda {
-class NextOffsetOpKernel final : public OpKernel {
-public:
-  explicit NextOffsetOpKernel(const OpKernelInfo &info);
-  common::Status RunImpl(const ExecutionContext &) override;
-  common::Status ProloguePerFrame(const ExecutionContext &) override;
-  common::Status EpiloguePerFrame(const ExecutionContext &) override;
-};
-
+namespace cpu {
 class GetSeedOpKernel final : public OpKernel {
 public:
   explicit GetSeedOpKernel(const OpKernelInfo &info);
@@ -38,5 +30,13 @@ public:
   common::Status EpiloguePerFrame(const ExecutionContext &) override;
 };
 
-} // namespace cuda
+class NextOffsetOpKernel final : public OpKernel {
+public:
+  explicit NextOffsetOpKernel(const OpKernelInfo &info);
+  common::Status RunImpl(const ExecutionContext &) override;
+  common::Status ProloguePerFrame(const ExecutionContext &) override;
+  common::Status EpiloguePerFrame(const ExecutionContext &) override;
+};
+
+} // namespace cpu
 } // namespace brt
