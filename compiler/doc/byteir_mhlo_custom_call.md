@@ -42,13 +42,15 @@ If an op is frontend-specific, it uses a frontend-specific prefix, such as `tf` 
 
 Further needed infomation for a given coarse-grained op are encoded in a dictionary attribute, called `byteir_attrs`, which includes all named attributes. 
 
-```Op Attribute: byteir_attrs = {approximate = "none"} or byteir_attrs = {} of if none```
+**Op Attribute**:
+  * ```byteir_attrs = {approximate = "none"}``` or ```byteir_attrs = {}``` if no attribute
+  * ```axis``` attribute must be positive
 
 ### byteir.layer_norm
 - Operands:
   - input: Tensor
-  - weight: Tensor
-  - bias: Tensor
+  - weight: Tensor (shape should be same as axis of input tensor)
+  - bias: Tensor (shape should be same as axis of input tensor)
 - Attrs
   - epsilon: F64Attr
   - axis: I64ArrayAttr
@@ -137,6 +139,12 @@ Further needed infomation for a given coarse-grained op are encoded in a diction
 ```
 %0 = "mhlo.custom_call"(%arg0) {call_target_name = "byteir.erf", has_side_effect = false} : (tensor<?x64xf32>) -> tensor<?x64xf32>
 ```
+
+### byteir.addn
+- Operands:
+  - inputs: Variadic\<Tensor>
+- Results:
+  - outputs: Tensor
 
 ### byteir.one_hot
 - Operands:
