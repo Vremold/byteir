@@ -157,6 +157,13 @@ Further needed infomation for a given coarse-grained op are encoded in a diction
 - Results:
   - output: Tensor (ElementType same as on_value and off_value)
 
+### byteir.repeat
+- Operands:
+  - input: Tensor
+  - repeats: Int32/Int64 Tensor
+- Results:
+  - output: Tensor (ElementType same as input)
+
 ### byteir.quantize
 - Operands:
   - input: FloatTensor
