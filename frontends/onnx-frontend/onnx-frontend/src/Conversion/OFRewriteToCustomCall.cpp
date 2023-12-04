@@ -339,31 +339,57 @@ Value createResize(PatternRewriter &rewriter, Location loc, Value input,
 //===----------------------------------------------------------------------===//
 // LayerNorm
 //===----------------------------------------------------------------------===//
+
+Value createSqueezedValue(PatternRewriter &rewriter, Location loc, Value input,
+                          SmallVector<int64_t, 4> &axis_vec) {
+  RankedTensorType inputType =
+      input.getType().dyn_cast_or_null<RankedTensorType>();
+  int64_t inputRank = inputType.getRank();
+  int64_t axisSize = axis_vec.size();
+  if (inputRank == axisSize)
+    return input;
+  Type elemType = inputType.getElementType();
+  auto inputShape = inputType.getShape();
+  SmallVector<int64_t> outputShape;
+  for (int64_t axis : axis_vec) {
+    outputShape.emplace_back(inputShape[axis]);
+  }
+  RankedTensorType outputType = RankedTensorType::get(outputShape, elemType);
+  Value output = rewriter.create<mhlo::ReshapeOp>(loc, outputType, input);
+  return output;
+}
+
 Value createLayerNorm(PatternRewriter &rewriter, Location loc, Value input,
                       Value scale, Value B, ArrayAttr axis_attr,
                       Attribute epsilon_attr) {
   RankedTensorType inputType =
       input.getType().dyn_cast_or_null<RankedTensorType>();
   assert(inputType != nullptr && "Input type must be ranked");
-  int64_t axis = axis_attr[0].cast<IntegerAttr>().getInt();
-  // canonicalize axis to be positive
-  if (axis < 0) {
-    axis = inputType.getRank() + axis;
+  int64_t num_axis = axis_attr.size();
+  SmallVector<int64_t, 4> axis_vec;
+  for (int64_t i = 0; i < num_axis; i++) {
+    int64_t axis = axis_attr[i].cast<IntegerAttr>().getInt();
+    // canonicalize axis to be positive
+    if (axis < 0)
+      axis = inputType.getRank() + axis;
+    axis_vec.emplace_back(axis);
   }
+  Value squeezedScale = createSqueezedValue(rewriter, loc, scale, axis_vec);
+  Value squeezedB = createSqueezedValue(rewriter, loc, B, axis_vec);
   double eps = (*epsilon_attr.cast<ElementsAttr>().getValues<APFloat>().begin())
                    .convertToDouble();
   std::string call_target_name = getLayerNormNameWithPrefix();
   mhlo::CustomCallOp customCallOp = rewriter.create<mlir::mhlo::CustomCallOp>(
       loc, llvm::ArrayRef<Type>{inputType},
-      llvm::ArrayRef<Value>{input, scale, B}, call_target_name, false,
-      rewriter.getStringAttr(""),
+      llvm::ArrayRef<Value>{input, squeezedScale, squeezedB}, call_target_name,
+      false, rewriter.getStringAttr(""),
       mhlo::CustomCallApiVersion::API_VERSION_ORIGINAL,
       rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}),
       mhlo::CustomCallSchedule::NONE, nullptr, nullptr,
       rewriter.getArrayAttr(llvm::ArrayRef<mlir::Attribute>{}));
   DictionaryAttrWrapper attrs(rewriter.getContext());
   attrs.setAttr("epsilon", rewriter.getF64FloatAttr(eps));
-  attrs.setAttr("axis", rewriter.getI64ArrayAttr({axis}));
+  attrs.setAttr("axis", rewriter.getI64ArrayAttr(ArrayRef(axis_vec)));
   customCallOp->setAttr(BYTEIR_ATTRS, getCleanAttr(attrs));
   return customCallOp.getResults()[0];
 }
