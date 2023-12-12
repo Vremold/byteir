@@ -138,8 +138,9 @@ void MhloShapeValueAnalysis::visitOperation(
   TypeSwitch<Operation *>(op)
       .Case<mhlo::ComputeReshapeShapeOp>([&](Operation *op) {
         const ShapeValueLattice *shape = operands[1];
-        assert(!shape->getValue().isUninitialized() &&
-               "operand must be initialized");
+        if (shape->getValue().isUninitialized()) {
+          return;
+        }
         ShapeValueLattice *lattice = results[0];
         Attribute attr = shape->getValue().getConstantValue();
         // in some cases, the shape in computeReshapeShapeOp is dense<[-1, x,

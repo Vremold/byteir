@@ -1,4 +1,4 @@
-//===- Where.cpp ----------------------------------------------*--- C++ -*-===//
+//===- Repeat.cpp ---------------------------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,11 +24,9 @@
 
 using namespace mlir;
 
-/// See Where's signature on https://www.tensorflow.org/api_docs/python/tf/where
-/// Bounded shape infer is the same as nonzero
-void mlir::registerWhereInferBoundedReturnTypeComponents() {
+void mlir::registerRepeatInferBoundedReturnTypeComponents() {
   static InferBoundedReturnTypeComponentsRegistration shapeRegister(
-      getWhereName(),
+      getRepeatName(),
       [](MLIRContext *context, std::optional<Location>,
          ValueShapeRange operands, DictionaryAttr, RegionRange,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
@@ -36,10 +34,7 @@ void mlir::registerWhereInferBoundedReturnTypeComponents() {
         ShapedType inputShape = input.getType().dyn_cast<ShapedType>();
         if (!inputShape || !inputShape.hasStaticShape())
           return failure();
-        Type type = RankedTensorType::get(
-            {inputShape.getNumElements(), inputShape.getRank()},
-            IntegerType::get(context, 64));
-        inferredReturnTypes.push_back(type.cast<ShapedType>());
+        inferredReturnTypes.push_back(inputShape);
         return success();
       });
 }
