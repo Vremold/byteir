@@ -634,10 +634,6 @@ struct EliminateRedundantConvertFromI1
     }
     auto firstType =
         convertOp.getOperand().getType().cast<TensorType>().getElementType();
-    auto secondType =
-        op.getOperand().getType().cast<TensorType>().getElementType();
-    auto thirdType =
-        op.getResult().getType().cast<TensorType>().getElementType();
     auto loc = rewriter.getFusedLoc({convertOp->getLoc(), op->getLoc()});
 
     if (firstType.isa<IntegerType>() &&
@@ -735,9 +731,9 @@ struct FoldConcatWithSlicesAndRehape
               break;
             }
           } else if ((startAttr.getValues<IntegerAttr>()[j].getInt() !=
-                      i * sliceSize) ||
+                      static_cast<int64_t>(i * sliceSize)) ||
                      (limitAttr.getValues<IntegerAttr>()[j].getInt() !=
-                      (i + 1) * sliceSize) ||
+                      static_cast<int64_t>((i + 1) * sliceSize)) ||
                      (stridesAttr.getValues<IntegerAttr>()[j].getInt() != 1)) {
             isAllSliceOpLegal = false;
             break;
@@ -755,8 +751,9 @@ struct FoldConcatWithSlicesAndRehape
           opOperandList[0]->get().getDefiningOp<mhlo::ReshapeOp>());
 
       // only support that reshape expand's dim is  equal to concat dim
-      if ((!expandDim.has_value()) || (*expandDim != concatDim) ||
-          (*expandDim != sliceOperandShape.size() - 1)) {
+      if ((!expandDim.has_value()) ||
+          (*expandDim != static_cast<int64_t>(concatDim)) ||
+          (*expandDim != static_cast<int64_t>(sliceOperandShape.size() - 1))) {
         continue;
       }
       SmallVector<int64_t> newReshapeShape(sliceOperandShape.begin(),
@@ -1672,7 +1669,7 @@ struct CanonicalizeConcatWithBroadcast
     std::unordered_set<int64_t> dimensions(
         firstBcast.getBroadcastDimensions().getValues<int64_t>().begin(),
         firstBcast.getBroadcastDimensions().getValues<int64_t>().end());
-    if (dimensions.size() !=
+    if (static_cast<int64_t>(dimensions.size()) !=
         (firstBcast.getType().cast<ShapedType>().getRank() - 1)) {
       return failure();
     }
@@ -2021,6 +2018,7 @@ struct FoldScatterWithInputAndUpdate
       rewriter.replaceOp(op, op.getUpdates());
       return success();
     }
+    return failure();
   }
 };
 
