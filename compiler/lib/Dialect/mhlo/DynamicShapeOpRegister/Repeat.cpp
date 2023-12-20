@@ -34,6 +34,7 @@ void mlir::registerRepeatInferBoundedReturnTypeComponents() {
         ShapedType inputShape = input.getType().dyn_cast<ShapedType>();
         if (!inputShape || !inputShape.hasStaticShape())
           return failure();
+        // TODO: set config for repeat bounded shape inference
         inferredReturnTypes.push_back(inputShape);
         return success();
       });

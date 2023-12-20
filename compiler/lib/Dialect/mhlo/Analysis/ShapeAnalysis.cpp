@@ -137,6 +137,10 @@ void MhloShapeValueAnalysis::visitOperation(
   LLVM_DEBUG(llvm::dbgs() << "mhlo shape value analysis on " << *op << "\n");
   TypeSwitch<Operation *>(op)
       .Case<mhlo::ComputeReshapeShapeOp>([&](Operation *op) {
+        const ShapeValueLattice *product = operands[0];
+        if (product->getValue().isUninitialized()) {
+          return;
+        }
         const ShapeValueLattice *shape = operands[1];
         if (shape->getValue().isUninitialized()) {
           return;
@@ -164,7 +168,6 @@ void MhloShapeValueAnalysis::visitOperation(
               shape, [](int32_t dimSize) { return dimSize < 0; });
 
           if (cntDynamic == 1) {
-            const ShapeValueLattice *product = operands[0];
             Attribute productAttr = product->getValue().getConstantValue();
             if (auto num = productAttr.dyn_cast_or_null<IntegerAttr>()) {
               int64_t number = num.getInt();
