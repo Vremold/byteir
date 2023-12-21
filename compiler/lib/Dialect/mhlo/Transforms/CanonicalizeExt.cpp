@@ -64,21 +64,6 @@
 using namespace llvm;
 using namespace mlir;
 
-// common util
-namespace {
-bool isSplatZero(SplatElementsAttr attr) {
-  if (!attr)
-    return false;
-  if (attr.getElementType().isa<FloatType>()) {
-    return attr.getSplatValue<APFloat>().isZero();
-  }
-  if (attr.getElementType().isa<IntegerType>()) {
-    return attr.getSplatValue<APInt>().isZero();
-  }
-  return false;
-}
-} // namespace
-
 ///
 ///  foldBroadcastInDimConstWithBinary
 ///
@@ -439,17 +424,12 @@ struct SimplifyAddInsertSlicesToInsertSlices
       if (!cstOp)
         return false;
 
-      DenseElementsAttr valAttr =
-          cstOp.getValue().dyn_cast<DenseElementsAttr>();
+      DenseIntOrFPElementsAttr valAttr =
+          cstOp.getValue().dyn_cast<DenseIntOrFPElementsAttr>();
       if (!valAttr)
         return false;
 
-      SplatElementsAttr splatAttr =
-          valAttr.dyn_cast_or_null<SplatElementsAttr>();
-      if (!splatAttr)
-        return false;
-
-      return isSplatZero(splatAttr);
+      return isSplatElementsAttribute(valAttr, 0, 0.0);
     };
 
     if (!checkZero(lhsChain->init) || !checkZero(rhsChain->init)) {
@@ -903,17 +883,12 @@ struct FoldMultiplyZero : public OpRewritePattern<mhlo::MulOp> {
       if (!cstOp)
         return false;
 
-      DenseElementsAttr valAttr =
-          cstOp.getValue().dyn_cast<DenseElementsAttr>();
+      DenseIntOrFPElementsAttr valAttr =
+          cstOp.getValue().dyn_cast<DenseIntOrFPElementsAttr>();
       if (!valAttr)
         return false;
 
-      SplatElementsAttr splatAttr =
-          valAttr.dyn_cast_or_null<SplatElementsAttr>();
-      if (!splatAttr)
-        return false;
-
-      if (isSplatZero(splatAttr)) {
+      if (isSplatElementsAttribute(valAttr, 0, 0.0)) {
         rewriter.replaceOp(op, cstOp.getResult());
         return true;
       }
