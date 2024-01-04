@@ -87,6 +87,7 @@ cc_library(
         "rewrite_func_attr_to_byteir.cc",
         "rewrite_to_custom_call.cc",
         "tf_fallback_to_custom_call.cc",
+        "tf_switch_merge_to_if.cc",
     ],
     hdrs = [
       "constant_folding.h",
@@ -100,6 +101,7 @@ cc_library(
       "rewrite_func_attr_to_byteir.h",
       "rewrite_to_custom_call.h",
       "tf_fallback_to_custom_call.h",
+      "tf_switch_merge_to_if.h",
     ],
     textual_hdrs = [
        "passes_detail.h",
