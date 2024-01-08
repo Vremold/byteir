@@ -37,7 +37,7 @@ td_library(
     includes = ["../../external/tensorflow"], # patch tensorflow_ops_td_files's `includes`
     deps = [
         "@org_tensorflow//tensorflow/compiler/mlir/tensorflow:tensorflow_ops_td_files",
-        "@org_tensorflow//tensorflow/compiler/xla/mlir_hlo:hlo_ops_td_files",
+        "@local_xla//xla/mlir_hlo:hlo_ops_td_files",
     ],
 )
 
@@ -120,7 +120,7 @@ cc_library(
       "@org_tensorflow//tensorflow/compiler/mlir/tensorflow:shape_inference_utils",
       "@org_tensorflow//tensorflow/compiler/mlir/tensorflow:tensorflow",
       "@org_tensorflow//tensorflow/compiler/mlir/lite:validators",
-      "@org_tensorflow//tensorflow/compiler/xla/mlir_hlo",
+      "@local_xla//xla/mlir_hlo",
       "@llvm-project//llvm:Support",
       "@llvm-project//mlir:Dialect",
       "@llvm-project//mlir:IR",

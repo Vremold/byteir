@@ -15,9 +15,10 @@ export no_proxy='*.byted.org'
 
 bash $PROJ_DIR/scripts/prepare.sh
 
+export TF_PYTHON_VERSION=3.9
 # build and test
 pushd $PROJ_DIR
-python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.0.10-cp39-cp39-linux_x86_64.whl
+python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.3.0-cp39-cp39-linux_x86_64.whl
 $PROJ_DIR/bazel --output_user_root=./build build //tools:tf-frontend //tools:tf-ext-opt
 $PROJ_DIR/bazel --output_user_root=./build test //tf_mlir_ext/tests:all --java_runtime_version=remotejdk_11
 $PROJ_DIR/bazel --output_user_root=./build test //tf_mlir_ext/numerical:all --java_runtime_version=remotejdk_11
