@@ -92,7 +92,7 @@ def generate_inputs(entry_func):
 
 def calculate_mhlo_golden(mhlo_str):
     ENTRY_FUNC_KEY = "byteir.entry_point"
-    with Interpreter.load_from_string(mhlo_str) as interp:
+    with Interpreter.load_from_string(mhlo_str, True) as interp:
         module = interp._mod
         entry_func = ir.SymbolTable(module.operation)["main"]
         entry_point_dict = mlir_attr_to_pyobj(entry_func.attributes[ENTRY_FUNC_KEY])
