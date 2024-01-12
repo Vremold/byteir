@@ -44,36 +44,44 @@ void mlir::registerStridedSliceInferBoundedReturnTypeComponents() {
                        << "\n";
           return failure();
         }
+        auto inputShape = inputShapeType.getShape();
         mlir::DenseIntElementsAttr beginAttr;
         if (!matchPattern(begin, m_Constant(&beginAttr))) {
+          // TODO: support non const begin
+          Type type =
+              RankedTensorType::get(inputShape, IntegerType::get(context, 64));
+          inferredReturnTypes.push_back(type.cast<ShapedType>());
           llvm::outs() << "begin of tf.StridedSlice not const value"
                        << "\n";
-          return failure();
+          return success();
         }
         mlir::DenseIntElementsAttr endAttr;
         if (!matchPattern(end, m_Constant(&endAttr))) {
+          // TODO: support non const end
+          Type type =
+              RankedTensorType::get(inputShape, IntegerType::get(context, 64));
+          inferredReturnTypes.push_back(type.cast<ShapedType>());
           llvm::outs() << "end  of tf.StridedSlice not const value"
                        << "\n";
-          return failure();
+          return success();
         }
         mlir::DenseIntElementsAttr strideAttr;
         if (!matchPattern(stride, m_Constant(&strideAttr))) {
+          // TODO: support non const stride
+          Type type =
+              RankedTensorType::get(inputShape, IntegerType::get(context, 64));
+          inferredReturnTypes.push_back(type.cast<ShapedType>());
           llvm::outs() << "stride of tf.StridedSlice not const value"
                        << "\n";
-          return failure();
+          return success();
         }
 
-        auto inputShape = inputShapeType.getShape();
         llvm::SmallVector<int> beginValue(beginAttr.getValues<int>().begin(),
                                           beginAttr.getValues<int>().end());
         llvm::SmallVector<int> endValue(endAttr.getValues<int>().begin(),
                                         endAttr.getValues<int>().end());
         llvm::SmallVector<int> strideValue(strideAttr.getValues<int>().begin(),
                                            strideAttr.getValues<int>().end());
-
-        assert(inputShape.size() == beginValue.size());
-        assert(inputShape.size() == endValue.size());
-        assert(inputShape.size() == strideValue.size());
 
         int64_t beginMask = attr.getAs<DictionaryAttr>(getCustomCallAttrName())
                                 .getAs<IntegerAttr>("begin_mask")
@@ -97,27 +105,40 @@ void mlir::registerStridedSliceInferBoundedReturnTypeComponents() {
         assert(ellipsisMask == 0);
         assert(newAxisMask == 0);
 
+        assert(beginValue.size() == endValue.size());
+        assert(beginValue.size() == strideValue.size());
+        assert(beginValue.size() <= inputShape.size());
+
         llvm::SmallVector<int64_t> outputShape;
-        for (size_t i = 0; i < inputShape.size(); ++i) {
+        for (size_t i = 0; i < beginValue.size(); ++i) {
           int64_t from = beginValue[i];
           int64_t to = endValue[i];
           int64_t step = strideValue[i];
-          // TODO: support negative
-          assert(from >= 0);
-          assert(to >= 0);
+          if (from < 0) {
+            from += inputShape[i];
+          }
+          if (to < 0) {
+            to += inputShape[i];
+          }
           assert(step >= 0);
           if (((1 << i) & beginMask) == 1) {
-            from = 0;
+            from = (step > 0) ? 0 : inputShape[i];
           }
           if (((1 << i) & endMask) == 1) {
-            to = inputShape[i];
+            to = (step > 0) ? inputShape[i] : 0;
           }
+          int64_t len = std::abs((to - from) / step);
           if (((1 << i) & shrinkAxisMask) == 0) {
-            outputShape.push_back((to - from) / step);
+            outputShape.push_back(len);
+          } else {
+            assert(len == 1);
           }
         }
+        for (size_t i = beginValue.size(); i < inputShape.size(); ++i) {
+          outputShape.push_back(inputShape[i]);
+        }
         Type type =
-            RankedTensorType::get(outputShape, inputShapeType.getElementType());
+            RankedTensorType::get(outputShape, IntegerType::get(context, 64));
         inferredReturnTypes.push_back(type.cast<ShapedType>());
         return success();
       });

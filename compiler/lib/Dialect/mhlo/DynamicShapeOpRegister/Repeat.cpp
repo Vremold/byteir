@@ -35,7 +35,9 @@ void mlir::registerRepeatInferBoundedReturnTypeComponents() {
         if (!inputShape || !inputShape.hasStaticShape())
           return failure();
         // TODO: set config for repeat bounded shape inference
-        inferredReturnTypes.push_back(inputShape);
+        Type type = RankedTensorType::get(inputShape.getShape(),
+                                          IntegerType::get(context, 64));
+        inferredReturnTypes.push_back(type.cast<ShapedType>());
         return success();
       });
 }
