@@ -1,9 +1,6 @@
 """
 This configuration configures Copybara to sync the GitHub repository
 to the codebase repository at root directory.
-
-To run this configuration, run from the root of the Bazel repository:
-$ bazel run @bazelize//scripts/copybara:run -- <repository_url> <config_file_path>
 """
 
 src_branch = "main"
