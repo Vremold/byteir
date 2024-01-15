@@ -38,13 +38,71 @@ void mlir::registerStridedSliceInferBoundedReturnTypeComponents() {
         Value end = operands[2];
         Value stride = operands[3];
 
+        int64_t beginMask = attr.getAs<DictionaryAttr>(getCustomCallAttrName())
+                                .getAs<IntegerAttr>("begin_mask")
+                                .getInt();
+        int64_t endMask = attr.getAs<DictionaryAttr>(getCustomCallAttrName())
+                              .getAs<IntegerAttr>("end_mask")
+                              .getInt();
+        int64_t ellipsisMask =
+            attr.getAs<DictionaryAttr>(getCustomCallAttrName())
+                .getAs<IntegerAttr>("ellipsis_mask")
+                .getInt();
+        int64_t newAxisMask =
+            attr.getAs<DictionaryAttr>(getCustomCallAttrName())
+                .getAs<IntegerAttr>("new_axis_mask")
+                .getInt();
+        int64_t shrinkAxisMask =
+            attr.getAs<DictionaryAttr>(getCustomCallAttrName())
+                .getAs<IntegerAttr>("shrink_axis_mask")
+                .getInt();
+        // TODO: support ellipsis_mask
+        assert(ellipsisMask == 0);
+
         ShapedType inputShapeType = input.getType().dyn_cast<ShapedType>();
         if (!inputShapeType || !inputShapeType.hasStaticShape()) {
           llvm::outs() << "input shape of tf.StridedSlice not static"
                        << "\n";
           return failure();
         }
-        auto inputShape = inputShapeType.getShape();
+
+        auto inputShapeRef = inputShapeType.getShape();
+        llvm::SmallVector<int64_t> inputShape;
+        if (newAxisMask != 0) {
+          // insert 1 to inputshape according to newAxisMask
+          llvm::SmallVector<int> newAxis;
+          auto newAxisMaskCopy = newAxisMask;
+          int index = 0;
+          while (newAxisMaskCopy > 0) {
+            if (newAxisMaskCopy & 1) {
+              newAxis.push_back(index);
+            }
+            newAxisMaskCopy = newAxisMaskCopy >> 1;
+            index++;
+          }
+          int rank = newAxis.size() + inputShapeRef.size();
+          inputShape.resize(rank, 0);
+          int newAxisIndex = 0;
+          int inputShapeIndex = 0;
+          for (int i = 0; i < rank; ++i) {
+            if (newAxisIndex < newAxis.size()) {
+              if ((inputShapeIndex + newAxisIndex) < newAxis[newAxisIndex]) {
+                inputShape[i] = inputShapeRef[inputShapeIndex];
+                inputShapeIndex++;
+              } else {
+                inputShape[i] = 1;
+                newAxisIndex++;
+              }
+            } else {
+              inputShape[i] = inputShapeRef[inputShapeIndex];
+              inputShapeIndex++;
+            }
+          }
+        } else {
+          std::copy(inputShapeRef.begin(), inputShapeRef.end(),
+                    std::back_inserter(inputShape));
+        }
+
         mlir::DenseIntElementsAttr beginAttr;
         if (!matchPattern(begin, m_Constant(&beginAttr))) {
           // TODO: support non const begin
@@ -83,34 +141,17 @@ void mlir::registerStridedSliceInferBoundedReturnTypeComponents() {
         llvm::SmallVector<int> strideValue(strideAttr.getValues<int>().begin(),
                                            strideAttr.getValues<int>().end());
 
-        int64_t beginMask = attr.getAs<DictionaryAttr>(getCustomCallAttrName())
-                                .getAs<IntegerAttr>("begin_mask")
-                                .getInt();
-        int64_t endMask = attr.getAs<DictionaryAttr>(getCustomCallAttrName())
-                              .getAs<IntegerAttr>("end_mask")
-                              .getInt();
-        int64_t ellipsisMask =
-            attr.getAs<DictionaryAttr>(getCustomCallAttrName())
-                .getAs<IntegerAttr>("ellipsis_mask")
-                .getInt();
-        int64_t newAxisMask =
-            attr.getAs<DictionaryAttr>(getCustomCallAttrName())
-                .getAs<IntegerAttr>("new_axis_mask")
-                .getInt();
-        int64_t shrinkAxisMask =
-            attr.getAs<DictionaryAttr>(getCustomCallAttrName())
-                .getAs<IntegerAttr>("shrink_axis_mask")
-                .getInt();
-        // TODO: support ellipsis_mask and new_axis_mask
-        assert(ellipsisMask == 0);
-        assert(newAxisMask == 0);
-
         assert(beginValue.size() == endValue.size());
         assert(beginValue.size() == strideValue.size());
         assert(beginValue.size() <= inputShape.size());
 
         llvm::SmallVector<int64_t> outputShape;
         for (size_t i = 0; i < beginValue.size(); ++i) {
+          if (((1 << i) & newAxisMask) != 0) {
+            assert(inputShape[i] == 1);
+            outputShape.push_back(inputShape[i]);
+            continue;
+          }
           int64_t from = beginValue[i];
           int64_t to = endValue[i];
           int64_t step = strideValue[i];
@@ -120,14 +161,16 @@ void mlir::registerStridedSliceInferBoundedReturnTypeComponents() {
           if (to < 0) {
             to += inputShape[i];
           }
-          assert(step >= 0);
-          if (((1 << i) & beginMask) == 1) {
+          assert(step != 0);
+          if (((1 << i) & beginMask) != 0) {
             from = (step > 0) ? 0 : inputShape[i];
           }
-          if (((1 << i) & endMask) == 1) {
+          if (((1 << i) & endMask) != 0) {
             to = (step > 0) ? inputShape[i] : 0;
           }
-          int64_t len = std::abs((to - from) / step);
+          int64_t range = std::abs(to - from);
+          step = std::abs(step);
+          int64_t len = (range - 1) / step + 1;
           if (((1 << i) & shrinkAxisMask) == 0) {
             outputShape.push_back(len);
           } else {
