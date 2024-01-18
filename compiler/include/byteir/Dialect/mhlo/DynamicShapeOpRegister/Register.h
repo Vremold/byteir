@@ -36,6 +36,7 @@ void registerSoftmaxInferReturnTypeComponents();
 void registerAddNInferReturnTypeComponents();
 void registerTorchIndexSelectInferReturnTypeComponents();
 void registerGeLUInferReturnTypeComponents();
+void registerLayerNormInferReturnTypeComponents();
 
 inline void registerAllMhloInferReturnTypeComponents() {
   registerConvolutionInferReturnTypeComponents();
@@ -49,6 +50,7 @@ inline void registerAllMhloInferReturnTypeComponents() {
   registerAddNInferReturnTypeComponents();
   registerTorchIndexSelectInferReturnTypeComponents();
   registerGeLUInferReturnTypeComponents();
+  registerLayerNormInferReturnTypeComponents();
 }
 
 //===----------------------------------------------------------------------===//

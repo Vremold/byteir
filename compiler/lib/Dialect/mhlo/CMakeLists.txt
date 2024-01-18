@@ -39,6 +39,7 @@ add_mlir_dialect_library(ByteIRMhloDynamicShapeOpRegister
   DynamicShapeOpRegister/StridedSlice.cpp
   DynamicShapeOpRegister/Repeat.cpp
   DynamicShapeOpRegister/GeLU.cpp
+  DynamicShapeOpRegister/LayerNorm.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${BYTEIR_SRC_INCLUDE_DIR}/byteir/Dialect/mhlo/DynamicShapeOpRegister
