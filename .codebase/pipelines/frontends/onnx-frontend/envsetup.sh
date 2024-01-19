@@ -8,7 +8,7 @@ echo "ONNX_FRONTEND_ROOT = $ONNX_FRONTEND_ROOT"
 function download_llvm_prebuilt_rtti() {
   pushd $ONNX_FRONTEND_ROOT
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_rtti_d13da154a7c7eff77df8686b2de1cfdfa7cc7029.tar.gz"
+    LLVM_BUILD="llvm_install_rtti_b2cdf3cc4c08729d0ff582d55e40793a20bbcdcc.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install_rtti*
       rm -rf llvm_build_rtti
@@ -31,7 +31,7 @@ function of_envsetup() {
   export no_proxy='*.byted.org'
 
   # install requirements
-  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.2.4-cp39-cp39-linux_x86_64.whl
+  python3 -m pip install https://tosv.byted.org/obj/turing/byteir/mhlo_tools-1.3.0-cp39-cp39-linux_x86_64.whl
   python3 -m pip install -r $ONNX_FRONTEND_ROOT/requirements.txt
 
   # init submodule
@@ -42,6 +42,7 @@ function of_envsetup() {
   git submodule update -f $ONNX_MLIR_ROOT
   pushd $ONNX_MLIR_ROOT
   git clean -fd .
+  git am $ONNX_FRONTEND_ROOT/third_party/patches/UpstreamOnnxMlir*.patch --whitespace=fix
   git apply $ONNX_FRONTEND_ROOT/third_party/patches/OnnxMlir*.patch
   git submodule update -f $ONNX_OFFICIAL_ROOT
   popd
