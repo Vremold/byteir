@@ -1,6 +1,6 @@
 function download_llvm_prebuilt() {
   if [[ -z ${LLVM_INSTALL_DIR} ]]; then
-    LLVM_BUILD="llvm_install_4592543a01609feb4b3c19e81a9d54743e15e329.tar.gz"
+    LLVM_BUILD="llvm_install_b2cdf3cc4c08729d0ff582d55e40793a20bbcdcc.tar.gz"
     if [ ! -f "$LLVM_BUILD" ]; then
       rm -rf llvm_install*
       rm -rf llvm_build
