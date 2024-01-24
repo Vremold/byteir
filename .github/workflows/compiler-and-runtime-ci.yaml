@@ -5,8 +5,10 @@ on:
     branches:
       - main
     paths-ignore:
+      - ".github/workflows/onnx-frontend-ci.yaml"
+      - ".github/workflows/tf-frontend-ci.yaml"
+      - ".github/workflows/torch-frontend-ci.yaml"
       - "frontends/**"
-      - "scripts/frontends/**"
       - "**/**.md"
       - "talks/**"
       - "compiler/python/version.txt"
@@ -15,8 +17,10 @@ on:
     branches:
       - main
     paths-ignore:
+      - ".github/workflows/onnx-frontend-ci.yaml"
+      - ".github/workflows/tf-frontend-ci.yaml"
+      - ".github/workflows/torch-frontend-ci.yaml"
       - "frontends/**"
-      - "scripts/frontends/**"
       - "**/**.md"
       - "talks/**"
       - "compiler/python/version.txt"

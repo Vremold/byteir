@@ -42,7 +42,7 @@ function of_envsetup() {
   git submodule update -f $ONNX_MLIR_ROOT
   pushd $ONNX_MLIR_ROOT
   git clean -fd .
-  git am $ONNX_FRONTEND_ROOT/third_party/patches/UpstreamOnnxMlir*.patch --whitespace=fix
+  # git am $ONNX_FRONTEND_ROOT/third_party/patches/UpstreamOnnxMlir*.patch --whitespace=fix
   git apply $ONNX_FRONTEND_ROOT/third_party/patches/OnnxMlir*.patch
   git submodule update -f $ONNX_OFFICIAL_ROOT
   popd
