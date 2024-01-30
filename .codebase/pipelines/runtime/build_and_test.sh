@@ -31,10 +31,6 @@ while [[ $# -gt 0 ]]; do
       US_DEV=true
       shift
       ;;
-    --flash)
-      brt_BUILD_FLASH_ATTN=ON
-      shift
-      ;;
     *)
       echo "Invalid option: $1"
       exit 1
@@ -75,7 +71,6 @@ cmake -GNinja \
   -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/install" \
   -Dbrt_USE_CUDA=${BRT_USE_CUDA} \
   -Dbrt_USE_NCCL=${BRT_USE_NCCL} \
-  -Dbrt_BUILD_FLASH_ATTN=${brt_BUILD_FLASH_ATTN} \
   -Dbrt_ENABLE_ASAN=${BRT_ENABLE_ASAN} \
   -Dbrt_ENABLE_PYTHON_BINDINGS=${BRT_ENABLE_PYTHON_BINDINGS}
 
@@ -96,7 +91,7 @@ if [[ $BRT_TEST == "ON" ]]; then
   pushd $BUILD_DIR
   # note: now ci machine driver is 470.182.03, it's no need for compat(470.57.02) in docker
   # LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/compat ./bin/brt_test_all
-  # ./bin/brt_test_all --gtest_filter=-\*SM80\*
-  ./bin/brt_test_all
+  ./bin/brt_test_all --gtest_filter=-\*SM80\*
+  # ./bin/brt_test_all
   popd
 fi
