@@ -8,6 +8,8 @@ trigger:
       - "frontends/torch-frontend/**"
       - ".codebase/pipelines/torch_frontend_ci.yaml"
       - ".codebase/pipelines/frontends/torch-frontend/**"
+      - "compiler/dialects/include/byteir/Dialect/Ccl/**"
+      - "compiler/dialects/lib/Dialect/Ccl/**"
       - "!**/*.md"
       - "!frontends/torch-frontend/doc/**"
       - "!frontends/torch-frontend/examples/**"
