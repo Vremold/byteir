@@ -28,9 +28,13 @@ def IsOneSizeElements : Constraint<And<[
 def TrueBoolAttr : Constraint<CPred<"$0.getValue() == true">, "this BoolAttr should be true">;
 def SameTwoValuesOrAttrs : Constraint<CPred<"$0 == $1">, "two values or attrs are actually the same">;
 def HasOneUse : Constraint<CPred<"$0.hasOneUse()">, "value has exactly one use">;
-def isScalarConstantTensor:
+
+def isScalarConstantTensor :
     Constraint<CPred<"onnx_mlir::isScalarConstantTensor($_self)">,
   "Value is produced by a dense ONNXConstantOp and has size one">;
+def SameTwoIntegerScalarConstantValues :
+    Constraint<CPred<"onnx_mlir::getElementAttributeFromONNXValue($0).getValues<APInt>()[0].getSExtValue() == onnx_mlir::getElementAttributeFromONNXValue($1).getValues<APInt>()[0].getSExtValue()">,
+  "Two integer scalar constant Value have the same integer scalar">;
 
 //===----------------------------------------------------------------------===//
 // L2Norm Pattern
@@ -129,7 +133,7 @@ def RewriteLayerNorm : Pat<
   (NativeCodeCall<"createLayerNorm($_builder, $_loc, $0, $1, $2, $3, $4)"> $input, $scale, $B, $axes_0, $epsilon_attr),
   [(IsOneSizeElements $epsilon_attr),
    (isScalarConstantTensor:$axes_0), (isScalarConstantTensor:$axes_1),
-   (SameTwoValuesOrAttrs $axes_0, $axes_1),
+   (SameTwoIntegerScalarConstantValues $axes_0, $axes_1),
    (SameTwoValuesOrAttrs $input_zero_mean_0, $input_zero_mean_1),
    (HasOneUse $mul_result),
   ]>;
@@ -157,7 +161,7 @@ def RewriteLayerNormWithNoneEps : Pat<
   ),
   (NativeCodeCall<"createLayerNormWithNoneEps($_builder, $_loc, $0, $1, $2, $3)"> $input, $scale, $B, $axes_0),
   [(isScalarConstantTensor:$axes_0), (isScalarConstantTensor:$axes_1),
-   (SameTwoValuesOrAttrs $axes_0, $axes_1),
+   (SameTwoIntegerScalarConstantValues $axes_0, $axes_1),
    (SameTwoValuesOrAttrs $input_zero_mean_0, $input_zero_mean_1),
    (HasOneUse $mul_result),
   ]>;
@@ -186,7 +190,7 @@ def RewriteLayerNormWithoutLastAdd : Pat<
   (NativeCodeCall<"createLayerNormWithoutLastAdd($_builder, $_loc, $0, $1, $2, $3)"> $input, $scale, $axes_0, $epsilon_attr),
   [(IsOneSizeElements $epsilon_attr),
    (isScalarConstantTensor:$axes_0), (isScalarConstantTensor:$axes_1),
-   (SameTwoValuesOrAttrs $axes_0, $axes_1),
+   (SameTwoIntegerScalarConstantValues $axes_0, $axes_1),
    (SameTwoValuesOrAttrs $input_zero_mean_0, $input_zero_mean_1),
   ]>;
 
