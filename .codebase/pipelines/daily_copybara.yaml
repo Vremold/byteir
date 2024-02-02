@@ -22,6 +22,10 @@ jobs:
         commands:
           - git config --global user.name "wujiawei.aml"
           - git config --global user.email "wujiawei.aml@bytedance.com"
+          # NOTE: by default, copybara will checkout the destination branch, but 
+          # it will fail to execute `git lfs smudge`, so we skip it here.
+          - git config --global filter.lfs.smudge "git-lfs smudge --skip %f"
+          - git config --global filter.lfs.process "git-lfs filter-process --skip"
           - bash .codebase/pipelines/copybara/sync_with_github.sh
   send_msg:
     name: send message to byteir ci group
