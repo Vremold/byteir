@@ -1,4 +1,4 @@
-//===- RewriteToByteIREntryPoint.h ----------------------------*--- C++ -*-===//
+//===- remove_cstr_reshapable.h -------------------------------*--- C++ -*-===//
 //
 // Copyright 2022 ByteDance Ltd. and/or its affiliates. All rights reserved.
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef TORCH_FRONTEND_TRANSFORMS_REWRITETOBYTEIRENTRYPOINT_H
-#define TORCH_FRONTEND_TRANSFORMS_REWRITETOBYTEIRENTRYPOINT_H
+#ifndef TFEXT_TRANSFORMS_REMOVE_CSTR_RESHAPABLE
+#define TFEXT_TRANSFORMS_REMOVE_CSTR_RESHAPABLE
 
-#include "mlir/Pass/Pass.h"
 #include <memory>
 
+#include "mlir/IR/MLIRContext.h"  // from @llvm-project
+#include "mlir/IR/PatternMatch.h" // from @llvm-project
+#include "mlir/Pass/Pass.h"       // from @llvm-project
+#include "tensorflow/compiler/mlir/tensorflow/ir/tf_executor.h"
+
 namespace mlir {
-class ModuleOp;
+namespace tfext {
 
-std::unique_ptr<OperationPass<ModuleOp>> createRewriteToByteIREntryPoint();
+// -------------------------------------------
+std::unique_ptr<OperationPass<func::FuncOp>> createRemoveCstrReshapablePass();
 
+} // namespace tfext
 } // namespace mlir
 
-#endif // TORCH_FRONTEND_TRANSFORMS_REWRITETOBYTEIRENTRYPOINT_H
+#endif // TFEXT_TRANSFORMS_REMOVE_CSTR_RESHAPABLE
