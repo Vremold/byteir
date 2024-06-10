@@ -46,17 +46,11 @@ set(LLVM_LINK_COMPONENTS
   )
 
 set(MHLO_LIBS
-  LmhloDialect
-  LmhloGPUDialect
   MhloRegisterDialects
-  LmhloPasses
   AllMhloPasses
   DeallocationPasses
   MLIRBufferTransforms
   MLIRHLOGPUTransforms
-  MLIRHLOAnalysis
-  MLIRHLOTestAnalysis
-  MhloTestAnalysis
   StablehloRegister
   StablehloOps
   ChloOps

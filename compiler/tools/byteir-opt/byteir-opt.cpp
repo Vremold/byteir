@@ -42,9 +42,6 @@
 #include "byteir/Pipelines/InitAllPipelines.h"
 #include "byteir/Transforms/Passes.h"
 #include "byteir/Utils/OpInterfaceUtils.h"
-#include "lhlo/IR/lhlo_ops.h"
-#include "lhlo/transforms/passes.h"
-#include "lhlo_gpu/IR/lhlo_gpu_ops.h"
 #include "mhlo/IR/hlo_ops.h"
 #include "mhlo/IR/register.h"
 #include "mhlo/transforms/passes.h"
@@ -112,7 +109,7 @@ int main(int argc, char **argv) {
   mlir::hlo::registerLMHLOTransformsPasses();
   mlir::registerLMHLOGPUTransformsPasses();
   mlir::mhlo::registerAllMhloPasses();
-  mlir::lmhlo::registerAllLmhloPasses();
+  
 
   registerByteIRConversionPasses();
   registerByteIRTransformsPasses();
@@ -153,7 +150,6 @@ int main(int argc, char **argv) {
   registry.insert<mlir::mhlo::MhloDialect>();
   registry.insert<mlir::lace::LaceDialect>();
   registry.insert<mlir::lccl::LcclDialect>();
-  registry.insert<mlir::lmhlo::LmhloDialect>();
   registry.insert<mlir::shape_ext::ShapeExtDialect>();
   registry.insert<mlir::linalg_ext::LinalgExtDialect>();
 

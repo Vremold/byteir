@@ -56,7 +56,6 @@ int main(int argc, char **argv) {
   registry.insert<mlir::ace::AceDialect>();
   registry.insert<mlir::byre::ByreDialect>();
   registry.insert<mlir::mhlo::MhloDialect>();
-  registry.insert<mlir::lmhlo::LmhloDialect>();
 
   std::string errorMessage;
   auto input = openInputFile(inputFilename, &errorMessage);
