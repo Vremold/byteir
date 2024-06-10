@@ -19,7 +19,6 @@
 #include "byteir/Dialect/Byre/ByreDialect.h"
 #include "byteir/Stat/Common/Reg.h"
 #include "byteir/Stat/InitAllStats.h"
-#include "lhlo/IR/lhlo_ops.h"
 #include "mhlo/IR/hlo_ops.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/InitAllDialects.h"
