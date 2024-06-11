@@ -106,10 +106,7 @@ void registerTestPasses() {
 
 int main(int argc, char **argv) {
   mlir::registerAllPasses();
-  mlir::hlo::registerLMHLOTransformsPasses();
-  mlir::registerLMHLOGPUTransformsPasses();
   mlir::mhlo::registerAllMhloPasses();
-  
 
   registerByteIRConversionPasses();
   registerByteIRTransformsPasses();

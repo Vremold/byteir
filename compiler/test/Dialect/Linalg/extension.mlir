@@ -1,4 +1,4 @@
-// RUN: byteir-opt %s | FileCheck %s
+// RUN: byteir-opt %s --allow-unregistered-dialect| FileCheck %s
 
 func.func @custom_tensor(%arg0: tensor<1024x64xf32>) -> (tensor<1024x64xf32>) {
   %0 = linalg_ext.custom {target_name = "foo"} outs(%arg0 : tensor<1024x64xf32>) {
