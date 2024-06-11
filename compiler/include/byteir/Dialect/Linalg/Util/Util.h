@@ -100,6 +100,11 @@ static SmallVector<DstOpTy> castToTypedOperations(ArrayRef<Operation *> ops) {
       llvm::map_range(ops, [](Operation *op) { return cast<DstOpTy>(op); }));
 }
 template <typename DstOpTy>
+static SmallVector<DstOpTy> castToTypedOperations(ArrayRef<LoopLikeOpInterface> ifaces) {
+  return llvm::to_vector(
+      llvm::map_range(ifaces, [](LoopLikeOpInterface iface) { return cast<DstOpTy>(iface.getOperation()); }));
+}
+template <typename DstOpTy>
 static SmallVector<DstOpTy>
 castToTypedOperations(const SmallVector<Operation *> &ops) {
   return castToTypedOperations<DstOpTy>(ArrayRef<Operation *>(ops));
