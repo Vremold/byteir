@@ -81,7 +81,8 @@ void mlir::registerDotInferReturnTypeComponents() {
          ValueShapeRange operands, DictionaryAttr attrs, RegionRange regions,
          SmallVectorImpl<ShapedTypeComponents> &inferredReturnTypes) {
         return hlo::inferDotOp(
-            loc, operands[0], operands[1],
+            loc, cast<RankedTensorType>(operands[0].getType()),
+            cast<RankedTensorType>(operands[1].getType()),
             attrs.getAs<ArrayAttr>(mhlo::DotOp::getPrecisionConfigAttrName(
                 OperationName(mhlo::DotOp::getOperationName(), context))),
             inferredReturnTypes);
