@@ -135,7 +135,7 @@ void mlirRegisterPDLConstraintFn(MlirContext ctx, MlirStringRef name,
   registerPDLConstraintFunction(
       unwrap(ctx), unwrap(name),
       [fn = *reinterpret_cast<std::function<bool(std::vector<MlirPDLValue>)> *>(
-           pfn)](PatternRewriter &,
+           pfn)](PatternRewriter &, PDLResultList &,
                  ArrayRef<PDLValue> pdlValues) -> LogicalResult {
         std::vector<MlirPDLValue> wrapped;
         wrapped.reserve(pdlValues.size());
