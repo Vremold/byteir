@@ -162,7 +162,7 @@ SmallVector<Range> commonGetIterationDomainForLinalgExt(Operation *op,
   return loopBounds;
 }
 
-FailureOr<Operation *> commonGenerateInitialTensorForPartialReduction(
+FailureOr<SmallVector<Value>> commonGenerateInitialTensorForPartialReduction(
     Operation *op, OpBuilder &b, Location loc, ArrayRef<OpFoldResult> sizes,
     ArrayRef<int> reductionDims) {
   auto linalgOp = cast<LinalgOp>(op);
@@ -208,7 +208,11 @@ FailureOr<Operation *> commonGenerateInitialTensorForPartialReduction(
       dynamicDims);
   Value constantOp = b.create<arith::ConstantOp>(loc, *identity);
   auto identityTensor = b.create<linalg::FillOp>(loc, constantOp, emptyTensor);
-  return identityTensor.getOperation();
+  SmallVector<Value> results;
+  for (auto item : identityTensor.getResults()) {
+    results.emplace_back(item);
+  }
+  return results;
 }
 
 Operation *commonTileToPartialReduction(Operation *op, OpBuilder &b,
@@ -1922,7 +1926,7 @@ void mlir::linalg_ext::BatchMatmulOp::getEffects(
                         getDpsInits());
 }
 
-FailureOr<Operation *>
+FailureOr<SmallVector<Value>>
 mlir::linalg_ext::BatchMatmulOp::generateInitialTensorForPartialReduction(
     OpBuilder &b, Location loc, ArrayRef<OpFoldResult> sizes,
     ArrayRef<int> reductionDims) {
