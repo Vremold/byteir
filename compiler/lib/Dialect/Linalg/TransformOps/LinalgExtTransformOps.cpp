@@ -130,20 +130,20 @@ transform::CollapseDimsOp::apply(transform::TransformRewriter &rewriter,
 
     SimpleRewriter rewriter(getContext());
     rewriter.setInsertionPoint(target);
-    std::optional<SmallVector<Value>> replacements =
-        collapseOpIterationDims<linalg::GenericOp>(
+    FailureOr<CollapseResult> replacementsInfo =
+        mlir::linalg::collapseOpIterationDims(
             genericOp, getReassociationIndices(), rewriter);
-    if (!replacements)
+    if (failed(replacementsInfo))
       return emitDefaultDefiniteFailure(target) << " failed to collapsed dims";
-
-    Operation *definingOp = (*replacements)[0].getDefiningOp();
+    auto replacements = (*replacementsInfo).results;
+    Operation *definingOp = replacements[0].getDefiningOp();
     if (llvm::isa<tensor::ExpandShapeOp>(definingOp))
       definingOp = definingOp->getOperand(0).getDefiningOp();
 
     if (!llvm::isa<linalg::GenericOp>(definingOp))
       return emitDefaultDefiniteFailure(target) << " failed to collapsed dims";
 
-    genericOp->replaceAllUsesWith(*replacements);
+    genericOp->replaceAllUsesWith(replacements);
     genericOp->erase();
 
     collapsed.push_back(definingOp);
@@ -1041,7 +1041,7 @@ transform::TileExtOp::apply(TransformRewriter &rewriter,
     tilingOptions.setInterchange(getInterchange());
     SimpleRewriter rewriter(en.value()->getContext());
 
-    FailureOr<scf::SCFTilingResult> maybeTilingResult = tileUsingSCFForOp(
+    FailureOr<scf::SCFTilingResult> maybeTilingResult = tileUsingSCF(
         rewriter, cast<TilingInterface>(en.value()), tilingOptions);
 
     if (failed(maybeTilingResult))
@@ -1288,7 +1288,7 @@ DiagnosedSilenceableFailure transform::SharedOutputToDistributedStyleOp::apply(
     ArrayAttr replicaGroupAttrs =
         builder.getArrayAttr({builder.getI64ArrayAttr(replicaGroup)});
 
-    BlockArgument loopOutBlockArg = loopOp.getOutputBlockArguments()[0];
+    BlockArgument loopOutBlockArg = loopOp.getRegionIterArgs()[0];
     if (!all_of(loopOutBlockArg.getUsers(), [](Operation *op) {
           return isa<tensor::ExtractSliceOp, tensor::ParallelInsertSliceOp>(op);
         })) {
@@ -1377,7 +1377,7 @@ DiagnosedSilenceableFailure transform::SharedOutputToDistributedStyleOp::apply(
     SmallVector<OpFoldResult> strides(rank, builder.getIndexAttr(1));
     builder.create<tensor::ParallelInsertSliceOp>(
         retVal.getLoc(), finalMergeOp->getResult(0),
-        loopOp.getOutputBlockArguments()[0], offsets, sizes, strides);
+        loopOp.getRegionIterArgs()[0], offsets, sizes, strides);
 
     // replace all uses of original merge op
     mergeOp->getResult(0).replaceAllUsesWith(loopOp->getResult(0));
