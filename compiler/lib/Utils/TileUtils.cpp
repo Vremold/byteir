@@ -442,6 +442,7 @@ LogicalResult mlir::tileToExistedLoops(
         loops.front()->getResult(oldNumResult + en.index());
   }
 
-  tileAndFuseResult.loops = getAsOperations(loops);
+  tileAndFuseResult.loops = llvm::to_vector(llvm::map_range(
+      loops, [](scf::ForOp loop) { return cast<LoopLikeOpInterface>(loop.getOperation()); }));
   return success();
 }

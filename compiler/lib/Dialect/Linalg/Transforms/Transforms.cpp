@@ -1066,7 +1066,7 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
   llvm::SmallDenseMap<Value, int64_t> yieldedValueToResultNumber;
   {
     FailureOr<scf::SCFTilingResult> tilingResult =
-        tileUsingSCFForOp(rewriter, consumer, options.tilingOptions);
+        tileUsingSCF(rewriter, consumer, options.tilingOptions);
     if (failed(tilingResult))
       return rewriter.notifyMatchFailure(consumer, "failed to tile consumer");
 
@@ -1432,7 +1432,8 @@ mlir::scf::tileConsumerAndFuseProducerUsingSCFForOpExt(
     } // for (const auto &p : fusedOps)
   }
 
-  tileAndFuseResult.loops = getAsOperations(tileAndFuseResultLoops);
+  tileAndFuseResult.loops = llvm::to_vector(llvm::map_range(
+      tileAndFuseResultLoops, [](scf::ForOp loop) { return cast<LoopLikeOpInterface>(loop.getOperation()); }));
   return tileAndFuseResult;
 }
 
@@ -1495,7 +1496,8 @@ mlir::scf::tileConsumerArrayAndFuseProducerGreedilyUsingSCFFor(
   auto tileAndFuseResultLoops =
       scf::createNestedEmptyScfForOpsWithZeroLbAndOneStep(rewriter, loc,
                                                           validTileNums);
-  tileAndFuseResult.loops = getAsOperations(tileAndFuseResultLoops);
+  tileAndFuseResult.loops = llvm::to_vector(llvm::map_range(
+      tileAndFuseResultLoops, [](scf::ForOp loop) { return cast<LoopLikeOpInterface>(loop.getOperation()); }));
 
   // If there are no loops generated, fusion is immaterial.
   if (tileAndFuseResult.loops.empty())
@@ -1753,7 +1755,8 @@ mlir::scf::tileConsumerArrayAndFuseProducerGreedilyUsingSCFFor(
     }
   }
 
-  tileAndFuseResult.loops = getAsOperations(tileAndFuseResultLoops);
+  tileAndFuseResult.loops = llvm::to_vector(llvm::map_range(
+      tileAndFuseResultLoops, [](scf::ForOp loop) { return cast<LoopLikeOpInterface>(loop.getOperation()); }));
   return tileAndFuseResult;
 }
 
