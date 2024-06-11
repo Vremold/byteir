@@ -161,7 +161,7 @@ struct ByreComputeOnTensorOpBufferization
 
     for (auto &&namedAttr : op->getAttrs()) {
       StringRef name = namedAttr.getName();
-      if ((!name.startswith("bufferization.") &&
+      if ((!name.starts_with("bufferization.") &&
            name != "operandSegmentSizes") &&
           !newOp->hasAttr(name)) {
         newOp->setAttr(name, namedAttr.getValue());
@@ -236,7 +236,7 @@ struct ByreCustomOpBufferization
 
     for (auto &&namedAttr : op->getAttrs()) {
       StringRef name = namedAttr.getName();
-      if (!name.startswith("bufferization.") && !newOp->hasAttr(name)) {
+      if (!name.starts_with("bufferization.") && !newOp->hasAttr(name)) {
         newOp->setAttr(name, namedAttr.getValue());
       }
     }
