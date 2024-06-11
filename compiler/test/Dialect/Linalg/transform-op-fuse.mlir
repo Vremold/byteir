@@ -148,7 +148,7 @@ transform.sequence failures(propagate) {
   %0 = transform.structured.match ops{["linalg.generic"]} in %arg1 : (!pdl.operation) -> !pdl.operation
   %1, %loops:2 = transform.structured.fuse %0 {tile_sizes = [5, 0, 7], tile_interchange = [0, 2, 1]} :
     (!pdl.operation) -> (!pdl.operation, !pdl.operation, !pdl.operation)
-  %2, %loops_2 = transform.structured.tile_using_for %1 [0, 4] : (!pdl.operation) -> (!pdl.operation, !pdl.operation)
+  %2, %loops_2 = transform.structured.tile_using_for %1 tile_sizes [0, 4] : (!pdl.operation) -> (!pdl.operation, !pdl.operation)
 }
 
 // -----
