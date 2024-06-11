@@ -222,7 +222,7 @@ void SerializeToPTX::translateToISA(llvm::Module &llvmModule,
   llvm::OptimizationLevel optLevel = mapToLevel(optLevelAsInt);
   llvm::PassBuilder pB(&targetMachine);
 
-  targetMachine.registerPassBuilderCallbacks(pB);
+  targetMachine.registerPassBuilderCallbacks(pB, /*PopulateClassToPassNames=*/false);
 
   // Register all basic analyses
   llvm::LoopAnalysisManager lAM;

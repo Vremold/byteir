@@ -169,7 +169,7 @@ FailureOr<Operation *> commonGenerateInitialTensorForPartialReduction(
   OpBuilder::InsertionGuard guard(b);
   assert(reductionDims.size() == 1 &&
          "only support single reduction right now.");
-  if (linalgOp.hasBufferSemantics())
+  if (linalgOp.hasPureBufferSemantics())
     return op->emitOpError("expected operation to have tensor semantics");
   // Insert the new parallel dimension based on the index of the reduction
   // loop. This could be controlled by user for more flexibility.
@@ -585,7 +585,7 @@ mlir::linalg_ext::ScanOp::getTiledImplementation(OpBuilder &builder,
   }
 
   SmallVector<Type, 4> resultTypes;
-  if (hasTensorSemantics()) {
+  if (hasPureTensorSemantics()) {
     resultTypes.push_back(tiledOperands[1].getType());
     resultTypes.push_back(tiledOperands[2].getType());
   }
@@ -860,7 +860,7 @@ FailureOr<TilingResult> mlir::linalg_ext::ScatterOp::getTiledImplementation(
   // tiled scatter op
   Operation *newOp = mlir::clone(
       builder, getOperation(),
-      hasTensorSemantics() ? TypeRange(newSrc.getType()) : TypeRange(),
+      hasPureTensorSemantics() ? TypeRange(newSrc.getType()) : TypeRange(),
       {newIndices, newUpdate, newSrc});
   return TilingResult{{newOp}, SmallVector<Value>(newOp->getResults())};
   ;
@@ -1399,7 +1399,7 @@ FailureOr<TilingResult> getTiledImplementationForSoftmaxLikeOp(
   }
 
   SmallVector<Type, 4> resultTypes;
-  if (softmaxLikeOp.hasTensorSemantics()) {
+  if (softmaxLikeOp.hasPureTensorSemantics()) {
     resultTypes.push_back(tiledOperands[1].getType());
     resultTypes.push_back(tiledOperands[2].getType());
     resultTypes.push_back(tiledOperands[3].getType());
@@ -1596,7 +1596,7 @@ mlir::linalg_ext::TopkOp::getTiledImplementation(OpBuilder &builder,
   tiledOperands.emplace_back(
       getSlice(builder, loc, getOutputs()[1], offsets, outputSizes, strides));
   SmallVector<Type, 2> resultTypes;
-  if (hasTensorSemantics()) {
+  if (hasPureTensorSemantics()) {
     resultTypes.push_back(tiledOperands[tiledOperands.size() - 2].getType());
     resultTypes.push_back(tiledOperands[tiledOperands.size() - 1].getType());
   }
@@ -2118,7 +2118,7 @@ FailureOr<TilingResult> mlir::linalg_ext::LayerNormOp::getTiledImplementation(
         getSlice(builder, loc, getOutputs()[2], offsets, outputSizes, strides));
   }
   SmallVector<Type> resultTypes;
-  if (hasTensorSemantics()) {
+  if (hasPureTensorSemantics()) {
     if (getNumOutputs() > 1) {
       resultTypes.push_back(tiledOperands[tiledOperands.size() - 3].getType());
       resultTypes.push_back(tiledOperands[tiledOperands.size() - 2].getType());

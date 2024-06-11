@@ -29,8 +29,8 @@ public:
 
   PDLPatternHooksInterface(Dialect *dialect) : Base(dialect) {}
 
-  void add(StringRef name, PDLConstraintFunction constraintFn);
-  void add(StringRef name, PDLRewriteFunction rewriteFn);
+  void registerConstraintFunction(StringRef name, PDLConstraintFunction constraintFn);
+  void registerRewriteFunction(StringRef name, PDLRewriteFunction rewriteFn);
 
   void apply(PDLPatternModule &pdlModule) const;
 
@@ -41,12 +41,12 @@ private:
   llvm::StringMap<PDLRewriteFunction> rewriteFunctions;
 };
 
-void PDLPatternHooksInterface::add(StringRef name,
+void PDLPatternHooksInterface::registerConstraintFunction(StringRef name,
                                    PDLConstraintFunction constraintFn) {
   constraintFunctions.try_emplace(name, std::move(constraintFn));
 }
 
-void PDLPatternHooksInterface::add(StringRef name,
+void PDLPatternHooksInterface::registerRewriteFunction(StringRef name,
                                    PDLRewriteFunction rewriteFn) {
   rewriteFunctions.try_emplace(name, std::move(rewriteFn));
 }
@@ -75,7 +75,7 @@ void mlir::registerPDLConstraintFunction(MLIRContext *ctx, StringRef name,
   if (!iface)
     return;
 
-  iface->add(name, std::move(constraintFn));
+  iface->registerConstraintFunction(name, std::move(constraintFn));
 }
 
 void mlir::registerPDLRewriteFunction(MLIRContext *ctx, StringRef name,
@@ -84,7 +84,7 @@ void mlir::registerPDLRewriteFunction(MLIRContext *ctx, StringRef name,
   if (!iface)
     return;
 
-  iface->add(name, std::move(rewriteFn));
+  iface->registerRewriteFunction(name, std::move(rewriteFn));
 }
 
 void mlir::applyPDLPatternHooks(PDLPatternModule &pdlPattern) {

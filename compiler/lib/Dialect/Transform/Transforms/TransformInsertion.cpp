@@ -106,7 +106,7 @@ struct DetensorizeTransformInsertionPass
   }
 
   static bool isScalarTensorOp(linalg::LinalgOp linalgOp) {
-    if (!linalgOp.hasTensorSemantics())
+    if (!linalgOp.hasPureTensorSemantics())
       return false;
 
     if (linalgOp.getNumLoops() != 0)

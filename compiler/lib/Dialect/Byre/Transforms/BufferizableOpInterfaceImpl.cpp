@@ -122,10 +122,10 @@ struct ByreComputeOnTensorOpBufferization
     OpBuilder::InsertionGuard g(rewriter);
     rewriter.setInsertionPoint(op);
 
-    if (DpsOp.hasBufferSemantics())
+    if (DpsOp.hasPureBufferSemantics())
       return success();
 
-    if (!DpsOp.hasTensorSemantics())
+    if (!DpsOp.hasPureTensorSemantics())
       return DpsOp->emitError() << "op does not have tensor semantics";
 
     SmallVector<Value> newInputBuffers;

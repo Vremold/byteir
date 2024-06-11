@@ -544,6 +544,8 @@ def LinalgExtInterface : OpInterface<"LinalgExtOp"> {
     >
   ];
 
+  let cppNamespace = "::mlir::linalg_ext";
+
   let extraClassDeclaration = [{
     /// Returns the value that expresses the shape of the output in terms of
     /// shape of the input operands where possible.

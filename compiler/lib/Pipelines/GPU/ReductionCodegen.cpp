@@ -296,7 +296,8 @@ void GridTileConfig::apply(ImplicitLocOpBuilder &b, Value pdlV,
           /*padding_values=*/b.getArrayAttr(padValues),
           /*padding_dimensions=*/
           b.getI64ArrayAttr({padDim}),
-          /*padToMultipleOf=*/b.getArrayAttr({b.getI64IntegerAttr(warpSize)}),
+          /*padToMultipleOf=*/ValueRange{},
+          /*staticPadToMultipleOf=*/b.getDenseI64ArrayAttr({warpSize}),
           /*pack_paddings=*/ArrayAttr{},
           /*transpose_paddings=*/ArrayAttr{},
           /*copyBack=*/transform::PadOp::kCopyOpNone);
@@ -320,7 +321,8 @@ void BlockSplitConfig::apply(ImplicitLocOpBuilder &b, Value pdlV) {
         /*padding_values=*/b.getArrayAttr(padValues),
         /*padding_dimensions=*/
         b.getI64ArrayAttr(padDims),
-        /*padToMultipleOf=*/ArrayAttr{},
+        /*padToMultipleOf=*/ValueRange{},
+        /*staticPadToMultipleOf=*/DenseI64ArrayAttr{},
         /*pack_paddings=*/ArrayAttr{},
         /*transpose_paddings=*/ArrayAttr{},
         /*copyBack=*/transform::PadOp::kCopyOpNone);

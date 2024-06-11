@@ -157,7 +157,7 @@ transform::CollapseDimsOp::apply(transform::TransformRewriter &rewriter,
 //===----------------------------------------------------------------------===//
 namespace {
 LogicalResult detensorizeLinalgOp(OpBuilder &b, linalg::LinalgOp linalgOp) {
-  if (!linalgOp.hasTensorSemantics())
+  if (!linalgOp.hasPureTensorSemantics())
     return failure();
 
   if (linalgOp.getNumLoops())
@@ -517,7 +517,7 @@ static LogicalResult applyTilingToAll(
         return true;
       };
 
-      rewriter.replaceOpWithIf(toReplace, replacements, allowReplacement);
+      rewriter.replaceUsesWithIf(toReplace->getResults(), replacements, allowReplacement);
 
       // simplify tensor::DimOp
       simplifyTensorDimOpUsedInLinalgWithinOp(*funcOp.getOperation());
