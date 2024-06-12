@@ -37,13 +37,12 @@ module attributes {transform.with_named_sequence} {
       // CHECK: %[[TIDZ:.*]] = gpu.thread_id  z
       // CHECK: %[[P1:.*]] = arith.cmpi ult, %[[TIDX]], %[[DIM1]] : index
       // CHECK: %[[P2:.*]] = arith.cmpi ult, %[[TIDY]], %[[DIM0]] : index
-      // CHECK: %[[P3:.*]] = arith.andi %4, %5 : i1
+      // CHECK: %[[P3:.*]] = arith.andi %[[P1]], %[[P2]] : i1
       // CHECK: scf.if %[[P3]]
                 //CHECK-NEXT: %[[V0:.*]] = memref.load %arg0[%[[TIDY]], %[[TIDX]], %[[TIDZ]]]
                 //CHECK-NEXT: %[[V1:.*]] = memref.load %arg1[%[[TIDY]], %[[TIDX]], %[[TIDZ]]]
                 //CHECK-NEXT: %[[V2:.*]] = math.fma %arg2, %[[V0]], %[[V1]] : f32
                 //CHECK-NEXT: memref.store %[[V2]], %arg1[%[[TIDY]], %[[TIDX]], %[[TIDZ]]]
-
 // -----
 
 module {
@@ -217,7 +216,7 @@ module {
 // CHECK-DAG: %[[DIM0:.*]] = memref.dim %arg0, %[[C0]] : memref<?x?xf32>
 // CHECK-DAG: %[[DIM1:.*]] = memref.dim %arg0, %[[C1]] : memref<?x?xf32>
 // CHECK-DAG: %[[DIM2:.*]] = memref.dim %arg2, %[[C0]] : memref<?xf32>
-// CHECK-LAUNCH: %[[LAUNCH:.*]] = gpu.launch async
+// CHECK: %[[LAUNCH:.*]] = gpu.launch async
 // CHECK-DAG: %[[TIDX:.*]] = gpu.thread_id  x
 // CHECK-DAG: %[[TIDY:.*]] = gpu.thread_id  y
 // CHECK-DAG: %[[P1:.*]] = arith.cmpi ult, %[[TIDX]], %[[C9]] : index
@@ -285,10 +284,9 @@ module {
 // CHECK-DAG: %[[C512:.*]] = arith.constant 512 : index
 // CHECK-DAG: %[[DIM:.*]] = memref.dim %arg0, %[[C1]] : memref<2x?xf32>
 // CHECK: %[[LAUNCH:.*]] = gpu.launch async
-
-// CHECK-DAG: %[[TIDX:.*]] = gpu.thread_id  x
 // CHECK-DAG: %[[TIDY:.*]] = gpu.thread_id  y
-// CHECK-DAG: %[[WG_ID_X:.*]] = affine.apply #map(%1)
+// CHECK-DAG: %[[TIDX:.*]] = gpu.thread_id  x
+// CHECK-DAG: %[[WG_ID_X:.*]] = affine.apply #map(%[[TIDX]])
 // CHECK-DAG: %[[ACTIVE_SIZE_X:.*]] = arith.muli %dim, %c128 : index
 // CHECK-DAG: %[[P:.*]] = arith.cmpi ult, %[[TIDX]], %[[ACTIVE_SIZE_X]] : index
 // CHECK: scf.if %[[P]]

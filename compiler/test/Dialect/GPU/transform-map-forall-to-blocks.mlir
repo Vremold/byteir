@@ -195,7 +195,7 @@ module {
 // CHECK: gpu.launch blocks(%arg1, %arg2, %arg3) in (%arg7 = %[[C1]], %arg8 = %[[C1]], %arg9 = %[[C1]]) threads(%arg4, %arg5, %arg6) in (%arg10 = %[[C4]], %arg11 = %[[C8]], %arg12 = %[[C4]])
     // CHECK: %[[BIDX:.*]] = gpu.block_id  x
     // CHECK: %[[BLX:.*]] = affine.apply #[[$MAPB]](%[[BIDX]])
-    // CHECK: %subview = memref.subview %arg0[%1] [128] [1]
+    // CHECK: %subview = memref.subview %arg0[%[[BLX]]] [128] [1]
     // CHECK: %[[TIDX:.*]] = gpu.thread_id  x
     // CHECK: %[[TIDY:.*]] = gpu.thread_id  y
     // CHECK: %[[TIDZ:.*]] = gpu.thread_id  z

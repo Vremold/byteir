@@ -296,11 +296,11 @@ void GridTileConfig::apply(ImplicitLocOpBuilder &b, Value pdlV,
           /*padding_values=*/b.getArrayAttr(padValues),
           /*padding_dimensions=*/
           b.getI64ArrayAttr({padDim}),
-          /*padToMultipleOf=*/ValueRange{},
-          /*staticPadToMultipleOf=*/b.getDenseI64ArrayAttr({warpSize}),
+          /*pad_to_multiple_of=*/ValueRange{},
+          /*static_pad_to_multiple_of=*/b.getDenseI64ArrayAttr({warpSize}),
           /*pack_paddings=*/ArrayAttr{},
           /*transpose_paddings=*/ArrayAttr{},
-          /*copyBack=*/transform::PadOp::kCopyOpNone);
+          /*copy_back_op=*/transform::PadOp::kCopyOpNone);
     }
 
   } else {
@@ -321,11 +321,11 @@ void BlockSplitConfig::apply(ImplicitLocOpBuilder &b, Value pdlV) {
         /*padding_values=*/b.getArrayAttr(padValues),
         /*padding_dimensions=*/
         b.getI64ArrayAttr(padDims),
-        /*padToMultipleOf=*/ValueRange{},
-        /*staticPadToMultipleOf=*/DenseI64ArrayAttr{},
+        /*pad_to_multiple_of=*/ValueRange{},
+        /*static_pad_to_multiple_of=*/b.getDenseI64ArrayAttr({}),
         /*pack_paddings=*/ArrayAttr{},
         /*transpose_paddings=*/ArrayAttr{},
-        /*copyBack=*/transform::PadOp::kCopyOpNone);
+        /*copy_back_op=*/transform::PadOp::kCopyOpNone);
     pdlV = padOp.getPadded();
   }
   if (!splitFactors.empty()) {

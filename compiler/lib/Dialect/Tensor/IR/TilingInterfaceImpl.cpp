@@ -507,8 +507,11 @@ struct ExpandShapeOpTiling
         }));
     auto resType = expandShapeOp.getResultType().clone(resShape);
 
-    Operation *tiledExpandShapeOp =
-        b.create<tensor::ExpandShapeOp>(loc, resType, tiledSrc, op->getAttrs());
+    // TODO(wujiawei): other tensor.expand_shape may need be handled.
+    Operation *tiledExpandShapeOp = b.create<tensor::ExpandShapeOp>(
+        loc, resType, tiledSrc, expandShapeOp.getReassociation(),
+        ValueRange(expandShapeOp.getOutputShape()),
+        expandShapeOp.getStaticOutputShapeAttr());
 
     return TilingResult{{tiledExpandShapeOp},
                         SmallVector<Value>(tiledExpandShapeOp->getResults())};
