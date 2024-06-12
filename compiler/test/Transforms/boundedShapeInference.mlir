@@ -77,11 +77,6 @@ func.func @dynamic_broadcast_in_dim(%arg0 : tensor<?x32xf32> {byteir.bounded_sha
 //CHECK-LABEL: func.func @dynamic_broadcast_in_dim(%arg0: tensor<?x32xf32, {byteir.bounded_shape = [32, 32]}> {byteir.bounded_shape = [32, 32]}) -> tensor<1x?x30x32xf32, {byteir.bounded_shape = [1, 32, 30, 32]}> {
 //CHECK: %0 = "mhlo.dynamic_broadcast_in_dim"(%arg0, %from_elements) <{broadcast_dimensions = dense<[1, 3]> : tensor<2xi64>}> : (tensor<?x32xf32, {byteir.bounded_shape = [32, 32]}>, tensor<4xindex>) -> tensor<1x?x30x32xf32, {byteir.bounded_shape = [1, 32, 30, 32]}>
 
-// ERROR: 和下面的那个类似，也像是mhlo的bug
-// #1 0x0000000005c9c40c SignalHandler(int) Signals.cpp:0:0
-// #2 0x00007fe22d9f3730 __restore_rt (/lib/x86_64-linux-gnu/libpthread.so.0+0x12730)
-// #3 0x0000000003346107 mlir::IntegerAttr::getValue() const (/root/share/repo/byteir/compiler/build/bin/byteir-opt+0x3346107)
-// #4 0x000000000244d27d mlir::mhlo::detail::TorchIndexSelectOpGenericAdaptorBase::getBatchDims() (/root/share/repo/byteir/compiler/build/bin/byteir-opt+0x244d27d)
 func.func @torch_index_select(%arg0: tensor<10x128xf16>, %arg1: tensor<?xi32> {byteir.bounded_shape = [10]}) -> tensor<?x128xf16> {
   %6 = "mhlo.torch_index_select"(%arg0, %arg1) <{batch_dims = 0 : i64, dim = 0 : i64}> : (tensor<10x128xf16>, tensor<?xi32>) -> tensor<?x128xf16>
   return %6 : tensor<?x128xf16>
@@ -90,12 +85,6 @@ func.func @torch_index_select(%arg0: tensor<10x128xf16>, %arg1: tensor<?xi32> {b
 // CHECK-NEXT:  %0 = "mhlo.torch_index_select"(%arg0, %arg1) <{batch_dims = 0 : i64, dim = 0 : i64}> : (tensor<10x128xf16>, tensor<?xi32, {byteir.bounded_shape = [10]}>) -> tensor<?x128xf16, {byteir.bounded_shape = [10, 128]}>
 // CHECK-NEXT:  return %0 : tensor<?x128xf16, {byteir.bounded_shape = [10, 128]}>
 
-
-// ERROR: 看起来像是mhlo的bug
-// #3 0x0000000002325f83 mlir::mhlo::DotDimensionNumbersAttr::getLhsBatchingDimensions() const (/root/share/repo/byteir/compiler/build/bin/byteir-opt+0x2325f83)
-// #4 0x0000000004f6e68f std::_Function_handler<mlir::LogicalResult (mlir::MLIRContext*, std::optional<mlir::Location>, mlir::ValueShapeRange, mlir::DictionaryAttr, mlir::RegionRange, llvm::SmallVectorImpl<mlir::ShapedTypeComponents>&), mlir::registerDotGeneralInferReturnTypeComponents()::$_3>::_M_invoke(std::_Any_data const&, mlir::MLIRContext*&&, std::optional<mlir::Location>&&, mlir::ValueShapeRange&&, mlir::DictionaryAttr&&, mlir::RegionRange&&, llvm::SmallVectorImpl<mlir::ShapedTypeComponents>&) DotLike.cpp:0:0
-// #5 0x0000000004f7ee52 mlir::MhloShapeAnalysis::inferResultShapesWithKnowledges(mlir::Operation*, llvm::function_ref<mlir::Type (mlir::Value)>, llvm::function_ref<mlir::Attribute (mlir::Value)>, llvm::SmallVectorImpl<mlir::ShapedTypeComponents>&) (/root/share/repo/byteir/compiler/build/bin/byteir-opt+0x4f7ee52)
-// #6 0x0000000004f7f2a7 mlir::MhloBoundedShapeAnalysis::inferResultShapesWithKnowledges(mlir::Operation*, llvm::function_ref<mlir::Type (mlir::Value)>, llvm::function_ref<mlir::Attribute (mlir::Value)>, llvm::SmallVectorImpl<mlir::ShapedTypeComponents>&) (/root/share/repo/byteir/compiler/build/bin/byteir-opt+0x4f7f2a7)
 func.func @dot_general(%arg0 : tensor<?x1x8xf16> {byteir.bounded_shape = [1, 1, 8]}, %arg1 : tensor<?x8x128xf16> {byteir.bounded_shape = [1, 8, 128]}) -> tensor<?x1x128xf16> {
   %0 = "mhlo.dot_general"(%arg0, %arg1) {dot_dimension_numbers = #mhlo.dot<lhs_batching_dimensions = [0], rhs_batching_dimensions = [0], lhs_contracting_dimensions = [2], rhs_contracting_dimensions = [1]>} : (tensor<?x1x8xf16>, tensor<?x8x128xf16>) -> tensor<?x1x128xf16>
   return %0 : tensor<?x1x128xf16>
