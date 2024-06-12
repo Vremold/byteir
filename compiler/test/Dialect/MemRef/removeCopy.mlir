@@ -284,7 +284,6 @@ func.func @copy_collapse_shape(%arg0: memref<90x10xf32>) -> memref<90xf32> {
 
 // -----
 
-// ERROR: 反复横跳？
 // CHECK-LABEL: func.func @transpose_split
 func.func @transpose_split(%arg0: memref<11x13x15x17xf32>) -> memref<11x15x17x13xf32> {
   // CHECK-NOT: memref.copy
@@ -367,7 +366,6 @@ func.func @transpose_split(%arg0: memref<11x13x15x17xf32>) -> memref<11x15x17x13
 }
 
 // -----
-// ERROR: 反复横跳？
 // CHECK-LABEL: func.func @view_of_view
 //   CHECK-NEXT: %[[ALLOC:.*]] = memref.alloc() : memref<11x15x17x13xf32>
 //   CHECK-NEXT: %[[SUBVIEW:.*]] = memref.subview %[[ALLOC]][0, 0, 16, 0] [11, 15, 1, 8] [1, 1, 1, 1]

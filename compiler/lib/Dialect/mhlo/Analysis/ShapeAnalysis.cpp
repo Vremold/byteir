@@ -79,7 +79,7 @@ LogicalResult MhloShapeAnalysis::inferResultShapesWithKnowledges(
                         wrapperShapeValueKnowledges);
 
   return inferFunc(op->getContext(), op->getLoc(), range,
-                   op->getAttrDictionary(), op->getRegions(), results);
+                   op->getAttrDictionary(), op->getPropertiesStorage(), op->getRegions(), results);
 }
 
 LogicalResult MhloBoundedShapeAnalysis::inferResultShapesWithKnowledges(

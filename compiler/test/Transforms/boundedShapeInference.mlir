@@ -83,7 +83,7 @@ func.func @dynamic_broadcast_in_dim(%arg0 : tensor<?x32xf32> {byteir.bounded_sha
 // #3 0x0000000003346107 mlir::IntegerAttr::getValue() const (/root/share/repo/byteir/compiler/build/bin/byteir-opt+0x3346107)
 // #4 0x000000000244d27d mlir::mhlo::detail::TorchIndexSelectOpGenericAdaptorBase::getBatchDims() (/root/share/repo/byteir/compiler/build/bin/byteir-opt+0x244d27d)
 func.func @torch_index_select(%arg0: tensor<10x128xf16>, %arg1: tensor<?xi32> {byteir.bounded_shape = [10]}) -> tensor<?x128xf16> {
-  %6 = "mhlo.torch_index_select"(%arg0, %arg1) {batch_dims = 0 : i64, dim = 0 : i64} : (tensor<10x128xf16>, tensor<?xi32>) -> tensor<?x128xf16>
+  %6 = "mhlo.torch_index_select"(%arg0, %arg1) <{batch_dims = 0 : i64, dim = 0 : i64}> : (tensor<10x128xf16>, tensor<?xi32>) -> tensor<?x128xf16>
   return %6 : tensor<?x128xf16>
 }
 // CHECK-LABEL: func.func @torch_index_select(%arg0: tensor<10x128xf16>, %arg1: tensor<?xi32, {byteir.bounded_shape = [10]}> {byteir.bounded_shape = [10]}) -> tensor<?x128xf16, {byteir.bounded_shape = [10, 128]}>
